@@ -93,6 +93,8 @@ public:
 					UInt32							inNumberFrames,
 					AudioBufferList					*ioData);
 	
+	void * FileReaderThreadEntry();
+	
 private:
 	
 	AUGraph mAUGraph;
@@ -104,6 +106,7 @@ private:
 	AUNode mOutputNode;
 	
 	CARingBuffer *mRingBuffer;
+	semaphore_t mSemaphore;
 	
 	SInt64 mFramesDecoded;
 	SInt64 mFramesRendered;
@@ -129,5 +132,5 @@ private:
 	// PreGain Utilities
 	bool EnablePreGain(UInt32 flag);
 	bool PreGainIsEnabled();
-	
+
 };

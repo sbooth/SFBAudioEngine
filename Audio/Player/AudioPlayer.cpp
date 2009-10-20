@@ -16,6 +16,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <libkern/OSAtomic.h>
+#include <pthread.h>
+#include <mach/thread_act.h>
+#include <mach/mach_error.h>
+#include <mach/task.h>
+#include <mach/semaphore.h>
+#include <mach/sync_policy.h>
+
 #include "AudioPlayer.h"
 #include "CoreAudioDecoder.h"
 
@@ -26,7 +34,8 @@
 // Macros
 // ========================================
 #define RING_BUFFER_SIZE_FRAMES					16384
-//#define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
+#define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
+#define FEEDER_THREAD_IMPORTANCE				6
 
 
 // ========================================
@@ -64,6 +73,43 @@ channelLayoutsAreEqual(AudioChannelLayout *layoutA,
 	return true;
 }
 
+// ========================================
+// Set the calling thread's timesharing and importance
+// ========================================
+static bool
+setThreadPolicy(integer_t importance)
+{
+	// Turn off timesharing
+	thread_extended_policy_data_t extendedPolicy = { 0 };
+	kern_return_t error = thread_policy_set(mach_thread_self(),
+											THREAD_EXTENDED_POLICY,
+											(thread_policy_t)&extendedPolicy, 
+											THREAD_EXTENDED_POLICY_COUNT);
+	
+	if(KERN_SUCCESS != error) {
+#if DEBUG
+		mach_error((char *)"Couldn't set thread's extended policy", error);
+#endif
+		return false;
+	}
+	
+	// Give the thread the specified importance
+	thread_precedence_policy_data_t precedencePolicy = { importance };
+	error = thread_policy_set(mach_thread_self(), 
+							  THREAD_PRECEDENCE_POLICY, 
+							  (thread_policy_t)&precedencePolicy, 
+							  THREAD_PRECEDENCE_POLICY_COUNT);
+	
+	if (error != KERN_SUCCESS) {
+#if DEBUG
+		mach_error((char *)"Couldn't set thread's precedence policy", error);
+#endif
+		return false;
+	}
+	
+	return true;
+}
+
 static OSStatus
 myAURenderCallback(void *							inRefCon,
 				   AudioUnitRenderActionFlags *		ioActionFlags,
@@ -76,6 +122,15 @@ myAURenderCallback(void *							inRefCon,
 	
 	AudioPlayer *player = (AudioPlayer *)inRefCon;
 	return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
+}
+
+static void *
+fileReaderEntry(void *arg)
+{
+	assert(NULL != arg);
+	
+	AudioPlayer *player = (AudioPlayer *)arg;
+	return player->FileReaderThreadEntry();
 }
 
 static inline void 
@@ -100,6 +155,13 @@ AudioPlayer::AudioPlayer()
 	: mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
 	mRingBuffer = new CARingBuffer();		
+
+	kern_return_t err = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
+	if(KERN_SUCCESS != err) {
+#if DEBUG
+		mach_error((char *)"semaphore_create", err);
+#endif
+	}
 	
 	CreateAUGraph();
 }
@@ -328,6 +390,8 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 #if DEBUG
 		CFLog(CFSTR("SetAUGraphFormat failed: %i"), result);
 #endif
+		
+		return false;
 	}
 
 	// Allocate enough space in the ring buffer for the new format
@@ -335,6 +399,13 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 						  decoder->GetFormat().mBytesPerFrame,
 						  RING_BUFFER_SIZE_FRAMES);
 
+	// Launch the reader thread for this decoder
+	pthread_t fileReaderThread;
+		
+	if(0 != pthread_create(&fileReaderThread, NULL, fileReaderEntry, this)) {
+		return false;
+	}
+	
 	return true;
 }
 
@@ -362,11 +433,11 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 
 #pragma mark Callbacks
 
-OSStatus  AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
-							  const AudioTimeStamp				*inTimeStamp,
-							  UInt32							inBusNumber,
-							  UInt32							inNumberFrames,
-							  AudioBufferList					*ioData)
+OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
+							  const AudioTimeStamp			*inTimeStamp,
+							  UInt32						inBusNumber,
+							  UInt32						inNumberFrames,
+							  AudioBufferList				*ioData)
 {
 
 #pragma unused(ioActionFlags)
@@ -375,14 +446,12 @@ OSStatus  AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	
 	assert(NULL != ioData);
 	
-//	UInt32 framesRead = d->ReadAudio(ioData, inNumberFrames);
-//#if DEBUG
-//	CFLog(CFSTR("AudioPlayer::Render rendered %i/%i"), framesRead, inNumberFrames);
-//#endif
-//	
-//	if(0 == framesRead)
-//		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
-	
+	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
+	if(0 == framesAvailableToRead) {
+		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
+		return noErr;
+	}
+
 	CARingBufferError rbResult = mRingBuffer->Fetch(ioData, inNumberFrames, mFramesRendered, false);
 	if(kCARingBufferError_OK != rbResult) {
 #if DEBUG
@@ -391,9 +460,114 @@ OSStatus  AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		return ioErr;
 	}
 
-	mFramesRendered += inNumberFrames;
+	OSAtomicAdd64/*Barrier*/(inNumberFrames, &mFramesRendered);
+	
+	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
+	UInt32 framesAvailableToWrite = (UInt32)(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
+	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite)
+		semaphore_signal(mSemaphore);
 	
 	return noErr;
+}
+
+void * AudioPlayer::FileReaderThreadEntry()
+{
+	if(false == setThreadPolicy(FEEDER_THREAD_IMPORTANCE)) {
+#if DEBUG
+#endif
+	}
+	
+	AudioDecoder *decoder = d;
+	
+	// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
+	AudioStreamBasicDescription formatDescription = decoder->GetFormat();
+	AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1)), 1));
+	
+	bufferList->mNumberBuffers = formatDescription.mChannelsPerFrame;
+	
+	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
+		bufferList->mBuffers[i].mData = static_cast<void *>(calloc(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES, sizeof(float)));
+		bufferList->mBuffers[i].mDataByteSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * sizeof(float);
+		bufferList->mBuffers[i].mNumberChannels = 1;
+	}
+
+	// Two seconds and zero nanoseconds
+	mach_timespec_t timeout = { 2, 0 };
+	
+	SInt64 ringBufferOffset = 0;
+	
+	// Decode the audio file in the ring buffer until finished or cancelled
+	bool finished = false;
+	while(false == finished) {
+		
+		// Fill the ring buffer with as much data as possible
+		for(;;) {
+			
+			// Determine how many frames are available in the ring buffer
+			UInt32 framesAvailableToWrite = (UInt32)(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
+			
+			// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
+			if(framesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES) {
+				SInt64 startingFrameNumber = decoder->CurrentFrame();
+				
+				// Read the input chunk
+				UInt32 framesWritten = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+				
+				// If this is the first frame, decoding is just starting
+				if(0 == startingFrameNumber) {
+					//				OSAtomicCompareAndSwap32(0, 1, &_decodingStarted);
+					//				
+					//				if(_owner && [_owner respondsToSelector:@selector(bufferStartedDecoding:)])
+					//					[_owner performSelectorOnMainThread:@selector(bufferStartedDecoding:) withObject:self waitUntilDone:NO];
+				}
+				
+				// Store the decoded audio
+				if(0 != framesWritten) {
+#if USE_CAMUTEX
+					CAMutex::Locker lock(*(PRIVATE_DATA->_mutex));
+#endif
+					
+					// Copy the decoded audio to the ring buffer
+					CARingBufferError rbErr = mRingBuffer->Store(bufferList, framesWritten, startingFrameNumber + ringBufferOffset);
+					if(kCARingBufferError_OK != rbErr) {
+#if DEBUG
+						//					NSLog(@"BufferedAudioRegion <%p> error: CARingBuffer::Store() failed (%i)", self, rbErr);
+#endif
+					}
+					
+					OSAtomicAdd64/*Barrier*/(framesWritten, &mFramesDecoded);
+				}
+				
+				// If no frames were returned, this is the end of stream
+				if(0 == framesWritten) {
+					//				OSAtomicCompareAndSwap32(0, 1, &_decodingFinished);
+					//				
+					//				if(_owner && [_owner respondsToSelector:@selector(bufferFinishedDecoding:)])
+					//					[_owner performSelectorOnMainThread:@selector(bufferFinishedDecoding:) withObject:self waitUntilDone:NO];
+
+					finished = true;
+					
+					break;
+				}
+				
+			}
+			// Not enough space remains in the ring buffer to write an entire decoded chunk
+			else
+				break;
+		}
+		
+		// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
+		semaphore_timedwait(mSemaphore, timeout);
+	}
+	
+	if(bufferList) {
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+			free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
+		
+		free(bufferList), bufferList = NULL;
+	}
+	
+	return NULL;
 }
 
 #pragma mark AUGraph Utilities
