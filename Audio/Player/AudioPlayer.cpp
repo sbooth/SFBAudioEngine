@@ -434,10 +434,10 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 #pragma mark Callbacks
 
 OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
-							  const AudioTimeStamp			*inTimeStamp,
-							  UInt32						inBusNumber,
-							  UInt32						inNumberFrames,
-							  AudioBufferList				*ioData)
+							 const AudioTimeStamp			*inTimeStamp,
+							 UInt32							inBusNumber,
+							 UInt32							inNumberFrames,
+							 AudioBufferList				*ioData)
 {
 
 #pragma unused(ioActionFlags)
@@ -446,13 +446,23 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	
 	assert(NULL != ioData);
 	
+	// If the ring buffer doesn't contain any valid audio, skip some work
 	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
+		
+		size_t byteCountToZero = inNumberFrames * sizeof(float);
+		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
+			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
+		}
+		
 		return noErr;
 	}
 
-	CARingBufferError rbResult = mRingBuffer->Fetch(ioData, inNumberFrames, mFramesRendered, false);
+	// Restrict reads to valid decoded audio
+	UInt32 framesToRead = framesAvailableToRead < inNumberFrames ? framesAvailableToRead : inNumberFrames;
+	CARingBufferError rbResult = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != rbResult) {
 #if DEBUG
 		CFLog(CFSTR("AudioPlayer::Render error: CARingBuffer::Fetch() failed (%i)"), rbResult);
@@ -460,7 +470,18 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		return ioErr;
 	}
 
-	OSAtomicAdd64/*Barrier*/(inNumberFrames, &mFramesRendered);
+	OSAtomicAdd64/*Barrier*/(framesToRead, &mFramesRendered);
+	
+	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
+	if(framesToRead != inNumberFrames) {
+		UInt32 framesOfSilence = inNumberFrames - framesToRead;
+		size_t byteCountToZero = framesOfSilence * sizeof(float);
+		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
+			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
+			memset(bufferAlias + (framesToRead * sizeof(float)), 0, byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize += (UInt32)byteCountToZero;
+		}
+	}
 	
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = (UInt32)(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
@@ -474,6 +495,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 {
 	if(false == setThreadPolicy(FEEDER_THREAD_IMPORTANCE)) {
 #if DEBUG
+		perror("Couldn't set feeder thread importance");
 #endif
 	}
 	
@@ -511,7 +533,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 				SInt64 startingFrameNumber = decoder->CurrentFrame();
 				
 				// Read the input chunk
-				UInt32 framesWritten = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+				UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 				
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber) {
@@ -522,24 +544,24 @@ void * AudioPlayer::FileReaderThreadEntry()
 				}
 				
 				// Store the decoded audio
-				if(0 != framesWritten) {
+				if(0 != framesDecoded) {
 #if USE_CAMUTEX
 					CAMutex::Locker lock(*(PRIVATE_DATA->_mutex));
 #endif
 					
 					// Copy the decoded audio to the ring buffer
-					CARingBufferError rbErr = mRingBuffer->Store(bufferList, framesWritten, startingFrameNumber + ringBufferOffset);
+					CARingBufferError rbErr = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + ringBufferOffset);
 					if(kCARingBufferError_OK != rbErr) {
 #if DEBUG
 						//					NSLog(@"BufferedAudioRegion <%p> error: CARingBuffer::Store() failed (%i)", self, rbErr);
 #endif
 					}
 					
-					OSAtomicAdd64/*Barrier*/(framesWritten, &mFramesDecoded);
+					OSAtomicAdd64/*Barrier*/(framesDecoded, &mFramesDecoded);
 				}
 				
 				// If no frames were returned, this is the end of stream
-				if(0 == framesWritten) {
+				if(0 == framesDecoded) {
 					//				OSAtomicCompareAndSwap32(0, 1, &_decodingFinished);
 					//				
 					//				if(_owner && [_owner respondsToSelector:@selector(bufferFinishedDecoding:)])
