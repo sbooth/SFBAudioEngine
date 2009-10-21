@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <boost/ptr_container/ptr_vector.hpp>
 #include <AudioToolbox/AudioToolbox.h>
 
 
@@ -35,18 +36,6 @@
 // ========================================
 class CARingBuffer;
 class AudioDecoder;
-
-
-// ========================================
-// CFError domain and codes
-// ========================================
-extern CFStringRef const AudioPlayerErrorDomain;
-
-enum {
-	AudioPlayerInternalError							= 0,
-	AudioPlayerFileFormatNotSupportedError				= 1,
-	AudioPlayerInputOutputError							= 2
-};
 
 
 // ========================================
@@ -93,17 +82,7 @@ public:
 	// Playlist management
 	bool Play(AudioDecoder *decoder);
 	bool Enqueue(AudioDecoder *decoder);
-	
-	// ========================================
-	// Callbacks- for internal use only
-	OSStatus Render(AudioUnitRenderActionFlags		*ioActionFlags,
-					const AudioTimeStamp			*inTimeStamp,
-					UInt32							inBusNumber,
-					UInt32							inNumberFrames,
-					AudioBufferList					*ioData);
-	
-	void * FileReaderThreadEntry();
-	
+
 private:
 	
 	AUGraph mAUGraph;
@@ -115,13 +94,14 @@ private:
 	AUNode mOutputNode;
 	
 	CARingBuffer *mRingBuffer;
+	pthread_mutex_t mMutex;
 	semaphore_t mSemaphore;
+	
+	boost::ptr_vector<AudioDecoder> *mQueue;
 	
 	SInt64 mFramesDecoded;
 	SInt64 mFramesRendered;
 	
-	AudioDecoder *d;
-
 	// ========================================
 	// AUGraph Utilities
 	OSStatus CreateAUGraph();
@@ -141,5 +121,17 @@ private:
 	// PreGain Utilities
 	bool EnablePreGain(UInt32 flag);
 	bool PreGainIsEnabled();
+
+public:
+
+	// ========================================
+	// Callbacks- for internal use only
+	OSStatus Render(AudioUnitRenderActionFlags		*ioActionFlags,
+					const AudioTimeStamp			*inTimeStamp,
+					UInt32							inBusNumber,
+					UInt32							inNumberFrames,
+					AudioBufferList					*ioData);
+	
+	void * FileReaderThreadEntry();
 
 };

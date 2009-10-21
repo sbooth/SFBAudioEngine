@@ -49,12 +49,6 @@
 
 
 // ========================================
-// Constants
-// ========================================
-CFStringRef const AudioPlayerErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioPlayer");
-
-
-// ========================================
 // Utility functions
 // ========================================
 static bool
@@ -149,14 +143,19 @@ fileReaderEntry(void *arg)
 AudioPlayer::AudioPlayer()
 	: mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
-	mRingBuffer = new CARingBuffer();		
+	mQueue = new boost::ptr_vector<AudioDecoder>();
+	mRingBuffer = new CARingBuffer();
 
-	kern_return_t err = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
-	if(KERN_SUCCESS != err) {
+	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
+	if(KERN_SUCCESS != result) {
 #if DEBUG
-		mach_error((char *)"semaphore_create", err);
+		mach_error((char *)"semaphore_create", result);
 #endif
 	}
+	
+	int success = pthread_mutex_init(&mMutex, NULL);
+	if(0 != success)
+		ERR("pthread_mutex_init failed: %i", success);
 	
 	CreateAUGraph();
 }
@@ -165,8 +164,24 @@ AudioPlayer::~AudioPlayer()
 {
 	DisposeAUGraph();
 	
+
+	if(mQueue)
+		delete mQueue, mQueue = NULL;
+
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
+	
+	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
+	if(KERN_SUCCESS != result) {
+#if DEBUG
+		mach_error((char *)"semaphore_destroy", result);
+#endif
+	}
+	
+	int success = pthread_mutex_destroy(&mMutex);
+	
+	if(0 != success)
+		ERR("pthread_mutex_destroy failed: %i", success);
 }
 
 #pragma mark Playback Control
@@ -356,7 +371,20 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 
-	d = decoder;
+	int lockResult = pthread_mutex_lock(&mMutex);
+	
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		
+		return false;
+	}
+	
+	mQueue->push_back(decoder);
+	
+	lockResult = pthread_mutex_unlock(&mMutex);
+
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
 	
 	OSStatus result = SetAUGraphFormat(decoder->GetFormat());
 
@@ -400,6 +428,21 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	 return NO;
 	 */
 	
+	int lockResult = pthread_mutex_lock(&mMutex);
+	
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		
+		return false;
+	}
+	
+	mQueue->push_back(decoder);
+	
+	lockResult = pthread_mutex_unlock(&mMutex);
+	
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
+
 	return false;
 }
 
@@ -464,16 +507,27 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 void * AudioPlayer::FileReaderThreadEntry()
 {
-	if(false == setThreadPolicy(FEEDER_THREAD_IMPORTANCE)) {
-#if DEBUG
-		perror("Couldn't set feeder thread importance");
-#endif
+	if(false == setThreadPolicy(FEEDER_THREAD_IMPORTANCE))
+		ERR("Couldn't set feeder thread importance");
+	
+	int lockResult = pthread_mutex_lock(&mMutex);
+	
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		
+		// Stop now, to avoid risking data corruption
+		return NULL;
 	}
 	
-	AudioDecoder *decoder = d;
+	AudioDecoder& decoder = mQueue->front();
+	
+	lockResult = pthread_mutex_unlock(&mMutex);
+	
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
 	
 	// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
-	AudioStreamBasicDescription formatDescription = decoder->GetFormat();
+	AudioStreamBasicDescription formatDescription = decoder.GetFormat();
 	AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1)), 1));
 	
 	bufferList->mNumberBuffers = formatDescription.mChannelsPerFrame;
@@ -501,26 +555,18 @@ void * AudioPlayer::FileReaderThreadEntry()
 			
 			// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
 			if(framesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES) {
-				SInt64 startingFrameNumber = decoder->CurrentFrame();
+				SInt64 startingFrameNumber = decoder.GetCurrentFrame();
 				
 				// Read the input chunk
-				UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+				UInt32 framesDecoded = decoder.ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 				
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber) {
 					LOG("Starting decoding");
-					//				OSAtomicCompareAndSwap32(0, 1, &_decodingStarted);
-					//				
-					//				if(_owner && [_owner respondsToSelector:@selector(bufferStartedDecoding:)])
-					//					[_owner performSelectorOnMainThread:@selector(bufferStartedDecoding:) withObject:self waitUntilDone:NO];
 				}
 				
 				// Store the decoded audio
 				if(0 != framesDecoded) {
-#if USE_CAMUTEX
-					CAMutex::Locker lock(*(PRIVATE_DATA->_mutex));
-#endif
-					
 					// Copy the decoded audio to the ring buffer
 					CARingBufferError rbResult = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + ringBufferOffset);
 					if(kCARingBufferError_OK != rbResult)
@@ -531,10 +577,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 				
 				// If no frames were returned, this is the end of stream
 				if(0 == framesDecoded) {
-					//				OSAtomicCompareAndSwap32(0, 1, &_decodingFinished);
-					//				
-					//				if(_owner && [_owner respondsToSelector:@selector(bufferFinishedDecoding:)])
-					//					[_owner performSelectorOnMainThread:@selector(bufferFinishedDecoding:) withObject:self waitUntilDone:NO];
+					LOG("Finished decoding");
 
 					finished = true;
 					
