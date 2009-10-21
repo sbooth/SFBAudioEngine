@@ -327,7 +327,7 @@ CFStringRef AudioDecoder::GetSourceFormatDescription()
 																					 &mSourceFormatDescription);
 
 	if(noErr != result)
-		DEBUG_LOG("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
+		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
 	
 	return mSourceFormatDescription;
 }
@@ -345,7 +345,7 @@ CFStringRef AudioDecoder::GetFormatDescription()
 														 &mFormatDescription);
 
 	if(noErr != result)
-		DEBUG_LOG("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
+		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
 	
 	return mFormatDescription;
 }
@@ -363,7 +363,7 @@ CFStringRef AudioDecoder::GetChannelLayoutDescription()
 														 &mChannelLayoutDescription);
 
 	if(noErr != result)
-		DEBUG_LOG("AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
+		ERR("AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %i (%.4s)", result, reinterpret_cast<const char *> (&result));
 	
 	return mChannelLayoutDescription;
 }

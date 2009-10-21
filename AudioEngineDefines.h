@@ -29,11 +29,13 @@
 
 
 #if DEBUG
+#  define LOG(format, args ...) fprintf(stderr, format "\n", ## args)
 #  ifdef __cplusplus
-#    define DEBUG_LOG(format, args ...) fprintf(stderr, "%s: (%s:%i): " format "\n", __PRETTY_FUNCTION__, __FILE__, __LINE__, ## args)
+#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __PRETTY_FUNCTION__, __FILE__, __LINE__, ## args)
 #  else
-#    define DEBUG_LOG(format, args ...) fprintf(stderr, "%s: (%s:%i): " format "\n", __func__, __FILE__, __LINE__, ## args)
+#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __func__, __FILE__, __LINE__, ## args)
 #  endif
 #else
-#  define DEBUG_LOG(format, args ...)
+#  define LOG(format, args ...)
+#  define ERR(format, args ...)
 #endif
