@@ -32,19 +32,6 @@
 
 
 // ========================================
-// CFError domain and codes
-// ========================================
-extern CFStringRef const AudioDecoderErrorDomain;
-
-enum {
-	AudioDecoderFileNotFoundError				= 0,
-	AudioDecoderFileFormatNotRecognizedError	= 1,
-	AudioDecoderFileFormatNotSupportedError		= 2,
-	AudioDecoderInputOutputError				= 3
-};
-
-
-// ========================================
 // Abstract superclass for an audio decoder
 // A decoder is responsible for reading audio data in some format and providing
 // it as 32-bit float non-interleaved PCM (canonical Core Audio format)
@@ -60,20 +47,23 @@ public:
 	static bool HandlesMIMEType(CFStringRef)				{ return false; }
 	
 	// ========================================
-	// Return an AudioDecoder of the appropriate class
-	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForMIMEType(CFStringRef mimeType, CFErrorRef *error = NULL);
+	// Factory method- returns an AudioDecoder for the specified URL, or NULL on failure
+	static AudioDecoder * CreateDecoderForURL(CFURLRef url);
 	
 	// ========================================
 	// Creation
-	AudioDecoder(CFURLRef url, CFErrorRef *error = NULL);
-	
+	AudioDecoder(CFURLRef url);
+
 	// ========================================
 	// Destruction
 	virtual ~AudioDecoder();
 	
 	// ========================================
-	// The stream this decoder will process
+	// Is this decoder valid?
+	virtual bool IsValid()									{ return NULL != mURL; }
+	
+	// ========================================
+	// The URL this decoder will process
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
@@ -88,7 +78,7 @@ public:
 	
 	// ========================================
 	// The layout of the channels this decoder provides
-	inline AudioChannelLayout ChannelLayout()				{ return mChannelLayout; }
+	inline AudioChannelLayout GetChannelLayout()			{ return mChannelLayout; }
 	CFStringRef GetChannelLayoutDescription();
 	
 	// ========================================
@@ -97,9 +87,9 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual SInt64 TotalFrames() = 0;
-	virtual SInt64 CurrentFrame() = 0;
-	inline SInt64 FramesRemaining()							{ return TotalFrames() - CurrentFrame(); }
+	virtual SInt64 GetTotalFrames() = 0;
+	virtual SInt64 GetCurrentFrame() = 0;
+	inline SInt64 GetFramesRemaining()						{ return GetTotalFrames() - GetCurrentFrame(); }
 	
 	// ========================================
 	// Seeking support

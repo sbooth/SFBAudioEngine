@@ -57,13 +57,14 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		if(CFEqual(extension, CFArrayGetValueAtIndex(supportedExtensions, currentIndex))) {
+		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
 			extensionIsSupported = true;
 			break;
 		}
 	}
 		
-	CFRelease(supportedExtensions);
+	CFRelease(supportedExtensions), supportedExtensions = NULL;
 	
 	return extensionIsSupported;
 }
@@ -90,13 +91,14 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
-		if(CFEqual(mimeType, CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex))) {
+		CFStringRef currentMIMEType = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex));
+		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
 			mimeTypeIsSupported = true;
 			break;
 		}
 	}
 	
-	CFRelease(supportedMIMETypes);
+	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
 	
 	return mimeTypeIsSupported;
 }
@@ -105,46 +107,14 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-CoreAudioDecoder::CoreAudioDecoder(CFURLRef url, CFErrorRef *error)
-	: AudioDecoder(url, error), mExtAudioFile(NULL)
+CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
+	: AudioDecoder(url), mExtAudioFile(NULL)
 {
 	// Open the input file		
 	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
 	if(noErr != result) {
 		ERR("ExtAudioFileOpenURL failed: %i", result);
 
-		if(NULL != error) {
-			CFStringRef displayName = NULL;
-			result = LSCopyDisplayNameForURL(mURL, &displayName);
-
-			if(noErr != result)
-				displayName = CFURLCopyLastPathComponent(mURL);
-
-			CFStringRef errorDescription = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("The format of the file \"%@\" was not recognized."), displayName);
-
-			CFTypeRef userInfoKeys [] = {
-				kCFErrorLocalizedDescriptionKey,
-				kCFErrorLocalizedFailureReasonKey,
-				kCFErrorLocalizedRecoverySuggestionKey
-			};
-
-			CFTypeRef userInfoValues [] = {
-				errorDescription,
-				CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""),
-				CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "")
-			};
-						
-			*error = CFErrorCreateWithUserInfoKeysAndValues(kCFAllocatorDefault,
-															AudioDecoderErrorDomain,
-															AudioDecoderInputOutputError, 
-															(const void * const *)&userInfoKeys, 
-															(const void * const *)&userInfoValues,
-															3);
-			
-			CFRelease(displayName);
-			CFRelease(errorDescription);
-		}
-		
 		return;
 	}
 	
@@ -153,12 +123,14 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url, CFErrorRef *error)
 	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileDataFormat, &dataSize, &mSourceFormat);
 	if(noErr != result) {
 		ERR("ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %i", result);
+
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
 		
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault,
-								   kCFErrorDomainOSStatus,
-								   result,
-								   NULL);
+		mExtAudioFile = NULL;
+		
+		return;
 	}
 			
 	// Tell the ExtAudioFile the format in which we'd like our data
@@ -168,12 +140,14 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url, CFErrorRef *error)
 	result = ExtAudioFileSetProperty(mExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(mFormat), &mFormat);
 	if(noErr != result) {
 		ERR("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %i", result);
+
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
 		
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault,
-								   kCFErrorDomainOSStatus,
-								   result,
-								   NULL);
+		mExtAudioFile = NULL;
+		
+		return;
 	}
 	
 	// Setup the channel layout
@@ -182,11 +156,13 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url, CFErrorRef *error)
 	if(noErr != result) {
 		ERR("ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %i", result);
 
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault,
-								   kCFErrorDomainOSStatus,
-								   result,
-								   NULL);
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
+		
+		mExtAudioFile = NULL;
+		
+		return;
 	}
 }
 
@@ -206,7 +182,7 @@ CoreAudioDecoder::~CoreAudioDecoder()
 #pragma mark Functionality
 
 
-SInt64 CoreAudioDecoder::TotalFrames()
+SInt64 CoreAudioDecoder::GetTotalFrames()
 {
 	SInt64 totalFrames = -1;
 	UInt32 dataSize = sizeof(totalFrames);
@@ -218,7 +194,7 @@ SInt64 CoreAudioDecoder::TotalFrames()
 	return totalFrames;
 }
 
-SInt64 CoreAudioDecoder::CurrentFrame()
+SInt64 CoreAudioDecoder::GetCurrentFrame()
 {
 	SInt64 currentFrame = -1;
 	
@@ -232,7 +208,7 @@ SInt64 CoreAudioDecoder::CurrentFrame()
 SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
-	assert(frame < this->TotalFrames());
+	assert(frame < this->GetTotalFrames());
 	
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
@@ -241,7 +217,7 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 		return -1;
 	}
 	
-	return this->CurrentFrame();
+	return this->GetCurrentFrame();
 }
 
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
