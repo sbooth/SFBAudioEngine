@@ -1,19 +1,28 @@
 /*
  *  Copyright (C) 2006 - 2009 Stephen F. Booth <me@sbooth.org>
+ *  All Rights Reserved.
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *      * Redistributions of source code must retain the above copyright
+ *        notice, this list of conditions and the following disclaimer.
+ *      * Redistributions in binary form must reproduce the above copyright
+ *        notice, this list of conditions and the following disclaimer in the
+ *        documentation and/or other materials provided with the distribution.
+ *      * Neither the name of Stephen F. Booth nor the
+ *        names of its contributors may be used to endorse or promote products
+ *        derived from this software without specific prior written permission.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  THIS SOFTWARE IS PROVIDED BY STEPHEN F. BOOTH ''AS IS'' AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *  DISCLAIMED. IN NO EVENT SHALL STEPHEN F. BOOTH BE LIABLE FOR ANY
+ *  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ *  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <libkern/OSAtomic.h>
@@ -24,6 +33,7 @@
 #include <mach/semaphore.h>
 #include <mach/sync_policy.h>
 
+#include "AudioEngineDefines.h"
 #include "AudioPlayer.h"
 #include "CoreAudioDecoder.h"
 
@@ -41,7 +51,7 @@
 // ========================================
 // Constants
 // ========================================
-CFStringRef const AudioPlayerErrorDomain = CFSTR("org.sbooth.Play.ErrorDomain.AudioPlayer");
+CFStringRef const AudioPlayerErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioPlayer");
 
 
 // ========================================
@@ -133,21 +143,6 @@ fileReaderEntry(void *arg)
 	return player->FileReaderThreadEntry();
 }
 
-static inline void 
-CFLog(CFStringRef format, ...)
-{
-	va_list args;
-	va_start(args, format);
-	
-	CFStringRef message = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault,
-															   NULL,
-															   format,
-															   args);
-	
-	CFShow(message);
-	CFRelease(message);
-}
-
 
 #pragma mark Creation/Destruction
 
@@ -183,11 +178,8 @@ void AudioPlayer::Play()
 	
 	OSStatus result = AUGraphStart(mAUGraph);
 
-	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphStart failed: %i"), result);
-#endif
-	}
+	if(noErr != result)
+		DEBUG_LOG("AUGraphStart failed: %i", result);
 }
 
 void AudioPlayer::Pause()
@@ -197,11 +189,8 @@ void AudioPlayer::Pause()
 	
 	OSStatus result = AUGraphStop(mAUGraph);
 
-	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphStop failed: %i"), result);
-#endif
-	}
+	if(noErr != result)
+		DEBUG_LOG("AUGraphStop failed: %i", result);
 }
 
 void AudioPlayer::PlayPause()
@@ -222,11 +211,8 @@ bool AudioPlayer::IsPlaying()
 	Boolean isRunning = FALSE;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
 
-	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphIsRunning failed: %i"), result);
-#endif
-	}
+	if(noErr != result)
+		DEBUG_LOG("AUGraphIsRunning failed: %i", result);
 		
 	return isRunning;
 }
@@ -244,9 +230,8 @@ Float32 AudioPlayer::GetVolume()
 										&au);
 
 	if(noErr != auResult) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), auResult);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", auResult);
+		
 		return -1;
 	}
 	
@@ -257,11 +242,8 @@ Float32 AudioPlayer::GetVolume()
 												   0,
 												   &volume);
 	
-	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AudioUnitGetParameter (kHALOutputParam_Volume) failed: %i"), result);
-#endif
-	}
+	if(noErr != result)
+		DEBUG_LOG("AudioUnitGetParameter (kHALOutputParam_Volume) failed: %i", result);
 		
 	return volume;
 }
@@ -278,9 +260,8 @@ bool AudioPlayer::SetVolume(Float32 volume)
 										&au);
 	
 	if(noErr != auResult) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), auResult);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", auResult);
+
 		return -1;
 	}
 	
@@ -292,9 +273,8 @@ bool AudioPlayer::SetVolume(Float32 volume)
 												   0);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AudioUnitSetParameter (kHALOutputParam_Volume) failed: %i"), result);
-#endif
+		DEBUG_LOG("AudioUnitSetParameter (kHALOutputParam_Volume) failed: %i", result);
+
 		return false;
 	}
 	
@@ -313,9 +293,8 @@ Float32 AudioPlayer::GetPreGain()
 										&au);
 	
 	if(noErr != auResult) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), auResult);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", auResult);
+
 		return -1;
 	}
 
@@ -326,11 +305,8 @@ Float32 AudioPlayer::GetPreGain()
 												   0,
 												   &preGain);
 	
-	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AudioUnitGetParameter (kLimiterParam_PreGain) failed: %i"), result);
-#endif
-	}
+	if(noErr != result)
+		DEBUG_LOG("AudioUnitGetParameter (kLimiterParam_PreGain) failed: %i", result);
 	
 	return preGain;
 }
@@ -347,9 +323,8 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 									  &au);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 		return false;
 	}
 	
@@ -367,9 +342,8 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 							 0);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUParameterSet (kLimiterParam_PreGain) failed: %i"), result);
-#endif
+		DEBUG_LOG("AUParameterSet (kLimiterParam_PreGain) failed: %i", result);
+
 		return false;
 	}
 	
@@ -387,9 +361,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	OSStatus result = SetAUGraphFormat(decoder->GetFormat());
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("SetAUGraphFormat failed: %i"), result);
-#endif
+		DEBUG_LOG("SetAUGraphFormat failed: %i", result);
 		
 		return false;
 	}
@@ -464,9 +436,8 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	UInt32 framesToRead = framesAvailableToRead < inNumberFrames ? framesAvailableToRead : inNumberFrames;
 	CARingBufferError rbResult = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != rbResult) {
-#if DEBUG
-		CFLog(CFSTR("AudioPlayer::Render error: CARingBuffer::Fetch() failed (%i)"), rbResult);
-#endif
+		DEBUG_LOG("CARingBuffer::Fetch() failed: %i", rbResult);
+
 		return ioErr;
 	}
 
@@ -537,6 +508,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 				
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber) {
+					DEBUG_LOG("Starting decoding");
 					//				OSAtomicCompareAndSwap32(0, 1, &_decodingStarted);
 					//				
 					//				if(_owner && [_owner respondsToSelector:@selector(bufferStartedDecoding:)])
@@ -550,12 +522,9 @@ void * AudioPlayer::FileReaderThreadEntry()
 #endif
 					
 					// Copy the decoded audio to the ring buffer
-					CARingBufferError rbErr = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + ringBufferOffset);
-					if(kCARingBufferError_OK != rbErr) {
-#if DEBUG
-						//					NSLog(@"BufferedAudioRegion <%p> error: CARingBuffer::Store() failed (%i)", self, rbErr);
-#endif
-					}
+					CARingBufferError rbResult = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + ringBufferOffset);
+					if(kCARingBufferError_OK != rbResult)
+						DEBUG_LOG("CARingBuffer::Store() failed: %i", rbResult);
 					
 					OSAtomicAdd64/*Barrier*/(framesDecoded, &mFramesDecoded);
 				}
@@ -599,9 +568,8 @@ OSStatus AudioPlayer::CreateAUGraph()
 	OSStatus result = NewAUGraph(&mAUGraph);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("NewAUGraph failed: %i"), result);
-#endif
+		DEBUG_LOG("NewAUGraph failed: %i", result);
+
 		return result;
 	}
 	
@@ -619,9 +587,8 @@ OSStatus AudioPlayer::CreateAUGraph()
 	result = AUGraphAddNode(mAUGraph, &desc, &mLimiterNode);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphAddNode failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphAddNode failed: %i", result);
+
 		return result;
 	}
 	
@@ -635,18 +602,16 @@ OSStatus AudioPlayer::CreateAUGraph()
 	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphAddNode failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphAddNode failed: %i", result);
+
 		return result;
 	}
 	
 	result = AUGraphConnectNodeInput(mAUGraph, mLimiterNode, 0, mOutputNode, 0);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphConnectNodeInput failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphConnectNodeInput failed: %i", result);
+
 		return result;
 	}
 	
@@ -655,9 +620,8 @@ OSStatus AudioPlayer::CreateAUGraph()
 	result = AUGraphSetNodeInputCallback(mAUGraph, mLimiterNode, 0, &cbs);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphSetNodeInputCallback failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphSetNodeInputCallback failed: %i", result);
+
 		return result;
 	}
 	
@@ -665,9 +629,8 @@ OSStatus AudioPlayer::CreateAUGraph()
 	result = AUGraphOpen(mAUGraph);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphOpen failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphOpen failed: %i", result);
+
 		return result;
 	}
 	
@@ -675,9 +638,8 @@ OSStatus AudioPlayer::CreateAUGraph()
 	result = AUGraphInitialize(mAUGraph);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphInitialize failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphInitialize failed: %i", result);
+
 		return result;
 	}
 	
@@ -692,9 +654,8 @@ OSStatus AudioPlayer::DisposeAUGraph()
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphIsRunning failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphIsRunning failed: %i", result);
+
 		return result;
 	}
 	
@@ -702,9 +663,8 @@ OSStatus AudioPlayer::DisposeAUGraph()
 		result = AUGraphStop(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphStop failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphStop failed: %i", result);
+
 			return result;
 		}
 	}
@@ -713,9 +673,8 @@ OSStatus AudioPlayer::DisposeAUGraph()
 	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphIsInitialized failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphIsInitialized failed: %i", result);
+
 		return result;
 	}
 	
@@ -723,9 +682,8 @@ OSStatus AudioPlayer::DisposeAUGraph()
 		result = AUGraphUninitialize(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphUninitialize failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphUninitialize failed: %i", result);
+
 			return result;
 		}
 	}
@@ -733,18 +691,16 @@ OSStatus AudioPlayer::DisposeAUGraph()
 	result = AUGraphClose(mAUGraph);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphClose failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphClose failed: %i", result);
+
 		return result;
 	}
 	
 	result = ::DisposeAUGraph(mAUGraph);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("DisposeAUGraph failed: %i"), result);
-#endif
+		DEBUG_LOG("DisposeAUGraph failed: %i", result);
+
 		return result;
 	}
 	
@@ -758,9 +714,8 @@ OSStatus AudioPlayer::ResetAUGraph()
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphGetNodeCount failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphGetNodeCount failed: %i", result);
+
 		return result;
 	}
 	
@@ -768,26 +723,23 @@ OSStatus AudioPlayer::ResetAUGraph()
 		AUNode node = 0;
 		result = AUGraphGetIndNode(mAUGraph, i, &node);
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphGetIndNode failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphGetIndNode failed: %i", result);
+
 			return result;
 		}
 		
 		AudioUnit au = NULL;
 		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 			return result;
 		}
 		
 		result = AudioUnitReset(au, kAudioUnitScope_Global, 0);
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AudioUnitReset failed: %i"), result);
-#endif
+			DEBUG_LOG("AudioUnitReset failed: %i", result);
+
 			return result;
 		}
 	}
@@ -802,9 +754,8 @@ Float64 AudioPlayer::GetAUGraphLatency()
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphGetNodeCount failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphGetNodeCount failed: %i", result);
+
 		return -1;
 	}
 	
@@ -813,9 +764,8 @@ Float64 AudioPlayer::GetAUGraphLatency()
 		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphGetIndNode failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphGetIndNode failed: %i", result);
+
 			return -1;
 		}
 		
@@ -823,9 +773,8 @@ Float64 AudioPlayer::GetAUGraphLatency()
 		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 			return -1;
 		}
 		
@@ -834,9 +783,8 @@ Float64 AudioPlayer::GetAUGraphLatency()
 		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &latency, &dataSize);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AudioUnitGetProperty (kAudioUnitProperty_Latency) failed: %i"), result);
-#endif
+			DEBUG_LOG("AudioUnitGetProperty failed: %i", result);
+
 			return -1;
 		}
 		
@@ -853,9 +801,8 @@ Float64 AudioPlayer::GetAUGraphTailTime()
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphGetNodeCount failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphGetNodeCount failed: %i", result);
+
 		return -1;
 	}
 	
@@ -864,9 +811,8 @@ Float64 AudioPlayer::GetAUGraphTailTime()
 		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
 		
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphGetIndNode failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphGetIndNode failed: %i", result);
+
 			return -1;
 		}
 		
@@ -874,9 +820,8 @@ Float64 AudioPlayer::GetAUGraphTailTime()
 		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
 		
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 			return -1;
 		}
 		
@@ -885,9 +830,8 @@ Float64 AudioPlayer::GetAUGraphTailTime()
 		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &tailTime, &dataSize);
 		
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AudioUnitGetProperty (kAudioUnitProperty_TailTime) failed: %i"), result);
-#endif
+			DEBUG_LOG("AudioUnitGetProperty (kAudioUnitProperty_TailTime) failed: %i", result);
+
 			return -1;
 		}
 		
@@ -906,9 +850,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphGetNodeCount failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphGetNodeCount failed: %i", result);
+
 		return result;
 	}
 	
@@ -918,9 +861,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 		result = AUGraphGetIndNode(mAUGraph, i, &node);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphGetIndNode failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphGetIndNode failed: %i", result);
+
 			return result;
 		}
 		
@@ -928,9 +870,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 			return result;
 		}
 		
@@ -939,9 +880,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 			result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, 0, propertyData, propertyDataSize);
 
 			if(noErr != result) {
-#if DEBUG
-				CFLog(CFSTR("AudioUnitSetProperty (%i) failed: %i"), propertyID, result);
-#endif
+				DEBUG_LOG("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+
 				return result;
 			}
 			
@@ -957,9 +897,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &elementCount, &dataSize);
 
 			if(noErr != result) {
-#if DEBUG
-				CFLog(CFSTR("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i"), result);
-#endif
+				DEBUG_LOG("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i", result);
+
 				return result;
 			}
 			
@@ -976,9 +915,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, j, propertyData, propertyDataSize);
 
 				if(noErr != result) {
-#if DEBUG
-					CFLog(CFSTR("AudioUnitSetProperty (%i) failed: %i"), propertyID, result);
-#endif
+					DEBUG_LOG("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+
 					return result;
 				}
 			}
@@ -988,9 +926,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Output, 0, &elementCount, &dataSize);
 
 			if(noErr != result) {
-#if DEBUG
-				CFLog(CFSTR("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i"), result);
-#endif
+				DEBUG_LOG("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i", result);
+
 				return result;
 			}
 			
@@ -1007,9 +944,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, j, propertyData, propertyDataSize);
 
 				if(noErr != result) {
-#if DEBUG
-					CFLog(CFSTR("AudioUnitSetProperty (%i) failed: %i"), propertyID, result);
-#endif
+					DEBUG_LOG("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+
 					return result;
 				}
 			}
@@ -1029,9 +965,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphIsRunning failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphIsRunning failed: %i", result);
+
 		return result;
 	}
 	
@@ -1039,9 +974,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = AUGraphStop(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphStop failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphStop failed: %i", result);
+
 			return result;
 		}
 	}
@@ -1052,9 +986,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphIsInitialized failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphIsInitialized failed: %i", result);
+
 		return result;
 	}
 	
@@ -1062,9 +995,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = AUGraphUninitialize(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphUninitialize failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphUninitialize failed: %i", result);
+
 			return result;
 		}
 	}
@@ -1075,9 +1007,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	result = AUGraphGetNumberOfInteractions(mAUGraph, &interactionCount);
 
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphGetNumberOfInteractions failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphGetNumberOfInteractions failed: %i", result);
+
 		return result;
 	}
 	
@@ -1089,10 +1020,10 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = AUGraphGetInteractionInfo(mAUGraph, i, &interactions[i]);
 
 		if(noErr != result) {
+			DEBUG_LOG("AUGraphGetInteractionInfo failed: %i", result);
+
 			free(interactions);
-#if DEBUG
-			CFLog(CFSTR("AUGraphGetInteractionInfo failed: %i"), result);
-#endif
+
 			return result;
 		}
 	}
@@ -1100,10 +1031,10 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	result = AUGraphClearConnections(mAUGraph);
 
 	if(noErr != result) {
+		DEBUG_LOG("AUGraphClearConnections failed: %i", result);
+
 		free(interactions);
-#if DEBUG
-		CFLog(CFSTR("AUGraphClearConnections failed: %i"), result);
-#endif
+		
 		return result;
 	}
 	
@@ -1116,11 +1047,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		// If the new format could not be set, restore the old format to ensure a working graph
 		OSStatus newErr = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mAUGraphFormat, sizeof(mAUGraphFormat));
 
-		if(noErr != newErr) {
-#if DEBUG
-			CFLog(CFSTR("AudioPlayer error: Unable to restore AUGraph format: %i"), newErr);
-#endif
-		}
+		if(noErr != newErr)
+			DEBUG_LOG("Unable to restore AUGraph format: %i", result);
 
 		// Do not free connections here, so graph can be rebuilt
 		result = newErr;
@@ -1144,10 +1072,10 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 												 interactions[i].nodeInteraction.connection.destInputNumber);
 
 				if(noErr != result) {
-#if DEBUG
-					CFLog(CFSTR("AUGraphConnectNodeInput failed: %i"), result);
-#endif
+					DEBUG_LOG("AUGraphConnectNodeInput failed: %i", result);
+
 					free(interactions), interactions = NULL;
+					
 					return result;
 				}
 				
@@ -1163,10 +1091,10 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 												  &interactions[i].nodeInteraction.inputCallback.cback);
 
 				if(noErr != result) {
-#if DEBUG
-					CFLog(CFSTR("AUGraphSetNodeInputCallback failed: %i"), result);
-#endif
+					DEBUG_LOG("AUGraphSetNodeInputCallback failed: %i", result);
+
 					free(interactions), interactions = NULL;
+					
 					return result;
 				}
 				
@@ -1182,9 +1110,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = AUGraphInitialize(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphIsRunning failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphInitialize failed: %i", result);
+
 			return result;
 		}
 	}
@@ -1194,9 +1121,8 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = AUGraphStart(mAUGraph);
 
 		if(noErr != result) {
-#if DEBUG
-			CFLog(CFSTR("AUGraphIsRunning failed: %i"), result);
-#endif
+			DEBUG_LOG("AUGraphStart failed: %i", result);
+
 			return result;
 		}
 	}
@@ -1240,9 +1166,8 @@ bool AudioPlayer::EnablePreGain(UInt32 flag)
 									  &au);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 		return false;
 	}
 	
@@ -1254,9 +1179,8 @@ bool AudioPlayer::EnablePreGain(UInt32 flag)
 								  sizeof(flag));
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AudioUnitSetProperty (kAudioUnitProperty_BypassEffect) failed: %i"), result);
-#endif
+		DEBUG_LOG("AudioUnitSetProperty (kAudioUnitProperty_BypassEffect) failed: %i", result);
+
 		return false;
 	}
 	
@@ -1272,9 +1196,8 @@ bool AudioPlayer::PreGainIsEnabled()
 									  &au);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+		DEBUG_LOG("AUGraphNodeInfo failed: %i", result);
+
 		return false;
 	}
 	
@@ -1289,9 +1212,8 @@ bool AudioPlayer::PreGainIsEnabled()
 								  &dataSize);
 	
 	if(noErr != result) {
-#if DEBUG
-		CFLog(CFSTR("AUGraphNodeInfo failed: %i"), result);
-#endif
+		DEBUG_LOG("AudioUnitGetProperty (kAudioUnitProperty_BypassEffect) failed: %i", result);
+
 		return false;
 	}
 	

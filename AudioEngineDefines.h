@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006 - 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -27,47 +27,13 @@
 
 #pragma once
 
-#include <AudioToolbox/ExtendedAudioFile.h>
-#include "AudioDecoder.h"
 
-
-// ========================================
-//
-// ========================================
-class CoreAudioDecoder : public AudioDecoder
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
-
-	// ========================================
-	// Creation
-	CoreAudioDecoder(CFURLRef url, CFErrorRef *error = NULL);
-	
-	// ========================================
-	// Destruction
-	virtual ~CoreAudioDecoder();
-
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-	
-	// ========================================
-	// Source audio information
-	virtual SInt64 TotalFrames();
-	virtual SInt64 CurrentFrame();
-	
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
-	virtual SInt64 SeekToFrame(SInt64 frame);
-	
-private:
-	
-	ExtAudioFileRef mExtAudioFile;
-	
-};
+#if DEBUG
+#  ifdef __cplusplus
+#    define DEBUG_LOG(format, args ...) fprintf(stderr, "%s: (%s:%i): " format "\n", __PRETTY_FUNCTION__, __FILE__, __LINE__, ## args)
+#  else
+#    define DEBUG_LOG(format, args ...) fprintf(stderr, "%s: (%s:%i): " format "\n", __func__, __FILE__, __LINE__, ## args)
+#  endif
+#else
+#  define DEBUG_LOG(format, args ...)
+#endif
