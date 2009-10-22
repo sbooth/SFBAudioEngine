@@ -32,7 +32,7 @@
 
 
 // ========================================
-//
+// An AudioDecoder subclass supporting all formats handled by Core Audio
 // ========================================
 class CoreAudioDecoder : public AudioDecoder
 {
