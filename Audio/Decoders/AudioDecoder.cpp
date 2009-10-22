@@ -89,14 +89,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 
 
 AudioDecoder::AudioDecoder()
-	: mURL(NULL), mFormat(), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
-{	
-}
-
-AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
 	: mURL(NULL), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
-{
-	*this = rhs;
+{	
 }
 
 AudioDecoder::AudioDecoder(CFURLRef url)
@@ -115,6 +109,12 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;		
+}
+
+AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
+: mURL(NULL), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
+{
+	*this = rhs;
 }
 
 AudioDecoder::~AudioDecoder()

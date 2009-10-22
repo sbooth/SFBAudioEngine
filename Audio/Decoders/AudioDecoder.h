@@ -42,18 +42,9 @@ class AudioDecoder
 public:
 	
 	// ========================================
-	// The data types handled by this class
-	static bool HandlesFilesWithExtension(CFStringRef)		{ return false; }
-	static bool HandlesMIMEType(CFStringRef)				{ return false; }
-	
-	// ========================================
 	// Factory method- returns an AudioDecoder for the specified URL, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url);
 	
-	// ========================================
-	// Creation
-	AudioDecoder(CFURLRef url);
-
 	// ========================================
 	// Destruction
 	virtual ~AudioDecoder();
@@ -108,6 +99,7 @@ protected:
 	// ========================================
 	// For subclass use only
 	AudioDecoder();
+	AudioDecoder(CFURLRef url);
 	AudioDecoder(const AudioDecoder& rhs);
 	AudioDecoder& operator=(const AudioDecoder& rhs);
 
