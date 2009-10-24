@@ -34,6 +34,7 @@
 #include "AudioEngineDefines.h"
 #include "AudioDecoder.h"
 #include "CoreAudioDecoder.h"
+#include "FLACDecoder.h"
 
 
 #pragma mark Static Methods
@@ -48,16 +49,33 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
-		CFStringRef pathExtension = CFURLCopyPathExtension(url);
+		// Verify the file exists
+		SInt32 errorCode = noErr;
+		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
 		
-		if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
-			decoder = new CoreAudioDecoder(url);
-
-			if(false == decoder->IsValid())
-				delete decoder, decoder = NULL;
+		if(NULL != fileExists) {
+			if(CFBooleanGetValue(fileExists)) {
+				CFStringRef pathExtension = CFURLCopyPathExtension(url);
+				
+				if(NULL != pathExtension) {
+					if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new CoreAudioDecoder(url);
+					else if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new FLACDecoder(url);
+					
+					if(NULL != decoder && false == decoder->IsValid())
+						delete decoder, decoder = NULL;
+					
+					CFRelease(pathExtension), pathExtension = NULL;
+				}				
+			}
+			else
+				LOG("The requested URL doesn't exist");
 		}
-		
-		CFRelease(pathExtension), pathExtension = NULL;
+		else
+			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		
+
+		CFRelease(fileExists), fileExists = NULL;
 	}
 	// Determine the MIME type for the URL
 	else {
