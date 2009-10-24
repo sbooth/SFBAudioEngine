@@ -1,29 +1,34 @@
 /*
- *  Copyright (C) 2006 - 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions are met:
- *      * Redistributions of source code must retain the above copyright
- *        notice, this list of conditions and the following disclaimer.
- *      * Redistributions in binary form must reproduce the above copyright
- *        notice, this list of conditions and the following disclaimer in the
- *        documentation and/or other materials provided with the distribution.
- *      * Neither the name of Stephen F. Booth nor the
- *        names of its contributors may be used to endorse or promote products
- *        derived from this software without specific prior written permission.
+ *  modification, are permitted provided that the following conditions are
+ *  met:
  *
- *  THIS SOFTWARE IS PROVIDED BY STEPHEN F. BOOTH ''AS IS'' AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *  DISCLAIMED. IN NO EVENT SHALL STEPHEN F. BOOTH BE LIABLE FOR ANY
- *  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *    - Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    - Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *    - Neither the name of Stephen F. Booth nor the names of its 
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include "boost/ptr_container/ptr_deque.hpp"
 
 #include <libkern/OSAtomic.h>
 #include <pthread.h>
@@ -35,7 +40,8 @@
 
 #include "AudioEngineDefines.h"
 #include "AudioPlayer.h"
-#include "CoreAudioDecoder.h"
+#include "AudioDecoder.h"
+#include "QueueData.h"
 
 #include "CARingBuffer.h"
 
@@ -46,6 +52,8 @@
 #define RING_BUFFER_SIZE_FRAMES					16384
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define FEEDER_THREAD_IMPORTANCE				6
+
+#define DECODER_QUEUE							static_cast<boost::ptr_deque<QueueData> *>(mDecoderQueue)
 
 
 // ========================================
@@ -114,6 +122,9 @@ setThreadPolicy(integer_t importance)
 	return true;
 }
 
+// ========================================
+// The AUGraph input callback
+// ========================================
 static OSStatus
 myAURenderCallback(void *							inRefCon,
 				   AudioUnitRenderActionFlags *		ioActionFlags,
@@ -124,16 +135,33 @@ myAURenderCallback(void *							inRefCon,
 {
 	assert(NULL != inRefCon);
 	
-	AudioPlayer *player = (AudioPlayer *)inRefCon;
+	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
 	return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
 
+static OSStatus
+auGraphDidRender(void *							inRefCon,
+				 AudioUnitRenderActionFlags *	ioActionFlags,
+				 const AudioTimeStamp *			inTimeStamp,
+				 UInt32							inBusNumber,
+				 UInt32							inNumberFrames,
+				 AudioBufferList *				ioData)
+{
+	assert(NULL != inRefCon);
+	
+	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+	return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
+}
+
+// ========================================
+// The file reader thread's entry point
+// ========================================
 static void *
 fileReaderEntry(void *arg)
 {
 	assert(NULL != arg);
 	
-	AudioPlayer *player = (AudioPlayer *)arg;
+	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
 	return player->FileReaderThreadEntry();
 }
 
@@ -141,9 +169,9 @@ fileReaderEntry(void *arg)
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mDecoderQueue(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mFrameCount(0)
 {
-	mQueue = new boost::ptr_vector<AudioDecoder>();
+	mDecoderQueue = new boost::ptr_deque<QueueData>();
 	mRingBuffer = new CARingBuffer();
 
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
@@ -165,8 +193,8 @@ AudioPlayer::~AudioPlayer()
 	DisposeAUGraph();
 	
 
-	if(mQueue)
-		delete mQueue, mQueue = NULL;
+	if(mDecoderQueue)
+		delete DECODER_QUEUE, mDecoderQueue = NULL;
 
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
@@ -219,6 +247,7 @@ void AudioPlayer::Stop()
 		return;
 
 	Pause();
+	ResetAUGraph();
 }
 
 bool AudioPlayer::IsPlaying()
@@ -379,7 +408,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 	
-	mQueue->push_back(decoder);
+	DECODER_QUEUE->push_back(new QueueData(decoder));
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 
@@ -394,6 +423,8 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 
+//	ResetAUGraph();
+
 	// Allocate enough space in the ring buffer for the new format
 	mRingBuffer->Allocate(decoder->GetFormat().mChannelsPerFrame,
 						  decoder->GetFormat().mBytesPerFrame,
@@ -405,7 +436,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	if(0 != pthread_create(&fileReaderThread, NULL, fileReaderEntry, this)) {
 		return false;
 	}
-	
+		
 	return true;
 }
 
@@ -436,7 +467,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	mQueue->push_back(decoder);
+	DECODER_QUEUE->push_back(new QueueData(decoder));
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
@@ -460,7 +491,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 #pragma unused(inBusNumber)
 	
 	assert(NULL != ioData);
-	
+
 	// If the ring buffer doesn't contain any valid audio, skip some work
 	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
 	if(0 == framesAvailableToRead) {
@@ -484,7 +515,8 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		return ioErr;
 	}
 
-	OSAtomicAdd64/*Barrier*/(framesToRead, &mFramesRendered);
+//	mFramesRenderedLastPass = framesToRead;
+	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 	
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesToRead != inNumberFrames) {
@@ -505,11 +537,45 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	return noErr;
 }
 
+OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
+								const AudioTimeStamp			*inTimeStamp,
+								UInt32							inBusNumber,
+								UInt32							inNumberFrames,
+								AudioBufferList					*ioData)
+{
+
+#pragma unused(inTimeStamp)
+#pragma unused(inBusNumber)
+#pragma unused(ioData)
+	
+	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
+
+//		QueueData& data = DECODER_QUEUE->front();
+		
+		AudioDecoder *decoder = static_cast<AudioDecoder *>(mCurrentDecoder);
+		
+		if(0 == decoder->GetCurrentFrame())
+			LOG("Rendering started");
+		
+//		data.mFramesRendered += mFramesRenderedLastPass;
+//		
+//		if(data.mFramesRendered == data.mDecoder->GetTotalFrames())
+//			LOG("Rendering finished");
+		
+	}
+	
+	return noErr;
+}
+
 void * AudioPlayer::FileReaderThreadEntry()
 {
+	// ========================================
+	// Make ourselves a high priority thread
 	if(false == setThreadPolicy(FEEDER_THREAD_IMPORTANCE))
 		ERR("Couldn't set feeder thread importance");
-	
+
+	// ========================================
+	// Lock the queue and remove the head element, which contains the next decoder to use
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
@@ -519,15 +585,20 @@ void * AudioPlayer::FileReaderThreadEntry()
 		return NULL;
 	}
 	
-	AudioDecoder& decoder = mQueue->front();
+	boost::ptr_deque<QueueData>::auto_type data = DECODER_QUEUE->pop_front();
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
-	
+
+	AudioDecoder *decoder = data->mDecoder;
+	mCurrentDecoder = decoder;
+	SInt64 startTime = 0;
+
+	// ========================================
 	// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
-	AudioStreamBasicDescription formatDescription = decoder.GetFormat();
+	AudioStreamBasicDescription formatDescription = decoder->GetFormat();
 	AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1)), 1));
 	
 	bufferList->mNumberBuffers = formatDescription.mChannelsPerFrame;
@@ -540,9 +611,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
-	
-	SInt64 ringBufferOffset = 0;
-	
+
+	// ========================================
 	// Decode the audio file in the ring buffer until finished or cancelled
 	bool finished = false;
 	while(false == finished) {
@@ -555,24 +625,24 @@ void * AudioPlayer::FileReaderThreadEntry()
 			
 			// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
 			if(framesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES) {
-				SInt64 startingFrameNumber = decoder.GetCurrentFrame();
+				SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 				
 				// Read the input chunk
-				UInt32 framesDecoded = decoder.ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+				UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 				
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber) {
 					LOG("Starting decoding");
 				}
-				
+								
 				// Store the decoded audio
 				if(0 != framesDecoded) {
 					// Copy the decoded audio to the ring buffer
-					CARingBufferError rbResult = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + ringBufferOffset);
+					CARingBufferError rbResult = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 					if(kCARingBufferError_OK != rbResult)
 						ERR("CARingBuffer::Store() failed: %i", rbResult);
 					
-					OSAtomicAdd64/*Barrier*/(framesDecoded, &mFramesDecoded);
+					OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 				}
 				
 				// If no frames were returned, this is the end of stream
@@ -594,6 +664,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 		semaphore_timedwait(mSemaphore, timeout);
 	}
 	
+	// ========================================
+	// Clean up
 	if(bufferList) {
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 			free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
@@ -686,7 +758,14 @@ OSStatus AudioPlayer::CreateAUGraph()
 		return result;
 	}
 	
-	// TODO: Install a render callback on the output node for more accurate tracking?
+	// Install the render notification
+	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
+
+	if(noErr != result) {
+		ERR("AUGraphAddRenderNotify failed: %i", result);
+		
+		return result;
+	}
 	
 	return noErr;
 }
@@ -1148,6 +1227,77 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	
 	free(interactions), interactions = NULL;
 	
+	// ========================================
+	// Output units perform sample rate conversion if the input sample rate is not equal to
+	// the output sample rate. For high sample rates, the sample rate conversion can require 
+	// more rendered frames than are available by default in kAudioUnitProperty_MaximumFramesPerSlice (512)
+	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 samples
+	// So if the input and output sample rates on the output device don't match, adjust 
+	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed
+
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mOutputNode, 
+							 NULL, 
+							 &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		
+		return result;
+	}
+
+	Float64 inputSampleRate = 0;
+	UInt32 dataSize = sizeof(inputSampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Input, 0, &inputSampleRate, &dataSize);
+
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_SampleRate) [kAudioUnitScope_Input] failed: %i", result);
+		
+		return result;
+	}
+	
+	Float64 outputSampleRate = 0;
+	dataSize = sizeof(outputSampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Output, 0, &outputSampleRate, &dataSize);
+
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_SampleRate) [kAudioUnitScope_Output] failed: %i", result);
+		
+		return result;
+	}
+	
+	if(inputSampleRate != outputSampleRate) {
+		LOG("Input sample rate (%f) and output sample rate (%f) don't match", inputSampleRate, outputSampleRate);
+
+		UInt32 currentMaxFrames = 0;
+		dataSize = sizeof(currentMaxFrames);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &currentMaxFrames, &dataSize);
+		
+		if(noErr != result) {
+			ERR("AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice) failed: %i", result);
+			
+			return result;
+		}
+		
+		Float64 ratio = inputSampleRate / outputSampleRate;
+		Float64 multiplier = std::max(1.0, ceil(ratio));
+		
+		// Round up to the nearest power of 16
+		UInt32 newMaxFrames = static_cast<UInt32>(currentMaxFrames * multiplier);
+		newMaxFrames += 16;
+		newMaxFrames &= 0xFFFFFFF0;
+
+		if(newMaxFrames > currentMaxFrames) {
+			LOG("Adjusting kAudioUnitProperty_MaximumFramesPerSlice to %d", newMaxFrames);
+			
+			result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames));
+			
+			if(noErr != result)
+				ERR("SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed: %i", result);
+		}
+	}
+
 	// If the graph was initialized, reinitialize it
 	if(graphIsInitialized) {
 		result = AUGraphInitialize(mAUGraph);
