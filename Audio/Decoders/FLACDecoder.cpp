@@ -75,14 +75,24 @@ bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);
 	
-	return (kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive));
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
+		return true;
+//	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
+//		return true;
+
+	return false;
 }
 
 bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);	
 	
-	return (kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive));
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
+		return true;
+//	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
+//		return true;
+	
+	return false;
 }
 
 
