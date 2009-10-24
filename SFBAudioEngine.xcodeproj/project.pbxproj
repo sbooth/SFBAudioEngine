@@ -187,8 +187,7 @@
 				322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */,
 				322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */,
 			);
-			name = Decoders;
-			path = Audio/Decoders;
+			path = Decoders;
 			sourceTree = "<group>";
 		};
 		322B5D76108C210400CA9BDE /* Player */ = {
