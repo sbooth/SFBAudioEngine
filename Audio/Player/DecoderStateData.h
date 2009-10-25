@@ -47,8 +47,9 @@ public:
 	AudioDecoder			*mDecoder;
 	AudioTimeStamp			mTimeStamp;
 	SInt64					mTotalFrames;
-	pthread_t				mDecodingThread;
 	volatile SInt64			mFramesRendered;
+
+	pthread_t				mDecodingThread;
 
 	DecoderStateData		*mNext;
 };

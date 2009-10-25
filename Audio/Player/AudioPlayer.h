@@ -43,7 +43,7 @@ class DecoderStateData;
 
 
 // ========================================
-//
+// An audio player class
 // ========================================
 class AudioPlayer
 {
@@ -66,8 +66,8 @@ public:
 	
 	// ========================================
 	// Seeking
-	void SkipForward()									{ SkipForward(3); }
-	void SkipBackward()									{ SkipBackward(3); }
+	inline void SkipForward()							{ SkipForward(3); }
+	inline void SkipBackward()							{ SkipBackward(3); }
 	void SkipForward(UInt32 seconds);
 	void SkipBackward(UInt32 seconds);
 		

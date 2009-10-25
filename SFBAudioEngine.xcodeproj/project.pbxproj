@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		3255602B1092A38F00580566 /* FLACDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325560291092A38F00580566 /* FLACDecoder.cpp */; };
 		3255602C1092A38F00580566 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
 		325560671092A89600580566 /* FLAC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
 		325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
 		32C212DA109111A100BA2493 /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
 		32C212DB109111A100BA2493 /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32C212DC109111A200BA2493 /* QueueData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* QueueData.cpp */; };
-		32C212DD109111A300BA2493 /* QueueData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* QueueData.h */; };
+		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
+		32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* DecoderStateData.h */; };
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
@@ -61,8 +62,8 @@
 /* Begin PBXFileReference section */
 		29B97316FDCFA39411CA2CEA /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		3201ECB810901F08000082BF /* QueueData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QueueData.h; sourceTree = "<group>"; };
-		3201ECB910901F08000082BF /* QueueData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QueueData.cpp; sourceTree = "<group>"; };
+		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
+		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		322B5B2E108BA69F00CA9BDE /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -81,6 +82,7 @@
 		322B5D99108C223900CA9BDE /* CAAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAAtomic.h; sourceTree = "<group>"; };
 		322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAAutoDisposer.h; sourceTree = "<group>"; };
 		322B5D9B108C223900CA9BDE /* CABitOperations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CABitOperations.h; sourceTree = "<group>"; };
+		32379E8A1093D35700DD5B34 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
 		325560291092A38F00580566 /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACDecoder.cpp; sourceTree = "<group>"; };
 		3255602A1092A38F00580566 /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
 		325560661092A89600580566 /* FLAC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FLAC.framework; path = Frameworks/FLAC.framework; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 				32C381B8109117C50024EB87 /* CoreServices.framework in Frameworks */,
 				32C381C1109117D00024EB87 /* AudioUnit.framework in Frameworks */,
 				325560671092A89600580566 /* FLAC.framework in Frameworks */,
+				32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,6 +163,7 @@
 				32C381B7109117C50024EB87 /* CoreServices.framework */,
 				32C381C0109117D00024EB87 /* AudioUnit.framework */,
 				325560661092A89600580566 /* FLAC.framework */,
+				32379E8A1093D35700DD5B34 /* CoreAudio.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -195,8 +199,8 @@
 			children = (
 				322B5D80108C213800CA9BDE /* AudioPlayer.h */,
 				322B5D81108C213800CA9BDE /* AudioPlayer.cpp */,
-				3201ECB810901F08000082BF /* QueueData.h */,
-				3201ECB910901F08000082BF /* QueueData.cpp */,
+				3201ECB810901F08000082BF /* DecoderStateData.h */,
+				3201ECB910901F08000082BF /* DecoderStateData.cpp */,
 			);
 			name = Player;
 			path = Audio/Player;
@@ -230,7 +234,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32C212DB109111A100BA2493 /* AudioPlayer.h in Headers */,
-				32C212DD109111A300BA2493 /* QueueData.h in Headers */,
+				32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */,
 				32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */,
 				32C212E1109111A700BA2493 /* CoreAudioDecoder.h in Headers */,
 				32C212E2109111AC00BA2493 /* AudioEngineDefines.h in Headers */,
@@ -318,7 +322,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32C212DA109111A100BA2493 /* AudioPlayer.cpp in Sources */,
-				32C212DC109111A200BA2493 /* QueueData.cpp in Sources */,
+				32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */,
 				32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */,
 				32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */,
 				32C212E6109111B500BA2493 /* CARingBuffer.cpp in Sources */,

@@ -53,8 +53,6 @@
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define FEEDER_THREAD_IMPORTANCE				6
 
-//	#define DECODER_QUEUE							static_cast<boost::ptr_deque<QueueData> *>(mDecoderQueue)
-
 
 // ========================================
 // Utility functions
@@ -616,12 +614,11 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 
 #pragma mark Playlist Management
 
+
 bool AudioPlayer::Play(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 
-//	DecoderStateData *data = new DecoderStateData(decoder);
-	
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
@@ -658,9 +655,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	if(0 != pthread_create(&fileReaderThread, NULL, fileReaderEntry, this)) {
 		return false;
 	}
-	
-//	data->mDecodingThread = fileReaderThread;
-	
+
 	return true;
 }
 
@@ -683,21 +678,6 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	 return NO;
 	 */
 	
-	int lockResult = pthread_mutex_lock(&mMutex);
-	
-	if(0 != lockResult) {
-		ERR("pthread_mutex_lock failed: %i", lockResult);
-		
-		return false;
-	}
-	
-	mDecoderQueue.push_back(decoder);
-	
-	lockResult = pthread_mutex_unlock(&mMutex);
-	
-	if(0 != lockResult)
-		ERR("pthread_mutex_unlock failed: %i", lockResult);
-
 	return false;
 }
 
@@ -784,14 +764,20 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			return ioErr;
 		}
 		
-		if(0 == activeDecoder->mFramesRendered)
+		if(0 == activeDecoder->mFramesRendered) {
 			LOG("Rendering started");
+			
+			activeDecoder->mDecoder->PerformRenderingStartedCallback();
+		}
 
 		activeDecoder->mFramesRendered += mFramesRenderedLastPass;		
 //		OSAtomicAdd64Barrier(mFramesRenderedLastPass, &activeDecoder->mFramesRendered);
 				
 		if(activeDecoder->mFramesRendered == activeDecoder->mTotalFrames) {
 			LOG("Rendering finished");
+
+			activeDecoder->mDecoder->PerformRenderingFinishedCallback();
+
 			Stop();
 		}
 	}
@@ -830,16 +816,16 @@ void * AudioPlayer::FileReaderThreadEntry()
 	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 	decoderStateData->mDecodingThread = pthread_self();
 	
-	DecoderStateData *dd = mActiveDecoders;
-	if(NULL == dd) {
+	DecoderStateData *lastActiveDecoderStateData = mActiveDecoders;
+	if(NULL == lastActiveDecoderStateData) {
 		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders)))
 			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
 	}
 	else {
-		while(NULL != dd->mNext)
-			dd = dd->mNext;
+		while(NULL != lastActiveDecoderStateData->mNext)
+			lastActiveDecoderStateData = lastActiveDecoderStateData->mNext;
 
-		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&dd->mNext)))
+		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
 			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
 	}
 	
@@ -882,6 +868,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber) {
 					LOG("Starting decoding");
+
+					decoder->PerformDecodingStartedCallback();
 				}
 								
 				// Store the decoded audio
@@ -898,6 +886,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 				if(0 == framesDecoded) {
 					LOG("Finished decoding");
 
+					decoder->PerformDecodingFinishedCallback();
+					
 					finished = true;
 					
 					break;

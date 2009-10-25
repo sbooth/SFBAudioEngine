@@ -140,6 +140,7 @@ AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
 
 AudioDecoder::~AudioDecoder()
 {
+	LOG("AudioDecoder::~AudioDecoder()");
 	if(mURL)
 		CFRelease(mURL), mURL = NULL;
 
@@ -177,6 +178,9 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 	mFormat				= rhs.mFormat;
 	mChannelLayout		= rhs.mChannelLayout;
 	mSourceFormat		= rhs.mSourceFormat;
+
+	
+	memcpy(&mCallbacks, &rhs.mCallbacks, sizeof(rhs.mCallbacks));
 	
 	return *this;
 }
@@ -238,4 +242,54 @@ CFStringRef AudioDecoder::GetChannelLayoutDescription()
 		ERR("AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
 	
 	return mChannelLayoutDescription;
+}
+
+#pragma mark Callbacks
+
+void AudioDecoder::SetDecodingStartedCallback(AudioDecoderCallback callback, void *context)
+{
+	mCallbacks[0].mCallback = callback;
+	mCallbacks[0].mContext = context;
+}
+
+void AudioDecoder::SetDecodingFinishedCallback(AudioDecoderCallback callback, void *context)
+{
+	mCallbacks[1].mCallback = callback;
+	mCallbacks[1].mContext = context;
+}
+
+void AudioDecoder::SetRenderingStartedCallback(AudioDecoderCallback callback, void *context)
+{
+	mCallbacks[2].mCallback = callback;
+	mCallbacks[2].mContext = context;
+}
+
+void AudioDecoder::SetRenderingFinishedCallback(AudioDecoderCallback callback, void *context)
+{
+	mCallbacks[3].mCallback = callback;
+	mCallbacks[3].mContext = context;
+}
+
+void AudioDecoder::PerformDecodingStartedCallback()
+{
+	if(NULL != mCallbacks[0].mCallback)
+		mCallbacks[0].mCallback(mCallbacks[0].mContext, this);
+}
+
+void AudioDecoder::PerformDecodingFinishedCallback()
+{
+	if(NULL != mCallbacks[1].mCallback)
+		mCallbacks[1].mCallback(mCallbacks[1].mContext, this);
+}
+
+void AudioDecoder::PerformRenderingStartedCallback()
+{
+	if(NULL != mCallbacks[2].mCallback)
+		mCallbacks[2].mCallback(mCallbacks[2].mContext, this);
+}
+
+void AudioDecoder::PerformRenderingFinishedCallback()
+{
+	if(NULL != mCallbacks[3].mCallback)
+		mCallbacks[3].mCallback(mCallbacks[3].mContext, this);
 }

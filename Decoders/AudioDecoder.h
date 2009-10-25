@@ -35,12 +35,29 @@
 
 
 // ========================================
+// Typedefs
+// ========================================
+class AudioDecoder;
+typedef void
+(*AudioDecoderCallback)(void					*context,
+						const AudioDecoder		*decoder);
+
+
+struct AudioDecoderCallbackAndContext
+{
+	AudioDecoderCallback	mCallback;
+	void					*mContext;
+};
+
+// ========================================
 // Abstract superclass for an audio decoder
 // A decoder is responsible for reading audio data in some format and providing
 // it as 32-bit float non-interleaved PCM (canonical Core Audio format)
 // ========================================
 class AudioDecoder
 {
+	
+	friend class AudioPlayer;
 	
 public:
 	
@@ -90,6 +107,13 @@ public:
 	virtual bool SupportsSeeking()							{ return false; }
 	virtual SInt64 SeekToFrame(SInt64 /*frame*/)			{ return -1; }
 
+	// ========================================
+	// Callback support
+	void SetDecodingStartedCallback(AudioDecoderCallback callback, void *context);
+	void SetDecodingFinishedCallback(AudioDecoderCallback callback, void *context);
+	void SetRenderingStartedCallback(AudioDecoderCallback callback, void *context);
+	void SetRenderingFinishedCallback(AudioDecoderCallback callback, void *context);
+
 protected:
 
 	CFURLRef						mURL;				// The location of the stream to be decoded
@@ -108,6 +132,15 @@ protected:
 
 private:
 
+	// ========================================
+	// Callbacks for AudioPlayer use only
+	AudioDecoderCallbackAndContext	mCallbacks [4];
+	
+	void PerformDecodingStartedCallback();
+	void PerformDecodingFinishedCallback();
+	void PerformRenderingStartedCallback();
+	void PerformRenderingFinishedCallback();
+	
 	// Cached values
 	CFStringRef						mFormatDescription;
 	CFStringRef						mChannelLayoutDescription;
