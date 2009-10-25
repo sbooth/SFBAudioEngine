@@ -81,9 +81,17 @@ public:
 	bool SetPreGain(Float32 preGain);
 
 //	SInt64 GetCurrentFrame();
-	
+
 	// ========================================
-	// Playlist management
+	// Device Management
+	CFStringRef CreateOutputDeviceUID();
+	bool SetOutputDeviceUID(CFStringRef deviceUID);
+
+	Float64 GetOutputDeviceSampleRate();
+	bool SetOutputDeviceSampleRate(Float64 sampleRate);
+
+	// ========================================
+	// Playlist Management
 	bool Play(AudioDecoder *decoder);
 	bool Enqueue(AudioDecoder *decoder);
 
