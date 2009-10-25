@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "boost/ptr_container/ptr_deque.hpp"
+//#include "boost/ptr_container/ptr_deque.hpp"
 
 #include <libkern/OSAtomic.h>
 #include <pthread.h>
@@ -41,7 +41,7 @@
 #include "AudioEngineDefines.h"
 #include "AudioPlayer.h"
 #include "AudioDecoder.h"
-#include "QueueData.h"
+#include "DecoderStateData.h"
 
 #include "CARingBuffer.h"
 
@@ -53,7 +53,7 @@
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define FEEDER_THREAD_IMPORTANCE				6
 
-#define DECODER_QUEUE							static_cast<boost::ptr_deque<QueueData> *>(mDecoderQueue)
+//	#define DECODER_QUEUE							static_cast<boost::ptr_deque<QueueData> *>(mDecoderQueue)
 
 
 // ========================================
@@ -169,9 +169,9 @@ fileReaderEntry(void *arg)
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mFrameCount(0)
+	: mDecoderQueue(), mActiveDecoders(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mFrameCount(0)
 {
-	mDecoderQueue = new boost::ptr_deque<QueueData>();
+//	mDecoderQueue = new boost::ptr_deque<QueueData>();
 	mRingBuffer = new CARingBuffer();
 
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
@@ -193,8 +193,8 @@ AudioPlayer::~AudioPlayer()
 	DisposeAUGraph();
 	
 
-	if(mDecoderQueue)
-		delete DECODER_QUEUE, mDecoderQueue = NULL;
+//	if(mDecoderQueue)
+//		delete DECODER_QUEUE, mDecoderQueue = NULL;
 
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
@@ -620,6 +620,8 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 
+//	DecoderStateData *data = new DecoderStateData(decoder);
+	
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
@@ -628,7 +630,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 	
-	DECODER_QUEUE->push_back(new QueueData(decoder));
+	mDecoderQueue.push_back(decoder);
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 
@@ -656,7 +658,9 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	if(0 != pthread_create(&fileReaderThread, NULL, fileReaderEntry, this)) {
 		return false;
 	}
-		
+	
+//	data->mDecodingThread = fileReaderThread;
+	
 	return true;
 }
 
@@ -687,7 +691,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	DECODER_QUEUE->push_back(new QueueData(decoder));
+	mDecoderQueue.push_back(decoder);
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
@@ -706,10 +710,10 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 							 AudioBufferList				*ioData)
 {
 
-#pragma unused(ioActionFlags)
 #pragma unused(inTimeStamp)
 #pragma unused(inBusNumber)
 	
+	assert(NULL != ioActionFlags);
 	assert(NULL != ioData);
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
@@ -728,18 +732,20 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = framesAvailableToRead < inNumberFrames ? framesAvailableToRead : inNumberFrames;
-	CARingBufferError rbResult = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
-	if(kCARingBufferError_OK != rbResult) {
-		ERR("CARingBuffer::Fetch() failed: %i", rbResult);
+	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
+	if(kCARingBufferError_OK != result) {
+		ERR("CARingBuffer::Fetch() failed: %i", result);
 
 		return ioErr;
 	}
 
-//	mFramesRenderedLastPass = framesToRead;
+	mFramesRenderedLastPass = framesToRead;
 	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 	
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesToRead != inNumberFrames) {
+		LOG("Ring buffer contained insufficient data: %d / %d", framesToRead, inNumberFrames);
+		
 		UInt32 framesOfSilence = inNumberFrames - framesToRead;
 		size_t byteCountToZero = framesOfSilence * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
@@ -766,22 +772,28 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 #pragma unused(inTimeStamp)
 #pragma unused(inBusNumber)
+#pragma unused(inNumberFrames)
 #pragma unused(ioData)
 	
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
-//		QueueData& data = DECODER_QUEUE->front();
+		DecoderStateData *activeDecoder = mActiveDecoders;
 		
-		AudioDecoder *decoder = static_cast<AudioDecoder *>(mCurrentDecoder);
+		if(NULL == activeDecoder) {
+			ERR("NULL == activeDecoder");
+			return ioErr;
+		}
 		
-		if(0 == decoder->GetCurrentFrame())
+		if(0 == activeDecoder->mFramesRendered)
 			LOG("Rendering started");
-		
-//		data.mFramesRendered += mFramesRenderedLastPass;
-//		
-//		if(data.mFramesRendered == data.mDecoder->GetTotalFrames())
-//			LOG("Rendering finished");
-		
+
+		activeDecoder->mFramesRendered += mFramesRenderedLastPass;		
+//		OSAtomicAdd64Barrier(mFramesRenderedLastPass, &activeDecoder->mFramesRendered);
+				
+		if(activeDecoder->mFramesRendered == activeDecoder->mTotalFrames) {
+			LOG("Rendering finished");
+			Stop();
+		}
 	}
 	
 	return noErr;
@@ -805,15 +817,32 @@ void * AudioPlayer::FileReaderThreadEntry()
 		return NULL;
 	}
 	
-	boost::ptr_deque<QueueData>::auto_type data = DECODER_QUEUE->pop_front();
+	AudioDecoder *decoder = mDecoderQueue.front();
+	mDecoderQueue.pop_front();
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
 
-	AudioDecoder *decoder = data->mDecoder;
-	mCurrentDecoder = decoder;
+	// ========================================
+	// Create the decoder state and append to the list of active decoders
+	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
+	decoderStateData->mDecodingThread = pthread_self();
+	
+	DecoderStateData *dd = mActiveDecoders;
+	if(NULL == dd) {
+		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders)))
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+	}
+	else {
+		while(NULL != dd->mNext)
+			dd = dd->mNext;
+
+		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&dd->mNext)))
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
+	}
+	
 	SInt64 startTime = 0;
 
 	// ========================================
@@ -858,9 +887,9 @@ void * AudioPlayer::FileReaderThreadEntry()
 				// Store the decoded audio
 				if(0 != framesDecoded) {
 					// Copy the decoded audio to the ring buffer
-					CARingBufferError rbResult = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
-					if(kCARingBufferError_OK != rbResult)
-						ERR("CARingBuffer::Store() failed: %i", rbResult);
+					CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
+					if(kCARingBufferError_OK != result)
+						ERR("CARingBuffer::Store() failed: %i", result);
 					
 					OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 				}
@@ -1451,9 +1480,9 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	// Output units perform sample rate conversion if the input sample rate is not equal to
 	// the output sample rate. For high sample rates, the sample rate conversion can require 
 	// more rendered frames than are available by default in kAudioUnitProperty_MaximumFramesPerSlice (512)
-	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 samples
+	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 frames
 	// So if the input and output sample rates on the output device don't match, adjust 
-	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed
+	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
 
 	AudioUnit au = NULL;
 	result = AUGraphNodeInfo(mAUGraph, 
@@ -1513,8 +1542,11 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 			
 			result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames));
 			
-			if(noErr != result)
+			if(noErr != result) {
 				ERR("SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed: %i", result);
+				
+				return result;
+			}
 		}
 	}
 

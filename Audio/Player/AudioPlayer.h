@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include <deque>
 #include <AudioToolbox/AudioToolbox.h>
 
 
@@ -38,6 +39,7 @@
 // ========================================
 class AudioDecoder;
 class CARingBuffer;
+class DecoderStateData;
 
 
 // ========================================
@@ -107,8 +109,8 @@ private:
 	AUNode								mLimiterNode;
 	AUNode								mOutputNode;
 	
-	void								*mDecoderQueue;
-	void								*mCurrentDecoder;
+	std::deque<AudioDecoder *>			mDecoderQueue;
+	DecoderStateData					*mActiveDecoders;
 	
 	CARingBuffer						*mRingBuffer;
 	pthread_mutex_t						mMutex;
