@@ -158,7 +158,7 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1)), 1));
+	mBufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
 	
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
