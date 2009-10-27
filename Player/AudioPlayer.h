@@ -32,6 +32,7 @@
 
 #include <deque>
 #include <AudioToolbox/AudioToolbox.h>
+#include "AudioDecoderInterface.h"
 
 
 // ========================================
@@ -123,7 +124,6 @@ private:
 	SInt64								mFramesDecoded;
 	SInt64								mFramesRendered;
 	UInt32								mFramesRenderedLastPass;
-	SInt64								mFrameCount;
 	
 	// ========================================
 	// AUGraph Utilities

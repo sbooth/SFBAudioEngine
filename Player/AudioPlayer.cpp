@@ -28,8 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#include "boost/ptr_container/ptr_deque.hpp"
-
 #include <libkern/OSAtomic.h>
 #include <pthread.h>
 #include <mach/thread_act.h>
@@ -58,26 +56,26 @@
 // Utility functions
 // ========================================
 static bool
-channelLayoutsAreEqual(AudioChannelLayout *layoutA,
-					   AudioChannelLayout *layoutB)
+channelLayoutsAreEqual(AudioChannelLayout *lhs,
+					   AudioChannelLayout *rhs)
 {
-	assert(NULL != layoutA);
-	assert(NULL != layoutB);
+	assert(NULL != lhs);
+	assert(NULL != rhs);
 	
 	// First check if the tags are equal
-	if(layoutA->mChannelLayoutTag != layoutB->mChannelLayoutTag)
+	if(lhs->mChannelLayoutTag != rhs->mChannelLayoutTag)
 		return false;
 	
 	// If the tags are equal, check for special values
-	if(kAudioChannelLayoutTag_UseChannelBitmap == layoutA->mChannelLayoutTag)
-		return (layoutA->mChannelBitmap == layoutB->mChannelBitmap);
+	if(kAudioChannelLayoutTag_UseChannelBitmap == lhs->mChannelLayoutTag)
+		return (lhs->mChannelBitmap == rhs->mChannelBitmap);
 	
-	if(kAudioChannelLayoutTag_UseChannelDescriptions == layoutA->mChannelLayoutTag) {
-		if(layoutA->mNumberChannelDescriptions != layoutB->mNumberChannelDescriptions)
+	if(kAudioChannelLayoutTag_UseChannelDescriptions == lhs->mChannelLayoutTag) {
+		if(lhs->mNumberChannelDescriptions != rhs->mNumberChannelDescriptions)
 			return false;
 		
-		size_t bytesToCompare = layoutA->mNumberChannelDescriptions * sizeof(AudioChannelDescription);
-		return (0 == memcmp(&layoutA->mChannelDescriptions, &layoutB->mChannelDescriptions, bytesToCompare));
+		size_t bytesToCompare = lhs->mNumberChannelDescriptions * sizeof(AudioChannelDescription);
+		return (0 == memcmp(&lhs->mChannelDescriptions, &rhs->mChannelDescriptions, bytesToCompare));
 	}
 	
 	return true;
@@ -167,9 +165,8 @@ fileReaderEntry(void *arg)
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(), mActiveDecoders(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mFrameCount(0)
+	: mDecoderQueue(), mActiveDecoders(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
-//	mDecoderQueue = new boost::ptr_deque<QueueData>();
 	mRingBuffer = new CARingBuffer();
 
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
@@ -779,11 +776,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 //	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &channelLayout);
 
 	// The two files can be joined only if they have the same formats and channel layouts
-	if(false == formatsMatch /*|| false == channelLayoutsMatch*/) {
-		LOG("Enqueue() failed");
-		
+	if(false == formatsMatch /*|| false == channelLayoutsMatch*/)
 		return false;
-	}
 	
 	// Add the decoder to the queue
 	lockResult = pthread_mutex_lock(&mMutex);
@@ -917,7 +911,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 				
 				SInt64 nextDecoderFramesRemaining = nextDecoder->mTotalFrames - nextDecoder->mFramesRendered;
 				
-				if(framesRemainingToDistribute < nextDecoderFramesRemaining) {
+				if(framesRemainingToDistribute <= nextDecoderFramesRemaining) {
 					nextDecoder->mFramesRendered += framesRemainingToDistribute;
 					framesRemainingToDistribute = 0;
 				}
@@ -935,21 +929,18 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 		// Now remove any active decoders that have finished rendering
 		DecoderStateData *nextDecoder = activeDecoder;
-		while(NULL != nextDecoder) {
-			if(nextDecoder->mFramesRendered == nextDecoder->mTotalFrames) {
-				// Swap the next decoder in as the current active decoder since this one has finished
-				if(false == OSAtomicCompareAndSwapPtrBarrier(nextDecoder, nextDecoder->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
-					ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+		while(NULL != nextDecoder && nextDecoder->mFramesRendered == nextDecoder->mTotalFrames) {
+			// Swap the next decoder in as the current active decoder since this one has finished
+			if(false == OSAtomicCompareAndSwapPtrBarrier(nextDecoder, nextDecoder->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
+				ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
 
-				if(NULL == nextDecoder->mNext)
-					Stop();
-				
-//				delete nextDecoder;
-				
-				nextDecoder = mActiveDecoders;
-			}
-			else
-				nextDecoder = nextDecoder->mNext;
+			if(NULL == nextDecoder->mNext)
+				Stop();
+			
+			// This causes a crash, which appears to be multi-threading related. Haven't figured it out yet.
+			delete nextDecoder;
+			
+			nextDecoder = mActiveDecoders;
 		}
 	}
 	
@@ -1010,7 +1001,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 	// ========================================
 	// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
 	AudioStreamBasicDescription formatDescription = decoder->GetFormat();
-	AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1)), 1));
+	AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1))));
 	
 	bufferList->mNumberBuffers = formatDescription.mChannelsPerFrame;
 	
