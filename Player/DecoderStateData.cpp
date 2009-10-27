@@ -46,8 +46,13 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 	
 DecoderStateData::~DecoderStateData()
 {
-	LOG("DecoderStateData::~DecoderStateData()");
-
+//	if(static_cast<pthread_t>(0) != mDecodingThread) {
+//		int killResult = pthread_kill(mDecodingThread, SIGKILL);
+//		
+//		if(0 != killResult)
+//			ERR("pthread_kill failed: %i", killResult);
+//	}
+	
 	if(mDecoder)
 		delete mDecoder, mDecoder = NULL;
 }
