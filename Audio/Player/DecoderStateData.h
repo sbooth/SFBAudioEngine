@@ -40,16 +40,21 @@ class DecoderStateData
 	
 public:	
 
-	DecoderStateData();
 	DecoderStateData(AudioDecoder *decoder);
 	~DecoderStateData();
 	
 	AudioDecoder			*mDecoder;
-	AudioTimeStamp			mTimeStamp;
+	SInt64					mTimeStamp;
 	SInt64					mTotalFrames;
 	volatile SInt64			mFramesRendered;
 
 	pthread_t				mDecodingThread;
 
 	DecoderStateData		*mNext;
+	DecoderStateData		*mPrevious;
+	
+private:
+
+	DecoderStateData();
+
 };

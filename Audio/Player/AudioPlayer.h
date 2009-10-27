@@ -94,7 +94,11 @@ public:
 
 	// ========================================
 	// Playlist Management
+	// The player will take ownership of decoder
+	bool Play(CFURLRef url);
 	bool Play(AudioDecoder *decoder);
+	
+	bool Enqueue(CFURLRef url);
 	bool Enqueue(AudioDecoder *decoder);
 
 //	const AudioDecoder * GetCurrent();

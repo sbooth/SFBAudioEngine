@@ -246,6 +246,8 @@ void AudioPlayer::Stop()
 
 	Pause();
 	ResetAUGraph();
+	
+	// TODO: Clean up mActiveDecoders
 }
 
 bool AudioPlayer::IsPlaying()
@@ -615,6 +617,23 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 #pragma mark Playlist Management
 
 
+bool AudioPlayer::Play(CFURLRef url)
+{
+	assert(NULL != url);
+	
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	
+	if(NULL == decoder)
+		return false;
+	
+	bool success = Play(decoder);
+	
+	if(false == success)
+		delete decoder;
+	
+	return success;
+}
+
 bool AudioPlayer::Play(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
@@ -627,7 +646,7 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 	
-	mDecoderQueue.push_back(decoder);
+	mDecoderQueue.push_front(decoder);
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 
@@ -642,6 +661,14 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 
+	result = SetAUGraphChannelLayout(decoder->GetChannelLayout());
+	
+	if(noErr != result) {
+		ERR("SetAUGraphChannelLayout failed: %i", result);
+		
+		return false;
+	}
+	
 //	ResetAUGraph();
 
 	// Allocate enough space in the ring buffer for the new format
@@ -650,35 +677,131 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 						  RING_BUFFER_SIZE_FRAMES);
 
 	// Launch the reader thread for this decoder
-	pthread_t fileReaderThread;
+	pthread_t fileReaderThread;							
+	int creationResult = pthread_create(&fileReaderThread, NULL, fileReaderEntry, this);
+	
+	if(0 != creationResult) {
+		ERR("pthread_create failed: %i", creationResult);
 		
-	if(0 != pthread_create(&fileReaderThread, NULL, fileReaderEntry, this)) {
 		return false;
 	}
-
+	
 	return true;
+}
+
+bool AudioPlayer::Enqueue(CFURLRef url)
+{
+	assert(NULL != url);
+	
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	
+	if(NULL == decoder)
+		return false;
+	
+	bool success = Enqueue(decoder);
+	
+	if(false == success)
+		delete decoder;
+	
+	return success;
 }
 
 bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 	
-	/*
-	 AudioStreamBasicDescription		format				= [self format];
-	 AudioStreamBasicDescription		nextFormat			= [decoder format];
-	 
-	 AudioChannelLayout				channelLayout		= [self channelLayout];
-	 AudioChannelLayout				nextChannelLayout	= [decoder channelLayout];
-	 
-	 BOOL	formatsMatch			= (nextFormat.mSampleRate == format.mSampleRate && nextFormat.mChannelsPerFrame == format.mChannelsPerFrame);
-	 BOOL	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &channelLayout);
-	 
-	 // The two files can be joined only if they have the same formats and channel layouts
-	 if(NO == formatsMatch || NO == channelLayoutsMatch)
-	 return NO;
-	 */
+	// If there are no actve decoders and none in the queue, start this decoder immediately
+	int lockResult = pthread_mutex_lock(&mMutex);
 	
-	return false;
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		
+		return false;
+	}
+	
+	std::deque<AudioDecoder *>::size_type decoderQueueSize = mDecoderQueue.size();
+		
+	lockResult = pthread_mutex_unlock(&mMutex);
+		
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
+	
+	if(NULL == mActiveDecoders && 0 == decoderQueueSize)
+		return Play(decoder);
+	
+	// Otherwise, enqueue this decoder if the format matches
+	AudioUnit au = NULL;
+	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+										mOutputNode, 
+										NULL, 
+										&au);
+	
+	if(noErr != auResult) {
+		ERR("AUGraphNodeInfo failed: %i", auResult);
+		
+		return false;
+	}
+	
+	AudioStreamBasicDescription format;
+	UInt32 dataSize = sizeof(format);
+	ComponentResult result = AudioUnitGetProperty(au,
+												  kAudioUnitProperty_StreamFormat,
+												  kAudioUnitScope_Input,
+												  0,
+												  &format,
+												  &dataSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
+		
+		return false;
+	}
+
+/*	AudioChannelLayout channelLayout;
+	dataSize = sizeof(channelLayout);
+	result = AudioUnitGetProperty(au,
+								  kAudioUnitProperty_AudioChannelLayout,
+								  kAudioUnitScope_Input,
+								  0,
+								  &channelLayout,
+								  &dataSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_AudioChannelLayout) failed: %i", result);
+		
+		return false;
+	}*/
+	
+	AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
+//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
+
+	bool	formatsMatch			= (nextFormat.mSampleRate == format.mSampleRate && nextFormat.mChannelsPerFrame == format.mChannelsPerFrame);
+//	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &channelLayout);
+
+	// The two files can be joined only if they have the same formats and channel layouts
+	if(false == formatsMatch /*|| false == channelLayoutsMatch*/) {
+		LOG("Enqueue() failed");
+		
+		return false;
+	}
+	
+	// Add the decoder to the queue
+	lockResult = pthread_mutex_lock(&mMutex);
+	
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		
+		return false;
+	}
+	
+	mDecoderQueue.push_back(decoder);
+	
+	lockResult = pthread_mutex_unlock(&mMutex);
+	
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
+	
+	return true;
 }
 
 #pragma mark Callbacks
@@ -720,7 +843,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	}
 
 	mFramesRenderedLastPass = framesToRead;
-	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
+	OSAtomicAdd64/*Barrier*/(framesToRead, &mFramesRendered);
 	
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesToRead != inNumberFrames) {
@@ -754,7 +877,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 #pragma unused(inBusNumber)
 #pragma unused(inNumberFrames)
 #pragma unused(ioData)
-	
+
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
 		DecoderStateData *activeDecoder = mActiveDecoders;
@@ -764,21 +887,69 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			return ioErr;
 		}
 		
-		if(0 == activeDecoder->mFramesRendered) {
-			LOG("Rendering started");
+		// mFramesRenderedLastPass contains the number of valid frames that were rendered
+		// However, these could have come from any number of decoders depending on the buffer sizes
+		// So it is necessary to split them up here
+
+		SInt64 decoderFramesRemaining = activeDecoder->mTotalFrames - activeDecoder->mFramesRendered;
+		
+		// If the number of frames rendered was less than the number of frames remaining in the decoder,
+		// all of the rendered frames were from that decoder
+		if(mFramesRenderedLastPass <= decoderFramesRemaining) {
+			if(0 == activeDecoder->mFramesRendered)
+				activeDecoder->mDecoder->PerformRenderingStartedCallback();
 			
-			activeDecoder->mDecoder->PerformRenderingStartedCallback();
+			activeDecoder->mFramesRendered += mFramesRenderedLastPass;
+
+			if(activeDecoder->mFramesRendered == activeDecoder->mTotalFrames)
+				activeDecoder->mDecoder->PerformRenderingFinishedCallback();
+		}
+		// Otherwise, the frames are split among the active decoders (assuming no decoding errors occurred)
+		else {
+			activeDecoder->mFramesRendered += decoderFramesRemaining;
+			
+			SInt64 framesRemainingToDistribute = mFramesRenderedLastPass - decoderFramesRemaining;
+			
+			DecoderStateData *nextDecoder = activeDecoder->mNext;
+			while(NULL != nextDecoder && 0 < framesRemainingToDistribute) {
+				if(0 == nextDecoder->mFramesRendered)
+					nextDecoder->mDecoder->PerformRenderingStartedCallback();
+				
+				SInt64 nextDecoderFramesRemaining = nextDecoder->mTotalFrames - nextDecoder->mFramesRendered;
+				
+				if(framesRemainingToDistribute < nextDecoderFramesRemaining) {
+					nextDecoder->mFramesRendered += framesRemainingToDistribute;
+					framesRemainingToDistribute = 0;
+				}
+				else {
+					nextDecoder->mFramesRendered += nextDecoderFramesRemaining;
+					framesRemainingToDistribute -= nextDecoderFramesRemaining;
+				}
+				
+				if(nextDecoder->mFramesRendered == nextDecoder->mTotalFrames)
+					nextDecoder->mDecoder->PerformRenderingFinishedCallback();
+
+				nextDecoder = nextDecoder->mNext;
+			}
 		}
 
-		activeDecoder->mFramesRendered += mFramesRenderedLastPass;		
-//		OSAtomicAdd64Barrier(mFramesRenderedLastPass, &activeDecoder->mFramesRendered);
+		// Now remove any active decoders that have finished rendering
+		DecoderStateData *nextDecoder = activeDecoder;
+		while(NULL != nextDecoder) {
+			if(nextDecoder->mFramesRendered == nextDecoder->mTotalFrames) {
+				// Swap the next decoder in as the current active decoder since this one has finished
+				if(false == OSAtomicCompareAndSwapPtrBarrier(nextDecoder, nextDecoder->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
+					ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+
+				if(NULL == nextDecoder->mNext)
+					Stop();
 				
-		if(activeDecoder->mFramesRendered == activeDecoder->mTotalFrames) {
-			LOG("Rendering finished");
-
-			activeDecoder->mDecoder->PerformRenderingFinishedCallback();
-
-			Stop();
+//				delete nextDecoder;
+				
+				nextDecoder = mActiveDecoders;
+			}
+			else
+				nextDecoder = nextDecoder->mNext;
 		}
 	}
 	
@@ -819,17 +990,22 @@ void * AudioPlayer::FileReaderThreadEntry()
 	DecoderStateData *lastActiveDecoderStateData = mActiveDecoders;
 	if(NULL == lastActiveDecoderStateData) {
 		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders)))
-			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
 	}
 	else {
 		while(NULL != lastActiveDecoderStateData->mNext)
 			lastActiveDecoderStateData = lastActiveDecoderStateData->mNext;
 
-		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
-			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
+		lastActiveDecoderStateData->mNext	= decoderStateData;
+		decoderStateData->mPrevious			= lastActiveDecoderStateData;
+		
+//		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
+//			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
+		
+		decoderStateData->mTimeStamp = lastActiveDecoderStateData->mTimeStamp + lastActiveDecoderStateData->mTotalFrames;
 	}
 	
-	SInt64 startTime = 0;
+	SInt64 startTime = decoderStateData->mTimeStamp;
 
 	// ========================================
 	// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
@@ -866,11 +1042,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 				UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 				
 				// If this is the first frame, decoding is just starting
-				if(0 == startingFrameNumber) {
-					LOG("Starting decoding");
-
+				if(0 == startingFrameNumber)
 					decoder->PerformDecodingStartedCallback();
-				}
 								
 				// Store the decoded audio
 				if(0 != framesDecoded) {
@@ -879,20 +1052,41 @@ void * AudioPlayer::FileReaderThreadEntry()
 					if(kCARingBufferError_OK != result)
 						ERR("CARingBuffer::Store() failed: %i", result);
 					
-					OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
+					OSAtomicAdd64/*Barrier*/(framesDecoded, &mFramesDecoded);
 				}
 				
 				// If no frames were returned, this is the end of stream
 				if(0 == framesDecoded) {
-					LOG("Finished decoding");
-
 					decoder->PerformDecodingFinishedCallback();
 					
+					// Lock the queue and determine if there is another decoder which should be started
+					lockResult = pthread_mutex_lock(&mMutex);
+					
+					if(0 == lockResult) {
+						std::deque<AudioDecoder *>::size_type decoderQueueSize = mDecoderQueue.size();
+						
+						lockResult = pthread_mutex_unlock(&mMutex);
+						
+						if(0 != lockResult)
+							ERR("pthread_mutex_unlock failed: %i", lockResult);
+						
+						// Launch another reader thread if another decoder is present in the queue
+						if(0 < decoderQueueSize) {
+							pthread_t fileReaderThread;							
+							int creationResult = pthread_create(&fileReaderThread, NULL, fileReaderEntry, this);
+							
+							if(0 != creationResult)
+								ERR("pthread_create failed: %i", creationResult);
+						}
+					}
+					else
+						ERR("pthread_mutex_lock failed: %i", lockResult);
+					
+					// This thread is complete					
 					finished = true;
 					
 					break;
 				}
-				
 			}
 			// Not enough space remains in the ring buffer to write an entire decoded chunk
 			else
