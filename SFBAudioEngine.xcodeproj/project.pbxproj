@@ -92,7 +92,6 @@
 		32C213101091129F00BA2493 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
-		32DCA6D01091893C00EC607A /* LockFreeFIFO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LockFreeFIFO.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,7 +149,6 @@
 				32C212D61091116D00BA2493 /* Info.plist */,
 				29B97316FDCFA39411CA2CEA /* main.cpp */,
 				3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */,
-				32DCA6D01091893C00EC607A /* LockFreeFIFO.h */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -202,8 +200,7 @@
 				3201ECB810901F08000082BF /* DecoderStateData.h */,
 				3201ECB910901F08000082BF /* DecoderStateData.cpp */,
 			);
-			name = Player;
-			path = Audio/Player;
+			path = Player;
 			sourceTree = "<group>";
 		};
 		322B5D91108C21E000CA9BDE /* ThirdParty */ = {
