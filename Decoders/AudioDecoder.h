@@ -80,17 +80,17 @@ public:
 	// ========================================
 	// The native (PCM) format of the source
 	inline AudioStreamBasicDescription GetSourceFormat()	{ return mSourceFormat; }
-	CFStringRef GetSourceFormatDescription();
+	CFStringRef CreateSourceFormatDescription();
 	
 	// ========================================
 	// The type of PCM data provided by this decoder
 	inline AudioStreamBasicDescription GetFormat()			{ return mFormat; }
-	CFStringRef GetFormatDescription();
+	CFStringRef CreateFormatDescription();
 	
 	// ========================================
 	// The layout of the channels this decoder provides
 	inline AudioChannelLayout GetChannelLayout()			{ return mChannelLayout; }
-	CFStringRef GetChannelLayoutDescription();
+	CFStringRef CreateChannelLayoutDescription();
 	
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
@@ -108,7 +108,7 @@ public:
 	virtual SInt64 SeekToFrame(SInt64 /*frame*/)			{ return -1; }
 
 	// ========================================
-	// Callback support
+	// AudioPlayer callback support
 	void SetDecodingStartedCallback(AudioDecoderCallback callback, void *context);
 	void SetDecodingFinishedCallback(AudioDecoderCallback callback, void *context);
 	void SetRenderingStartedCallback(AudioDecoderCallback callback, void *context);
@@ -140,10 +140,5 @@ private:
 	void PerformDecodingFinishedCallback();
 	void PerformRenderingStartedCallback();
 	void PerformRenderingFinishedCallback();
-	
-	// Cached values
-	CFStringRef						mFormatDescription;
-	CFStringRef						mChannelLayoutDescription;
-	CFStringRef						mSourceFormatDescription;
 	
 };

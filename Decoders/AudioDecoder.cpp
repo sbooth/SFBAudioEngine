@@ -110,12 +110,12 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 
 
 AudioDecoder::AudioDecoder()
-	: mURL(NULL), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
+	: mURL(NULL)
 {	
 }
 
 AudioDecoder::AudioDecoder(CFURLRef url)
-	: mURL(NULL), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
+	: mURL(NULL)
 {
 	assert(NULL != url);
 	
@@ -133,25 +133,15 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
-: mURL(NULL), mFormatDescription(NULL), mChannelLayoutDescription(NULL), mSourceFormatDescription(NULL)
+	: mURL(NULL)
 {
 	*this = rhs;
 }
 
 AudioDecoder::~AudioDecoder()
 {
-	LOG("AudioDecoder::~AudioDecoder()");
 	if(mURL)
 		CFRelease(mURL), mURL = NULL;
-
-	if(mFormatDescription)
-		CFRelease(mFormatDescription), mFormatDescription = NULL;
-	
-	if(mChannelLayoutDescription)
-		CFRelease(mChannelLayoutDescription), mChannelLayoutDescription = NULL;
-
-	if(mSourceFormatDescription)
-		CFRelease(mSourceFormatDescription), mSourceFormatDescription = NULL;
 }
 
 
@@ -163,22 +153,12 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 	if(mURL)
 		CFRelease(mURL), mURL = NULL;
 	
-	if(mFormatDescription)
-		CFRelease(mFormatDescription), mFormatDescription = NULL;
-	
-	if(mChannelLayoutDescription)
-		CFRelease(mChannelLayoutDescription), mChannelLayoutDescription = NULL;
-	
-	if(mSourceFormatDescription)
-		CFRelease(mSourceFormatDescription), mSourceFormatDescription = NULL;
-	
 	if(rhs.mURL)
 		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
 	
 	mFormat				= rhs.mFormat;
 	mChannelLayout		= rhs.mChannelLayout;
 	mSourceFormat		= rhs.mSourceFormat;
-
 	
 	memcpy(&mCallbacks, &rhs.mCallbacks, sizeof(rhs.mCallbacks));
 	
@@ -189,59 +169,52 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 #pragma mark Base Functionality
 
 
-CFStringRef AudioDecoder::GetSourceFormatDescription()
+CFStringRef AudioDecoder::CreateSourceFormatDescription()
 {
-	if(mSourceFormatDescription)
-		return mSourceFormatDescription;
-	
-	AudioStreamBasicDescription		sourceFormat			= mSourceFormat;	
-	UInt32							sourceFormatNameSize	= sizeof(mSourceFormatDescription);
-	OSStatus						result					= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
-																					 sizeof(sourceFormat), 
-																					 &sourceFormat, 
-																					 &sourceFormatNameSize, 
-																					 &mSourceFormatDescription);
+	CFStringRef		sourceFormatDescription		= NULL;
+	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
+																		 sizeof(mSourceFormat), 
+																		 &mSourceFormat, 
+																		 &sourceFormatNameSize, 
+																		 &sourceFormatDescription);
 
 	if(noErr != result)
 		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
 	
-	return mSourceFormatDescription;
+	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::GetFormatDescription()
+CFStringRef AudioDecoder::CreateFormatDescription()
 {
-	if(mFormatDescription)
-		return mFormatDescription;
-
-	UInt32		specifierSize	= sizeof(mFormatDescription);
-	OSStatus	result			= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
-														 sizeof(mFormat), 
-														 &mFormat, 
-														 &specifierSize, 
-														 &mFormatDescription);
+	CFStringRef		sourceFormatDescription		= NULL;
+	UInt32			specifierSize				= sizeof(sourceFormatDescription);
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
+																		 sizeof(mFormat), 
+																		 &mFormat, 
+																		 &specifierSize, 
+																		 &sourceFormatDescription);
 
 	if(noErr != result)
 		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
 	
-	return mFormatDescription;
+	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::GetChannelLayoutDescription()
+CFStringRef AudioDecoder::CreateChannelLayoutDescription()
 {
-	if(mChannelLayoutDescription)
-		return mChannelLayoutDescription;
-	
-	UInt32		specifierSize	= sizeof(mChannelLayoutDescription);
-	OSStatus	result			= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
-														 sizeof(mChannelLayout), 
-														 &mChannelLayout, 
-														 &specifierSize, 
-														 &mChannelLayoutDescription);
+	CFStringRef		channelLayoutDescription	= NULL;
+	UInt32			specifierSize				= sizeof(channelLayoutDescription);
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
+																		 sizeof(mChannelLayout), 
+																		 &mChannelLayout, 
+																		 &specifierSize, 
+																		 &channelLayoutDescription);
 
 	if(noErr != result)
 		ERR("AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
 	
-	return mChannelLayoutDescription;
+	return channelLayoutDescription;
 }
 
 #pragma mark Callbacks
