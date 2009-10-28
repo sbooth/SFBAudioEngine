@@ -847,7 +847,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		size_t byteCountToZero = framesOfSilence * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
-			memset(bufferAlias + (framesToRead * sizeof(float)), 0, byteCountToZero);
+			memset(bufferAlias + framesToRead, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize += (UInt32)byteCountToZero;
 		}
 	}
