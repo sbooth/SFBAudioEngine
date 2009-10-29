@@ -185,11 +185,9 @@ AudioPlayer::AudioPlayer()
 
 AudioPlayer::~AudioPlayer()
 {
-	DisposeAUGraph();
+	Stop();
 	
-
-//	if(mDecoderQueue)
-//		delete DECODER_QUEUE, mDecoderQueue = NULL;
+	DisposeAUGraph();
 
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
@@ -243,8 +241,17 @@ void AudioPlayer::Stop()
 
 	Pause();
 	ResetAUGraph();
-	
-	// TODO: Clean up mActiveDecoders
+
+	// Delete any active decoders
+	DecoderStateData *decoderState = mActiveDecoders;
+	while(NULL != decoderState) {
+		if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
+			delete decoderState;
+		else
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+
+		decoderState = mActiveDecoders;
+	}
 }
 
 bool AudioPlayer::IsPlaying()
@@ -874,9 +881,9 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
-		DecoderStateData *activeDecoder = mActiveDecoders;
+		DecoderStateData *decoderState = mActiveDecoders;
 		
-		if(NULL == activeDecoder) {
+		if(NULL == decoderState) {
 			ERR("NULL == activeDecoder");
 			return ioErr;
 		}
@@ -885,63 +892,64 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		// However, these could have come from any number of decoders depending on the buffer sizes
 		// So it is necessary to split them up here
 
-		SInt64 decoderFramesRemaining = activeDecoder->mTotalFrames - activeDecoder->mFramesRendered;
+		SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
 		
 		// If the number of frames rendered was less than the number of frames remaining in the decoder,
 		// all of the rendered frames were from that decoder
 		if(mFramesRenderedLastPass <= decoderFramesRemaining) {
-			if(0 == activeDecoder->mFramesRendered)
-				activeDecoder->mDecoder->PerformRenderingStartedCallback();
+			if(0 == decoderState->mFramesRendered)
+				decoderState->mDecoder->PerformRenderingStartedCallback();
 			
-			activeDecoder->mFramesRendered += mFramesRenderedLastPass;
+			decoderState->mFramesRendered += mFramesRenderedLastPass;
 
-			if(activeDecoder->mFramesRendered == activeDecoder->mTotalFrames)
-				activeDecoder->mDecoder->PerformRenderingFinishedCallback();
+			if(decoderState->mFramesRendered == decoderState->mTotalFrames)
+				decoderState->mDecoder->PerformRenderingFinishedCallback();
 		}
 		// Otherwise, the frames are split among the active decoders (assuming no decoding errors occurred)
 		else {
-			activeDecoder->mFramesRendered += decoderFramesRemaining;
+			decoderState->mFramesRendered += decoderFramesRemaining;
 			
 			SInt64 framesRemainingToDistribute = mFramesRenderedLastPass - decoderFramesRemaining;
 			
-			DecoderStateData *nextDecoder = activeDecoder->mNext;
-			while(NULL != nextDecoder && 0 < framesRemainingToDistribute) {
-				if(0 == nextDecoder->mFramesRendered)
-					nextDecoder->mDecoder->PerformRenderingStartedCallback();
+			DecoderStateData *nextDecoderState = decoderState->mNext;
+			while(NULL != nextDecoderState && 0 < framesRemainingToDistribute) {
+				if(0 == nextDecoderState->mFramesRendered)
+					nextDecoderState->mDecoder->PerformRenderingStartedCallback();
 				
-				SInt64 nextDecoderFramesRemaining = nextDecoder->mTotalFrames - nextDecoder->mFramesRendered;
+				SInt64 nextDecoderFramesRemaining = nextDecoderState->mTotalFrames - nextDecoderState->mFramesRendered;
 				
 				if(framesRemainingToDistribute <= nextDecoderFramesRemaining) {
-					nextDecoder->mFramesRendered += framesRemainingToDistribute;
+					nextDecoderState->mFramesRendered += framesRemainingToDistribute;
 					framesRemainingToDistribute = 0;
 				}
 				else {
-					nextDecoder->mFramesRendered += nextDecoderFramesRemaining;
+					nextDecoderState->mFramesRendered += nextDecoderFramesRemaining;
 					framesRemainingToDistribute -= nextDecoderFramesRemaining;
 				}
 				
-				if(nextDecoder->mFramesRendered == nextDecoder->mTotalFrames)
-					nextDecoder->mDecoder->PerformRenderingFinishedCallback();
+				if(nextDecoderState->mFramesRendered == nextDecoderState->mTotalFrames)
+					nextDecoderState->mDecoder->PerformRenderingFinishedCallback();
 
-				nextDecoder = nextDecoder->mNext;
+				nextDecoderState = nextDecoderState->mNext;
 			}
 		}
 
 		// Now remove any active decoders that have finished rendering
-		DecoderStateData *nextDecoder = activeDecoder;
-		while(NULL != nextDecoder && nextDecoder->mFramesRendered == nextDecoder->mTotalFrames) {
+		decoderState = mActiveDecoders;
+		while(NULL != decoderState && decoderState->mFramesRendered == decoderState->mTotalFrames) {
 			// Swap the next decoder in as the current active decoder since this one has finished
-			if(false == OSAtomicCompareAndSwapPtrBarrier(nextDecoder, nextDecoder->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
+			if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders))) {
+				// Stop will delete all active decoders
+				if(NULL == decoderState->mNext)
+					Stop();
+				else
+					delete decoderState;
+			}
+			else
 				ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
-
-			if(NULL == nextDecoder->mNext)
-				Stop();
 			
-			// This causes a crash, which appears to be multi-threading related. Haven't figured it out yet.
-			delete nextDecoder;
-			
-			nextDecoder = mActiveDecoders;
-		}
+			decoderState = mActiveDecoders;
+		}		
 	}
 	
 	return noErr;
@@ -986,12 +994,9 @@ void * AudioPlayer::FileReaderThreadEntry()
 	else {
 		while(NULL != lastActiveDecoderStateData->mNext)
 			lastActiveDecoderStateData = lastActiveDecoderStateData->mNext;
-
-		lastActiveDecoderStateData->mNext	= decoderStateData;
-		decoderStateData->mPrevious			= lastActiveDecoderStateData;
 		
-//		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
-//			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
+		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
 		
 		decoderStateData->mTimeStamp = lastActiveDecoderStateData->mTimeStamp + lastActiveDecoderStateData->mTotalFrames;
 	}
@@ -1075,6 +1080,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 					
 					// This thread is complete					
 					finished = true;
+					decoderStateData->mDecodingThread = static_cast<pthread_t>(0);
 					
 					break;
 				}
