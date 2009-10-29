@@ -33,11 +33,11 @@
 #include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL), mPrevious(NULL)
+	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL), mPrevious(NULL)
+	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
 {
 	assert(NULL != decoder);
 	
@@ -46,12 +46,12 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 	
 DecoderStateData::~DecoderStateData()
 {
-//	if(static_cast<pthread_t>(0) != mDecodingThread) {
-//		int killResult = pthread_kill(mDecodingThread, SIGKILL);
-//		
-//		if(0 != killResult)
-//			ERR("pthread_kill failed: %i", killResult);
-//	}
+	if(static_cast<pthread_t>(0) != mDecodingThread) {
+		int killResult = pthread_kill(mDecodingThread, SIGKILL);
+		
+		if(0 != killResult)
+			ERR("pthread_kill failed: %i", killResult);
+	}
 	
 	if(mDecoder)
 		delete mDecoder, mDecoder = NULL;
