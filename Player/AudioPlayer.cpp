@@ -986,6 +986,10 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
+		// There is nothing to do if no frames were rendered
+		if(0 == mFramesRenderedLastPass)
+			return noErr;
+		
 		DecoderStateData *decoderState = mActiveDecoders;
 		
 		if(NULL == decoderState) {
