@@ -33,6 +33,7 @@
 
 #include "AudioEngineDefines.h"
 #include "AudioDecoder.h"
+#include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
 #include "FLACDecoder.h"
 
@@ -103,6 +104,42 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 	CFRelease(scheme), scheme = NULL;
 
 	return decoder;
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame)
+{
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	
+	if(NULL == decoder)
+		return NULL;
+	
+	return new LoopableRegionDecoder(decoder, startingFrame);
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount)
+{
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	
+	if(NULL == decoder)
+		return NULL;
+	
+	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
+{
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	
+	if(NULL == decoder)
+		return NULL;
+	
+	// In order to repeat a decoder must support seeking
+	if(false == decoder->SupportsSeeking()) {
+		delete decoder;
+		return NULL;
+	}
+	
+	return new LoopableRegionDecoder(decoder, startingFrame, frameCount, repeatCount);
 }
 
 

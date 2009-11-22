@@ -62,8 +62,13 @@ class AudioDecoder
 public:
 	
 	// ========================================
-	// Factory method- returns an AudioDecoder for the specified URL, or NULL on failure
+	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url);
+
+	// Limit decoding to a specified file region
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
 	
 	// ========================================
 	// Destruction
