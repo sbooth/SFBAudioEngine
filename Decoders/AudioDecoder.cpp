@@ -38,7 +38,7 @@
 #include "FLACDecoder.h"
 #include "WavPackDecoder.h"
 #include "MPEGDecoder.h"
-//#include "OggVorbisDecoder.h"
+#include "OggVorbisDecoder.h"
 //#include "MusepackDecoder.h"
 
 #pragma mark Static Methods
@@ -68,8 +68,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 						decoder = new WavPackDecoder(url);
 					else if(MPEGDecoder::HandlesFilesWithExtension(pathExtension))
 						decoder = new MPEGDecoder(url);
-//					else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
-//						decoder = new OggVorbisDecoder(url);
+					else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new OggVorbisDecoder(url);
 //					else if(MusepackDecoder::HandlesFilesWithExtension(pathExtension))
 //						decoder = new MusepackDecoder(url);
 					else if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))

@@ -38,8 +38,16 @@
 		32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; };
 		32E7368E10B9057900094C8A /* wavpack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7368D10B9057900094C8A /* wavpack.framework */; };
 		32E7369110B9058100094C8A /* wavpack.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7368D10B9057900094C8A /* wavpack.framework */; };
-		32E7369410B9058C00094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
-		32E7369510B9058C00094C8A /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E734A210B8C9F900094C8A /* WavPackDecoder.h */; };
+		32E7378E10B9178000094C8A /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E734A210B8C9F900094C8A /* WavPackDecoder.h */; };
+		32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
+		32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
+		32E7392D10B9A85D00094C8A /* mad.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7392C10B9A85D00094C8A /* mad.framework */; };
+		32E7393010B9A86700094C8A /* mad.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7392C10B9A85D00094C8A /* mad.framework */; };
+		32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7374310B90C9A00094C8A /* MPEGDecoder.h */; };
+		32E73AF710B9D88800094C8A /* vorbis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E73AF610B9D88800094C8A /* vorbis.framework */; };
+		32E73AFA10B9D89100094C8A /* vorbis.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E73AF610B9D88800094C8A /* vorbis.framework */; };
+		32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */; };
+		32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +67,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				32E73AFA10B9D89100094C8A /* vorbis.framework in Copy Embedded Frameworks */,
+				32E7393010B9A86700094C8A /* mad.framework in Copy Embedded Frameworks */,
 				32E7369110B9058100094C8A /* wavpack.framework in Copy Embedded Frameworks */,
 				325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */,
 			);
@@ -99,12 +109,21 @@
 		32C213101091129F00BA2493 /* AudioEngineExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AudioEngineExample; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
+		32CA904B10B9DE1C005A85DA /* ogg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ogg.framework; path = Frameworks/vorbis.framework/Versions/A/Frameworks/ogg.framework; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
 		32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackDecoder.cpp; sourceTree = "<group>"; };
 		32E734A210B8C9F900094C8A /* WavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavPackDecoder.h; sourceTree = "<group>"; };
 		32E7368D10B9057900094C8A /* wavpack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = wavpack.framework; path = Frameworks/wavpack.framework; sourceTree = "<group>"; };
+		32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MPEGDecoder.cpp; sourceTree = "<group>"; };
+		32E7374310B90C9A00094C8A /* MPEGDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPEGDecoder.h; sourceTree = "<group>"; };
+		32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggVorbisDecoder.cpp; sourceTree = "<group>"; };
+		32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisDecoder.h; sourceTree = "<group>"; };
+		32E7379510B9978200094C8A /* MusepackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackDecoder.cpp; sourceTree = "<group>"; };
+		32E7379610B9978200094C8A /* MusepackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackDecoder.h; sourceTree = "<group>"; };
+		32E7392C10B9A85D00094C8A /* mad.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mad.framework; path = Frameworks/mad.framework; sourceTree = "<group>"; };
+		32E73AF610B9D88800094C8A /* vorbis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vorbis.framework; path = Frameworks/vorbis.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +138,8 @@
 				325560671092A89600580566 /* FLAC.framework in Frameworks */,
 				32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */,
 				32E7368E10B9057900094C8A /* wavpack.framework in Frameworks */,
+				32E7392D10B9A85D00094C8A /* mad.framework in Frameworks */,
+				32E73AF710B9D88800094C8A /* vorbis.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -178,6 +199,9 @@
 				325560661092A89600580566 /* FLAC.framework */,
 				32379E8A1093D35700DD5B34 /* CoreAudio.framework */,
 				32E7368D10B9057900094C8A /* wavpack.framework */,
+				32E7392C10B9A85D00094C8A /* mad.framework */,
+				32E73AF610B9D88800094C8A /* vorbis.framework */,
+				32CA904B10B9DE1C005A85DA /* ogg.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -198,6 +222,12 @@
 		322B5B9D108BA7E400CA9BDE /* Decoders */ = {
 			isa = PBXGroup;
 			children = (
+				32E7379510B9978200094C8A /* MusepackDecoder.cpp */,
+				32E7379610B9978200094C8A /* MusepackDecoder.h */,
+				32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */,
+				32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */,
+				32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */,
+				32E7374310B90C9A00094C8A /* MPEGDecoder.h */,
 				32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */,
 				32E734A210B8C9F900094C8A /* WavPackDecoder.h */,
 				32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */,
@@ -269,16 +299,18 @@
 				32C212E7109111B500BA2493 /* CARingBuffer.h in Headers */,
 				3255602C1092A38F00580566 /* FLACDecoder.h in Headers */,
 				32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */,
-				32E7369510B9058C00094C8A /* WavPackDecoder.h in Headers */,
+				32E7378E10B9178000094C8A /* WavPackDecoder.h in Headers */,
+				32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */,
+				32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		32C212D41091116D00BA2493 /* Framework */ = {
+		32C212D41091116D00BA2493 /* SFBAudioEngine.framework */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "Framework" */;
+			buildConfigurationList = 32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "SFBAudioEngine.framework" */;
 			buildPhases = (
 				32C212D01091116D00BA2493 /* Headers */,
 				32C212D11091116D00BA2493 /* Resources */,
@@ -290,7 +322,7 @@
 			);
 			dependencies = (
 			);
-			name = Framework;
+			name = SFBAudioEngine.framework;
 			productName = Framework;
 			productReference = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */;
 			productType = "com.apple.product-type.framework";
@@ -327,7 +359,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				32C212D41091116D00BA2493 /* Framework */,
+				32C212D41091116D00BA2493 /* SFBAudioEngine.framework */,
 				32C2130F1091129F00BA2493 /* Example */,
 			);
 		};
@@ -355,7 +387,9 @@
 				32C212E6109111B500BA2493 /* CARingBuffer.cpp in Sources */,
 				3255602B1092A38F00580566 /* FLACDecoder.cpp in Sources */,
 				32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */,
-				32E7369410B9058C00094C8A /* WavPackDecoder.cpp in Sources */,
+				32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */,
+				32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */,
+				32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,7 +406,7 @@
 /* Begin PBXTargetDependency section */
 		32C37FAA109116F30024EB87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 32C212D41091116D00BA2493 /* Framework */;
+			target = 32C212D41091116D00BA2493 /* SFBAudioEngine.framework */;
 			targetProxy = 32C37FA9109116F30024EB87 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -389,6 +423,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
+					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -415,6 +450,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
+					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -474,7 +510,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "Framework" */ = {
+		32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "SFBAudioEngine.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				32C212D71091116D00BA2493 /* Debug */,
