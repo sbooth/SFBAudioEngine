@@ -33,11 +33,11 @@
 #include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
+	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
+	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
 {
 	assert(NULL != decoder);
 	

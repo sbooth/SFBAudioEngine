@@ -267,6 +267,111 @@ bool AudioPlayer::IsPlaying()
 
 #pragma mark Seeking
 
+bool AudioPlayer::SeekForward(UInt32 seconds)
+{
+	AudioUnit au = NULL;
+	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+										mOutputNode, 
+										NULL, 
+										&au);
+	
+	if(noErr != auResult) {
+		ERR("AUGraphNodeInfo failed: %i", auResult);
+		
+		return false;
+	}
+	
+	AudioStreamBasicDescription format;
+	UInt32 dataSize = sizeof(format);
+	ComponentResult result = AudioUnitGetProperty(au,
+												  kAudioUnitProperty_StreamFormat,
+												  kAudioUnitScope_Input,
+												  0,
+												  &format,
+												  &dataSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
+		
+		return false;
+	}
+
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return false;
+
+	SInt64 frameCount		= static_cast<SInt64>(seconds * format.mSampleRate);	
+	SInt64 desiredFrame		= currentDecoderState->mFramesRendered + frameCount;
+	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
+	
+	return SeekToFrame(desiredFrame > totalFrames ? totalFrames : desiredFrame);
+}
+
+bool AudioPlayer::SeekBackward(UInt32 seconds)
+{
+	AudioUnit au = NULL;
+	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+										mOutputNode, 
+										NULL, 
+										&au);
+	
+	if(noErr != auResult) {
+		ERR("AUGraphNodeInfo failed: %i", auResult);
+		
+		return false;
+	}
+	
+	AudioStreamBasicDescription format;
+	UInt32 dataSize = sizeof(format);
+	ComponentResult result = AudioUnitGetProperty(au,
+												  kAudioUnitProperty_StreamFormat,
+												  kAudioUnitScope_Input,
+												  0,
+												  &format,
+												  &dataSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
+		
+		return false;
+	}
+	
+	SInt64 frameCount = static_cast<SInt64>(seconds * format.mSampleRate);
+	SInt64 currentFrame = GetCurrentFrame();
+	
+	SInt64 desiredFrame = currentFrame - frameCount;
+	
+	return SeekToFrame(0 > desiredFrame ? 0 : desiredFrame);
+}
+
+SInt64 AudioPlayer::GetCurrentFrame()
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return -1;
+	
+	return currentDecoderState->mFramesRendered;
+}
+
+bool AudioPlayer::SeekToFrame(SInt64 frame)
+{
+	assert(0 <= frame);
+
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return false;
+	
+	if(false == OSAtomicCompareAndSwap64Barrier(-1, frame, &currentDecoderState->mFrameToSeek))
+		return false;
+	
+	semaphore_signal(mSemaphore);
+
+	return true;	
+}
+
 #pragma mark Player Parameters
 
 Float32 AudioPlayer::GetVolume()
@@ -331,7 +436,7 @@ bool AudioPlayer::SetVolume(Float32 volume)
 
 Float32 AudioPlayer::GetPreGain()
 {
-	if(false == PreGainIsEnabled())
+	if(false == IsPreGainEnabled())
 		return 0.f;
 
 	AudioUnit au = NULL;
@@ -821,14 +926,14 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	assert(NULL != ioData);
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
-	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
+	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
 		size_t byteCountToZero = inNumberFrames * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
-			ioData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
+			ioData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
 		}
 		
 		return noErr;
@@ -838,13 +943,13 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	UInt32 framesToRead = framesAvailableToRead < inNumberFrames ? framesAvailableToRead : inNumberFrames;
 	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != result) {
-		ERR("CARingBuffer::Fetch() failed: %i", result);
+		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %ld", result, framesToRead, static_cast<long>(mFramesRendered));
 
 		return ioErr;
 	}
 
 	mFramesRenderedLastPass = framesToRead;
-	OSAtomicAdd64/*Barrier*/(framesToRead, &mFramesRendered);
+	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 	
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesToRead != inNumberFrames) {
@@ -855,12 +960,12 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
 			memset(bufferAlias + framesToRead, 0, byteCountToZero);
-			ioData->mBuffers[bufferIndex].mDataByteSize += (UInt32)byteCountToZero;
+			ioData->mBuffers[bufferIndex].mDataByteSize += static_cast<UInt32>(byteCountToZero);
 		}
 	}
 	
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
-	UInt32 framesAvailableToWrite = (UInt32)(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
+	UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite)
 		semaphore_signal(mSemaphore);
 	
@@ -885,6 +990,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		
 		if(NULL == decoderState) {
 			ERR("NULL == activeDecoder");
+			
 			return ioErr;
 		}
 		
@@ -900,15 +1006,15 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			if(0 == decoderState->mFramesRendered)
 				decoderState->mDecoder->PerformRenderingStartedCallback();
 			
-			decoderState->mFramesRendered += mFramesRenderedLastPass;
+			OSAtomicAdd64Barrier(mFramesRenderedLastPass, &decoderState->mFramesRendered);
 
 			if(decoderState->mFramesRendered == decoderState->mTotalFrames)
 				decoderState->mDecoder->PerformRenderingFinishedCallback();
 		}
 		// Otherwise, the frames are split among the active decoders (assuming no decoding errors occurred)
 		else {
-			decoderState->mFramesRendered += decoderFramesRemaining;
-			
+			OSAtomicAdd64Barrier(decoderFramesRemaining, &decoderState->mFramesRendered);
+
 			SInt64 framesRemainingToDistribute = mFramesRenderedLastPass - decoderFramesRemaining;
 			
 			DecoderStateData *nextDecoderState = decoderState->mNext;
@@ -919,11 +1025,11 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 				SInt64 nextDecoderFramesRemaining = nextDecoderState->mTotalFrames - nextDecoderState->mFramesRendered;
 				
 				if(framesRemainingToDistribute <= nextDecoderFramesRemaining) {
-					nextDecoderState->mFramesRendered += framesRemainingToDistribute;
+					OSAtomicAdd64Barrier(framesRemainingToDistribute, &nextDecoderState->mFramesRendered);
 					framesRemainingToDistribute = 0;
 				}
 				else {
-					nextDecoderState->mFramesRendered += nextDecoderFramesRemaining;
+					OSAtomicAdd64Barrier(nextDecoderFramesRemaining, &nextDecoderState->mFramesRendered);
 					framesRemainingToDistribute -= nextDecoderFramesRemaining;
 				}
 				
@@ -986,6 +1092,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 	decoderStateData->mDecodingThread = pthread_self();
 	
+	// TODO: Is this thread safe?
 	DecoderStateData *lastActiveDecoderStateData = mActiveDecoders;
 	if(NULL == lastActiveDecoderStateData) {
 		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders)))
@@ -1028,15 +1135,42 @@ void * AudioPlayer::FileReaderThreadEntry()
 		for(;;) {
 			
 			// Determine how many frames are available in the ring buffer
-			UInt32 framesAvailableToWrite = (UInt32)(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
+			UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 			
 			// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
 			if(framesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES) {
+
+				// Seek to the specified frame
+				if(-1 != decoderStateData->mFrameToSeek) {
+					SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
+
+					SInt64 newFrame = decoder->SeekToFrame(decoderStateData->mFrameToSeek);
+					
+					if(newFrame != decoderStateData->mFrameToSeek)
+						ERR("Error seeking to frame %ld", static_cast<long>(decoderStateData->mFrameToSeek));
+
+					// Update the seek request
+					if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFrameToSeek, -1, &decoderStateData->mFrameToSeek))
+						ERR("OSAtomicCompareAndSwap64Barrier failed");
+					
+					SInt64 framesSkipped = newFrame - currentFrameBeforeSeeking;
+
+					// Treat the skipped frames as if they were rendered, and update the counters accordingly
+					if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFramesRendered, newFrame, &decoderStateData->mFramesRendered))
+						ERR("OSAtomicCompareAndSwap64Barrier failed");
+					
+					OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
+					if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
+						ERR("OSAtomicCompareAndSwap64Barrier failed");
+					
+					ResetAUGraph();
+				}
+				
 				SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 				
 				// Read the input chunk
 				UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
-				
+
 				// If this is the first frame, decoding is just starting
 				if(0 == startingFrameNumber)
 					decoder->PerformDecodingStartedCallback();
@@ -1048,7 +1182,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 					if(kCARingBufferError_OK != result)
 						ERR("CARingBuffer::Store() failed: %i", result);
 					
-					OSAtomicAdd64/*Barrier*/(framesDecoded, &mFramesDecoded);
+					OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 				}
 				
 				// If no frames were returned, this is the end of stream
@@ -1780,9 +1914,9 @@ OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout /*channelLayout
 
 bool AudioPlayer::EnablePreGain(UInt32 flag)
 {
-	if(flag && PreGainIsEnabled())
+	if(flag && IsPreGainEnabled())
 		return true;
-	else if(!flag && false == PreGainIsEnabled())
+	else if(!flag && false == IsPreGainEnabled())
 		return true;
 	
 	AudioUnit au = NULL;
@@ -1813,7 +1947,7 @@ bool AudioPlayer::EnablePreGain(UInt32 flag)
 	return true;
 }
 
-bool AudioPlayer::PreGainIsEnabled()
+bool AudioPlayer::IsPreGainEnabled()
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 

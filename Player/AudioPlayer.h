@@ -67,14 +67,12 @@ public:
 	
 	// ========================================
 	// Seeking
-	inline void SkipForward()							{ SkipForward(3); }
-	inline void SkipBackward()							{ SkipBackward(3); }
-	void SkipForward(UInt32 seconds);
-	void SkipBackward(UInt32 seconds);
-		
-	void SkipToEnd();
-	void SkipToBeginning();
-		
+	bool SeekForward(UInt32 seconds = 3);
+	bool SeekBackward(UInt32 seconds = 3);
+
+	SInt64 GetCurrentFrame();
+	bool SeekToFrame(SInt64 frame);
+	
 	// ========================================
 	// Player Parameters
 	Float32 GetVolume();
@@ -82,8 +80,6 @@ public:
 
 	Float32 GetPreGain();
 	bool SetPreGain(Float32 preGain);
-
-//	SInt64 GetCurrentFrame();
 
 	// ========================================
 	// Device Management
@@ -143,7 +139,7 @@ private:
 	// ========================================
 	// PreGain Utilities
 	bool EnablePreGain(UInt32 flag);
-	bool PreGainIsEnabled();
+	bool IsPreGainEnabled();
 
 public:
 

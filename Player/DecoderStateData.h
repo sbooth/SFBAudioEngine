@@ -53,6 +53,8 @@ public:
 	SInt64					mTotalFrames;
 	volatile SInt64			mFramesRendered;
 
+	SInt64					mFrameToSeek;
+	
 	pthread_t				mDecodingThread;
 
 	DecoderStateData		*mNext;
