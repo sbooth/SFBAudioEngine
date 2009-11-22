@@ -37,7 +37,9 @@
 #include "CoreAudioDecoder.h"
 #include "FLACDecoder.h"
 #include "WavPackDecoder.h"
-
+#include "MPEGDecoder.h"
+//#include "OggVorbisDecoder.h"
+//#include "MusepackDecoder.h"
 
 #pragma mark Static Methods
 
@@ -60,12 +62,18 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 				CFStringRef pathExtension = CFURLCopyPathExtension(url);
 				
 				if(NULL != pathExtension) {
-					if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new CoreAudioDecoder(url);
-					else if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
+					if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
 						decoder = new FLACDecoder(url);
 					else if(WavPackDecoder::HandlesFilesWithExtension(pathExtension))
 						decoder = new WavPackDecoder(url);
+					else if(MPEGDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new MPEGDecoder(url);
+//					else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
+//						decoder = new OggVorbisDecoder(url);
+//					else if(MusepackDecoder::HandlesFilesWithExtension(pathExtension))
+//						decoder = new MusepackDecoder(url);
+					else if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new CoreAudioDecoder(url);
 					
 					if(NULL != decoder && false == decoder->IsValid())
 						delete decoder, decoder = NULL;
