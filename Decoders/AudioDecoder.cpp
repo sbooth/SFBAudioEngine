@@ -36,6 +36,7 @@
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
 #include "FLACDecoder.h"
+#include "WavPackDecoder.h"
 
 
 #pragma mark Static Methods
@@ -63,6 +64,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 						decoder = new CoreAudioDecoder(url);
 					else if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
 						decoder = new FLACDecoder(url);
+					else if(WavPackDecoder::HandlesFilesWithExtension(pathExtension))
+						decoder = new WavPackDecoder(url);
 					
 					if(NULL != decoder && false == decoder->IsValid())
 						delete decoder, decoder = NULL;

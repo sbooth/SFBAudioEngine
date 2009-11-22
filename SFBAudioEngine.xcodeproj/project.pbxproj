@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		3255602B1092A38F00580566 /* FLACDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325560291092A38F00580566 /* FLACDecoder.cpp */; };
 		3255602C1092A38F00580566 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
@@ -28,11 +29,17 @@
 		32C212E7109111B500BA2493 /* CARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D94108C221100CA9BDE /* CARingBuffer.h */; };
 		32C212F3109111E800BA2493 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
 		32C212F4109111E900BA2493 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322B5C16108BB59600CA9BDE /* AudioToolbox.framework */; };
-		32C37FAB109116FD0024EB87 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.cpp */; };
 		32C37FAD1091170C0024EB87 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
 		32C380AA1091177B0024EB87 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		32C381B8109117C50024EB87 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C381B7109117C50024EB87 /* CoreServices.framework */; };
 		32C381C1109117D00024EB87 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C381C0109117D00024EB87 /* AudioUnit.framework */; };
+		32E6AB3B1096745400DA998D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB391096744C00DA998D /* main.cpp */; };
+		32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
+		32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; };
+		32E7368E10B9057900094C8A /* wavpack.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7368D10B9057900094C8A /* wavpack.framework */; };
+		32E7369110B9058100094C8A /* wavpack.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7368D10B9057900094C8A /* wavpack.framework */; };
+		32E7369410B9058C00094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
+		32E7369510B9058C00094C8A /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E734A210B8C9F900094C8A /* WavPackDecoder.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +59,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				32E7369110B9058100094C8A /* wavpack.framework in Copy Embedded Frameworks */,
 				325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */,
 			);
 			name = "Copy Embedded Frameworks";
@@ -60,7 +68,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		29B97316FDCFA39411CA2CEA /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
@@ -89,9 +96,15 @@
 		3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioEngineDefines.h; sourceTree = "<group>"; };
 		32C212D51091116D00BA2493 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32C213101091129F00BA2493 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
+		32C213101091129F00BA2493 /* AudioEngineExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AudioEngineExample; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
+		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
+		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
+		32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackDecoder.cpp; sourceTree = "<group>"; };
+		32E734A210B8C9F900094C8A /* WavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavPackDecoder.h; sourceTree = "<group>"; };
+		32E7368D10B9057900094C8A /* wavpack.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = wavpack.framework; path = Frameworks/wavpack.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +118,7 @@
 				32C381C1109117D00024EB87 /* AudioUnit.framework in Frameworks */,
 				325560671092A89600580566 /* FLAC.framework in Frameworks */,
 				32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */,
+				32E7368E10B9057900094C8A /* wavpack.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -114,6 +128,7 @@
 			files = (
 				32C37FAD1091170C0024EB87 /* Foundation.framework in Frameworks */,
 				32C380AA1091177B0024EB87 /* SFBAudioEngine.framework in Frameworks */,
+				32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,7 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				32C212D51091116D00BA2493 /* SFBAudioEngine.framework */,
-				32C213101091129F00BA2493 /* Test */,
+				32C213101091129F00BA2493 /* AudioEngineExample */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,6 +151,7 @@
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
 				29B97315FDCFA39411CA2CEA /* Other */,
 				322B5B2B108BA68E00CA9BDE /* Configs */,
+				32E6AB381096742A00DA998D /* Example */,
 				322B5D91108C21E000CA9BDE /* ThirdParty */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
@@ -147,7 +163,6 @@
 			isa = PBXGroup;
 			children = (
 				32C212D61091116D00BA2493 /* Info.plist */,
-				29B97316FDCFA39411CA2CEA /* main.cpp */,
 				3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */,
 			);
 			name = Other;
@@ -162,6 +177,7 @@
 				32C381C0109117D00024EB87 /* AudioUnit.framework */,
 				325560661092A89600580566 /* FLAC.framework */,
 				32379E8A1093D35700DD5B34 /* CoreAudio.framework */,
+				32E7368D10B9057900094C8A /* wavpack.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -182,6 +198,10 @@
 		322B5B9D108BA7E400CA9BDE /* Decoders */ = {
 			isa = PBXGroup;
 			children = (
+				32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */,
+				32E734A210B8C9F900094C8A /* WavPackDecoder.h */,
+				32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */,
+				32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */,
 				325560291092A38F00580566 /* FLACDecoder.cpp */,
 				3255602A1092A38F00580566 /* FLACDecoder.h */,
 				322B5C1D108BC70600CA9BDE /* CoreAudioDecoder.h */,
@@ -223,6 +243,14 @@
 			path = PublicUtility;
 			sourceTree = "<group>";
 		};
+		32E6AB381096742A00DA998D /* Example */ = {
+			isa = PBXGroup;
+			children = (
+				32E6AB391096744C00DA998D /* main.cpp */,
+			);
+			path = Example;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -240,6 +268,8 @@
 				32C212E5109111B400BA2493 /* CABitOperations.h in Headers */,
 				32C212E7109111B500BA2493 /* CARingBuffer.h in Headers */,
 				3255602C1092A38F00580566 /* FLACDecoder.h in Headers */,
+				32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */,
+				32E7369510B9058C00094C8A /* WavPackDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,9 +295,9 @@
 			productReference = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		32C2130F1091129F00BA2493 /* Tester */ = {
+		32C2130F1091129F00BA2493 /* Example */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 32C21316109112B200BA2493 /* Build configuration list for PBXNativeTarget "Tester" */;
+			buildConfigurationList = 32C21316109112B200BA2493 /* Build configuration list for PBXNativeTarget "Example" */;
 			buildPhases = (
 				32C2130D1091129F00BA2493 /* Sources */,
 				32C2130E1091129F00BA2493 /* Frameworks */,
@@ -277,9 +307,9 @@
 			dependencies = (
 				32C37FAA109116F30024EB87 /* PBXTargetDependency */,
 			);
-			name = Tester;
+			name = Example;
 			productName = Test;
-			productReference = 32C213101091129F00BA2493 /* Test */;
+			productReference = 32C213101091129F00BA2493 /* AudioEngineExample */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -298,7 +328,7 @@
 			projectRoot = "";
 			targets = (
 				32C212D41091116D00BA2493 /* Framework */,
-				32C2130F1091129F00BA2493 /* Tester */,
+				32C2130F1091129F00BA2493 /* Example */,
 			);
 		};
 /* End PBXProject section */
@@ -324,6 +354,8 @@
 				32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */,
 				32C212E6109111B500BA2493 /* CARingBuffer.cpp in Sources */,
 				3255602B1092A38F00580566 /* FLACDecoder.cpp in Sources */,
+				32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */,
+				32E7369410B9058C00094C8A /* WavPackDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,7 +363,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C37FAB109116FD0024EB87 /* main.cpp in Sources */,
+				32E6AB3B1096745400DA998D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -365,7 +397,8 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
 				PRODUCT_NAME = SFBAudioEngine;
 			};
 			name = Debug;
@@ -388,7 +421,8 @@
 				GCC_MODEL_TUNING = G5;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@executable_path/../Frameworks";
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
 				PREBINDING = NO;
 				PRODUCT_NAME = SFBAudioEngine;
 			};
@@ -406,7 +440,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
 				PREBINDING = NO;
-				PRODUCT_NAME = Test;
+				PRODUCT_NAME = AudioEngineExample;
 			};
 			name = Debug;
 		};
@@ -421,7 +455,7 @@
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
 				PREBINDING = NO;
-				PRODUCT_NAME = Test;
+				PRODUCT_NAME = AudioEngineExample;
 			};
 			name = Release;
 		};
@@ -449,7 +483,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		32C21316109112B200BA2493 /* Build configuration list for PBXNativeTarget "Tester" */ = {
+		32C21316109112B200BA2493 /* Build configuration list for PBXNativeTarget "Example" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				32C21312109112A000BA2493 /* Debug */,

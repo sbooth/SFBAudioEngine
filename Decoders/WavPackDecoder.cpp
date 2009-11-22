@@ -74,7 +74,7 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 	char errorBuf [80];
 
 	// Setup converter
-	mWPC = WavpackOpenFileInput(buf, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
+	mWPC = WavpackOpenFileInput(reinterpret_cast<char *>(buf), errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
 	
 	if(NULL == mWPC) {
 		ERR("WavpackOpenFileInput failed");
@@ -118,7 +118,7 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
-	int result = WavpackSeekSample(mWPC, frame);
+	int result = WavpackSeekSample(mWPC, static_cast<uint32_t>(frame));
 	if(result)
 		mCurrentFrame = frame;
 	
@@ -158,7 +158,7 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		}
 	}
 	else {
-		float scaleFactor = (1L << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
+		float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
 		
 		// Deinterleave the 32-bit samples and convert to float
 		for(unsigned channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
