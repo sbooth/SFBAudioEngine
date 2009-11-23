@@ -169,18 +169,23 @@ AudioPlayer::AudioPlayer()
 {
 	mRingBuffer = new CARingBuffer();
 
+	// Create the semaphore and mutex to be used by the decoding and rendering threads
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
 	if(KERN_SUCCESS != result) {
 #if DEBUG
-		mach_error((char *)"semaphore_create", result);
+		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 	}
-	
+
 	int success = pthread_mutex_init(&mMutex, NULL);
 	if(0 != success)
 		ERR("pthread_mutex_init failed: %i", success);
-	
+
+	// Set up our AUGraph and set pregain to 0
 	CreateAUGraph();
+	
+	if(false == SetPreGain(0))
+		ERR("SetPreGain(0) failed");
 }
 
 AudioPlayer::~AudioPlayer()
@@ -227,11 +232,6 @@ void AudioPlayer::Pause()
 
 	if(noErr != result)
 		ERR("AUGraphStop failed: %i", result);
-}
-
-void AudioPlayer::PlayPause()
-{
-	IsPlaying() ? Pause() : Play();
 }
 
 void AudioPlayer::Stop()

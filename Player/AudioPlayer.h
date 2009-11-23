@@ -59,7 +59,7 @@ public:
 	// Playback Control
 	void Play();
 	void Pause();
-	void PlayPause();
+	inline void PlayPause()					{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
 	bool IsPlaying();
@@ -68,9 +68,11 @@ public:
 	// UI properties
 	SInt64 GetCurrentFrame();
 	SInt64 GetTotalFrames();
+	SInt64 GetRemainingFrames()				{ return GetTotalFrames() - GetCurrentFrame(); }
 	
 	Float64 GetCurrentTime();
 	Float64 GetTotalTime();
+	inline Float64 GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
 
 	// ========================================
 	// Seeking
