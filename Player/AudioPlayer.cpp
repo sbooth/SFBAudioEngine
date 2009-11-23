@@ -265,85 +265,7 @@ bool AudioPlayer::IsPlaying()
 	return isRunning;
 }
 
-#pragma mark Seeking
-
-bool AudioPlayer::SeekForward(UInt32 seconds)
-{
-	AudioUnit au = NULL;
-	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
-										mOutputNode, 
-										NULL, 
-										&au);
-	
-	if(noErr != auResult) {
-		ERR("AUGraphNodeInfo failed: %i", auResult);
-		
-		return false;
-	}
-	
-	AudioStreamBasicDescription format;
-	UInt32 dataSize = sizeof(format);
-	ComponentResult result = AudioUnitGetProperty(au,
-												  kAudioUnitProperty_StreamFormat,
-												  kAudioUnitScope_Input,
-												  0,
-												  &format,
-												  &dataSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
-		
-		return false;
-	}
-
-	DecoderStateData *currentDecoderState = mActiveDecoders;
-	
-	if(NULL == currentDecoderState)
-		return false;
-
-	SInt64 frameCount		= static_cast<SInt64>(seconds * format.mSampleRate);	
-	SInt64 desiredFrame		= currentDecoderState->mFramesRendered + frameCount;
-	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
-	
-	return SeekToFrame(desiredFrame > totalFrames ? totalFrames : desiredFrame);
-}
-
-bool AudioPlayer::SeekBackward(UInt32 seconds)
-{
-	AudioUnit au = NULL;
-	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
-										mOutputNode, 
-										NULL, 
-										&au);
-	
-	if(noErr != auResult) {
-		ERR("AUGraphNodeInfo failed: %i", auResult);
-		
-		return false;
-	}
-	
-	AudioStreamBasicDescription format;
-	UInt32 dataSize = sizeof(format);
-	ComponentResult result = AudioUnitGetProperty(au,
-												  kAudioUnitProperty_StreamFormat,
-												  kAudioUnitScope_Input,
-												  0,
-												  &format,
-												  &dataSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
-		
-		return false;
-	}
-	
-	SInt64 frameCount = static_cast<SInt64>(seconds * format.mSampleRate);
-	SInt64 currentFrame = GetCurrentFrame();
-	
-	SInt64 desiredFrame = currentFrame - frameCount;
-	
-	return SeekToFrame(0 > desiredFrame ? 0 : desiredFrame);
-}
+#pragma mark UI Properties
 
 SInt64 AudioPlayer::GetCurrentFrame()
 {
@@ -353,6 +275,79 @@ SInt64 AudioPlayer::GetCurrentFrame()
 		return -1;
 	
 	return currentDecoderState->mFramesRendered;
+}
+
+SInt64 AudioPlayer::GetTotalFrames()
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return -1;
+	
+	return currentDecoderState->mTotalFrames;
+}
+
+Float64 AudioPlayer::GetCurrentTime()
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return -1;
+	
+	return static_cast<Float64>(currentDecoderState->mFramesRendered / currentDecoderState->mDecoder->GetFormat().mSampleRate);
+}
+
+Float64 AudioPlayer::GetTotalTime()
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return -1;
+	
+	return static_cast<Float64>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
+}
+
+#pragma mark Seeking
+
+bool AudioPlayer::SeekForward(UInt32 secondsToSkip)
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return false;
+
+	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
+	SInt64 desiredFrame		= currentDecoderState->mFramesRendered + frameCount;
+	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
+	
+	return SeekToFrame(std::min(desiredFrame, totalFrames));
+}
+
+bool AudioPlayer::SeekBackward(UInt32 secondsToSkip)
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return false;
+
+	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
+	SInt64 currentFrame		= GetCurrentFrame();
+	SInt64 desiredFrame		= currentFrame - frameCount;
+	
+	return SeekToFrame(std::max(0LL, desiredFrame));
+}
+
+bool AudioPlayer::SeekToTime(Float64 timeInSeconds)
+{
+	DecoderStateData *currentDecoderState = mActiveDecoders;
+	
+	if(NULL == currentDecoderState)
+		return false;
+	
+	SInt64 desiredFrame		= static_cast<SInt64>(timeInSeconds * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
+	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
+	
+	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames)));
 }
 
 bool AudioPlayer::SeekToFrame(SInt64 frame)
@@ -1219,6 +1214,12 @@ void * AudioPlayer::FileReaderThreadEntry()
 					// This thread is complete					
 					finished = true;
 					decoderStateData->mDecodingThread = static_cast<pthread_t>(0);
+					
+					// Some formats (MP3) may not know the exact number of frames in advance
+					// without processing the entire file, which is a potentially slow operation
+					// Rather than require preprocessing to ensure an accurate frame count, update 
+					// it here so EOS is correctly detected in DidRender()
+					decoderStateData->mTotalFrames = startingFrameNumber;
 					
 					break;
 				}

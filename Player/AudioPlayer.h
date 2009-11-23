@@ -63,13 +63,21 @@ public:
 	void Stop();
 	
 	bool IsPlaying();
+
+	// ========================================
+	// UI properties
+	SInt64 GetCurrentFrame();
+	SInt64 GetTotalFrames();
 	
+	Float64 GetCurrentTime();
+	Float64 GetTotalTime();
+
 	// ========================================
 	// Seeking
-	bool SeekForward(UInt32 seconds = 3);
-	bool SeekBackward(UInt32 seconds = 3);
+	bool SeekForward(UInt32 secondsToSkip = 3);
+	bool SeekBackward(UInt32 secondsToSkip = 3);
 
-	SInt64 GetCurrentFrame();
+	bool SeekToTime(Float64 timeInSeconds);
 	bool SeekToFrame(SInt64 frame);
 	
 	// ========================================
@@ -96,8 +104,6 @@ public:
 	
 	bool Enqueue(CFURLRef url);
 	bool Enqueue(AudioDecoder *decoder);
-
-//	const AudioDecoder * GetCurrent();
 	
 private:
 	
