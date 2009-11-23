@@ -51,6 +51,8 @@ DecoderStateData::~DecoderStateData()
 		
 		if(0 != killResult)
 			ERR("pthread_kill failed: %i", killResult);
+		
+		mDecodingThread = static_cast<pthread_t>(0);
 	}
 	
 	if(mDecoder)
