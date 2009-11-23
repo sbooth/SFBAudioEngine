@@ -96,7 +96,7 @@ setThreadPolicy(integer_t importance)
 	
 	if(KERN_SUCCESS != error) {
 #if DEBUG
-		mach_error((char *)"Couldn't set thread's extended policy", error);
+		mach_error(const_cast<char *>("Couldn't set thread's extended policy"), error);
 #endif
 		return false;
 	}
@@ -110,7 +110,7 @@ setThreadPolicy(integer_t importance)
 	
 	if (error != KERN_SUCCESS) {
 #if DEBUG
-		mach_error((char *)"Couldn't set thread's precedence policy", error);
+		mach_error(const_cast<char *>("Couldn't set thread's precedence policy"), error);
 #endif
 		return false;
 	}
@@ -171,11 +171,10 @@ AudioPlayer::AudioPlayer()
 
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
-	if(KERN_SUCCESS != result) {
 #if DEBUG
+	if(KERN_SUCCESS != result)
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
-	}
 
 	int success = pthread_mutex_init(&mMutex, NULL);
 	if(0 != success)
@@ -190,19 +189,17 @@ AudioPlayer::AudioPlayer()
 
 AudioPlayer::~AudioPlayer()
 {
-	Stop();
-	
 	DisposeAUGraph();
+	DeleteActiveDecoders();	
 
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
 	
 	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
-	if(KERN_SUCCESS != result) {
 #if DEBUG
-		mach_error((char *)"semaphore_destroy", result);
+	if(KERN_SUCCESS != result)
+		mach_error(const_cast<char *>("semaphore_destroy"), result);
 #endif
-	}
 	
 	int success = pthread_mutex_destroy(&mMutex);
 	
@@ -241,17 +238,8 @@ void AudioPlayer::Stop()
 
 	Pause();
 	ResetAUGraph();
-
-	// Delete any active decoders
-	DecoderStateData *decoderState = mActiveDecoders;
-	while(NULL != decoderState) {
-		if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
-			delete decoderState;
-		else
-			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
-
-		decoderState = mActiveDecoders;
-	}
+	
+	DeleteActiveDecoders();
 }
 
 bool AudioPlayer::IsPlaying()
@@ -357,6 +345,9 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	DecoderStateData *currentDecoderState = mActiveDecoders;
 	
 	if(NULL == currentDecoderState)
+		return false;
+	
+	if(false == currentDecoderState->mDecoder->SupportsSeeking())
 		return false;
 	
 	if(false == OSAtomicCompareAndSwap64Barrier(-1, frame, &currentDecoderState->mFrameToSeek))
@@ -498,6 +489,170 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 	return true;
 }
 
+bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask)
+{
+	// Iterate through all the graph's connections to find the node immediately preceding the output node
+	UInt32 numInteractions = 0;
+	OSStatus result = AUGraphGetNumberOfInteractions(mAUGraph, 
+													 &numInteractions);
+
+	if(noErr != result) {
+		ERR("AUGraphCountNodeInteractions failed: %i", result);
+		return false;
+	}
+	
+	AUNode previousNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction;
+		
+		result = AUGraphGetInteractionInfo(mAUGraph, 
+										   interactionIndex, 
+										   &interaction);
+	
+		if(noErr != result) {
+			ERR("AUGraphGetInteractionInfo failed: %i", result);
+			return false;
+		}
+		
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType && mOutputNode == interaction.nodeInteraction.connection.destNode) {
+			previousNode = interaction.nodeInteraction.connection.sourceNode;
+			break;
+		}
+	}
+
+	// Unable to determine the preceding node, so bail
+	if(-1 == previousNode) {
+		ERR("Unable to determine input node");
+		return false;
+	}
+	
+	// Create the effect node and set its format
+	ComponentDescription desc = { kAudioUnitType_Effect, subType, manufacturer, flags, mask };
+	
+	AUNode effectNode;
+	result = AUGraphAddNode(mAUGraph, 
+							&desc, 
+							&effectNode);
+	
+	if(noErr != result) {
+		ERR("AUGraphAddNode failed: %i", result);
+		return false;
+	}
+	
+	AudioUnit effectUnit;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 effectNode, 
+							 NULL, 
+							 &effectUnit);
+
+	if(noErr != result) {
+		ERR("AUGraphAddNode failed: %i", result);
+		
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+
+		return false;
+	}
+	
+	result = AudioUnitSetProperty(effectUnit,
+								  kAudioUnitProperty_StreamFormat, 
+								  kAudioUnitScope_Input, 
+								  0,
+								  &mAUGraphFormat,
+								  sizeof(mAUGraphFormat));
+
+	if(noErr != result) {
+		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+
+		// If the property couldn't be set (the AU may not support this format), remove the new node
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+				
+		return false;
+	}
+	
+	result = AudioUnitSetProperty(effectUnit,
+								  kAudioUnitProperty_StreamFormat, 
+								  kAudioUnitScope_Output, 
+								  0,
+								  &mAUGraphFormat,
+								  sizeof(mAUGraphFormat));
+	
+	if(noErr != result) {
+		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+		
+		// If the property couldn't be set (the AU may not support this format), remove the new node
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+		
+		return false;
+	}
+
+	// Insert the effect at the end of the graph, before the output node
+	result = AUGraphDisconnectNodeInput(mAUGraph, 
+										mOutputNode,
+										0);
+
+	if(noErr != result) {
+		ERR("AUGraphDisconnectNodeInput failed: %i", result);
+		
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+		
+		return false;
+	}
+	
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, 
+									 previousNode,
+									 0,
+									 effectNode,
+									 0);
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+
+		return false;
+	}
+	
+	result = AUGraphConnectNodeInput(mAUGraph, 
+									 effectNode,
+									 0,
+									 mOutputNode,
+									 0);
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+
+		return false;
+	}
+	
+	result = AUGraphUpdate(mAUGraph, NULL);
+	if(noErr != result) {
+		ERR("AUGraphUpdate failed: %i", result);
+
+		// If the update failed, restore the previous node state
+		result = AUGraphConnectNodeInput(mAUGraph,
+										 previousNode,
+										 0,
+										 mOutputNode,
+										 0);
+
+		if(noErr != result) {
+			ERR("AUGraphConnectNodeInput failed: %i", result);
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 #pragma mark Device Management
 
 CFStringRef AudioPlayer::CreateOutputDeviceUID()
@@ -618,6 +773,7 @@ Float64 AudioPlayer::GetOutputDeviceSampleRate()
 	
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
+
 		return -1;
 	}
 	
@@ -666,6 +822,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
+
 		return false;
 	}
 	
@@ -718,8 +875,128 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	return (noErr == result);
 }
 
-#pragma mark Playlist Management
+bool AudioPlayer::OutputDeviceIsHogged()
+{
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
 
+		return false;
+	}
+	
+	// Get the current output device
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	
+	UInt32 specifierSize = sizeof(deviceID);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+		
+		return false;
+	}
+	
+	// Is it hogged by us?
+	pid_t hogPID = static_cast<pid_t>(-1);
+	specifierSize = sizeof(hogPID);
+	result = AudioDeviceGetProperty(deviceID, 
+									0,
+									FALSE,
+									kAudioDevicePropertyHogMode,
+									&specifierSize,
+									&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
+
+		return false;
+	}
+	
+	return (hogPID == getpid() ? true : false);
+}
+
+bool AudioPlayer::StartHoggingOutputDevice()
+{
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		
+		return false;
+	}
+	
+	// Get the current output device
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	
+	UInt32 specifierSize = sizeof(deviceID);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+
+		return false;
+	}
+	
+	// Is it hogged already?
+	pid_t hogPID = static_cast<pid_t>(-1);
+	specifierSize = sizeof(hogPID);
+	result = AudioDeviceGetProperty(deviceID, 
+									0,
+									FALSE, 
+									kAudioDevicePropertyHogMode,
+									&specifierSize,
+									&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
+
+		return false;
+	}
+	
+	// The device isn't hogged, so attempt to hog it
+	if(hogPID == static_cast<pid_t>(-1)) {
+		hogPID = getpid();
+		result = AudioDeviceSetProperty(deviceID,
+										NULL, 
+										0, FALSE,
+										kAudioDevicePropertyHogMode,
+										sizeof(hogPID),
+										&hogPID);
+		
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioDeviceSetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
+
+			return false;
+		}
+	}
+	else
+		LOG("Device is already hogged by pid: %d", hogPID);
+		
+	return true;
+}
+
+#pragma mark Playlist Management
 
 bool AudioPlayer::Play(CFURLRef url)
 {
@@ -1983,4 +2260,20 @@ bool AudioPlayer::IsPreGainEnabled()
 	}
 	
 	return bypassed;
+}
+
+#pragma mark Other Utilities
+
+void AudioPlayer::DeleteActiveDecoders()
+{
+	DecoderStateData *decoderState = mActiveDecoders;
+
+	while(NULL != decoderState) {
+		if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
+			delete decoderState;
+		else
+			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+		
+		decoderState = mActiveDecoders;
+	}
 }

@@ -90,6 +90,8 @@ public:
 	Float32 GetPreGain();
 	bool SetPreGain(Float32 preGain);
 
+	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask);
+	
 	// ========================================
 	// Device Management
 	CFStringRef CreateOutputDeviceUID();
@@ -97,6 +99,10 @@ public:
 
 	Float64 GetOutputDeviceSampleRate();
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
+
+	bool OutputDeviceIsHogged();
+	bool StartHoggingOutputDevice();
+	inline bool StopHoggingOutputDevice()	{ return StartHoggingOutputDevice(); }
 
 	// ========================================
 	// Playlist Management
@@ -148,6 +154,10 @@ private:
 	bool EnablePreGain(UInt32 flag);
 	bool IsPreGainEnabled();
 
+	// ========================================
+	// Other Utilities
+	void DeleteActiveDecoders();
+	
 public:
 
 	// ========================================
