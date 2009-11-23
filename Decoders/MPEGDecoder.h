@@ -90,7 +90,7 @@ private:
 	uint32_t			mMPEGFramesDecoded;
 	uint32_t			mTotalMPEGFrames;
 	
-	unsigned			mSamplesToSkipInNextFrame;
+	uint32_t			mSamplesToSkipInNextFrame;
 	
 	SInt64				mCurrentFrame;
 	SInt64				mTotalFrames;
@@ -99,7 +99,7 @@ private:
 	uint16_t			mEncoderPadding;
 	
 	SInt64				mSamplesDecoded;
-	unsigned			mSamplesPerMPEGFrame;
+	uint32_t			mSamplesPerMPEGFrame;
 	
 	bool				mFoundXingHeader;
 	bool				mFoundLAMEHeader;
