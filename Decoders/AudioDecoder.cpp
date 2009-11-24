@@ -159,7 +159,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 
 AudioDecoder::AudioDecoder()
 	: mURL(NULL)
-{	
+{
+	memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
 AudioDecoder::AudioDecoder(CFURLRef url)
@@ -168,7 +169,9 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 	assert(NULL != url);
 	
 	mURL = static_cast<CFURLRef>(CFRetain(url));
-	
+
+	memset(&mCallbacks, 0, sizeof(mCallbacks));
+
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
