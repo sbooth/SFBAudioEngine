@@ -42,6 +42,9 @@ class CARingBuffer;
 class DecoderStateData;
 
 
+const UInt32 kActiveDecoderArraySize = 32;
+//const UInt32 kActiveDecoderQueueMask = kActiveDecoderArraySize - 1;
+
 // ========================================
 // An audio player class
 // ========================================
@@ -115,25 +118,6 @@ public:
 	
 private:
 	
-	AUGraph								mAUGraph;
-	
-	AudioStreamBasicDescription			mAUGraphFormat;
-	AudioChannelLayout					mAUGraphChannelLayout;
-	
-	AUNode								mLimiterNode;
-	AUNode								mOutputNode;
-	
-	std::deque<AudioDecoder *>			mDecoderQueue;
-	DecoderStateData					*mActiveDecoders;
-	
-	CARingBuffer						*mRingBuffer;
-	pthread_mutex_t						mMutex;
-	semaphore_t							mSemaphore;
-	
-	SInt64								mFramesDecoded;
-	SInt64								mFramesRendered;
-	UInt32								mFramesRenderedLastPass;
-	
 	// ========================================
 	// AUGraph Utilities
 	OSStatus CreateAUGraph();
@@ -145,19 +129,46 @@ private:
 	Float64 GetAUGraphTailTime();
 	
 	OSStatus SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
-
+	
 	OSStatus SetAUGraphFormat(AudioStreamBasicDescription format);
 	OSStatus SetAUGraphChannelLayout(AudioChannelLayout channelLayout);
-
+	
 	// ========================================
 	// PreGain Utilities
 	bool EnablePreGain(UInt32 flag);
 	bool IsPreGainEnabled();
-
+	
 	// ========================================
 	// Other Utilities
-	void DeleteActiveDecoders();
+	void EndActiveDecoders();
+	DecoderStateData * GetCurrentDecoderState();
+
+	// ========================================
+	// Data Members
+	AUGraph								mAUGraph;
 	
+	AudioStreamBasicDescription			mAUGraphFormat;
+	AudioChannelLayout					mAUGraphChannelLayout;
+	
+	AUNode								mLimiterNode;
+	AUNode								mOutputNode;
+	
+	std::deque<AudioDecoder *>			mDecoderQueue;
+	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
+
+	CARingBuffer						*mRingBuffer;
+	pthread_mutex_t						mMutex;
+//	OSSpinLock							mSpinLock;
+	semaphore_t							mDecoderSemaphore;
+	semaphore_t							mCollectorSemaphore;
+	
+	pthread_t							mCollectorThread;
+	bool								mKeepCollecting;
+	
+	SInt64								mFramesDecoded;
+	SInt64								mFramesRendered;
+	UInt32								mFramesRenderedLastPass;
+			
 public:
 
 	// ========================================
@@ -175,5 +186,6 @@ public:
 					   AudioBufferList					*ioData);
 	
 	void * FileReaderThreadEntry();
+	void * CollectorThreadEntry();
 
 };

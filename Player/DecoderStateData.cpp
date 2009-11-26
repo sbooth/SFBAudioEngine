@@ -32,12 +32,14 @@
 #include "AudioDecoder.h"
 #include "AudioEngineDefines.h"
 
+#include <pthread.h>
+
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
+	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mKeepDecoding(true), mReadyForCollection(false)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mNext(NULL)
+	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mKeepDecoding(true), mReadyForCollection(false)
 {
 	assert(NULL != decoder);
 	
@@ -47,10 +49,12 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 DecoderStateData::~DecoderStateData()
 {
 	if(static_cast<pthread_t>(0) != mDecodingThread) {
-		int killResult = pthread_kill(mDecodingThread, SIGKILL);
+		mKeepDecoding = false;
 		
-		if(0 != killResult)
-			ERR("pthread_kill failed: %i", killResult);
+		// End the decoding thread
+		int result = pthread_join(mDecodingThread, NULL);
+		if(0 != result)
+			ERR("pthread_join failed: %i", result);
 		
 		mDecodingThread = static_cast<pthread_t>(0);
 	}

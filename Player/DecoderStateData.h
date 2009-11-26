@@ -56,9 +56,10 @@ public:
 	SInt64					mFrameToSeek;
 	
 	pthread_t				mDecodingThread;
+	bool					mKeepDecoding;
 
-	DecoderStateData		*mNext;
-	
+	bool					mReadyForCollection;
+
 private:
 
 	DecoderStateData();

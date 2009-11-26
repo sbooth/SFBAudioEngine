@@ -161,25 +161,52 @@ fileReaderEntry(void *arg)
 	return player->FileReaderThreadEntry();
 }
 
+// ========================================
+// The collector thread's entry point
+// ========================================
+static void *
+collectorEntry(void *arg)
+{
+	assert(NULL != arg);
+	
+	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+	return player->CollectorThreadEntry();
+}
+
 
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(), mActiveDecoders(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
 	mRingBuffer = new CARingBuffer();
 
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
-	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
+	kern_return_t result = semaphore_create(mach_task_self(), &mDecoderSemaphore, SYNC_POLICY_FIFO, 0);
 #if DEBUG
 	if(KERN_SUCCESS != result)
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 
+	result = semaphore_create(mach_task_self(), &mCollectorSemaphore, SYNC_POLICY_FIFO, 0);
+#if DEBUG
+	if(KERN_SUCCESS != result)
+		mach_error(const_cast<char *>("semaphore_create"), result);
+#endif
+	
 	int success = pthread_mutex_init(&mMutex, NULL);
 	if(0 != success)
 		ERR("pthread_mutex_init failed: %i", success);
 
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i)
+		mActiveDecoders[i] = NULL;
+	
+	// Launch the collector thread
+	mKeepCollecting = true;
+	int creationResult = pthread_create(&mCollectorThread, NULL, collectorEntry, this);
+	if(0 != creationResult)
+		ERR("pthread_create failed: %i", creationResult);
+	
 	// Set up our AUGraph and set pregain to 0
 	CreateAUGraph();
 	
@@ -189,18 +216,47 @@ AudioPlayer::AudioPlayer()
 
 AudioPlayer::~AudioPlayer()
 {
+	// Stop the processing graph and reclaim its resources
 	DisposeAUGraph();
-	DeleteActiveDecoders();	
 
+	// Dispose of all active decoders
+	EndActiveDecoders();
+	
+	// End the collector thread
+	mKeepCollecting = false;
+	semaphore_signal(mCollectorSemaphore);
+	
+	int joinResult = pthread_join(mCollectorThread, NULL);
+	if(0 != joinResult)
+		ERR("pthread_join failed: %i", joinResult);
+	
+	mCollectorThread = static_cast<pthread_t>(0);
+	
+	// Clean up any queued decoders
+	while(false == mDecoderQueue.empty()) {
+		AudioDecoder *decoder = mDecoderQueue.front();
+		mDecoderQueue.pop_front();
+		delete decoder;
+	}
+
+	// Clean up the ring buffer
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
 	
-	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
+	// Destroy the decoder and collector semaphores
+	kern_return_t result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
+#if DEBUG
+	if(KERN_SUCCESS != result)
+		mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+
+	result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
 #if DEBUG
 	if(KERN_SUCCESS != result)
 		mach_error(const_cast<char *>("semaphore_destroy"), result);
 #endif
 	
+	// Destroy the decoder mutex
 	int success = pthread_mutex_destroy(&mMutex);
 	
 	if(0 != success)
@@ -237,9 +293,12 @@ void AudioPlayer::Stop()
 		return;
 
 	Pause();
+	
+	EndActiveDecoders();
 	ResetAUGraph();
 	
-	DeleteActiveDecoders();
+	mFramesDecoded = 0;
+	mFramesRendered = 0;	
 }
 
 bool AudioPlayer::IsPlaying()
@@ -257,7 +316,7 @@ bool AudioPlayer::IsPlaying()
 
 SInt64 AudioPlayer::GetCurrentFrame()
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return -1;
@@ -267,7 +326,7 @@ SInt64 AudioPlayer::GetCurrentFrame()
 
 SInt64 AudioPlayer::GetTotalFrames()
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return -1;
@@ -277,7 +336,7 @@ SInt64 AudioPlayer::GetTotalFrames()
 
 Float64 AudioPlayer::GetCurrentTime()
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return -1;
@@ -287,7 +346,7 @@ Float64 AudioPlayer::GetCurrentTime()
 
 Float64 AudioPlayer::GetTotalTime()
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return -1;
@@ -299,7 +358,7 @@ Float64 AudioPlayer::GetTotalTime()
 
 bool AudioPlayer::SeekForward(UInt32 secondsToSkip)
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return false;
@@ -313,7 +372,7 @@ bool AudioPlayer::SeekForward(UInt32 secondsToSkip)
 
 bool AudioPlayer::SeekBackward(UInt32 secondsToSkip)
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return false;
@@ -327,7 +386,7 @@ bool AudioPlayer::SeekBackward(UInt32 secondsToSkip)
 
 bool AudioPlayer::SeekToTime(Float64 timeInSeconds)
 {
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return false;
@@ -342,7 +401,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
 
-	DecoderStateData *currentDecoderState = mActiveDecoders;
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return false;
@@ -353,7 +412,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	if(false == OSAtomicCompareAndSwap64Barrier(-1, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
-	semaphore_signal(mSemaphore);
+	semaphore_signal(mDecoderSemaphore);
 
 	return true;	
 }
@@ -1018,6 +1077,17 @@ bool AudioPlayer::Play(CFURLRef url)
 bool AudioPlayer::Play(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
+	
+	bool wasPlaying = IsPlaying();
+	if(true == wasPlaying)
+		Pause();
+
+	EndActiveDecoders();
+	ResetAUGraph();
+	
+	mFramesDecoded = 0;
+	mFramesRendered = 0;
+
 
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1050,8 +1120,6 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 	
-//	ResetAUGraph();
-
 	// Allocate enough space in the ring buffer for the new format
 	mRingBuffer->Allocate(decoder->GetFormat().mChannelsPerFrame,
 						  decoder->GetFormat().mBytesPerFrame,
@@ -1067,6 +1135,9 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 		return false;
 	}
 	
+	if(true == wasPlaying)
+		Play();
+
 	return true;
 }
 
@@ -1107,7 +1178,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
 	
-	if(NULL == mActiveDecoders && 0 == decoderQueueSize)
+	if(NULL == GetCurrentDecoderState() && 0 == decoderQueueSize)
 		return Play(decoder);
 	
 	// Otherwise, enqueue this decoder if the format matches
@@ -1239,7 +1310,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite)
-		semaphore_signal(mSemaphore);
+		semaphore_signal(mDecoderSemaphore);
 	
 	return noErr;
 }
@@ -1262,76 +1333,46 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		if(0 == mFramesRenderedLastPass)
 			return noErr;
 		
-		DecoderStateData *decoderState = mActiveDecoders;
-		
-		if(NULL == decoderState) {
-			ERR("NULL == activeDecoder");
-			
-			return ioErr;
-		}
-		
 		// mFramesRenderedLastPass contains the number of valid frames that were rendered
 		// However, these could have come from any number of decoders depending on the buffer sizes
 		// So it is necessary to split them up here
 
-		SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
-		
-		// If the number of frames rendered was less than the number of frames remaining in the decoder,
-		// all of the rendered frames were from that decoder
-		if(mFramesRenderedLastPass <= decoderFramesRemaining) {
+		SInt64 framesRemainingToDistribute = mFramesRenderedLastPass;
+
+		for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+			DecoderStateData *decoderState = mActiveDecoders[i];
+			
+			if(NULL == decoderState)
+				continue;
+			
+			if(decoderState->mReadyForCollection)
+				continue;
+
+			SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
+			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
+			
 			if(0 == decoderState->mFramesRendered)
 				decoderState->mDecoder->PerformRenderingStartedCallback();
 			
-			OSAtomicAdd64Barrier(mFramesRenderedLastPass, &decoderState->mFramesRendered);
-
-			if(decoderState->mFramesRendered == decoderState->mTotalFrames)
+			OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
+			
+			if(decoderState->mFramesRendered == decoderState->mTotalFrames) {
 				decoderState->mDecoder->PerformRenderingFinishedCallback();
-		}
-		// Otherwise, the frames are split among the active decoders (assuming no decoding errors occurred)
-		else {
-			OSAtomicAdd64Barrier(decoderFramesRemaining, &decoderState->mFramesRendered);
-
-			SInt64 framesRemainingToDistribute = mFramesRenderedLastPass - decoderFramesRemaining;
-			
-			DecoderStateData *nextDecoderState = decoderState->mNext;
-			while(NULL != nextDecoderState && 0 < framesRemainingToDistribute) {
-				if(0 == nextDecoderState->mFramesRendered)
-					nextDecoderState->mDecoder->PerformRenderingStartedCallback();
 				
-				SInt64 nextDecoderFramesRemaining = nextDecoderState->mTotalFrames - nextDecoderState->mFramesRendered;
-				
-				if(framesRemainingToDistribute <= nextDecoderFramesRemaining) {
-					OSAtomicAdd64Barrier(framesRemainingToDistribute, &nextDecoderState->mFramesRendered);
-					framesRemainingToDistribute = 0;
-				}
-				else {
-					OSAtomicAdd64Barrier(nextDecoderFramesRemaining, &nextDecoderState->mFramesRendered);
-					framesRemainingToDistribute -= nextDecoderFramesRemaining;
-				}
-				
-				if(nextDecoderState->mFramesRendered == nextDecoderState->mTotalFrames)
-					nextDecoderState->mDecoder->PerformRenderingFinishedCallback();
-
-				nextDecoderState = nextDecoderState->mNext;
+				// Since rendering is finished, signal the collector to clean up this decoder
+				decoderState->mReadyForCollection = true;
+				semaphore_signal(mCollectorSemaphore);
 			}
+			
+			framesRemainingToDistribute -= framesFromThisDecoder;
+			
+			if(0 == framesRemainingToDistribute)
+				break;
 		}
 
-		// Now remove any active decoders that have finished rendering
-		decoderState = mActiveDecoders;
-		while(NULL != decoderState && decoderState->mFramesRendered == decoderState->mTotalFrames) {
-			// Swap the next decoder in as the current active decoder since this one has finished
-			if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders))) {
-				// Stop will delete all active decoders
-				if(NULL == decoderState->mNext)
-					Stop();
-				else
-					delete decoderState;
-			}
-			else
-				ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
-			
-			decoderState = mActiveDecoders;
-		}		
+		// If there are no more active decoders, stop playback
+		if(NULL == GetCurrentDecoderState())
+			Stop();
 	}
 	
 	return noErr;
@@ -1368,20 +1409,23 @@ void * AudioPlayer::FileReaderThreadEntry()
 	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 	decoderStateData->mDecodingThread = pthread_self();
 	
-	// TODO: Is this thread safe?
-	DecoderStateData *lastActiveDecoderStateData = mActiveDecoders;
-	if(NULL == lastActiveDecoderStateData) {
-		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders)))
-			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
-	}
-	else {
-		while(NULL != lastActiveDecoderStateData->mNext)
-			lastActiveDecoderStateData = lastActiveDecoderStateData->mNext;
+	DecoderStateData *previousDecoderState = NULL;
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+		previousDecoderState = mActiveDecoders[i];
+
+		if(NULL != previousDecoderState) {
+			
+			// If the previous decoder is still rendering, start this decoder after it completes
+			if(false == previousDecoderState->mReadyForCollection)
+				decoderStateData->mTimeStamp += previousDecoderState->mTimeStamp + previousDecoderState->mTotalFrames;
+
+			continue;
+		}
 		
-		if(false == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&lastActiveDecoderStateData->mNext)))
+		if(true == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders[i])))
+			break;
+		else
 			ERR("OSAtomicCompareAndSwapPtrBarrier failed");
-		
-		decoderStateData->mTimeStamp = lastActiveDecoderStateData->mTimeStamp + lastActiveDecoderStateData->mTotalFrames;
 	}
 	
 	SInt64 startTime = decoderStateData->mTimeStamp;
@@ -1404,8 +1448,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 
 	// ========================================
 	// Decode the audio file in the ring buffer until finished or cancelled
-	bool finished = false;
-	while(false == finished) {
+	while(true == decoderStateData->mKeepDecoding) {
 		
 		// Fill the ring buffer with as much data as possible
 		for(;;) {
@@ -1489,8 +1532,8 @@ void * AudioPlayer::FileReaderThreadEntry()
 						ERR("pthread_mutex_lock failed: %i", lockResult);
 					
 					// This thread is complete					
-					finished = true;
 					decoderStateData->mDecodingThread = static_cast<pthread_t>(0);
+					decoderStateData->mKeepDecoding = false;
 					
 					// Some formats (MP3) may not know the exact number of frames in advance
 					// without processing the entire file, which is a potentially slow operation
@@ -1507,7 +1550,7 @@ void * AudioPlayer::FileReaderThreadEntry()
 		}
 		
 		// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
-		semaphore_timedwait(mSemaphore, timeout);
+		semaphore_timedwait(mDecoderSemaphore, timeout);
 	}
 	
 	// ========================================
@@ -1517,6 +1560,35 @@ void * AudioPlayer::FileReaderThreadEntry()
 			free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
 		
 		free(bufferList), bufferList = NULL;
+	}
+
+	return NULL;
+}
+
+void * AudioPlayer::CollectorThreadEntry()
+{
+	// Two seconds and zero nanoseconds
+	mach_timespec_t timeout = { 2, 0 };
+
+	while(mKeepCollecting) {
+		
+		for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+			DecoderStateData *decoderState = mActiveDecoders[i];
+			
+			if(NULL == decoderState)
+				continue;
+			
+			if(false == decoderState->mReadyForCollection)
+				continue;
+			
+			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, NULL, reinterpret_cast<void **>(&mActiveDecoders[i]));
+			
+			if(swapSucceeded)
+				delete decoderState, decoderState = NULL;
+		}
+		
+		// Wait for any thread to signal us to try and collect finished decoders
+		semaphore_timedwait(mCollectorSemaphore, timeout);
 	}
 	
 	return NULL;
@@ -2264,16 +2336,41 @@ bool AudioPlayer::IsPreGainEnabled()
 
 #pragma mark Other Utilities
 
-void AudioPlayer::DeleteActiveDecoders()
+DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 {
-	DecoderStateData *decoderState = mActiveDecoders;
-
-	while(NULL != decoderState) {
-		if(true == OSAtomicCompareAndSwapPtrBarrier(decoderState, decoderState->mNext, reinterpret_cast<void **>(&mActiveDecoders)))
-			delete decoderState;
-		else
-			ERR("OSAtomicCompareAndSwapPtrBarrier failed");		
+	DecoderStateData *result = NULL;
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+		DecoderStateData *decoderState = mActiveDecoders[i];
 		
-		decoderState = mActiveDecoders;
+		if(NULL == decoderState)
+			continue;
+		
+		if(true == decoderState->mReadyForCollection)
+			continue;
+		
+		if(NULL == result)
+			result = decoderState;
+		else if(decoderState->mTimeStamp < result->mTimeStamp)
+			result = decoderState;
 	}
+	
+	return result;
+}
+
+void AudioPlayer::EndActiveDecoders()
+{
+	// End any still-active decoders
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+		DecoderStateData *decoderState = mActiveDecoders[i];
+		
+		if(NULL == decoderState)
+			continue;
+		
+		decoderState->mKeepDecoding = false;
+		decoderState->mReadyForCollection = true;
+	}
+	
+	// Signal the collector to collect 
+	semaphore_signal(mDecoderSemaphore);
+	semaphore_signal(mCollectorSemaphore);
 }
