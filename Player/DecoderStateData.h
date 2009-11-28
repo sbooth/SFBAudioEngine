@@ -36,7 +36,7 @@
 class AudioDecoder;
 
 // ========================================
-// Simple linked list for running decoders
+// State data for decoders that are decoding and/or rendering
 // ========================================
 class DecoderStateData
 {

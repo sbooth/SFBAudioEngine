@@ -43,22 +43,24 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 	
+	// NB: The decoder may return an estimate of the total frames
 	mTotalFrames = mDecoder->GetTotalFrames();
 }
 	
 DecoderStateData::~DecoderStateData()
 {
+	// Wait for the decoding thread to end, if it hasn't already
 	if(static_cast<pthread_t>(0) != mDecodingThread) {
 		mKeepDecoding = false;
 		
-		// End the decoding thread
 		int result = pthread_join(mDecodingThread, NULL);
 		if(0 != result)
 			ERR("pthread_join failed: %i", result);
 		
 		mDecodingThread = static_cast<pthread_t>(0);
 	}
-	
-	if(mDecoder)
+
+	// Delete the decoder
+	if(NULL != mDecoder)
 		delete mDecoder, mDecoder = NULL;
 }
