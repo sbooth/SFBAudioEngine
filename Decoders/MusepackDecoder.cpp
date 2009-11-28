@@ -131,7 +131,7 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 	if(MPC_STATUS_OK == result)
 		mCurrentFrame = frame;
 	
-	return (result ? mCurrentFrame : -1);
+	return ((MPC_STATUS_OK == result) ? mCurrentFrame : -1);
 }
 
 UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
