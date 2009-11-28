@@ -363,7 +363,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			
 			for(uint32_t sample = startingSample; sample < sampleCount; ++sample) {
 				audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
-				*floatBuffer++ = (float)(audioSample / scaleFactor);
+				*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
 			}
 			
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
@@ -635,7 +635,7 @@ bool MPEGDecoder::ScanFile()
 
 SInt64 MPEGDecoder::SeekToFrameApproximately(SInt64 frame)
 {
-	double	fraction	= static_cast<double>(frame / this->GetTotalFrames());
+	double	fraction	= static_cast<double>(frame) / this->GetTotalFrames();
 	long	seekPoint	= 0;
 	
 	// If a Xing header was found, interpolate in TOC
@@ -653,7 +653,7 @@ SInt64 MPEGDecoder::SeekToFrameApproximately(SInt64 frame)
 			secondOffset = mXingTOC[firstIndex + 1];;
 			
 			double x = firstOffset + (secondOffset - firstOffset) * (percent - firstIndex);
-			seekPoint = (long)((1.0 / 256.0) * x * mFileBytes); 
+			seekPoint = static_cast<long>((1.0 / 256.0) * x * mFileBytes);
 	}
 	else
 		seekPoint = static_cast<long>(mFileBytes * fraction);
@@ -842,11 +842,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 				
 				for(unsigned sample = startingSample + additionalSamplesToSkip; sample < sampleCount; ++sample) {
 					audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
-					
-					if(0 <= audioSample)
-						*floatBuffer++ = (float)(audioSample / (scaleFactor - 1));
-					else
-						*floatBuffer++ = (float)(audioSample / scaleFactor);
+					*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
 				}
 				
 				mBufferList->mBuffers[channel].mNumberChannels	= 1;
