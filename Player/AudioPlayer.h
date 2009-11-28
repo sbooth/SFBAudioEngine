@@ -42,8 +42,11 @@ class CARingBuffer;
 class DecoderStateData;
 
 
+// ========================================
+// Constants
+// ========================================
 const UInt32 kActiveDecoderArraySize = 32;
-//const UInt32 kActiveDecoderQueueMask = kActiveDecoderArraySize - 1;
+
 
 // ========================================
 // An audio player class
@@ -140,7 +143,7 @@ private:
 	
 	// ========================================
 	// Other Utilities
-	void EndActiveDecoders();
+	void StopActiveDecoders();
 	DecoderStateData * GetCurrentDecoderState();
 
 	// ========================================
@@ -158,7 +161,6 @@ private:
 
 	CARingBuffer						*mRingBuffer;
 	pthread_mutex_t						mMutex;
-//	OSSpinLock							mSpinLock;
 	semaphore_t							mDecoderSemaphore;
 	semaphore_t							mCollectorSemaphore;
 	
@@ -167,8 +169,9 @@ private:
 	
 	SInt64								mFramesDecoded;
 	SInt64								mFramesRendered;
+	SInt64								mNextDecoderStartingTimeStamp;
 	UInt32								mFramesRenderedLastPass;
-			
+
 public:
 
 	// ========================================

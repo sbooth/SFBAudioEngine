@@ -177,7 +177,7 @@ collectorEntry(void *arg)
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mNextDecoderStartingTimeStamp(0)
 {
 	mRingBuffer = new CARingBuffer();
 
@@ -220,7 +220,7 @@ AudioPlayer::~AudioPlayer()
 	DisposeAUGraph();
 
 	// Dispose of all active decoders
-	EndActiveDecoders();
+	StopActiveDecoders();
 	
 	// End the collector thread
 	mKeepCollecting = false;
@@ -294,11 +294,12 @@ void AudioPlayer::Stop()
 
 	Pause();
 	
-	EndActiveDecoders();
+	StopActiveDecoders();
 	ResetAUGraph();
 	
 	mFramesDecoded = 0;
-	mFramesRendered = 0;	
+	mFramesRendered = 0;
+	mNextDecoderStartingTimeStamp = 0;
 }
 
 bool AudioPlayer::IsPlaying()
@@ -1082,12 +1083,12 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	if(true == wasPlaying)
 		Pause();
 
-	EndActiveDecoders();
+	StopActiveDecoders();
 	ResetAUGraph();
 	
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
-
+	mNextDecoderStartingTimeStamp = 0;
 
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1408,20 +1409,12 @@ void * AudioPlayer::FileReaderThreadEntry()
 	// Create the decoder state and append to the list of active decoders
 	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 	decoderStateData->mDecodingThread = pthread_self();
+	decoderStateData->mTimeStamp = mNextDecoderStartingTimeStamp;
 	
-	DecoderStateData *previousDecoderState = NULL;
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
-		previousDecoderState = mActiveDecoders[i];
-
-		if(NULL != previousDecoderState) {
-			
-			// If the previous decoder is still rendering, start this decoder after it completes
-			if(false == previousDecoderState->mReadyForCollection)
-				decoderStateData->mTimeStamp += previousDecoderState->mTimeStamp + previousDecoderState->mTotalFrames;
-
+		if(NULL != mActiveDecoders[i])
 			continue;
-		}
-		
+
 		if(true == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders[i])))
 			break;
 		else
@@ -1508,6 +1501,18 @@ void * AudioPlayer::FileReaderThreadEntry()
 				if(0 == framesDecoded) {
 					decoder->PerformDecodingFinishedCallback();
 					
+					// This thread is complete					
+					decoderStateData->mDecodingThread = static_cast<pthread_t>(0);
+					decoderStateData->mKeepDecoding = false;
+					
+					// Some formats (MP3) may not know the exact number of frames in advance
+					// without processing the entire file, which is a potentially slow operation
+					// Rather than require preprocessing to ensure an accurate frame count, update 
+					// it here so EOS is correctly detected in DidRender()
+					decoderStateData->mTotalFrames = startingFrameNumber;
+					
+					OSAtomicAdd64Barrier(startingFrameNumber, &mNextDecoderStartingTimeStamp);
+					
 					// Lock the queue and determine if there is another decoder which should be started
 					lockResult = pthread_mutex_lock(&mMutex);
 					
@@ -1530,16 +1535,6 @@ void * AudioPlayer::FileReaderThreadEntry()
 					}
 					else
 						ERR("pthread_mutex_lock failed: %i", lockResult);
-					
-					// This thread is complete					
-					decoderStateData->mDecodingThread = static_cast<pthread_t>(0);
-					decoderStateData->mKeepDecoding = false;
-					
-					// Some formats (MP3) may not know the exact number of frames in advance
-					// without processing the entire file, which is a potentially slow operation
-					// Rather than require preprocessing to ensure an accurate frame count, update 
-					// it here so EOS is correctly detected in DidRender()
-					decoderStateData->mTotalFrames = startingFrameNumber;
 					
 					break;
 				}
@@ -2357,7 +2352,7 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 	return result;
 }
 
-void AudioPlayer::EndActiveDecoders()
+void AudioPlayer::StopActiveDecoders()
 {
 	// End any still-active decoders
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
