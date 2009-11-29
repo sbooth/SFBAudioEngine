@@ -119,7 +119,7 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 
 MPEGDecoder::MPEGDecoder(CFURLRef url)
-	: AudioDecoder(url)
+: AudioDecoder(url), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0), mFileBytes(0)
 {
 	assert(NULL != url);
 	
@@ -138,6 +138,8 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	mad_stream_init(&mStream);
 	mad_frame_init(&mFrame);
 	mad_synth_init(&mSynth);
+	
+	memset(mXingTOC, 0, 100 * sizeof(uint8_t));
 	
 	// Scan file to determine sample rate, channels, total frames, etc
 	if(false == this->ScanFile()) {
@@ -326,14 +328,14 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		
 		// Housekeeping
 		++mMPEGFramesDecoded;
-		
+
 		// Synthesize the frame into PCM
 		mad_synth_frame(&mSynth, &mFrame);
 		
 		// Skip any samples that remain from last frame
 		// This can happen if the encoder delay is greater than the number of samples in a frame
 		uint32_t startingSample = mSamplesToSkipInNextFrame;
-		
+
 		// Skip the Xing header (it contains empty audio)
 		if(true == mFoundXingHeader && 1 == mMPEGFramesDecoded)
 			continue;
@@ -343,7 +345,6 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 
 		// The number of samples in this frame
 		uint32_t sampleCount = mSynth.pcm.length;
-
 		// Skip this entire frame if necessary
 		if(startingSample > sampleCount) {
 			mSamplesToSkipInNextFrame += startingSample - sampleCount;
@@ -356,7 +357,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		// is known.  Ensure only that many are output
 		if(true == mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
 			sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
-		
+
 		// Output samples in 32-bit float PCM
 		for(uint32_t channel = 0; channel < MAD_NCHANNELS(&mFrame.header); ++channel) {
 			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
@@ -532,8 +533,7 @@ bool MPEGDecoder::ScanFile()
 					if(8 * 100 > ancillaryBitsRemaining)
 						continue;
 					
-					unsigned i;
-					for(i = 0; i < 100; ++i)
+					for(unsigned i = 0; i < 100; ++i)
 						mXingTOC[i] = mad_bit_read(&stream.anc_ptr, 8);
 					
 					ancillaryBitsRemaining -= (8 * 100);
@@ -707,8 +707,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 		mCurrentFrame += mBufferList->mBuffers[0].mDataByteSize / sizeof(float);
 	
 	// Zero the buffers
-	unsigned i;
-	for(i = 0; i < mBufferList->mNumberBuffers; ++i)
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 	
 	for(;;) {
