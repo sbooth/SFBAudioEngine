@@ -71,21 +71,21 @@ public:
 	bool IsPlaying();
 
 	// ========================================
-	// UI properties
+	// Playback Properties
 	SInt64 GetCurrentFrame();
 	SInt64 GetTotalFrames();
 	SInt64 GetRemainingFrames()				{ return GetTotalFrames() - GetCurrentFrame(); }
 	
-	Float64 GetCurrentTime();
-	Float64 GetTotalTime();
-	inline Float64 GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
+	CFTimeInterval GetCurrentTime();
+	CFTimeInterval GetTotalTime();
+	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
 
 	// ========================================
 	// Seeking
-	bool SeekForward(UInt32 secondsToSkip = 3);
-	bool SeekBackward(UInt32 secondsToSkip = 3);
+	bool SeekForward(CFTimeInterval secondsToSkip = 3);
+	bool SeekBackward(CFTimeInterval secondsToSkip = 3);
 
-	bool SeekToTime(Float64 timeInSeconds);
+	bool SeekToTime(CFTimeInterval timeInSeconds);
 	bool SeekToFrame(SInt64 frame);
 	
 	// ========================================
@@ -96,7 +96,10 @@ public:
 	Float32 GetPreGain();
 	bool SetPreGain(Float32 preGain);
 
-	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask);
+	// ========================================
+	// DSP Effects
+	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = NULL);
+	bool RemoveEffect(AudioUnit effectUnit);
 	
 	// ========================================
 	// Device Management
