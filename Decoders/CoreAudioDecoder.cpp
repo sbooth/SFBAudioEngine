@@ -30,6 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "CoreAudioDecoder.h"
@@ -52,7 +53,6 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	if(noErr != result) {
 		ERR("AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
-		
 		return false;
 	}
 	
@@ -86,7 +86,6 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	if(noErr != result) {
 		ERR("AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
-		
 		return false;
 	}
 	
@@ -115,11 +114,8 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 {
 	// Open the input file		
 	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
-	if(noErr != result) {
-		ERR("ExtAudioFileOpenURL failed: %i", result);
-
-		return;
-	}
+	if(noErr != result)
+		throw std::runtime_error("ExtAudioFileOpenURL failed");
 	
 	// Query file format
 	UInt32 dataSize = sizeof(mSourceFormat);
@@ -133,7 +129,7 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		mExtAudioFile = NULL;
 		
-		return;
+		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed");
 	}
 			
 	// Tell the ExtAudioFile the format in which we'd like our data
@@ -150,7 +146,7 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		mExtAudioFile = NULL;
 		
-		return;
+		throw std::runtime_error("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed");
 	}
 	
 	// Setup the channel layout
@@ -165,7 +161,7 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		mExtAudioFile = NULL;
 		
-		return;
+		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed");
 	}
 }
 
@@ -216,7 +212,6 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
 		ERR("ExtAudioFileSeek failed: %i", result);
-		
 		return -1;
 	}
 	
@@ -232,7 +227,6 @@ UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
 	if(noErr != result) {
 		ERR("ExtAudioFileRead failed: %i", result);
-		
 		return 0;
 	}
 	
