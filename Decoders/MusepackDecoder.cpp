@@ -233,8 +233,8 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
 
 			for(UInt32 sample = channel; sample < frame.samples * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
-				audioSample = inputBuffer[sample];				
-				*floatBuffer++	= (audioSample < -1.0f ? -1.0f : (audioSample > 1.0f ? 1.0f : audioSample));
+				audioSample = inputBuffer[sample];
+				*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
 			}
 			
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;

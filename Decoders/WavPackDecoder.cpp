@@ -161,8 +161,8 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
 			
 			for(unsigned sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
-				float audioSample = inputBuffer[sample];				
-				*floatBuffer++ = (audioSample < -1.0f ? -1.0f : (audioSample > 1.0f ? 1.0f : audioSample));
+				float audioSample = inputBuffer[sample];
+				*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
 			}
 			
 			bufferList->mBuffers[channel].mNumberChannels	= 1;
