@@ -30,6 +30,7 @@
 
 #include <AudioToolbox/AudioFormat.h>
 #include <CoreServices/CoreServices.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "AudioDecoder.h"
@@ -40,6 +41,7 @@
 #include "MPEGDecoder.h"
 #include "OggVorbisDecoder.h"
 #include "MusepackDecoder.h"
+
 
 #pragma mark Static Methods
 
@@ -62,18 +64,26 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 				CFStringRef pathExtension = CFURLCopyPathExtension(url);
 				
 				if(NULL != pathExtension) {
-					if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new FLACDecoder(url);
-					else if(WavPackDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new WavPackDecoder(url);
-					else if(MPEGDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new MPEGDecoder(url);
-					else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new OggVorbisDecoder(url);
-					else if(MusepackDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new MusepackDecoder(url);
-					else if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
-						decoder = new CoreAudioDecoder(url);
+
+					// Creating a decoder may throw an exception for any number of reasons
+					try {
+						if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new FLACDecoder(url);
+						else if(WavPackDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new WavPackDecoder(url);
+						else if(MPEGDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new MPEGDecoder(url);
+						else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new OggVorbisDecoder(url);
+						else if(MusepackDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new MusepackDecoder(url);
+						else if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
+							decoder = new CoreAudioDecoder(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
 					
 					if(NULL != decoder && false == decoder->IsValid())
 						delete decoder, decoder = NULL;
@@ -124,6 +134,11 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(NULL == decoder)
 		return NULL;
 	
+	if(false == decoder->SupportsSeeking()) {
+		delete decoder;
+		return NULL;
+	}
+
 	return new LoopableRegionDecoder(decoder, startingFrame);
 }
 
@@ -133,6 +148,11 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	
 	if(NULL == decoder)
 		return NULL;
+	
+	if(false == decoder->SupportsSeeking()) {
+		delete decoder;
+		return NULL;
+	}
 	
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
 }
