@@ -386,7 +386,7 @@ SInt64 AudioPlayer::GetCurrentFrame()
 	if(NULL == currentDecoderState)
 		return -1;
 	
-	return currentDecoderState->mFramesRendered;
+	return (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 }
 
 SInt64 AudioPlayer::GetTotalFrames()
@@ -406,7 +406,7 @@ CFTimeInterval AudioPlayer::GetCurrentTime()
 	if(NULL == currentDecoderState)
 		return -1;
 	
-	return static_cast<CFTimeInterval>(currentDecoderState->mFramesRendered / currentDecoderState->mDecoder->GetFormat().mSampleRate);
+	return static_cast<CFTimeInterval>(GetCurrentFrame() / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
 CFTimeInterval AudioPlayer::GetTotalTime()
@@ -431,7 +431,7 @@ bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 		return false;
 
 	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
-	SInt64 desiredFrame		= currentDecoderState->mFramesRendered + frameCount;
+	SInt64 desiredFrame		= GetCurrentFrame() + frameCount;
 	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
 	
 	return SeekToFrame(std::min(desiredFrame, totalFrames));
@@ -476,13 +476,13 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	if(false == currentDecoderState->mDecoder->SupportsSeeking())
 		return false;
 	
-	Float64 graphLatency = GetAUGraphLatency();
-	if(-1 != graphLatency) {
-		SInt64 graphLatencyFrames = static_cast<SInt64>(graphLatency * mAUGraphFormat.mSampleRate);
-		frame -= graphLatencyFrames;
-	}
+//	Float64 graphLatency = GetAUGraphLatency();
+//	if(-1 != graphLatency) {
+//		SInt64 graphLatencyFrames = static_cast<SInt64>(graphLatency * mAUGraphFormat.mSampleRate);
+//		frame -= graphLatencyFrames;
+//	}
 	
-	if(false == OSAtomicCompareAndSwap64Barrier(-1, frame, &currentDecoderState->mFrameToSeek))
+	if(false == OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
 	semaphore_signal(mDecoderSemaphore);

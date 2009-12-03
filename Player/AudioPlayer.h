@@ -65,7 +65,7 @@ public:
 	// Playback Control
 	void Play();
 	void Pause();
-	inline void PlayPause()					{ IsPlaying() ? Pause() : Play(); }
+	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
 	bool IsPlaying();
@@ -74,7 +74,7 @@ public:
 	// Playback Properties
 	SInt64 GetCurrentFrame();
 	SInt64 GetTotalFrames();
-	SInt64 GetRemainingFrames()				{ return GetTotalFrames() - GetCurrentFrame(); }
+	inline SInt64 GetRemainingFrames()				{ return GetTotalFrames() - GetCurrentFrame(); }
 	
 	CFTimeInterval GetCurrentTime();
 	CFTimeInterval GetTotalTime();
@@ -111,7 +111,7 @@ public:
 
 	bool OutputDeviceIsHogged();
 	bool StartHoggingOutputDevice();
-	inline bool StopHoggingOutputDevice()	{ return StartHoggingOutputDevice(); }
+	inline bool StopHoggingOutputDevice()			{ return StartHoggingOutputDevice(); }
 
 	// ========================================
 	// Playlist Management
