@@ -35,6 +35,7 @@
 #include <mach/task.h>
 #include <mach/semaphore.h>
 #include <mach/sync_policy.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "AudioPlayer.h"
@@ -184,20 +185,53 @@ AudioPlayer::AudioPlayer()
 
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
 	kern_return_t result = semaphore_create(mach_task_self(), &mDecoderSemaphore, SYNC_POLICY_FIFO, 0);
+	if(KERN_SUCCESS != result) {
 #if DEBUG
-	if(KERN_SUCCESS != result)
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 
+		delete mRingBuffer, mRingBuffer = NULL;
+
+		throw std::runtime_error("semaphore_create failed");
+	}
+
 	result = semaphore_create(mach_task_self(), &mCollectorSemaphore, SYNC_POLICY_FIFO, 0);
+	if(KERN_SUCCESS != result) {
 #if DEBUG
-	if(KERN_SUCCESS != result)
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
+		
+		delete mRingBuffer, mRingBuffer = NULL;
+
+		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
+#if DEBUG
+		if(KERN_SUCCESS != result)
+			mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+		
+		throw std::runtime_error("semaphore_create failed");
+	}
 	
 	int success = pthread_mutex_init(&mMutex, NULL);
-	if(0 != success)
+	if(0 != success) {
 		ERR("pthread_mutex_init failed: %i", success);
+		
+		delete mRingBuffer, mRingBuffer = NULL;
+		
+		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
+#if DEBUG
+		if(KERN_SUCCESS != result)
+			mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+
+		result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
+#if DEBUG
+		if(KERN_SUCCESS != result)
+			mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+
+		throw std::runtime_error("pthread_mutex_init failed");
+	}
 
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i)
 		mActiveDecoders[i] = NULL;
@@ -205,11 +239,31 @@ AudioPlayer::AudioPlayer()
 	// Launch the collector thread
 	mKeepCollecting = true;
 	int creationResult = pthread_create(&mCollectorThread, NULL, collectorEntry, this);
-	if(0 != creationResult)
+	if(0 != creationResult) {
 		ERR("pthread_create failed: %i", creationResult);
+		
+		delete mRingBuffer, mRingBuffer = NULL;
+		
+		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
+#if DEBUG
+		if(KERN_SUCCESS != result)
+			mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+		
+		result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
+#if DEBUG
+		if(KERN_SUCCESS != result)
+			mach_error(const_cast<char *>("semaphore_destroy"), result);
+#endif
+		
+		throw std::runtime_error("pthread_create failed");
+	}
 	
 	// Set up our AUGraph and set pregain to 0
-	CreateAUGraph();
+	OSStatus status = CreateAUGraph();
+	if(noErr != status) {
+		ERR("CreateAUGraph failed: %i", result);
+	}
 	
 	if(false == SetPreGain(0))
 		ERR("SetPreGain failed");
@@ -232,6 +286,12 @@ AudioPlayer::~AudioPlayer()
 		ERR("pthread_join failed: %i", joinResult);
 	
 	mCollectorThread = static_cast<pthread_t>(0);
+
+	// Force any decoders left hanging by the collector to end
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+		if(NULL != mActiveDecoders[i])
+			delete mActiveDecoders[i], mActiveDecoders[i] = NULL;
+	}
 	
 	// Clean up any queued decoders
 	while(false == mDecoderQueue.empty()) {
@@ -259,7 +319,6 @@ AudioPlayer::~AudioPlayer()
 	
 	// Destroy the decoder mutex
 	int success = pthread_mutex_destroy(&mMutex);
-	
 	if(0 != success)
 		ERR("pthread_mutex_destroy failed: %i", success);
 }
@@ -272,7 +331,7 @@ void AudioPlayer::Play()
 {
 	if(IsPlaying())
 		return;
-	
+
 	OSStatus result = AUGraphStart(mAUGraph);
 
 	if(noErr != result)
@@ -1547,6 +1606,15 @@ void * AudioPlayer::FileReaderThreadEntry()
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
 
+	// This only happens in rare cases when the user calls Enqueue() and then (immediately)
+	// deletes the player before calling Play(). In this scenario it is possible for the
+	// player's destructor to run before this function is called. When this happens the
+	// destructor deletes all enqueued decoders and this function is left with nothing to work with.
+	if(NULL == decoder) {
+		ERR("FileReaderThreadEntry called with no decoders in queue");
+		return NULL;
+	}
+	
 	// ========================================
 	// Create the decoder state and append to the list of active decoders
 	DecoderStateData *decoderStateData = new DecoderStateData(decoder);
