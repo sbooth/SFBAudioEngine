@@ -75,5 +75,6 @@ public:
 private:
 	
 	ExtAudioFileRef mExtAudioFile;
+	SInt64 mPrimingFrameBugWorkaroundAdjustment;
 	
 };

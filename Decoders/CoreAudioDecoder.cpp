@@ -146,7 +146,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 
 CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
-	: AudioDecoder(url), mExtAudioFile(NULL)
+	: AudioDecoder(url), mExtAudioFile(NULL), mPrimingFrameBugWorkaroundAdjustment(0)
 {
 	// Open the input file		
 	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
@@ -184,6 +184,12 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		throw std::runtime_error("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed");
 	}
+	
+	// Work around a bug in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
+	// Synopsis: ExtAudioFileTell() returns values too small by the number of priming frames
+	SInt64 currentFrame = GetCurrentFrame();
+	if(0 > currentFrame)
+		mPrimingFrameBugWorkaroundAdjustment = -1 * currentFrame;
 	
 	// Setup the channel layout
 	dataSize = sizeof(mChannelLayout);
@@ -234,10 +240,12 @@ SInt64 CoreAudioDecoder::GetCurrentFrame()
 	SInt64 currentFrame = -1;
 	
 	OSStatus result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
-	if(noErr != result)
+	if(noErr != result) {
 		ERR("ExtAudioFileTell failed: %i", result);
+		return -1;
+	}
 	
-	return currentFrame;
+	return currentFrame + mPrimingFrameBugWorkaroundAdjustment;
 }
 
 SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
