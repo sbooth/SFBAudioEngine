@@ -38,6 +38,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(NULL != decoder);
+	assert(decoder->SupportsSeeking());
 	
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
@@ -53,6 +54,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(NULL != decoder);
+	assert(decoder->SupportsSeeking());
 
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
@@ -66,6 +68,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(NULL != decoder);
+	assert(decoder->SupportsSeeking());
 	
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
@@ -87,7 +90,7 @@ void LoopableRegionDecoder::Reset()
 	
 	mFramesReadInCurrentPass	= 0;
 	mTotalFramesRead			= 0;
-	mCompletedPasses				= 0;
+	mCompletedPasses			= 0;
 }
 
 #pragma mark Decoding
@@ -144,7 +147,7 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 	assert(0 <= frame);
 	assert(frame < GetTotalFrames());
 	
-	mCompletedPasses				= static_cast<UInt32>(frame / mFrameCount);
+	mCompletedPasses			= static_cast<UInt32>(frame / mFrameCount);
 	mFramesReadInCurrentPass	= static_cast<UInt32>(frame % mFrameCount);
 	mTotalFramesRead			= frame;
 	
