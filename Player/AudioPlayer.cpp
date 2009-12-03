@@ -176,6 +176,7 @@ collectorEntry(void *arg)
 
 #pragma mark Creation/Destruction
 
+
 AudioPlayer::AudioPlayer()
 	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mNextDecoderStartingTimeStamp(0)
 {
@@ -263,7 +264,9 @@ AudioPlayer::~AudioPlayer()
 		ERR("pthread_mutex_destroy failed: %i", success);
 }
 
+
 #pragma mark Playback Control
+
 
 void AudioPlayer::Play()
 {
@@ -313,7 +316,9 @@ bool AudioPlayer::IsPlaying()
 	return isRunning;
 }
 
+
 #pragma mark Playback Properties
+
 
 SInt64 AudioPlayer::GetCurrentFrame()
 {
@@ -355,7 +360,9 @@ CFTimeInterval AudioPlayer::GetTotalTime()
 	return static_cast<CFTimeInterval>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
+
 #pragma mark Seeking
+
 
 bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 {
@@ -424,7 +431,9 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
+
 #pragma mark Player Parameters
+
 
 Float32 AudioPlayer::GetVolume()
 {
@@ -549,7 +558,9 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 	return true;
 }
 
+
 #pragma mark DSP Effects
+
 
 bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
@@ -857,7 +868,9 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 	return true;
 }
 
+
 #pragma mark Device Management
+
 
 CFStringRef AudioPlayer::CreateOutputDeviceUID()
 {
@@ -1191,7 +1204,9 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	return true;
 }
 
+
 #pragma mark Playlist Management
+
 
 bool AudioPlayer::Play(CFURLRef url)
 {
@@ -1380,7 +1395,9 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
+
 #pragma mark Callbacks
+
 
 OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 							 const AudioTimeStamp			*inTimeStamp,
@@ -1717,7 +1734,9 @@ void * AudioPlayer::CollectorThreadEntry()
 	return NULL;
 }
 
+
 #pragma mark AUGraph Utilities
+
 
 OSStatus AudioPlayer::CreateAUGraph()
 {
@@ -2407,7 +2426,9 @@ bool AudioPlayer::IsPreGainEnabled()
 	return bypassed;
 }
 
+
 #pragma mark Other Utilities
+
 
 DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 {
