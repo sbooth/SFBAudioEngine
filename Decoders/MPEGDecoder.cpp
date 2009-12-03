@@ -95,6 +95,18 @@ audio_linear_round(unsigned int bits,
 #pragma mark Static Methods
 
 
+CFArrayRef MPEGDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("mp3") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg-layer-iii") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
 bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);

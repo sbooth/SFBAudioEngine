@@ -39,6 +39,18 @@
 #pragma mark Static Methods
 
 
+CFArrayRef OggVorbisDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 2, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef OggVorbisDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg-vorbis") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
 bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);

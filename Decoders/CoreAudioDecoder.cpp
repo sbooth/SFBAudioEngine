@@ -39,6 +39,42 @@
 #pragma mark Static Methods
 
 
+CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
+{
+	CFArrayRef		supportedExtensions			= NULL;
+	UInt32			size						= sizeof(supportedExtensions);
+	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 
+																		 0, 
+																		 NULL, 
+																		 &size, 
+																		 &supportedExtensions);
+	
+	if(noErr != result) {
+		ERR("AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
+		return NULL;
+	}
+	
+	return CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
+}
+
+CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
+{
+	CFArrayRef		supportedMIMETypes			= NULL;
+	UInt32			size						= sizeof(supportedMIMETypes);
+	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 
+																		 0, 
+																		 NULL, 
+																		 &size, 
+																		 &supportedMIMETypes);
+	
+	if(noErr != result) {
+		ERR("AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
+		return NULL;
+	}
+	
+	return CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
+}
+
 bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);
@@ -74,7 +110,7 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	assert(NULL != mimeType);
 
 	CFArrayRef		supportedMIMETypes			= NULL;
 	UInt32			size						= sizeof(supportedMIMETypes);

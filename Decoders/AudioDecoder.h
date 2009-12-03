@@ -61,7 +61,12 @@ class AudioDecoder
 	friend class AudioPlayer;
 	
 public:
-	
+
+	// ========================================
+	// Information on supported file formats
+	static CFArrayRef CreateSupportedFileExtensions();
+	static CFArrayRef CreateSupportedMIMETypes();
+
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url);

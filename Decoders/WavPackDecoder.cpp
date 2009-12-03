@@ -39,6 +39,18 @@
 #pragma mark Static Methods
 
 
+CFArrayRef WavPackDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("wv") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
 bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);

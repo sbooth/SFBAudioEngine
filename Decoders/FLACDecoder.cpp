@@ -73,27 +73,16 @@ errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus
 #pragma mark Static Methods
 
 
-CFArrayRef FLACDecoder::sSupportedFileExtensions = NULL;
-CFArrayRef FLACDecoder::sSupportedMIMETypes = NULL;
-
-CFArrayRef FLACDecoder::GetSupportedFileExtensions()
+CFArrayRef FLACDecoder::CreateSupportedFileExtensions()
 {
-	if(NULL == sSupportedFileExtensions) {
-		CFStringRef supportedExtensions [] = { CFSTR("flac")/*, CFSTR("ogg")*/ };
-		sSupportedFileExtensions = CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
-	}
-	
-	return sSupportedFileExtensions;
+	CFStringRef supportedExtensions [] = { CFSTR("flac")/*, CFSTR("ogg")*/ };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef FLACDecoder::GetSupportedMIMETypes()
+CFArrayRef FLACDecoder::CreateSupportedMIMETypes()
 {
-	if(NULL == sSupportedMIMETypes) {
-		CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac")/*, CFSTR("audio/ogg")*/ };
-		sSupportedMIMETypes = CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
-	}
-	
-	return sSupportedMIMETypes;
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac")/*, CFSTR("audio/ogg")*/ };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
 bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)

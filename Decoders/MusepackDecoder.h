@@ -47,6 +47,9 @@ public:
 	
 	// ========================================
 	// The data types handled by this class
+	static CFArrayRef CreateSupportedFileExtensions();
+	static CFArrayRef CreateSupportedMIMETypes();
+
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
 	

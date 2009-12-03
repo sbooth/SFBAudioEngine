@@ -40,6 +40,18 @@
 #pragma mark Static Methods
 
 
+CFArrayRef MusepackDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
 bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);
