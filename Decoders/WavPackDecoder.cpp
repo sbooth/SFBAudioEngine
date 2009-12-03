@@ -30,6 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "WavPackDecoder.h"
@@ -69,20 +70,17 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 		
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		ERR("CFURLGetFileSystemRepresentation failed");
+		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
 	
 	char errorBuf [80];
 
 	// Setup converter
 	mWPC = WavpackOpenFileInput(reinterpret_cast<char *>(buf), errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
+	if(NULL == mWPC)
+		throw std::runtime_error("WavpackOpenFileInput failed");
 	
-	if(NULL == mWPC) {
-		ERR("WavpackOpenFileInput failed");
-		return;
-	}
-	
-	mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-	mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);
+	mFormat.mSampleRate					= WavpackGetSampleRate(mWPC);
+	mFormat.mChannelsPerFrame			= WavpackGetNumChannels(mWPC);
 	
 	// The source's PCM format
 	mSourceFormat.mFormatID				= kAudioFormatLinearPCM;
@@ -111,7 +109,9 @@ WavPackDecoder::~WavPackDecoder()
 		WavpackCloseFile(mWPC), mWPC = NULL;
 }
 
+
 #pragma mark Functionality
+
 
 SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 {

@@ -30,6 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "OggVorbisDecoder.h"
@@ -71,19 +72,36 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 	
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		ERR("CFURLGetFileSystemRepresentation failed");
-
+		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
+	
 	FILE *file = fopen(reinterpret_cast<const char *>(buf), "r");
-//	NSAssert1(NULL != file, @"Unable to open the input file (%s).", strerror(errno));	
+	if(NULL == file)
+		throw std::runtime_error("Unable to open the input file");
 	
-	int result = ov_test(file, &mVorbisFile, NULL, 0);
-//	NSAssert(0 == result, NSLocalizedStringFromTable(@"The file does not appear to be a valid Ogg Vorbis file.", @"Errors", @""));
+	if(0 != ov_test(file, &mVorbisFile, NULL, 0)) {
+		if(0 != fclose(file))
+			ERR("fclose() failed");
+		
+		throw std::runtime_error("The file does not appear to be a valid Ogg Vorbis file");
+	}
 	
-	result = ov_test_open(&mVorbisFile);
-//	NSAssert(0 == result, NSLocalizedStringFromTable(@"Unable to open the input file.", @"Errors", @""));
+	if(0 != ov_test_open(&mVorbisFile)) {
+		if(0 != fclose(file))
+			ERR("fclose() failed");
+
+		if(0 != ov_clear(&mVorbisFile))
+			ERR("ov_clear failed");
+
+		throw std::runtime_error("Unable to open the input file");
+	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
-//	NSAssert(NULL != ovInfo, @"Unable to get information on Ogg Vorbis stream.");
+	if(NULL == ovInfo) {
+		if(0 != ov_clear(&mVorbisFile))
+			ERR("ov_clear failed");
+
+		throw std::runtime_error("Unable to get information on Ogg Vorbis stream");
+	}
 	
 	mFormat.mSampleRate			= ovInfo->rate;
 	mFormat.mChannelsPerFrame	= ovInfo->channels;
@@ -106,8 +124,10 @@ OggVorbisDecoder::~OggVorbisDecoder()
 		ERR("ov_clear failed");
 }
 
+
 #pragma mark Functionality
-	
+
+
 SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
@@ -129,10 +149,8 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	int16_t		*buffer			= static_cast<int16_t *>(calloc(frameCount * mFormat.mChannelsPerFrame, sizeof(int16_t)));
 	unsigned	bufferSize		= static_cast<unsigned>(frameCount * mFormat.mChannelsPerFrame * sizeof(int16_t));
 	
-	if(NULL == buffer) {
-		ERR("Unable to allocate memory");
-		return 0;
-	}
+	if(NULL == buffer)
+		throw std::bad_alloc();
 	
 	int			currentSection	= 0;	
 	long		currentBytes	= 0;
@@ -162,10 +180,10 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	float		scaleFactor		= (1 << (16 - 1));
 	
 	// Deinterleave the 16-bit samples and convert to float
-	for(unsigned channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+	for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 		float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
 		
-		for(unsigned sample = channel; sample < framesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+		for(UInt32 sample = channel; sample < framesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
 			*floatBuffer++ = static_cast<float>(buffer[sample] / scaleFactor);
 		
 		bufferList->mBuffers[channel].mNumberChannels	= 1;
