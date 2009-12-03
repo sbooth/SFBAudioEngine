@@ -114,7 +114,6 @@
 		32C213101091129F00BA2493 /* AudioEngineExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AudioEngineExample; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
-		32CA904B10B9DE1C005A85DA /* ogg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ogg.framework; path = Frameworks/vorbis.framework/Versions/A/Frameworks/ogg.framework; sourceTree = "<group>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
@@ -208,7 +207,6 @@
 				32E7368D10B9057900094C8A /* wavpack.framework */,
 				32E7392C10B9A85D00094C8A /* mad.framework */,
 				32E73AF610B9D88800094C8A /* vorbis.framework */,
-				32CA904B10B9DE1C005A85DA /* ogg.framework */,
 				32CA90F810B9E514005A85DA /* mpcdec.framework */,
 			);
 			name = Frameworks;
