@@ -85,9 +85,6 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 						LOG("Exception creating decoder: %s", e.what());
 					}
 					
-					if(NULL != decoder && false == decoder->IsValid())
-						delete decoder, decoder = NULL;
-					
 					CFRelease(pathExtension), pathExtension = NULL;
 				}				
 			}

@@ -76,10 +76,6 @@ public:
 	virtual ~AudioDecoder();
 	
 	// ========================================
-	// Is this decoder valid?
-	virtual bool IsValid()									{ return NULL != mURL; }
-	
-	// ========================================
 	// The URL this decoder will process
 	inline CFURLRef GetURL()								{ return mURL; }
 	

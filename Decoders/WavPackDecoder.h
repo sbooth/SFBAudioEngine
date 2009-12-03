@@ -59,10 +59,6 @@ public:
 	virtual ~WavPackDecoder();
 	
 	// ========================================
-	// Is this decoder valid?
-	virtual inline bool IsValid()							{ return AudioDecoder::IsValid() && NULL != mWPC; }
-	
-	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 	

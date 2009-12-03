@@ -50,10 +50,6 @@ public:
 	virtual ~LoopableRegionDecoder();
 	
 	// ========================================
-	// Is this decoder valid?
-	virtual bool IsValid()									{ return (NULL != mDecoder && mDecoder->IsValid()); }
-
-	// ========================================
 	// The starting frame for this audio file region
 	inline SInt64 GetStartingFrame()						{ return mStartingFrame; }
 	inline void SetStartingFrame(SInt64 startingFrame)		{ mStartingFrame = startingFrame; }
