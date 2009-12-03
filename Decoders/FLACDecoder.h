@@ -47,6 +47,9 @@ public:
 	
 	// ========================================
 	// The data types handled by this class
+	static CFArrayRef GetSupportedFileExtensions();
+	static CFArrayRef GetSupportedMIMETypes();
+	
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
 	
@@ -77,6 +80,9 @@ public:
 	virtual SInt64 SeekToFrame(SInt64 frame);
 	
 private:
+	
+	static CFArrayRef					sSupportedFileExtensions;
+	static CFArrayRef					sSupportedMIMETypes;
 	
 	FLAC__StreamDecoder					*mFLAC;
 	FLAC__StreamMetadata_StreamInfo		mStreamInfo;

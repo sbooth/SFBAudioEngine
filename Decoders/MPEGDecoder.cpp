@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "MPEGDecoder.h"
@@ -125,14 +126,19 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	
 	mInputBuffer = static_cast<unsigned char *>(calloc(INPUT_BUFFER_SIZE + MAD_BUFFER_GUARD, sizeof(unsigned char)));
 	
+	if(NULL == mInputBuffer)
+		throw std::bad_alloc();
+	
 	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		ERR("CFURLGetFileSystemRepresentation failed");
+	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX)) {
+		free(mInputBuffer), mInputBuffer = NULL;
+		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
+	}
 
 	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
 	if(NULL == mFile) {
-		ERR("Unable to open file for reading");
-		return;
+		free(mInputBuffer), mInputBuffer = NULL;
+		throw std::runtime_error("Unable to open file for reading");
 	}
 		
 	mad_stream_init(&mStream);
@@ -143,8 +149,14 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	
 	// Scan file to determine sample rate, channels, total frames, etc
 	if(false == this->ScanFile()) {
-		ERR("Unable to scan file");
-		return;
+		mad_synth_finish(&mSynth);
+		mad_frame_finish(&mFrame);
+		mad_stream_finish(&mStream);
+
+		free(mInputBuffer), mInputBuffer = NULL;
+		fclose(mFile), mFile = NULL;
+		
+		throw std::runtime_error("Unable to scan file");
 	}
 	
 	// The source's PCM format
@@ -162,10 +174,38 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	// Allocate the buffer list
 	mBufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1)), 1));
 	
+	if(NULL == mBufferList) {
+		mad_synth_finish(&mSynth);
+		mad_frame_finish(&mFrame);
+		mad_stream_finish(&mStream);
+
+		free(mInputBuffer), mInputBuffer = NULL;
+		fclose(mFile), mFile = NULL;
+		
+		throw std::bad_alloc();
+	}
+	
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 		mBufferList->mBuffers[i].mData = calloc(mSamplesPerMPEGFrame, sizeof(float));
+
+		if(NULL == mBufferList->mBuffers[i].mData) {
+			mad_synth_finish(&mSynth);
+			mad_frame_finish(&mFrame);
+			mad_stream_finish(&mStream);
+
+			free(mInputBuffer), mInputBuffer = NULL;
+			fclose(mFile), mFile = NULL;
+			
+			for(UInt32 j = 0; j < i; ++j)
+				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
+			
+			free(mBufferList), mBufferList = NULL;
+			
+			throw std::bad_alloc();
+		}
+		
 		mBufferList->mBuffers[i].mNumberChannels = 1;
 	}		
 }

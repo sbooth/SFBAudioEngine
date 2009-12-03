@@ -31,6 +31,7 @@
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
 #include <algorithm>
+#include <stdexcept>
 
 #include "AudioEngineDefines.h"
 #include "MusepackDecoder.h"
@@ -70,15 +71,16 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		ERR("CFURLGetFileSystemRepresentation failed");
+		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
 	
-	mpc_status result = mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf));
-	if(MPC_STATUS_OK != result) {
-		ERR("mpc_reader_init_stdio failed: %d", result);
-		return;
-	}
+	if(MPC_STATUS_OK != mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf)))
+		throw std::runtime_error("mpc_reader_init_stdio failed");
 
 	mDemux = mpc_demux_init(&mReader);
+	if(NULL == mDemux) {
+		mpc_reader_exit_stdio(&mReader);
+		throw std::runtime_error("mpc_demux_init failed");
+	}
 	
 	// Get input file information
 	mpc_streaminfo streaminfo;
@@ -98,10 +100,30 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	// Allocate the buffer list
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
 	
+	if(NULL == mBufferList) {
+		mpc_demux_exit(mDemux), mDemux = NULL;
+		mpc_reader_exit_stdio(&mReader);
+		
+		throw std::bad_alloc();
+	}
+
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 		mBufferList->mBuffers[i].mData = calloc(MPC_FRAME_LENGTH, sizeof(float));
+
+		if(NULL == mBufferList->mBuffers[i].mData) {
+			mpc_demux_exit(mDemux), mDemux = NULL;
+			mpc_reader_exit_stdio(&mReader);
+			
+			for(UInt32 j = 0; j < i; ++j)
+				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
+			
+			free(mBufferList), mBufferList = NULL;
+			
+			throw std::bad_alloc();
+		}
+		
 		mBufferList->mBuffers[i].mNumberChannels = 1;
 	}
 }
