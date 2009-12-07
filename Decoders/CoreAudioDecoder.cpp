@@ -146,9 +146,9 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 
 CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
-	: AudioDecoder(url), mExtAudioFile(NULL), mPrimingFrameBugWorkaroundAdjustment(0)
+	: AudioDecoder(url), mExtAudioFile(NULL), mUseM4AWorkarounds(false), mCurrentFrame(0)
 {
-	// Open the input file		
+	// Open the input file
 	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
 	if(noErr != result)
 		throw std::runtime_error("ExtAudioFileOpenURL failed");
@@ -167,7 +167,7 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed");
 	}
-			
+
 	// Tell the ExtAudioFile the format in which we'd like our data
 	mFormat.mSampleRate			= mSourceFormat.mSampleRate;
 	mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
@@ -185,12 +185,6 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		throw std::runtime_error("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed");
 	}
 	
-	// Work around a bug in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
-	// Synopsis: ExtAudioFileTell() returns values too small by the number of priming frames
-	SInt64 currentFrame = GetCurrentFrame();
-	if(0 > currentFrame)
-		mPrimingFrameBugWorkaroundAdjustment = -1 * currentFrame;
-	
 	// Setup the channel layout
 	dataSize = sizeof(mChannelLayout);
 	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, &mChannelLayout);
@@ -205,6 +199,25 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed");
 	}
+	
+	// Work around bugs in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
+	// Synopsis: ExtAudioFileTell() and ExtAudioFileSeek() are broken for m4a files
+	SInt64 currentFrame = -1;	
+	result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
+	if(noErr != result) {
+		ERR("ExtAudioFileTell failed: %i", result);
+		
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
+		
+		mExtAudioFile = NULL;
+		
+		throw std::runtime_error("ExtAudioFileTell failed");
+	}
+	
+	if(0 > currentFrame)
+		mUseM4AWorkarounds = true;	
 }
 
 CoreAudioDecoder::~CoreAudioDecoder()
@@ -237,6 +250,9 @@ SInt64 CoreAudioDecoder::GetTotalFrames()
 
 SInt64 CoreAudioDecoder::GetCurrentFrame()
 {
+	if(mUseM4AWorkarounds)
+		return mCurrentFrame;
+	
 	SInt64 currentFrame = -1;
 	
 	OSStatus result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
@@ -245,13 +261,13 @@ SInt64 CoreAudioDecoder::GetCurrentFrame()
 		return -1;
 	}
 	
-	return currentFrame + mPrimingFrameBugWorkaroundAdjustment;
+	return currentFrame;
 }
 
 SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	assert(frame < GetTotalFrames());
 	
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
@@ -259,7 +275,10 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 		return -1;
 	}
 	
-	return this->GetCurrentFrame();
+	if(mUseM4AWorkarounds)
+		mCurrentFrame = frame;
+	
+	return GetCurrentFrame();
 }
 
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
@@ -273,6 +292,9 @@ UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		ERR("ExtAudioFileRead failed: %i", result);
 		return 0;
 	}
+	
+	if(mUseM4AWorkarounds)
+		mCurrentFrame += frameCount;
 	
 	return frameCount;
 }
