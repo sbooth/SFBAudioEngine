@@ -28,10 +28,11 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LoopableRegionDecoder.h"
-#include "AudioDecoder.h"
-
 #include <algorithm>
+
+#include "LoopableRegionDecoder.h"
+#include "AudioEngineDefines.h"
+#include "AudioDecoder.h"
 
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
@@ -93,17 +94,54 @@ void LoopableRegionDecoder::Reset()
 	mCompletedPasses			= 0;
 }
 
-#pragma mark Decoding
+
+#pragma mark Functionality
+
+
+SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
+{
+	assert(0 <= frame);
+	assert(frame < GetTotalFrames());
+	
+	mCompletedPasses			= static_cast<UInt32>(frame / mFrameCount);
+	mFramesReadInCurrentPass	= static_cast<UInt32>(frame % mFrameCount);
+	mTotalFramesRead			= frame;
+	
+	mDecoder->SeekToFrame(mStartingFrame + mFramesReadInCurrentPass);
+	
+	return GetCurrentFrame();
+}
 
 UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	assert(NULL != bufferList);
+	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
 	// If the repeat count is N then (N + 1) passes must be completed to read all the frames
 	if((1 + mRepeatCount) == mCompletedPasses)
 		return 0;
 
+	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
+	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
+	
+	if(NULL == bufferListAlias) {
+		ERR("Unable to allocate memory");
+		return 0;
+	}	
+
+	UInt32 initialBufferCapacityBytes = bufferList->mBuffers[0].mDataByteSize;
+	bufferListAlias->mNumberBuffers = mFormat.mChannelsPerFrame;
+
+	// Initially the buffer list alias points to the beginning and contains no data
+	for(UInt32 i = 0; i < bufferListAlias->mNumberBuffers; ++i) {
+		bufferListAlias->mBuffers[i].mData				= bufferList->mBuffers[i].mData;
+		bufferListAlias->mBuffers[i].mDataByteSize		= bufferList->mBuffers[i].mDataByteSize;
+		bufferListAlias->mBuffers[i].mNumberChannels	= bufferList->mBuffers[i].mNumberChannels;
+
+		bufferList->mBuffers[i].mDataByteSize			= 0;
+	}
+	
 	UInt32 framesRemaining = frameCount;
 	UInt32 totalFramesRead = 0;
 	
@@ -114,13 +152,23 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		// Nothing left to read
 		if(0 == framesToRead)
 			break;
-		
-		UInt32 framesRead = mDecoder->ReadAudio(bufferList, framesToRead);
+
+		UInt32 framesRead = mDecoder->ReadAudio(bufferListAlias, framesToRead);
 		
 		// A read error occurred
 		if(0 == framesRead)
 			break;
 
+		// Advance the write pointers and update the capacity
+		for(UInt32 i = 0; i < bufferListAlias->mNumberBuffers; ++i) {
+			float *buf									= static_cast<float *>(bufferListAlias->mBuffers[i].mData);
+			bufferListAlias->mBuffers[i].mData			= static_cast<void *>(buf + framesRead);
+
+			bufferList->mBuffers[i].mDataByteSize		+= bufferListAlias->mBuffers[i].mDataByteSize;
+			
+			bufferListAlias->mBuffers[i].mDataByteSize	= initialBufferCapacityBytes - bufferList->mBuffers[i].mDataByteSize;
+		}
+		
 		// Housekeeping
 		mFramesReadInCurrentPass	+= framesRead;
 		mTotalFramesRead			+= framesRead;
@@ -139,19 +187,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		}
 	}
 	
+	free(bufferListAlias), bufferListAlias = NULL;
+	
 	return totalFramesRead;
-}
-
-SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
-{
-	assert(0 <= frame);
-	assert(frame < GetTotalFrames());
-	
-	mCompletedPasses			= static_cast<UInt32>(frame / mFrameCount);
-	mFramesReadInCurrentPass	= static_cast<UInt32>(frame % mFrameCount);
-	mTotalFramesRead			= frame;
-	
-	mDecoder->SeekToFrame(mStartingFrame + mFramesReadInCurrentPass);
-	
-	return GetCurrentFrame();
 }
