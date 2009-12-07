@@ -267,7 +267,9 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
-	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;		
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+
+	mFormat.mReserved			= 0;
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
