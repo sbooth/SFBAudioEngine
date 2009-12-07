@@ -33,10 +33,10 @@
 #include <libkern/OSAtomic.h>
 #include <stdexcept>
 
+#include <FLAC/metadata.h>
+
 #include "AudioEngineDefines.h"
 #include "FLACDecoder.h"
-
-#include <FLAC/metadata.h>
 
 
 #pragma mark Callbacks
