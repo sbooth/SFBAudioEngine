@@ -242,7 +242,7 @@ SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 	
 	if(result) {
 		mCurrentFrame = frame;
-		for(unsigned i = 0; i < mBufferList->mNumberBuffers; ++i)
+		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 			mBufferList->mBuffers[i].mDataByteSize = 0;	
 	}
 	
