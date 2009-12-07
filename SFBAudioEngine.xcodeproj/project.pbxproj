@@ -9,6 +9,13 @@
 /* Begin PBXBuildFile section */
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
+		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
+		3252E85B10CC9EFD00F1AA23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85510CC9EFD00F1AA23 /* main.m */; };
+		3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */; };
+		3252E85D10CC9EFD00F1AA23 /* PlayerWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85810CC9EFD00F1AA23 /* PlayerWindowController.mm */; };
+		3252E85E10CC9EFD00F1AA23 /* SimplePlayerAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85A10CC9EFD00F1AA23 /* SimplePlayerAppDelegate.mm */; };
+		3252E86510CC9F4200F1AA23 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E86410CC9F4200F1AA23 /* MainMenu.xib */; };
+		3252E87A10CCA01400F1AA23 /* SFBAudioEngine.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		3255602B1092A38F00580566 /* FLACDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325560291092A38F00580566 /* FLACDecoder.cpp */; };
 		3255602C1092A38F00580566 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
 		325560671092A89600580566 /* FLAC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
@@ -55,6 +62,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3252E84110CC9E4B00F1AA23 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32C212D41091116D00BA2493 /* SFBAudioEngine.framework */;
+			remoteInfo = SFBAudioEngine.framework;
+		};
 		32C37FA9109116F30024EB87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
@@ -65,6 +79,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		3252E87E10CCA03200F1AA23 /* Copy Embedded Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3252E87A10CCA01400F1AA23 /* SFBAudioEngine.framework in Copy Embedded Frameworks */,
+			);
+			name = "Copy Embedded Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		325560ED1092B38700580566 /* Copy Embedded Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -105,6 +130,15 @@
 		322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAAutoDisposer.h; sourceTree = "<group>"; };
 		322B5D9B108C223900CA9BDE /* CABitOperations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CABitOperations.h; sourceTree = "<group>"; };
 		32379E8A1093D35700DD5B34 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
+		3252E83B10CC9E4500F1AA23 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimplePlayer-Info.plist"; sourceTree = "<group>"; };
+		3252E85510CC9EFD00F1AA23 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PlayerWindow.xib; sourceTree = "<group>"; };
+		3252E85710CC9EFD00F1AA23 /* PlayerWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayerWindowController.h; sourceTree = "<group>"; };
+		3252E85810CC9EFD00F1AA23 /* PlayerWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PlayerWindowController.mm; sourceTree = "<group>"; };
+		3252E85910CC9EFD00F1AA23 /* SimplePlayerAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimplePlayerAppDelegate.h; sourceTree = "<group>"; };
+		3252E85A10CC9EFD00F1AA23 /* SimplePlayerAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SimplePlayerAppDelegate.mm; sourceTree = "<group>"; };
+		3252E86410CC9F4200F1AA23 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		325560291092A38F00580566 /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACDecoder.cpp; sourceTree = "<group>"; };
 		3255602A1092A38F00580566 /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
 		325560661092A89600580566 /* FLAC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FLAC.framework; path = Frameworks/FLAC.framework; sourceTree = "<group>"; };
@@ -132,6 +166,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3252E83910CC9E4500F1AA23 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C212D31091116D00BA2493 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -167,6 +209,7 @@
 			children = (
 				32C212D51091116D00BA2493 /* SFBAudioEngine.framework */,
 				32C213101091129F00BA2493 /* AudioEngineExample */,
+				3252E83B10CC9E4500F1AA23 /* SimplePlayer.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -178,6 +221,7 @@
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
 				29B97315FDCFA39411CA2CEA /* Other */,
 				322B5B2B108BA68E00CA9BDE /* Configs */,
+				3252E83610CC9E3000F1AA23 /* SimplePlayer */,
 				32E6AB381096742A00DA998D /* Example */,
 				322B5D91108C21E000CA9BDE /* ThirdParty */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -279,6 +323,21 @@
 			path = PublicUtility;
 			sourceTree = "<group>";
 		};
+		3252E83610CC9E3000F1AA23 /* SimplePlayer */ = {
+			isa = PBXGroup;
+			children = (
+				3252E86410CC9F4200F1AA23 /* MainMenu.xib */,
+				3252E85510CC9EFD00F1AA23 /* main.m */,
+				3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */,
+				3252E85710CC9EFD00F1AA23 /* PlayerWindowController.h */,
+				3252E85810CC9EFD00F1AA23 /* PlayerWindowController.mm */,
+				3252E85910CC9EFD00F1AA23 /* SimplePlayerAppDelegate.h */,
+				3252E85A10CC9EFD00F1AA23 /* SimplePlayerAppDelegate.mm */,
+				3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */,
+			);
+			path = SimplePlayer;
+			sourceTree = "<group>";
+		};
 		32E6AB381096742A00DA998D /* Example */ = {
 			isa = PBXGroup;
 			children = (
@@ -315,6 +374,25 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		3252E83A10CC9E4500F1AA23 /* SimplePlayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3252E84010CC9E4600F1AA23 /* Build configuration list for PBXNativeTarget "SimplePlayer" */;
+			buildPhases = (
+				3252E83710CC9E4500F1AA23 /* Resources */,
+				3252E83810CC9E4500F1AA23 /* Sources */,
+				3252E83910CC9E4500F1AA23 /* Frameworks */,
+				3252E87E10CCA03200F1AA23 /* Copy Embedded Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3252E84210CC9E4B00F1AA23 /* PBXTargetDependency */,
+			);
+			name = SimplePlayer;
+			productName = SimplePlayer;
+			productReference = 3252E83B10CC9E4500F1AA23 /* SimplePlayer.app */;
+			productType = "com.apple.product-type.application";
+		};
 		32C212D41091116D00BA2493 /* SFBAudioEngine.framework */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "SFBAudioEngine.framework" */;
@@ -368,11 +446,21 @@
 			targets = (
 				32C212D41091116D00BA2493 /* SFBAudioEngine.framework */,
 				32C2130F1091129F00BA2493 /* Example */,
+				3252E83A10CC9E4500F1AA23 /* SimplePlayer */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3252E83710CC9E4500F1AA23 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */,
+				3252E86510CC9F4200F1AA23 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C212D11091116D00BA2493 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -383,6 +471,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3252E83810CC9E4500F1AA23 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3252E85B10CC9EFD00F1AA23 /* main.m in Sources */,
+				3252E85D10CC9EFD00F1AA23 /* PlayerWindowController.mm in Sources */,
+				3252E85E10CC9EFD00F1AA23 /* SimplePlayerAppDelegate.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C212D21091116D00BA2493 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -412,6 +510,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		3252E84210CC9E4B00F1AA23 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 32C212D41091116D00BA2493 /* SFBAudioEngine.framework */;
+			targetProxy = 3252E84110CC9E4B00F1AA23 /* PBXContainerItemProxy */;
+		};
 		32C37FAA109116F30024EB87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 32C212D41091116D00BA2493 /* SFBAudioEngine.framework */;
@@ -420,6 +523,58 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3252E83E10CC9E4600F1AA23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = SimplePlayer;
+			};
+			name = Debug;
+		};
+		3252E83F10CC9E4600F1AA23 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 322B5B2E108BA69F00CA9BDE /* Release.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "SimplePlayer-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = SimplePlayer;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		32C212D71091116D00BA2493 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 322B5B2F108BA69F00CA9BDE /* AudioEngine-Debug.xcconfig */;
@@ -518,6 +673,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3252E84010CC9E4600F1AA23 /* Build configuration list for PBXNativeTarget "SimplePlayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3252E83E10CC9E4600F1AA23 /* Debug */,
+				3252E83F10CC9E4600F1AA23 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		32C212D91091116E00BA2493 /* Build configuration list for PBXNativeTarget "SFBAudioEngine.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
