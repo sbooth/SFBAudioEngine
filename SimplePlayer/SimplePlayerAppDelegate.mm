@@ -47,7 +47,8 @@
 	
 	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();
 	
-	[openPanel runModalForDirectory:nil file:nil types:reinterpret_cast<const NSArray *>(supportedTypes)];
+	if(NSCancelButton == [openPanel runModalForDirectory:nil file:nil types:reinterpret_cast<const NSArray *>(supportedTypes)])
+		return;
 	
 	CFRelease(supportedTypes), supportedTypes = NULL;
 	
