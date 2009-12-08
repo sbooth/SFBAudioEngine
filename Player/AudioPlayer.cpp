@@ -1454,6 +1454,29 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
+bool AudioPlayer::ClearQueuedDecoders()
+{
+	int lockResult = pthread_mutex_lock(&mMutex);
+	
+	if(0 != lockResult) {
+		ERR("pthread_mutex_lock failed: %i", lockResult);
+		return false;
+	}
+	
+	while(false == mDecoderQueue.empty()) {
+		AudioDecoder *decoder = mDecoderQueue.front();
+		mDecoderQueue.pop_front();
+		delete decoder;
+	}
+	
+	lockResult = pthread_mutex_unlock(&mMutex);
+	
+	if(0 != lockResult)
+		ERR("pthread_mutex_unlock failed: %i", lockResult);
+	
+	return true;	
+}
+
 
 #pragma mark Callbacks
 
@@ -1486,7 +1509,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	}
 
 	// Restrict reads to valid decoded audio
-	UInt32 framesToRead = framesAvailableToRead < inNumberFrames ? framesAvailableToRead : inNumberFrames;
+	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
 	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != result) {
 		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %ld", result, framesToRead, static_cast<long>(mFramesRendered));
@@ -2410,23 +2433,34 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 
 OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout /*channelLayout*/)
 {
-	/*
 	 // Attempt to set the new channel layout
-	 //	OSStatus err = [self setPropertyOnAUGraphNodes:kAudioUnitProperty_AudioChannelLayout data:&channelLayout dataSize:sizeof(channelLayout)];
-	 OSStatus err = AudioUnitSetProperty(_outputUnit, kAudioUnitProperty_AudioChannelLayout, kAudioUnitScope_Input, 0, &channelLayout, sizeof(channelLayout));
+//	 OSStatus result = AudioUnitSetProperty(mOutputUnit,
+//											kAudioUnitProperty_AudioChannelLayout, 
+//											kAudioUnitScope_Input, 
+//											0,
+//											&channelLayout, 
+//											sizeof(channelLayout));
+//
+//	 if(noErr != result) {
+//		 // If the new format could not be set, restore the old format to ensure a working graph
+//		 OSStatus newResult = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, 
+//														&mChannelLayout, 
+//														sizeof(mChannelLayout));
+//		 
+//		 
+//		 OSStatus newErr = AudioUnitSetProperty(mOutputUnit, 
+//												kAudioUnitProperty_AudioChannelLayout,
+//												kAudioUnitScope_Input, 
+//												0,
+//												&channelLayout, 
+//												sizeof(channelLayout));
+//
+//		 if(noErr != newResult)
+//			 LOG("Unable to restore AUGraph channel layout: %i", newResult);
+//	 
+//		 return result;
+//	 }
 
-	 if(noErr != err) {
-	 // If the new format could not be set, restore the old format to ensure a working graph
-	 channelLayout = [self channelLayout];
-	 //		OSStatus newErr = [self setPropertyOnAUGraphNodes:kAudioUnitProperty_AudioChannelLayout data:&channelLayout dataSize:sizeof(channelLayout)];
-	 OSStatus newErr = AudioUnitSetProperty(_outputUnit, kAudioUnitProperty_AudioChannelLayout, kAudioUnitScope_Input, 0, &channelLayout, sizeof(channelLayout));
-
-	 if(noErr != newErr)
-	 NSLog(@"AudioPlayer error: Unable to restore AUGraph channel layout: %i", newErr);
-	 
-	 return err;
-	 }
-	 */
 	return noErr;
 }
 

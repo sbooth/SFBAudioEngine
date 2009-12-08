@@ -122,6 +122,8 @@ public:
 	bool Enqueue(CFURLRef url);
 	bool Enqueue(AudioDecoder *decoder);
 	
+	bool ClearQueuedDecoders();
+	
 private:
 	
 	// ========================================
