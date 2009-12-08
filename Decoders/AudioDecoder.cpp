@@ -248,6 +248,7 @@ AudioDecoder::AudioDecoder()
 	: mURL(NULL)
 {
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
+	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 AudioDecoder::AudioDecoder(CFURLRef url)
