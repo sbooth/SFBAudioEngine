@@ -66,7 +66,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 32C212D41091116D00BA2493 /* SFBAudioEngine.framework */;
+			remoteGlobalIDString = 32C212D41091116D00BA2493;
 			remoteInfo = SFBAudioEngine.framework;
 		};
 		32C37FA9109116F30024EB87 /* PBXContainerItemProxy */ = {
@@ -560,7 +560,7 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
-				INFOPLIST_FILE = "SimplePlayer-Info.plist";
+				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				OTHER_LDFLAGS = (
