@@ -62,6 +62,10 @@ public:
 	virtual ~FLACDecoder();
 	
 	// ========================================
+	// The native format of the source audio
+	virtual CFStringRef CreateSourceFormatDescription();
+
+	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 	

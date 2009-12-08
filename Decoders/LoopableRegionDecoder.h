@@ -50,6 +50,10 @@ public:
 	virtual ~LoopableRegionDecoder();
 	
 	// ========================================
+	// The native format of the source audio
+	virtual inline CFStringRef CreateSourceFormatDescription() { return mDecoder->CreateSourceFormatDescription(); }
+
+	// ========================================
 	// The starting frame for this audio file region
 	inline SInt64 GetStartingFrame()						{ return mStartingFrame; }
 	inline void SetStartingFrame(SInt64 startingFrame)		{ mStartingFrame = startingFrame; }

@@ -118,6 +118,12 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 	mFormat.mSampleRate			= ovInfo->rate;
 	mFormat.mChannelsPerFrame	= ovInfo->channels;
 	
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'VORB';
+	
+	mSourceFormat.mSampleRate			= ovInfo->rate;
+	mSourceFormat.mChannelsPerFrame		= ovInfo->channels;
+
 	switch(ovInfo->channels) {
 		// Default channel layouts from Vorbis I specification section 4.3.9
 		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
@@ -139,6 +145,15 @@ OggVorbisDecoder::~OggVorbisDecoder()
 
 #pragma mark Functionality
 
+
+CFStringRef OggVorbisDecoder::CreateSourceFormatDescription()
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
 
 SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 {

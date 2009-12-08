@@ -98,10 +98,18 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	mpc_streaminfo streaminfo;
 	mpc_demux_get_info(mDemux, &streaminfo);
 	
-	mFormat.mSampleRate			= streaminfo.sample_freq;
-	mFormat.mChannelsPerFrame	= streaminfo.channels;
+	mTotalFrames					= mpc_streaminfo_get_length_samples(&streaminfo);
 	
-	mTotalFrames = mpc_streaminfo_get_length_samples(&streaminfo);
+	mFormat.mSampleRate				= streaminfo.sample_freq;
+	mFormat.mChannelsPerFrame		= streaminfo.channels;
+	
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'MUSE';
+	
+	mSourceFormat.mSampleRate			= streaminfo.sample_freq;
+	mSourceFormat.mChannelsPerFrame		= streaminfo.channels;
+	
+	mSourceFormat.mFramesPerPacket		= (1 << streaminfo.block_pwr);
 	
 	// Setup the channel layout
 	switch(streaminfo.channels) {
@@ -154,7 +162,18 @@ MusepackDecoder::~MusepackDecoder()
 	}
 }
 
+
 #pragma mark Functionality
+
+
+CFStringRef MusepackDecoder::CreateSourceFormatDescription()
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("Musepack, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
 
 SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 {

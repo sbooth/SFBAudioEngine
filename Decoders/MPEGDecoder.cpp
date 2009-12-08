@@ -171,18 +171,6 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 		throw std::runtime_error("Unable to scan file");
 	}
 	
-	// The source's PCM format
-	mSourceFormat.mFormatID				= kAudioFormatLinearPCM;
-	mSourceFormat.mFormatFlags			= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagsNativeEndian;
-	
-	mSourceFormat.mSampleRate			= mFormat.mSampleRate;
-	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
-	mSourceFormat.mBitsPerChannel		= 16;
-	
-	mSourceFormat.mBytesPerPacket		= ((mSourceFormat.mBitsPerChannel + 7) / 8) * mSourceFormat.mChannelsPerFrame;
-	mSourceFormat.mFramesPerPacket		= 1;
-	mSourceFormat.mBytesPerFrame		= mSourceFormat.mBytesPerPacket * mSourceFormat.mFramesPerPacket;		
-	
 	// Allocate the buffer list
 	mBufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1)), 1));
 	
@@ -238,7 +226,45 @@ MPEGDecoder::~MPEGDecoder()
 	}
 }
 
+
 #pragma mark Functionality
+
+
+CFStringRef MPEGDecoder::CreateSourceFormatDescription()
+{
+	CFStringRef layerDescription = NULL;
+	switch(mMPEGLayer) {
+		case MAD_LAYER_I:
+			mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;
+			layerDescription = CFSTR("Layer I");
+			break;
+
+		case MAD_LAYER_II:
+			mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;
+			layerDescription = CFSTR("Layer II");
+			break;
+		
+		case MAD_LAYER_III:
+			mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;
+			layerDescription = CFSTR("Layer III");
+			break;
+	}
+	
+	CFStringRef channelDescription = NULL;
+	switch(mMode) {  
+		case MAD_MODE_SINGLE_CHANNEL:	channelDescription = CFSTR("Single Channel");	break;
+		case MAD_MODE_DUAL_CHANNEL:		channelDescription = CFSTR("Dual Channel");		break;
+		case MAD_MODE_JOINT_STEREO:		channelDescription = CFSTR("Joint Stereo");		break;
+		case MAD_MODE_STEREO:			channelDescription = CFSTR("Stereo");			break;
+	}
+
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("MPEG-1 Audio (%@), %@, %u Hz"), 
+									layerDescription,
+									channelDescription,
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
@@ -534,12 +560,28 @@ bool MPEGDecoder::ScanFile()
 		// Look for a Xing header in the first frame that was successfully decoded
 		// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp
 		if(1 == framesDecoded) {
+			mMPEGLayer					= frame.header.layer;
+			mMode						= frame.header.mode;
+			mEmphasis					= frame.header.emphasis;
+
 			mFormat.mSampleRate			= frame.header.samplerate;
 			mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&frame.header);
 			
+			mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&frame.header);
+
+			// Set up the source format
+			switch(mMPEGLayer) {
+				case MAD_LAYER_I:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;	break;
+				case MAD_LAYER_II:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;	break;
+				case MAD_LAYER_III:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;	break;
+			}
+			
+			mSourceFormat.mSampleRate			= frame.header.samplerate;
+			mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&frame.header);
+			mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
+
 			// MAD_NCHANNELS always returns 1 or 2
 			mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&frame.header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
-			mSamplesPerMPEGFrame				= 32 * MAD_NSBSAMPLES(&frame.header);
 			
 			unsigned ancillaryBitsRemaining = stream.anc_bitlen;
 			if(32 > ancillaryBitsRemaining)

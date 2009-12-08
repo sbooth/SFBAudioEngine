@@ -91,22 +91,17 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 	if(NULL == mWPC)
 		throw std::runtime_error("WavpackOpenFileInput failed");
 	
+	mTotalFrames						= WavpackGetNumSamples(mWPC);
+
 	mFormat.mSampleRate					= WavpackGetSampleRate(mWPC);
 	mFormat.mChannelsPerFrame			= WavpackGetNumChannels(mWPC);
 	
-	// The source's PCM format
-	mSourceFormat.mFormatID				= kAudioFormatLinearPCM;
-	mSourceFormat.mFormatFlags			= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagsNativeEndian;
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'WVPK';
 	
 	mSourceFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
 	mSourceFormat.mChannelsPerFrame		= WavpackGetNumChannels(mWPC);
 	mSourceFormat.mBitsPerChannel		= WavpackGetBitsPerSample(mWPC);
-	
-	mSourceFormat.mBytesPerPacket		= ((mSourceFormat.mBitsPerChannel + 7) / 8) * mSourceFormat.mChannelsPerFrame;
-	mSourceFormat.mFramesPerPacket		= 1;
-	mSourceFormat.mBytesPerFrame		= mSourceFormat.mBytesPerPacket * mSourceFormat.mFramesPerPacket;		
-	
-	mTotalFrames = WavpackGetNumSamples(mWPC);
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
@@ -124,6 +119,15 @@ WavPackDecoder::~WavPackDecoder()
 
 #pragma mark Functionality
 
+
+CFStringRef WavPackDecoder::CreateSourceFormatDescription()
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("WavPack, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
 
 SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 {

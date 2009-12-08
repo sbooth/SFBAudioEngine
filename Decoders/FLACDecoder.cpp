@@ -154,17 +154,14 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	mFormat.mSampleRate					= mStreamInfo.sample_rate;
 	mFormat.mChannelsPerFrame			= mStreamInfo.channels;
 	
-	// The source's PCM format
-	mSourceFormat.mFormatID				= kAudioFormatLinearPCM;
-	mSourceFormat.mFormatFlags			= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagsNativeEndian;
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'FLAC';
 
 	mSourceFormat.mSampleRate			= mStreamInfo.sample_rate;
 	mSourceFormat.mChannelsPerFrame		= mStreamInfo.channels;
 	mSourceFormat.mBitsPerChannel		= mStreamInfo.bits_per_sample;
 
-	mSourceFormat.mBytesPerPacket		= ((mSourceFormat.mBitsPerChannel + 7) / 8) * mSourceFormat.mChannelsPerFrame;
-	mSourceFormat.mFramesPerPacket		= 1;
-	mSourceFormat.mBytesPerFrame		= mSourceFormat.mBytesPerPacket * mSourceFormat.mFramesPerPacket;		
+	mSourceFormat.mFramesPerPacket		= mStreamInfo.max_blocksize;
 	
 	switch(mStreamInfo.channels) {
 		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
@@ -228,6 +225,15 @@ FLACDecoder::~FLACDecoder()
 
 #pragma mark Functionality
 
+
+CFStringRef FLACDecoder::CreateSourceFormatDescription()
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("FLAC, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
 
 SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 {

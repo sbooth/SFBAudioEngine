@@ -85,9 +85,9 @@ public:
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
-	// The native (PCM) format of the source
+	// The native format of the source audio
 	inline AudioStreamBasicDescription GetSourceFormat()	{ return mSourceFormat; }
-	CFStringRef CreateSourceFormatDescription();
+	virtual CFStringRef CreateSourceFormatDescription();
 	
 	// ========================================
 	// The type of PCM data provided by this decoder

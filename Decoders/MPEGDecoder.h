@@ -62,6 +62,10 @@ public:
 	virtual ~MPEGDecoder();
 	
 	// ========================================
+	// The native format of the source audio
+	virtual CFStringRef CreateSourceFormatDescription();
+
+	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 	
@@ -109,4 +113,8 @@ private:
 	struct mad_stream	mStream;
 	struct mad_frame	mFrame;
 	struct mad_synth	mSynth;
+	
+	enum mad_layer		mMPEGLayer;
+	enum mad_mode		mMode;
+	enum mad_emphasis	mEmphasis;
 };
