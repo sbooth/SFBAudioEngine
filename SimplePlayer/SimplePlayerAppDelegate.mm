@@ -42,19 +42,17 @@
 #pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	
+	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();
+
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
-	
-	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();
-	
-	if(NSCancelButton == [openPanel runModalForDirectory:nil file:nil types:reinterpret_cast<const NSArray *>(supportedTypes)])
-		return;
-	
+
+	if(NSFileHandlingPanelOKButton == [openPanel runModalForTypes:reinterpret_cast<const NSArray *>(supportedTypes)]) {
+		NSArray *filenames = [openPanel filenames];
+		[_playerWindowController playFile:[filenames objectAtIndex:0]];	
+	}	
+
 	CFRelease(supportedTypes), supportedTypes = NULL;
-	
-	NSArray *filenames = [openPanel filenames];
-	
-	[_playerWindowController playFile:[filenames objectAtIndex:0]];	
 }
 
 @end
