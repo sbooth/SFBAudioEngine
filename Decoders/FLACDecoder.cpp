@@ -271,7 +271,7 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		UInt32	framesRemaining	= frameCount - framesRead;
 		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
-		UInt32	framesToCopy	= (framesInBuffer > framesRemaining ? framesRemaining : framesInBuffer);
+		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
