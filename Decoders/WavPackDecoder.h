@@ -83,6 +83,8 @@ private:
 	
 	WavpackContext		*mWPC;
 	
+	int32_t				*mBuffer;
+	
 	SInt64				mTotalFrames;
 	SInt64				mCurrentFrame;
 };

@@ -36,6 +36,9 @@
 #include "WavPackDecoder.h"
 
 
+#define BUFFER_SIZE_FRAMES 2048
+
+
 #pragma mark Static Methods
 
 
@@ -108,12 +111,19 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
 		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
 	}
+	
+	mBuffer = static_cast<int32_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t)));
+	if(NULL == mBuffer)
+		throw std::bad_alloc();
 }
 
 WavPackDecoder::~WavPackDecoder()
 {
 	if(mWPC)
 		WavpackCloseFile(mWPC), mWPC = NULL;
+	
+	if(mBuffer)
+		free(mBuffer), mBuffer = NULL;
 }
 
 
@@ -147,50 +157,52 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
-	int32_t *buffer = static_cast<int32_t *>(calloc(frameCount * mFormat.mChannelsPerFrame, sizeof(int32_t)));
-	if(NULL == buffer) {
-		ERR("Unable to allocate memory");
-		return 0;
-	}
+	UInt32 framesRemaining = frameCount;
+	UInt32 totalFramesRead = 0;
 	
-	// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
-	uint32_t samplesRead = WavpackUnpackSamples(mWPC, buffer, frameCount);
-	
-	// Handle floating point files
-	if(MODE_FLOAT & WavpackGetMode(mWPC)) {
-		float *inputBuffer = reinterpret_cast<float *>(buffer);
+	while(0 < framesRemaining) {
+		UInt32 framesToRead = std::min(framesRemaining, static_cast<UInt32>(BUFFER_SIZE_FRAMES));
 		
-		// Deinterleave the normalized samples
-		for(unsigned channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
+		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
+		uint32_t samplesRead = WavpackUnpackSamples(mWPC, mBuffer, framesToRead);
+		
+		// Handle floating point files
+		if(MODE_FLOAT & WavpackGetMode(mWPC)) {
+			float *inputBuffer = reinterpret_cast<float *>(mBuffer);
 			
-			for(unsigned sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
-				float audioSample = inputBuffer[sample];
-				*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
+			// Deinterleave the normalized samples
+			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+				float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
+				
+				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
+					float audioSample = inputBuffer[sample];
+					*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
+				}
+				
+				bufferList->mBuffers[channel].mNumberChannels	= 1;
+				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
 			}
-			
-			bufferList->mBuffers[channel].mNumberChannels	= 1;
-			bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
 		}
-	}
-	else {
-		float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
+		else {
+			float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
+			
+			// Deinterleave the 32-bit samples and convert to float
+			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+				float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
+				
+				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+					*floatBuffer++ = mBuffer[sample] / scaleFactor;
+				
+				bufferList->mBuffers[channel].mNumberChannels	= 1;
+				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
+			}		
+		}
 		
-		// Deinterleave the 32-bit samples and convert to float
-		for(unsigned channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
-			
-			for(unsigned sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
-				*floatBuffer++ = buffer[sample] / scaleFactor;
-			
-			bufferList->mBuffers[channel].mNumberChannels	= 1;
-			bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
-		}		
+		totalFramesRead += samplesRead;
+		framesRemaining -= samplesRead;
 	}
 	
-	free(buffer);
+	mCurrentFrame += totalFramesRead;
 	
-	mCurrentFrame += samplesRead;
-	
-	return samplesRead;
+	return totalFramesRead;
 }
