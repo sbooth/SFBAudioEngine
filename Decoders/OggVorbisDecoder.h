@@ -81,5 +81,6 @@ public:
 
 private:
 	
-	OggVorbis_File mVorbisFile;
+	OggVorbis_File		mVorbisFile;
+	int16_t				*mBuffer;
 };
