@@ -138,9 +138,22 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 		case 6:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_1_C;		break;
 	}
 	
-	mBuffer = static_cast<int16_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int16_t)));
+	// Allocate the decoding buffer
+	mBuffer = static_cast<float **>(calloc(mFormat.mChannelsPerFrame, sizeof(float *)));
 	if(NULL == mBuffer)
 		throw std::bad_alloc();	
+
+	for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i) {
+		mBuffer[i] = static_cast<float *>(calloc(BUFFER_SIZE_FRAMES, sizeof(float)));
+		if(NULL == mBuffer[i]) {
+			for(UInt32 j = 0; j < i; ++j)
+				free(mBuffer[j]), mBuffer[j] = NULL;
+			
+			free(mBuffer), mBuffer = NULL;
+			
+			throw std::bad_alloc();	
+		}
+	}
 }
 
 OggVorbisDecoder::~OggVorbisDecoder()
@@ -148,8 +161,11 @@ OggVorbisDecoder::~OggVorbisDecoder()
 	if(0 != ov_clear(&mVorbisFile))
 		ERR("ov_clear failed");
 
-	if(mBuffer)
+	if(mBuffer) {
+		for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i)
+			free(mBuffer[i]), mBuffer[i] = NULL;
 		free(mBuffer), mBuffer = NULL;
+	}
 }
 
 
@@ -170,8 +186,7 @@ SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
-	int result = ov_pcm_seek(&mVorbisFile, frame);
-	if(result)
+	if(0 != ov_pcm_seek(&mVorbisFile, frame))
 		return -1;
 	
 	return this->GetCurrentFrame();
@@ -183,50 +198,41 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 		
-	UInt32		bufferSize			= static_cast<unsigned>(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame * sizeof(int16_t));
 	UInt32		framesRemaining		= frameCount;
 	UInt32		totalFramesRead		= 0;
-	
+	int			currentSection		= 0;
+
+	// Mark the output buffers as empty
+	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
+		bufferList->mBuffers[i].mDataByteSize = 0;
+		bufferList->mBuffers[i].mNumberChannels = 1;
+	}
+		
 	while(0 < framesRemaining) {
-		int			currentSection	= 0;	
-		long		currentBytes	= 0;
-		long		bytesRead		= 0;
-		char		*readPtr		= reinterpret_cast<char *>(mBuffer);
-		
-		for(;;) {
-#if __BIG_ENDIAN__
-			currentBytes = ov_read(&mVorbisFile, readPtr + bytesRead, static_cast<int>(bufferSize - bytesRead), true, sizeof(int16_t), true, &currentSection);
-#else
-			currentBytes = ov_read(&mVorbisFile, readPtr + bytesRead, static_cast<int>(bufferSize - bytesRead), false, sizeof(int16_t), true, &currentSection);
-#endif
+		// Decode a chunk of samples from the file
+		long framesRead = ov_read_float(&mVorbisFile, 
+										&mBuffer, 
+										std::min(BUFFER_SIZE_FRAMES, static_cast<int>(framesRemaining)), 
+										&currentSection);
 			
-			if(0 > currentBytes) {
-				LOG("Ogg Vorbis decode error");
-				return 0;
-			}
-			
-			bytesRead += currentBytes;
-			
-			if(0 == currentBytes || 0 == bufferSize - bytesRead)
-				break;
+		if(0 > framesRead) {
+			LOG("Ogg Vorbis decode error");
+			return 0;
 		}
 		
-		UInt32		framesRead		= static_cast<UInt32>((bytesRead / sizeof(int16_t)) / mFormat.mChannelsPerFrame);
-		float		scaleFactor		= (1 << (16 - 1));
+		// 0 frames indicates EOS
+		if(0 == framesRead)
+			break;
 		
-		// Deinterleave the 16-bit samples and convert to float
+		// Copy the frames from the decoding buffer to the output buffer
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
-			
-			for(UInt32 sample = channel; sample < framesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
-				*floatBuffer++ = static_cast<float>(mBuffer[sample] / scaleFactor);
-			
-			bufferList->mBuffers[channel].mNumberChannels	= 1;
-			bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(framesRead * sizeof(float));
+			// Skip over any frames already decoded
+			memcpy(static_cast<float *>(bufferList->mBuffers[channel].mData) + totalFramesRead, mBuffer[channel], framesRead * sizeof(float));
+			bufferList->mBuffers[channel].mDataByteSize += static_cast<UInt32>(framesRead * sizeof(float));
 		}
 		
-		totalFramesRead += framesRead;
-		framesRemaining -= framesRead;
+		totalFramesRead += static_cast<UInt32>(framesRead);
+		framesRemaining -= static_cast<UInt32>(framesRead);
 	}
 	
 	return totalFramesRead;
