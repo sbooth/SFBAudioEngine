@@ -45,7 +45,7 @@ class DecoderStateData;
 // ========================================
 // Constants
 // ========================================
-const UInt32 kActiveDecoderArraySize = 32;
+const UInt32 kActiveDecoderArraySize = 8;
 
 
 // ========================================
@@ -80,6 +80,8 @@ public:
 	CFTimeInterval GetTotalTime();
 	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
 
+	const AudioDecoder * GetCurrentDecoder();
+	
 	// ========================================
 	// Seeking
 	bool SeekForward(CFTimeInterval secondsToSkip = 3);
@@ -150,6 +152,7 @@ private:
 	// Other Utilities
 	void StopActiveDecoders();
 	DecoderStateData * GetCurrentDecoderState();
+	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
 
 	// ========================================
 	// Data Members

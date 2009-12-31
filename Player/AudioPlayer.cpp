@@ -419,6 +419,16 @@ CFTimeInterval AudioPlayer::GetTotalTime()
 	return static_cast<CFTimeInterval>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
+const AudioDecoder * AudioPlayer::GetCurrentDecoder()
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	
+	if(NULL == currentDecoderState)
+		return NULL;
+	
+	return currentDecoderState->mDecoder;
+}
+
 
 #pragma mark Seeking
 
@@ -1561,17 +1571,15 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		// mFramesRenderedLastPass contains the number of valid frames that were rendered
 		// However, these could have come from any number of decoders depending on the buffer sizes
 		// So it is necessary to split them up here
-
+		
 		SInt64 framesRemainingToDistribute = mFramesRenderedLastPass;
-
-		for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
-			DecoderStateData *decoderState = mActiveDecoders[i];
-			
-			if(NULL == decoderState)
-				continue;
-			
-			if(decoderState->mReadyForCollection)
-				continue;
+		DecoderStateData *decoderState = GetCurrentDecoderState();
+		
+		// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
+		// in the proper order multiple passes are made here
+		// TODO: Keep the array sorted in the future
+		while(NULL != decoderState) {
+			SInt64 timeStamp = decoderState->mTimeStamp;
 
 			SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
 			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
@@ -1593,6 +1601,8 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			
 			if(0 == framesRemainingToDistribute)
 				break;
+			
+			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
 
 		// If there are no more active decoders, stop playback
@@ -2547,6 +2557,27 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 		if(NULL == result)
 			result = decoderState;
 		else if(decoderState->mTimeStamp < result->mTimeStamp)
+			result = decoderState;
+	}
+	
+	return result;
+}
+
+DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
+{
+	DecoderStateData *result = NULL;
+	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
+		DecoderStateData *decoderState = mActiveDecoders[i];
+		
+		if(NULL == decoderState)
+			continue;
+		
+		if(true == decoderState->mReadyForCollection)
+			continue;
+
+		if(NULL == result && decoderState->mTimeStamp > timeStamp)
+			result = decoderState;
+		else if(decoderState->mTimeStamp > timeStamp && decoderState->mTimeStamp < result->mTimeStamp)
 			result = decoderState;
 	}
 	
