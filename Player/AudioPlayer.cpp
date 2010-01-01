@@ -444,7 +444,7 @@ bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 	SInt64 desiredFrame		= GetCurrentFrame() + frameCount;
 	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
 	
-	return SeekToFrame(std::min(desiredFrame, totalFrames));
+	return SeekToFrame(std::min(desiredFrame, totalFrames - 1));
 }
 
 bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
@@ -471,7 +471,7 @@ bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 	SInt64 desiredFrame		= static_cast<SInt64>(timeInSeconds * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
 	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
 	
-	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames)));
+	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
 }
 
 bool AudioPlayer::SeekToFrame(SInt64 frame)
