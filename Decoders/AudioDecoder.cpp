@@ -116,6 +116,32 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	return result;
 }
 
+bool AudioDecoder::FileExtensionIsSupported(CFStringRef extension)
+{
+	assert(NULL != extension);
+	
+	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
+	
+	bool extensionIsValid = CFArrayContainsValue(supportedExtensions, CFRangeMake(0, CFArrayGetCount(supportedExtensions)), extension);
+
+	CFRelease(supportedExtensions), supportedExtensions = NULL;
+
+	return extensionIsValid;
+}
+
+bool AudioDecoder::MIMETypeIsSupported(CFStringRef mimeType)
+{
+	assert(NULL != mimeType);
+
+	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
+	
+	bool mimeTypeIsValid = CFArrayContainsValue(supportedMIMETypes, CFRangeMake(0, CFArrayGetCount(supportedMIMETypes)), mimeType);
+	
+	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	
+	return mimeTypeIsValid;
+}
+
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 {
 	assert(NULL != url);

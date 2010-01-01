@@ -67,6 +67,9 @@ public:
 	static CFArrayRef CreateSupportedFileExtensions();
 	static CFArrayRef CreateSupportedMIMETypes();
 
+	static bool FileExtensionIsSupported(CFStringRef extension);
+	static bool MIMETypeIsSupported(CFStringRef mimeType);
+	
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url);
