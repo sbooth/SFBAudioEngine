@@ -80,7 +80,7 @@ public:
 	CFTimeInterval GetTotalTime();
 	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
 
-	const AudioDecoder * GetCurrentDecoder();
+	CFURLRef GetPlayingURL();
 	
 	// ========================================
 	// Seeking
@@ -89,6 +89,8 @@ public:
 
 	bool SeekToTime(CFTimeInterval timeInSeconds);
 	bool SeekToFrame(SInt64 frame);
+	
+	bool CanSeek();
 	
 	// ========================================
 	// Player Parameters

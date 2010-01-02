@@ -419,14 +419,14 @@ CFTimeInterval AudioPlayer::GetTotalTime()
 	return static_cast<CFTimeInterval>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
-const AudioDecoder * AudioPlayer::GetCurrentDecoder()
+CFURLRef AudioPlayer::GetPlayingURL()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return NULL;
 	
-	return currentDecoderState->mDecoder;
+	return currentDecoderState->mDecoder->GetURL();
 }
 
 
@@ -498,6 +498,16 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	semaphore_signal(mDecoderSemaphore);
 
 	return true;	
+}
+
+bool AudioPlayer::CanSeek()
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	
+	if(NULL == currentDecoderState)
+		return false;
+	
+	return currentDecoderState->mDecoder->SupportsSeeking();
 }
 
 
@@ -2552,6 +2562,9 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 			continue;
 		
 		if(true == decoderState->mReadyForCollection)
+			continue;
+		
+		if(decoderState->mTotalFrames == decoderState->mFramesRendered)
 			continue;
 		
 		if(NULL == result)
