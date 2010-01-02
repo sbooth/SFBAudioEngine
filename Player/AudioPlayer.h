@@ -69,6 +69,7 @@ public:
 	void Stop();
 	
 	bool IsPlaying();
+	CFURLRef GetPlayingURL();
 
 	// ========================================
 	// Playback Properties
@@ -79,8 +80,6 @@ public:
 	CFTimeInterval GetCurrentTime();
 	CFTimeInterval GetTotalTime();
 	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
-
-	CFURLRef GetPlayingURL();
 	
 	// ========================================
 	// Seeking
@@ -90,7 +89,7 @@ public:
 	bool SeekToTime(CFTimeInterval timeInSeconds);
 	bool SeekToFrame(SInt64 frame);
 	
-	bool CanSeek();
+	bool SupportsSeeking();
 	
 	// ========================================
 	// Player Parameters

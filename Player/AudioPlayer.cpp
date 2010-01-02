@@ -375,6 +375,16 @@ bool AudioPlayer::IsPlaying()
 	return isRunning;
 }
 
+CFURLRef AudioPlayer::GetPlayingURL()
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	
+	if(NULL == currentDecoderState)
+		return NULL;
+	
+	return currentDecoderState->mDecoder->GetURL();
+}
+
 
 #pragma mark Playback Properties
 
@@ -417,16 +427,6 @@ CFTimeInterval AudioPlayer::GetTotalTime()
 		return -1;
 	
 	return static_cast<CFTimeInterval>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
-}
-
-CFURLRef AudioPlayer::GetPlayingURL()
-{
-	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
-	
-	if(NULL == currentDecoderState)
-		return NULL;
-	
-	return currentDecoderState->mDecoder->GetURL();
 }
 
 
@@ -500,7 +500,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
-bool AudioPlayer::CanSeek()
+bool AudioPlayer::SupportsSeeking()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
