@@ -75,7 +75,7 @@ errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus
 
 CFArrayRef FLACDecoder::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("flac")/*, CFSTR("ogg")*/ };
+	CFStringRef supportedExtensions [] = { CFSTR("flac")/*, CFSTR("oga")*/ };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
 }
 
