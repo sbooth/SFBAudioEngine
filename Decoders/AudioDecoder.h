@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -67,8 +67,8 @@ public:
 	static CFArrayRef CreateSupportedFileExtensions();
 	static CFArrayRef CreateSupportedMIMETypes();
 
-	static bool FileExtensionIsSupported(CFStringRef extension);
-	static bool MIMETypeIsSupported(CFStringRef mimeType);
+	static bool HandlesFilesWithExtension(CFStringRef extension);
+	static bool HandlesMIMEType(CFStringRef mimeType);
 	
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure

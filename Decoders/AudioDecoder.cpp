@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -116,7 +116,7 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	return result;
 }
 
-bool AudioDecoder::FileExtensionIsSupported(CFStringRef extension)
+bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);
 	
@@ -129,7 +129,7 @@ bool AudioDecoder::FileExtensionIsSupported(CFStringRef extension)
 	return extensionIsValid;
 }
 
-bool AudioDecoder::MIMETypeIsSupported(CFStringRef mimeType)
+bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);
 
