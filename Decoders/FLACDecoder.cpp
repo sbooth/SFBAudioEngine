@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -75,13 +75,13 @@ errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus
 
 CFArrayRef FLACDecoder::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("flac")/*, CFSTR("oga")*/ };
+	CFStringRef supportedExtensions [] = { CFSTR("flac"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef FLACDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac")/*, CFSTR("audio/ogg")*/ };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac"), CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
@@ -91,8 +91,8 @@ bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
 		return true;
-//	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
-//		return true;
+	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
+		return true;
 
 	return false;
 }
@@ -103,8 +103,8 @@ bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
 		return true;
-//	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
-//		return true;
+	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
+		return true;
 	
 	return false;
 }
@@ -127,18 +127,33 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	mFLAC = FLAC__stream_decoder_new();
 	if(NULL == mFLAC)
 		throw std::runtime_error("FLAC__stream_decoder_new failed");
-	
-	// Initialize decoder
-	FLAC__StreamDecoderInitStatus status = FLAC__stream_decoder_init_file(mFLAC, 
-																		  reinterpret_cast<const char *>(buf),
-																		  writeCallback, 
-																		  metadataCallback, 
-																		  errorCallback,
-																		  this);
 
+	CFStringRef extension = CFURLCopyPathExtension(url);
+	if(NULL == extension)
+		throw std::runtime_error("CFURLCopyPathExtension failed");
+
+	// Initialize decoder
+	FLAC__StreamDecoderInitStatus status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
+		status = FLAC__stream_decoder_init_file(mFLAC, 
+												reinterpret_cast<const char *>(buf),
+												writeCallback, 
+												metadataCallback, 
+												errorCallback,
+												this);
+	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
+		status = FLAC__stream_decoder_init_ogg_file(mFLAC, 
+													reinterpret_cast<const char *>(buf),
+													writeCallback, 
+													metadataCallback, 
+													errorCallback,
+													this);
+
+	CFRelease(extension), extension = NULL;
+	
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
-		throw std::runtime_error("FLAC__stream_decoder_init_file failed");
+		throw std::runtime_error("FLAC__stream_decoder_init_file (or FLAC__stream_decoder_init_ogg_file) failed");
 	}
 
 	// Process metadata
