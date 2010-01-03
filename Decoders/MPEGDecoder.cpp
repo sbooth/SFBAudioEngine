@@ -103,7 +103,7 @@ CFArrayRef MPEGDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg-layer-iii") };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
@@ -121,7 +121,7 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);	
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg-layer-iii"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
