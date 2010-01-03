@@ -162,18 +162,61 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 				if(NULL != pathExtension) {
 
 					// Creating a decoder may throw an exception for any number of reasons
+					
+					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
+					// In lieu of adding a FileIsValid() method to each class that would open
+					// and evaluate each file before opening, the try/catch madness here has a
+					// similar effect without the file opening overhead
+					
+					// Additionally, as a factory this class has knowledge of its subclasses
+					// It would be possible (and perhaps preferable) to switch to a generic
+					// plugin interface at a later date
 					try {
 						if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new FLACDecoder(url);
-						else if(WavPackDecoder::HandlesFilesWithExtension(pathExtension))
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
+					
+					try {
+						if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new WavPackDecoder(url);
-						else if(MPEGDecoder::HandlesFilesWithExtension(pathExtension))
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
+
+					try {
+						if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new MPEGDecoder(url);
-						else if(OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
+					try {
+						if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new OggVorbisDecoder(url);
-						else if(MusepackDecoder::HandlesFilesWithExtension(pathExtension))
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
+
+					try {
+						if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new MusepackDecoder(url);
-						else if(CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
+					}
+
+					catch(std::exception& e) {
+						LOG("Exception creating decoder: %s", e.what());
+					}
+
+					try {
+						if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
 							decoder = new CoreAudioDecoder(url);
 					}
 					
