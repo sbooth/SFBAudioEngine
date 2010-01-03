@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -88,15 +88,15 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
-	
+
 	FILE *file = fopen(reinterpret_cast<const char *>(buf), "r");
 	if(NULL == file)
 		throw std::runtime_error("Unable to open the input file");
-	
+
 	if(0 != ov_test(file, &mVorbisFile, NULL, 0)) {
 		if(0 != fclose(file))
 			ERR("fclose() failed");
-		
+
 		throw std::runtime_error("The file does not appear to be a valid Ogg Vorbis file");
 	}
 	
@@ -136,36 +136,13 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 		case 4:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Quadraphonic;		break;
 		case 5:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_0_C;		break;
 		case 6:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_1_C;		break;
-	}
-	
-	// Allocate the decoding buffer
-	mBuffer = static_cast<float **>(calloc(mFormat.mChannelsPerFrame, sizeof(float *)));
-	if(NULL == mBuffer)
-		throw std::bad_alloc();	
-
-	for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i) {
-		mBuffer[i] = static_cast<float *>(calloc(BUFFER_SIZE_FRAMES, sizeof(float)));
-		if(NULL == mBuffer[i]) {
-			for(UInt32 j = 0; j < i; ++j)
-				free(mBuffer[j]), mBuffer[j] = NULL;
-			
-			free(mBuffer), mBuffer = NULL;
-			
-			throw std::bad_alloc();	
-		}
-	}
+	}	
 }
 
 OggVorbisDecoder::~OggVorbisDecoder()
 {
 	if(0 != ov_clear(&mVorbisFile))
 		ERR("ov_clear failed");
-
-	if(mBuffer) {
-		for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i)
-			free(mBuffer[i]), mBuffer[i] = NULL;
-		free(mBuffer), mBuffer = NULL;
-	}
 }
 
 
@@ -197,7 +174,8 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
-		
+
+	float		**buffer			= NULL;
 	UInt32		framesRemaining		= frameCount;
 	UInt32		totalFramesRead		= 0;
 	int			currentSection		= 0;
@@ -211,7 +189,7 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	while(0 < framesRemaining) {
 		// Decode a chunk of samples from the file
 		long framesRead = ov_read_float(&mVorbisFile, 
-										&mBuffer, 
+										&buffer, 
 										std::min(BUFFER_SIZE_FRAMES, static_cast<int>(framesRemaining)), 
 										&currentSection);
 			
@@ -227,7 +205,7 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		// Copy the frames from the decoding buffer to the output buffer
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 			// Skip over any frames already decoded
-			memcpy(static_cast<float *>(bufferList->mBuffers[channel].mData) + totalFramesRead, mBuffer[channel], framesRead * sizeof(float));
+			memcpy(static_cast<float *>(bufferList->mBuffers[channel].mData) + totalFramesRead, buffer[channel], framesRead * sizeof(float));
 			bufferList->mBuffers[channel].mDataByteSize += static_cast<UInt32>(framesRead * sizeof(float));
 		}
 		
