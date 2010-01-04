@@ -206,7 +206,7 @@
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="714778481">
-								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags">67763712</int>
 								<int key="NSCellFlags2">134217728</int>
 								<string key="NSContents">Forward</string>
 								<reference key="NSSupport" ref="60093846"/>
@@ -227,7 +227,7 @@
 							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="515285581">
-								<int key="NSCellFlags">67239424</int>
+								<int key="NSCellFlags">67763712</int>
 								<int key="NSCellFlags2">134217728</int>
 								<string key="NSContents">Backward</string>
 								<reference key="NSSupport" ref="60093846"/>

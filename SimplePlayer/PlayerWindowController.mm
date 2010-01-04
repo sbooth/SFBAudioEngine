@@ -16,6 +16,10 @@
 - (void) uiTimerFired:(NSTimer *)timer;
 @end
 
+@interface PlayerWindowController (Private)
+- (void) updateWindowUI;
+@end
+
 static void renderingStarted(void *context, const AudioDecoder *decoder)
 {
 	NSCParameterAssert(NULL != context);
@@ -71,12 +75,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 - (void) awakeFromNib
 {
 	// Disable the UI since no file is loaded
-	[_slider setEnabled:NO];
-	[_playButton setEnabled:NO];
-	[_backwardButton setEnabled:NO];
-	[_forwardButton setEnabled:NO];
-	[_elapsed setHidden:YES];
-	[_remaining setHidden:YES];
+	[self updateWindowUI];
 }
 
 - (NSString *) windowFrameAutosaveName
@@ -144,52 +143,22 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 // This is called from the real-time rendering thread so it shouldn't do much!
 - (void) renderingStarted:(AudioDecoder *)decoder
 {
-	NSParameterAssert(NULL != decoder);
+#pragma unused(decoder)
 	
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	// No autorelease pool is required since no Objective-C objects are created
 	
-	NSURL *url = const_cast<NSURL *>(reinterpret_cast<const NSURL *>(decoder->GetURL()));
-	
-	// Update the window's title and represented file
-	[[self window] setRepresentedURL:url];
-	[[self window] setTitle:[[NSFileManager defaultManager] displayNameAtPath:[url path]]];
-	
-	// Update the UI
-	[_slider setEnabled:decoder->SupportsSeeking()];
-	[_playButton setEnabled:YES];
-	[_backwardButton setEnabled:decoder->SupportsSeeking()];
-	[_forwardButton setEnabled:decoder->SupportsSeeking()];
-	
-	// Show the times
-	[_elapsed setHidden:NO];
-	[_remaining setHidden:NO];
-
-	[pool release], pool = nil;
+	[self performSelectorOnMainThread:@selector(updateWindowUI) withObject:nil waitUntilDone:NO];
 }
 
 // This is also called from the rendering thread
 - (void) renderingFinished:(AudioDecoder *)decoder
 {
-	NSParameterAssert(NULL != decoder);
-
-	// We only handle one file at a time, so stop
-	PLAYER->Stop();
-
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-	// Reset the window to its initial state
-	[[self window] setRepresentedURL:nil];
-	[[self window] setTitle:@""];
+#pragma unused(decoder)
 	
-	[_slider setEnabled:NO];
-	[_playButton setEnabled:NO];
-	[_backwardButton setEnabled:NO];
-	[_forwardButton setEnabled:NO];
-
-	[_elapsed setHidden:YES];
-	[_remaining setHidden:YES];
-
-	[pool release], pool = nil;
+	// No autorelease pool is required since no Objective-C objects are created
+	
+	// If there isn't another decoder queued, the UI should be disabled
+	[self performSelectorOnMainThread:@selector(updateWindowUI) withObject:nil waitUntilDone:NO];
 }
 
 - (void) uiTimerFired:(NSTimer *)timer
@@ -205,6 +174,50 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	[_slider setDoubleValue:fractionComplete];
 	[_elapsed setDoubleValue:PLAYER->GetCurrentTime()];
 	[_remaining setDoubleValue:(-1 * PLAYER->GetRemainingTime())];
+}
+
+@end
+
+@implementation PlayerWindowController (Private)
+
+- (void) updateWindowUI
+{
+	NSURL *url = reinterpret_cast<const NSURL *>(PLAYER->GetPlayingURL());
+	
+	// Nothing happening, reset the window
+	if(NULL == url) {
+		[[self window] setRepresentedURL:nil];
+		[[self window] setTitle:@""];
+		
+		[_slider setEnabled:NO];
+		[_playButton setState:NSOffState];
+		[_playButton setEnabled:NO];
+		[_backwardButton setEnabled:NO];
+		[_forwardButton setEnabled:NO];
+		
+		[_elapsed setHidden:YES];
+		[_remaining setHidden:YES];
+		
+		return;
+	}
+	
+	bool seekable = PLAYER->SupportsSeeking();
+	
+	// Update the window's title and represented file
+	[[self window] setRepresentedURL:url];
+	[[self window] setTitle:[[NSFileManager defaultManager] displayNameAtPath:[url path]]];
+	
+	[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
+	
+	// Update the UI
+	[_slider setEnabled:seekable];
+	[_playButton setEnabled:YES];
+	[_backwardButton setEnabled:seekable];
+	[_forwardButton setEnabled:seekable];
+	
+	// Show the times
+	[_elapsed setHidden:NO];
+	[_remaining setHidden:NO];	
 }
 
 @end
