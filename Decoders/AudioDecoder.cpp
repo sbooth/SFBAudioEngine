@@ -121,12 +121,23 @@ bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	assert(NULL != extension);
 	
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
+	if(NULL == supportedExtensions)
+		return false;
 	
-	bool extensionIsValid = CFArrayContainsValue(supportedExtensions, CFRangeMake(0, CFArrayGetCount(supportedExtensions)), extension);
-
+	bool extensionIsSupported = false;
+	
+	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
+	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
+		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
+			extensionIsSupported = true;
+			break;
+		}
+	}
+	
 	CFRelease(supportedExtensions), supportedExtensions = NULL;
 
-	return extensionIsValid;
+	return extensionIsSupported;
 }
 
 bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
@@ -134,12 +145,23 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	assert(NULL != mimeType);
 
 	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
+	if(NULL == supportedMIMETypes)
+		return false;
 	
-	bool mimeTypeIsValid = CFArrayContainsValue(supportedMIMETypes, CFRangeMake(0, CFArrayGetCount(supportedMIMETypes)), mimeType);
+	bool mimeTypeIsSupported = false;
 	
+	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
+	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
+		CFStringRef currentMIMEType = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex));
+		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
+			mimeTypeIsSupported = true;
+			break;
+		}
+	}
+
 	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
 	
-	return mimeTypeIsValid;
+	return mimeTypeIsSupported;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
