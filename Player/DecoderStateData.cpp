@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,16 +30,14 @@
 
 #include "DecoderStateData.h"
 #include "AudioDecoder.h"
-#include "AudioEngineDefines.h"
-
-#include <pthread.h>
+//#include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingThread(static_cast<pthread_t>(0)), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {
 	assert(NULL != decoder);
 	
@@ -49,17 +47,6 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 	
 DecoderStateData::~DecoderStateData()
 {
-	// Wait for the decoding thread to end, if it hasn't already
-	if(static_cast<pthread_t>(0) != mDecodingThread) {
-		mKeepDecoding = false;
-		
-		int result = pthread_join(mDecodingThread, NULL);
-		if(0 != result)
-			ERR("pthread_join failed: %i", result);
-		
-		mDecodingThread = static_cast<pthread_t>(0);
-	}
-
 	// Delete the decoder
 	if(NULL != mDecoder)
 		delete mDecoder, mDecoder = NULL;

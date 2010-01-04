@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -119,9 +119,6 @@ public:
 	// ========================================
 	// Playlist Management
 	// The player will take ownership of decoder
-	bool Play(CFURLRef url);
-	bool Play(AudioDecoder *decoder);
-	
 	bool Enqueue(CFURLRef url);
 	bool Enqueue(AudioDecoder *decoder);
 	
@@ -170,15 +167,17 @@ private:
 
 	CARingBuffer						*mRingBuffer;
 	pthread_mutex_t						mMutex;
+	
+	pthread_t							mDecoderThread;
 	semaphore_t							mDecoderSemaphore;
-	semaphore_t							mCollectorSemaphore;
+	bool								mKeepDecoding;
 	
 	pthread_t							mCollectorThread;
+	semaphore_t							mCollectorSemaphore;
 	bool								mKeepCollecting;
-	
+
 	SInt64								mFramesDecoded;
 	SInt64								mFramesRendered;
-	SInt64								mNextDecoderStartingTimeStamp;
 	UInt32								mFramesRenderedLastPass;
 
 public:
@@ -197,7 +196,7 @@ public:
 					   UInt32							inNumberFrames,
 					   AudioBufferList					*ioData);
 	
-	void * FileReaderThreadEntry();
+	void * DecoderThreadEntry();
 	void * CollectorThreadEntry();
 
 };
