@@ -114,7 +114,7 @@ public:
 
 	bool OutputDeviceIsHogged();
 	bool StartHoggingOutputDevice();
-	inline bool StopHoggingOutputDevice()			{ return StartHoggingOutputDevice(); }
+	bool StopHoggingOutputDevice();
 
 	// ========================================
 	// Playlist Management
@@ -123,7 +123,7 @@ public:
 	bool Enqueue(AudioDecoder *decoder);
 	
 	bool ClearQueuedDecoders();
-	
+
 private:
 	
 	// ========================================
