@@ -381,11 +381,10 @@ void AudioPlayer::Play()
 	if(IsPlaying())
 		return;
 
-//	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	
 //	printf("currentDecoderState = %p\n",currentDecoderState);
-//	
-//	if(NULL == currentDecoderState)
-//		return;
+//	printf("mDecoderQueue.empty(): %d\n",mDecoderQueue.empty());
 	
 	OSStatus result = AUGraphStart(mAUGraph);
 
@@ -1318,6 +1317,12 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	
 	// The device isn't hogged, so attempt to hog it
 	if(hogPID == static_cast<pid_t>(-1)) {
+		// If IO is enabled, disable it while hog mode is acquired because the AUHAL
+		// does not automatically restart IO after hog mode is taken
+		bool wasPlaying = IsPlaying();
+		if(true == wasPlaying)
+			Pause();
+				
 		hogPID = getpid();
 		result = AudioDeviceSetProperty(deviceID,
 										NULL, 
@@ -1330,10 +1335,88 @@ bool AudioPlayer::StartHoggingOutputDevice()
 			ERR("AudioDeviceSetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
 			return false;
 		}
+
+		// If IO was enabled before, re-enable it
+		if(true == wasPlaying)
+			Play();
 	}
 	else
 		LOG("Device is already hogged by pid: %d", hogPID);
-		
+	
+	return true;
+}
+
+bool AudioPlayer::StopHoggingOutputDevice()
+{
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+	
+	// Get the current output device
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	
+	UInt32 specifierSize = sizeof(deviceID);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+		return false;
+	}
+	
+	// Is it hogged by us?
+	pid_t hogPID = static_cast<pid_t>(-1);
+	specifierSize = sizeof(hogPID);
+	result = AudioDeviceGetProperty(deviceID, 
+									0,
+									FALSE,
+									kAudioDevicePropertyHogMode,
+									&specifierSize,
+									&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
+		return false;
+	}
+	
+	// If we don't own hog mode we can't release it
+	if(hogPID != getpid())
+		return false;
+
+	// Disable IO while hog mode is released
+	bool wasPlaying = IsPlaying();
+	if(true == wasPlaying)
+		Pause();
+
+	// Release hog mode.
+	hogPID = static_cast<pid_t>(-1);
+	result = AudioDeviceSetProperty(deviceID,
+									NULL, 
+									0, FALSE,
+									kAudioDevicePropertyHogMode,
+									sizeof(hogPID),
+									&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioDeviceSetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
+		return false;
+	}
+	
+	if(true == wasPlaying)
+		Play();
+	
 	return true;
 }
 
@@ -1362,7 +1445,6 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 	
-	// If there are no active decoders and none in the queue, start this decoder immediately
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
@@ -1450,7 +1532,6 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 			return false;
 	}
 
-	// If we get to here this is either the first decoder or the formats match
 	// Add the decoder to the queue
 	lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1595,7 +1676,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 				decoderState->mDecoder->PerformRenderingStartedCallback();
 			
 			OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
-			
+
 			if(decoderState->mFramesRendered == decoderState->mTotalFrames) {
 				decoderState->mDecoder->PerformRenderingFinishedCallback();
 				
@@ -1629,9 +1710,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
-//	SInt64 timeStamp = 0;
 
-	while(mKeepDecoding) {
+	while(true == mKeepDecoding) {
 		AudioDecoder *decoder = NULL;
 
 		// ========================================
@@ -1761,8 +1841,6 @@ void * AudioPlayer::DecoderThreadEntry()
 							// Rather than require preprocessing to ensure an accurate frame count, update 
 							// it here so EOS is correctly detected in DidRender()
 							decoderStateData->mTotalFrames = startingFrameNumber;
-							
-//							timeStamp += startingFrameNumber;
 
 							break;
 						}
@@ -1798,7 +1876,7 @@ void * AudioPlayer::CollectorThreadEntry()
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
 
-	while(mKeepCollecting) {
+	while(true == mKeepCollecting) {
 		
 		for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
 			DecoderStateData *decoderState = mActiveDecoders[i];
@@ -1855,7 +1933,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 	
 	// Set up the output node
 	desc.componentType			= kAudioUnitType_Output;
-	desc.componentSubType		= kAudioUnitSubType_DefaultOutput;
+	desc.componentSubType		= kAudioUnitSubType_HALOutput;
 	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
 	desc.componentFlags			= 0;
 	desc.componentFlagsMask		= 0;
