@@ -96,9 +96,9 @@ public:
 	Float32 GetVolume();
 	bool SetVolume(Float32 volume);
 
-	Float32 GetPreGain();
+	inline Float32 GetPreGain()						{ return mPreGain; }
 	bool SetPreGain(Float32 preGain);
-
+	
 	// ========================================
 	// DSP Effects
 	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = NULL);
@@ -142,11 +142,6 @@ private:
 	OSStatus SetAUGraphChannelLayout(AudioChannelLayout channelLayout);
 	
 	// ========================================
-	// PreGain Utilities
-	bool EnablePreGain(UInt32 flag);
-	bool IsPreGainEnabled();
-	
-	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
 	DecoderStateData * GetCurrentDecoderState();
@@ -159,7 +154,6 @@ private:
 	AudioStreamBasicDescription			mAUGraphFormat;
 	AudioChannelLayout					mAUGraphChannelLayout;
 	
-	AUNode								mLimiterNode;
 	AUNode								mOutputNode;
 	
 	std::deque<AudioDecoder *>			mDecoderQueue;
@@ -179,6 +173,9 @@ private:
 	SInt64								mFramesDecoded;
 	SInt64								mFramesRendered;
 	UInt32								mFramesRenderedLastPass;
+	
+	Float32								mPreGain;
+	bool								mPerformHardLimiting;
 
 public:
 
