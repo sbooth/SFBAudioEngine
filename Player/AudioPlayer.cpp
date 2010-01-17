@@ -179,7 +179,7 @@ collectorEntry(void *arg)
 
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false)
 {
 	mRingBuffer = new CARingBuffer();
 
@@ -300,7 +300,7 @@ AudioPlayer::AudioPlayer()
 	// Set up our AUGraph and set pregain to 0
 	OSStatus status = CreateAUGraph();
 	if(noErr != status) {
-		ERR("CreateAUGraph failed: %i", result);
+		ERR("CreateAUGraph failed: %i", status);
 		throw std::runtime_error("CreateAUGraph failed");
 	}
 	
@@ -580,7 +580,7 @@ Float32 AudioPlayer::GetVolume()
 		return -1;
 	}
 	
-	Float32 volume = -1;
+	AudioUnitParameterValue volume = -1;
 	ComponentResult result = AudioUnitGetParameter(au,
 												   kHALOutputParam_Volume,
 												   kAudioUnitScope_Global,
@@ -624,70 +624,15 @@ bool AudioPlayer::SetVolume(Float32 volume)
 	return true;
 }
 
-Float32 AudioPlayer::GetPreGain()
-{
-	if(false == IsPreGainEnabled())
-		return 0.f;
-
-	AudioUnit au = NULL;
-	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
-										mLimiterNode, 
-										NULL, 
-										&au);
-	
-	if(noErr != auResult) {
-		ERR("AUGraphNodeInfo failed: %i", auResult);
-		return -1;
-	}
-
-	Float32 preGain = -1;
-	ComponentResult result = AudioUnitGetParameter(au, 
-												   kLimiterParam_PreGain, 
-												   kAudioUnitScope_Global, 
-												   0,
-												   &preGain);
-	
-	if(noErr != result)
-		ERR("AudioUnitGetParameter (kLimiterParam_PreGain) failed: %i", result);
-	
-	return preGain;
-}
-
 bool AudioPlayer::SetPreGain(Float32 preGain)
 {
-	if(0.f == preGain)
-		return EnablePreGain(false);
+	assert(-40.f <= preGain);
+	assert(40.f >= preGain);
 	
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mLimiterNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	AudioUnitParameter auParameter;
-	
-	auParameter.mAudioUnit		= au;
-	auParameter.mParameterID	= kLimiterParam_PreGain;
-	auParameter.mScope			= kAudioUnitScope_Global;
-	auParameter.mElement		= 0;
-	
-	result	= AUParameterSet(NULL, 
-							 NULL, 
-							 &auParameter, 
-							 preGain,
-							 0);
-	
-	if(noErr != result) {
-		ERR("AUParameterSet (kLimiterParam_PreGain) failed: %i", result);
-		return false;
-	}
-	
+	mPreGain = preGain;	
 	return true;
+	
+	//	return OSAtomicCompareAndSwap32Barrier(*reinterpret_cast<int32_t *>(&mPreGain), *reinterpret_cast<int32_t *>(&preGain), reinterpret_cast<int32_t *>(&mPreGain));
 }
 
 
@@ -1821,6 +1766,46 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// Store the decoded audio
 						if(0 != framesDecoded) {
+
+							// Apply pregain
+							if(0.f != mPreGain) {
+								// Convert pregain in dB to a linear gain value
+								float linearGain = powf(10, mPreGain / 20);
+								
+								// Apply pre-gain to the decoded samples
+								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
+									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex)
+										*buffer++ *= linearGain;
+								}
+							}
+							
+							// Clip the samples to [-1, +1), if desired
+							if(mPerformHardLimiting) {
+								UInt32 bitsPerChannel = decoder->GetSourceFormat().mBitsPerChannel;
+								
+								// For compressed formats, pretend the samples are 24-bit
+								if(0 == bitsPerChannel)
+									bitsPerChannel = 24;
+								
+								// The maximum allowable sample value
+								float maxValue = 1.f - (1.f / (1 << (bitsPerChannel - 1)));
+								
+								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
+									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex) {
+										float sample = *buffer;
+										
+										if(sample > maxValue)
+											*buffer = maxValue;
+										else if(sample < -1.f)
+											*buffer = -1.f;
+										
+										++buffer;
+									}
+								}
+							}
+							
 							// Copy the decoded audio to the ring buffer
 							CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 							if(kCARingBufferError_OK != result)
@@ -1914,17 +1899,18 @@ OSStatus AudioPlayer::CreateAUGraph()
 	}
 	
 	// The graph will look like:
-	// Peak Limiter -> Effects -> Output
+	// MultiChannelMixer -> Effects (if any) -> Output
 	ComponentDescription desc;
 
-	// Set up the peak limiter node
-	desc.componentType			= kAudioUnitType_Effect;
-	desc.componentSubType		= kAudioUnitSubType_PeakLimiter;
+	// Set up the mixer node
+	desc.componentType			= kAudioUnitType_Mixer;
+	desc.componentSubType		= kAudioUnitSubType_MultiChannelMixer;
 	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
 	desc.componentFlags			= 0;
 	desc.componentFlagsMask		= 0;
 	
-	result = AUGraphAddNode(mAUGraph, &desc, &mLimiterNode);
+	AUNode mixerNode;
+	result = AUGraphAddNode(mAUGraph, &desc, &mixerNode);
 
 	if(noErr != result) {
 		ERR("AUGraphAddNode failed: %i", result);
@@ -1945,7 +1931,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 		return result;
 	}
 	
-	result = AUGraphConnectNodeInput(mAUGraph, mLimiterNode, 0, mOutputNode, 0);
+	result = AUGraphConnectNodeInput(mAUGraph, mixerNode, 0, mOutputNode, 0);
 
 	if(noErr != result) {
 		ERR("AUGraphConnectNodeInput failed: %i", result);
@@ -1954,7 +1940,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 	
 	// Install the input callback
 	AURenderCallbackStruct cbs = { myAURenderCallback, this };
-	result = AUGraphSetNodeInputCallback(mAUGraph, mLimiterNode, 0, &cbs);
+	result = AUGraphSetNodeInputCallback(mAUGraph, mixerNode, 0, &cbs);
 
 	if(noErr != result) {
 		ERR("AUGraphSetNodeInputCallback failed: %i", result);
@@ -1976,6 +1962,38 @@ OSStatus AudioPlayer::CreateAUGraph()
 		ERR("AUGraphInitialize failed: %i", result);
 		return result;
 	}
+
+	// Set the mixer's volume on the input and output
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mixerNode, 
+							 NULL, 
+							 &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return result;
+	}
+
+	result = AudioUnitSetParameter(au,
+								   kMultiChannelMixerParam_Volume,
+								   kAudioUnitScope_Input,
+								   0,
+								   1.f,
+								   0);
+	
+	if(noErr != result)
+		ERR("AudioUnitSetParameter (kMultiChannelMixerParam_Volume) failed: %i", result);
+
+	result = AudioUnitSetParameter(au,
+								   kMultiChannelMixerParam_Volume,
+								   kAudioUnitScope_Output,
+								   0,
+								   1.f,
+								   0);
+	
+	if(noErr != result)
+		ERR("AudioUnitSetParameter (kMultiChannelMixerParam_Volume) failed: %i", result);
 	
 	// Install the render notification
 	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
@@ -1984,7 +2002,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 		ERR("AUGraphAddRenderNotify failed: %i", result);
 		return result;
 	}
-	
+	CAShow(mAUGraph);
 	return noErr;
 }
 
@@ -2537,70 +2555,6 @@ OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout /*channelLayout
 //	 }
 
 	return noErr;
-}
-
-bool AudioPlayer::EnablePreGain(UInt32 flag)
-{
-	if(flag && IsPreGainEnabled())
-		return true;
-	else if(!flag && false == IsPreGainEnabled())
-		return true;
-	
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mLimiterNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	result = AudioUnitSetProperty(au, 
-								  kAudioUnitProperty_BypassEffect,
-								  kAudioUnitScope_Global, 
-								  0, 
-								  &flag, 
-								  sizeof(flag));
-	
-	if(noErr != result) {
-		ERR("AudioUnitSetProperty (kAudioUnitProperty_BypassEffect) failed: %i", result);
-		return false;
-	}
-	
-	return true;
-}
-
-bool AudioPlayer::IsPreGainEnabled()
-{
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mLimiterNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	UInt32 bypassed	= FALSE;
-	UInt32 dataSize	= sizeof(bypassed);
-	
-	result = AudioUnitGetProperty(au, 
-								  kAudioUnitProperty_BypassEffect, 
-								  kAudioUnitScope_Global, 
-								  0,
-								  &bypassed,
-								  &dataSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioUnitProperty_BypassEffect) failed: %i", result);
-		return false;
-	}
-	
-	return bypassed;
 }
 
 
