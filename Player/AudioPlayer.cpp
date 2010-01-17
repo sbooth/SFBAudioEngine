@@ -381,7 +381,7 @@ void AudioPlayer::Play()
 	if(IsPlaying())
 		return;
 
-	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+//	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 //	printf("currentDecoderState = %p\n",currentDecoderState);
 //	printf("mDecoderQueue.empty(): %d\n",mDecoderQueue.empty());
@@ -2002,7 +2002,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 		ERR("AUGraphAddRenderNotify failed: %i", result);
 		return result;
 	}
-	CAShow(mAUGraph);
+
 	return noErr;
 }
 
