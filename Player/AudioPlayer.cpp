@@ -997,64 +997,72 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 {
 	assert(NULL != deviceUID);
-	
+
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
 	OSStatus			result			= noErr;
-	
+
+	// If NULL was passed as the device ID, use the default output device
 	if(NULL == deviceUID) {
 		specifierSize = sizeof(deviceID);
-		
+
 		result = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, 
 										  &specifierSize, 
 										  &deviceID);
-		
-		if(noErr != result)
+
+		if(noErr != result) {
 			ERR("AudioHardwareGetProperty (kAudioHardwarePropertyDefaultOutputDevice) failed: %i", result);
+			return false;
+		}
 	}
 	else {
 		AudioValueTranslation translation;
-		
+
 		translation.mInputData			= &deviceUID;
 		translation.mInputDataSize		= sizeof(deviceUID);
 		translation.mOutputData			= &deviceID;
 		translation.mOutputDataSize		= sizeof(deviceID);
-		
+
 		specifierSize					= sizeof(translation);
-		
+
 		result = AudioHardwareGetProperty(kAudioHardwarePropertyDeviceForUID, 
 										  &specifierSize, 
 										  &translation);
-		
-		if(noErr != result)
+
+		if(noErr != result) {
 			ERR("AudioHardwareGetProperty (kAudioHardwarePropertyDeviceForUID) failed: %i", result);
-	}
-	
-	if(noErr == result && kAudioDeviceUnknown != deviceID) {
-
-		AudioUnit au = NULL;
-		result = AUGraphNodeInfo(mAUGraph, 
-								 mOutputNode, 
-								 NULL, 
-								 &au);
-		
-		// Update our output AU to use the currently selected device
-		if(noErr == result) {
-			result = AudioUnitSetProperty(au,
-										  kAudioOutputUnitProperty_CurrentDevice,
-										  kAudioUnitScope_Global,
-										  0,
-										  &deviceID,
-										  sizeof(deviceID));
-			
-			if(noErr != result)
-				ERR("AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+			return false;
 		}
-		else
-			ERR("AUGraphNodeInfo failed: %i", result);
 	}
 
-	return (noErr == result);
+	if(kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mOutputNode, 
+							 NULL, 
+							 &au);
+
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+
+	// Update our output AU to use the specified device
+	result = AudioUnitSetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  sizeof(deviceID));
+
+	if(noErr != result) {
+		ERR("AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+		return false;
+	}
+
+	return true;
 }
 
 Float64 AudioPlayer::GetOutputDeviceSampleRate()
@@ -1415,9 +1423,10 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		
 		result = SetAUGraphChannelLayout(decoder->GetChannelLayout());
 		
+		// Not all decoders have channel layouts
 		if(noErr != result) {
 			ERR("SetAUGraphChannelLayout failed: %i", result);
-			return false;
+			//return false;
 		}
 		
 		// Allocate enough space in the ring buffer for the new format
@@ -2220,12 +2229,6 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 				ERR("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
 				return result;
 			}
-			
-// IO must be enabled for this to work
-/*			err = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, 1, propertyData, propertyDataSize);
-
-			if(noErr != err)
-				return err;*/
 		}
 		else {
 			UInt32 elementCount = 0;
@@ -2524,36 +2527,31 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	return noErr;
 }
 
-OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout /*channelLayout*/)
+OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
 {
-	 // Attempt to set the new channel layout
-//	 OSStatus result = AudioUnitSetProperty(mOutputUnit,
-//											kAudioUnitProperty_AudioChannelLayout, 
-//											kAudioUnitScope_Input, 
-//											0,
-//											&channelLayout, 
-//											sizeof(channelLayout));
-//
-//	 if(noErr != result) {
-//		 // If the new format could not be set, restore the old format to ensure a working graph
-//		 OSStatus newResult = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, 
-//														&mChannelLayout, 
-//														sizeof(mChannelLayout));
-//		 
-//		 
-//		 OSStatus newErr = AudioUnitSetProperty(mOutputUnit, 
-//												kAudioUnitProperty_AudioChannelLayout,
-//												kAudioUnitScope_Input, 
-//												0,
-//												&channelLayout, 
-//												sizeof(channelLayout));
-//
-//		 if(noErr != newResult)
-//			 LOG("Unable to restore AUGraph channel layout: %i", newResult);
-//	 
-//		 return result;
-//	 }
-
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return result;
+	}
+	
+	// Attempt to set the new channel layout
+	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, 
+									   &channelLayout, 
+									   sizeof(channelLayout));
+	
+	if(noErr != result) {
+		ERR("SetPropertyOnAUGraphNodes (kAudioUnitProperty_AudioChannelLayout) failed: %i", result);
+		return result;
+	}
+	else
+		mAUGraphChannelLayout = channelLayout;
+	
 	return noErr;
 }
 
