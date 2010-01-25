@@ -199,8 +199,18 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 	}
 	// For all other formats convert to the canonical Core Audio format
 	else {
+		mFormat.mFormatID			= kAudioFormatLinearPCM;
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+		
 		mFormat.mSampleRate			= mSourceFormat.mSampleRate;
 		mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
+		mFormat.mBitsPerChannel		= 8 * sizeof(float);
+		
+		mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+		mFormat.mFramesPerPacket	= 1;
+		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+		
+		mFormat.mReserved			= 0;
 	}
 	
 	result = ExtAudioFileSetProperty(mExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(mFormat), &mFormat);
