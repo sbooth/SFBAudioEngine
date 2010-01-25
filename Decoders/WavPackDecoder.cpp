@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -93,12 +93,41 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 	mWPC = WavpackOpenFileInput(reinterpret_cast<char *>(buf), errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
 	if(NULL == mWPC)
 		throw std::runtime_error("WavpackOpenFileInput failed");
+
+	// Floating-point and lossy files will be handed off in the canonical Core Audio format
+	int mode = WavpackGetMode(mWPC);
+	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
+		// Canonical Core Audio format
+		mFormat.mFormatID			= kAudioFormatLinearPCM;
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+		
+		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
+		mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);		
+		mFormat.mBitsPerChannel		= 8 * sizeof(float);
+		
+		mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+		mFormat.mFramesPerPacket	= 1;
+		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+		
+		mFormat.mReserved			= 0;
+	}
+	else {
+		mFormat.mFormatID			= kAudioFormatLinearPCM;
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
+		
+		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
+		mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);
+		mFormat.mBitsPerChannel		= WavpackGetBitsPerSample(mWPC);
+		
+		mFormat.mBytesPerPacket		= sizeof(int32_t);
+		mFormat.mFramesPerPacket	= 1;
+		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+		
+		mFormat.mReserved			= 0;
+	}
 	
 	mTotalFrames						= WavpackGetNumSamples(mWPC);
 
-	mFormat.mSampleRate					= WavpackGetSampleRate(mWPC);
-	mFormat.mChannelsPerFrame			= WavpackGetNumChannels(mWPC);
-	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'WVPK';
 	
@@ -166,23 +195,41 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
 		uint32_t samplesRead = WavpackUnpackSamples(mWPC, mBuffer, framesToRead);
 		
-		// Handle floating point files
-		if(MODE_FLOAT & WavpackGetMode(mWPC)) {
+		// The samples returned are handled differently based on the file's mode
+		int mode = WavpackGetMode(mWPC);
+		
+		// Floating point files require no special handling other than deinterleaving
+		if(MODE_FLOAT & mode) {
 			float *inputBuffer = reinterpret_cast<float *>(mBuffer);
 			
-			// Deinterleave the normalized samples
+			// Deinterleave the samples
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 				float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
 				
-				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
-					float audioSample = inputBuffer[sample];
-					*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
-				}
+				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+					*floatBuffer++ = inputBuffer[sample];
 				
 				bufferList->mBuffers[channel].mNumberChannels	= 1;
 				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
 			}
 		}
+		// Lossless files will be handed off as integers
+		else if(MODE_LOSSLESS & mode) {
+			// WavPack hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
+			UInt32 shift = static_cast<UInt32>(8 * (sizeof(int32_t) - WavpackGetBytesPerSample(mWPC)));
+			
+			// Deinterleave the 32-bit samples and shift to high-alignment
+			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+				int32_t *shiftedBuffer = static_cast<int32_t *>(bufferList->mBuffers[channel].mData);
+				
+				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+					*shiftedBuffer++ = mBuffer[sample] << shift;
+				
+				bufferList->mBuffers[channel].mNumberChannels	= 1;
+				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(int32_t));
+			}		
+		}
+		// Convert lossy files to float
 		else {
 			float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
 			
@@ -195,7 +242,7 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 				
 				bufferList->mBuffers[channel].mNumberChannels	= 1;
 				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
-			}		
+			}
 		}
 		
 		totalFramesRead += samplesRead;

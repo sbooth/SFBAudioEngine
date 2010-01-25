@@ -52,8 +52,9 @@ struct AudioDecoderCallbackAndContext
 
 // ========================================
 // Abstract superclass for an audio decoder
-// A decoder is responsible for reading audio data in some format and providing
-// it as 32-bit float normalized non-interleaved PCM (canonical Core Audio format)
+// An AudioDecoder is responsible for reading audio data in some format and providing
+// it as 32-bit float normalized non-interleaved PCM (canonical Core Audio format),
+// or some other PCM format that is handled by an AudioConverter
 // ========================================
 class AudioDecoder
 {
@@ -131,7 +132,7 @@ protected:
 	AudioStreamBasicDescription		mFormat;			// The type of PCM data provided by this decoder
 	AudioChannelLayout				mChannelLayout;		// The channel layout for the PCM data	
 	
-	AudioStreamBasicDescription		mSourceFormat;		// The native (PCM) format of the source file
+	AudioStreamBasicDescription		mSourceFormat;		// The native format of the source file
 
 	// ========================================
 	// For subclass use only

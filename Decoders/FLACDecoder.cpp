@@ -32,12 +32,17 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <libkern/OSAtomic.h>
 #include <stdexcept>
+#include <typeinfo>
 
 #include <FLAC/metadata.h>
 
 #include "AudioEngineDefines.h"
 #include "FLACDecoder.h"
 
+
+//__attribute__ ((constructor)) static void register_decoder()
+//{
+//}
 
 #pragma mark Callbacks
 
@@ -166,8 +171,19 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 		throw std::runtime_error("FLAC__stream_decoder_process_until_end_of_metadata failed");
 	}
 	
-	mFormat.mSampleRate					= mStreamInfo.sample_rate;
-	mFormat.mChannelsPerFrame			= mStreamInfo.channels;
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mSampleRate			= mStreamInfo.sample_rate;
+	mFormat.mChannelsPerFrame	= mStreamInfo.channels;
+	mFormat.mBitsPerChannel		= mStreamInfo.bits_per_sample;
+	
+	mFormat.mBytesPerPacket		= sizeof(FLAC__int32);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
+
 	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'FLAC';
@@ -187,7 +203,7 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 		case 6:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_1_A;		break;
 	}
 	
-	// Allocate the buffer list
+	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
 	
 	if(NULL == mBufferList) {
@@ -202,7 +218,7 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = calloc(mStreamInfo.max_blocksize, sizeof(float));
+		mBufferList->mBuffers[i].mData = calloc(mStreamInfo.max_blocksize, sizeof(FLAC__int32));
 		
 		if(NULL == mBufferList->mBuffers[i].mData) {
 			if(FALSE == FLAC__stream_decoder_finish(mFLAC))
@@ -284,23 +300,23 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	
 	for(;;) {
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(FLAC__int32));
+		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(FLAC__int32));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[i].mData);
-			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(float));
+			FLAC__int32 *pullBuffer = static_cast<FLAC__int32 *>(bufferList->mBuffers[i].mData);
+			memcpy(pullBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(FLAC__int32));
+			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(FLAC__int32));
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
-				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
+				pullBuffer = static_cast<FLAC__int32 *>(mBufferList->mBuffers[i].mData);
+				memmove(pullBuffer, pullBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(FLAC__int32));
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(float));
+			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(FLAC__int32));
 		}
 		
 		framesRead += framesToCopy;
@@ -337,17 +353,17 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 	if(NULL == mBufferList || mBufferList->mNumberBuffers != frame->header.channels)
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 	
-	// Normalize audio
-	float scaleFactor = (1 << ((((frame->header.bits_per_sample + 7) / 8) * 8) - 1));
+	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
+	UInt32 shift = static_cast<UInt32>((8 * sizeof(FLAC__int32)) - frame->header.bits_per_sample);
 	
 	for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-		float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
+		FLAC__int32 *pullBuffer = static_cast<FLAC__int32 *>(mBufferList->mBuffers[channel].mData);
 		
 		for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-			*floatBuffer++ = buffer[channel][sample] / scaleFactor;
+			*pullBuffer++ = buffer[channel][sample] << shift;
 		
 		mBufferList->mBuffers[channel].mNumberChannels		= 1;
-		mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(float));
+		mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(FLAC__int32));
 	}
 	
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;	

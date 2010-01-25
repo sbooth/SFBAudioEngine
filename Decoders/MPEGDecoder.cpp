@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -158,6 +158,18 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	mad_synth_init(&mSynth);
 	
 	memset(mXingTOC, 0, 100 * sizeof(uint8_t));
+	
+	// Canonical Core Audio format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mBitsPerChannel		= 8 * sizeof(float);
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
 	
 	// Scan file to determine sample rate, channels, total frames, etc
 	if(false == this->ScanFile()) {

@@ -350,20 +350,9 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
-
-	// Canonical Core Audio format
-	mFormat.mFormatID			= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
-	
-	mFormat.mBitsPerChannel		= 8 * sizeof(float);
-	
-	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
-	mFormat.mFramesPerPacket	= 1;
-	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-
-	mFormat.mReserved			= 0;
-	
+	memset(&mFormat, 0, sizeof(mSourceFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
+	memset(&mChannelLayout, 0, sizeof(mChannelLayout));
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
@@ -451,7 +440,9 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription()
 	return channelLayoutDescription;
 }
 
+
 #pragma mark Callbacks
+
 
 void AudioDecoder::SetDecodingStartedCallback(AudioDecoderCallback callback, void *context)
 {

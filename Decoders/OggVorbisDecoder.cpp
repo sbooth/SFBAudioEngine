@@ -118,8 +118,19 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 		throw std::runtime_error("Unable to get information on Ogg Vorbis stream");
 	}
 	
+	// Canonical Core Audio format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	mFormat.mSampleRate			= ovInfo->rate;
 	mFormat.mChannelsPerFrame	= ovInfo->channels;
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
 	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'VORB';

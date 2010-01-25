@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -98,10 +98,21 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	mpc_streaminfo streaminfo;
 	mpc_demux_get_info(mDemux, &streaminfo);
 	
-	mTotalFrames					= mpc_streaminfo_get_length_samples(&streaminfo);
+	mTotalFrames				= mpc_streaminfo_get_length_samples(&streaminfo);
 	
-	mFormat.mSampleRate				= streaminfo.sample_freq;
-	mFormat.mChannelsPerFrame		= streaminfo.channels;
+	// Canonical Core Audio format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mSampleRate			= streaminfo.sample_freq;
+	mFormat.mChannelsPerFrame	= streaminfo.channels;
+	mFormat.mBitsPerChannel		= 8 * sizeof(float);
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
 	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'MUSE';

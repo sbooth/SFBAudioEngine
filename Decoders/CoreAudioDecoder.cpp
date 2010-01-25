@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -169,8 +169,39 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 	}
 
 	// Tell the ExtAudioFile the format in which we'd like our data
-	mFormat.mSampleRate			= mSourceFormat.mSampleRate;
-	mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
+	
+	// For Linear PCM formats, leave the data untouched
+	if(kAudioFormatLinearPCM == mSourceFormat.mFormatID)
+		mFormat = mSourceFormat;
+	// For Apple Lossless, convert to high-aligned signed ints in 32 bits
+	else if(kAudioFormatAppleLossless == mSourceFormat.mFormatID) {
+		mFormat.mFormatID			= kAudioFormatLinearPCM;
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
+		
+		mFormat.mSampleRate			= mSourceFormat.mSampleRate;
+		mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
+		
+		if(kAppleLosslessFormatFlag_16BitSourceData & mSourceFormat.mFormatFlags)
+			mFormat.mBitsPerChannel	= 16;
+		else if(kAppleLosslessFormatFlag_20BitSourceData & mSourceFormat.mFormatFlags)
+			mFormat.mBitsPerChannel	= 20;
+		else if(kAppleLosslessFormatFlag_24BitSourceData & mSourceFormat.mFormatFlags)
+			mFormat.mBitsPerChannel	= 24;
+		else if(kAppleLosslessFormatFlag_32BitSourceData & mSourceFormat.mFormatFlags)
+			mFormat.mBitsPerChannel	= 32;
+		
+		mFormat.mBytesPerPacket		= sizeof(SInt32);
+		mFormat.mFramesPerPacket	= 1;
+		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+		
+		mFormat.mReserved			= 0;
+		
+	}
+	// For all other formats convert to the canonical Core Audio format
+	else {
+		mFormat.mSampleRate			= mSourceFormat.mSampleRate;
+		mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
+	}
 	
 	result = ExtAudioFileSetProperty(mExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(mFormat), &mFormat);
 	if(noErr != result) {
