@@ -129,7 +129,7 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
+	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == mBufferList) {
 		mpc_demux_exit(mDemux), mDemux = NULL;

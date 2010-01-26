@@ -184,7 +184,7 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = static_cast<AudioBufferList *>(calloc(sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1)), 1));
+	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == mBufferList) {
 		mad_synth_finish(&mSynth);

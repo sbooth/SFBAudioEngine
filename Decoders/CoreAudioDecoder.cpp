@@ -176,7 +176,7 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 	// For Apple Lossless, convert to high-aligned signed ints in 32 bits
 	else if(kAudioFormatAppleLossless == mSourceFormat.mFormatID) {
 		mFormat.mFormatID			= kAudioFormatLinearPCM;
-		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh;
 		
 		mFormat.mSampleRate			= mSourceFormat.mSampleRate;
 		mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
@@ -325,7 +325,6 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);

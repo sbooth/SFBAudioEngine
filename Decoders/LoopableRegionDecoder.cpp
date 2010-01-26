@@ -123,7 +123,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		return 0;
 
 	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
-	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (mFormat.mChannelsPerFrame - 1))));
+	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == bufferListAlias) {
 		ERR("Unable to allocate memory");
