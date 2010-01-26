@@ -174,6 +174,37 @@ collectorEntry(void *arg)
 	return player->CollectorThreadEntry();
 }
 
+// ========================================
+// AudioConverter input callback
+// ========================================
+static OSStatus
+myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
+									 UInt32							*ioNumberDataPackets,
+									 AudioBufferList				*ioData,
+									 AudioStreamPacketDescription	**outDataPacketDescription,
+									 void*							inUserData)
+{
+
+#pragma unused(inAudioConverter)
+#pragma unused(outDataPacketDescription)
+
+	assert(NULL != inUserData);
+	assert(NULL != ioNumberDataPackets);
+	
+	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
+	
+	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
+	
+	// Point ioData at our decoded audio
+	ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
+	for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
+		ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
+	
+	*ioNumberDataPackets = framesRead;
+	
+	return noErr;
+}
+
 
 #pragma mark Creation/Destruction
 
@@ -295,6 +326,21 @@ AudioPlayer::AudioPlayer()
 
 		throw std::runtime_error("pthread_create failed");
 	}
+	
+	// ========================================
+	// The AUGraph will always receive audio in the canonical Core Audio format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mSampleRate			= 0;
+	mFormat.mChannelsPerFrame	= 0;
+	mFormat.mBitsPerChannel		= 8 * sizeof(float);
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
 	
 	// ========================================
 	// Set up our AUGraph and set pregain to 0
@@ -567,7 +613,7 @@ bool AudioPlayer::SupportsSeeking()
 #pragma mark Player Parameters
 
 
-Float32 AudioPlayer::GetVolume()
+bool AudioPlayer::GetVolume(Float32& volume)
 {
 	AudioUnit au = NULL;
 	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
@@ -577,20 +623,24 @@ Float32 AudioPlayer::GetVolume()
 
 	if(noErr != auResult) {
 		ERR("AUGraphNodeInfo failed: %i", auResult);
-		return -1;
+		return false;
 	}
 	
-	AudioUnitParameterValue volume = -1;
+	AudioUnitParameterValue auVolume;
 	ComponentResult result = AudioUnitGetParameter(au,
 												   kHALOutputParam_Volume,
 												   kAudioUnitScope_Global,
 												   0,
-												   &volume);
+												   &auVolume);
 	
-	if(noErr != result)
+	if(noErr != result) {
 		ERR("AudioUnitGetParameter (kHALOutputParam_Volume) failed: %i", result);
-		
-	return volume;
+		return false;
+	}
+
+	volume = static_cast<Float32>(auVolume);
+	
+	return true;
 }
 
 bool AudioPlayer::SetVolume(Float32 volume)
@@ -624,6 +674,13 @@ bool AudioPlayer::SetVolume(Float32 volume)
 	return true;
 }
 
+bool AudioPlayer::GetPreGain(Float32& preGain)
+{
+	preGain = mPreGain;
+	
+	return true;
+}
+
 bool AudioPlayer::SetPreGain(Float32 preGain)
 {
 	assert(-40.f <= preGain);
@@ -651,11 +708,7 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 		return false;
 	}
 	
-	AUNodeInteraction *interactions = static_cast<AUNodeInteraction *>(calloc(numInteractions, sizeof(AUNodeInteraction)));
-	if(NULL == interactions) {
-		ERR("Unable to allocate memory");
-		return false;
-	}
+	AUNodeInteraction interactions [numInteractions];
 	
 	result = AUGraphGetNodeInteractions(mAUGraph, 
 										mOutputNode,
@@ -664,9 +717,6 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	
 	if(noErr != result) {
 		ERR("AUGraphGetNodeInteractions failed: %i", result);
-		
-		free(interactions), interactions = NULL;
-		
 		return false;
 	}
 	
@@ -679,8 +729,6 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 			break;
 		}
 	}						
-	
-	free(interactions), interactions = NULL;
 
 	// Unable to determine the preceding node, so bail
 	if(-1 == sourceNode) {
@@ -722,8 +770,8 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 								  kAudioUnitProperty_StreamFormat, 
 								  kAudioUnitScope_Input, 
 								  0,
-								  &mAUGraphFormat,
-								  sizeof(mAUGraphFormat));
+								  &mFormat,
+								  sizeof(mFormat));
 
 	if(noErr != result) {
 		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
@@ -741,8 +789,8 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 								  kAudioUnitProperty_StreamFormat, 
 								  kAudioUnitScope_Output, 
 								  0,
-								  &mAUGraphFormat,
-								  sizeof(mAUGraphFormat));
+								  &mFormat,
+								  sizeof(mFormat));
 	
 	if(noErr != result) {
 		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
@@ -1175,204 +1223,6 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	return (noErr == result);
 }
 
-bool AudioPlayer::OutputDeviceIsHogged()
-{
-	// Get the output node's AudioUnit
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mOutputNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	// Get the current output device
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	
-	UInt32 specifierSize = sizeof(deviceID);
-	result = AudioUnitGetProperty(au,
-								  kAudioOutputUnitProperty_CurrentDevice,
-								  kAudioUnitScope_Global,
-								  0,
-								  &deviceID,
-								  &specifierSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
-		return false;
-	}
-	
-	// Is it hogged by us?
-	pid_t hogPID = static_cast<pid_t>(-1);
-	specifierSize = sizeof(hogPID);
-	result = AudioDeviceGetProperty(deviceID, 
-									0,
-									FALSE,
-									kAudioDevicePropertyHogMode,
-									&specifierSize,
-									&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
-		return false;
-	}
-	
-	return (hogPID == getpid() ? true : false);
-}
-
-bool AudioPlayer::StartHoggingOutputDevice()
-{
-	// Get the output node's AudioUnit
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mOutputNode, 
-									  NULL, 
-									  &au);
-
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	// Get the current output device
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	
-	UInt32 specifierSize = sizeof(deviceID);
-	result = AudioUnitGetProperty(au,
-								  kAudioOutputUnitProperty_CurrentDevice,
-								  kAudioUnitScope_Global,
-								  0,
-								  &deviceID,
-								  &specifierSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
-		return false;
-	}
-	
-	// Is it hogged already?
-	pid_t hogPID = static_cast<pid_t>(-1);
-	specifierSize = sizeof(hogPID);
-	result = AudioDeviceGetProperty(deviceID, 
-									0,
-									FALSE, 
-									kAudioDevicePropertyHogMode,
-									&specifierSize,
-									&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
-		return false;
-	}
-	
-	// The device isn't hogged, so attempt to hog it
-	if(hogPID == static_cast<pid_t>(-1)) {
-		// If IO is enabled, disable it while hog mode is acquired because the AUHAL
-		// does not automatically restart IO after hog mode is taken
-		bool wasPlaying = IsPlaying();
-		if(true == wasPlaying)
-			Pause();
-				
-		hogPID = getpid();
-		result = AudioDeviceSetProperty(deviceID,
-										NULL, 
-										0, FALSE,
-										kAudioDevicePropertyHogMode,
-										sizeof(hogPID),
-										&hogPID);
-		
-		if(kAudioHardwareNoError != result) {
-			ERR("AudioDeviceSetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
-			return false;
-		}
-
-		// If IO was enabled before, re-enable it
-		if(true == wasPlaying)
-			Play();
-	}
-	else
-		LOG("Device is already hogged by pid: %d", hogPID);
-	
-	return true;
-}
-
-bool AudioPlayer::StopHoggingOutputDevice()
-{
-	// Get the output node's AudioUnit
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mOutputNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return false;
-	}
-	
-	// Get the current output device
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	
-	UInt32 specifierSize = sizeof(deviceID);
-	result = AudioUnitGetProperty(au,
-								  kAudioOutputUnitProperty_CurrentDevice,
-								  kAudioUnitScope_Global,
-								  0,
-								  &deviceID,
-								  &specifierSize);
-	
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
-		return false;
-	}
-	
-	// Is it hogged by us?
-	pid_t hogPID = static_cast<pid_t>(-1);
-	specifierSize = sizeof(hogPID);
-	result = AudioDeviceGetProperty(deviceID, 
-									0,
-									FALSE,
-									kAudioDevicePropertyHogMode,
-									&specifierSize,
-									&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioDeviceGetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
-		return false;
-	}
-	
-	// If we don't own hog mode we can't release it
-	if(hogPID != getpid())
-		return false;
-
-	// Disable IO while hog mode is released
-	bool wasPlaying = IsPlaying();
-	if(true == wasPlaying)
-		Pause();
-
-	// Release hog mode.
-	hogPID = static_cast<pid_t>(-1);
-	result = AudioDeviceSetProperty(deviceID,
-									NULL, 
-									0, FALSE,
-									kAudioDevicePropertyHogMode,
-									sizeof(hogPID),
-									&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioDeviceSetProperty(kAudioDevicePropertyHogMode) failed: %i", result);
-		return false;
-	}
-	
-	if(true == wasPlaying)
-		Play();
-	
-	return true;
-}
-
 
 #pragma mark Playlist Management
 
@@ -1414,7 +1264,9 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && true == queueEmpty) {
-		OSStatus result = SetAUGraphFormat(decoder->GetFormat());
+		AudioStreamBasicDescription format = decoder->GetFormat();
+		
+		OSStatus result = SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame);
 		
 		if(noErr != result) {
 			ERR("SetAUGraphFormat failed: %i", result);
@@ -1430,56 +1282,17 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		}
 		
 		// Allocate enough space in the ring buffer for the new format
-		mRingBuffer->Allocate(decoder->GetFormat().mChannelsPerFrame,
-							  decoder->GetFormat().mBytesPerFrame,
+		mRingBuffer->Allocate(mFormat.mChannelsPerFrame,
+							  mFormat.mBytesPerFrame,
 							  RING_BUFFER_SIZE_FRAMES);
 	}
 	// Otherwise, enqueue this decoder if the format matches
 	else {
-		AudioUnit au = NULL;
-		OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
-											mOutputNode, 
-											NULL, 
-											&au);
-		
-		if(noErr != auResult) {
-			ERR("AUGraphNodeInfo failed: %i", auResult);
-			return false;
-		}
-		
-		AudioStreamBasicDescription format;
-		UInt32 dataSize = sizeof(format);
-		ComponentResult result = AudioUnitGetProperty(au,
-													  kAudioUnitProperty_StreamFormat,
-													  kAudioUnitScope_Input,
-													  0,
-													  &format,
-													  &dataSize);
-		
-		if(noErr != result) {
-			ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) failed: %i", result);
-			return false;
-		}
-		
-	/*	AudioChannelLayout channelLayout;
-		 dataSize = sizeof(channelLayout);
-		 result = AudioUnitGetProperty(au,
-		 kAudioUnitProperty_AudioChannelLayout,
-		 kAudioUnitScope_Input,
-		 0,
-		 &channelLayout,
-		 &dataSize);
-		 
-		 if(noErr != result) {
-		 ERR("AudioUnitGetProperty (kAudioUnitProperty_AudioChannelLayout) failed: %i", result);
-		 return false;
-		 }*/
-		
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
-		bool	formatsMatch			= (nextFormat.mSampleRate == format.mSampleRate && nextFormat.mChannelsPerFrame == format.mChannelsPerFrame);
-	//	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &channelLayout);
+		bool	formatsMatch			= (nextFormat.mSampleRate == mFormat.mSampleRate && nextFormat.mChannelsPerFrame == mFormat.mChannelsPerFrame);
+	//	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &mChannelLayout);
 		
 		// The two files can be joined seamlessly only if they have the same formats and channel layouts
 		if(false == formatsMatch /*|| false == channelLayoutsMatch*/)
@@ -1698,11 +1511,11 @@ void * AudioPlayer::DecoderThreadEntry()
 			DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 			decoderStateData->mTimeStamp = mFramesDecoded;
 			
-			for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
-				if(NULL != mActiveDecoders[i])
+			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
+				if(NULL != mActiveDecoders[bufferIndex])
 					continue;
 				
-				if(true == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders[i])))
+				if(true == OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
 					break;
 				else
 					ERR("OSAtomicCompareAndSwapPtrBarrier failed");
@@ -1710,17 +1523,33 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			SInt64 startTime = decoderStateData->mTimeStamp;
 			
-			// ========================================
-			// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
 			AudioStreamBasicDescription formatDescription = decoder->GetFormat();
-			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, sizeof(AudioBufferList) + (sizeof(AudioBuffer) * (formatDescription.mChannelsPerFrame - 1))));
+
+			// ========================================
+			// Create the AudioConverter which will convert from the decoder's format to the graph's format
+			AudioConverterRef audioConverter = NULL;
+			OSStatus result = AudioConverterNew(&formatDescription, &mFormat, &audioConverter);
+
+			if(noErr != result) {
+				ERR("AudioConverterNew failed: %i", result);
+
+				// If this happens, output will be impossible
+				decoderStateData->mKeepDecoding = false;
+			}
 			
-			bufferList->mNumberBuffers = formatDescription.mChannelsPerFrame;
+			// ========================================
+			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
+			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+
+			// The AUGraph expects the canonical Core Audio format
+			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 			
-			for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
-				bufferList->mBuffers[i].mData = static_cast<void *>(calloc(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES, sizeof(float)));
-				bufferList->mBuffers[i].mDataByteSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * sizeof(float);
-				bufferList->mBuffers[i].mNumberChannels = 1;
+			bufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
+			
+			for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+				bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES, sizeof(float)));
+				bufferList->mBuffers[bufferIndex].mDataByteSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * sizeof(float);
+				bufferList->mBuffers[bufferIndex].mNumberChannels = 1;
 			}
 			
 			// ========================================
@@ -1766,9 +1595,20 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 						
-						// Read the input chunk
-						UInt32 framesDecoded = decoder->ReadAudio(bufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+						// Read the input chunk, converting from the decoder's format to the AUGraph's format
+						UInt32 framesDecoded = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES;
 
+						result = AudioConverterFillComplexBuffer(audioConverter, 
+																 myAudioConverterComplexInputDataProc,
+																 decoderStateData,
+																 &framesDecoded, 
+																 bufferList,
+																 NULL);
+						
+						if(noErr != result) {
+							ERR("AudioConverterFillComplexBuffer failed: %i", result);
+						}
+						
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber)
 							decoder->PerformDecodingStartedCallback();
@@ -1816,7 +1656,8 @@ void * AudioPlayer::DecoderThreadEntry()
 							}
 							
 							// Copy the decoded audio to the ring buffer
-							CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
+							result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
+
 							if(kCARingBufferError_OK != result)
 								ERR("CARingBuffer::Store() failed: %i", result);
 							
@@ -1850,12 +1691,19 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Clean up
-			if(bufferList) {
+			if(NULL != bufferList) {
 				for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 					free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
 				
 				free(bufferList), bufferList = NULL;
-			}			
+			}
+
+			if(NULL != audioConverter) {
+				result = AudioConverterDispose(audioConverter);
+				audioConverter = NULL;
+				if(noErr != result)
+					ERR("AudioConverterDispose failed: %i", result);
+			}
 		}
 
 		// Wait for the audio rendering thread to wake us, or for the timeout to happen
@@ -2290,10 +2138,8 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 	return noErr;
 }
 
-OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
+OSStatus AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
 {
-	AUNodeInteraction *interactions = NULL;
-	
 	// ========================================
 	// If the graph is running, stop it
 	Boolean graphIsRunning = FALSE;
@@ -2342,18 +2188,13 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		return result;
 	}
 	
-	interactions = static_cast<AUNodeInteraction *>(calloc(interactionCount, sizeof(AUNodeInteraction)));
-	if(NULL == interactions)
-		return memFullErr;
-	
+	AUNodeInteraction interactions [interactionCount];
+
 	for(UInt32 i = 0; i < interactionCount; ++i) {
 		result = AUGraphGetInteractionInfo(mAUGraph, i, &interactions[i]);
 
 		if(noErr != result) {
 			ERR("AUGraphGetInteractionInfo failed: %i", result);
-
-			free(interactions);
-
 			return result;
 		}
 	}
@@ -2362,12 +2203,14 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 
 	if(noErr != result) {
 		ERR("AUGraphClearConnections failed: %i", result);
-
-		free(interactions);
-		
 		return result;
 	}
 	
+	AudioStreamBasicDescription format = mFormat;
+	
+	format.mChannelsPerFrame	= channelsPerFrame;
+	format.mSampleRate			= sampleRate;
+
 	// ========================================
 	// Attempt to set the new stream format
 	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &format, sizeof(format));
@@ -2375,7 +2218,7 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 	if(noErr != result) {
 		
 		// If the new format could not be set, restore the old format to ensure a working graph
-		OSStatus newErr = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mAUGraphFormat, sizeof(mAUGraphFormat));
+		OSStatus newErr = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mFormat, sizeof(mFormat));
 
 		if(noErr != newErr)
 			ERR("Unable to restore AUGraph format: %i", result);
@@ -2384,7 +2227,7 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 		result = newErr;
 	}
 	else
-		mAUGraphFormat = format;
+		mFormat = format;
 
 	
 	// ========================================
@@ -2403,9 +2246,6 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 
 				if(noErr != result) {
 					ERR("AUGraphConnectNodeInput failed: %i", result);
-
-					free(interactions), interactions = NULL;
-					
 					return result;
 				}
 				
@@ -2422,9 +2262,6 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 
 				if(noErr != result) {
 					ERR("AUGraphSetNodeInputCallback failed: %i", result);
-
-					free(interactions), interactions = NULL;
-					
 					return result;
 				}
 				
@@ -2432,8 +2269,6 @@ OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
 			}				
 		}
 	}
-	
-	free(interactions), interactions = NULL;
 	
 	// ========================================
 	// Output units perform sample rate conversion if the input sample rate is not equal to
@@ -2550,7 +2385,7 @@ OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
 		return result;
 	}
 	else
-		mAUGraphChannelLayout = channelLayout;
+		mChannelLayout = channelLayout;
 	
 	return noErr;
 }

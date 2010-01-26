@@ -46,7 +46,11 @@ public:
 	DecoderStateData(AudioDecoder *decoder);
 	~DecoderStateData();
 	
+	void AllocateBufferList(UInt32 capacityFrames);
+	void DeallocateBufferList();
+	
 	AudioDecoder			*mDecoder;
+	AudioBufferList			*mBufferList;
 	
 	SInt64					mTimeStamp;
 	

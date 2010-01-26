@@ -33,11 +33,11 @@
 //#include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(NULL), mBufferList(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(decoder), mBufferList(NULL), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {
 	assert(NULL != decoder);
 	
@@ -50,4 +50,36 @@ DecoderStateData::~DecoderStateData()
 	// Delete the decoder
 	if(NULL != mDecoder)
 		delete mDecoder, mDecoder = NULL;
+
+	DeallocateBufferList();
+}
+
+void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
+{
+	DeallocateBufferList();
+
+	AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
+	
+	UInt32 numBuffers = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? formatDescription.mChannelsPerFrame : 1;
+	UInt32 channelsPerBuffer = numBuffers;
+	
+	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers)));
+	
+	mBufferList->mNumberBuffers = numBuffers;
+	
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
+		mBufferList->mBuffers[i].mData = static_cast<void *>(calloc(capacityFrames, formatDescription.mBytesPerFrame));
+		mBufferList->mBuffers[i].mDataByteSize = capacityFrames * formatDescription.mBytesPerFrame;
+		mBufferList->mBuffers[i].mNumberChannels = channelsPerBuffer;
+	}
+}
+
+void DecoderStateData::DeallocateBufferList()
+{
+	if(NULL != mBufferList) {
+		for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
+			free(mBufferList->mBuffers[bufferIndex].mData), mBufferList->mBuffers[bufferIndex].mData = NULL;
+		
+		free(mBufferList), mBufferList = NULL;
+	}
 }

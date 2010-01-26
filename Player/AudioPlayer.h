@@ -93,10 +93,10 @@ public:
 	
 	// ========================================
 	// Player Parameters
-	Float32 GetVolume();
+	bool GetVolume(Float32& volume);
 	bool SetVolume(Float32 volume);
 
-	inline Float32 GetPreGain()						{ return mPreGain; }
+	bool GetPreGain(Float32& preGain);
 	bool SetPreGain(Float32 preGain);
 	
 	// ========================================
@@ -111,10 +111,6 @@ public:
 
 	Float64 GetOutputDeviceSampleRate();
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
-
-	bool OutputDeviceIsHogged();
-	bool StartHoggingOutputDevice();
-	bool StopHoggingOutputDevice();
 
 	// ========================================
 	// Playlist Management
@@ -138,12 +134,13 @@ private:
 	
 	OSStatus SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
 	
-	OSStatus SetAUGraphFormat(AudioStreamBasicDescription format);
+	OSStatus SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
 	OSStatus SetAUGraphChannelLayout(AudioChannelLayout channelLayout);
 	
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
+
 	DecoderStateData * GetCurrentDecoderState();
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
 
@@ -151,8 +148,8 @@ private:
 	// Data Members
 	AUGraph								mAUGraph;
 	
-	AudioStreamBasicDescription			mAUGraphFormat;
-	AudioChannelLayout					mAUGraphChannelLayout;
+	AudioStreamBasicDescription			mFormat;
+	AudioChannelLayout					mChannelLayout;
 	
 	AUNode								mOutputNode;
 	
