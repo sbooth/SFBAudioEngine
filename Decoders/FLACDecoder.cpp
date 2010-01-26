@@ -171,6 +171,7 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 		throw std::runtime_error("FLAC__stream_decoder_process_until_end_of_metadata failed");
 	}
 	
+	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
 	
@@ -184,7 +185,6 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	
 	mFormat.mReserved			= 0;
 
-	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'FLAC';
 
@@ -384,8 +384,9 @@ void FLACDecoder::Metadata(const FLAC__StreamDecoder *decoder, const FLAC__Strea
 	}
 }
 
-void FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus /*status*/)
+void FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status)
 {
 	assert(NULL != decoder);
 	
+	ERR("FLAC error: %s", FLAC__StreamDecoderErrorStatusString[status]);
 }

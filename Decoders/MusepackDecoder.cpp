@@ -255,17 +255,14 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 #ifdef MPC_FIXED_POINT
 #error "Fixed point not yet supported"
 #else
-		float		*inputBuffer	= reinterpret_cast<float *>(buffer);
-		float		audioSample		= 0;
+		float *inputBuffer = reinterpret_cast<float *>(buffer);
 		
 		// Deinterleave the normalized samples
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
 
-			for(UInt32 sample = channel; sample < frame.samples * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame) {
-				audioSample = inputBuffer[sample];
-				*floatBuffer++ = std::max(-1.0f, std::min(audioSample, 1.0f));
-			}
+			for(UInt32 sample = channel; sample < frame.samples * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+				*floatBuffer++ = inputBuffer[sample];
 			
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
 			mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>(frame.samples * sizeof(float));
