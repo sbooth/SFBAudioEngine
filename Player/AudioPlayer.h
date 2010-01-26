@@ -68,7 +68,7 @@ public:
 	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
-	inline bool IsPlaying()							{ return mOutputUnitIsRunning; }
+	bool IsPlaying();
 	CFURLRef GetPlayingURL();
 
 	// ========================================
@@ -97,21 +97,13 @@ public:
 	bool SetVolume(Float32 volume);
 
 	inline Float32 GetPreGain()						{ return mPreGain; }
-	void SetPreGain(Float32 preGain);
-
-	inline bool PerformHardLimiting()				{ return mPerformHardLimiting; }
-	inline void SetPerformHardLimiting(bool b)		{ mPerformHardLimiting = b; }
-
+	bool SetPreGain(Float32 preGain);
+	
 	// ========================================
 	// DSP Effects
 	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = NULL);
 	bool RemoveEffect(AudioUnit effectUnit);
-
-	// ========================================
-	// The format and channel layout of the audio being sent to the output unit
-	bool GetFormat(AudioStreamBasicDescription& format);
-	bool GetChannelLayout(AudioChannelLayout& channelLayout);
-
+	
 	// ========================================
 	// Device Management
 	CFStringRef CreateOutputDeviceUID();
@@ -133,33 +125,37 @@ public:
 	bool ClearQueuedDecoders();
 
 private:
-
+	
 	// ========================================
-	// AudioUnit Utilities
-	bool OpenOutput();
-	bool CloseOutput();
-	bool Reset();
-
-	bool SetFormat(AudioStreamBasicDescription format);
-	bool SetChannelLayout(AudioChannelLayout channelLayout);
+	// AUGraph Utilities
+	OSStatus CreateAUGraph();
+	OSStatus DisposeAUGraph();
+	
+	OSStatus ResetAUGraph();
+	
+	Float64 GetAUGraphLatency();
+	Float64 GetAUGraphTailTime();
+	
+	OSStatus SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
+	
+	OSStatus SetAUGraphFormat(AudioStreamBasicDescription format);
+	OSStatus SetAUGraphChannelLayout(AudioChannelLayout channelLayout);
 	
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
-	
 	DecoderStateData * GetCurrentDecoderState();
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
 
 	// ========================================
 	// Data Members
-	AudioUnit							mOutputUnit;
-	bool								mOutputUnitIsRunning;
-
-	AudioStreamBasicDescription			mFormat;
-	AudioChannelLayout					mChannelLayout;
-
-	AUGraph								mEffectsGraph;
-
+	AUGraph								mAUGraph;
+	
+	AudioStreamBasicDescription			mAUGraphFormat;
+	AudioChannelLayout					mAUGraphChannelLayout;
+	
+	AUNode								mOutputNode;
+	
 	std::deque<AudioDecoder *>			mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 

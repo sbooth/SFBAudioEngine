@@ -120,15 +120,15 @@ setThreadPolicy(integer_t importance)
 }
 
 // ========================================
-// AudioUnit render callbacks
+// The AUGraph input callback
 // ========================================
 static OSStatus
-myAURenderCallback(void								*inRefCon,
-				   AudioUnitRenderActionFlags		*ioActionFlags,
-				   const AudioTimeStamp				*inTimeStamp,
+myAURenderCallback(void *							inRefCon,
+				   AudioUnitRenderActionFlags *		ioActionFlags,
+				   const AudioTimeStamp *			inTimeStamp,
 				   UInt32							inBusNumber,
 				   UInt32							inNumberFrames,
-				   AudioBufferList					*ioData)
+				   AudioBufferList *				ioData)
 {
 	assert(NULL != inRefCon);
 	
@@ -137,13 +137,12 @@ myAURenderCallback(void								*inRefCon,
 }
 
 static OSStatus
-myAURenderNotify(void								*inRefCon,
-				 AudioUnitRenderActionFlags			*ioActionFlags,
-				 const AudioTimeStamp				*inTimeStamp,
-				 UInt32								inBusNumber,
-				 UInt32								inNumberFrames,
-				 AudioBufferList					*ioData)
-
+auGraphDidRender(void *							inRefCon,
+				 AudioUnitRenderActionFlags *	ioActionFlags,
+				 const AudioTimeStamp *			inTimeStamp,
+				 UInt32							inBusNumber,
+				 UInt32							inNumberFrames,
+				 AudioBufferList *				ioData)
 {
 	assert(NULL != inRefCon);
 	
@@ -180,7 +179,7 @@ collectorEntry(void *arg)
 
 
 AudioPlayer::AudioPlayer()
-	: mDecoderQueue(), mRingBuffer(NULL), mOutputUnit(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false), mOutputUnitIsRunning(false), mEffectsGraph(NULL)
+	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false)
 {
 	mRingBuffer = new CARingBuffer();
 
@@ -298,18 +297,21 @@ AudioPlayer::AudioPlayer()
 	}
 	
 	// ========================================
-	// Set up output
-	if(false == OpenOutput()) {
-		ERR("OpenOutput failed");
-		throw std::runtime_error("OpenOutput failed");
+	// Set up our AUGraph and set pregain to 0
+	OSStatus status = CreateAUGraph();
+	if(noErr != status) {
+		ERR("CreateAUGraph failed: %i", status);
+		throw std::runtime_error("CreateAUGraph failed");
 	}
+	
+	if(false == SetPreGain(0))
+		ERR("SetPreGain failed");
 }
 
 AudioPlayer::~AudioPlayer()
 {
 	// Stop the processing graph and reclaim its resources
-	if(false == CloseOutput())
-		ERR("CloseOutput failed");
+	DisposeAUGraph();
 
 	// Dispose of all active decoders
 	StopActiveDecoders();
@@ -379,39 +381,51 @@ void AudioPlayer::Play()
 	if(IsPlaying())
 		return;
 
-	ComponentResult result = AudioOutputUnitStart(mOutputUnit);
+//	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
+//	printf("currentDecoderState = %p\n",currentDecoderState);
+//	printf("mDecoderQueue.empty(): %d\n",mDecoderQueue.empty());
+	
+	OSStatus result = AUGraphStart(mAUGraph);
+
 	if(noErr != result)
-		ERR("AudioOutputUnitStart failed: %i", result);
-	
-	mOutputUnitIsRunning = true;
+		ERR("AUGraphStart failed: %i", result);
 }
 
 void AudioPlayer::Pause()
 {
-	if(false == IsPlaying())
+	if(!IsPlaying())
 		return;
 	
-	ComponentResult result = AudioOutputUnitStop(mOutputUnit);
-	
+	OSStatus result = AUGraphStop(mAUGraph);
+
 	if(noErr != result)
-		ERR("AudioOutputUnitStop failed: %i", result);
-	
-	mOutputUnitIsRunning = false;
+		ERR("AUGraphStop failed: %i", result);
 }
 
 void AudioPlayer::Stop()
 {
-	if(false == IsPlaying())
+	if(!IsPlaying())
 		return;
 
 	Pause();
 	
 	StopActiveDecoders();
-	Reset();
+	ResetAUGraph();
 	
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
+}
+
+bool AudioPlayer::IsPlaying()
+{
+	Boolean isRunning = FALSE;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
+
+	if(noErr != result)
+		ERR("AUGraphIsRunning failed: %i", result);
+		
+	return isRunning;
 }
 
 CFURLRef AudioPlayer::GetPlayingURL()
@@ -525,6 +539,12 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	if(false == currentDecoderState->mDecoder->SupportsSeeking())
 		return false;
 	
+//	Float64 graphLatency = GetAUGraphLatency();
+//	if(-1 != graphLatency) {
+//		SInt64 graphLatencyFrames = static_cast<SInt64>(graphLatency * mAUGraphFormat.mSampleRate);
+//		frame -= graphLatencyFrames;
+//	}
+	
 	if(false == OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
@@ -549,8 +569,19 @@ bool AudioPlayer::SupportsSeeking()
 
 Float32 AudioPlayer::GetVolume()
 {
+	AudioUnit au = NULL;
+	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+										mOutputNode, 
+										NULL, 
+										&au);
+
+	if(noErr != auResult) {
+		ERR("AUGraphNodeInfo failed: %i", auResult);
+		return -1;
+	}
+	
 	AudioUnitParameterValue volume = -1;
-	ComponentResult result = AudioUnitGetParameter(mOutputUnit,
+	ComponentResult result = AudioUnitGetParameter(au,
 												   kHALOutputParam_Volume,
 												   kAudioUnitScope_Global,
 												   0,
@@ -567,7 +598,18 @@ bool AudioPlayer::SetVolume(Float32 volume)
 	assert(0 <= volume);
 	assert(volume <= 1);
 	
-	ComponentResult result = AudioUnitSetParameter(mOutputUnit,
+	AudioUnit au = NULL;
+	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+										mOutputNode, 
+										NULL, 
+										&au);
+	
+	if(noErr != auResult) {
+		ERR("AUGraphNodeInfo failed: %i", auResult);
+		return -1;
+	}
+	
+	ComponentResult result = AudioUnitSetParameter(au,
 												   kHALOutputParam_Volume,
 												   kAudioUnitScope_Global,
 												   0,
@@ -582,58 +624,321 @@ bool AudioPlayer::SetVolume(Float32 volume)
 	return true;
 }
 
-void AudioPlayer::SetPreGain(Float32 preGain)
+bool AudioPlayer::SetPreGain(Float32 preGain)
 {
 	assert(-40.f <= preGain);
 	assert(40.f >= preGain);
 	
 	mPreGain = preGain;	
+	return true;
+	
+	//	return OSAtomicCompareAndSwap32Barrier(*reinterpret_cast<int32_t *>(&mPreGain), *reinterpret_cast<int32_t *>(&preGain), reinterpret_cast<int32_t *>(&mPreGain));
 }
 
 
 #pragma mark DSP Effects
 
 
-bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit)
+bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
-	return false;
-}
-
-bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
-{
-	return false;
-}
-
-bool AudioPlayer::GetFormat(AudioStreamBasicDescription& format)
-{
-	UInt32 dataSize = sizeof(format);
-	ComponentResult result = AudioUnitGetProperty(mOutputUnit,
-												  kAudioUnitProperty_StreamFormat, 
-												  kAudioUnitScope_Input, 
-												  0, 
-												  &format,
-												  &dataSize);
-	
+	// Get the source node for the graph's output node
+	UInt32 numInteractions = 0;
+	OSStatus result = AUGraphCountNodeInteractions(mAUGraph, 
+												   mOutputNode, 
+												   &numInteractions);
 	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioUnitProperty_StreamFormat) [kAudioUnitScope_Input] failed: %i", result);
+		ERR("AUGraphCountNodeConnections failed: %i", result);
 		return false;
 	}
+	
+	AUNodeInteraction *interactions = static_cast<AUNodeInteraction *>(calloc(numInteractions, sizeof(AUNodeInteraction)));
+	if(NULL == interactions) {
+		ERR("Unable to allocate memory");
+		return false;
+	}
+	
+	result = AUGraphGetNodeInteractions(mAUGraph, 
+										mOutputNode,
+										&numInteractions, 
+										interactions);
+	
+	if(noErr != result) {
+		ERR("AUGraphGetNodeInteractions failed: %i", result);
+		
+		free(interactions), interactions = NULL;
+		
+		return false;
+	}
+	
+	AUNode sourceNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+		
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType && mOutputNode == interaction.nodeInteraction.connection.destNode) {
+			sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			break;
+		}
+	}						
+	
+	free(interactions), interactions = NULL;
+
+	// Unable to determine the preceding node, so bail
+	if(-1 == sourceNode) {
+		ERR("Unable to determine input node");
+		return false;
+	}
+	
+	// Create the effect node and set its format
+	ComponentDescription desc = { kAudioUnitType_Effect, subType, manufacturer, flags, mask };
+	
+	AUNode effectNode = -1;
+	result = AUGraphAddNode(mAUGraph, 
+							&desc, 
+							&effectNode);
+	
+	if(noErr != result) {
+		ERR("AUGraphAddNode failed: %i", result);
+		return false;
+	}
+	
+	AudioUnit effectUnit = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 effectNode, 
+							 NULL, 
+							 &effectUnit);
+
+	if(noErr != result) {
+		ERR("AUGraphAddNode failed: %i", result);
+		
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+
+		return false;
+	}
+	
+	result = AudioUnitSetProperty(effectUnit,
+								  kAudioUnitProperty_StreamFormat, 
+								  kAudioUnitScope_Input, 
+								  0,
+								  &mAUGraphFormat,
+								  sizeof(mAUGraphFormat));
+
+	if(noErr != result) {
+		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+
+		// If the property couldn't be set (the AU may not support this format), remove the new node
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+				
+		return false;
+	}
+	
+	result = AudioUnitSetProperty(effectUnit,
+								  kAudioUnitProperty_StreamFormat, 
+								  kAudioUnitScope_Output, 
+								  0,
+								  &mAUGraphFormat,
+								  sizeof(mAUGraphFormat));
+	
+	if(noErr != result) {
+		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+		
+		// If the property couldn't be set (the AU may not support this format), remove the new node
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+		
+		return false;
+	}
+
+	// Insert the effect at the end of the graph, before the output node
+	result = AUGraphDisconnectNodeInput(mAUGraph, 
+										mOutputNode,
+										0);
+
+	if(noErr != result) {
+		ERR("AUGraphDisconnectNodeInput failed: %i", result);
+		
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		
+		if(noErr != result)
+			ERR("AUGraphRemoveNode failed: %i", result);
+		
+		return false;
+	}
+	
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, 
+									 sourceNode,
+									 0,
+									 effectNode,
+									 0);
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+		return false;
+	}
+	
+	result = AUGraphConnectNodeInput(mAUGraph, 
+									 effectNode,
+									 0,
+									 mOutputNode,
+									 0);
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+		return false;
+	}
+	
+	result = AUGraphUpdate(mAUGraph, NULL);
+	if(noErr != result) {
+		ERR("AUGraphUpdate failed: %i", result);
+
+		// If the update failed, restore the previous node state
+		result = AUGraphConnectNodeInput(mAUGraph,
+										 sourceNode,
+										 0,
+										 mOutputNode,
+										 0);
+
+		if(noErr != result) {
+			ERR("AUGraphConnectNodeInput failed: %i", result);
+			return false;
+		}
+	}
+	
+	if(NULL != effectUnit1)
+		*effectUnit1 = effectUnit;
 	
 	return true;
 }
 
-bool AudioPlayer::GetChannelLayout(AudioChannelLayout& channelLayout)
+bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 {
-	UInt32 dataSize = sizeof(channelLayout);
-	ComponentResult result = AudioUnitGetProperty(mOutputUnit,
-												  kAudioUnitProperty_AudioChannelLayout, 
-												  kAudioUnitScope_Input, 
-												  0, 
-												  &channelLayout,
-												  &dataSize);
+	assert(NULL != effectUnit);
+	
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	
 	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioUnitProperty_AudioChannelLayout) [kAudioUnitScope_Input] failed: %i", result);
+		ERR("AUGraphGetNodeCount failed: %i", result);
+		return false;
+	}
+	
+	AUNode effectNode = -1;
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = -1;
+		result = AUGraphGetIndNode(mAUGraph, 
+								   nodeIndex, 
+								   &node);
+		
+		if(noErr != result) {
+			ERR("AUGraphGetIndNode failed: %i", result);
+			return false;
+		}
+		
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, 
+								 node, 
+								 NULL, 
+								 &au);
+		
+		if(noErr != result) {
+			ERR("AUGraphNodeInfo failed: %i", result);
+			return false;
+		}
+		
+		// This is the unit to remove
+		if(effectUnit == au) {
+			effectNode = node;
+			break;
+		}
+	}
+	
+	if(-1 == effectNode) {
+		ERR("Unable to find the AUNode for the specified AudioUnit");
+		return false;
+	}
+	
+	// Get the current input and output nodes for the node to delete
+	UInt32 numInteractions = 0;
+	result = AUGraphCountNodeInteractions(mAUGraph, 
+										  effectNode, 
+										  &numInteractions);
+	if(noErr != result) {
+		ERR("AUGraphCountNodeConnections failed: %i", result);
+		return false;
+	}
+	
+	AUNodeInteraction *interactions = static_cast<AUNodeInteraction *>(calloc(numInteractions, sizeof(AUNodeInteraction)));
+	if(NULL == interactions) {
+		ERR("Unable to allocate memory");
+		return false;
+	}
+
+	result = AUGraphGetNodeInteractions(mAUGraph, 
+										effectNode,
+										&numInteractions, 
+										interactions);
+	
+	if(noErr != result) {
+		ERR("AUGraphGetNodeInteractions failed: %i", result);
+		
+		free(interactions), interactions = NULL;
+		
+		return false;
+	}
+	
+	AUNode sourceNode = -1, destNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+		
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType) {
+			if(effectNode == interaction.nodeInteraction.connection.destNode)
+				sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			else if(effectNode == interaction.nodeInteraction.connection.sourceNode)
+				destNode = interaction.nodeInteraction.connection.destNode;
+		}
+	}						
+	
+	free(interactions), interactions = NULL;
+	
+	if(-1 == sourceNode || -1 == destNode) {
+		ERR("Unable to find the source or destination nodes");
+		return false;
+	}
+	
+	result = AUGraphDisconnectNodeInput(mAUGraph, effectNode, 0);
+	if(noErr != result) {
+		ERR("AUGraphDisconnectNodeInput failed: %i", result);
+		return false;
+	}
+	
+	result = AUGraphDisconnectNodeInput(mAUGraph, destNode, 0);
+	if(noErr != result) {
+		ERR("AUGraphDisconnectNodeInput failed: %i", result);
+		return false;
+	}
+	
+	result = AUGraphRemoveNode(mAUGraph, effectNode);
+	if(noErr != result) {
+		ERR("AUGraphRemoveNode failed: %i", result);
+		return false;
+	}
+	
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, destNode, 0);
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+		return false;
+	}
+	
+	result = AUGraphUpdate(mAUGraph, NULL);
+	if(noErr != result) {
+		ERR("AUGraphUpdate failed: %i", result);
 		return false;
 	}
 	
@@ -646,15 +951,26 @@ bool AudioPlayer::GetChannelLayout(AudioChannelLayout& channelLayout)
 
 CFStringRef AudioPlayer::CreateOutputDeviceUID()
 {
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return NULL;
+	}
+
 	AudioDeviceID deviceID = 0;
 	UInt32 dataSize = sizeof(deviceID);
 
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &dataSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &dataSize);
 		
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -722,8 +1038,19 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	if(kAudioDeviceUnknown == deviceID)
 		return false;
 
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mOutputNode, 
+							 NULL, 
+							 &au);
+
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+
 	// Update our output AU to use the specified device
-	result = AudioUnitSetProperty(mOutputUnit,
+	result = AudioUnitSetProperty(au,
 								  kAudioOutputUnitProperty_CurrentDevice,
 								  kAudioUnitScope_Global,
 								  0,
@@ -740,15 +1067,26 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 
 Float64 AudioPlayer::GetOutputDeviceSampleRate()
 {
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return -1;
+	}
+	
 	AudioDeviceID deviceID = 0;
 	UInt32 dataSize = sizeof(deviceID);
 	
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &dataSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &dataSize);
 	
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -777,15 +1115,26 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
 	assert(0 < sampleRate);
 	
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+	
 	AudioDeviceID deviceID = 0;
 	UInt32 dataSize = sizeof(deviceID);
 	
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &dataSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &dataSize);
 
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -828,16 +1177,28 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 
 bool AudioPlayer::OutputDeviceIsHogged()
 {
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+	
 	// Get the current output device
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	
 	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &specifierSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
 	
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -864,16 +1225,28 @@ bool AudioPlayer::OutputDeviceIsHogged()
 
 bool AudioPlayer::StartHoggingOutputDevice()
 {
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+	
 	// Get the current output device
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	
 	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &specifierSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
 	
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -928,16 +1301,28 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 bool AudioPlayer::StopHoggingOutputDevice()
 {
+	// Get the output node's AudioUnit
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return false;
+	}
+	
 	// Get the current output device
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	
 	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioUnitGetProperty(mOutputUnit,
-										   kAudioOutputUnitProperty_CurrentDevice,
-										   kAudioUnitScope_Global,
-										   0,
-										   &deviceID,
-										   &specifierSize);
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &specifierSize);
 	
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty(kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
@@ -1029,17 +1414,18 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && true == queueEmpty) {
-		if(false == SetFormat(decoder->GetFormat())) {
-			ERR("SetFormat failed");
+		OSStatus result = SetAUGraphFormat(decoder->GetFormat());
+		
+		if(noErr != result) {
+			ERR("SetAUGraphFormat failed: %i", result);
 			return false;
 		}
 		
-		// Not all decoders have channel layouts
-		AudioChannelLayout channelLayout = decoder->GetChannelLayout();
+		result = SetAUGraphChannelLayout(decoder->GetChannelLayout());
 		
-		// TODO: Check if channelLayout is not empty		
-		if(false ==  SetChannelLayout(channelLayout)) {
-			ERR("SetChannelLayout failed");
+		// Not all decoders have channel layouts
+		if(noErr != result) {
+			ERR("SetAUGraphChannelLayout failed: %i", result);
 			//return false;
 		}
 		
@@ -1050,9 +1436,20 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	}
 	// Otherwise, enqueue this decoder if the format matches
 	else {
+		AudioUnit au = NULL;
+		OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
+											mOutputNode, 
+											NULL, 
+											&au);
+		
+		if(noErr != auResult) {
+			ERR("AUGraphNodeInfo failed: %i", auResult);
+			return false;
+		}
+		
 		AudioStreamBasicDescription format;
 		UInt32 dataSize = sizeof(format);
-		ComponentResult result = AudioUnitGetProperty(mOutputUnit,
+		ComponentResult result = AudioUnitGetProperty(au,
 													  kAudioUnitProperty_StreamFormat,
 													  kAudioUnitScope_Input,
 													  0,
@@ -1154,7 +1551,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
-		size_t byteCountToZero = inNumberFrames * mFormat.mBytesPerFrame;
+		size_t byteCountToZero = inNumberFrames * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
@@ -1179,10 +1576,10 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		LOG("Ring buffer contained insufficient data: %d / %d", framesToRead, inNumberFrames);
 		
 		UInt32 framesOfSilence = inNumberFrames - framesToRead;
-		size_t byteCountToZero = framesOfSilence * mFormat.mBytesPerFrame;
+		size_t byteCountToZero = framesOfSilence * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
-			UInt8 *bufferAlias = static_cast<UInt8 *>(ioData->mBuffers[bufferIndex].mData);
-			memset(bufferAlias + ioData->mBuffers[bufferIndex].mDataByteSize, 0, byteCountToZero);
+			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
+			memset(bufferAlias + framesToRead, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize += static_cast<UInt32>(byteCountToZero);
 		}
 	}
@@ -1363,7 +1760,7 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
-								Reset();
+								ResetAUGraph();
 							}
 						}
 						
@@ -1379,44 +1776,44 @@ void * AudioPlayer::DecoderThreadEntry()
 						// Store the decoded audio
 						if(0 != framesDecoded) {
 
-//							// Apply pregain
-//							if(0.f != mPreGain) {
-//								// Convert pregain in dB to a linear gain value
-//								float linearGain = powf(10, mPreGain / 20);
-//								
-//								// Apply pre-gain to the decoded samples
-//								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-//									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
-//									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex)
-//										*buffer++ *= linearGain;
-//								}
-//							}
-//							
-//							// Clip the samples to [-1, +1), if desired
-//							if(mPerformHardLimiting) {
-//								UInt32 bitsPerChannel = decoder->GetSourceFormat().mBitsPerChannel;
-//								
-//								// For compressed formats, pretend the samples are 24-bit
-//								if(0 == bitsPerChannel)
-//									bitsPerChannel = 24;
-//								
-//								// The maximum allowable sample value
-//								float maxValue = 1.f - (1.f / (1 << (bitsPerChannel - 1)));
-//								
-//								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-//									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
-//									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex) {
-//										float sample = *buffer;
-//										
-//										if(sample > maxValue)
-//											*buffer = maxValue;
-//										else if(sample < -1.f)
-//											*buffer = -1.f;
-//										
-//										++buffer;
-//									}
-//								}
-//							}
+							// Apply pregain
+							if(0.f != mPreGain) {
+								// Convert pregain in dB to a linear gain value
+								float linearGain = powf(10, mPreGain / 20);
+								
+								// Apply pre-gain to the decoded samples
+								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
+									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex)
+										*buffer++ *= linearGain;
+								}
+							}
+							
+							// Clip the samples to [-1, +1), if desired
+							if(mPerformHardLimiting) {
+								UInt32 bitsPerChannel = decoder->GetSourceFormat().mBitsPerChannel;
+								
+								// For compressed formats, pretend the samples are 24-bit
+								if(0 == bitsPerChannel)
+									bitsPerChannel = 24;
+								
+								// The maximum allowable sample value
+								float maxValue = 1.f - (1.f / (1 << (bitsPerChannel - 1)));
+								
+								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
+									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex) {
+										float sample = *buffer;
+										
+										if(sample > maxValue)
+											*buffer = maxValue;
+										else if(sample < -1.f)
+											*buffer = -1.f;
+										
+										++buffer;
+									}
+								}
+							}
 							
 							// Copy the decoded audio to the ring buffer
 							CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
@@ -1498,147 +1895,546 @@ void * AudioPlayer::CollectorThreadEntry()
 }
 
 
-#pragma mark AudioUnit Utilities
+#pragma mark AUGraph Utilities
 
 
-bool AudioPlayer::OpenOutput()
+OSStatus AudioPlayer::CreateAUGraph()
 {
-	ComponentDescription desc;
+	OSStatus result = NewAUGraph(&mAUGraph);
+
+	if(noErr != result) {
+		ERR("NewAUGraph failed: %i", result);
+		return result;
+	}
 	
+	// The graph will look like:
+	// MultiChannelMixer -> Effects (if any) -> Output
+	ComponentDescription desc;
+
+	// Set up the mixer node
+	desc.componentType			= kAudioUnitType_Mixer;
+	desc.componentSubType		= kAudioUnitSubType_MultiChannelMixer;
+	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
+	desc.componentFlags			= 0;
+	desc.componentFlagsMask		= 0;
+	
+	AUNode mixerNode;
+	result = AUGraphAddNode(mAUGraph, &desc, &mixerNode);
+
+	if(noErr != result) {
+		ERR("AUGraphAddNode failed: %i", result);
+		return result;
+	}
+	
+	// Set up the output node
 	desc.componentType			= kAudioUnitType_Output;
 	desc.componentSubType		= kAudioUnitSubType_HALOutput;
 	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
 	desc.componentFlags			= 0;
 	desc.componentFlagsMask		= 0;
 	
-	if(0 == CountComponents(&desc))
-		return fnfErr;
-	
-	Component comp = FindNextComponent(NULL, &desc);
-	
-	if(NULL == comp) {
-		ERR("FindNextComponent returned NULL for kAudioUnitType_Output:kAudioUnitSubType_HALOutput:kAudioUnitManufacturer_Apple");
-		return false;
-	}
-	
-	ComponentResult result = OpenAComponent(comp, &mOutputUnit);
+	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
 
 	if(noErr != result) {
-		ERR("OpenAComponent failed: %i", result);
-		return false;
-	}
-
-	result = AudioUnitInitialize(mOutputUnit);
-
-	if(noErr != result) {
-		ERR("AudioUnitInitialize failed: %i", result);
-		return false;
+		ERR("AUGraphAddNode failed: %i", result);
+		return result;
 	}
 	
-	// Register the input callback
+	result = AUGraphConnectNodeInput(mAUGraph, mixerNode, 0, mOutputNode, 0);
+
+	if(noErr != result) {
+		ERR("AUGraphConnectNodeInput failed: %i", result);
+		return result;
+	}
+	
+	// Install the input callback
 	AURenderCallbackStruct cbs = { myAURenderCallback, this };
-
-	result = AudioUnitSetProperty(mOutputUnit, 
-								  kAudioUnitProperty_SetRenderCallback, 
-								  kAudioUnitScope_Input, 
-								  0, 
-								  &cbs, 
-								  sizeof(cbs));
+	result = AUGraphSetNodeInputCallback(mAUGraph, mixerNode, 0, &cbs);
 
 	if(noErr != result) {
-		ERR("AudioUnitSetProperty (kAudioOutputUnitProperty_SetInputCallback) failed: %i", result);
-		return false;
+		ERR("AUGraphSetNodeInputCallback failed: %i", result);
+		return result;
 	}
+	
+	// Open the graph
+	result = AUGraphOpen(mAUGraph);
+
+	if(noErr != result) {
+		ERR("AUGraphOpen failed: %i", result);
+		return result;
+	}
+	
+	// Initialize the graph
+	result = AUGraphInitialize(mAUGraph);
+
+	if(noErr != result) {
+		ERR("AUGraphInitialize failed: %i", result);
+		return result;
+	}
+
+	// Set the mixer's volume on the input and output
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mixerNode, 
+							 NULL, 
+							 &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return result;
+	}
+
+	result = AudioUnitSetParameter(au,
+								   kMultiChannelMixerParam_Volume,
+								   kAudioUnitScope_Input,
+								   0,
+								   1.f,
+								   0);
+	
+	if(noErr != result)
+		ERR("AudioUnitSetParameter (kMultiChannelMixerParam_Volume) failed: %i", result);
+
+	result = AudioUnitSetParameter(au,
+								   kMultiChannelMixerParam_Volume,
+								   kAudioUnitScope_Output,
+								   0,
+								   1.f,
+								   0);
+	
+	if(noErr != result)
+		ERR("AudioUnitSetParameter (kMultiChannelMixerParam_Volume) failed: %i", result);
 	
 	// Install the render notification
-	result = AudioUnitAddRenderNotify(mOutputUnit, 
-									  myAURenderNotify, 
-									  this);
+	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
 
 	if(noErr != result) {
 		ERR("AUGraphAddRenderNotify failed: %i", result);
-		return false;
+		return result;
 	}
 
-	return true;
+	return noErr;
 }
 
-bool AudioPlayer::CloseOutput()
+OSStatus AudioPlayer::DisposeAUGraph()
 {
-	ComponentResult result = AudioOutputUnitStop(mOutputUnit);
+	Boolean graphIsRunning = FALSE;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
 
 	if(noErr != result) {
-		ERR("AudioOutputUnitStop failed: %i", result);
-		return false;
-	}
-
-	result = AudioUnitUninitialize(mOutputUnit);
-	
-	if(noErr != result) {
-		ERR("AudioUnitUninitialize failed: %i", result);
-		return false;
+		ERR("AUGraphIsRunning failed: %i", result);
+		return result;
 	}
 	
-	result = CloseComponent(mOutputUnit);
+	if(graphIsRunning) {
+		result = AUGraphStop(mAUGraph);
 
-	if(noErr != result) {
-		ERR("CloseComponent failed: %i", result);
-		return false;
-	}
-	
-	mOutputUnit = NULL;
-	
-	return true;
-}
-
-bool AudioPlayer::Reset()
-{
-	ComponentResult result = AudioUnitReset(mOutputUnit, kAudioUnitScope_Global, 0);
-	
-	if(noErr != result)
-		ERR("AudioUnitReset failed: %i", result);
-	
-	return (noErr == result);
-}
-
-bool AudioPlayer::SetFormat(AudioStreamBasicDescription format)
-{
-	// ========================================
-	// If IO is running, stop it before changing the output unit's format
-	bool wasPlaying = IsPlaying();
-
-	if(wasPlaying) {
-		ComponentResult result = AudioOutputUnitStop(mOutputUnit);
-		
 		if(noErr != result) {
-			ERR("AudioOutputUnitStop failed: %i", result);
-			return false;
+			ERR("AUGraphStop failed: %i", result);
+			return result;
 		}
 	}
 	
-	ComponentResult result = AudioUnitUninitialize(mOutputUnit);
+	Boolean graphIsInitialized = FALSE;	
+	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
+
+	if(noErr != result) {
+		ERR("AUGraphIsInitialized failed: %i", result);
+		return result;
+	}
+	
+	if(graphIsInitialized) {
+		result = AUGraphUninitialize(mAUGraph);
+
+		if(noErr != result) {
+			ERR("AUGraphUninitialize failed: %i", result);
+			return result;
+		}
+	}
+	
+	result = AUGraphClose(mAUGraph);
+
+	if(noErr != result) {
+		ERR("AUGraphClose failed: %i", result);
+		return result;
+	}
+	
+	result = ::DisposeAUGraph(mAUGraph);
+
+	if(noErr != result) {
+		ERR("DisposeAUGraph failed: %i", result);
+		return result;
+	}
+	
+	mAUGraph = NULL;
+	
+	return noErr;
+}
+
+OSStatus AudioPlayer::ResetAUGraph()
+{
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		ERR("AUGraphGetNodeCount failed: %i", result);
+		return result;
+	}
+	
+	for(UInt32 i = 0; i < nodeCount; ++i) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, i, &node);
+		if(noErr != result) {
+			ERR("AUGraphGetIndNode failed: %i", result);
+			return result;
+		}
+		
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		if(noErr != result) {
+			ERR("AUGraphNodeInfo failed: %i", result);
+			return result;
+		}
+		
+		result = AudioUnitReset(au, kAudioUnitScope_Global, 0);
+		if(noErr != result) {
+			ERR("AudioUnitReset failed: %i", result);
+			return result;
+		}
+	}
+	
+	return noErr;
+}
+
+Float64 AudioPlayer::GetAUGraphLatency()
+{
+	Float64 graphLatency = 0;
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+
+	if(noErr != result) {
+		ERR("AUGraphGetNodeCount failed: %i", result);
+		return -1;
+	}
+	
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+
+		if(noErr != result) {
+			ERR("AUGraphGetIndNode failed: %i", result);
+			return -1;
+		}
+		
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+
+		if(noErr != result) {
+			ERR("AUGraphNodeInfo failed: %i", result);
+			return -1;
+		}
+		
+		Float64 latency = 0;
+		UInt32 dataSize = sizeof(latency);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &latency, &dataSize);
+
+		if(noErr != result) {
+			ERR("AudioUnitGetProperty failed: %i", result);
+			return -1;
+		}
+		
+		graphLatency += latency;
+	}
+	
+	return graphLatency;
+}
+
+Float64 AudioPlayer::GetAUGraphTailTime()
+{
+	Float64 graphTailTime = 0;
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	
 	if(noErr != result) {
-		ERR("AudioUnitUninitialize failed: %i", result);
-		return false;
+		ERR("AUGraphGetNodeCount failed: %i", result);
+		return -1;
+	}
+	
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		
+		if(noErr != result) {
+			ERR("AUGraphGetIndNode failed: %i", result);
+			return -1;
+		}
+		
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		
+		if(noErr != result) {
+			ERR("AUGraphNodeInfo failed: %i", result);
+			return -1;
+		}
+		
+		Float64 tailTime = 0;
+		UInt32 dataSize = sizeof(tailTime);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &tailTime, &dataSize);
+		
+		if(noErr != result) {
+			ERR("AudioUnitGetProperty (kAudioUnitProperty_TailTime) failed: %i", result);
+			return -1;
+		}
+		
+		graphTailTime += tailTime;
+	}
+	
+	return graphTailTime;
+}
+
+OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
+{
+	assert(NULL != propertyData);
+	assert(0 < propertyDataSize);
+	
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+
+	if(noErr != result) {
+		ERR("AUGraphGetNodeCount failed: %i", result);
+		return result;
+	}
+	
+	// Iterate through the nodes and attempt to set the property
+	for(UInt32 i = 0; i < nodeCount; ++i) {
+		AUNode node;
+		result = AUGraphGetIndNode(mAUGraph, i, &node);
+
+		if(noErr != result) {
+			ERR("AUGraphGetIndNode failed: %i", result);
+			return result;
+		}
+		
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+
+		if(noErr != result) {
+			ERR("AUGraphNodeInfo failed: %i", result);
+			return result;
+		}
+		
+		if(mOutputNode == node) {
+			// For AUHAL as the output node, you can't set the device side, so just set the client side
+			result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, 0, propertyData, propertyDataSize);
+
+			if(noErr != result) {
+				ERR("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+				return result;
+			}
+		}
+		else {
+			UInt32 elementCount = 0;
+			UInt32 dataSize = sizeof(elementCount);
+			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &elementCount, &dataSize);
+
+			if(noErr != result) {
+				ERR("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i", result);
+				return result;
+			}
+			
+			for(UInt32 j = 0; j < elementCount; ++j) {
+/*				Boolean writable;
+				err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Input, j, &dataSize, &writable);
+
+				if(noErr != err && kAudioUnitErr_InvalidProperty != err)
+					return err;
+				 
+				if(kAudioUnitErr_InvalidProperty == err || !writable)
+					continue;*/
+				
+				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, j, propertyData, propertyDataSize);
+
+				if(noErr != result) {
+					ERR("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+					return result;
+				}
+			}
+			
+			elementCount = 0;
+			dataSize = sizeof(elementCount);
+			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Output, 0, &elementCount, &dataSize);
+
+			if(noErr != result) {
+				ERR("AudioUnitGetProperty (kAudioUnitProperty_ElementCount) failed: %i", result);
+				return result;
+			}
+			
+			for(UInt32 j = 0; j < elementCount; ++j) {
+/*				Boolean writable;
+				err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Output, j, &dataSize, &writable);
+
+				if(noErr != err && kAudioUnitErr_InvalidProperty != err)
+					return err;
+				 
+				if(kAudioUnitErr_InvalidProperty == err || !writable)
+					continue;*/
+				
+				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, j, propertyData, propertyDataSize);
+
+				if(noErr != result) {
+					ERR("AudioUnitSetProperty ('%.4s') failed: %i", reinterpret_cast<const char *>(&propertyID), result);
+					return result;
+				}
+			}
+		}
+	}
+	
+	return noErr;
+}
+
+OSStatus AudioPlayer::SetAUGraphFormat(AudioStreamBasicDescription format)
+{
+	AUNodeInteraction *interactions = NULL;
+	
+	// ========================================
+	// If the graph is running, stop it
+	Boolean graphIsRunning = FALSE;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
+
+	if(noErr != result) {
+		ERR("AUGraphIsRunning failed: %i", result);
+		return result;
+	}
+	
+	if(graphIsRunning) {
+		result = AUGraphStop(mAUGraph);
+
+		if(noErr != result) {
+			ERR("AUGraphStop failed: %i", result);
+			return result;
+		}
+	}
+	
+	// ========================================
+	// If the graph is initialized, uninitialize it
+	Boolean graphIsInitialized = FALSE;
+	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
+
+	if(noErr != result) {
+		ERR("AUGraphIsInitialized failed: %i", result);
+		return result;
+	}
+	
+	if(graphIsInitialized) {
+		result = AUGraphUninitialize(mAUGraph);
+
+		if(noErr != result) {
+			ERR("AUGraphUninitialize failed: %i", result);
+			return result;
+		}
+	}
+	
+	// ========================================
+	// Save the interaction information and then clear all the connections
+	UInt32 interactionCount = 0;
+	result = AUGraphGetNumberOfInteractions(mAUGraph, &interactionCount);
+
+	if(noErr != result) {
+		ERR("AUGraphGetNumberOfInteractions failed: %i", result);
+		return result;
+	}
+	
+	interactions = static_cast<AUNodeInteraction *>(calloc(interactionCount, sizeof(AUNodeInteraction)));
+	if(NULL == interactions)
+		return memFullErr;
+	
+	for(UInt32 i = 0; i < interactionCount; ++i) {
+		result = AUGraphGetInteractionInfo(mAUGraph, i, &interactions[i]);
+
+		if(noErr != result) {
+			ERR("AUGraphGetInteractionInfo failed: %i", result);
+
+			free(interactions);
+
+			return result;
+		}
+	}
+	
+	result = AUGraphClearConnections(mAUGraph);
+
+	if(noErr != result) {
+		ERR("AUGraphClearConnections failed: %i", result);
+
+		free(interactions);
+		
+		return result;
 	}
 	
 	// ========================================
 	// Attempt to set the new stream format
-	result = AudioUnitSetProperty(mOutputUnit,
-								  kAudioUnitProperty_StreamFormat, 
-								  kAudioUnitScope_Input, 
-								  0, 
-								  &format,
-								  sizeof(format));
-	
+	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &format, sizeof(format));
+
 	if(noErr != result) {
-		ERR("AudioUnitSetProperty (kAudioUnitProperty_StreamFormat) [kAudioUnitScope_Input] failed: %i", result);
-		return false;
+		
+		// If the new format could not be set, restore the old format to ensure a working graph
+		OSStatus newErr = SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mAUGraphFormat, sizeof(mAUGraphFormat));
+
+		if(noErr != newErr)
+			ERR("Unable to restore AUGraph format: %i", result);
+
+		// Do not free connections here, so graph can be rebuilt
+		result = newErr;
 	}
 	else
-		mFormat = format;
+		mAUGraphFormat = format;
 
+	
+	// ========================================
+	// Restore the graph's connections and input callbacks
+	for(UInt32 i = 0; i < interactionCount; ++i) {
+		switch(interactions[i].nodeInteractionType) {
+				
+			// Reestablish the connection
+			case kAUNodeInteraction_Connection:
+			{
+				result = AUGraphConnectNodeInput(mAUGraph, 
+												 interactions[i].nodeInteraction.connection.sourceNode, 
+												 interactions[i].nodeInteraction.connection.sourceOutputNumber,
+												 interactions[i].nodeInteraction.connection.destNode, 
+												 interactions[i].nodeInteraction.connection.destInputNumber);
+
+				if(noErr != result) {
+					ERR("AUGraphConnectNodeInput failed: %i", result);
+
+					free(interactions), interactions = NULL;
+					
+					return result;
+				}
+				
+				break;
+			}
+				
+			// Reestablish the input callback
+			case kAUNodeInteraction_InputCallback:
+			{
+				result = AUGraphSetNodeInputCallback(mAUGraph, 
+												  interactions[i].nodeInteraction.inputCallback.destNode, 
+												  interactions[i].nodeInteraction.inputCallback.destInputNumber,
+												  &interactions[i].nodeInteraction.inputCallback.cback);
+
+				if(noErr != result) {
+					ERR("AUGraphSetNodeInputCallback failed: %i", result);
+
+					free(interactions), interactions = NULL;
+					
+					return result;
+				}
+				
+				break;
+			}				
+		}
+	}
+	
+	free(interactions), interactions = NULL;
+	
 	// ========================================
 	// Output units perform sample rate conversion if the input sample rate is not equal to
 	// the output sample rate. For high sample rates, the sample rate conversion can require 
@@ -1646,53 +2442,46 @@ bool AudioPlayer::SetFormat(AudioStreamBasicDescription format)
 	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 frames
 	// So if the input and output sample rates on the output device don't match, adjust 
 	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
-	
-	Float64 inputSampleRate = 0;
-	UInt32 dataSize = sizeof(inputSampleRate);
-	
-	result = AudioUnitGetProperty(mOutputUnit, 
-								  kAudioUnitProperty_SampleRate, 
-								  kAudioUnitScope_Input, 
-								  0, 
-								  &inputSampleRate, 
-								  &dataSize);
+
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, 
+							 mOutputNode, 
+							 NULL, 
+							 &au);
 	
 	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return result;
+	}
+
+	Float64 inputSampleRate = 0;
+	UInt32 dataSize = sizeof(inputSampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Input, 0, &inputSampleRate, &dataSize);
+
+	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioUnitProperty_SampleRate) [kAudioUnitScope_Input] failed: %i", result);
-		return false;
+		return result;
 	}
 	
 	Float64 outputSampleRate = 0;
 	dataSize = sizeof(outputSampleRate);
-	
-	result = AudioUnitGetProperty(mOutputUnit, 
-								  kAudioUnitProperty_SampleRate, 
-								  kAudioUnitScope_Output, 
-								  0, 
-								  &outputSampleRate, 
-								  &dataSize);
-	
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Output, 0, &outputSampleRate, &dataSize);
+
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioUnitProperty_SampleRate) [kAudioUnitScope_Output] failed: %i", result);
-		return false;
+		return result;
 	}
 	
 	if(inputSampleRate != outputSampleRate) {
 		LOG("Input sample rate (%f) and output sample rate (%f) don't match", inputSampleRate, outputSampleRate);
-		
+
 		UInt32 currentMaxFrames = 0;
 		dataSize = sizeof(currentMaxFrames);
-		
-		result = AudioUnitGetProperty(mOutputUnit, 
-									  kAudioUnitProperty_MaximumFramesPerSlice, 
-									  kAudioUnitScope_Global, 
-									  0, 
-									  &currentMaxFrames, 
-									  &dataSize);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &currentMaxFrames, &dataSize);
 		
 		if(noErr != result) {
 			ERR("AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice) failed: %i", result);
-			return false;
+			return result;
 		}
 		
 		Float64 ratio = inputSampleRate / outputSampleRate;
@@ -1702,60 +2491,68 @@ bool AudioPlayer::SetFormat(AudioStreamBasicDescription format)
 		UInt32 newMaxFrames = static_cast<UInt32>(currentMaxFrames * multiplier);
 		newMaxFrames += 16;
 		newMaxFrames &= 0xFFFFFFF0;
-		
+
 		if(newMaxFrames > currentMaxFrames) {
 			LOG("Adjusting kAudioUnitProperty_MaximumFramesPerSlice to %d", newMaxFrames);
 			
-			result = AudioUnitSetProperty(mOutputUnit, 
-										  kAudioUnitProperty_MaximumFramesPerSlice, 
-										  kAudioUnitScope_Input, 
-										  0, 
-										  &newMaxFrames, 
-										  sizeof(newMaxFrames));
+			result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames));
 			
 			if(noErr != result) {
-				ERR("AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice) [kAudioUnitScope_Input] failed: %i", result);
-				return false;
+				ERR("SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed: %i", result);
+				return result;
 			}
 		}
 	}
-	
-	result = AudioUnitInitialize(mOutputUnit);
-	
-	if(noErr != result) {
-		ERR("AudioUnitInitialize failed: %i", result);
-		return false;
-	}
-	
-	// If IO was running, restart it
-	if(wasPlaying) {
-		result = AudioOutputUnitStart(mOutputUnit);
-		
+
+	// If the graph was initialized, reinitialize it
+	if(graphIsInitialized) {
+		result = AUGraphInitialize(mAUGraph);
+
 		if(noErr != result) {
-			ERR("AudioOutputUnitStart failed: %i", result);
-			return false;
+			ERR("AUGraphInitialize failed: %i", result);
+			return result;
 		}
 	}
 	
-	return true;
+	// If the graph was running, restart it
+	if(graphIsRunning) {
+		result = AUGraphStart(mAUGraph);
+
+		if(noErr != result) {
+			ERR("AUGraphStart failed: %i", result);
+			return result;
+		}
+	}
+	
+	return noErr;
 }
 
-bool AudioPlayer::SetChannelLayout(AudioChannelLayout channelLayout)
+OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
 {
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return result;
+	}
+	
 	// Attempt to set the new channel layout
-	ComponentResult result = AudioUnitSetProperty(mOutputUnit, 
-												  kAudioUnitProperty_AudioChannelLayout, 
-												  kAudioUnitScope_Input, 
-												  0, 
-												  &channelLayout, 
-												  sizeof(channelLayout));
+	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, 
+									   &channelLayout, 
+									   sizeof(channelLayout));
 	
-	if(noErr != result)
-		ERR("AudioUnitSetProperty (kAudioUnitProperty_AudioChannelLayout) failed: %i", result);
+	if(noErr != result) {
+		ERR("SetPropertyOnAUGraphNodes (kAudioUnitProperty_AudioChannelLayout) failed: %i", result);
+		return result;
+	}
 	else
-		mChannelLayout = channelLayout;
+		mAUGraphChannelLayout = channelLayout;
 	
-	return (noErr == result);
+	return noErr;
 }
 
 
