@@ -61,7 +61,7 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 	AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
 	
 	UInt32 numBuffers = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? formatDescription.mChannelsPerFrame : 1;
-	UInt32 channelsPerBuffer = numBuffers;
+	UInt32 channelsPerBuffer = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? 1 : formatDescription.mChannelsPerFrame;
 	
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers)));
 	
