@@ -344,10 +344,10 @@ AudioPlayer::AudioPlayer()
 	
 	// ========================================
 	// Set up our AUGraph and set pregain to 0
-	OSStatus status = CreateAUGraph();
+	OSStatus status = OpenOutput();
 	if(noErr != status) {
-		ERR("CreateAUGraph failed: %i", status);
-		throw std::runtime_error("CreateAUGraph failed");
+		ERR("OpenOutput failed: %i", status);
+		throw std::runtime_error("OpenOutput failed");
 	}
 	
 	if(false == SetPreGain(0))
@@ -357,7 +357,7 @@ AudioPlayer::AudioPlayer()
 AudioPlayer::~AudioPlayer()
 {
 	// Stop the processing graph and reclaim its resources
-	DisposeAUGraph();
+	CloseOutput();
 
 	// Dispose of all active decoders
 	StopActiveDecoders();
@@ -457,7 +457,7 @@ void AudioPlayer::Stop()
 	Pause();
 	
 	StopActiveDecoders();
-	ResetAUGraph();
+	ResetOutput();
 	
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
@@ -1589,7 +1589,13 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
-								ResetAUGraph();
+								// Reset the converter and output to flush any buffers
+								result = AudioConverterReset(audioConverter);
+								
+								if(noErr != result)
+									ERR("AudioConverterReset failed: %i", result);
+
+								ResetOutput();
 							}
 						}
 						
@@ -1605,9 +1611,8 @@ void * AudioPlayer::DecoderThreadEntry()
 																 bufferList,
 																 NULL);
 						
-						if(noErr != result) {
+						if(noErr != result)
 							ERR("AudioConverterFillComplexBuffer failed: %i", result);
-						}
 						
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber)
@@ -1746,7 +1751,7 @@ void * AudioPlayer::CollectorThreadEntry()
 #pragma mark AUGraph Utilities
 
 
-OSStatus AudioPlayer::CreateAUGraph()
+OSStatus AudioPlayer::OpenOutput()
 {
 	OSStatus result = NewAUGraph(&mAUGraph);
 
@@ -1863,7 +1868,7 @@ OSStatus AudioPlayer::CreateAUGraph()
 	return noErr;
 }
 
-OSStatus AudioPlayer::DisposeAUGraph()
+OSStatus AudioPlayer::CloseOutput()
 {
 	Boolean graphIsRunning = FALSE;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
@@ -1906,7 +1911,7 @@ OSStatus AudioPlayer::DisposeAUGraph()
 		return result;
 	}
 	
-	result = ::DisposeAUGraph(mAUGraph);
+	result = DisposeAUGraph(mAUGraph);
 
 	if(noErr != result) {
 		ERR("DisposeAUGraph failed: %i", result);
@@ -1918,7 +1923,7 @@ OSStatus AudioPlayer::DisposeAUGraph()
 	return noErr;
 }
 
-OSStatus AudioPlayer::ResetAUGraph()
+OSStatus AudioPlayer::ResetOutput()
 {
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);

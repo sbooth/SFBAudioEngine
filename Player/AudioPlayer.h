@@ -124,10 +124,10 @@ private:
 	
 	// ========================================
 	// AUGraph Utilities
-	OSStatus CreateAUGraph();
-	OSStatus DisposeAUGraph();
+	OSStatus OpenOutput();
+	OSStatus CloseOutput();
 	
-	OSStatus ResetAUGraph();
+	OSStatus ResetOutput();
 	
 	Float64 GetAUGraphLatency();
 	Float64 GetAUGraphTailTime();
