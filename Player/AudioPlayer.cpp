@@ -1041,7 +1041,7 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 										&dataSize,
 										&deviceUID);
 
-	if(noErr != result) {
+	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %i", result);
 		return NULL;
 	}
@@ -1051,8 +1051,6 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 
 bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 {
-	assert(NULL != deviceUID);
-
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
 
@@ -1073,7 +1071,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 													 &specifierSize,
 													 &deviceID);
 		
-		if(noErr != result) {
+		if(kAudioHardwareNoError != result) {
 			ERR("AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %i", result);
 			return false;
 		}
@@ -1099,7 +1097,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 													 &specifierSize,
 													 &translation);
 		
-		if(noErr != result) {
+		if(kAudioHardwareNoError != result) {
 			ERR("AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %i", result);
 			return false;
 		}
@@ -1179,7 +1177,7 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
 										&dataSize,
 										&sampleRate);
 	
-	if(noErr != result) {
+	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
 		return false;
 	}
@@ -1216,16 +1214,14 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	}
 	
 	// Determine if this will actually be a change
-	Float64 currentSampleRate;
-	dataSize = sizeof(currentSampleRate);
-	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
 		kAudioObjectPropertyScopeGlobal,
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	dataSize = sizeof(sampleRate);
+	Float64 currentSampleRate;
+	dataSize = sizeof(currentSampleRate);
 	
 	result = AudioObjectGetPropertyData(deviceID,
 										&propertyAddress,
@@ -1234,7 +1230,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 										&dataSize,
 										&currentSampleRate);
 	
-	if(noErr != result) {
+	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
 		return false;
 	}
