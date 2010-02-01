@@ -1010,7 +1010,7 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 		return NULL;
 	}
 
-	AudioDeviceID deviceID = 0;
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
 	UInt32 dataSize = sizeof(deviceID);
 
 	result = AudioUnitGetProperty(au,
@@ -1025,17 +1025,24 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 		return NULL;
 	}
 	
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyDeviceUID, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
 	CFStringRef deviceUID = NULL;
 	dataSize = sizeof(deviceUID);
-	result = AudioDeviceGetProperty(deviceID, 
-									0, 
-									FALSE, 
-									kAudioDevicePropertyDeviceUID, 
-									&dataSize, 
-									&deviceUID);
 	
+	result = AudioObjectGetPropertyData(deviceID,
+										&propertyAddress,
+										0,
+										NULL,
+										&dataSize,
+										&deviceUID);
+
 	if(noErr != result) {
-		ERR("AudioDeviceGetProperty (kAudioDevicePropertyDeviceUID) failed: %i", result);
+		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %i", result);
 		return NULL;
 	}
 	
@@ -1048,49 +1055,65 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
-	OSStatus			result			= noErr;
 
-	// If NULL was passed as the device ID, use the default output device
+	// If NULL was passed as the device UID, use the default output device
 	if(NULL == deviceUID) {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioHardwarePropertyDefaultOutputDevice, 
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+		
 		specifierSize = sizeof(deviceID);
-
-		result = AudioHardwareGetProperty(kAudioHardwarePropertyDefaultOutputDevice, 
-										  &specifierSize, 
-										  &deviceID);
-
+		
+		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+													 &propertyAddress,
+													 0,
+													 NULL,
+													 &specifierSize,
+													 &deviceID);
+		
 		if(noErr != result) {
-			ERR("AudioHardwareGetProperty (kAudioHardwarePropertyDefaultOutputDevice) failed: %i", result);
+			ERR("AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %i", result);
 			return false;
 		}
 	}
 	else {
-		AudioValueTranslation translation;
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioHardwarePropertyDeviceForUID, 
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+		
+		AudioValueTranslation translation = {
+			&deviceUID, sizeof(deviceUID),
+			&deviceID, sizeof(deviceID)
+		};
 
-		translation.mInputData			= &deviceUID;
-		translation.mInputDataSize		= sizeof(deviceUID);
-		translation.mOutputData			= &deviceID;
-		translation.mOutputDataSize		= sizeof(deviceID);
+		specifierSize = sizeof(translation);
 
-		specifierSize					= sizeof(translation);
-
-		result = AudioHardwareGetProperty(kAudioHardwarePropertyDeviceForUID, 
-										  &specifierSize, 
-										  &translation);
-
+		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+													 &propertyAddress,
+													 0,
+													 NULL,
+													 &specifierSize,
+													 &translation);
+		
 		if(noErr != result) {
-			ERR("AudioHardwareGetProperty (kAudioHardwarePropertyDeviceForUID) failed: %i", result);
+			ERR("AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %i", result);
 			return false;
 		}
 	}
 
+	// The device isn't connected or doesn't exist
 	if(kAudioDeviceUnknown == deviceID)
 		return false;
 
 	AudioUnit au = NULL;
-	result = AUGraphNodeInfo(mAUGraph, 
-							 mOutputNode, 
-							 NULL, 
-							 &au);
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
 
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
@@ -1113,7 +1136,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	return true;
 }
 
-Float64 AudioPlayer::GetOutputDeviceSampleRate()
+bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
@@ -1123,7 +1146,7 @@ Float64 AudioPlayer::GetOutputDeviceSampleRate()
 	
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
-		return -1;
+		return false;
 	}
 	
 	AudioDeviceID deviceID = 0;
@@ -1138,31 +1161,34 @@ Float64 AudioPlayer::GetOutputDeviceSampleRate()
 	
 	if(noErr != result) {
 		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
-		return -1;
+		return false;
 	}
 	
-	Float64 sampleRate = -1;
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyNominalSampleRate, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
 	dataSize = sizeof(sampleRate);
 	
-	result = AudioDeviceGetProperty(deviceID, 
-									0,
-									FALSE, 
-									kAudioDevicePropertyNominalSampleRate,
-									&dataSize,
-									&sampleRate);
-
-	if(noErr != result) {
-		ERR("AudioDeviceGetProperty (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
-		return -1;
-	}
+	result = AudioObjectGetPropertyData(deviceID,
+										&propertyAddress,
+										0,
+										NULL,
+										&dataSize,
+										&sampleRate);
 	
-	return sampleRate;
+	if(noErr != result) {
+		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
+		return false;
+	}
+
+	return true;
 }
 
 bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
-	assert(0 < sampleRate);
-	
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
 									  mOutputNode, 
@@ -1192,15 +1218,24 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	// Determine if this will actually be a change
 	Float64 currentSampleRate;
 	dataSize = sizeof(currentSampleRate);
-	result = AudioDeviceGetProperty(deviceID,
-									0,
-									FALSE,
-									kAudioDevicePropertyNominalSampleRate,
-									&dataSize,
-									&currentSampleRate);
-
+	
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyNominalSampleRate, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	dataSize = sizeof(sampleRate);
+	
+	result = AudioObjectGetPropertyData(deviceID,
+										&propertyAddress,
+										0,
+										NULL,
+										&dataSize,
+										&currentSampleRate);
+	
 	if(noErr != result) {
-		ERR("AudioDeviceGetProperty (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
+		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
 		return false;
 	}
 	
@@ -1209,18 +1244,21 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 		return true;
 	
 	// Set the sample rate
-	result = AudioDeviceSetProperty(deviceID,
-									NULL,
-									0,
-									FALSE,
-									kAudioDevicePropertyNominalSampleRate,
-									sizeof(sampleRate),
-									&sampleRate);
+	dataSize = sizeof(sampleRate);
 	
-	if(kAudioHardwareNoError != result)
-		ERR("AudioDeviceSetProperty (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
+	result = AudioObjectSetPropertyData(deviceID,
+										&propertyAddress,
+										0,
+										NULL,
+										sizeof(sampleRate),
+										&sampleRate);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
+		return false;
+	}
 
-	return (noErr == result);
+	return true;
 }
 
 
@@ -1377,7 +1415,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
 	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != result) {
-		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %ld", result, framesToRead, static_cast<long>(mFramesRendered));
+		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
 		return ioErr;
 	}
 
@@ -1432,7 +1470,6 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		
 		// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
 		// in the proper order multiple passes are made here
-		// TODO: Keep the array sorted in the future
 		while(NULL != decoderState) {
 			SInt64 timeStamp = decoderState->mTimeStamp;
 
@@ -1536,7 +1573,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				// If this happens, output will be impossible
 				decoderStateData->mKeepDecoding = false;
 			}
-			
+
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
 			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
@@ -1571,7 +1608,7 @@ void * AudioPlayer::DecoderThreadEntry()
 							SInt64 newFrame = decoder->SeekToFrame(decoderStateData->mFrameToSeek);
 							
 							if(newFrame != decoderStateData->mFrameToSeek)
-								ERR("Error seeking to frame %ld", static_cast<long>(decoderStateData->mFrameToSeek));
+								ERR("Error seeking to frame %lld", decoderStateData->mFrameToSeek);
 							
 							// Update the seek request
 							if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFrameToSeek, -1, &decoderStateData->mFrameToSeek))

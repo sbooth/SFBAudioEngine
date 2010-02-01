@@ -109,7 +109,7 @@ public:
 	CFStringRef CreateOutputDeviceUID();
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
 
-	Float64 GetOutputDeviceSampleRate();
+	bool GetOutputDeviceSampleRate(Float64& sampleRate);
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
 
 	// ========================================
