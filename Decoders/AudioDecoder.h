@@ -60,6 +60,7 @@ class AudioDecoder
 {
 	
 	friend class AudioPlayer;
+	friend class AudioPlayer2;
 	
 public:
 
