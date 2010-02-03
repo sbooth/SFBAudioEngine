@@ -1532,6 +1532,9 @@ void * AudioPlayer2::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
+								// This isn't thread safe
+								jack_ringbuffer_reset(static_cast<jack_ringbuffer_t *>(mRingBuffer));
+
 								// Reset the converter and output to flush any buffers
 								result = AudioConverterReset(audioConverter);
 
