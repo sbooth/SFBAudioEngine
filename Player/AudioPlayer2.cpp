@@ -465,7 +465,7 @@ void AudioPlayer2::Pause()
 	if(false == IsPlaying())
 		return;
 	
-	mIsPlaying = StopOutput();
+	mIsPlaying = (false == StopOutput());
 }
 
 void AudioPlayer2::Stop()
@@ -1598,7 +1598,16 @@ void * AudioPlayer2::DecoderThreadEntry()
 								if(noErr != result)
 									ERR("AudioConverterReset failed: %i", result);
 
+								// ResetOutput is not thread safe, so it is necessary to stop IO
+								bool outputRunning = OutputIsRunning();
+								
+								if(outputRunning)
+									StopOutput();
+								
 								ResetOutput();
+								
+								if(outputRunning)
+									StartOutput();
 							}
 						}
 						
@@ -1945,8 +1954,10 @@ bool AudioPlayer2::OutputIsRunning()
 	return isRunning;
 }
 
+// NOT thread safe
 bool AudioPlayer2::ResetOutput()
 {
+	jack_ringbuffer_reset(static_cast<jack_ringbuffer_t *>(mRingBuffer));
 	return true;
 }
 
