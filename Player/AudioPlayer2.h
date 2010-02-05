@@ -67,7 +67,7 @@ public:
 	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
-	bool IsPlaying();
+	inline bool IsPlaying()							{ return mIsPlaying; }
 	CFURLRef GetPlayingURL();
 
 	// ========================================
@@ -135,6 +135,10 @@ private:
 	bool OpenOutput();
 	bool CloseOutput();
 
+	bool StartOutput();
+	bool StopOutput();
+
+	bool OutputIsRunning();
 	bool ResetOutput();
 	
 	bool SetFormat(AudioStreamBasicDescription format);
@@ -157,7 +161,10 @@ private:
 	AudioStreamID						mOutputStreamID;
 
 	AudioStreamBasicDescription			mFormat;
+	UInt32								mFormatChanged;
 	AudioChannelLayout					mChannelLayout;
+
+	bool								mIsPlaying;
 
 	std::deque<AudioDecoder *>			mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize2];
