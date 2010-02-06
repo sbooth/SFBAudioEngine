@@ -180,9 +180,6 @@ private:
 	semaphore_t							mCollectorSemaphore;
 	bool								mKeepCollecting;
 
-	SInt64								mFramesDecoded;
-	SInt64								mFramesRendered;
-
 public:
 
 	// ========================================

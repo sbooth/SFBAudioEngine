@@ -244,7 +244,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer2::AudioPlayer2()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFormatChanged(false), mDecoderQueue(), mFramesDecoded(0), mFramesRendered(0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFormatChanged(false), mDecoderQueue()
 {
 	mRingBuffer = jack_ringbuffer_create(RING_BUFFER_SIZE_BYTES + 1);
 	if(NULL == mRingBuffer)
@@ -475,9 +475,6 @@ void AudioPlayer2::Stop()
 	StopActiveDecoders();
 	
 	ResetOutput();
-
-	mFramesDecoded = 0;
-	mFramesRendered = 0;
 }
 
 CFURLRef AudioPlayer2::GetPlayingURL()
@@ -1213,10 +1210,6 @@ OSStatus AudioPlayer2::Render(AudioDeviceID			inDevice,
 	
 	framesRead = static_cast<UInt32>(bytesRead / mFormat.mBytesPerFrame);
 
-	OSAtomicAdd64Barrier(framesRead, &mFramesRendered);
-
-//	LOG("\t\tFetched %d frames, mFramesRendered = %lld",framesRead,mFramesRendered);
-	
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	size_t bytesAvailableToWrite = jack_ringbuffer_write_space(static_cast<jack_ringbuffer_t *>(mRingBuffer));
 	if(RING_BUFFER_WRITE_CHUNK_SIZE_BYTES <= bytesAvailableToWrite)
@@ -1247,7 +1240,18 @@ OSStatus AudioPlayer2::Render(AudioDeviceID			inDevice,
 		if(0 == decoderState->mFramesRendered)
 			decoderState->mDecoder->PerformRenderingStartedCallback();
 		
-		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
+		// If sample rate conversion was performed, the number of frames from the decoder
+		// (in the decoder's sample rate) could be more or less than was sent to the hardware
+		Float64 decoderSampleRate = decoderState->mDecoder->GetFormat().mSampleRate;
+		Float64 streamSampleRate = mFormat.mSampleRate;
+		
+		if(decoderSampleRate != streamSampleRate) {
+			Float64 sampleRateRatio = decoderSampleRate / streamSampleRate;
+			UInt32 adjustedFrameCount = static_cast<UInt32>(framesFromThisDecoder * sampleRateRatio);
+			OSAtomicAdd64Barrier(adjustedFrameCount, &decoderState->mFramesRendered);
+		}
+		else
+			OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
 		
 		if(decoderState->mFramesRendered == decoderState->mTotalFrames) {
 			decoderState->mDecoder->PerformRenderingFinishedCallback();
@@ -1414,7 +1418,10 @@ void * AudioPlayer2::DecoderThreadEntry()
 	
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
-	
+
+	// The time stamp (in frames) of frames decoded since the last virtual format change
+	SInt64 currentTimeStamp = 0;
+
 	while(true == mKeepDecoding) {
 		AudioDecoder *decoder = NULL;
 		
@@ -1451,7 +1458,7 @@ void * AudioPlayer2::DecoderThreadEntry()
 			// ========================================
 			// Create the decoder state and append to the list of active decoders
 			DecoderStateData *decoderStateData = new DecoderStateData(decoder);
-			decoderStateData->mTimeStamp = mFramesDecoded;
+			decoderStateData->mTimeStamp = currentTimeStamp;
 			
 			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
 				if(NULL != mActiveDecoders[bufferIndex])
@@ -1554,6 +1561,8 @@ void * AudioPlayer2::DecoderThreadEntry()
 					
 					OSAtomicCompareAndSwap32Barrier(true, false, reinterpret_cast<int32_t *>(&mFormatChanged));
 
+					currentTimeStamp = 0;
+					
 					// Restart IO
 					if(IsPlaying())
 						StartOutput();
@@ -1588,9 +1597,7 @@ void * AudioPlayer2::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFramesRendered, newFrame, &decoderStateData->mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
-								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
-								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
-									ERR("OSAtomicCompareAndSwap64Barrier failed");
+								currentTimeStamp += framesSkipped;
 								
 								// Reset the converter and output to flush any buffers
 								result = AudioConverterReset(audioConverter);
@@ -1645,10 +1652,8 @@ void * AudioPlayer2::DecoderThreadEntry()
 
 							framesWritten = static_cast<UInt32>(bytesWritten / mFormat.mBytesPerFrame);
 
-							OSAtomicAdd64Barrier(framesWritten, &mFramesDecoded);
+							currentTimeStamp += framesWritten;
 						}
-						
-//						LOG("\tDecoded %d frames from %lld, wrote %d, mFramesDecoded = %lld", framesDecoded, startingFrameNumber, framesWritten, mFramesDecoded);
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesWritten) {
