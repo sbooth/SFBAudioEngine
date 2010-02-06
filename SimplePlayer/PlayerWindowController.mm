@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -119,7 +119,9 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
 	if(NULL == decoder)
 		return NO;
-	
+
+	PLAYER->Stop();
+
 	// Register for rendering started/finished notifications so the UI can be updated properly
 	decoder->SetRenderingStartedCallback(renderingStarted, self);
 	decoder->SetRenderingFinishedCallback(renderingFinished, self);
