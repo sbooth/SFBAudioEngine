@@ -44,21 +44,21 @@ class DecoderStateData;
 // ========================================
 // Constants
 // ========================================
-const UInt32 kActiveDecoderArraySize2 = 8;
+const UInt32 kActiveDecoderArraySize = 8;
 
 
 // ========================================
 // An audio player class
 // ========================================
-class AudioPlayer2
+class AudioPlayer
 {
 	
 public:
 	
 	// ========================================
 	// Creation/Destruction
-	AudioPlayer2();
-	~AudioPlayer2();
+	AudioPlayer();
+	~AudioPlayer();
 	
 	// ========================================
 	// Playback Control
@@ -167,7 +167,7 @@ private:
 	bool								mIsPlaying;
 
 	std::deque<AudioDecoder *>			mDecoderQueue;
-	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize2];
+	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	void								*mRingBuffer;
 	pthread_mutex_t						mMutex;

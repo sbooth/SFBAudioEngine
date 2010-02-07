@@ -39,7 +39,7 @@
 #include <new>
 
 #include "AudioEngineDefines.h"
-#include "AudioPlayer2.h"
+#include "AudioPlayer.h"
 #include "AudioDecoder.h"
 #include "DecoderStateData.h"
 
@@ -168,7 +168,7 @@ myIOProc(AudioDeviceID				inDevice,
 {
 	assert(NULL != inClientData);
 
-	AudioPlayer2 *player = static_cast<AudioPlayer2 *>(inClientData);
+	AudioPlayer *player = static_cast<AudioPlayer *>(inClientData);
 	return player->Render(inDevice, inNow, inInputData, inInputTime, outOutputData, inOutputTime);
 }
 
@@ -180,7 +180,7 @@ myAudioObjectPropertyListenerProc(AudioObjectID							inObjectID,
 {
 	assert(NULL != inClientData);
 	
-	AudioPlayer2 *player = static_cast<AudioPlayer2 *>(inClientData);
+	AudioPlayer *player = static_cast<AudioPlayer *>(inClientData);
 	return player->AudioObjectPropertyChanged(inObjectID, inNumberAddresses, inAddresses);
 }
 
@@ -192,7 +192,7 @@ decoderEntry(void *arg)
 {
 	assert(NULL != arg);
 	
-	AudioPlayer2 *player = static_cast<AudioPlayer2 *>(arg);
+	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
 	return player->DecoderThreadEntry();
 }
 
@@ -204,7 +204,7 @@ collectorEntry(void *arg)
 {
 	assert(NULL != arg);
 	
-	AudioPlayer2 *player = static_cast<AudioPlayer2 *>(arg);
+	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
 	return player->CollectorThreadEntry();
 }
 
@@ -243,7 +243,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 #pragma mark Creation/Destruction
 
 
-AudioPlayer2::AudioPlayer2()
+AudioPlayer::AudioPlayer()
 	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFormatChanged(false), mDecoderQueue()
 {
 	mRingBuffer = jack_ringbuffer_create(RING_BUFFER_SIZE_BYTES + 1);
@@ -297,7 +297,7 @@ AudioPlayer2::AudioPlayer2()
 
 	// ========================================
 	// Initialize the decoder array
-	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex)
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex)
 		mActiveDecoders[bufferIndex] = NULL;
 
 	// ========================================
@@ -383,7 +383,7 @@ AudioPlayer2::AudioPlayer2()
 	}
 }
 
-AudioPlayer2::~AudioPlayer2()
+AudioPlayer::~AudioPlayer()
 {
 	// Stop the processing graph and reclaim its resources
 	if(false == CloseOutput())
@@ -413,7 +413,7 @@ AudioPlayer2::~AudioPlayer2()
 	mCollectorThread = static_cast<pthread_t>(0);
 
 	// Force any decoders left hanging by the collector to end
-	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		if(NULL != mActiveDecoders[bufferIndex])
 			delete mActiveDecoders[bufferIndex], mActiveDecoders[bufferIndex] = NULL;
 	}
@@ -452,7 +452,7 @@ AudioPlayer2::~AudioPlayer2()
 #pragma mark Playback Control
 
 
-void AudioPlayer2::Play()
+void AudioPlayer::Play()
 {
 	if(IsPlaying())
 		return;
@@ -460,7 +460,7 @@ void AudioPlayer2::Play()
 	mIsPlaying = StartOutput();
 }
 
-void AudioPlayer2::Pause()
+void AudioPlayer::Pause()
 {
 	if(false == IsPlaying())
 		return;
@@ -468,7 +468,7 @@ void AudioPlayer2::Pause()
 	mIsPlaying = (false == StopOutput());
 }
 
-void AudioPlayer2::Stop()
+void AudioPlayer::Stop()
 {
 	Pause();
 	
@@ -477,7 +477,7 @@ void AudioPlayer2::Stop()
 	ResetOutput();
 }
 
-CFURLRef AudioPlayer2::GetPlayingURL()
+CFURLRef AudioPlayer::GetPlayingURL()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -491,7 +491,7 @@ CFURLRef AudioPlayer2::GetPlayingURL()
 #pragma mark Playback Properties
 
 
-SInt64 AudioPlayer2::GetCurrentFrame()
+SInt64 AudioPlayer::GetCurrentFrame()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -501,7 +501,7 @@ SInt64 AudioPlayer2::GetCurrentFrame()
 	return (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 }
 
-SInt64 AudioPlayer2::GetTotalFrames()
+SInt64 AudioPlayer::GetTotalFrames()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -511,7 +511,7 @@ SInt64 AudioPlayer2::GetTotalFrames()
 	return currentDecoderState->mTotalFrames;
 }
 
-CFTimeInterval AudioPlayer2::GetCurrentTime()
+CFTimeInterval AudioPlayer::GetCurrentTime()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -521,7 +521,7 @@ CFTimeInterval AudioPlayer2::GetCurrentTime()
 	return static_cast<CFTimeInterval>(GetCurrentFrame() / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
-CFTimeInterval AudioPlayer2::GetTotalTime()
+CFTimeInterval AudioPlayer::GetTotalTime()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -535,7 +535,7 @@ CFTimeInterval AudioPlayer2::GetTotalTime()
 #pragma mark Seeking
 
 
-bool AudioPlayer2::SeekForward(CFTimeInterval secondsToSkip)
+bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -549,7 +549,7 @@ bool AudioPlayer2::SeekForward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::min(desiredFrame, totalFrames - 1));
 }
 
-bool AudioPlayer2::SeekBackward(CFTimeInterval secondsToSkip)
+bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -563,7 +563,7 @@ bool AudioPlayer2::SeekBackward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::max(0LL, desiredFrame));
 }
 
-bool AudioPlayer2::SeekToTime(CFTimeInterval timeInSeconds)
+bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -576,7 +576,7 @@ bool AudioPlayer2::SeekToTime(CFTimeInterval timeInSeconds)
 	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
 }
 
-bool AudioPlayer2::SeekToFrame(SInt64 frame)
+bool AudioPlayer::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
 
@@ -596,7 +596,7 @@ bool AudioPlayer2::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
-bool AudioPlayer2::SupportsSeeking()
+bool AudioPlayer::SupportsSeeking()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -610,17 +610,17 @@ bool AudioPlayer2::SupportsSeeking()
 #pragma mark Player Parameters
 
 
-bool AudioPlayer2::GetMasterVolume(Float32& volume)
+bool AudioPlayer::GetMasterVolume(Float32& volume)
 {
 	return GetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
-bool AudioPlayer2::SetMasterVolume(Float32 volume)
+bool AudioPlayer::SetMasterVolume(Float32 volume)
 {
 	return SetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
-bool AudioPlayer2::GetVolumeForChannel(UInt32 channel, Float32& volume)
+bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume)
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyVolumeScalar, 
@@ -650,7 +650,7 @@ bool AudioPlayer2::GetVolumeForChannel(UInt32 channel, Float32& volume)
 	return true;
 }
 
-bool AudioPlayer2::SetVolumeForChannel(UInt32 channel, Float32 volume)
+bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyVolumeScalar, 
@@ -678,13 +678,13 @@ bool AudioPlayer2::SetVolumeForChannel(UInt32 channel, Float32 volume)
 	return true;
 }
 
-bool AudioPlayer2::GetFormat(AudioStreamBasicDescription& format)
+bool AudioPlayer::GetFormat(AudioStreamBasicDescription& format)
 {
 	format = mFormat;
 	return true;
 }
 
-bool AudioPlayer2::GetChannelLayout(AudioChannelLayout& channelLayout)
+bool AudioPlayer::GetChannelLayout(AudioChannelLayout& channelLayout)
 {
 	channelLayout = mChannelLayout;
 	return true;
@@ -694,7 +694,7 @@ bool AudioPlayer2::GetChannelLayout(AudioChannelLayout& channelLayout)
 #pragma mark Device Management
 
 
-CFStringRef AudioPlayer2::CreateOutputDeviceUID()
+CFStringRef AudioPlayer::CreateOutputDeviceUID()
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceUID, 
@@ -720,7 +720,7 @@ CFStringRef AudioPlayer2::CreateOutputDeviceUID()
 	return deviceUID;
 }
 
-bool AudioPlayer2::SetOutputDeviceUID(CFStringRef deviceUID)
+bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 {
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
@@ -781,7 +781,7 @@ bool AudioPlayer2::SetOutputDeviceUID(CFStringRef deviceUID)
 	return SetOutputDeviceID(deviceID);
 }
 
-bool AudioPlayer2::SetOutputDeviceID(AudioDeviceID deviceID)
+bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 {
 	assert(kAudioDeviceUnknown != deviceID);
 	
@@ -796,7 +796,7 @@ bool AudioPlayer2::SetOutputDeviceID(AudioDeviceID deviceID)
 	return true;
 }
 
-bool AudioPlayer2::GetOutputDeviceSampleRate(Float64& sampleRate)
+bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
@@ -821,7 +821,7 @@ bool AudioPlayer2::GetOutputDeviceSampleRate(Float64& sampleRate)
 	return true;
 }
 
-bool AudioPlayer2::SetOutputDeviceSampleRate(Float64 sampleRate)
+bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
@@ -844,7 +844,7 @@ bool AudioPlayer2::SetOutputDeviceSampleRate(Float64 sampleRate)
 	return true;
 }
 
-bool AudioPlayer2::OutputDeviceIsHogged()
+bool AudioPlayer::OutputDeviceIsHogged()
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -871,7 +871,7 @@ bool AudioPlayer2::OutputDeviceIsHogged()
 	return (hogPID == getpid() ? true : false);
 }
 
-bool AudioPlayer2::StartHoggingOutputDevice()
+bool AudioPlayer::StartHoggingOutputDevice()
 {
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -927,7 +927,7 @@ bool AudioPlayer2::StartHoggingOutputDevice()
 	return true;
 }
 
-bool AudioPlayer2::StopHoggingOutputDevice()
+bool AudioPlayer::StopHoggingOutputDevice()
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -981,7 +981,7 @@ bool AudioPlayer2::StopHoggingOutputDevice()
 	return true;
 }
 
-bool AudioPlayer2::SetOutputStreamID(AudioStreamID streamID)
+bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
 {
 	assert(kAudioStreamUnknown != streamID);
 	
@@ -1071,7 +1071,7 @@ bool AudioPlayer2::SetOutputStreamID(AudioStreamID streamID)
 #pragma mark Playlist Management
 
 
-bool AudioPlayer2::Enqueue(CFURLRef url)
+bool AudioPlayer::Enqueue(CFURLRef url)
 {
 	assert(NULL != url);
 	
@@ -1088,7 +1088,7 @@ bool AudioPlayer2::Enqueue(CFURLRef url)
 	return success;
 }
 
-bool AudioPlayer2::Enqueue(AudioDecoder *decoder)
+bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 	
@@ -1142,7 +1142,7 @@ bool AudioPlayer2::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
-bool AudioPlayer2::ClearQueuedDecoders()
+bool AudioPlayer::ClearQueuedDecoders()
 {
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1169,7 +1169,7 @@ bool AudioPlayer2::ClearQueuedDecoders()
 #pragma mark IOProc
 
 
-OSStatus AudioPlayer2::Render(AudioDeviceID			inDevice,
+OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 							  const AudioTimeStamp	*inNow,
 							  const AudioBufferList	*inInputData,
 							  const AudioTimeStamp	*inInputTime,
@@ -1276,7 +1276,7 @@ OSStatus AudioPlayer2::Render(AudioDeviceID			inDevice,
 	return kAudioHardwareNoError;
 }
 
-OSStatus AudioPlayer2::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
+OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 												  UInt32							inNumberAddresses,
 												  const AudioObjectPropertyAddress	inAddresses[])
 {
@@ -1409,7 +1409,7 @@ OSStatus AudioPlayer2::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 #pragma mark Thread Entry Points
 
 
-void * AudioPlayer2::DecoderThreadEntry()
+void * AudioPlayer::DecoderThreadEntry()
 {
 	// ========================================
 	// Make ourselves a high priority thread
@@ -1460,7 +1460,7 @@ void * AudioPlayer2::DecoderThreadEntry()
 			DecoderStateData *decoderStateData = new DecoderStateData(decoder);
 			decoderStateData->mTimeStamp = currentTimeStamp;
 			
-			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 				if(NULL != mActiveDecoders[bufferIndex])
 					continue;
 				
@@ -1702,14 +1702,14 @@ void * AudioPlayer2::DecoderThreadEntry()
 	return NULL;
 }
 
-void * AudioPlayer2::CollectorThreadEntry()
+void * AudioPlayer::CollectorThreadEntry()
 {
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
 
 	while(true == mKeepCollecting) {
 		
-		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 			DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 			
 			if(NULL == decoderState)
@@ -1735,7 +1735,7 @@ void * AudioPlayer2::CollectorThreadEntry()
 #pragma mark AudioHardware Utilities
 
 
-bool AudioPlayer2::OpenOutput()
+bool AudioPlayer::OpenOutput()
 {
 	// Create the IOProc which will feed audio to the device
 	OSStatus result = AudioDeviceCreateIOProcID(mOutputDeviceID, 
@@ -1842,7 +1842,7 @@ bool AudioPlayer2::OpenOutput()
 	return true;
 }
 
-bool AudioPlayer2::CloseOutput()
+bool AudioPlayer::CloseOutput()
 {
 	OSStatus result = AudioDeviceDestroyIOProcID(mOutputDeviceID, 
 												 mOutputDeviceIOProcID);
@@ -1907,7 +1907,7 @@ bool AudioPlayer2::CloseOutput()
 	return true;
 }
 
-bool AudioPlayer2::StartOutput()
+bool AudioPlayer::StartOutput()
 {
 	OSStatus result = AudioDeviceStart(mOutputDeviceID, 
 									   mOutputDeviceIOProcID);
@@ -1920,7 +1920,7 @@ bool AudioPlayer2::StartOutput()
 	return true;
 }
 
-bool AudioPlayer2::StopOutput()
+bool AudioPlayer::StopOutput()
 {
 	OSStatus result = AudioDeviceStop(mOutputDeviceID, 
 									  mOutputDeviceIOProcID);
@@ -1933,7 +1933,7 @@ bool AudioPlayer2::StopOutput()
 	return true;
 }
 
-bool AudioPlayer2::OutputIsRunning()
+bool AudioPlayer::OutputIsRunning()
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceIsRunning, 
@@ -1960,7 +1960,7 @@ bool AudioPlayer2::OutputIsRunning()
 }
 
 // NOT thread safe
-bool AudioPlayer2::ResetOutput()
+bool AudioPlayer::ResetOutput()
 {
 	jack_ringbuffer_reset(static_cast<jack_ringbuffer_t *>(mRingBuffer));
 	return true;
@@ -1970,10 +1970,10 @@ bool AudioPlayer2::ResetOutput()
 #pragma mark Other Utilities
 
 
-DecoderStateData * AudioPlayer2::GetCurrentDecoderState()
+DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 {
 	DecoderStateData *result = NULL;
-	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
 		if(NULL == decoderState)
@@ -1994,10 +1994,10 @@ DecoderStateData * AudioPlayer2::GetCurrentDecoderState()
 	return result;
 }
 
-DecoderStateData * AudioPlayer2::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
+DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
 {
 	DecoderStateData *result = NULL;
-	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
 		if(NULL == decoderState)
@@ -2015,10 +2015,10 @@ DecoderStateData * AudioPlayer2::GetDecoderStateStartingAfterTimeStamp(SInt64 ti
 	return result;
 }
 
-void AudioPlayer2::StopActiveDecoders()
+void AudioPlayer::StopActiveDecoders()
 {
 	// End any still-active decoders
-	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize2; ++bufferIndex) {
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
 		if(NULL == decoderState)
