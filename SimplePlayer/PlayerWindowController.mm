@@ -5,7 +5,11 @@
 
 #import "PlayerWindowController.h"
 
-#include <SFBAudioEngine/AudioPlayer.h>
+#if DSP_ENABLED
+#  include <SFBAudioEngine/DSPAudioPlayer.h>
+#else
+#  include <SFBAudioEngine/AudioPlayer.h>
+#endif /* DSP_ENABLED */
 #include <SFBAudioEngine/AudioDecoder.h>
 
 #define PLAYER (static_cast<AudioPlayer *>(_player))
@@ -52,8 +56,12 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 		return nil;
 	}
 	
+#if DSP_ENABLED
+	_player = new DSPAudioPlayer();
+#else	
 	_player = new AudioPlayer();
-	
+#endif
+
 	// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
 	_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
 
