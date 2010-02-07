@@ -38,7 +38,7 @@
 #include <stdexcept>
 
 #include "AudioEngineDefines.h"
-#include "AudioPlayer.h"
+#include "DSPAudioPlayer.h"
 #include "AudioDecoder.h"
 #include "DecoderStateData.h"
 
@@ -132,7 +132,7 @@ myAURenderCallback(void *							inRefCon,
 {
 	assert(NULL != inRefCon);
 	
-	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+	DSPAudioPlayer *player = static_cast<DSPAudioPlayer *>(inRefCon);
 	return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
 
@@ -146,7 +146,7 @@ auGraphDidRender(void *							inRefCon,
 {
 	assert(NULL != inRefCon);
 	
-	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+	DSPAudioPlayer *player = static_cast<DSPAudioPlayer *>(inRefCon);
 	return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
 
@@ -158,7 +158,7 @@ decoderEntry(void *arg)
 {
 	assert(NULL != arg);
 	
-	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+	DSPAudioPlayer *player = static_cast<DSPAudioPlayer *>(arg);
 	return player->DecoderThreadEntry();
 }
 
@@ -170,7 +170,7 @@ collectorEntry(void *arg)
 {
 	assert(NULL != arg);
 	
-	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+	DSPAudioPlayer *player = static_cast<DSPAudioPlayer *>(arg);
 	return player->CollectorThreadEntry();
 }
 
@@ -209,7 +209,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 #pragma mark Creation/Destruction
 
 
-AudioPlayer::AudioPlayer()
+DSPAudioPlayer::DSPAudioPlayer()
 	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false)
 {
 	mRingBuffer = new CARingBuffer();
@@ -354,7 +354,7 @@ AudioPlayer::AudioPlayer()
 		ERR("SetPreGain failed");
 }
 
-AudioPlayer::~AudioPlayer()
+DSPAudioPlayer::~DSPAudioPlayer()
 {
 	// Stop the processing graph and reclaim its resources
 	CloseOutput();
@@ -422,59 +422,40 @@ AudioPlayer::~AudioPlayer()
 #pragma mark Playback Control
 
 
-void AudioPlayer::Play()
+void DSPAudioPlayer::Play()
 {
 	if(IsPlaying())
 		return;
-
-//	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-//	printf("currentDecoderState = %p\n",currentDecoderState);
-//	printf("mDecoderQueue.empty(): %d\n",mDecoderQueue.empty());
-	
-	OSStatus result = AUGraphStart(mAUGraph);
-
-	if(noErr != result)
-		ERR("AUGraphStart failed: %i", result);
+	StartOutput();
 }
 
-void AudioPlayer::Pause()
+void DSPAudioPlayer::Pause()
 {
-	if(!IsPlaying())
+	if(false == IsPlaying())
 		return;
 	
-	OSStatus result = AUGraphStop(mAUGraph);
-
-	if(noErr != result)
-		ERR("AUGraphStop failed: %i", result);
+	StopOutput();
 }
 
-void AudioPlayer::Stop()
+void DSPAudioPlayer::Stop()
 {
-	if(!IsPlaying())
-		return;
-
 	Pause();
 	
 	StopActiveDecoders();
+	
 	ResetOutput();
 	
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
 }
 
-bool AudioPlayer::IsPlaying()
+bool DSPAudioPlayer::IsPlaying()
 {
-	Boolean isRunning = FALSE;
-	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
-
-	if(noErr != result)
-		ERR("AUGraphIsRunning failed: %i", result);
-		
-	return isRunning;
+	return OutputIsRunning();
 }
 
-CFURLRef AudioPlayer::GetPlayingURL()
+CFURLRef DSPAudioPlayer::GetPlayingURL()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -488,7 +469,7 @@ CFURLRef AudioPlayer::GetPlayingURL()
 #pragma mark Playback Properties
 
 
-SInt64 AudioPlayer::GetCurrentFrame()
+SInt64 DSPAudioPlayer::GetCurrentFrame()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -498,7 +479,7 @@ SInt64 AudioPlayer::GetCurrentFrame()
 	return (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 }
 
-SInt64 AudioPlayer::GetTotalFrames()
+SInt64 DSPAudioPlayer::GetTotalFrames()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -508,7 +489,7 @@ SInt64 AudioPlayer::GetTotalFrames()
 	return currentDecoderState->mTotalFrames;
 }
 
-CFTimeInterval AudioPlayer::GetCurrentTime()
+CFTimeInterval DSPAudioPlayer::GetCurrentTime()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -518,7 +499,7 @@ CFTimeInterval AudioPlayer::GetCurrentTime()
 	return static_cast<CFTimeInterval>(GetCurrentFrame() / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
-CFTimeInterval AudioPlayer::GetTotalTime()
+CFTimeInterval DSPAudioPlayer::GetTotalTime()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -532,7 +513,7 @@ CFTimeInterval AudioPlayer::GetTotalTime()
 #pragma mark Seeking
 
 
-bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
+bool DSPAudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -546,7 +527,7 @@ bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::min(desiredFrame, totalFrames - 1));
 }
 
-bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
+bool DSPAudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -560,7 +541,7 @@ bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::max(0LL, desiredFrame));
 }
 
-bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
+bool DSPAudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -573,7 +554,7 @@ bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
 }
 
-bool AudioPlayer::SeekToFrame(SInt64 frame)
+bool DSPAudioPlayer::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);
 
@@ -599,7 +580,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
-bool AudioPlayer::SupportsSeeking()
+bool DSPAudioPlayer::SupportsSeeking()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -613,7 +594,7 @@ bool AudioPlayer::SupportsSeeking()
 #pragma mark Player Parameters
 
 
-bool AudioPlayer::GetVolume(Float32& volume)
+bool DSPAudioPlayer::GetVolume(Float32& volume)
 {
 	AudioUnit au = NULL;
 	OSStatus auResult = AUGraphNodeInfo(mAUGraph, 
@@ -643,7 +624,7 @@ bool AudioPlayer::GetVolume(Float32& volume)
 	return true;
 }
 
-bool AudioPlayer::SetVolume(Float32 volume)
+bool DSPAudioPlayer::SetVolume(Float32 volume)
 {
 	assert(0 <= volume);
 	assert(volume <= 1);
@@ -674,14 +655,14 @@ bool AudioPlayer::SetVolume(Float32 volume)
 	return true;
 }
 
-bool AudioPlayer::GetPreGain(Float32& preGain)
+bool DSPAudioPlayer::GetPreGain(Float32& preGain)
 {
 	preGain = mPreGain;
 	
 	return true;
 }
 
-bool AudioPlayer::SetPreGain(Float32 preGain)
+bool DSPAudioPlayer::SetPreGain(Float32 preGain)
 {
 	assert(-40.f <= preGain);
 	assert(40.f >= preGain);
@@ -696,7 +677,7 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 #pragma mark DSP Effects
 
 
-bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
+bool DSPAudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
 	// Get the source node for the graph's output node
 	UInt32 numInteractions = 0;
@@ -864,7 +845,7 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	return true;
 }
 
-bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
+bool DSPAudioPlayer::RemoveEffect(AudioUnit effectUnit)
 {
 	assert(NULL != effectUnit);
 	
@@ -997,7 +978,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 #pragma mark Device Management
 
 
-CFStringRef AudioPlayer::CreateOutputDeviceUID()
+CFStringRef DSPAudioPlayer::CreateOutputDeviceUID()
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
@@ -1049,7 +1030,7 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 	return deviceUID;
 }
 
-bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
+bool DSPAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 {
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
@@ -1134,7 +1115,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	return true;
 }
 
-bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
+bool DSPAudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
@@ -1185,7 +1166,7 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate)
 	return true;
 }
 
-bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
+bool DSPAudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
@@ -1261,7 +1242,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 #pragma mark Playlist Management
 
 
-bool AudioPlayer::Enqueue(CFURLRef url)
+bool DSPAudioPlayer::Enqueue(CFURLRef url)
 {
 	assert(NULL != url);
 	
@@ -1278,7 +1259,7 @@ bool AudioPlayer::Enqueue(CFURLRef url)
 	return success;
 }
 
-bool AudioPlayer::Enqueue(AudioDecoder *decoder)
+bool DSPAudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
 	
@@ -1353,7 +1334,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
-bool AudioPlayer::ClearQueuedDecoders()
+bool DSPAudioPlayer::ClearQueuedDecoders()
 {
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1380,7 +1361,7 @@ bool AudioPlayer::ClearQueuedDecoders()
 #pragma mark Callbacks
 
 
-OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
+OSStatus DSPAudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 							 const AudioTimeStamp			*inTimeStamp,
 							 UInt32							inBusNumber,
 							 UInt32							inNumberFrames,
@@ -1439,7 +1420,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	return noErr;
 }
 
-OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
+OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 								const AudioTimeStamp			*inTimeStamp,
 								UInt32							inBusNumber,
 								UInt32							inNumberFrames,
@@ -1501,7 +1482,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 	return noErr;
 }
 
-void * AudioPlayer::DecoderThreadEntry()
+void * DSPAudioPlayer::DecoderThreadEntry()
 {
 	// ========================================
 	// Make ourselves a high priority thread
@@ -1751,7 +1732,7 @@ void * AudioPlayer::DecoderThreadEntry()
 	return NULL;
 }
 
-void * AudioPlayer::CollectorThreadEntry()
+void * DSPAudioPlayer::CollectorThreadEntry()
 {
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
@@ -1781,22 +1762,22 @@ void * AudioPlayer::CollectorThreadEntry()
 }
 
 
-#pragma mark AUGraph Utilities
+#pragma mark Audio Output Utilities
 
 
-OSStatus AudioPlayer::OpenOutput()
+bool DSPAudioPlayer::OpenOutput()
 {
 	OSStatus result = NewAUGraph(&mAUGraph);
-
+	
 	if(noErr != result) {
 		ERR("NewAUGraph failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	// The graph will look like:
 	// MultiChannelMixer -> Effects (if any) -> Output
 	ComponentDescription desc;
-
+	
 	// Set up the mixer node
 	desc.componentType			= kAudioUnitType_Mixer;
 	desc.componentSubType		= kAudioUnitSubType_MultiChannelMixer;
@@ -1806,10 +1787,10 @@ OSStatus AudioPlayer::OpenOutput()
 	
 	AUNode mixerNode;
 	result = AUGraphAddNode(mAUGraph, &desc, &mixerNode);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphAddNode failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	// Set up the output node
@@ -1820,44 +1801,44 @@ OSStatus AudioPlayer::OpenOutput()
 	desc.componentFlagsMask		= 0;
 	
 	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphAddNode failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	result = AUGraphConnectNodeInput(mAUGraph, mixerNode, 0, mOutputNode, 0);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphConnectNodeInput failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	// Install the input callback
 	AURenderCallbackStruct cbs = { myAURenderCallback, this };
 	result = AUGraphSetNodeInputCallback(mAUGraph, mixerNode, 0, &cbs);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphSetNodeInputCallback failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	// Open the graph
 	result = AUGraphOpen(mAUGraph);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphOpen failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	// Initialize the graph
 	result = AUGraphInitialize(mAUGraph);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphInitialize failed: %i", result);
-		return result;
+		return false;
 	}
-
+	
 	// Set the mixer's volume on the input and output
 	AudioUnit au = NULL;
 	result = AUGraphNodeInfo(mAUGraph, 
@@ -1867,9 +1848,9 @@ OSStatus AudioPlayer::OpenOutput()
 	
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
-		return result;
+		return false;
 	}
-
+	
 	result = AudioUnitSetParameter(au,
 								   kMultiChannelMixerParam_Volume,
 								   kAudioUnitScope_Input,
@@ -1879,7 +1860,7 @@ OSStatus AudioPlayer::OpenOutput()
 	
 	if(noErr != result)
 		ERR("AudioUnitSetParameter (kMultiChannelMixerParam_Volume) failed: %i", result);
-
+	
 	result = AudioUnitSetParameter(au,
 								   kMultiChannelMixerParam_Volume,
 								   kAudioUnitScope_Output,
@@ -1892,105 +1873,151 @@ OSStatus AudioPlayer::OpenOutput()
 	
 	// Install the render notification
 	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphAddRenderNotify failed: %i", result);
-		return result;
+		return false;
 	}
-
-	return noErr;
+	
+	return true;
 }
 
-OSStatus AudioPlayer::CloseOutput()
+bool DSPAudioPlayer::CloseOutput()
 {
 	Boolean graphIsRunning = FALSE;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphIsRunning failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	if(graphIsRunning) {
 		result = AUGraphStop(mAUGraph);
-
+		
 		if(noErr != result) {
 			ERR("AUGraphStop failed: %i", result);
-			return result;
+			return false;
 		}
 	}
 	
 	Boolean graphIsInitialized = FALSE;	
 	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphIsInitialized failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	if(graphIsInitialized) {
 		result = AUGraphUninitialize(mAUGraph);
-
+		
 		if(noErr != result) {
 			ERR("AUGraphUninitialize failed: %i", result);
-			return result;
+			return false;
 		}
 	}
 	
 	result = AUGraphClose(mAUGraph);
-
+	
 	if(noErr != result) {
 		ERR("AUGraphClose failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	result = DisposeAUGraph(mAUGraph);
-
+	
 	if(noErr != result) {
 		ERR("DisposeAUGraph failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	mAUGraph = NULL;
 	
-	return noErr;
+	return true;
 }
 
-OSStatus AudioPlayer::ResetOutput()
+bool DSPAudioPlayer::StartOutput()
+{
+	OSStatus result = AUGraphStart(mAUGraph);
+	
+	if(noErr != result) {
+		ERR("AUGraphStart failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
+bool DSPAudioPlayer::StopOutput()
+{
+	OSStatus result = AUGraphStop(mAUGraph);
+	
+	if(noErr != result) {
+		ERR("AUGraphStop failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
+bool DSPAudioPlayer::OutputIsRunning()
+{
+	Boolean isRunning = FALSE;
+	
+	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
+	
+	if(noErr != result) {
+		ERR("AUGraphIsRunning failed: %i", result);
+		return false;
+	}
+	
+	return isRunning;
+}
+
+bool DSPAudioPlayer::ResetOutput()
 {
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	
 	if(noErr != result) {
 		ERR("AUGraphGetNodeCount failed: %i", result);
-		return result;
+		return false;
 	}
 	
 	for(UInt32 i = 0; i < nodeCount; ++i) {
 		AUNode node = 0;
 		result = AUGraphGetIndNode(mAUGraph, i, &node);
+		
 		if(noErr != result) {
 			ERR("AUGraphGetIndNode failed: %i", result);
-			return result;
+			return false;
 		}
 		
 		AudioUnit au = NULL;
 		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		
 		if(noErr != result) {
 			ERR("AUGraphNodeInfo failed: %i", result);
-			return result;
+			return false;
 		}
 		
 		result = AudioUnitReset(au, kAudioUnitScope_Global, 0);
+		
 		if(noErr != result) {
 			ERR("AudioUnitReset failed: %i", result);
-			return result;
+			return false;
 		}
 	}
 	
-	return noErr;
+	return true;
 }
 
-Float64 AudioPlayer::GetAUGraphLatency()
+
+#pragma mark AUGraph Utilities
+
+
+Float64 DSPAudioPlayer::GetAUGraphLatency()
 {
 	Float64 graphLatency = 0;
 	UInt32 nodeCount = 0;
@@ -2033,7 +2060,7 @@ Float64 AudioPlayer::GetAUGraphLatency()
 	return graphLatency;
 }
 
-Float64 AudioPlayer::GetAUGraphTailTime()
+Float64 DSPAudioPlayer::GetAUGraphTailTime()
 {
 	Float64 graphTailTime = 0;
 	UInt32 nodeCount = 0;
@@ -2076,7 +2103,7 @@ Float64 AudioPlayer::GetAUGraphTailTime()
 	return graphTailTime;
 }
 
-OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
+OSStatus DSPAudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
 {
 	assert(NULL != propertyData);
 	assert(0 < propertyDataSize);
@@ -2176,7 +2203,7 @@ OSStatus AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, 
 	return noErr;
 }
 
-OSStatus AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
+OSStatus DSPAudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
 {
 	// ========================================
 	// If the graph is running, stop it
@@ -2400,7 +2427,7 @@ OSStatus AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate
 	return noErr;
 }
 
-OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
+OSStatus DSPAudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
 {
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
@@ -2432,7 +2459,7 @@ OSStatus AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout channelLayout)
 #pragma mark Other Utilities
 
 
-DecoderStateData * AudioPlayer::GetCurrentDecoderState()
+DecoderStateData * DSPAudioPlayer::GetCurrentDecoderState()
 {
 	DecoderStateData *result = NULL;
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
@@ -2456,7 +2483,7 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 	return result;
 }
 
-DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
+DecoderStateData * DSPAudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
 {
 	DecoderStateData *result = NULL;
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {
@@ -2477,7 +2504,7 @@ DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 tim
 	return result;
 }
 
-void AudioPlayer::StopActiveDecoders()
+void DSPAudioPlayer::StopActiveDecoders()
 {
 	// End any still-active decoders
 	for(UInt32 i = 0; i < kActiveDecoderArraySize; ++i) {

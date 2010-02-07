@@ -51,15 +51,15 @@ const UInt32 kActiveDecoderArraySize = 8;
 // ========================================
 // An audio player class
 // ========================================
-class AudioPlayer
+class DSPAudioPlayer
 {
 	
 public:
 	
 	// ========================================
 	// Creation/Destruction
-	AudioPlayer();
-	~AudioPlayer();
+	DSPAudioPlayer();
+	~DSPAudioPlayer();
 	
 	// ========================================
 	// Playback Control
@@ -123,12 +123,18 @@ public:
 private:
 	
 	// ========================================
+	// Audio output utilities
+	bool OpenOutput();
+	bool CloseOutput();
+	
+	bool StartOutput();
+	bool StopOutput();
+	
+	bool OutputIsRunning();
+	bool ResetOutput();
+	
+	// ========================================
 	// AUGraph Utilities
-	OSStatus OpenOutput();
-	OSStatus CloseOutput();
-	
-	OSStatus ResetOutput();
-	
 	Float64 GetAUGraphLatency();
 	Float64 GetAUGraphTailTime();
 	
