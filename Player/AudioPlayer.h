@@ -44,7 +44,7 @@ class DecoderStateData;
 // ========================================
 // Constants
 // ========================================
-const UInt32 kActiveDecoderArraySize = 8;
+#define kActiveDecoderArraySize 8
 
 
 // ========================================
@@ -195,6 +195,8 @@ public:
 										UInt32								inNumberAddresses,
 										const AudioObjectPropertyAddress	inAddresses[]);
 
+	// ========================================
+	// Thread entry points
 	void * DecoderThreadEntry();
 	void * CollectorThreadEntry();
 
