@@ -1435,8 +1435,13 @@ OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
 		// There is nothing to do if no frames were rendered
-		if(0 == mFramesRenderedLastPass)
+		if(0 == mFramesRenderedLastPass) {
+			// If there are no more active decoders, stop playback
+			if(NULL == GetCurrentDecoderState())
+				Stop();
+
 			return noErr;
+		}
 		
 		// mFramesRenderedLastPass contains the number of valid frames that were rendered
 		// However, these could have come from any number of decoders depending on the buffer sizes
@@ -1473,10 +1478,6 @@ OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			
 			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
-
-		// If there are no more active decoders, stop playback
-		if(NULL == GetCurrentDecoderState())
-			Stop();
 	}
 	
 	return noErr;

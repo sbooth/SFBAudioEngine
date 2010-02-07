@@ -1106,11 +1106,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
 	
-	// If there are no decoders in the queue, set up for playback
-	if(NULL == GetCurrentDecoderState() && true == queueEmpty) {
-	}
-	// Otherwise, enqueue this decoder if the format matches
-	else {
+	// This decoder can only be enqueued if the format matches
+	if(NULL != GetCurrentDecoderState() || false == queueEmpty) {
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
@@ -1193,8 +1190,13 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	UInt32 framesAvailableToRead = static_cast<UInt32>(bytesAvailableToRead / mFormat.mBytesPerFrame);
 
 	// The buffers are pre-zeroed so just return
-	if(0 == framesAvailableToRead)
+	if(0 == framesAvailableToRead) {
+		// If there are no decoders in the queue, stop IO
+		if(NULL == GetCurrentDecoderState())
+			Stop();
+		
 		return kAudioHardwareNoError;
+	}
 
 	UInt32 desiredFrames = outOutputData->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame;
 	UInt32 framesToRead = std::min(framesAvailableToRead, desiredFrames);
@@ -1269,10 +1271,6 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 	}
 	
-	// If there are no more active decoders, stop playback
-	if(NULL == GetCurrentDecoderState())
-		Stop();
-
 	return kAudioHardwareNoError;
 }
 
@@ -1289,6 +1287,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 			switch(currentAddress.mSelector) {
 				case kAudioDevicePropertyDeviceIsRunning:
 				{
+#if DEBUG
 					UInt32 isRunning = 0;
 					UInt32 dataSize = sizeof(isRunning);
 					
@@ -1299,11 +1298,14 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 																 &dataSize,
 																 &isRunning);
 					
-					if(kAudioHardwareNoError != result)
+					if(kAudioHardwareNoError != result) {
 						ERR("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
+						continue;
+					}
 
 					LOG("-> kAudioDevicePropertyDeviceIsRunning is %s", isRunning ? "True" : "False");
-					
+#endif
+
 					break;
 				}
 					
@@ -1385,19 +1387,40 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					
 					if(kAudioHardwareNoError != result) {
 						ERR("AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %i", result);
-						return ioErr;
+						continue;
 					}
 
-					printf("-> Virtual format changed: ");
-					asbd.Print(stdout);
+					fprintf(stderr, "-> Virtual format changed: ");
+					asbd.Print(stderr);
 #endif
 
 					break;
 				}
 					
 				case kAudioStreamPropertyPhysicalFormat:
-					LOG("-> kAudioStreamPropertyPhysicalFormat changed");
+				{
+#if DEBUG
+					CAStreamBasicDescription asbd;
+					UInt32 dataSize = sizeof(asbd);
+					
+					OSStatus result = AudioObjectGetPropertyData(inObjectID,
+																 &currentAddress, 
+																 0, 
+																 NULL, 
+																 &dataSize, 
+																 &asbd);
+					
+					if(kAudioHardwareNoError != result) {
+						ERR("AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
+						continue;
+					}
+					
+					fprintf(stderr, "-> Physical format changed: ");
+					asbd.Print(stderr);
+#endif
+
 					break;
+				}
 			}
 		}
 	}
