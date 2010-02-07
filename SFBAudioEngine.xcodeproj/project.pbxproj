@@ -7,9 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		320FB5F2111E13E800CE061E /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
+		320FB5F3111E13E800CE061E /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		32200C661119E69D00F753AA /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 32200C641119E69D00F753AA /* ringbuffer.c */; };
 		32200C671119E69D00F753AA /* ringbuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32200C651119E69D00F753AA /* ringbuffer.h */; };
+		32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		3252E85B10CC9EFD00F1AA23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85510CC9EFD00F1AA23 /* main.m */; };
@@ -25,8 +30,7 @@
 		328AA519111615060091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
 		328AA51A1116151C0091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
 		328AA51F111615390091D56B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
-		32C212DA109111A100BA2493 /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
-		32C212DB109111A100BA2493 /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
 		32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* DecoderStateData.h */; };
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
@@ -47,8 +51,6 @@
 		32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32CA90F810B9E514005A85DA /* mpcdec.framework */; };
 		32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7379510B9978200094C8A /* MusepackDecoder.cpp */; };
 		32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7379610B9978200094C8A /* MusepackDecoder.h */; };
-		32D47120110F5778005FF080 /* AudioPlayer2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D4711E110F5778005FF080 /* AudioPlayer2.cpp */; };
-		32D47121110F5778005FF080 /* AudioPlayer2.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D4711F110F5778005FF080 /* AudioPlayer2.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32E6AB3B1096745400DA998D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB391096744C00DA998D /* main.cpp */; };
 		32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; };
@@ -170,8 +172,6 @@
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
-		32D4711E110F5778005FF080 /* AudioPlayer2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioPlayer2.cpp; sourceTree = "<group>"; };
-		32D4711F110F5778005FF080 /* AudioPlayer2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer2.h; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
@@ -331,8 +331,6 @@
 			children = (
 				328AA025111149970091D56B /* DSPAudioPlayer.cpp */,
 				328AA026111149970091D56B /* DSPAudioPlayer.h */,
-				32D4711E110F5778005FF080 /* AudioPlayer2.cpp */,
-				32D4711F110F5778005FF080 /* AudioPlayer2.h */,
 				322B5D80108C213800CA9BDE /* AudioPlayer.h */,
 				322B5D81108C213800CA9BDE /* AudioPlayer.cpp */,
 				3201ECB810901F08000082BF /* DecoderStateData.h */,
@@ -403,7 +401,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C212DB109111A100BA2493 /* AudioPlayer.h in Headers */,
 				32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */,
 				32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */,
 				32C212E1109111A700BA2493 /* CoreAudioDecoder.h in Headers */,
@@ -418,8 +415,9 @@
 				32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */,
 				32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */,
 				32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */,
-				32D47121110F5778005FF080 /* AudioPlayer2.h in Headers */,
 				32200C671119E69D00F753AA /* ringbuffer.h in Headers */,
+				320FB5F3111E13E800CE061E /* DSPAudioPlayer.h in Headers */,
+				320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -537,7 +535,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C212DA109111A100BA2493 /* AudioPlayer.cpp in Sources */,
 				32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */,
 				32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */,
 				32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */,
@@ -548,8 +545,10 @@
 				32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */,
 				32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */,
 				32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */,
-				32D47120110F5778005FF080 /* AudioPlayer2.cpp in Sources */,
 				32200C661119E69D00F753AA /* ringbuffer.c in Sources */,
+				32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */,
+				320FB5F2111E13E800CE061E /* DSPAudioPlayer.cpp in Sources */,
+				320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,6 +557,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32E6AB3B1096745400DA998D /* main.cpp in Sources */,
+				32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
