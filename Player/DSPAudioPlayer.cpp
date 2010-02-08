@@ -193,6 +193,8 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 	
 	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
 	
+	decoderStateData->ResetBufferList();
+	
 	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
 	
 	// Point ioData at our decoded audio
@@ -344,11 +346,8 @@ DSPAudioPlayer::DSPAudioPlayer()
 	
 	// ========================================
 	// Set up our AUGraph and set pregain to 0
-	OSStatus status = OpenOutput();
-	if(noErr != status) {
-		ERR("OpenOutput failed: %i", status);
+	if(false == OpenOutput())
 		throw std::runtime_error("OpenOutput failed");
-	}
 	
 	if(false == SetPreGain(0))
 		ERR("SetPreGain failed");
@@ -1362,10 +1361,10 @@ bool DSPAudioPlayer::ClearQueuedDecoders()
 
 
 OSStatus DSPAudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
-							 const AudioTimeStamp			*inTimeStamp,
-							 UInt32							inBusNumber,
-							 UInt32							inNumberFrames,
-							 AudioBufferList				*ioData)
+								const AudioTimeStamp			*inTimeStamp,
+								UInt32							inBusNumber,
+								UInt32							inNumberFrames,
+								AudioBufferList					*ioData)
 {
 
 #pragma unused(inTimeStamp)
@@ -1421,10 +1420,10 @@ OSStatus DSPAudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 }
 
 OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
-								const AudioTimeStamp			*inTimeStamp,
-								UInt32							inBusNumber,
-								UInt32							inNumberFrames,
-								AudioBufferList					*ioData)
+								   const AudioTimeStamp				*inTimeStamp,
+								   UInt32							inBusNumber,
+								   UInt32							inNumberFrames,
+								   AudioBufferList					*ioData)
 {
 
 #pragma unused(inTimeStamp)
