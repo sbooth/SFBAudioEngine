@@ -5,6 +5,8 @@
 
 #import "PlayerWindowController.h"
 
+#define DSP_ENABLED 1
+
 #if DSP_ENABLED
 #  include <SFBAudioEngine/DSPAudioPlayer.h>
 #else
@@ -12,7 +14,11 @@
 #endif /* DSP_ENABLED */
 #include <SFBAudioEngine/AudioDecoder.h>
 
-#define PLAYER (static_cast<AudioPlayer *>(_player))
+#if DSP_ENABLED
+#  define PLAYER (static_cast<DSPAudioPlayer *>(_player))
+#else
+#  define PLAYER (static_cast<AudioPlayer *>(_player))
+#endif /* DSP_ENABLED */
 
 @interface PlayerWindowController (Callbacks)
 - (void) renderingStarted:(AudioDecoder *)decoder;
