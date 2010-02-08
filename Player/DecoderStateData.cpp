@@ -33,11 +33,11 @@
 //#include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mBufferList(NULL), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(NULL), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mBufferList(NULL), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
+	: mDecoder(decoder), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mKeepDecoding(true), mReadyForCollection(false)
 {
 	assert(NULL != decoder);
 	
@@ -58,6 +58,8 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 {
 	DeallocateBufferList();
 
+	mBufferCapacityFrames = capacityFrames;
+
 	AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
 	
 	UInt32 numBuffers = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? formatDescription.mChannelsPerFrame : 1;
@@ -68,8 +70,8 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 	mBufferList->mNumberBuffers = numBuffers;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = static_cast<void *>(calloc(capacityFrames, formatDescription.mBytesPerFrame));
-		mBufferList->mBuffers[i].mDataByteSize = capacityFrames * formatDescription.mBytesPerFrame;
+		mBufferList->mBuffers[i].mData = static_cast<void *>(calloc(mBufferCapacityFrames, formatDescription.mBytesPerFrame));
+		mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
 		mBufferList->mBuffers[i].mNumberChannels = channelsPerBuffer;
 	}
 }
@@ -77,9 +79,19 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 void DecoderStateData::DeallocateBufferList()
 {
 	if(NULL != mBufferList) {
+		mBufferCapacityFrames = 0;
+
 		for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
 			free(mBufferList->mBuffers[bufferIndex].mData), mBufferList->mBuffers[bufferIndex].mData = NULL;
 		
 		free(mBufferList), mBufferList = NULL;
 	}
+}
+
+void DecoderStateData::ResetBufferList()
+{
+	AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
+		
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
+		mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
 }

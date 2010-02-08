@@ -49,8 +49,12 @@ public:
 	void AllocateBufferList(UInt32 capacityFrames);
 	void DeallocateBufferList();
 	
+	void ResetBufferList();
+	
 	AudioDecoder			*mDecoder;
+
 	AudioBufferList			*mBufferList;
+	UInt32					mBufferCapacityFrames;
 	
 	SInt64					mTimeStamp;
 	
