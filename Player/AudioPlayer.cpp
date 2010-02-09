@@ -1531,7 +1531,17 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
-			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			UInt32 inputBufferSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mFormat.mBytesPerFrame;
+			UInt32 dataSize = sizeof(inputBufferSize);
+			result = AudioConverterGetProperty(audioConverter, 
+											   kAudioConverterPropertyCalculateInputBufferSize, 
+											   &dataSize, 
+											   &inputBufferSize);
+			
+			if(noErr != result)
+				ERR("AudioConverterGetProperty () failed: %i", result);
+			
+			decoderStateData->AllocateBufferList(inputBufferSize / decoder->GetFormat().mBytesPerFrame);
 			
 			// The stream's format; for now only formats with the same number of channels per buffer are handled properly
 			AudioBufferList *bufferList = allocateBufferList(mFormat.mChannelsPerFrame, 
@@ -1561,7 +1571,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						kAudioObjectPropertyElementMaster 
 					};
 
-					UInt32 dataSize = sizeof(mFormat);
+					dataSize = sizeof(mFormat);
 					
 					result = AudioObjectGetPropertyData(mOutputStreamID,
 														&propertyAddress, 
@@ -1593,6 +1603,18 @@ void * AudioPlayer::DecoderThreadEntry()
 #endif
 
 					// Reallocate buffer memory
+					inputBufferSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mFormat.mBytesPerFrame;
+					dataSize = sizeof(inputBufferSize);
+					result = AudioConverterGetProperty(audioConverter, 
+													   kAudioConverterPropertyCalculateInputBufferSize, 
+													   &dataSize, 
+													   &inputBufferSize);
+					
+					if(noErr != result)
+						ERR("AudioConverterGetProperty () failed: %i", result);
+					
+					decoderStateData->AllocateBufferList(inputBufferSize / decoder->GetFormat().mBytesPerFrame);
+
 					deallocateBufferList(bufferList), bufferList = NULL;
 					
 					bufferList = allocateBufferList(mFormat.mChannelsPerFrame, 
