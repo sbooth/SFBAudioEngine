@@ -53,8 +53,8 @@
 // ========================================
 // Macros
 // ========================================
-#define RING_BUFFER_SIZE_BYTES					(16384 * 2 * 2)
-#define RING_BUFFER_WRITE_CHUNK_SIZE_BYTES		(2048 * 2 * 2)
+#define RING_BUFFER_SIZE_FRAMES					16384
+#define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
 
 
@@ -226,7 +226,9 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 	assert(NULL != ioNumberDataPackets);
 	
 	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
-	
+
+	decoderStateData->ResetBufferList();
+
 	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
 
 	// Point ioData at our decoded audio
@@ -244,12 +246,8 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFormatChanged(false), mDecoderQueue()
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFormatChanged(false), mDecoderQueue(), mRingBuffer(NULL)
 {
-	mRingBuffer = jack_ringbuffer_create(RING_BUFFER_SIZE_BYTES + 1);
-	if(NULL == mRingBuffer)
-		throw std::bad_alloc();
-	
 	// ========================================
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
 	kern_return_t result = semaphore_create(mach_task_self(), &mDecoderSemaphore, SYNC_POLICY_FIFO, 0);
@@ -498,7 +496,21 @@ SInt64 AudioPlayer::GetCurrentFrame()
 	if(NULL == currentDecoderState)
 		return -1;
 	
-	return (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
+	if(-1 == currentDecoderState->mFrameToSeek) {
+		Float64 decoderSampleRate = currentDecoderState->mDecoder->GetFormat().mSampleRate;
+		Float64 streamSampleRate = mFormat.mSampleRate;
+		
+		SInt64 currentFrame = currentDecoderState->mFramesRendered;
+		
+		if(decoderSampleRate != streamSampleRate) {
+			Float64 sampleRateRatio = decoderSampleRate / streamSampleRate;
+			currentFrame = static_cast<SInt64>(currentFrame * sampleRateRatio);
+		}
+		
+		return currentFrame;
+	}
+	else
+		return currentDecoderState->mFrameToSeek;
 }
 
 SInt64 AudioPlayer::GetTotalFrames()
@@ -1106,8 +1118,11 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	if(0 != lockResult)
 		ERR("pthread_mutex_unlock failed: %i", lockResult);
 	
-	// This decoder can only be enqueued if the format matches
-	if(NULL != GetCurrentDecoderState() || false == queueEmpty) {
+	// If there are no decoders in the queue, set up for playback
+	if(NULL == GetCurrentDecoderState() && true == queueEmpty) {
+	}
+	// Otherwise, enqueue this decoder if the format matches
+	else {
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
@@ -1167,11 +1182,11 @@ bool AudioPlayer::ClearQueuedDecoders()
 
 
 OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
-							  const AudioTimeStamp	*inNow,
-							  const AudioBufferList	*inInputData,
-							  const AudioTimeStamp	*inInputTime,
-							  AudioBufferList		*outOutputData,
-							  const AudioTimeStamp	*inOutputTime)
+							 const AudioTimeStamp	*inNow,
+							 const AudioBufferList	*inInputData,
+							 const AudioTimeStamp	*inInputTime,
+							 AudioBufferList		*outOutputData,
+							 const AudioTimeStamp	*inOutputTime)
 {
 
 #pragma unused(inNow)
@@ -1181,7 +1196,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	assert(inDevice == mOutputDeviceID);
 	assert(NULL != outOutputData);
-	
+
 	// ========================================
 	// RENDERING
 
@@ -1214,7 +1229,9 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	size_t bytesAvailableToWrite = jack_ringbuffer_write_space(static_cast<jack_ringbuffer_t *>(mRingBuffer));
-	if(RING_BUFFER_WRITE_CHUNK_SIZE_BYTES <= bytesAvailableToWrite)
+	UInt32 framesAvailableToWrite = static_cast<UInt32>(bytesAvailableToWrite / mFormat.mBytesPerFrame);
+	
+	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite)
 		semaphore_signal(mDecoderSemaphore);
 
 	// ========================================
@@ -1234,28 +1251,29 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
 	// in the proper order multiple passes are made here
 	while(NULL != decoderState) {
+		// If sample rate conversion was performed, it is necessary to adjust the frame counts
+		Float64 decoderSampleRate = decoderState->mDecoder->GetFormat().mSampleRate;
+		Float64 streamSampleRate = mFormat.mSampleRate;
+
+		// Adjust for the sample rate conversion here
+		SInt64 adjustedDecoderTotalFrames = decoderState->mTotalFrames;
+
+		if(decoderSampleRate != streamSampleRate) {
+			Float64 sampleRateRatio = streamSampleRate / decoderSampleRate;
+			adjustedDecoderTotalFrames = static_cast<SInt64>(adjustedDecoderTotalFrames * sampleRateRatio);
+		}
+		
 		SInt64 timeStamp = decoderState->mTimeStamp;
 		
-		SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
+		SInt64 decoderFramesRemaining = adjustedDecoderTotalFrames - decoderState->mFramesRendered;
 		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(framesRead));
 		
 		if(0 == decoderState->mFramesRendered)
 			decoderState->mDecoder->PerformRenderingStartedCallback();
 		
-		// If sample rate conversion was performed, the number of frames from the decoder
-		// (in the decoder's sample rate) could be more or less than was sent to the hardware
-		Float64 decoderSampleRate = decoderState->mDecoder->GetFormat().mSampleRate;
-		Float64 streamSampleRate = mFormat.mSampleRate;
+		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
 		
-		if(decoderSampleRate != streamSampleRate) {
-			Float64 sampleRateRatio = decoderSampleRate / streamSampleRate;
-			UInt32 adjustedFrameCount = static_cast<UInt32>(framesFromThisDecoder * sampleRateRatio);
-			OSAtomicAdd64Barrier(adjustedFrameCount, &decoderState->mFramesRendered);
-		}
-		else
-			OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
-		
-		if(decoderState->mFramesRendered == decoderState->mTotalFrames) {
+		if(decoderState->mFramesRendered == adjustedDecoderTotalFrames) {
 			decoderState->mDecoder->PerformRenderingFinishedCallback();
 			
 			// Since rendering is finished, signal the collector to clean up this decoder
@@ -1275,8 +1293,8 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 }
 
 OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
-												  UInt32							inNumberAddresses,
-												  const AudioObjectPropertyAddress	inAddresses[])
+												 UInt32								inNumberAddresses,
+												 const AudioObjectPropertyAddress	inAddresses[])
 {
 	// ========================================
 	// AudioDevice properties
@@ -1513,13 +1531,13 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
-			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_BYTES / mFormat.mBytesPerFrame);
+			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 			
 			// The stream's format; for now only formats with the same number of channels per buffer are handled properly
 			AudioBufferList *bufferList = allocateBufferList(mFormat.mChannelsPerFrame, 
 															 mFormat.mBytesPerFrame, 
 															 !(kAudioFormatFlagIsNonInterleaved & mFormat.mFormatFlags),
-															 RING_BUFFER_WRITE_CHUNK_SIZE_BYTES / mFormat.mBytesPerFrame);
+															 RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -1577,10 +1595,13 @@ void * AudioPlayer::DecoderThreadEntry()
 					bufferList = allocateBufferList(mFormat.mChannelsPerFrame, 
 													mFormat.mBytesPerFrame, 
 													!(kAudioFormatFlagIsNonInterleaved & mFormat.mFormatFlags),
-													RING_BUFFER_WRITE_CHUNK_SIZE_BYTES / mFormat.mBytesPerFrame);
+													RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 					
-					// Reset the ring buffer
-					jack_ringbuffer_reset(static_cast<jack_ringbuffer_t *>(mRingBuffer));
+					// Reallocate the ring buffer
+					if(mRingBuffer)
+						jack_ringbuffer_free(static_cast<jack_ringbuffer_t *>(mRingBuffer)), mRingBuffer = NULL;
+					
+					mRingBuffer = jack_ringbuffer_create((RING_BUFFER_SIZE_FRAMES * mFormat.mBytesPerFrame) + 1);
 					
 					OSAtomicCompareAndSwap32Barrier(true, false, reinterpret_cast<int32_t *>(&mFormatChanged));
 
@@ -1595,9 +1616,10 @@ void * AudioPlayer::DecoderThreadEntry()
 				for(;;) {
 					// Determine how many frames are available in the ring buffer
 					size_t bytesAvailableToWrite = jack_ringbuffer_write_space(static_cast<const jack_ringbuffer_t *>(mRingBuffer));
+					UInt32 framesAvailableToWrite = static_cast<UInt32>(bytesAvailableToWrite / mFormat.mBytesPerFrame);
 					
-					// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_BYTES
-					if(bytesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_BYTES) {
+					// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
+					if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite) {
 						
 						// Seek to the specified frame
 						if(-1 != decoderStateData->mFrameToSeek) {
@@ -1615,6 +1637,17 @@ void * AudioPlayer::DecoderThreadEntry()
 							// If the seek failed do not update the counters
 							if(-1 != newFrame) {
 								SInt64 framesSkipped = newFrame - currentFrameBeforeSeeking;
+								
+								// Frames decoded are tracked in the file's native sample rate,
+								// while frames rendered are tracked in the device's sample rate
+								// Attempt to marry them here
+								Float64 decoderSampleRate = decoder->GetFormat().mSampleRate;
+								Float64 streamSampleRate = mFormat.mSampleRate;
+								
+								if(decoderSampleRate != streamSampleRate) {
+									Float64 sampleRateRatio = streamSampleRate / decoderSampleRate;
+									newFrame = static_cast<SInt64>(newFrame * sampleRateRatio);
+								}
 								
 								// Treat the skipped frames as if they were rendered, and update the counters accordingly
 								if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFramesRendered, newFrame, &decoderStateData->mFramesRendered))
@@ -1644,9 +1677,9 @@ void * AudioPlayer::DecoderThreadEntry()
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 						
 						// Read the input chunk, converting from the decoder's format to the stream's virtual format
-						UInt32 framesDecoded = RING_BUFFER_WRITE_CHUNK_SIZE_BYTES / mFormat.mBytesPerFrame;
+						UInt32 framesDecoded = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES;
 						UInt32 framesWritten = 0;
-						
+
 						result = AudioConverterFillComplexBuffer(audioConverter, 
 																 myAudioConverterComplexInputDataProc,
 																 decoderStateData,
@@ -1861,6 +1894,12 @@ bool AudioPlayer::OpenOutput()
 	// For now, use the first stream
 	if(false == SetOutputStreamID(audioStreams[0]))
 		return false;
+	
+	// Allocate the ring buffer
+	if(mRingBuffer)
+		jack_ringbuffer_free(static_cast<jack_ringbuffer_t *>(mRingBuffer)), mRingBuffer = NULL;
+	
+	mRingBuffer = jack_ringbuffer_create((RING_BUFFER_SIZE_FRAMES * mFormat.mBytesPerFrame) + 1);
 	
 	return true;
 }
