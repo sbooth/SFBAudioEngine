@@ -1551,6 +1551,9 @@ void * AudioPlayer::DecoderThreadEntry()
 				// and perform otherwise thread-unsafe operations
 				if(mFormatChanged) {
 
+					// Determine if there was a sample rate change
+					Float64 oldSampleRate = mFormat.mSampleRate;
+					
 					// Get the stream's new virtual format
 					AudioObjectPropertyAddress propertyAddress = { 
 						kAudioStreamPropertyVirtualFormat, 
@@ -1607,7 +1610,18 @@ void * AudioPlayer::DecoderThreadEntry()
 
 					currentTimeStamp = 0;
 					
-					// Restart IO
+					Float64 streamSampleRate = mFormat.mSampleRate;
+
+					// If the sample rate changed, adjust the frames rendered counter accordingly
+					if(oldSampleRate != streamSampleRate) {
+						Float64 sampleRateRatio = streamSampleRate / oldSampleRate;
+						SInt64 adjustedFramesRendered = static_cast<SInt64>(decoderStateData->mDecoder->GetCurrentFrame() * sampleRateRatio);
+
+						if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFramesRendered, adjustedFramesRendered, &decoderStateData->mFramesRendered))
+							ERR("OSAtomicCompareAndSwap64Barrier failed");
+					}
+					
+					// Restart IO (it was stopped automatically when the virtual format changed)
 					if(IsPlaying())
 						StartOutput();
 				}
