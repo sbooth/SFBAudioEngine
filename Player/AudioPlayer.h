@@ -99,11 +99,6 @@ public:
 	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
 
 	// ========================================
-	// The format and channel layout of the audio being sent to the output device
-	bool GetFormat(AudioStreamBasicDescription& format);
-	bool GetChannelLayout(AudioChannelLayout& channelLayout);
-
-	// ========================================
 	// Device Management
 	CFStringRef CreateOutputDeviceUID();
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
@@ -117,8 +112,15 @@ public:
 	bool StartHoggingOutputDevice();
 	bool StopHoggingOutputDevice();
 
+	// ========================================
+	// Stream Management
 	AudioStreamID GetOutputStreamID()				{ return mOutputStreamID; }
 	bool SetOutputStreamID(AudioStreamID streamID);
+	
+	bool GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat);
+	
+	bool GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
+	bool SetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
 	
 	// ========================================
 	// Playlist Management

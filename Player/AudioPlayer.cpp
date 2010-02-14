@@ -690,18 +690,6 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 	return true;
 }
 
-bool AudioPlayer::GetFormat(AudioStreamBasicDescription& format)
-{
-	format = mFormat;
-	return true;
-}
-
-bool AudioPlayer::GetChannelLayout(AudioChannelLayout& channelLayout)
-{
-	channelLayout = mChannelLayout;
-	return true;
-}
-
 
 #pragma mark Device Management
 
@@ -1073,6 +1061,79 @@ bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
 	
 	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectAddPropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
+bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat)
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioStreamPropertyVirtualFormat, 
+		kAudioObjectPropertyScopeGlobal, 
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	UInt32 dataSize = sizeof(virtualFormat);
+	
+	OSStatus result = AudioObjectGetPropertyData(mOutputStreamID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &virtualFormat);	
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
+bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat)
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioStreamPropertyPhysicalFormat, 
+		kAudioObjectPropertyScopeGlobal, 
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	UInt32 dataSize = sizeof(physicalFormat);
+	
+	OSStatus result = AudioObjectGetPropertyData(mOutputStreamID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &physicalFormat);	
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
+bool AudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat)
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioStreamPropertyPhysicalFormat, 
+		kAudioObjectPropertyScopeGlobal, 
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	OSStatus result = AudioObjectSetPropertyData(mOutputStreamID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 sizeof(physicalFormat),
+												 &physicalFormat);	
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectSetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
 		return false;
 	}
 	
@@ -1533,6 +1594,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
 			UInt32 inputBufferSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mFormat.mBytesPerFrame;
 			UInt32 dataSize = sizeof(inputBufferSize);
+
 			result = AudioConverterGetProperty(audioConverter, 
 											   kAudioConverterPropertyCalculateInputBufferSize, 
 											   &dataSize, 
@@ -1560,7 +1622,8 @@ void * AudioPlayer::DecoderThreadEntry()
 				// If mFormatChanged is true, output will not be running so it is safe to monkey with the ring buffer
 				// and perform otherwise thread-unsafe operations
 				if(mFormatChanged) {
-
+					LOG("Virtual format changed while decoding");
+					
 					// Determine if there was a sample rate change
 					Float64 oldSampleRate = mFormat.mSampleRate;
 					
