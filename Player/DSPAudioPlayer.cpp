@@ -1553,7 +1553,17 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
-			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			UInt32 inputBufferSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mFormat.mBytesPerFrame;
+			UInt32 dataSize = sizeof(inputBufferSize);
+			result = AudioConverterGetProperty(audioConverter, 
+											   kAudioConverterPropertyCalculateInputBufferSize, 
+											   &dataSize, 
+											   &inputBufferSize);
+			
+			if(noErr != result)
+				ERR("AudioConverterGetProperty () failed: %i", result);
+			
+			decoderStateData->AllocateBufferList(inputBufferSize / decoder->GetFormat().mBytesPerFrame);
 
 			// The AUGraph expects the canonical Core Audio format
 			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
