@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -161,8 +161,8 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 
 		// Advance the write pointers and update the capacity
 		for(UInt32 i = 0; i < bufferListAlias->mNumberBuffers; ++i) {
-			float *buf									= static_cast<float *>(bufferListAlias->mBuffers[i].mData);
-			bufferListAlias->mBuffers[i].mData			= static_cast<void *>(buf + framesRead);
+			int8_t *buf									= static_cast<int8_t *>(bufferListAlias->mBuffers[i].mData);
+			bufferListAlias->mBuffers[i].mData			= static_cast<void *>(buf + (framesRead * mFormat.mBytesPerFrame));
 
 			bufferList->mBuffers[i].mDataByteSize		+= bufferListAlias->mBuffers[i].mDataByteSize;
 			
