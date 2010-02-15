@@ -38,6 +38,7 @@
 // Forward declarations
 // ========================================
 class AudioDecoder;
+class CARingBuffer;
 class DecoderStateData;
 
 
@@ -46,6 +47,15 @@ class DecoderStateData;
 // ========================================
 #define kActiveDecoderArraySize 8
 
+
+// ========================================
+// Enums
+// ========================================
+enum {
+	eAudioPlayerFlagVirtualFormatChanged	= 1 << 0,
+	eAudioPlayerFlagSeekRequested			= 1 << 1,
+	eAudioPlayerFlagPerformSeek				= 1 << 2
+};
 
 // ========================================
 // An audio player class
@@ -120,7 +130,7 @@ public:
 	bool GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat);
 	
 	bool GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
-	bool SetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
+	bool SetOutputStreamPhysicalFormat(const AudioStreamBasicDescription& physicalFormat);
 	
 	// ========================================
 	// Playlist Management
@@ -143,9 +153,6 @@ private:
 	bool OutputIsRunning();
 	bool ResetOutput();
 	
-	bool SetFormat(AudioStreamBasicDescription format);
-	bool SetChannelLayout(AudioChannelLayout channelLayout);
-
 	bool OutputDeviceIsHogged();
 
 	// ========================================
@@ -155,6 +162,8 @@ private:
 	DecoderStateData * GetCurrentDecoderState();
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
 
+	bool CreateConverterAndConversionBuffer();
+	
 	// ========================================
 	// Data Members
 	AudioDeviceID						mOutputDeviceID;
@@ -162,16 +171,21 @@ private:
 	
 	AudioStreamID						mOutputStreamID;
 
-	AudioStreamBasicDescription			mFormat;
-	UInt32								mFormatChanged;
-	AudioChannelLayout					mChannelLayout;
+	AudioStreamBasicDescription			mRingBufferFormat;
+	AudioStreamBasicDescription			mStreamVirtualFormat;
+//	AudioChannelLayout					mChannelLayout;
+
+	AudioConverterRef					mConverter;
+	AudioBufferList						*mConversionBuffer;
+
+	UInt32								mFlags;
 
 	bool								mIsPlaying;
 
 	std::deque<AudioDecoder *>			mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
-	void								*mRingBuffer;
+	CARingBuffer						*mRingBuffer;
 	pthread_mutex_t						mMutex;
 	
 	pthread_t							mDecoderThread;
@@ -181,6 +195,10 @@ private:
 	pthread_t							mCollectorThread;
 	semaphore_t							mCollectorSemaphore;
 	bool								mKeepCollecting;
+
+	SInt64								mFramesDecoded;
+	SInt64								mFramesRendered;
+	UInt32								mFramesRenderedLastPass;
 
 public:
 
@@ -197,6 +215,11 @@ public:
 										UInt32								inNumberAddresses,
 										const AudioObjectPropertyAddress	inAddresses[]);
 
+	OSStatus FillConversionBuffer(AudioConverterRef				inAudioConverter,
+								  UInt32						*ioNumberDataPackets,
+								  AudioBufferList				*ioData,
+								  AudioStreamPacketDescription	**outDataPacketDescription);
+	
 	// ========================================
 	// Thread entry points
 	void * DecoderThreadEntry();
