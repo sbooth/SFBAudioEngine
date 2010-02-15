@@ -7,13 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		320FB5F2111E13E800CE061E /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
-		320FB5F3111E13E800CE061E /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
+		320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
-		32200C661119E69D00F753AA /* ringbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 32200C641119E69D00F753AA /* ringbuffer.c */; };
-		32200C671119E69D00F753AA /* ringbuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32200C651119E69D00F753AA /* ringbuffer.h */; };
 		32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
@@ -118,8 +116,6 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
-		32200C641119E69D00F753AA /* ringbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ringbuffer.c; sourceTree = "<group>"; };
-		32200C651119E69D00F753AA /* ringbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ringbuffer.h; sourceTree = "<group>"; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		322B5B2E108BA69F00CA9BDE /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -281,15 +277,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		32200C631119E69D00F753AA /* jack */ = {
-			isa = PBXGroup;
-			children = (
-				32200C641119E69D00F753AA /* ringbuffer.c */,
-				32200C651119E69D00F753AA /* ringbuffer.h */,
-			);
-			path = jack;
-			sourceTree = "<group>";
-		};
 		322B5B2B108BA68E00CA9BDE /* Configs */ = {
 			isa = PBXGroup;
 			children = (
@@ -342,7 +329,6 @@
 		322B5D91108C21E000CA9BDE /* ThirdParty */ = {
 			isa = PBXGroup;
 			children = (
-				32200C631119E69D00F753AA /* jack */,
 				322B5D92108C21F000CA9BDE /* PublicUtility */,
 			);
 			path = ThirdParty;
@@ -415,9 +401,8 @@
 				32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */,
 				32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */,
 				32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */,
-				32200C671119E69D00F753AA /* ringbuffer.h in Headers */,
-				320FB5F3111E13E800CE061E /* DSPAudioPlayer.h in Headers */,
 				320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */,
+				320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -545,10 +530,9 @@
 				32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */,
 				32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */,
 				32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */,
-				32200C661119E69D00F753AA /* ringbuffer.c in Sources */,
 				32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */,
-				320FB5F2111E13E800CE061E /* DSPAudioPlayer.cpp in Sources */,
 				320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */,
+				320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
