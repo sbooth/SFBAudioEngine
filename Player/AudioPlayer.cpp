@@ -1512,6 +1512,12 @@ OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
 //	UInt32 framesAvailableToRead = static_cast<UInt32>(endTime - startTime);
 	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
 
+	// Nothing to read
+	if(0 == framesAvailableToRead) {
+		*ioNumberDataPackets = 0;
+		return noErr;
+	}
+	
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = std::min(framesAvailableToRead, *ioNumberDataPackets);
 
@@ -2100,10 +2106,7 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 	}
 	
 	// Calculate how large the conversion buffer must be
-	bool virtualFormatIsInterleaved = !(kAudioFormatFlagIsNonInterleaved & mStreamVirtualFormat.mFormatFlags);
-	UInt32 virtualFormatNumberInterleavedChannels = (virtualFormatIsInterleaved ? mStreamVirtualFormat.mChannelsPerFrame: 1);
-	
-	UInt32 bufferSizeBytes = bufferSizeFrames * mStreamVirtualFormat.mBytesPerFrame * virtualFormatNumberInterleavedChannels;
+	UInt32 bufferSizeBytes = bufferSizeFrames * mStreamVirtualFormat.mBytesPerFrame;
 	dataSize = sizeof(bufferSizeBytes);
 	
 	result = AudioConverterGetProperty(mConverter, 
@@ -2118,12 +2121,11 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 	
 	// Allocate the conversion buffer
 	bool ringBufferFormatIsInterleaved = !(kAudioFormatFlagIsNonInterleaved & mRingBufferFormat.mFormatFlags);
-	UInt32 ringBufferFormatNumberInterleavedChannels = (ringBufferFormatIsInterleaved ? mRingBufferFormat.mChannelsPerFrame: 1);
 	
 	mConversionBuffer = allocateBufferList(mRingBufferFormat.mChannelsPerFrame, 
 										   mRingBufferFormat.mBytesPerFrame, 
 										   ringBufferFormatIsInterleaved, 
-										   bufferSizeBytes / (mRingBufferFormat.mBytesPerFrame * ringBufferFormatNumberInterleavedChannels));
+										   bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
 
 	return true;
 }
