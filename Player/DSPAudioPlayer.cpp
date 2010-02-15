@@ -1561,7 +1561,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 											   &inputBufferSize);
 			
 			if(noErr != result)
-				ERR("AudioConverterGetProperty () failed: %i", result);
+				ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
 			
 			decoderStateData->AllocateBufferList(inputBufferSize / decoder->GetFormat().mBytesPerFrame);
 
