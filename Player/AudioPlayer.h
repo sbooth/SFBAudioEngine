@@ -53,8 +53,7 @@ class DecoderStateData;
 // ========================================
 enum {
 	eAudioPlayerFlagVirtualFormatChanged	= 1 << 0,
-	eAudioPlayerFlagSeekRequested			= 1 << 1,
-	eAudioPlayerFlagPerformSeek				= 1 << 2
+	eAudioPlayerFlagIsSeeking				= 1 << 1
 };
 
 // ========================================

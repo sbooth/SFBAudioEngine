@@ -1266,6 +1266,10 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		// The buffers are pre-zeroed so just return
 		return kAudioHardwareNoError;
 	}
+
+	// Don't render during seeks
+	if(eAudioPlayerFlagIsSeeking & mFlags)
+		return kAudioHardwareNoError;
 	
 	// If the ring buffer doesn't contain any valid audio, skip some work
 	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
@@ -1617,6 +1621,8 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// Seek to the specified frame
 						if(-1 != decoderStateData->mFrameToSeek) {
+							OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagIsSeeking */, &mFlags);
+							
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
 							
 							SInt64 newFrame = decoder->SeekToFrame(decoderStateData->mFrameToSeek);
@@ -1640,8 +1646,17 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
+								// This is safe to call at this point, because eAudioPlayerFlagIsSeeking is set so
+								// no rendering is being performed
+								OSStatus result = AudioConverterReset(mConverter);
+								
+								if(noErr != result)
+									ERR("AudioConverterReset failed: %d", result);
+								
 								ResetOutput();
 							}
+
+							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagIsSeeking */, &mFlags);
 						}
 						
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
