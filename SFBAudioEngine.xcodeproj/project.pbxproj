@@ -17,6 +17,8 @@
 		3205E42B1130847C00FD9DAD /* AIFFMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4291130847C00FD9DAD /* AIFFMetadata.h */; };
 		3205E43E113085AE00FD9DAD /* MP3Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E43C113085AE00FD9DAD /* MP3Metadata.cpp */; };
 		3205E43F113085AE00FD9DAD /* MP3Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E43D113085AE00FD9DAD /* MP3Metadata.h */; };
+		3205E45C11308F8C00FD9DAD /* MusepackMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E45A11308F8C00FD9DAD /* MusepackMetadata.cpp */; };
+		3205E45D11308F8C00FD9DAD /* MusepackMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */; };
 		320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
 		320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -156,6 +158,8 @@
 		3205E4291130847C00FD9DAD /* AIFFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AIFFMetadata.h; sourceTree = "<group>"; };
 		3205E43C113085AE00FD9DAD /* MP3Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MP3Metadata.cpp; sourceTree = "<group>"; };
 		3205E43D113085AE00FD9DAD /* MP3Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP3Metadata.h; sourceTree = "<group>"; };
+		3205E45A11308F8C00FD9DAD /* MusepackMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackMetadata.cpp; sourceTree = "<group>"; };
+		3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackMetadata.h; sourceTree = "<group>"; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		322B5B2E108BA69F00CA9BDE /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -458,6 +462,8 @@
 		32EA67F5112BC4AE006C26F1 /* Metadata */ = {
 			isa = PBXGroup;
 			children = (
+				3205E45A11308F8C00FD9DAD /* MusepackMetadata.cpp */,
+				3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */,
 				3205E43C113085AE00FD9DAD /* MP3Metadata.cpp */,
 				3205E43D113085AE00FD9DAD /* MP3Metadata.h */,
 				3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */,
@@ -515,6 +521,7 @@
 				3205E41A1130840A00FD9DAD /* SetID3v2TagFromMetadata.h in Headers */,
 				3205E42B1130847C00FD9DAD /* AIFFMetadata.h in Headers */,
 				3205E43F113085AE00FD9DAD /* MP3Metadata.h in Headers */,
+				3205E45D11308F8C00FD9DAD /* MusepackMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -657,6 +664,7 @@
 				3205E4191130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp in Sources */,
 				3205E42A1130847C00FD9DAD /* AIFFMetadata.cpp in Sources */,
 				3205E43E113085AE00FD9DAD /* MP3Metadata.cpp in Sources */,
+				3205E45C11308F8C00FD9DAD /* MusepackMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

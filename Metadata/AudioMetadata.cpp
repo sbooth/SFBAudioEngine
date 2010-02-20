@@ -39,6 +39,7 @@
 #include "MP4Metadata.h"
 #include "WAVEMetadata.h"
 #include "AIFFMetadata.h"
+#include "MusepackMetadata.h"
 
 
 // ========================================
@@ -106,6 +107,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	decoderExtensions = AIFFMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = MusepackMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
@@ -139,6 +144,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = AIFFMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = MusepackMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -274,6 +283,15 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					try {
 						if(AIFFMetadata::HandlesFilesWithExtension(pathExtension))
 							metadata = new AIFFMetadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(MusepackMetadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new MusepackMetadata(url);
 					}
 					
 					catch(std::exception& e) {
