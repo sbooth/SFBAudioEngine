@@ -29,12 +29,11 @@
  */
 
 #include <taglib/mpcfile.h>
+#include <taglib/tag.h>
 
 #include "AudioEngineDefines.h"
 #include "MusepackMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromID3v2Tag.h"
-#include "SetID3v2TagFromMetadata.h"
 
 
 #pragma mark Static Methods
@@ -257,7 +256,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to Musepack metadata"), ""));
+								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 

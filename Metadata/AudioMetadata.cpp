@@ -40,6 +40,7 @@
 #include "WAVEMetadata.h"
 #include "AIFFMetadata.h"
 #include "MusepackMetadata.h"
+#include "OggVorbisMetadata.h"
 
 
 // ========================================
@@ -111,6 +112,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	decoderExtensions = MusepackMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = OggVorbisMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
@@ -148,6 +153,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = MusepackMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = OggVorbisMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -292,6 +301,15 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					try {
 						if(MusepackMetadata::HandlesFilesWithExtension(pathExtension))
 							metadata = new MusepackMetadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(OggVorbisMetadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new OggVorbisMetadata(url);
 					}
 					
 					catch(std::exception& e) {
