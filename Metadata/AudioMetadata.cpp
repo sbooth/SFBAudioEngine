@@ -35,6 +35,7 @@
 #include "AudioMetadata.h"
 #include "FLACMetadata.h"
 #include "WavPackMetadata.h"
+#include "MP4Metadata.h"
 
 
 // ========================================
@@ -86,6 +87,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	decoderExtensions = WavPackMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = MP4Metadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
@@ -103,6 +108,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = WavPackMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = MP4Metadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -202,6 +211,15 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					try {
 						if(WavPackMetadata::HandlesFilesWithExtension(pathExtension))
 							metadata = new WavPackMetadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(MP4Metadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new MP4Metadata(url);
 					}
 					
 					catch(std::exception& e) {

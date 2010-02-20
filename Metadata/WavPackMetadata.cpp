@@ -28,12 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <CoreServices/CoreServices.h>
-#include <AudioToolbox/AudioFormat.h>
-#include <libkern/OSAtomic.h>
-#include <stdexcept>
-#include <typeinfo>
-
 #include <wavpack/wavpack.h>
 
 #include "AudioEngineDefines.h"
@@ -231,7 +225,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -440,7 +434,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
