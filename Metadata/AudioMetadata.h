@@ -44,41 +44,9 @@ enum {
 	AudioMetadataInputOutputError					= 2
 };
 
-// ========================================
-// Key names for the metadata dictionary
-// ========================================
-extern const CFStringRef		kMetadataTitleKey;					// CFStringRef
-extern const CFStringRef		kMetadataAlbumTitleKey;				// CFStringRef
-extern const CFStringRef		kMetadataArtistKey;					// CFStringRef
-extern const CFStringRef		kMetadataAlbumArtistKey;			// CFStringRef
-extern const CFStringRef		kMetadataGenreKey;					// CFStringRef
-extern const CFStringRef		kMetadataComposerKey;				// CFStringRef
-extern const CFStringRef		kMetadataReleaseDateKey;			// CFStringRef
-extern const CFStringRef		kMetadataCompilationKey;			// CFBooleanRef
-extern const CFStringRef		kMetadataTrackNumberKey;			// CFNumberRef
-extern const CFStringRef		kMetadataTrackTotalKey;				// CFNumberRef
-extern const CFStringRef		kMetadataDiscNumberKey;				// CFNumberRef
-extern const CFStringRef		kMetadataDiscTotalKey;				// CFNumberRef
-extern const CFStringRef		kMetadataLyricsKey;					// CFStringRef
-extern const CFStringRef		kMetadataCommentKey;				// CFStringRef
-extern const CFStringRef		kMetadataISRCKey;					// CFStringRef
-extern const CFStringRef		kMetadataMCNKey;					// CFStringRef
-extern const CFStringRef		kMetadataMusicBrainzAlbumIDKey;		// CFStringRef
-extern const CFStringRef		kMetadataMusicBrainzTrackIDKey;		// CFStringRef
-extern const CFStringRef		kMetadataAdditionalMetadataKey;		// CFDictionaryRef
-
-extern const CFStringRef		kReplayGainReferenceLoudnessKey;	// CFNumberRef
-extern const CFStringRef		kReplayGainTrackGainKey;			// CFNumberRef
-extern const CFStringRef		kReplayGainTrackPeakKey;			// CFNumberRef
-extern const CFStringRef		kReplayGainAlbumGainKey;			// CFNumberRef
-extern const CFStringRef		kReplayGainAlbumPeakKey;			// CFNumberRef
-
-//extern const CFStringRef		kCueSheetKey;						// CFStringRef
-extern const CFStringRef		kAlbumArtFrontCoverKey;				// CFDataRef
-
 
 // ========================================
-//
+// Base class for all audio metadata reader/writer classes
 // ========================================
 class AudioMetadata
 {
@@ -102,7 +70,7 @@ public:
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
-	// The core functionality
+	// File access
 	virtual bool ReadMetadata(CFErrorRef *error = NULL) = 0;
 	virtual bool WriteMetadata(CFErrorRef *error = NULL) = 0;
 	
@@ -162,9 +130,13 @@ public:
 	CFStringRef GetMusicBrainzTrackID();
 	void SetMusicBrainzTrackID(CFStringRef trackID);
 
+	// ========================================
+	// Additional metadata
 	CFDictionaryRef GetAdditionalMetadata();
 	void SetAdditionalMetadata(CFDictionaryRef additionalMetadata);
 	
+	// ========================================
+	// Replay gain information
 	CFNumberRef GetReplayGainReferenceLoudness();
 	void SetReplayGainReferenceLoudness(CFNumberRef referenceLoudness);
 
@@ -180,8 +152,8 @@ public:
 	CFNumberRef GetReplayGainAlbumPeak();
 	void SetReplayGainAlbumPeak(CFNumberRef albumPeak);
 
-	// Cue Sheet
-
+	// ========================================
+	// Album artwork
 	CFDataRef GetFrontCoverArt();
 	void SetFrontCoverArt(CFDataRef frontCoverArt);
 

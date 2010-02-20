@@ -44,32 +44,31 @@ const CFStringRef	AudioMetadataErrorDomain				= CFSTR("org.sbooth.SFBAudioEngine
 // ========================================
 // Key names for the metadata dictionary
 // ========================================
-const CFStringRef	kMetadataTitleKey						= CFSTR("Title");
-const CFStringRef	kMetadataAlbumTitleKey					= CFSTR("AlbumTitle");
-const CFStringRef	kMetadataArtistKey						= CFSTR("Artist");
-const CFStringRef	kMetadataAlbumArtistKey					= CFSTR("AlbumArtist");
-const CFStringRef	kMetadataGenreKey						= CFSTR("Genre");
-const CFStringRef	kMetadataComposerKey					= CFSTR("Composer");
-const CFStringRef	kMetadataReleaseDateKey					= CFSTR("Date");
-const CFStringRef	kMetadataCompilationKey					= CFSTR("Compilation");
-const CFStringRef	kMetadataTrackNumberKey					= CFSTR("TrackNumber");
-const CFStringRef	kMetadataTrackTotalKey					= CFSTR("TrackTotal");
-const CFStringRef	kMetadataDiscNumberKey					= CFSTR("DiscNumber");
-const CFStringRef	kMetadataDiscTotalKey					= CFSTR("DiscTotal");
-const CFStringRef	kMetadataLyricsKey						= CFSTR("Lyrics");
-const CFStringRef	kMetadataCommentKey						= CFSTR("Comment");
-const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
-const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
-const CFStringRef	kMetadataMusicBrainzAlbumIDKey			= CFSTR("MusicBrainzAlbumID");
-const CFStringRef	kMetadataMusicBrainzTrackIDKey			= CFSTR("MusicBrainzTrackID");
-const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("AdditionalMetadata");
-const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("ReplayGainReferenceLoudess");
-const CFStringRef	kReplayGainTrackGainKey					= CFSTR("ReplayGainTrackGain");
-const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("ReplayGainTrackPeak");
-const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("ReplayGainAlbumGain");
-const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("ReplayGainAlbumPeak");
-//const CFStringRef	kCueSheetKey							= CFSTR("CueSheet");
-const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("AlbumArtFrontCover");
+static const CFStringRef	kMetadataTitleKey						= CFSTR("Title");
+static const CFStringRef	kMetadataAlbumTitleKey					= CFSTR("AlbumTitle");
+static const CFStringRef	kMetadataArtistKey						= CFSTR("Artist");
+static const CFStringRef	kMetadataAlbumArtistKey					= CFSTR("AlbumArtist");
+static const CFStringRef	kMetadataGenreKey						= CFSTR("Genre");
+static const CFStringRef	kMetadataComposerKey					= CFSTR("Composer");
+static const CFStringRef	kMetadataReleaseDateKey					= CFSTR("Date");
+static const CFStringRef	kMetadataCompilationKey					= CFSTR("Compilation");
+static const CFStringRef	kMetadataTrackNumberKey					= CFSTR("TrackNumber");
+static const CFStringRef	kMetadataTrackTotalKey					= CFSTR("TrackTotal");
+static const CFStringRef	kMetadataDiscNumberKey					= CFSTR("DiscNumber");
+static const CFStringRef	kMetadataDiscTotalKey					= CFSTR("DiscTotal");
+static const CFStringRef	kMetadataLyricsKey						= CFSTR("Lyrics");
+static const CFStringRef	kMetadataCommentKey						= CFSTR("Comment");
+static const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
+static const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
+static const CFStringRef	kMetadataMusicBrainzAlbumIDKey			= CFSTR("MusicBrainzAlbumID");
+static const CFStringRef	kMetadataMusicBrainzTrackIDKey			= CFSTR("MusicBrainzTrackID");
+static const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("AdditionalMetadata");
+static const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("ReplayGainReferenceLoudess");
+static const CFStringRef	kReplayGainTrackGainKey					= CFSTR("ReplayGainTrackGain");
+static const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("ReplayGainTrackPeak");
+static const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("ReplayGainAlbumGain");
+static const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("ReplayGainAlbumPeak");
+static const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("AlbumArtFrontCover");
 
 
 #pragma mark Static Methods
@@ -295,7 +294,7 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 }
 
 
-#pragma mark Base Functionality
+#pragma mark Metadata Access
 
 
 CFStringRef AudioMetadata::GetTitle()
@@ -483,6 +482,10 @@ void AudioMetadata::SetMusicBrainzTrackID(CFStringRef trackID)
 	SetValue(kMetadataMusicBrainzTrackIDKey, trackID);
 }
 
+
+#pragma mark Additional Metadata
+
+
 CFDictionaryRef AudioMetadata::GetAdditionalMetadata()
 {
 	CFTypeRef value = GetValue(kMetadataAdditionalMetadataKey);
@@ -497,6 +500,10 @@ void AudioMetadata::SetAdditionalMetadata(CFDictionaryRef additionalMetadata)
 {
 	SetValue(kMetadataAdditionalMetadataKey, additionalMetadata);
 }
+
+
+#pragma mark Replay Gain Information
+
 
 CFNumberRef AudioMetadata::GetReplayGainReferenceLoudness()
 {
@@ -548,7 +555,9 @@ void AudioMetadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 	SetValue(kReplayGainAlbumPeakKey, albumPeak);
 }
 
-// Cue Sheet
+
+#pragma mark Album Artwork
+
 
 CFDataRef AudioMetadata::GetFrontCoverArt()
 {
@@ -566,7 +575,7 @@ void AudioMetadata::SetFrontCoverArt(CFDataRef frontCoverArt)
 }
 
 
-#pragma mark fnord
+#pragma mark Type-Specific Access
 
 
 CFStringRef AudioMetadata::GetStringValue(CFStringRef key)
@@ -592,6 +601,10 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key)
 	else
 		return reinterpret_cast<CFNumberRef>(value);
 }
+
+
+#pragma mark Generic Access
+
 
 CFTypeRef AudioMetadata::GetValue(CFStringRef key)
 {
