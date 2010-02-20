@@ -34,6 +34,7 @@
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
 #include "FLACMetadata.h"
+#include "WavPackMetadata.h"
 
 
 // ========================================
@@ -81,6 +82,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	CFArrayRef decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = WavPackMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
@@ -94,6 +99,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
 	
 	CFArrayRef decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = WavPackMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -187,7 +196,16 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 					
 					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(WavPackMetadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new WavPackMetadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
 					}
 					
 					CFRelease(pathExtension), pathExtension = NULL;
