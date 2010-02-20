@@ -231,9 +231,9 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(number), number = NULL;
 	}
 	
-	if(albumGainFrame)
+	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
-	if(!albumGainFrame) {
+	if(albumGainFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 		CFRelease(str), str = NULL;
@@ -250,7 +250,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		foundReplayGain = true;
 	}
 	
-	if(albumPeakFrame)
+	if(!albumPeakFrame)
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
 	if(albumPeakFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
