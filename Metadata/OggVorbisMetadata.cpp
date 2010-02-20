@@ -29,6 +29,7 @@
  */
 
 #include <taglib/vorbisfile.h>
+#include <taglib/oggflacfile.h>
 #include <taglib/xiphcomment.h>
 
 #include "AudioEngineDefines.h"
@@ -97,9 +98,16 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
+	// Attempt to open the file as an Ogg Vorbis file, and if it fails, as an Ogg FLAC file
+	TagLib::Ogg::File *file = new TagLib::Ogg::Vorbis::File(reinterpret_cast<const char *>(buf), false);
 	
-	if(!file.isValid()) {
+	if(!file->isValid()) {
+		delete file, file = NULL;
+		
+		file = new TagLib::Ogg::FLAC::File(reinterpret_cast<const char *>(buf), false);
+	}
+	
+	if(!file->isValid()) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -109,7 +117,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg Vorbis file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -118,7 +126,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -135,17 +143,27 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 		
+		delete file, file = NULL;
+		
 		return false;
 	}
 
-	if(file.tag()) {
+	if(file->tag()) {
 		CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			  32,
 																			  &kCFTypeDictionaryKeyCallBacks,
 																			  &kCFTypeDictionaryValueCallBacks);
 
 		// A map <String, StringList>
-		TagLib::Ogg::FieldListMap fieldList = file.tag()->fieldListMap();
+		TagLib::Ogg::XiphComment *xiphComment = dynamic_cast<TagLib::Ogg::XiphComment *>(file->tag());
+
+		// This shouldn't happen
+		if(!xiphComment) {
+			delete file, file = NULL;			
+			return false;
+		}
+		
+		TagLib::Ogg::FieldListMap fieldList = xiphComment->fieldListMap();
 		
 		for(TagLib::Ogg::FieldListMap::ConstIterator it = fieldList.begin(); it != fieldList.end(); ++it) {
 			CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault,
@@ -248,6 +266,8 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 		
 	}
 
+	delete file, file = NULL;
+
 	return true;
 }
 
@@ -257,9 +277,16 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
+	// Attempt to open the file as an Ogg Vorbis file, and if it fails, as an Ogg FLAC file
+	TagLib::Ogg::File *file = new TagLib::Ogg::Vorbis::File(reinterpret_cast<const char *>(buf), false);
 	
-	if(!file.isValid()) {
+	if(!file->isValid()) {
+		delete file, file = NULL;
+		
+		file = new TagLib::Ogg::FLAC::File(reinterpret_cast<const char *>(buf), false);
+	}
+	
+	if(!file->isValid()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -269,7 +296,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg Vorbis file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -278,7 +305,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -295,11 +322,13 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 		
+		delete file, file = NULL;
+
 		return false;
 	}
 
 
-	if(!file.save()) {
+	if(!file->save()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -309,7 +338,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg Vorbis file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -337,6 +366,8 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-	
+
+	delete file, file = NULL;
+
 	return true;
 }
