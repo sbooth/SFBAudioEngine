@@ -42,7 +42,7 @@
 
 
 // ========================================
-// Vorbis comment utilities
+// WavPack comment utilities
 // ========================================
 static bool
 SetWavPackTag(WavpackContext	*wpc,
@@ -53,10 +53,7 @@ SetWavPackTag(WavpackContext	*wpc,
 	assert(NULL != key);
 	
 	// Remove the existing comment with this name
-	if(-1 == WavpackDeleteTagItem(wpc, key)) {
-		ERR("WavpackDeleteTagItem failed");
-		return false;
-	}
+	WavpackDeleteTagItem(wpc, key);
 
 	// Nothing left to do if value is NULL
 	if(NULL == value)
@@ -70,7 +67,7 @@ SetWavPackTag(WavpackContext	*wpc,
 		return false;
 	}
 	
-	if(-1 == WavpackAppendTagItem(wpc, key, valueCString, strlen(valueCString))) {
+	if(false == WavpackAppendTagItem(wpc, key, valueCString, static_cast<int>(strlen(valueCString)))) {
 		ERR("WavpackAppendTagItem failed");
 		return false;
 	}
@@ -81,8 +78,7 @@ SetWavPackTag(WavpackContext	*wpc,
 static bool
 SetWavPackTagNumber(WavpackContext		*wpc,
 					const char			*key,
-					CFNumberRef			value,
-					CFStringRef			format = NULL)
+					CFNumberRef			value)
 {
 	assert(NULL != wpc);
 	assert(NULL != key);
@@ -92,7 +88,7 @@ SetWavPackTagNumber(WavpackContext		*wpc,
 	if(NULL != value)
 		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 												NULL, 
-												(NULL == format ? CFSTR("%@") : format), 
+												CFSTR("%@"), 
 												value);
 	
 	bool result = SetWavPackTag(wpc, key, numberString);
@@ -115,6 +111,38 @@ SetWavPackTagBoolean(WavpackContext		*wpc,
 		return SetWavPackTag(wpc, key, CFSTR("1"));
 	else
 		return SetWavPackTag(wpc, key, CFSTR("0"));
+}
+
+static bool
+SetWavPackTagDouble(WavpackContext		*wpc,
+					const char			*key,
+					CFNumberRef			value,
+					CFStringRef			format = NULL)
+{
+	assert(NULL != wpc);
+	assert(NULL != key);
+	
+	CFStringRef numberString = NULL;
+	
+	if(NULL != value) {
+		double f;
+		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+												NULL, 
+												NULL == format ? CFSTR("%f") : format, 
+												f);
+	}
+	
+	bool result = SetWavPackTag(wpc, key, numberString);
+	
+	if(numberString)
+		CFRelease(numberString), numberString = NULL;
+	
+	return result;
 }
 
 
@@ -377,8 +405,6 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	
 	WavpackCloseFile(wpc), wpc = NULL;
 	
-	CFShow(mMetadata);
-	
 	return true;
 }
 
@@ -505,11 +531,11 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	}
 	
 	// ReplayGain info
-	SetWavPackTagNumber(wpc, "REPLAYGAIN_REFERENCE_LOUDNESS", GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	SetWavPackTagNumber(wpc, "REPLAYGAIN_TRACK_GAIN", GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
-	SetWavPackTagNumber(wpc, "REPLAYGAIN_TRACK_PEAK", GetReplayGainTrackGain(), CFSTR("%1.8f"));
-	SetWavPackTagNumber(wpc, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
-	SetWavPackTagNumber(wpc, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+	SetWavPackTagDouble(wpc, "REPLAYGAIN_REFERENCE_LOUDNESS", GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
+	SetWavPackTagDouble(wpc, "REPLAYGAIN_TRACK_GAIN", GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
+	SetWavPackTagDouble(wpc, "REPLAYGAIN_TRACK_PEAK", GetReplayGainTrackGain(), CFSTR("%1.8f"));
+	SetWavPackTagDouble(wpc, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
+	SetWavPackTagDouble(wpc, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
 	if(false == WavpackWriteTag(wpc)) {
 		if(NULL != error) {

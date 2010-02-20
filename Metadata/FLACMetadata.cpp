@@ -38,57 +38,22 @@
 
 #include "AudioEngineDefines.h"
 #include "FLACMetadata.h"
+#include "CreateDisplayNameForURL.h"
 
-
-// ========================================
-// Get the localized display name for a URL
-// ========================================
-static CFStringRef
-CreateDisplayNameForURL(CFURLRef url)
-{
-	assert(NULL != url);
-	
-	FSRef ref;
-	Boolean success = CFURLGetFSRef(url, &ref);
-	if(FALSE == success) {
-		ERR("Unable to get FSRef for URL");
-		
-		return NULL;
-	}
-	
-	CFStringRef displayName = NULL;
-	OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemDisplayName, reinterpret_cast<CFTypeRef *>(&displayName));
-	
-	if(noErr != result) {
-		ERR("LSCopyItemAttribute (kLSItemDisplayName) failed: %i", result);
-		
-		return NULL;
-	}
-	
-	return displayName;
-}
 
 // ========================================
 // Vorbis comment utilities
 // ========================================
 static bool
-setVorbisComment(FLAC__StreamMetadata		*block,
-				 CFStringRef				key,
+SetVorbisComment(FLAC__StreamMetadata		*block,
+				 const char					*key,
 				 CFStringRef				value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
 
-	CFIndex keyCStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(key), kCFStringEncodingASCII)  + 1;
-	char keyCString [keyCStringSize];
-	
-	if(false == CFStringGetCString(key, keyCString, keyCStringSize, kCFStringEncodingASCII)) {
-		ERR("CFStringGetCString failed");
-		return false;
-	}
-	
 	// Remove the existing comment with this name
-	if(-1 == FLAC__metadata_object_vorbiscomment_remove_entry_matching(block, keyCString)) {
+	if(-1 == FLAC__metadata_object_vorbiscomment_remove_entry_matching(block, key)) {
 		ERR("FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
 		return false;
 	}
@@ -107,7 +72,7 @@ setVorbisComment(FLAC__StreamMetadata		*block,
 	
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 	
-	if(false == FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, keyCString, valueCString)) {
+	if(false == FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, key, valueCString)) {
 		ERR("FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair failed");
 		return false;
 	}
@@ -121,10 +86,9 @@ setVorbisComment(FLAC__StreamMetadata		*block,
 }
 
 static bool
-setVorbisCommentNumber(FLAC__StreamMetadata		*block,
-					   CFStringRef				key,
-					   CFNumberRef				value,
-					   CFStringRef				format = NULL)
+SetVorbisCommentNumber(FLAC__StreamMetadata		*block,
+					   const char				*key,
+					   CFNumberRef				value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
@@ -134,10 +98,10 @@ setVorbisCommentNumber(FLAC__StreamMetadata		*block,
 	if(NULL != value)
 		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 												NULL, 
-												(NULL == format ? CFSTR("%@") : format), 
+												CFSTR("%@"), 
 												value);
 	
-	bool result = setVorbisComment(block, key, numberString);
+	bool result = SetVorbisComment(block, key, numberString);
 	
 	if(numberString)
 		CFRelease(numberString), numberString = NULL;
@@ -146,17 +110,49 @@ setVorbisCommentNumber(FLAC__StreamMetadata		*block,
 }
 
 static bool
-setVorbisCommentBoolean(FLAC__StreamMetadata	*block,
-						CFStringRef				key,
+SetVorbisCommentBoolean(FLAC__StreamMetadata	*block,
+						const char				*key,
 						CFBooleanRef			value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
 	
 	if(CFBooleanGetValue(value))
-		return setVorbisComment(block, key, CFSTR("1"));
+		return SetVorbisComment(block, key, CFSTR("1"));
 	else
-		return setVorbisComment(block, key, CFSTR("0"));
+		return SetVorbisComment(block, key, CFSTR("0"));
+}
+
+static bool
+SetVorbisCommentDouble(FLAC__StreamMetadata		*block,
+					   const char				*key,
+					   CFNumberRef				value,
+					   CFStringRef				format = NULL)
+{
+	assert(NULL != block);
+	assert(NULL != key);
+	
+	CFStringRef numberString = NULL;
+	
+	if(NULL != value) {
+		double f;
+		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+												NULL, 
+												NULL == format ? CFSTR("%f") : format, 
+												f);
+	}
+	
+	bool result = SetVorbisComment(block, key, numberString);
+	
+	if(numberString)
+		CFRelease(numberString), numberString = NULL;
+	
+	return result;
 }
 
 
@@ -216,8 +212,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(FALSE == success)
+	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
@@ -368,14 +363,14 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 																	reinterpret_cast<const UInt8 *>(fieldName),
 																	strlen(fieldName), 
 																	kCFStringEncodingASCII,
-																	FALSE,
+																	false,
 																	kCFAllocatorMalloc);
 
 					CFStringRef value = CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
 																	  reinterpret_cast<const UInt8 *>(fieldValue),
 																	  strlen(fieldValue), 
 																	  kCFStringEncodingUTF8,
-																	  FALSE,
+																	  false,
 																	  kCFAllocatorMalloc);
 					
 					if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
@@ -468,9 +463,9 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 				
 			case FLAC__METADATA_TYPE_PICTURE:
 			{
-//				CFDataRef data = CFDataCreate(kCFAllocatorDefault, block->data.picture.data, block->data.picture.data_length);
-//				CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
-//				CFRelease(data), data = NULL;
+				CFDataRef data = CFDataCreate(kCFAllocatorDefault, block->data.picture.data, block->data.picture.data_length);
+				SetFrontCoverArt(data);
+				CFRelease(data), data = NULL;
 			}
 			break;
 				
@@ -493,18 +488,13 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	FLAC__metadata_iterator_delete(iterator), iterator = NULL;
 	FLAC__metadata_chain_delete(chain), chain = NULL;
 	
-#if DEBUG
-	CFShow(mMetadata);
-#endif
-	
 	return true;
 }
 
 bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(FALSE == success)
+	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
@@ -699,49 +689,49 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		block = FLAC__metadata_iterator_get_block(iterator);
 	
 	// Album title
-	setVorbisComment(block, CFSTR("ALBUM"), GetAlbumTitle());
+	SetVorbisComment(block, "ALBUM", GetAlbumTitle());
 	
 	// Artist
-	setVorbisComment(block, CFSTR("ARTIST"), GetArtist());
+	SetVorbisComment(block, "ARTIST", GetArtist());
 	
 	// Album Artist
-	setVorbisComment(block, CFSTR("ALBUMARTIST"), GetAlbumArtist());
+	SetVorbisComment(block, "ALBUMARTIST", GetAlbumArtist());
 	
 	// Composer
-	setVorbisComment(block, CFSTR("COMPOSER"), GetComposer());
+	SetVorbisComment(block, "COMPOSER", GetComposer());
 	
 	// Genre
-	setVorbisComment(block, CFSTR("GENRE"), GetGenre());
+	SetVorbisComment(block, "GENRE", GetGenre());
 	
 	// Date
-	setVorbisComment(block, CFSTR("DATE"), GetReleaseDate());
+	SetVorbisComment(block, "DATE", GetReleaseDate());
 	
 	// Comment
-	setVorbisComment(block, CFSTR("DESCRIPTION"), GetComment());
+	SetVorbisComment(block, "DESCRIPTION", GetComment());
 	
 	// Track title
-	setVorbisComment(block, CFSTR("TITLE"), GetTitle());
+	SetVorbisComment(block, "TITLE", GetTitle());
 	
 	// Track number
-	setVorbisCommentNumber(block, CFSTR("TRACKNUMBER"), GetTrackNumber());
+	SetVorbisCommentNumber(block, "TRACKNUMBER", GetTrackNumber());
 	
 	// Total tracks
-	setVorbisCommentNumber(block, CFSTR("TRACKTOTAL"), GetTrackTotal());
+	SetVorbisCommentNumber(block, "TRACKTOTAL", GetTrackTotal());
 	
 	// Compilation
-	setVorbisCommentBoolean(block, CFSTR("COMPILATION"), GetCompilation());
+	SetVorbisCommentBoolean(block, "COMPILATION", GetCompilation());
 	
 	// Disc number
-	setVorbisCommentNumber(block, CFSTR("DISCNUMBER"), GetDiscNumber());
+	SetVorbisCommentNumber(block, "DISCNUMBER", GetDiscNumber());
 	
 	// Disc total
-	setVorbisCommentNumber(block, CFSTR("DISCTOTAL"), GetDiscTotal());
+	SetVorbisCommentNumber(block, "DISCTOTAL", GetDiscTotal());
 	
 	// ISRC
-	setVorbisComment(block, CFSTR("ISRC"), GetISRC());
+	SetVorbisComment(block, "ISRC", GetISRC());
 	
 	// MCN
-	setVorbisComment(block, CFSTR("MCN"), GetMCN());
+	SetVorbisComment(block, "MCN", GetMCN());
 
 	// Additional metadata
 	CFDictionaryRef additionalMetadata = GetAdditionalMetadata();
@@ -755,16 +745,25 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 									 reinterpret_cast<const void **>(keys), 
 									 reinterpret_cast<const void **>(values));
 		
-		for(CFIndex i = 0; i < count; ++i)
-			setVorbisComment(block, reinterpret_cast<CFStringRef>(keys[i]), reinterpret_cast<CFStringRef>(values[i]));
+		for(CFIndex i = 0; i < count; ++i) {
+			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
+			char key [keySize + 1];
+			       
+			if(false == CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+				ERR("CFStringGetCString failed");
+				continue;
+			}
+			
+			SetVorbisComment(block, key, reinterpret_cast<CFStringRef>(values[i]));
+		}
 	}
 	
 	// ReplayGain info
-	setVorbisCommentNumber(block, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	setVorbisCommentNumber(block, CFSTR("REPLAYGAIN_TRACK_GAIN"), GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
-	setVorbisCommentNumber(block, CFSTR("REPLAYGAIN_TRACK_PEAK"), GetReplayGainTrackGain(), CFSTR("%1.8f"));
-	setVorbisCommentNumber(block, CFSTR("REPLAYGAIN_ALBUM_GAIN"), GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
-	setVorbisCommentNumber(block, CFSTR("REPLAYGAIN_ALBUM_PEAK"), GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+	SetVorbisCommentDouble(block, "REPLAYGAIN_REFERENCE_LOUDNESS", GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
+	SetVorbisCommentDouble(block, "REPLAYGAIN_TRACK_GAIN", GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
+	SetVorbisCommentDouble(block, "REPLAYGAIN_TRACK_PEAK", GetReplayGainTrackGain(), CFSTR("%1.8f"));
+	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
+	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
 	// Write the new metadata to the file
 	if(false == FLAC__metadata_chain_write(chain, true, false)) {
