@@ -35,7 +35,10 @@
 #include "AudioMetadata.h"
 #include "FLACMetadata.h"
 #include "WavPackMetadata.h"
+#include "MP3Metadata.h"
 #include "MP4Metadata.h"
+#include "WAVEMetadata.h"
+#include "AIFFMetadata.h"
 
 
 // ========================================
@@ -88,7 +91,19 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
+	decoderExtensions = MP3Metadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
 	decoderExtensions = MP4Metadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	
+	decoderExtensions = WAVEMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = AIFFMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
@@ -111,7 +126,19 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
+	decoderMIMETypes = MP3Metadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
 	decoderMIMETypes = MP4Metadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	
+	decoderMIMETypes = WAVEMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = AIFFMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -218,8 +245,35 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
+						if(MP3Metadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new MP3Metadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
 						if(MP4Metadata::HandlesFilesWithExtension(pathExtension))
 							metadata = new MP4Metadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+					
+					try {
+						if(WAVEMetadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new WAVEMetadata(url);
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(AIFFMetadata::HandlesFilesWithExtension(pathExtension))
+							metadata = new AIFFMetadata(url);
 					}
 					
 					catch(std::exception& e) {
