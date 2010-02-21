@@ -617,39 +617,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	}
 	else
 		MP4TagsSetName(tags, NULL);
-	
-	// Track number
-	if(tags->track) {
-		if(tags->track->index) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index);
-			SetTrackNumber(num);
-			CFRelease(num), num = NULL;
-		}
-		
-		if(tags->track->total) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total);
-			SetTrackTotal(num);
-			CFRelease(num), num = NULL;
-		}
-	}
-	
-	// Disc number
-	if(tags->disk) {
-		if(tags->disk->index) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->index);
-			SetDiscNumber(num);
-			CFRelease(num), num = NULL;
-		}
-		
-		if(tags->disk->total) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->total);
-			SetDiscTotal(num);
-			CFRelease(num), num = NULL;
-		}
-	}
-	
-	// Compilation
-	
+
 	// Track number and total
 	MP4TagTrack trackInfo;
 	memset(&trackInfo, 0, sizeof(MP4TagTrack));
@@ -673,6 +641,14 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		CFNumberGetValue(GetDiscTotal(), kCFNumberSInt32Type, &discInfo.total);
 	
 	MP4TagsSetDisk(tags, &discInfo);
+
+	// Compilation
+	if(GetCompilation()) {
+		uint8_t comp = CFBooleanGetValue(GetCompilation());
+		MP4TagsSetCompilation(tags, &comp);
+	}
+	else
+		MP4TagsSetCompilation(tags, NULL);
 
 	// Album art
 	CFDataRef artData = GetFrontCoverArt();
