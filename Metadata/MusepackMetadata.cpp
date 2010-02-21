@@ -236,6 +236,114 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	// Album title
+	CFStringRef str = GetAlbumTitle();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setAlbum(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		file.tag()->setAlbum(TagLib::String());
+	
+	// Artist
+	str = GetArtist();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setArtist(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		file.tag()->setArtist(TagLib::String());
+	
+	// Genre
+	str = GetGenre();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setGenre(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		file.tag()->setGenre(TagLib::String());
+	
+	// Year
+	str = GetReleaseDate();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setYear(CFStringGetIntValue(str));
+	}
+	else
+		file.tag()->setYear(0);
+	
+	// Comment
+	str = GetComment();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setComment(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		file.tag()->setComment(TagLib::String());
+	
+	// Track title
+	str = GetTitle();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		file.tag()->setTitle(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		file.tag()->setTitle(TagLib::String());
+	
+	// Track number
+	int trackNum = 0;
+	if(GetTrackNumber())
+		CFNumberGetValue(GetTrackNumber(), kCFNumberIntType, &trackNum);
+
+	file.tag()->setTrack(trackNum);
 
 	if(!file.save()) {
 		if(error) {
