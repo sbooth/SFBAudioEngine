@@ -251,7 +251,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		file.tag()->setAlbum(TagLib::String(cString, TagLib::String::UTF8));
 	}
 	else
-		file.tag()->setAlbum(TagLib::String());
+		file.tag()->setAlbum(TagLib::String::null);
 	
 	// Artist
 	str = GetArtist();
@@ -268,7 +268,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		file.tag()->setArtist(TagLib::String(cString, TagLib::String::UTF8));
 	}
 	else
-		file.tag()->setArtist(TagLib::String());
+		file.tag()->setArtist(TagLib::String::null);
 	
 	// Genre
 	str = GetGenre();
@@ -285,7 +285,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		file.tag()->setGenre(TagLib::String(cString, TagLib::String::UTF8));
 	}
 	else
-		file.tag()->setGenre(TagLib::String());
+		file.tag()->setGenre(TagLib::String::null);
 	
 	// Year
 	str = GetReleaseDate();
@@ -319,7 +319,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		file.tag()->setComment(TagLib::String(cString, TagLib::String::UTF8));
 	}
 	else
-		file.tag()->setComment(TagLib::String());
+		file.tag()->setComment(TagLib::String::null);
 	
 	// Track title
 	str = GetTitle();
@@ -336,7 +336,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		file.tag()->setTitle(TagLib::String(cString, TagLib::String::UTF8));
 	}
 	else
-		file.tag()->setTitle(TagLib::String());
+		file.tag()->setTitle(TagLib::String::null);
 	
 	// Track number
 	int trackNum = 0;
