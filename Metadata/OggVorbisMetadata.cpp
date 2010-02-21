@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,12 +29,11 @@
  */
 
 #include <taglib/vorbisfile.h>
-#include <taglib/oggflacfile.h>
-#include <taglib/xiphcomment.h>
 
 #include "AudioEngineDefines.h"
 #include "OggVorbisMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "SetMetadataFromXiphComment.h"
 
 
 #pragma mark Static Methods
@@ -98,16 +97,9 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	// Attempt to open the file as an Ogg Vorbis file, and if it fails, as an Ogg FLAC file
-	TagLib::Ogg::File *file = new TagLib::Ogg::Vorbis::File(reinterpret_cast<const char *>(buf), false);
-	
-	if(!file->isValid()) {
-		delete file, file = NULL;
+	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
 		
-		file = new TagLib::Ogg::FLAC::File(reinterpret_cast<const char *>(buf), false);
-	}
-	
-	if(!file->isValid()) {
+	if(!file.isValid()) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -143,130 +135,11 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 		
-		delete file, file = NULL;
-		
 		return false;
 	}
 
-	if(file->tag()) {
-		CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			  32,
-																			  &kCFTypeDictionaryKeyCallBacks,
-																			  &kCFTypeDictionaryValueCallBacks);
-
-		// A map <String, StringList>
-		TagLib::Ogg::XiphComment *xiphComment = dynamic_cast<TagLib::Ogg::XiphComment *>(file->tag());
-
-		// This shouldn't happen
-		if(!xiphComment) {
-			delete file, file = NULL;			
-			return false;
-		}
-		
-		TagLib::Ogg::FieldListMap fieldList = xiphComment->fieldListMap();
-		
-		for(TagLib::Ogg::FieldListMap::ConstIterator it = fieldList.begin(); it != fieldList.end(); ++it) {
-			CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault,
-														it->first.toCString(true),
-														kCFStringEncodingUTF8);
-			
-			// Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
-			CFStringRef value = CFStringCreateWithCString(kCFAllocatorDefault,
-														  it->second.front().toCString(true),
-														  kCFStringEncodingUTF8);
-			
-			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
-				SetAlbumTitle(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTIST"), kCFCompareCaseInsensitive))
-				SetArtist(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTIST"), kCFCompareCaseInsensitive))
-				SetAlbumArtist(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSER"), kCFCompareCaseInsensitive))
-				SetComposer(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GENRE"), kCFCompareCaseInsensitive))
-				SetGenre(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DATE"), kCFCompareCaseInsensitive))
-				SetReleaseDate(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DESCRIPTION"), kCFCompareCaseInsensitive))
-				SetComment(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLE"), kCFCompareCaseInsensitive))
-				SetTitle(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive)) {
-				int num = CFStringGetIntValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-				SetTrackNumber(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive)) {
-				int num = CFStringGetIntValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-				SetTrackTotal(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPILATION"), kCFCompareCaseInsensitive))
-				SetCompilation(CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive)) {
-				int num = CFStringGetIntValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-				SetDiscNumber(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive)) {
-				int num = CFStringGetIntValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-				SetDiscTotal(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
-				SetISRC(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
-				SetMCN(value);
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive)) {
-				double num = CFStringGetDoubleValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-				SetReplayGainReferenceLoudness(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive)) {
-				double num = CFStringGetDoubleValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-				SetReplayGainTrackGain(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive)) {
-				double num = CFStringGetDoubleValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-				SetReplayGainTrackPeak(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive)) {
-				double num = CFStringGetDoubleValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-				SetReplayGainAlbumGain(number);
-				CFRelease(number), number = NULL;
-			}
-			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive)) {
-				double num = CFStringGetDoubleValue(value);
-				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-				SetReplayGainAlbumPeak(number);
-				CFRelease(number), number = NULL;
-			}
-			// Put all unknown tags into the additional metadata
-			else
-				CFDictionarySetValue(additionalMetadata, key, value);
-			
-			CFRelease(key), key = NULL;
-			CFRelease(value), value = NULL;
-		}
-
-		if(CFDictionaryGetCount(additionalMetadata))
-			SetAdditionalMetadata(additionalMetadata);
-		
-		CFRelease(additionalMetadata), additionalMetadata = NULL;
-		
-	}
-
-	delete file, file = NULL;
+	if(file.tag())
+		SetMetadataFromXiphComment(this, file.tag());
 
 	return true;
 }
@@ -277,16 +150,9 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	// Attempt to open the file as an Ogg Vorbis file, and if it fails, as an Ogg FLAC file
-	TagLib::Ogg::File *file = new TagLib::Ogg::Vorbis::File(reinterpret_cast<const char *>(buf), false);
+	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
 	
-	if(!file->isValid()) {
-		delete file, file = NULL;
-		
-		file = new TagLib::Ogg::FLAC::File(reinterpret_cast<const char *>(buf), false);
-	}
-	
-	if(!file->isValid()) {
+	if(!file.isValid()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -321,14 +187,12 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
-		
-		delete file, file = NULL;
 
 		return false;
 	}
 
 
-	if(!file->save()) {
+	if(!file.save()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -366,8 +230,6 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-
-	delete file, file = NULL;
 
 	return true;
 }

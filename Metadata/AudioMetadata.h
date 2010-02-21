@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ public:
 	
 	// ========================================
 	// Factory methods that return an AudioMetadata for the specified URL, or NULL on failure
-	static AudioMetadata * CreateMetadataForURL(CFURLRef url);
+	static AudioMetadata * CreateMetadataForURL(CFURLRef url, CFErrorRef *error = NULL);
 	virtual ~AudioMetadata();
 	
 	// ========================================
@@ -162,7 +162,7 @@ protected:
 	
 	// ========================================
 	// Data members
-	CFURLRef						mURL;				// The location of the stream to be decoded
+	CFURLRef						mURL;				// The location of the stream to be read/written
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
 	
 	// ========================================

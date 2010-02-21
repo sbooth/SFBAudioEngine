@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,35 +31,11 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-#import "AudioMetadata.h"
+#include <taglib/xiphcomment.h>
 
+class AudioMetadata;
 
 // ========================================
-// An AudioMetadata subclass supporting the Free Lossless Audio Codec (FLAC)
+// Fill in an AudioMetadata class from the specified Xiph comment
 // ========================================
-class FLACMetadata : public AudioMetadata
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
-	
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
-	
-	// ========================================
-	// Creation
-	FLACMetadata(CFURLRef url);
-	
-	// ========================================
-	// Destruction
-	virtual ~FLACMetadata();
-	
-	// ========================================
-	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = NULL);
-	virtual bool WriteMetadata(CFErrorRef *error = NULL);
-};
+bool SetMetadataFromXiphComment(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag);

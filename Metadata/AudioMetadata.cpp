@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
+#include "CreateDisplayNameForURL.h"
 #include "FLACMetadata.h"
 #include "WavPackMetadata.h"
 #include "MP3Metadata.h"
@@ -41,6 +42,7 @@
 #include "AIFFMetadata.h"
 #include "MusepackMetadata.h"
 #include "OggVorbisMetadata.h"
+#include "OggFLACMetadata.h"
 
 
 // ========================================
@@ -52,30 +54,30 @@ const CFStringRef	AudioMetadataErrorDomain				= CFSTR("org.sbooth.SFBAudioEngine
 // Key names for the metadata dictionary
 // ========================================
 static const CFStringRef	kMetadataTitleKey						= CFSTR("Title");
-static const CFStringRef	kMetadataAlbumTitleKey					= CFSTR("AlbumTitle");
+static const CFStringRef	kMetadataAlbumTitleKey					= CFSTR("Album Title");
 static const CFStringRef	kMetadataArtistKey						= CFSTR("Artist");
-static const CFStringRef	kMetadataAlbumArtistKey					= CFSTR("AlbumArtist");
+static const CFStringRef	kMetadataAlbumArtistKey					= CFSTR("Album Artist");
 static const CFStringRef	kMetadataGenreKey						= CFSTR("Genre");
 static const CFStringRef	kMetadataComposerKey					= CFSTR("Composer");
 static const CFStringRef	kMetadataReleaseDateKey					= CFSTR("Date");
 static const CFStringRef	kMetadataCompilationKey					= CFSTR("Compilation");
-static const CFStringRef	kMetadataTrackNumberKey					= CFSTR("TrackNumber");
-static const CFStringRef	kMetadataTrackTotalKey					= CFSTR("TrackTotal");
-static const CFStringRef	kMetadataDiscNumberKey					= CFSTR("DiscNumber");
-static const CFStringRef	kMetadataDiscTotalKey					= CFSTR("DiscTotal");
+static const CFStringRef	kMetadataTrackNumberKey					= CFSTR("Track Number");
+static const CFStringRef	kMetadataTrackTotalKey					= CFSTR("Track Total");
+static const CFStringRef	kMetadataDiscNumberKey					= CFSTR("Disc Number");
+static const CFStringRef	kMetadataDiscTotalKey					= CFSTR("Disc Total");
 static const CFStringRef	kMetadataLyricsKey						= CFSTR("Lyrics");
 static const CFStringRef	kMetadataCommentKey						= CFSTR("Comment");
 static const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
 static const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
-static const CFStringRef	kMetadataMusicBrainzAlbumIDKey			= CFSTR("MusicBrainzAlbumID");
-static const CFStringRef	kMetadataMusicBrainzTrackIDKey			= CFSTR("MusicBrainzTrackID");
-static const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("AdditionalMetadata");
-static const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("ReplayGainReferenceLoudess");
-static const CFStringRef	kReplayGainTrackGainKey					= CFSTR("ReplayGainTrackGain");
-static const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("ReplayGainTrackPeak");
-static const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("ReplayGainAlbumGain");
-static const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("ReplayGainAlbumPeak");
-static const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("AlbumArtFrontCover");
+static const CFStringRef	kMetadataMusicBrainzAlbumIDKey			= CFSTR("MusicBrainz Album ID");
+static const CFStringRef	kMetadataMusicBrainzTrackIDKey			= CFSTR("MusicBrainz Track ID");
+static const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("Additional Metadata");
+static const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("Replay Gain Reference Loudness");
+static const CFStringRef	kReplayGainTrackGainKey					= CFSTR("Replay Gain Track Gain");
+static const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("Replay Gain Track Peak");
+static const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("Replay Gain Album Gain");
+static const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
+static const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("Album Art (Front Cover)");
 
 
 #pragma mark Static Methods
@@ -114,6 +116,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
 	decoderExtensions = OggVorbisMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = OggFLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
@@ -157,6 +163,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = OggVorbisMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = OggFLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -215,7 +225,7 @@ bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return mimeTypeIsSupported;
 }
 
-AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
+AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
 {
 	assert(NULL != url);
 	
@@ -254,8 +264,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(WavPackMetadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && WavPackMetadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new WavPackMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -263,8 +276,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(MP3Metadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && MP3Metadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new MP3Metadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -272,8 +288,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(MP4Metadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && MP4Metadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new MP4Metadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -281,8 +300,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 					
 					try {
-						if(WAVEMetadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && WAVEMetadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new WAVEMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -290,8 +312,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(AIFFMetadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && AIFFMetadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new AIFFMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -299,8 +324,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(MusepackMetadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && MusepackMetadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new MusepackMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -308,8 +336,23 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					}
 
 					try {
-						if(OggVorbisMetadata::HandlesFilesWithExtension(pathExtension))
+						if(!metadata && OggVorbisMetadata::HandlesFilesWithExtension(pathExtension)) {
 							metadata = new OggVorbisMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
+					}
+					
+					catch(std::exception& e) {
+						LOG("Exception creating metadata: %s", e.what());
+					}
+
+					try {
+						if(!metadata && OggFLACMetadata::HandlesFilesWithExtension(pathExtension)) {
+							metadata = new OggFLACMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = NULL;
+						}
 					}
 					
 					catch(std::exception& e) {
@@ -319,8 +362,44 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url)
 					CFRelease(pathExtension), pathExtension = NULL;
 				}				
 			}
-			else
+			else {
 				LOG("The requested URL doesn't exist");
+				
+				if(error) {
+					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																					   32,
+																					   &kCFTypeDictionaryKeyCallBacks,
+																					   &kCFTypeDictionaryValueCallBacks);
+					
+					CFStringRef displayName = CreateDisplayNameForURL(url);
+					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																	   NULL, 
+																	   CFCopyLocalizedString(CFSTR("The file \"%@\" does not exist."), ""), 
+																	   displayName);
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedDescriptionKey, 
+										 errorString);
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedFailureReasonKey, 
+										 CFCopyLocalizedString(CFSTR("File not found"), ""));
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedRecoverySuggestionKey, 
+										 CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
+					
+					CFRelease(errorString), errorString = NULL;
+					CFRelease(displayName), displayName = NULL;
+					
+					*error = CFErrorCreate(kCFAllocatorDefault, 
+										   AudioMetadataErrorDomain, 
+										   AudioMetadataInputOutputError, 
+										   errorDictionary);
+					
+					CFRelease(errorDictionary), errorDictionary = NULL;				
+				}				
+			}
 		}
 		else
 			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		

@@ -28,47 +28,46 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <taglib/aifffile.h>
+#include <taglib/oggflacfile.h>
 
 #include "AudioEngineDefines.h"
-#include "AIFFMetadata.h"
+#include "OggFLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromID3v2Tag.h"
-#include "SetID3v2TagFromMetadata.h"
+#include "SetMetadataFromXiphComment.h"
 
 
 #pragma mark Static Methods
 
 
-CFArrayRef AIFFMetadata::CreateSupportedFileExtensions()
+CFArrayRef OggFLACMetadata::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("aiff"), CFSTR("aif") };
+	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef AIFFMetadata::CreateSupportedMIMETypes()
+CFArrayRef OggFLACMetadata::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/aiff") };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
-bool AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	assert(NULL != extension);
 	
-	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("aiff"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ogg"), kCFCompareCaseInsensitive))
 		return true;
-	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("aif"), kCFCompareCaseInsensitive))
+	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
 		return true;
 
 	return false;
 }
 
-bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);	
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wave"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
@@ -78,18 +77,18 @@ bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-AIFFMetadata::AIFFMetadata(CFURLRef url)
+OggFLACMetadata::OggFLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-AIFFMetadata::~AIFFMetadata()
+OggFLACMetadata::~OggFLACMetadata()
 {}
 
 
 #pragma mark Functionality
 
 
-bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
+bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
@@ -98,8 +97,8 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf), false);
-	
+	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf), false);
+		
 	if(!file.isValid()) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -110,7 +109,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -119,7 +118,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -138,20 +137,20 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-	
+
 	if(file.tag())
-		SetMetadataFromID3v2Tag(this, file.tag());
-	
+		SetMetadataFromXiphComment(this, file.tag());
+	CFShow(mMetadata);
 	return true;
 }
 
-bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
+bool OggFLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf), false);
 	
 	if(!file.isValid()) {
 		if(error) {
@@ -163,7 +162,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -172,7 +171,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -188,11 +187,10 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
-		
+
 		return false;
 	}
 
-	SetID3v2TagFromMetadata(this, file.tag());
 
 	if(!file.save()) {
 		if(error) {
@@ -204,7 +202,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -232,6 +230,6 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-	
+
 	return true;
 }

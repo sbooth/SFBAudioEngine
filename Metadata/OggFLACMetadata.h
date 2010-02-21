@@ -35,9 +35,9 @@
 
 
 // ========================================
-// An AudioMetadata subclass supporting the Free Lossless Audio Codec (FLAC)
+// An AudioMetadata subclass supporting Ogg FLAC files
 // ========================================
-class FLACMetadata : public AudioMetadata
+class OggFLACMetadata : public AudioMetadata
 {
 	
 public:
@@ -52,11 +52,11 @@ public:
 	
 	// ========================================
 	// Creation
-	FLACMetadata(CFURLRef url);
+	OggFLACMetadata(CFURLRef url);
 	
 	// ========================================
 	// Destruction
-	virtual ~FLACMetadata();
+	virtual ~OggFLACMetadata();
 	
 	// ========================================
 	// The core functionality
