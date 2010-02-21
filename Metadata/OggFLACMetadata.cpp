@@ -34,6 +34,7 @@
 #include "OggFLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "SetMetadataFromXiphComment.h"
+#include "SetXiphCommentFromMetadata.h"
 
 
 #pragma mark Static Methods
@@ -191,6 +192,7 @@ bool OggFLACMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	SetXiphCommentFromMetadata(this, file.tag());
 
 	if(!file.save()) {
 		if(error) {
