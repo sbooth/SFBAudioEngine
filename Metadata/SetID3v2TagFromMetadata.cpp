@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,453 @@
 
 #include "SetID3v2TagFromMetadata.h"
 
+// If type and format don't match, watch out!
+static CFStringRef
+CreateStringFromNumberWithFormat(CFNumberRef	value,
+								 CFNumberType	type,
+								 CFStringRef	format = NULL)
+{
+	assert(NULL != value);
+	
+	switch(type) {
+			// Double
+		case kCFNumberDoubleType:
+		{
+			double d;
+			CFNumberGetValue(value, type, &d);
+
+			return CFStringCreateWithFormat(kCFAllocatorDefault, 
+											NULL, 
+											NULL == format ? CFSTR("%f") : format, 
+											d);
+		}
+			
+			// Everything else
+		default:
+			return CFStringCreateWithFormat(kCFAllocatorDefault, 
+											NULL, 
+											CFSTR("%@"), 
+											value);
+	}
+
+	return NULL;
+}
+
+
 bool
 SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 {
 	assert(NULL != metadata);
 	assert(NULL != tag);
+	
+	// Use UTF-8 as the default encoding
+	(TagLib::ID3v2::FrameFactory::instance())->setDefaultTextEncoding(TagLib::String::UTF8);
+
+	// Album title
+	if(metadata->GetAlbumTitle()) {
+		CFStringRef str = metadata->GetAlbumTitle();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		tag->setAlbum(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		tag->setAlbum(TagLib::String::null);
+
+	// Artist
+	if(metadata->GetArtist()) {
+		CFStringRef str = metadata->GetArtist();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		tag->setArtist(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		tag->setArtist(TagLib::String::null);
+	
+	// Composer
+	tag->removeFrames("TCOM");
+	if(metadata->GetComposer()) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TCOM", TagLib::String::Latin1);
+		
+		CFStringRef str = metadata->GetComposer();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	
+	// Genre
+	if(metadata->GetGenre()) {
+		CFStringRef str = metadata->GetGenre();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		tag->setGenre(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		tag->setGenre(TagLib::String::null);
+	
+	// Date
+	int year = 0;
+	if(metadata->GetReleaseDate())
+		year = CFStringGetIntValue(metadata->GetReleaseDate());
+	tag->setYear(year);
+	
+	// Comment
+	if(metadata->GetComment()) {
+		CFStringRef str = metadata->GetComment();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		tag->setComment(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		tag->setComment(TagLib::String::null);
+	
+	// Album artist
+	tag->removeFrames("TPE2");
+	if(metadata->GetAlbumArtist()) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPE2", TagLib::String::Latin1);
+		
+		CFStringRef str = metadata->GetAlbumArtist();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	
+	// Track title
+	if(metadata->GetTitle()) {
+		CFStringRef str = metadata->GetTitle();
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		tag->setTitle(TagLib::String(cString, TagLib::String::UTF8));
+	}
+	else
+		tag->setTitle(TagLib::String::null);
+	
+	// BPM
+//	tag->removeFrames("TBPM");
+//	if(metadata->GetBPM()) {
+//		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
+//		
+//		CFStringRef str = metadata->GetBPM();
+//		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+//		char cString [cStringSize + 1];
+//		
+//		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+//			ERR("CFStringGetCString failed");
+//			return false;			
+//		}
+//		
+//		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+//		tag->addFrame(frame);
+//	}
+	
+	// Track number and total tracks
+	tag->removeFrames("TRCK");
+	CFNumberRef trackNumber	= metadata->GetTrackNumber();
+	CFNumberRef trackTotal	= metadata->GetTrackTotal();
+	if(trackNumber && trackTotal) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), trackNumber, trackTotal);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	else if(trackNumber) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), trackNumber);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	else if(trackTotal) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), trackTotal);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	
+	// Compilation
+	// iTunes uses the TCMP frame for this, which isn't in the standard, but we'll use it for compatibility
+	tag->removeFrames("TCMP");
+	if(metadata->GetCompilation()) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TCMP", TagLib::String::Latin1);
+		frame->setText(CFBooleanGetValue(metadata->GetCompilation()) ? "1" : "0");
+		tag->addFrame(frame);
+	}
+	
+	// Disc number and total discs
+	tag->removeFrames("TPOS");
+	CFNumberRef discNumber	= metadata->GetDiscNumber();
+	CFNumberRef discTotal	= metadata->GetDiscTotal();
+	if(discNumber && discTotal) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), discNumber, discTotal);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	else if(discNumber) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), discNumber);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	else if(discTotal) {
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), discTotal);
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		tag->addFrame(frame);
+	}
+	
+	// ReplayGain
+	CFNumberRef trackGain = metadata->GetReplayGainTrackGain();
+	CFNumberRef trackPeak = metadata->GetReplayGainTrackPeak();
+	CFNumberRef albumGain = metadata->GetReplayGainAlbumGain();
+	CFNumberRef albumPeak = metadata->GetReplayGainAlbumPeak();
+	
+	// Write TXXX frames
+	TagLib::ID3v2::UserTextIdentificationFrame *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");
+	TagLib::ID3v2::UserTextIdentificationFrame *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_peak");
+	TagLib::ID3v2::UserTextIdentificationFrame *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
+	TagLib::ID3v2::UserTextIdentificationFrame *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
+	
+	if(NULL != trackGainFrame)
+		tag->removeFrame(trackGainFrame);
+	
+	if(NULL != trackPeakFrame)
+		tag->removeFrame(trackPeakFrame);
+	
+	if(NULL != albumGainFrame)
+		tag->removeFrame(albumGainFrame);
+	
+	if(NULL != albumPeakFrame)
+		tag->removeFrame(albumPeakFrame);
+	
+	if(trackGain) {
+		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
+
+		CFStringRef str = CreateStringFromNumberWithFormat(trackGain, kCFNumberDoubleType, CFSTR("%+2.2f dB"));
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		userTextFrame->setDescription(TagLib::String("replaygain_track_gain", TagLib::String::Latin1));
+		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		
+		tag->addFrame(userTextFrame);
+	}
+	
+	if(trackPeak) {
+		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		
+		CFStringRef str = CreateStringFromNumberWithFormat(trackPeak, kCFNumberDoubleType, CFSTR("%1.8f dB"));
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		userTextFrame->setDescription(TagLib::String("replaygain_track_peak", TagLib::String::Latin1));
+		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		
+		tag->addFrame(userTextFrame);
+	}
+	
+	if(albumGain) {
+		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		
+		CFStringRef str = CreateStringFromNumberWithFormat(albumGain, kCFNumberDoubleType, CFSTR("%+2.2f dB"));
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		userTextFrame->setDescription(TagLib::String("replaygain_album_gain", TagLib::String::Latin1));
+		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		
+		tag->addFrame(userTextFrame);
+	}
+	
+	if(albumPeak) {
+		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		
+		CFStringRef str = CreateStringFromNumberWithFormat(albumPeak, kCFNumberDoubleType, CFSTR("%1.8f dB"));
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		CFRelease(str), str = NULL;
+		
+		userTextFrame->setDescription(TagLib::String("replaygain_album_peak", TagLib::String::Latin1));
+		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		
+		tag->addFrame(userTextFrame);
+	}
+	
+	// Also write the RVA2 frames
+	tag->removeFrames("RVA2");
+	if(trackGain) {
+		TagLib::ID3v2::RelativeVolumeFrame *relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
+		
+		float f;
+		CFNumberGetValue(trackGain, kCFNumberFloatType, &f);
+		
+		relativeVolume->setIdentification(TagLib::String("track", TagLib::String::Latin1));
+		relativeVolume->setVolumeAdjustment(f, TagLib::ID3v2::RelativeVolumeFrame::MasterVolume);
+		
+		tag->addFrame(relativeVolume);
+	}
+	
+	if(albumGain) {
+		TagLib::ID3v2::RelativeVolumeFrame *relativeVolume = new TagLib::ID3v2::RelativeVolumeFrame();
+
+		float f;
+		CFNumberGetValue(albumGain, kCFNumberFloatType, &f);
+
+		relativeVolume->setIdentification(TagLib::String("album", TagLib::String::Latin1));
+		relativeVolume->setVolumeAdjustment(f, TagLib::ID3v2::RelativeVolumeFrame::MasterVolume);
+		
+		tag->addFrame(relativeVolume);
+	}
+	
+	// Album art
+	/*	NSImage *albumArt = [metadata valueForKey:@"albumArt"];
+	 if(nil != albumArt) {
+	 NSData										*data;
+	 TagLib::ID3v2::AttachedPictureFrame			*pictureFrame;
+	 
+	 data			= getPNGDataForImage(albumArt); 
+	 pictureFrame	= new TagLib::ID3v2::AttachedPictureFrame();
+	 NSAssert(NULL != pictureFrame, @"Unable to allocate memory.");
+	 
+	 pictureFrame->setMimeType(TagLib::String("image/png", TagLib::String::Latin1));
+	 pictureFrame->setPicture(TagLib::ByteVector((const char *)[data bytes], [data length]));
+	 tag->addFrame(pictureFrame);
+	 }*/
 	
 	return true;
 }
