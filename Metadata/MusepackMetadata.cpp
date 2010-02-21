@@ -34,6 +34,7 @@
 #include "AudioEngineDefines.h"
 #include "MusepackMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "TagLibStringFromCFString.h"
 
 
 #pragma mark Static Methods
@@ -237,104 +238,38 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 	}
 
 	// Album title
-	CFStringRef str = GetAlbumTitle();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setAlbum(TagLib::String(cString, TagLib::String::UTF8));
-	}
+	if(GetAlbumTitle())
+		file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
 	else
 		file.tag()->setAlbum(TagLib::String::null);
 	
 	// Artist
-	str = GetArtist();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setArtist(TagLib::String(cString, TagLib::String::UTF8));
-	}
+	if(GetArtist())
+		file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
 	else
 		file.tag()->setArtist(TagLib::String::null);
 	
 	// Genre
-	str = GetGenre();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setGenre(TagLib::String(cString, TagLib::String::UTF8));
-	}
+	if(GetGenre())
+		file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
 	else
 		file.tag()->setGenre(TagLib::String::null);
 	
 	// Year
-	str = GetReleaseDate();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setYear(CFStringGetIntValue(str));
-	}
+	if(GetReleaseDate())
+		file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
 	else
 		file.tag()->setYear(0);
 	
 	// Comment
-	str = GetComment();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setComment(TagLib::String(cString, TagLib::String::UTF8));
-	}
+	if(GetComment())
+		file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
 	else
 		file.tag()->setComment(TagLib::String::null);
 	
 	// Track title
-	str = GetTitle();
-	
-	if(str) {
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		file.tag()->setTitle(TagLib::String(cString, TagLib::String::UTF8));
-	}
+	if(GetTitle())
+		file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
 	else
 		file.tag()->setTitle(TagLib::String::null);
 	

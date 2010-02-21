@@ -32,12 +32,184 @@
 #include "AudioMetadata.h"
 
 #include "SetXiphCommentFromMetadata.h"
+#include "TagLibStringFromCFString.h"
+
+
+// ========================================
+// Xiph comment utilities
+// ========================================
+static bool
+SetXiphComment(TagLib::Ogg::XiphComment		*tag,
+			   const char					*key,
+			   CFStringRef					value)
+{
+	assert(NULL != tag);
+	assert(NULL != key);
+	
+	// Remove the existing comment with this name
+	tag->removeField(key);
+	
+	// Nothing left to do if value is NULL
+	if(NULL == value)
+		return true;
+	
+	tag->addField(key, TagLib::StringFromCFString(value));
+	
+	return true;
+}
+
+static bool
+SetXiphCommentNumber(TagLib::Ogg::XiphComment	*tag,
+					 const char					*key,
+					 CFNumberRef				value)
+{
+	assert(NULL != tag);
+	assert(NULL != key);
+	
+	CFStringRef numberString = NULL;
+	
+	if(NULL != value)
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+												NULL, 
+												CFSTR("%@"), 
+												value);
+	
+	bool result = SetXiphComment(tag, key, numberString);
+	
+	if(numberString)
+		CFRelease(numberString), numberString = NULL;
+	
+	return result;
+}
+
+static bool
+SetXiphCommentBoolean(TagLib::Ogg::XiphComment	*tag,
+					  const char				*key,
+					  CFBooleanRef				value)
+{
+	assert(NULL != tag);
+	assert(NULL != key);
+	
+	if(CFBooleanGetValue(value))
+		return SetXiphComment(tag, key, CFSTR("1"));
+	else
+		return SetXiphComment(tag, key, CFSTR("0"));
+}
+
+static bool
+SetXiphCommentDouble(TagLib::Ogg::XiphComment	*tag,
+					 const char					*key,
+					 CFNumberRef				value,
+					 CFStringRef				format = NULL)
+{
+	assert(NULL != tag);
+	assert(NULL != key);
+	
+	CFStringRef numberString = NULL;
+	
+	if(NULL != value) {
+		double f;
+		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+												NULL, 
+												NULL == format ? CFSTR("%f") : format, 
+												f);
+	}
+	
+	bool result = SetXiphComment(tag, key, numberString);
+	
+	if(numberString)
+		CFRelease(numberString), numberString = NULL;
+	
+	return result;
+}
 
 bool
 SetXiphCommentFromMetadata(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag)
 {
 	assert(NULL != metadata);
 	assert(NULL != tag);
+
+	// Album title
+	SetXiphComment(tag, "ALBUM", metadata->GetAlbumTitle());
+	
+	// Artist
+	SetXiphComment(tag, "ARTIST", metadata->GetArtist());
+	
+	// Album Artist
+	SetXiphComment(tag, "ALBUMARTIST", metadata->GetAlbumArtist());
+	
+	// Composer
+	SetXiphComment(tag, "COMPOSER", metadata->GetComposer());
+	
+	// Genre
+	SetXiphComment(tag, "GENRE", metadata->GetGenre());
+	
+	// Date
+	SetXiphComment(tag, "DATE", metadata->GetReleaseDate());
+	
+	// Comment
+	SetXiphComment(tag, "DESCRIPTION", metadata->GetComment());
+	
+	// Track title
+	SetXiphComment(tag, "TITLE", metadata->GetTitle());
+	
+	// Track number
+	SetXiphCommentNumber(tag, "TRACKNUMBER", metadata->GetTrackNumber());
+	
+	// Total tracks
+	SetXiphCommentNumber(tag, "TRACKTOTAL", metadata->GetTrackTotal());
+	
+	// Compilation
+	SetXiphCommentBoolean(tag, "COMPILATION", metadata->GetCompilation());
+	
+	// Disc number
+	SetXiphCommentNumber(tag, "DISCNUMBER", metadata->GetDiscNumber());
+	
+	// Disc total
+	SetXiphCommentNumber(tag, "DISCTOTAL", metadata->GetDiscTotal());
+	
+	// ISRC
+	SetXiphComment(tag, "ISRC", metadata->GetISRC());
+	
+	// MCN
+	SetXiphComment(tag, "MCN", metadata->GetMCN());
+	
+	// Additional metadata
+	CFDictionaryRef additionalMetadata = metadata->GetAdditionalMetadata();
+	if(NULL != additionalMetadata) {
+		CFIndex count = CFDictionaryGetCount(additionalMetadata);
+		
+		const void * keys [count];
+		const void * values [count];
+		
+		CFDictionaryGetKeysAndValues(additionalMetadata, 
+									 reinterpret_cast<const void **>(keys), 
+									 reinterpret_cast<const void **>(values));
+		
+		for(CFIndex i = 0; i < count; ++i) {
+			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
+			char key [keySize + 1];
+			
+			if(false == CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+				ERR("CFStringGetCString failed");
+				continue;
+			}
+			
+			SetXiphComment(tag, key, reinterpret_cast<CFStringRef>(values[i]));
+		}
+	}
+	
+	// ReplayGain info
+	SetXiphCommentDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata->GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata->GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata->GetReplayGainTrackGain(), CFSTR("%1.8f"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata->GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata->GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
 	return true;
 }

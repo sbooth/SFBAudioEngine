@@ -35,8 +35,8 @@
 
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
-
 #include "SetID3v2TagFromMetadata.h"
+#include "TagLibStringFromCFString.h"
 
 // If type and format don't match, watch out!
 static CFStringRef
@@ -81,70 +81,21 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	(TagLib::ID3v2::FrameFactory::instance())->setDefaultTextEncoding(TagLib::String::UTF8);
 
 	// Album title
-	if(metadata->GetAlbumTitle()) {
-		CFStringRef str = metadata->GetAlbumTitle();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		tag->setAlbum(TagLib::String(cString, TagLib::String::UTF8));
-	}
-	else
-		tag->setAlbum(TagLib::String::null);
+	tag->setAlbum(TagLib::StringFromCFString(metadata->GetAlbumTitle()));
 
 	// Artist
-	if(metadata->GetArtist()) {
-		CFStringRef str = metadata->GetArtist();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		tag->setArtist(TagLib::String(cString, TagLib::String::UTF8));
-	}
-	else
-		tag->setArtist(TagLib::String::null);
+	tag->setArtist(TagLib::StringFromCFString(metadata->GetArtist()));
 	
 	// Composer
 	tag->removeFrames("TCOM");
 	if(metadata->GetComposer()) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TCOM", TagLib::String::Latin1);
-		
-		CFStringRef str = metadata->GetComposer();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		frame->setText(TagLib::StringFromCFString(metadata->GetComposer()));
 		tag->addFrame(frame);
 	}
 	
 	// Genre
-	if(metadata->GetGenre()) {
-		CFStringRef str = metadata->GetGenre();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		tag->setGenre(TagLib::String(cString, TagLib::String::UTF8));
-	}
-	else
-		tag->setGenre(TagLib::String::null);
+	tag->setGenre(TagLib::StringFromCFString(metadata->GetGenre()));
 	
 	// Date
 	int year = 0;
@@ -153,70 +104,24 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	tag->setYear(year);
 	
 	// Comment
-	if(metadata->GetComment()) {
-		CFStringRef str = metadata->GetComment();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		tag->setComment(TagLib::String(cString, TagLib::String::UTF8));
-	}
-	else
-		tag->setComment(TagLib::String::null);
+	tag->setComment(TagLib::StringFromCFString(metadata->GetComment()));
 	
 	// Album artist
 	tag->removeFrames("TPE2");
 	if(metadata->GetAlbumArtist()) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPE2", TagLib::String::Latin1);
-		
-		CFStringRef str = metadata->GetAlbumArtist();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		frame->setText(TagLib::StringFromCFString(metadata->GetAlbumArtist()));
 		tag->addFrame(frame);
 	}
 	
 	// Track title
-	if(metadata->GetTitle()) {
-		CFStringRef str = metadata->GetTitle();
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		tag->setTitle(TagLib::String(cString, TagLib::String::UTF8));
-	}
-	else
-		tag->setTitle(TagLib::String::null);
+	tag->setTitle(TagLib::StringFromCFString(metadata->GetTitle()));
 	
 	// BPM
 //	tag->removeFrames("TBPM");
 //	if(metadata->GetBPM()) {
 //		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
-//		
-//		CFStringRef str = metadata->GetBPM();
-//		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-//		char cString [cStringSize + 1];
-//		
-//		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-//			ERR("CFStringGetCString failed");
-//			return false;			
-//		}
-//		
-//		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+//		frame->setText(TagLib::StringFromCFString(metadata->GetBPM()));
 //		tag->addFrame(frame);
 //	}
 	
@@ -225,55 +130,31 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	CFNumberRef trackNumber	= metadata->GetTrackNumber();
 	CFNumberRef trackTotal	= metadata->GetTrackTotal();
 	if(trackNumber && trackTotal) {
-		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
-		
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), trackNumber, trackTotal);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		CFRelease(str), str = NULL;
 
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		tag->addFrame(frame);
-	}
-	else if(trackNumber) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
-		
+		frame->setText(TagLib::StringFromCFString(str));
+		tag->addFrame(frame);
+
+		CFRelease(str), str = NULL;
+	}
+	else if(trackNumber) {		
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), trackNumber);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		CFRelease(str), str = NULL;
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		tag->addFrame(frame);
-	}
-	else if(trackTotal) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
-		
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), trackTotal);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		CFRelease(str), str = NULL;
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
+
+		CFRelease(str), str = NULL;
+	}
+	else if(trackTotal) {		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), trackTotal);
+		
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
+		frame->setText(TagLib::StringFromCFString(str));
+		tag->addFrame(frame);
+
+		CFRelease(str), str = NULL;
 	}
 	
 	// Compilation
@@ -290,55 +171,31 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	CFNumberRef discNumber	= metadata->GetDiscNumber();
 	CFNumberRef discTotal	= metadata->GetDiscTotal();
 	if(discNumber && discTotal) {
-		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
-		
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), discNumber, discTotal);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+		frame->setText(TagLib::StringFromCFString(str));
+		tag->addFrame(frame);
 		
 		CFRelease(str), str = NULL;
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		tag->addFrame(frame);
 	}
-	else if(discNumber) {
-		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
-		
+	else if(discNumber) {		
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), discNumber);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
-		CFRelease(str), str = NULL;
-		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		tag->addFrame(frame);
-	}
-	else if(discTotal) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
-		
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), discTotal);
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
+		frame->setText(TagLib::StringFromCFString(str));
+		tag->addFrame(frame);
 		
 		CFRelease(str), str = NULL;
+	}
+	else if(discTotal) {		
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/%@"), discTotal);
 		
-		frame->setText(TagLib::String(cString, TagLib::String::UTF8));
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
+		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
+		
+		CFRelease(str), str = NULL;
 	}
 	
 	// ReplayGain
@@ -366,83 +223,47 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		tag->removeFrame(albumPeakFrame);
 	
 	if(trackGain) {
-		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
-
 		CFStringRef str = CreateStringFromNumberWithFormat(trackGain, kCFNumberDoubleType, CFSTR("%+2.2f dB"));
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
+		TagLib::ID3v2::UserTextIdentificationFrame *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		frame->setDescription("replaygain_track_gain");
+		frame->setText(TagLib::StringFromCFString(str));		
+		tag->addFrame(frame);
+
 		CFRelease(str), str = NULL;
-		
-		userTextFrame->setDescription(TagLib::String("replaygain_track_gain", TagLib::String::Latin1));
-		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		
-		tag->addFrame(userTextFrame);
 	}
 	
-	if(trackPeak) {
-		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
-		
+	if(trackPeak) {		
 		CFStringRef str = CreateStringFromNumberWithFormat(trackPeak, kCFNumberDoubleType, CFSTR("%1.8f dB"));
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
+		TagLib::ID3v2::UserTextIdentificationFrame *frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		frame->setDescription("replaygain_track_peak");
+		frame->setText(TagLib::StringFromCFString(str));		
+		tag->addFrame(frame);
+
 		CFRelease(str), str = NULL;
-		
-		userTextFrame->setDescription(TagLib::String("replaygain_track_peak", TagLib::String::Latin1));
-		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		
-		tag->addFrame(userTextFrame);
 	}
 	
 	if(albumGain) {
-		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
-		
 		CFStringRef str = CreateStringFromNumberWithFormat(albumGain, kCFNumberDoubleType, CFSTR("%+2.2f dB"));
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
-		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
+
+		TagLib::ID3v2::UserTextIdentificationFrame *frame = new TagLib::ID3v2::UserTextIdentificationFrame();		
+		frame->setDescription("replaygain_album_gain");
+		frame->setText(TagLib::StringFromCFString(str));		
+		tag->addFrame(frame);
+
 		CFRelease(str), str = NULL;
-		
-		userTextFrame->setDescription(TagLib::String("replaygain_album_gain", TagLib::String::Latin1));
-		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		
-		tag->addFrame(userTextFrame);
 	}
 	
 	if(albumPeak) {
-		TagLib::ID3v2::UserTextIdentificationFrame *userTextFrame = new TagLib::ID3v2::UserTextIdentificationFrame();
-		
 		CFStringRef str = CreateStringFromNumberWithFormat(albumPeak, kCFNumberDoubleType, CFSTR("%1.8f dB"));
-		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
-		char cString [cStringSize + 1];
 		
-		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			ERR("CFStringGetCString failed");
-			return false;			
-		}
-		
+		TagLib::ID3v2::UserTextIdentificationFrame *frame = new TagLib::ID3v2::UserTextIdentificationFrame();		
+		frame->setDescription("replaygain_album_peak");
+		frame->setText(TagLib::StringFromCFString(str));		
+		tag->addFrame(frame);
+
 		CFRelease(str), str = NULL;
-		
-		userTextFrame->setDescription(TagLib::String("replaygain_album_peak", TagLib::String::Latin1));
-		userTextFrame->setText(TagLib::String(cString, TagLib::String::UTF8));
-		
-		tag->addFrame(userTextFrame);
 	}
 	
 	// Also write the RVA2 frames

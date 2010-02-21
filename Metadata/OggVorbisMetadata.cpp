@@ -48,7 +48,7 @@ CFArrayRef OggVorbisMetadata::CreateSupportedFileExtensions()
 
 CFArrayRef OggVorbisMetadata::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg") };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg-vorbis") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
@@ -68,7 +68,7 @@ bool OggVorbisMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);	
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg-vorbis"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
