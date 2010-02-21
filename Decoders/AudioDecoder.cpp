@@ -34,6 +34,7 @@
 
 #include "AudioEngineDefines.h"
 #include "AudioDecoder.h"
+#include "CreateDisplayNameForURL.h"
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
 #include "FLACDecoder.h"
@@ -41,6 +42,12 @@
 #include "MPEGDecoder.h"
 #include "OggVorbisDecoder.h"
 #include "MusepackDecoder.h"
+
+
+// ========================================
+// Error Codes
+// ========================================
+const CFStringRef	AudioDecoderErrorDomain					= CFSTR("org.sbooth.SFBAudioEngine.ErrorDomain.AudioDecoder");
 
 
 #pragma mark Static Methods
@@ -164,7 +171,7 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return mimeTypeIsSupported;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
+AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
 	assert(NULL != url);
 	
@@ -249,8 +256,44 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 					CFRelease(pathExtension), pathExtension = NULL;
 				}				
 			}
-			else
+			else {
 				LOG("The requested URL doesn't exist");
+				
+				if(error) {
+					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																					   32,
+																					   &kCFTypeDictionaryKeyCallBacks,
+																					   &kCFTypeDictionaryValueCallBacks);
+					
+					CFStringRef displayName = CreateDisplayNameForURL(url);
+					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																	   NULL, 
+																	   CFCopyLocalizedString(CFSTR("The file \"%@\" does not exist."), ""), 
+																	   displayName);
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedDescriptionKey, 
+										 errorString);
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedFailureReasonKey, 
+										 CFCopyLocalizedString(CFSTR("File not found"), ""));
+					
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedRecoverySuggestionKey, 
+										 CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
+					
+					CFRelease(errorString), errorString = NULL;
+					CFRelease(displayName), displayName = NULL;
+					
+					*error = CFErrorCreate(kCFAllocatorDefault, 
+										   AudioDecoderErrorDomain, 
+										   AudioDecoderInputOutputError, 
+										   errorDictionary);
+					
+					CFRelease(errorDictionary), errorDictionary = NULL;				
+				}				
+			}
 		}
 		else
 			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		
@@ -285,9 +328,9 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url)
 	return decoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame)
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
 	
 	if(NULL == decoder)
 		return NULL;
@@ -300,9 +343,9 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return new LoopableRegionDecoder(decoder, startingFrame);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount)
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
 	
 	if(NULL == decoder)
 		return NULL;
@@ -315,9 +358,9 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
 	
 	if(NULL == decoder)
 		return NULL;

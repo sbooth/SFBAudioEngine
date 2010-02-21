@@ -51,6 +51,18 @@ struct AudioDecoderCallbackAndContext
 
 
 // ========================================
+// Error Codes
+// ========================================
+extern const CFStringRef		AudioDecoderErrorDomain;
+
+enum {
+	AudioDecoderFileFormatNotRecognizedError		= 0,
+	AudioDecoderFileFormatNotSupportedError			= 1,
+	AudioDecoderInputOutputError					= 2
+};
+
+
+// ========================================
 // Abstract superclass for an audio decoder
 // An AudioDecoder is responsible for reading audio data in some format and providing
 // it in a PCM format that is handled by an AudioConverter
@@ -73,12 +85,12 @@ public:
 	
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
-	static AudioDecoder * CreateDecoderForURL(CFURLRef url);
+	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
 
 	// Limit decoding to a specified file region
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame);
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount);
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
 	
 	// ========================================
 	// Destruction
