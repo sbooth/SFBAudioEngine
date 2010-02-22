@@ -34,6 +34,7 @@
 
 #include "AudioEngineDefines.h"
 #include "WavPackDecoder.h"
+#include "CreateDisplayNameForURL.h"
 
 
 #define BUFFER_SIZE_FRAMES 2048
@@ -80,20 +81,67 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 WavPackDecoder::WavPackDecoder(CFURLRef url)
 	: AudioDecoder(url), mWPC(NULL), mTotalFrames(0), mCurrentFrame(0)
+{}
+
+WavPackDecoder::~WavPackDecoder()
 {
-	assert(NULL != url);
-		
+	if(FileIsOpen())
+		CloseFile();
+}
+
+
+#pragma mark Functionality
+
+
+bool WavPackDecoder::OpenFile(CFErrorRef *error)
+{
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
+		return false;
 	
 	char errorBuf [80];
-
+	
 	// Setup converter
 	mWPC = WavpackOpenFileInput(reinterpret_cast<char *>(buf), errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
-	if(NULL == mWPC)
-		throw std::runtime_error("WavpackOpenFileInput failed");
-
+	if(NULL == mWPC) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		return false;
+	}
+	
 	// Floating-point and lossy files will be handed off in the canonical Core Audio format
 	int mode = WavpackGetMode(mWPC);
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
@@ -127,7 +175,7 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 	}
 	
 	mTotalFrames						= WavpackGetNumSamples(mWPC);
-
+	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'WVPK';
 	
@@ -142,22 +190,27 @@ WavPackDecoder::WavPackDecoder(CFURLRef url)
 	}
 	
 	mBuffer = static_cast<int32_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t)));
-	if(NULL == mBuffer)
-		throw std::bad_alloc();
+
+	if(NULL == mBuffer) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+		
+		return false;		
+	}
+
+	return true;
 }
 
-WavPackDecoder::~WavPackDecoder()
+bool WavPackDecoder::CloseFile(CFErrorRef */*error*/)
 {
 	if(mWPC)
 		WavpackCloseFile(mWPC), mWPC = NULL;
 	
 	if(mBuffer)
 		free(mBuffer), mBuffer = NULL;
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 CFStringRef WavPackDecoder::CreateSourceFormatDescription()
 {

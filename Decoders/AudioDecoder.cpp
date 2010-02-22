@@ -190,67 +190,40 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 				
 				if(NULL != pathExtension) {
 
-					// Creating a decoder may throw an exception for any number of reasons
-					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-					// In lieu of adding a FileIsValid() method to each class that would open
-					// and evaluate each file before opening, the try/catch madness here has a
-					// similar effect without the file opening overhead
 					
-					// Additionally, as a factory this class has knowledge of its subclasses
+					// As a factory this class has knowledge of its subclasses
 					// It would be possible (and perhaps preferable) to switch to a generic
 					// plugin interface at a later date
-					try {
-						if(FLACDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new FLACDecoder(url);
+					if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new FLACDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
+					if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new WavPackDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
-					
-					try {
-						if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new WavPackDecoder(url);
+					if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new MPEGDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
+					if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new OggVorbisDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
-
-					try {
-						if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new MPEGDecoder(url);
+					if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new MusepackDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
-					}
-					try {
-						if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new OggVorbisDecoder(url);
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
-					}
-
-					try {
-						if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new MusepackDecoder(url);
-					}
-
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
-					}
-
-					try {
-						if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension))
-							decoder = new CoreAudioDecoder(url);
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating decoder: %s", e.what());
+					if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+						decoder = new CoreAudioDecoder(url);
+						if(!decoder->OpenFile(error))
+							delete decoder, decoder = NULL;
 					}
 					
 					CFRelease(pathExtension), pathExtension = NULL;
@@ -427,7 +400,7 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 	mSourceFormat		= rhs.mSourceFormat;
 	
 	memcpy(&mCallbacks, &rhs.mCallbacks, sizeof(rhs.mCallbacks));
-	
+
 	return *this;
 }
 

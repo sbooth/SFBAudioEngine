@@ -38,6 +38,7 @@
 
 #include "AudioEngineDefines.h"
 #include "FLACDecoder.h"
+#include "CreateDisplayNameForURL.h"
 
 
 //__attribute__ ((constructor)) static void register_decoder()
@@ -120,25 +121,43 @@ bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 FLACDecoder::FLACDecoder(CFURLRef url)
 	: AudioDecoder(url), mFLAC(NULL), mCurrentFrame(0), mBufferList(NULL)
+{}
+
+FLACDecoder::~FLACDecoder()
 {
-	assert(NULL != url);
-	
+	if(FileIsOpen())
+		CloseFile();
+}
+
+
+#pragma mark Functionality
+
+
+bool FLACDecoder::OpenFile(CFErrorRef *error)
+{
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(FALSE == success)
-		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
+	if(false == success)
+		return false;
 	
 	// Create FLAC decoder
 	mFLAC = FLAC__stream_decoder_new();
-	if(NULL == mFLAC)
-		throw std::runtime_error("FLAC__stream_decoder_new failed");
-
-	CFStringRef extension = CFURLCopyPathExtension(url);
-	if(NULL == extension)
-		throw std::runtime_error("CFURLCopyPathExtension failed");
-
+	if(NULL == mFLAC) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+		return false;
+	}
+	
+	CFStringRef extension = CFURLCopyPathExtension(mURL);
+	if(NULL == extension) {
+		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
+		return false;
+	}
+	
 	// Initialize decoder
 	FLAC__StreamDecoderInitStatus status = FLAC__STREAM_DECODER_INIT_STATUS_ERROR_OPENING_FILE;
+	
+	// Attempt to create a stream decoder based on the file's extension
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
 		status = FLAC__stream_decoder_init_file(mFLAC, 
 												reinterpret_cast<const char *>(buf),
@@ -153,22 +172,58 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 													metadataCallback, 
 													errorCallback,
 													this);
-
+	
 	CFRelease(extension), extension = NULL;
 	
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
-		throw std::runtime_error("FLAC__stream_decoder_init_file (or FLAC__stream_decoder_init_ogg_file) failed");
-	}
-
-	// Process metadata
-	if(FALSE == FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
-		if(FALSE == FLAC__stream_decoder_finish(mFLAC))
-			ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
 
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 		
-		throw std::runtime_error("FLAC__stream_decoder_process_until_end_of_metadata failed");
+		return false;
+	}
+	
+	// Process metadata
+	if(false == FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
+		if(false == FLAC__stream_decoder_finish(mFLAC))
+			ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+		
+		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
+		
+		return false;
 	}
 	
 	// Canonical Core Audio format
@@ -184,14 +239,14 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
 	mFormat.mReserved			= 0;
-
+	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'FLAC';
-
+	
 	mSourceFormat.mSampleRate			= mStreamInfo.sample_rate;
 	mSourceFormat.mChannelsPerFrame		= mStreamInfo.channels;
 	mSourceFormat.mBitsPerChannel		= mStreamInfo.bits_per_sample;
-
+	
 	mSourceFormat.mFramesPerPacket		= mStreamInfo.max_blocksize;
 	
 	switch(mStreamInfo.channels) {
@@ -205,14 +260,17 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
-
+	
 	if(NULL == mBufferList) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+
 		if(FALSE == FLAC__stream_decoder_finish(mFLAC))
 			ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
-
-		throw std::bad_alloc();
+		
+		return false;
 	}
 	
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
@@ -221,7 +279,10 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 		mBufferList->mBuffers[i].mData = calloc(mStreamInfo.max_blocksize, sizeof(FLAC__int32));
 		
 		if(NULL == mBufferList->mBuffers[i].mData) {
-			if(FALSE == FLAC__stream_decoder_finish(mFLAC))
+			if(error)
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+
+			if(false == FLAC__stream_decoder_finish(mFLAC))
 				ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 			
 			FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
@@ -231,31 +292,32 @@ FLACDecoder::FLACDecoder(CFURLRef url)
 			
 			free(mBufferList), mBufferList = NULL;
 			
-			throw std::bad_alloc();
+			return false;
 		}
 		
 		mBufferList->mBuffers[i].mNumberChannels = 1;
 	}
+	
+	return true;
 }
 
-FLACDecoder::~FLACDecoder()
-{	
-	FLAC__bool result = FLAC__stream_decoder_finish(mFLAC);
-	if(FALSE == result)
-		ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-	
-	FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
+bool FLACDecoder::CloseFile(CFErrorRef */*error*/)
+{
+	if(mFLAC) {
+		if(FALSE == FLAC__stream_decoder_finish(mFLAC))
+			ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+		
+		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
+	}
 	
 	if(mBufferList) {
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
 		free(mBufferList), mBufferList = NULL;
 	}
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 CFStringRef FLACDecoder::CreateSourceFormatDescription()
 {

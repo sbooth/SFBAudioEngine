@@ -98,6 +98,22 @@ void LoopableRegionDecoder::Reset()
 #pragma mark Functionality
 
 
+bool LoopableRegionDecoder::OpenFile(CFErrorRef *error)
+{
+	if(!mDecoder->FileIsOpen())
+		return mDecoder->OpenFile(error);
+	
+	return true;
+}
+
+bool LoopableRegionDecoder::CloseFile(CFErrorRef *error)
+{
+	if(mDecoder->FileIsOpen())
+		return mDecoder->CloseFile(error);
+	
+	return true;
+}
+
 SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 {
 	assert(0 <= frame);

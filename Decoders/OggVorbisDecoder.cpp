@@ -34,6 +34,7 @@
 
 #include "AudioEngineDefines.h"
 #include "OggVorbisDecoder.h"
+#include "CreateDisplayNameForURL.h"
 
 
 #define BUFFER_SIZE_FRAMES 2048
@@ -83,39 +84,123 @@ bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 	: AudioDecoder(url)
 {
-	assert(NULL != url);
-	
+	memset(&mVorbisFile, 0, sizeof(mVorbisFile));
+}
+
+OggVorbisDecoder::~OggVorbisDecoder()
+{
+	if(FileIsOpen())
+		CloseFile();
+}
+
+
+#pragma mark Functionality
+
+
+bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
+{
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
-
+		return false;
+	
 	FILE *file = fopen(reinterpret_cast<const char *>(buf), "r");
-	if(NULL == file)
-		throw std::runtime_error("Unable to open the input file");
-
+	if(NULL == file) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" was not found."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("File Not Found"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file may have been renamed or deleted, or exist on removable media."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;
+		}
+		
+		return false;
+	}
+	
 	if(0 != ov_test(file, &mVorbisFile, NULL, 0)) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg Vorbis file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
 		if(0 != fclose(file))
 			ERR("fclose() failed");
-
-		throw std::runtime_error("The file does not appear to be a valid Ogg Vorbis file");
+		
+		return false;
 	}
 	
 	if(0 != ov_test_open(&mVorbisFile)) {
 		if(0 != fclose(file))
 			ERR("fclose() failed");
-
+		
 		if(0 != ov_clear(&mVorbisFile))
 			ERR("ov_clear failed");
-
-		throw std::runtime_error("Unable to open the input file");
+		
+		return false;
 	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
 	if(NULL == ovInfo) {
 		if(0 != ov_clear(&mVorbisFile))
 			ERR("ov_clear failed");
-
-		throw std::runtime_error("Unable to get information on Ogg Vorbis stream");
+		
+		return false;
 	}
 	
 	// Canonical Core Audio format
@@ -137,9 +222,9 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 	
 	mSourceFormat.mSampleRate			= ovInfo->rate;
 	mSourceFormat.mChannelsPerFrame		= ovInfo->channels;
-
+	
 	switch(ovInfo->channels) {
-		// Default channel layouts from Vorbis I specification section 4.3.9
+			// Default channel layouts from Vorbis I specification section 4.3.9
 		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
 		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
 			// FIXME: Is this the right tag for 3 channels?
@@ -147,18 +232,18 @@ OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
 		case 4:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Quadraphonic;		break;
 		case 5:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_0_C;		break;
 		case 6:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_1_C;		break;
-	}	
+	}
+	
+	return true;
 }
 
-OggVorbisDecoder::~OggVorbisDecoder()
+bool OggVorbisDecoder::CloseFile(CFErrorRef */*error*/)
 {
 	if(0 != ov_clear(&mVorbisFile))
 		ERR("ov_clear failed");
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 CFStringRef OggVorbisDecoder::CreateSourceFormatDescription()
 {

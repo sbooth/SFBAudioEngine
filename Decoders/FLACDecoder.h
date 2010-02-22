@@ -62,6 +62,13 @@ public:
 	virtual ~FLACDecoder();
 	
 	// ========================================
+	// File access
+	virtual bool OpenFile(CFErrorRef *error = NULL);
+	virtual bool CloseFile(CFErrorRef *error = NULL);
+
+	virtual inline bool FileIsOpen()						{ return (NULL != mFLAC); }
+
+	// ========================================
 	// The native format of the source audio
 	virtual CFStringRef CreateSourceFormatDescription();
 

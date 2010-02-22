@@ -101,6 +101,13 @@ public:
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
+	// File access (must be implemented by subclasses)
+	virtual bool OpenFile(CFErrorRef *error = NULL) = 0;
+	virtual bool CloseFile(CFErrorRef *error = NULL) = 0;
+	
+	virtual bool FileIsOpen() = 0;
+
+	// ========================================
 	// The native format of the source audio
 	inline AudioStreamBasicDescription GetSourceFormat()	{ return mSourceFormat; }
 	virtual CFStringRef CreateSourceFormatDescription();
@@ -145,7 +152,7 @@ protected:
 	AudioChannelLayout				mChannelLayout;		// The channel layout for the PCM data	
 	
 	AudioStreamBasicDescription		mSourceFormat;		// The native format of the source file
-
+	
 	// ========================================
 	// For subclass use only
 	AudioDecoder();

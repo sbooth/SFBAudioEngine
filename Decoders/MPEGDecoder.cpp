@@ -36,6 +36,8 @@
 
 #include "AudioEngineDefines.h"
 #include "MPEGDecoder.h"
+#include "CreateDisplayNameForURL.h"
+
 
 #define INPUT_BUFFER_SIZE	(5 * 8192)
 #define LAME_HEADER_SIZE	((8 * 5) + 4 + 4 + 8 + 32 + 16 + 16 + 4 + 4 + 8 + 12 + 12 + 8 + 8 + 2 + 3 + 11 + 32 + 32 + 32)
@@ -134,31 +136,123 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 MPEGDecoder::MPEGDecoder(CFURLRef url)
 : AudioDecoder(url), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0), mFileBytes(0)
 {
-	assert(NULL != url);
-	
 	mInputBuffer = static_cast<unsigned char *>(calloc(INPUT_BUFFER_SIZE + MAD_BUFFER_GUARD, sizeof(unsigned char)));
 	
 	if(NULL == mInputBuffer)
 		throw std::bad_alloc();
-	
-	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX)) {
-		free(mInputBuffer), mInputBuffer = NULL;
-		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
-	}
 
-	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
-	if(NULL == mFile) {
-		free(mInputBuffer), mInputBuffer = NULL;
-		throw std::runtime_error("Unable to open file for reading");
-	}
-		
 	mad_stream_init(&mStream);
 	mad_frame_init(&mFrame);
 	mad_synth_init(&mSynth);
 	
 	memset(mXingTOC, 0, 100 * sizeof(uint8_t));
+}
+
+MPEGDecoder::~MPEGDecoder()
+{
+	if(FileIsOpen())
+		CloseFile();
+
+	if(mInputBuffer)
+		free(mInputBuffer), mInputBuffer = NULL;
 	
+	mad_synth_finish(&mSynth);
+	mad_frame_finish(&mFrame);
+	mad_stream_finish(&mStream);
+}
+
+
+#pragma mark Functionality
+
+
+bool MPEGDecoder::OpenFile(CFErrorRef *error)
+{
+	UInt8 buf [PATH_MAX];
+	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
+		return false;
+	
+	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
+	if(NULL == mFile) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" was not found."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("File Not Found"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file may have been renamed or deleted, or exist on removable media."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;
+		}
+
+		return false;
+	}
+	
+	// Scan file to determine sample rate, channels, total frames, etc
+	if(false == this->ScanFile()) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid MP3 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		fclose(mFile), mFile = NULL;
+		
+		return false;
+	}
+
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
@@ -170,77 +264,54 @@ MPEGDecoder::MPEGDecoder(CFURLRef url)
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
 	mFormat.mReserved			= 0;
-	
-	// Scan file to determine sample rate, channels, total frames, etc
-	if(false == this->ScanFile()) {
-		mad_synth_finish(&mSynth);
-		mad_frame_finish(&mFrame);
-		mad_stream_finish(&mStream);
-
-		free(mInputBuffer), mInputBuffer = NULL;
-		fclose(mFile), mFile = NULL;
 		
-		throw std::runtime_error("Unable to scan file");
-	}
-	
 	// Allocate the buffer list
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == mBufferList) {
-		mad_synth_finish(&mSynth);
-		mad_frame_finish(&mFrame);
-		mad_stream_finish(&mStream);
-
-		free(mInputBuffer), mInputBuffer = NULL;
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 		fclose(mFile), mFile = NULL;
-		
-		throw std::bad_alloc();
+		return false;
 	}
 	
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 		mBufferList->mBuffers[i].mData = calloc(mSamplesPerMPEGFrame, sizeof(float));
-
+		
 		if(NULL == mBufferList->mBuffers[i].mData) {
-			mad_synth_finish(&mSynth);
-			mad_frame_finish(&mFrame);
-			mad_stream_finish(&mStream);
+			if(error)
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 
-			free(mInputBuffer), mInputBuffer = NULL;
 			fclose(mFile), mFile = NULL;
 			
 			for(UInt32 j = 0; j < i; ++j)
 				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
-			
 			free(mBufferList), mBufferList = NULL;
 			
-			throw std::bad_alloc();
+			return false;
 		}
 		
 		mBufferList->mBuffers[i].mNumberChannels = 1;
-	}		
+	}
+	
+	return true;
 }
 
-MPEGDecoder::~MPEGDecoder()
+bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 {
-	mad_synth_finish(&mSynth);
-	mad_frame_finish(&mFrame);
-	mad_stream_finish(&mStream);
-	
-	free(mInputBuffer), mInputBuffer = NULL;
-	fclose(mFile), mFile = NULL;
+	if(mFile)
+		fclose(mFile), mFile = NULL;
 	
 	if(mBufferList) {
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
 		free(mBufferList), mBufferList = NULL;
 	}
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 CFStringRef MPEGDecoder::CreateSourceFormatDescription()
 {

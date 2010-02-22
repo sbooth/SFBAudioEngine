@@ -59,6 +59,13 @@ public:
 	virtual ~CoreAudioDecoder();
 
 	// ========================================
+	// File access
+	virtual bool OpenFile(CFErrorRef *error = NULL);
+	virtual bool CloseFile(CFErrorRef *error = NULL);
+
+	virtual inline bool FileIsOpen()						{ return (NULL != mExtAudioFile); }
+
+	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 	

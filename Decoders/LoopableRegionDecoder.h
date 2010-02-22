@@ -50,6 +50,13 @@ public:
 	virtual ~LoopableRegionDecoder();
 	
 	// ========================================
+	// File access
+	virtual bool OpenFile(CFErrorRef *error = NULL);
+	virtual bool CloseFile(CFErrorRef *error = NULL);
+
+	virtual inline bool FileIsOpen()						{ return mDecoder->FileIsOpen(); }
+
+	// ========================================
 	// The native format of the source audio
 	virtual inline CFStringRef CreateSourceFormatDescription() { return mDecoder->CreateSourceFormatDescription(); }
 
@@ -90,6 +97,8 @@ public:
 	
 protected:
 	
+	// ========================================
+	// For these to work correctly decoder must be open already
 	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame);
 	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount);
 	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);

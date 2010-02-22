@@ -35,6 +35,7 @@
 
 #include "AudioEngineDefines.h"
 #include "MusepackDecoder.h"
+#include "CreateDisplayNameForURL.h"
 
 
 #pragma mark Static Methods
@@ -78,20 +79,68 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 MusepackDecoder::MusepackDecoder(CFURLRef url)
 	: AudioDecoder(url), mDemux(NULL), mTotalFrames(0), mCurrentFrame(0)
+{}
+
+MusepackDecoder::~MusepackDecoder()
 {
-	assert(NULL != url);
-	
+	if(FileIsOpen())
+		CloseFile();
+}
+
+
+#pragma mark Functionality
+
+
+bool MusepackDecoder::OpenFile(CFErrorRef *error)
+{
 	UInt8 buf [PATH_MAX];
 	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		throw std::runtime_error("CFURLGetFileSystemRepresentation failed");
+		return false;
 	
-	if(MPC_STATUS_OK != mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf)))
-		throw std::runtime_error("mpc_reader_init_stdio failed");
-
+	if(MPC_STATUS_OK != mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf))) {
+		if(error) {
+			if(error) {
+				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																				   32,
+																				   &kCFTypeDictionaryKeyCallBacks,
+																				   &kCFTypeDictionaryValueCallBacks);
+				
+				CFStringRef displayName = CreateDisplayNameForURL(mURL);
+				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																   NULL, 
+																   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Musepack file."), ""), 
+																   displayName);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedDescriptionKey, 
+									 errorString);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedFailureReasonKey, 
+									 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedRecoverySuggestionKey, 
+									 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+				
+				CFRelease(errorString), errorString = NULL;
+				CFRelease(displayName), displayName = NULL;
+				
+				*error = CFErrorCreate(kCFAllocatorDefault, 
+									   AudioDecoderErrorDomain, 
+									   AudioDecoderInputOutputError, 
+									   errorDictionary);
+				
+				CFRelease(errorDictionary), errorDictionary = NULL;				
+			}		}
+		
+		return false;
+	}
+	
 	mDemux = mpc_demux_init(&mReader);
 	if(NULL == mDemux) {
 		mpc_reader_exit_stdio(&mReader);
-		throw std::runtime_error("mpc_demux_init failed");
+		return false;
 	}
 	
 	// Get input file information
@@ -132,18 +181,24 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == mBufferList) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+
 		mpc_demux_exit(mDemux), mDemux = NULL;
 		mpc_reader_exit_stdio(&mReader);
 		
-		throw std::bad_alloc();
+		return false;
 	}
-
+	
 	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 		mBufferList->mBuffers[i].mData = calloc(MPC_FRAME_LENGTH, sizeof(float));
-
+		
 		if(NULL == mBufferList->mBuffers[i].mData) {
+			if(error)
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+
 			mpc_demux_exit(mDemux), mDemux = NULL;
 			mpc_reader_exit_stdio(&mReader);
 			
@@ -152,18 +207,20 @@ MusepackDecoder::MusepackDecoder(CFURLRef url)
 			
 			free(mBufferList), mBufferList = NULL;
 			
-			throw std::bad_alloc();
+			return false;
 		}
 		
 		mBufferList->mBuffers[i].mNumberChannels = 1;
 	}
+	
+	return true;
 }
 
-MusepackDecoder::~MusepackDecoder()
+bool MusepackDecoder::CloseFile(CFErrorRef */*error*/)
 {
 	if(mDemux)
 		mpc_demux_exit(mDemux), mDemux = NULL;
-
+	
     mpc_reader_exit_stdio(&mReader);
 	
 	if(mBufferList) {
@@ -171,11 +228,9 @@ MusepackDecoder::~MusepackDecoder()
 			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
 		free(mBufferList), mBufferList = NULL;
 	}
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 CFStringRef MusepackDecoder::CreateSourceFormatDescription()
 {

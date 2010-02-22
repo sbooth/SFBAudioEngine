@@ -34,6 +34,7 @@
 
 #include "AudioEngineDefines.h"
 #include "CoreAudioDecoder.h"
+#include "CreateDisplayNameForURL.h"
 
 
 #pragma mark Static Methods
@@ -147,27 +148,80 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 	: AudioDecoder(url), mExtAudioFile(NULL), mUseM4AWorkarounds(false), mCurrentFrame(0)
+{}
+
+CoreAudioDecoder::~CoreAudioDecoder()
+{
+	if(FileIsOpen())
+		CloseFile();
+}
+
+
+#pragma mark Functionality
+
+
+bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 {
 	// Open the input file
 	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
-	if(noErr != result)
-		throw std::runtime_error("ExtAudioFileOpenURL failed");
+
+	if(noErr != result) {
+		ERR("ExtAudioFileOpenURL failed: %i", result);
+		
+		if(NULL != error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The format of the file \"%@\" was not recognized."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		return false;
+	}
 	
 	// Query file format
 	UInt32 dataSize = sizeof(mSourceFormat);
 	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileDataFormat, &dataSize, &mSourceFormat);
+
 	if(noErr != result) {
 		ERR("ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %i", result);
-
+		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
 		mExtAudioFile = NULL;
 		
-		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed");
+		return false;
 	}
-
+	
 	// Tell the ExtAudioFile the format in which we'd like our data
 	
 	// For Linear PCM formats, leave the data untouched
@@ -214,37 +268,40 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 	}
 	
 	result = ExtAudioFileSetProperty(mExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(mFormat), &mFormat);
+
 	if(noErr != result) {
 		ERR("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %i", result);
-
+		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
 		mExtAudioFile = NULL;
 		
-		throw std::runtime_error("ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed");
+		return false;
 	}
 	
 	// Setup the channel layout
 	dataSize = sizeof(mChannelLayout);
 	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, &mChannelLayout);
+	
 	if(noErr != result) {
 		ERR("ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %i", result);
-
+		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
 		mExtAudioFile = NULL;
 		
-		throw std::runtime_error("ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed");
+		return false;
 	}
 	
 	// Work around bugs in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
 	// Synopsis: ExtAudioFileTell() and ExtAudioFileSeek() are broken for m4a files
 	SInt64 currentFrame = -1;	
 	result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
+
 	if(noErr != result) {
 		ERR("ExtAudioFileTell failed: %i", result);
 		
@@ -254,28 +311,28 @@ CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
 		
 		mExtAudioFile = NULL;
 		
-		throw std::runtime_error("ExtAudioFileTell failed");
+		return false;
 	}
 	
 	if(0 > currentFrame)
-		mUseM4AWorkarounds = true;	
+		mUseM4AWorkarounds = true;
+	
+	return true;
 }
 
-CoreAudioDecoder::~CoreAudioDecoder()
+bool CoreAudioDecoder::CloseFile(CFErrorRef */*error*/)
 {
 	// Close the output file
 	if(mExtAudioFile) {
 		OSStatus result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
-
+		
 		mExtAudioFile = NULL;
 	}
+	
+	return true;
 }
-
-
-#pragma mark Functionality
-
 
 SInt64 CoreAudioDecoder::GetTotalFrames()
 {
