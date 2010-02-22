@@ -244,119 +244,55 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				
 				if(NULL != pathExtension) {
 					
-					// Creating a decoder may throw an exception for any number of reasons
-					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-					// In lieu of adding a FileIsValid() method to each class that would open
-					// and evaluate each file before opening, the try/catch madness here has a
-					// similar effect without the file opening overhead
-					
-					// Additionally, as a factory this class has knowledge of its subclasses
+
+					// As a factory this class has knowledge of its subclasses
 					// It would be possible (and perhaps preferable) to switch to a generic
 					// plugin interface at a later date
-					try {
-						if(FLACMetadata::HandlesFilesWithExtension(pathExtension))
-							metadata = new FLACMetadata(url);
+					if(FLACMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new FLACMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
+					if(!metadata && WavPackMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new WavPackMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-
-					try {
-						if(!metadata && WavPackMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new WavPackMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
+					if(!metadata && MP3Metadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new MP3Metadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
+					if(!metadata && MP4Metadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new MP4Metadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-
-					try {
-						if(!metadata && MP3Metadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new MP3Metadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
+					if(!metadata && WAVEMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new WAVEMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
+					if(!metadata && AIFFMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new AIFFMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-
-					try {
-						if(!metadata && MP4Metadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new MP4Metadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
+					if(!metadata && MusepackMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new MusepackMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
+					if(!metadata && OggVorbisMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new OggVorbisMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
-					
-					try {
-						if(!metadata && WAVEMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new WAVEMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
-					}
-
-					try {
-						if(!metadata && AIFFMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new AIFFMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
-					}
-
-					try {
-						if(!metadata && MusepackMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new MusepackMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
-					}
-
-					try {
-						if(!metadata && OggVorbisMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new OggVorbisMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
-					}
-
-					try {
-						if(!metadata && OggFLACMetadata::HandlesFilesWithExtension(pathExtension)) {
-							metadata = new OggFLACMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = NULL;
-						}
-					}
-					
-					catch(std::exception& e) {
-						LOG("Exception creating metadata: %s", e.what());
+					if(!metadata && OggFLACMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new OggFLACMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
 					}
 					
 					CFRelease(pathExtension), pathExtension = NULL;
