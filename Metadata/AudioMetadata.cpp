@@ -725,6 +725,9 @@ CFStringRef AudioMetadata::GetStringValue(CFStringRef key)
 	
 	CFTypeRef value = GetValue(key);
 	
+	if(NULL == value)
+		return NULL;
+	
 	if(CFStringGetTypeID() != CFGetTypeID(value))
 		return NULL;
 	else
@@ -737,6 +740,9 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key)
 	
 	CFTypeRef value = GetValue(key);
 	
+	if(NULL == value)
+		return NULL;
+
 	if(CFNumberGetTypeID() != CFGetTypeID(value))
 		return NULL;
 	else
