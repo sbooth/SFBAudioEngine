@@ -177,7 +177,7 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The format of the file \"%@\" was not recognized."), ""), 
+															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

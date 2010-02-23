@@ -216,7 +216,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid MPEG-4 file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -439,7 +439,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid MPEG-4 file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

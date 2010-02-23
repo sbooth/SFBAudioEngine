@@ -230,7 +230,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -257,7 +257,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -283,7 +283,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -512,7 +512,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -539,7 +539,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -565,7 +565,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 					CFStringRef displayName = CreateDisplayNameForURL(mURL);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																	   displayName);
 					
 					CFDictionarySetValue(errorDictionary, 
@@ -647,7 +647,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 				CFStringRef displayName = CreateDisplayNameForURL(mURL);
 				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																   NULL, 
-																   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+																   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 																   displayName);
 				
 				CFDictionarySetValue(errorDictionary, 
@@ -770,7 +770,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

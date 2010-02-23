@@ -113,7 +113,7 @@ bool WavPackDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

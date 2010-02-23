@@ -110,7 +110,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -163,7 +163,7 @@ bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -204,7 +204,7 @@ bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

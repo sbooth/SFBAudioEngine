@@ -68,6 +68,9 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	_player = new AudioPlayer();
 #endif
 
+	if(false == PLAYER->SetOutputDeviceUID(CFSTR("AppleUSBAudioEngine:Texas Instruments:Benchmark 1.0:fd111000:1")))
+		puts("Couldn't set output device UID");
+
 	// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
 	_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
 

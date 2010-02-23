@@ -108,7 +108,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Musepack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -208,7 +208,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Musepack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -290,7 +290,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Musepack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

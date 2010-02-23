@@ -182,7 +182,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" was not found."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” was not found."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -222,7 +222,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid MP3 file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

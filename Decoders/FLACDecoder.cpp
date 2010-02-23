@@ -185,7 +185,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid FLAC file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -218,6 +218,41 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	
 	// Process metadata
 	if(false == FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
 		if(false == FLAC__stream_decoder_finish(mFLAC))
 			ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		

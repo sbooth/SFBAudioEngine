@@ -216,7 +216,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -425,7 +425,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -541,7 +541,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -580,7 +580,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WavPack file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

@@ -99,47 +99,82 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 	
 	if(MPC_STATUS_OK != mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf))) {
 		if(error) {
-			if(error) {
-				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   32,
-																				   &kCFTypeDictionaryKeyCallBacks,
-																				   &kCFTypeDictionaryValueCallBacks);
-				
-				CFStringRef displayName = CreateDisplayNameForURL(mURL);
-				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																   NULL, 
-																   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Musepack file."), ""), 
-																   displayName);
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedDescriptionKey, 
-									 errorString);
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedFailureReasonKey, 
-									 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedRecoverySuggestionKey, 
-									 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-				
-				CFRelease(errorString), errorString = NULL;
-				CFRelease(displayName), displayName = NULL;
-				
-				*error = CFErrorCreate(kCFAllocatorDefault, 
-									   AudioDecoderErrorDomain, 
-									   AudioDecoderInputOutputError, 
-									   errorDictionary);
-				
-				CFRelease(errorDictionary), errorDictionary = NULL;				
-			}		}
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
 		
 		return false;
 	}
 	
 	mDemux = mpc_demux_init(&mReader);
 	if(NULL == mDemux) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
 		mpc_reader_exit_stdio(&mReader);
+		
 		return false;
 	}
 	

@@ -108,7 +108,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -163,7 +163,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -204,7 +204,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 

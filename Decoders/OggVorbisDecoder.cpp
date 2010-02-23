@@ -114,7 +114,7 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" was not found."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” was not found."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -153,7 +153,7 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file \"%@\" is not a valid Ogg Vorbis file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
