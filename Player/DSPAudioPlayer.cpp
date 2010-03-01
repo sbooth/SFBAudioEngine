@@ -1537,12 +1537,12 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 			
 			SInt64 startTime = decoderStateData->mTimeStamp;
 			
-			AudioStreamBasicDescription formatDescription = decoder->GetFormat();
+			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 
 			// ========================================
 			// Create the AudioConverter which will convert from the decoder's format to the graph's format
 			AudioConverterRef audioConverter = NULL;
-			OSStatus result = AudioConverterNew(&formatDescription, &mFormat, &audioConverter);
+			OSStatus result = AudioConverterNew(&decoderFormat, &mFormat, &audioConverter);
 
 			if(noErr != result) {
 				ERR("AudioConverterNew failed: %i", result);
@@ -1563,7 +1563,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 			if(noErr != result)
 				ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
 			
-			decoderStateData->AllocateBufferList(inputBufferSize / decoder->GetFormat().mBytesPerFrame);
+			decoderStateData->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
 			// The AUGraph expects the canonical Core Audio format
 			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
@@ -1720,6 +1720,8 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Clean up
+			decoderStateData->DeallocateBufferList();
+
 			if(NULL != bufferList) {
 				for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 					free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
