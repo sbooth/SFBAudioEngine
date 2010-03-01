@@ -74,8 +74,8 @@ allocateBufferList(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleav
 	bufferList->mNumberBuffers = numBuffers;
 	
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-		bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(capacityFrames, bytesPerFrame));
-		bufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame;
+		bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(capacityFrames, bytesPerFrame * channelsPerBuffer));
+		bufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame * channelsPerBuffer;
 		bufferList->mBuffers[bufferIndex].mNumberChannels = channelsPerBuffer;
 	}
 	
@@ -228,6 +228,39 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 	AudioPlayer *player = static_cast<AudioPlayer *>(inUserData);
 	
 	return player->FillConversionBuffer(inAudioConverter, ioNumberDataPackets, ioData, outDataPacketDescription);
+}
+
+// ========================================
+// AudioConverter input callback
+// ========================================
+static OSStatus
+myDeinterleaverInputProc(AudioConverterRef				inAudioConverter,
+						 UInt32							*ioNumberDataPackets,
+						 AudioBufferList				*ioData,
+						 AudioStreamPacketDescription	**outDataPacketDescription,
+						 void*							inUserData)
+{
+	
+#pragma unused(inAudioConverter)
+#pragma unused(outDataPacketDescription)
+	
+	assert(NULL != inUserData);
+	assert(NULL != ioNumberDataPackets);
+	
+	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
+	
+	decoderStateData->ResetBufferList();
+	
+	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
+	
+	// Point ioData at our decoded audio
+	ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
+	for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
+		ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
+	
+	*ioNumberDataPackets = framesRead;
+	
+	return noErr;
 }
 
 
@@ -1171,8 +1204,16 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && true == queueEmpty) {
+		// The ring buffer's format will be the same as the decoder's, except
+		// the ring buffer will contain deinterleaved samples
 		mRingBufferFormat = decoder->GetFormat();
 		
+		if(!(kAudioFormatFlagIsNonInterleaved & mRingBufferFormat.mFormatFlags)) {
+			mRingBufferFormat.mFormatFlags		|= kAudioFormatFlagIsNonInterleaved;			
+			mRingBufferFormat.mBytesPerFrame	/= mRingBufferFormat.mChannelsPerFrame;
+			mRingBufferFormat.mBytesPerPacket	/= mRingBufferFormat.mChannelsPerFrame;
+		}
+
 		CreateConverterAndConversionBuffer();
 		
 		// Allocate enough space in the ring buffer for the new format
@@ -1607,11 +1648,44 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			SInt64 startTime = decoderStateData->mTimeStamp;
 
-			AudioStreamBasicDescription formatDescription = decoder->GetFormat();
+			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 			
 			// ========================================
-			// Allocate the buffer list which will serve as the transport between the decoder and the ring buffer
-			decoderStateData->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			// Create the AudioConverter which will deinterleave the decoder's format
+			AudioConverterRef audioConverter = NULL;
+			OSStatus result = AudioConverterNew(&decoderFormat, &mRingBufferFormat, &audioConverter);
+			
+			if(noErr != result) {
+				ERR("AudioConverterNew failed: %i", result);
+				
+				// If this happens, output will be impossible
+				decoderStateData->mKeepDecoding = false;
+			}
+			
+			// ========================================
+			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
+			UInt32 inputBufferSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mRingBufferFormat.mBytesPerFrame;
+			UInt32 dataSize = sizeof(inputBufferSize);
+			result = AudioConverterGetProperty(audioConverter, 
+											   kAudioConverterPropertyCalculateInputBufferSize, 
+											   &dataSize, 
+											   &inputBufferSize);
+			
+			if(noErr != result)
+				ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
+			
+			decoderStateData->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
+
+			// CARingBuffer only handles deinterleaved channels
+			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mRingBufferFormat.mChannelsPerFrame)));
+			
+			bufferList->mNumberBuffers = mRingBufferFormat.mChannelsPerFrame;
+			
+			for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+				bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES, mRingBufferFormat.mBytesPerFrame));
+				bufferList->mBuffers[bufferIndex].mDataByteSize = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES * mRingBufferFormat.mBytesPerFrame;
+				bufferList->mBuffers[bufferIndex].mNumberChannels = 1;
+			}
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -1652,9 +1726,15 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
+								// Reset the converter and output to flush any buffers
+								result = AudioConverterReset(audioConverter);
+								
+								if(noErr != result)
+									ERR("AudioConverterReset failed: %i", result);
+
 								// This is safe to call at this point, because eAudioPlayerFlagIsSeeking is set so
 								// no rendering is being performed
-								OSStatus result = AudioConverterReset(mConverter);
+								result = AudioConverterReset(mConverter);
 								
 								if(noErr != result)
 									ERR("AudioConverterReset failed: %d", result);
@@ -1667,11 +1747,18 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 
-						// Reset the buffer sizes in preparation for reading
-						decoderStateData->ResetBufferList();
-
-						// Read the input chunk
-						UInt32 framesDecoded = decoder->ReadAudio(decoderStateData->mBufferList, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+						// Read the input chunk, deinterleaving as necessary
+						UInt32 framesDecoded = RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES;
+						
+						result = AudioConverterFillComplexBuffer(audioConverter, 
+																 myDeinterleaverInputProc,
+																 decoderStateData,
+																 &framesDecoded, 
+																 bufferList,
+																 NULL);
+						
+						if(noErr != result)
+							ERR("AudioConverterFillComplexBuffer failed: %i", result);
 						
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber)
@@ -1679,9 +1766,9 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// Store the decoded audio
 						if(0 != framesDecoded) {
-							CARingBufferError result = mRingBuffer->Store(decoderStateData->mBufferList, 
-																		  framesDecoded, 
-																		  startingFrameNumber + startTime);
+							result = mRingBuffer->Store(bufferList, 
+														framesDecoded, 
+														startingFrameNumber + startTime);
 							
 							if(kCARingBufferError_OK != result)
 								ERR("CARingBuffer::Store() failed: %i", result);
@@ -1717,6 +1804,20 @@ void * AudioPlayer::DecoderThreadEntry()
 			// ========================================
 			// Clean up
 			decoderStateData->DeallocateBufferList();
+
+			if(NULL != bufferList) {
+				for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+					free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
+				
+				free(bufferList), bufferList = NULL;
+			}
+			
+			if(NULL != audioConverter) {
+				result = AudioConverterDispose(audioConverter);
+				audioConverter = NULL;
+				if(noErr != result)
+					ERR("AudioConverterDispose failed: %i", result);
+			}
 		}
 		
 		// Wait for the audio rendering thread to wake us, or for the timeout to happen
@@ -2078,10 +2179,6 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 		ERR("AudioConverterNew failed: %i", result);
 		return false;
 	}
-	
-#if DEBUG
-	CAShow(mConverter);
-#endif
 	
 	// Get the output buffer size for the stream
 	AudioObjectPropertyAddress propertyAddress = { 
