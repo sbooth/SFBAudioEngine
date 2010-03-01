@@ -45,6 +45,8 @@
 		322D7A4C11304B4F006676FC /* taglib.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 322D79FA11304B3C006676FC /* taglib.framework */; };
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
 		322D7A5411304C24006676FC /* MP4Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D7A5211304C24006676FC /* MP4Metadata.h */; };
+		32301E8911398A3A00025873 /* AudioRingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32301E8711398A3A00025873 /* AudioRingBuffer.cpp */; };
+		32301E8A11398A3A00025873 /* AudioRingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32301E8811398A3A00025873 /* AudioRingBuffer.h */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		3252E85B10CC9EFD00F1AA23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85510CC9EFD00F1AA23 /* main.m */; };
@@ -206,6 +208,8 @@
 		322D79FA11304B3C006676FC /* taglib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = taglib.framework; path = Frameworks/taglib.framework; sourceTree = "<group>"; };
 		322D7A5111304C24006676FC /* MP4Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MP4Metadata.cpp; sourceTree = "<group>"; };
 		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Metadata.h; sourceTree = "<group>"; };
+		32301E8711398A3A00025873 /* AudioRingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioRingBuffer.cpp; sourceTree = "<group>"; };
+		32301E8811398A3A00025873 /* AudioRingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioRingBuffer.h; sourceTree = "<group>"; };
 		32379E8A1093D35700DD5B34 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
 		3252E83B10CC9E4500F1AA23 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimplePlayer-Info.plist"; sourceTree = "<group>"; };
@@ -404,6 +408,8 @@
 		322B5D76108C210400CA9BDE /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				32301E8711398A3A00025873 /* AudioRingBuffer.cpp */,
+				32301E8811398A3A00025873 /* AudioRingBuffer.h */,
 				328AA025111149970091D56B /* DSPAudioPlayer.cpp */,
 				328AA026111149970091D56B /* DSPAudioPlayer.h */,
 				322B5D80108C213800CA9BDE /* AudioPlayer.h */,
@@ -557,6 +563,7 @@
 				3205E4DE1130EB2C00FD9DAD /* SetMetadataFromXiphComment.h in Headers */,
 				3205E52D1130F49700FD9DAD /* SetXiphCommentFromMetadata.h in Headers */,
 				3205E5DA11319E6400FD9DAD /* TagLibStringFromCFString.h in Headers */,
+				32301E8A11398A3A00025873 /* AudioRingBuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -705,6 +712,7 @@
 				3205E4DD1130EB2C00FD9DAD /* SetMetadataFromXiphComment.cpp in Sources */,
 				3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */,
 				3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */,
+				32301E8911398A3A00025873 /* AudioRingBuffer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
