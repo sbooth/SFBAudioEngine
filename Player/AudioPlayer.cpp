@@ -1226,6 +1226,13 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
+		// The channels will be deinterleaved after decoding and before storage in the ring buffer
+		if(!(kAudioFormatFlagIsNonInterleaved & nextFormat.mFormatFlags)) {
+			nextFormat.mFormatFlags		|= kAudioFormatFlagIsNonInterleaved;			
+			nextFormat.mBytesPerFrame	/= nextFormat.mChannelsPerFrame;
+			nextFormat.mBytesPerPacket	/= nextFormat.mChannelsPerFrame;
+		}
+		
 		bool	formatsMatch			= (0 == memcmp(&nextFormat, &mRingBufferFormat, sizeof(mRingBufferFormat)));
 	//	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &mChannelLayout);
 		
