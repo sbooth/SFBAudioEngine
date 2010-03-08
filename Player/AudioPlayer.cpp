@@ -74,8 +74,8 @@ allocateBufferList(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleav
 	bufferList->mNumberBuffers = numBuffers;
 	
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-		bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(capacityFrames, bytesPerFrame * channelsPerBuffer));
-		bufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame * channelsPerBuffer;
+		bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(capacityFrames, bytesPerFrame));
+		bufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame;
 		bufferList->mBuffers[bufferIndex].mNumberChannels = channelsPerBuffer;
 	}
 	
