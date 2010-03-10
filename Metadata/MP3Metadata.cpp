@@ -108,7 +108,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -117,7 +117,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a MPEG file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -163,7 +163,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -172,7 +172,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a MPEG file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -204,7 +204,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
