@@ -171,20 +171,17 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 			CFRelease(num), num = NULL;			
 		}
 	}
-	
-	
+
 	// Extract album art if present
-	/*		TagLib::ID3v2::AttachedPictureFrame *picture = NULL;
-	 frameList = tag->frameListMap()["APIC"];
-	 if(NO == frameList.isEmpty() && NULL != (picture = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(frameList.front()))) {
-	 TagLib::ByteVector	bv		= picture->picture();
-	 NSImage				*image	= [[NSImage alloc] initWithData:[NSData dataWithBytes:bv.data() length:bv.size()]];
-	 if(nil != image) {
-	 [metadataDictionary setValue:[image TIFFRepresentation] forKey:@"albumArt"];
-	 [image release];
-	 }
-	 }*/
-	
+	TagLib::ID3v2::AttachedPictureFrame *picture = NULL;
+	frameList = tag->frameListMap()["APIC"];
+	if(!frameList.isEmpty() && NULL != (picture = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(frameList.front()))) {
+		TagLib::ByteVector pictureBytes = picture->picture();
+		CFDataRef pictureData = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(pictureBytes.data()), pictureBytes.size());
+		metadata->SetFrontCoverArt(pictureData);
+		CFRelease(pictureData), pictureData = NULL;
+	}
+
 	// Extract compilation if present (iTunes TCMP tag)
 	frameList = tag->frameListMap()["TCMP"];
 	if(!frameList.isEmpty())

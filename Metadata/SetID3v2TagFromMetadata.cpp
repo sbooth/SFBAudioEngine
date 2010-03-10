@@ -198,6 +198,15 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 	}
 	
+	// Album art
+	tag->removeFrames("APIC");
+	CFDataRef pictureData = metadata->GetFrontCoverArt();
+	if(pictureData) {
+		TagLib::ByteVector pictureBytes(reinterpret_cast<const char *>(CFDataGetBytePtr(pictureData)), static_cast<TagLib::uint>(CFDataGetLength(pictureData)));
+		TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame(pictureBytes);
+		tag->addFrame(frame);
+	}
+
 	// ReplayGain
 	CFNumberRef trackGain = metadata->GetReplayGainTrackGain();
 	CFNumberRef trackPeak = metadata->GetReplayGainTrackPeak();
