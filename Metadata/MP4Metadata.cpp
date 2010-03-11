@@ -354,6 +354,13 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		
 	}
 	
+	// Lyrics
+	if(tags->lyrics) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->lyrics, kCFStringEncodingUTF8);
+		SetLyrics(str);
+		CFRelease(str), str = NULL;
+	}
+	
 	// Album art
 	if(tags->artworkCount) {
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {
@@ -649,6 +656,23 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	}
 	else
 		MP4TagsSetCompilation(tags, NULL);
+
+	// Lyrics
+	str = GetLyrics();
+	
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+		
+		if(false == CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			ERR("CFStringGetCString failed");
+			return false;			
+		}
+		
+		MP4TagsSetLyrics(tags, cString);
+	}
+	else
+		MP4TagsSetLyrics(tags, NULL);
 
 	// Album art
 	CFDataRef artData = GetFrontCoverArt();

@@ -32,6 +32,7 @@
 #include <taglib/attachedpictureframe.h>
 #include <taglib/relativevolumeframe.h>
 #include <taglib/textidentificationframe.h>
+#include <taglib/unsynchronizedlyricsframe.h>
 
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
@@ -198,6 +199,14 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 	}
 	
+	// Lyrics
+	tag->removeFrames("USLT");
+	if(metadata->GetLyrics()) {
+		TagLib::ID3v2::UnsynchronizedLyricsFrame *frame = new TagLib::ID3v2::UnsynchronizedLyricsFrame(TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata->GetLyrics()));
+		tag->addFrame(frame);
+	}
+	
 	// Album art
 	tag->removeFrames("APIC");
 	CFDataRef pictureData = metadata->GetFrontCoverArt();
@@ -300,21 +309,6 @@ SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		
 		tag->addFrame(relativeVolume);
 	}
-	
-	// Album art
-	/*	NSImage *albumArt = [metadata valueForKey:@"albumArt"];
-	 if(nil != albumArt) {
-	 NSData										*data;
-	 TagLib::ID3v2::AttachedPictureFrame			*pictureFrame;
-	 
-	 data			= getPNGDataForImage(albumArt); 
-	 pictureFrame	= new TagLib::ID3v2::AttachedPictureFrame();
-	 NSAssert(NULL != pictureFrame, @"Unable to allocate memory.");
-	 
-	 pictureFrame->setMimeType(TagLib::String("image/png", TagLib::String::Latin1));
-	 pictureFrame->setPicture(TagLib::ByteVector((const char *)[data bytes], [data length]));
-	 tag->addFrame(pictureFrame);
-	 }*/
 	
 	return true;
 }

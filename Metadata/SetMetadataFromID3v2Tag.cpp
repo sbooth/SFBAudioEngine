@@ -104,12 +104,11 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	
 	// Extract album artist
 	frameList = tag->frameListMap()["TPE2"];
-	if(!frameList.isEmpty())
-		if(!frameList.isEmpty()) {
-			CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
-			metadata->SetAlbumArtist(str);
-			CFRelease(str), str = NULL;
-		}
+	if(!frameList.isEmpty()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
+		metadata->SetAlbumArtist(str);
+		CFRelease(str), str = NULL;
+	}
 	
 	// BPM
 	frameList = tag->frameListMap()["TBPM"];
@@ -172,6 +171,14 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		}
 	}
 
+	// Lyrics
+	frameList = tag->frameListMap()["USLT"];
+	if(!frameList.isEmpty()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
+		metadata->SetLyrics(str);
+		CFRelease(str), str = NULL;
+	}
+	
 	// Extract album art if present
 	TagLib::ID3v2::AttachedPictureFrame *picture = NULL;
 	frameList = tag->frameListMap()["APIC"];
