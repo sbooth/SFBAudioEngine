@@ -1697,15 +1697,18 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 						if(0 == framesDecoded) {
 							decoder->PerformDecodingFinishedCallback();
 
-							// This thread is complete					
-							decoderStateData->mKeepDecoding = false;
-							
+							// Free unneeded memory
+							decoderStateData->DeallocateBufferList();
+
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							// Rather than require preprocessing to ensure an accurate frame count, update 
 							// it here so EOS is correctly detected in DidRender()
 							decoderStateData->mTotalFrames = startingFrameNumber;
 
+							// Decoding is complete			
+							decoderStateData->mKeepDecoding = false;
+							
 							break;
 						}
 					}
@@ -1720,8 +1723,6 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Clean up
-			decoderStateData->DeallocateBufferList();
-
 			if(NULL != bufferList) {
 				for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 					free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
