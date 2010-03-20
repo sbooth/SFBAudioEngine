@@ -546,10 +546,10 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 	UInt32				bytesToRead, bytesRemaining;
 	size_t				bytesRead;
 	unsigned char		*readStartPointer;
-	bool				readEOF;
-	
+	bool				readEOF			= false;
+
 	struct mad_stream	stream;
-	struct mad_frame	frame;
+	struct mad_header	header;
 	
 	int					result;
 	struct stat			stat;
@@ -557,10 +557,8 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 	
 	// Set up	
 	mad_stream_init(&stream);
-	mad_frame_init(&frame);
-	
-	readEOF = false;
-	
+	mad_header_init(&header);
+
 	result = fstat(fileno(mFile), &stat);
 	if(-1 == result)
 		return false;
@@ -602,7 +600,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 			stream.error = MAD_ERROR_NONE;
 		}
 		
-		result = mad_frame_decode(&frame, &stream);
+		result = mad_header_decode(&header, &stream);
 		if(-1 == result) {
 			if(MAD_RECOVERABLE(stream.error)) {
 				// Prevent ID3 tags from reporting recoverable frame errors
@@ -643,14 +641,14 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 		// Look for a Xing header in the first frame that was successfully decoded
 		// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp
 		if(1 == framesDecoded) {
-			mMPEGLayer					= frame.header.layer;
-			mMode						= frame.header.mode;
-			mEmphasis					= frame.header.emphasis;
+			mMPEGLayer					= header.layer;
+			mMode						= header.mode;
+			mEmphasis					= header.emphasis;
 
-			mFormat.mSampleRate			= frame.header.samplerate;
-			mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&frame.header);
+			mFormat.mSampleRate			= header.samplerate;
+			mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&header);
 			
-			mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&frame.header);
+			mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&header);
 
 			// Set up the source format
 			switch(mMPEGLayer) {
@@ -659,13 +657,13 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 				case MAD_LAYER_III:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;	break;
 			}
 			
-			mSourceFormat.mSampleRate			= frame.header.samplerate;
-			mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&frame.header);
+			mSourceFormat.mSampleRate			= header.samplerate;
+			mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&header);
 			mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
 
 			// MAD_NCHANNELS always returns 1 or 2
-			mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&frame.header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
-			
+			mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
+
 			unsigned ancillaryBitsRemaining = stream.anc_bitlen;
 			if(32 > ancillaryBitsRemaining)
 				continue;
@@ -792,8 +790,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 		}
 		else if(estimateTotalFrames) {
 			// Estimate the number of frames based on the file's size
-			mTotalFrames = static_cast<SInt64>(static_cast<float>(frame.header.samplerate) * ((mFileBytes - id3_length) / (frame.header.bitrate / 8.0)));
-
+			mTotalFrames = static_cast<SInt64>(static_cast<float>(header.samplerate) * ((mFileBytes - id3_length) / (header.bitrate / 8.0)));
 			break;
 		}
 	}
@@ -803,7 +800,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 		mTotalFrames = mSamplesPerMPEGFrame * framesDecoded;
 
 	// Clean up
-	mad_frame_finish(&frame);
+	mad_header_finish(&header);
 	mad_stream_finish(&stream);
 	
 	// Rewind to the beginning of file
