@@ -63,8 +63,8 @@ public:
 
 	SInt64					mFrameToSeek;
 	
-	bool					mKeepDecoding;
-	bool					mReadyForCollection;
+	bool					mDecodingFinished;
+	bool					mRenderingFinished;
 
 private:
 

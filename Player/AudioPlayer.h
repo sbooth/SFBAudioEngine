@@ -40,6 +40,7 @@
 class AudioDecoder;
 class CARingBuffer;
 class DecoderStateData;
+class PCMConverter;
 
 
 // ========================================
@@ -175,6 +176,7 @@ private:
 //	AudioChannelLayout					mChannelLayout;
 
 	AudioConverterRef					mConverter;
+	PCMConverter						*mPCMConverter;
 	AudioBufferList						*mConversionBuffer;
 
 	UInt32								mFlags;
