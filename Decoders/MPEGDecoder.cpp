@@ -42,8 +42,6 @@
 #define INPUT_BUFFER_SIZE	(5 * 8192)
 #define LAME_HEADER_SIZE	((8 * 5) + 4 + 4 + 8 + 32 + 16 + 16 + 4 + 4 + 8 + 12 + 12 + 8 + 8 + 2 + 3 + 11 + 32 + 32 + 32)
 
-#define ESTIMATE_TOTAL_FRAMES_ACCURATELY 1
-
 #define BIT_RESOLUTION		24
 
 // From vbrheadersdk:
@@ -542,7 +540,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	return framesRead;
 }
 
-bool MPEGDecoder::ScanFile()
+bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 {
 	uint32_t			framesDecoded = 0;
 	UInt32				bytesToRead, bytesRemaining;
@@ -792,21 +790,17 @@ bool MPEGDecoder::ScanFile()
 				}
 			}
 		}
-#if !ESTIMATE_TOTAL_FRAMES_ACCURATELY
-		else {
-			// Just estimate the number of frames based on the file's size
+		else if(estimateTotalFrames) {
+			// Estimate the number of frames based on the file's size
 			mTotalFrames = static_cast<SInt64>(static_cast<float>(frame.header.samplerate) * ((mFileBytes - id3_length) / (frame.header.bitrate / 8.0)));
 
 			break;
 		}
-#endif
 	}
 	
-#if ESTIMATE_TOTAL_FRAMES_ACCURATELY
 	// If no Xing or LAME header was found, gapless playback won't be possible but the total number of frames is still known
-	if(!mFoundXingHeader || (mFoundXingHeader && 0 == mTotalFrames) || !mFoundLAMEHeader)
+	if(!estimateTotalFrames && (!mFoundXingHeader || (mFoundXingHeader && 0 == mTotalFrames) || !mFoundLAMEHeader))
 		mTotalFrames = mSamplesPerMPEGFrame * framesDecoded;
-#endif
 
 	// Clean up
 	mad_frame_finish(&frame);

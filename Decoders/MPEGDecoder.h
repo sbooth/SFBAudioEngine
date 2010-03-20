@@ -88,7 +88,7 @@ public:
 
 private:
 	
-	bool ScanFile();
+	bool ScanFile(bool estimateTotalFrames = false);
 	SInt64 SeekToFrameApproximately(SInt64 frame);
 	SInt64 SeekToFrameAccurately(SInt64 frame);
 	
