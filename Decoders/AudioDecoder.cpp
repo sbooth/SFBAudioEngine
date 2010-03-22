@@ -238,7 +238,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 																					   &kCFTypeDictionaryKeyCallBacks,
 																					   &kCFTypeDictionaryValueCallBacks);
 					
-					CFStringRef displayName = CreateDisplayNameForURL(url);
+					CFStringRef displayName = CFURLCopyLastPathComponent(url);
 					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 																	   NULL, 
 																	   CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""), 
