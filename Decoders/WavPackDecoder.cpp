@@ -248,6 +248,9 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
 		uint32_t samplesRead = WavpackUnpackSamples(mWPC, mBuffer, framesToRead);
 		
+		if(0 == samplesRead)
+			break;
+		
 		// The samples returned are handled differently based on the file's mode
 		int mode = WavpackGetMode(mWPC);
 		
