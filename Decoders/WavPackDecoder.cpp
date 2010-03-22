@@ -239,6 +239,10 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
+	// Reset output buffer data size
+	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
+		bufferList->mBuffers[i].mDataByteSize = 0;
+
 	UInt32 framesRemaining = frameCount;
 	UInt32 totalFramesRead = 0;
 	
