@@ -33,11 +33,11 @@
 //#include "AudioEngineDefines.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingFinished(false), mRenderingFinished(false)
+	: mDecoder(NULL), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mDecodingFinished(false), mRenderingFinished(false)
+	: mDecoder(decoder), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 {
 	assert(NULL != decoder);
 	

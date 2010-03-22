@@ -1467,8 +1467,9 @@ OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 				decoderState->mDecoder->PerformRenderingFinishedCallback();
 				
+				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+
 				// Since rendering is finished, signal the collector to clean up this decoder
-				decoderState->mRenderingFinished = true;
 				semaphore_signal(mCollectorSemaphore);
 			}
 			
@@ -1524,20 +1525,20 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Create the decoder state and append to the list of active decoders
-			DecoderStateData *decoderStateData = new DecoderStateData(decoder);
-			decoderStateData->mTimeStamp = mFramesDecoded;
+			DecoderStateData *decoderState = new DecoderStateData(decoder);
+			decoderState->mTimeStamp = mFramesDecoded;
 			
 			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 				if(NULL != mActiveDecoders[bufferIndex])
 					continue;
 				
-				if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderStateData, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
+				if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
 					break;
 				else
 					ERR("OSAtomicCompareAndSwapPtrBarrier failed");
 			}
 			
-			SInt64 startTime = decoderStateData->mTimeStamp;
+			SInt64 startTime = decoderState->mTimeStamp;
 			
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 
@@ -1550,7 +1551,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 				ERR("AudioConverterNew failed: %i", result);
 
 				// If this happens, output will be impossible
-				decoderStateData->mDecodingFinished = true;
+				OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 			}
 
 			// ========================================
@@ -1565,7 +1566,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 			if(noErr != result)
 				ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
 			
-			decoderStateData->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
+			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
 			// The AUGraph expects the canonical Core Audio format
 			AudioBufferList *bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
@@ -1581,7 +1582,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
 			bool decodingFinished = false;
-			while(!decodingFinished && !decoderStateData->mDecodingFinished) {
+			while(!decodingFinished && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)) {
 
 				// Fill the ring buffer with as much data as possible
 				while(!decodingFinished) {
@@ -1592,16 +1593,16 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 					if(framesAvailableToWrite >= RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES) {
 
 						// Seek to the specified frame
-						if(-1 != decoderStateData->mFrameToSeek) {
+						if(-1 != decoderState->mFrameToSeek) {
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
 							
-							SInt64 newFrame = decoder->SeekToFrame(decoderStateData->mFrameToSeek);
+							SInt64 newFrame = decoder->SeekToFrame(decoderState->mFrameToSeek);
 							
-							if(newFrame != decoderStateData->mFrameToSeek)
-								ERR("Error seeking to frame %lld", decoderStateData->mFrameToSeek);
+							if(newFrame != decoderState->mFrameToSeek)
+								ERR("Error seeking to frame %lld", decoderState->mFrameToSeek);
 							
 							// Update the seek request
-							if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFrameToSeek, -1, &decoderStateData->mFrameToSeek))
+							if(false == OSAtomicCompareAndSwap64Barrier(decoderState->mFrameToSeek, -1, &decoderState->mFrameToSeek))
 								ERR("OSAtomicCompareAndSwap64Barrier failed");
 							
 							// If the seek failed do not update the counters
@@ -1609,7 +1610,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								SInt64 framesSkipped = newFrame - currentFrameBeforeSeeking;
 								
 								// Treat the skipped frames as if they were rendered, and update the counters accordingly
-								if(false == OSAtomicCompareAndSwap64Barrier(decoderStateData->mFramesRendered, newFrame, &decoderStateData->mFramesRendered))
+								if(false == OSAtomicCompareAndSwap64Barrier(decoderState->mFramesRendered, newFrame, &decoderState->mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
 								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
@@ -1633,7 +1634,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 
 						result = AudioConverterFillComplexBuffer(audioConverter, 
 																 myAudioConverterComplexInputDataProc,
-																 decoderStateData,
+																 decoderState,
 																 &framesDecoded, 
 																 bufferList,
 																 NULL);
@@ -1703,20 +1704,21 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 							decoder->PerformDecodingFinishedCallback();
 
 							// Free unneeded memory
-							decoderStateData->DeallocateBufferList();
+							decoderState->DeallocateBufferList();
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							// Rather than require preprocessing to ensure an accurate frame count, update 
 							// it here so EOS is correctly detected in DidRender()
-							decoderStateData->mTotalFrames = startingFrameNumber;
+							decoderState->mTotalFrames = startingFrameNumber;
 
 							// Decoding is complete
 							// The local variable decodingFinished is necessary because once 
 							// decoderStateData->mKeepDecoding is set to true, the decoderStateData object may
 							// be free'd at any time by the collector thread and thus may no longer be accessed
 							decodingFinished = true;
-							decoderStateData->mDecodingFinished = true;
+
+							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 							
 							break;
 						}
@@ -1767,7 +1769,7 @@ void * DSPAudioPlayer::CollectorThreadEntry()
 			if(NULL == decoderState)
 				continue;
 			
-			if(!decoderState->mDecodingFinished || !decoderState->mRenderingFinished)
+			if(!(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) || !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags))
 				continue;
 			
 			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, NULL, reinterpret_cast<void **>(&mActiveDecoders[i]));
@@ -2490,7 +2492,7 @@ DecoderStateData * DSPAudioPlayer::GetCurrentDecoderState()
 		if(NULL == decoderState)
 			continue;
 		
-		if(decoderState->mRenderingFinished)
+		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
 			continue;
 		
 		if(decoderState->mTotalFrames == decoderState->mFramesRendered)
@@ -2514,7 +2516,7 @@ DecoderStateData * DSPAudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 
 		if(NULL == decoderState)
 			continue;
 		
-		if(decoderState->mRenderingFinished)
+		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
 			continue;
 
 		if(NULL == result && decoderState->mTimeStamp > timeStamp)
@@ -2535,8 +2537,8 @@ void DSPAudioPlayer::StopActiveDecoders()
 		if(NULL == decoderState)
 			continue;
 		
-		decoderState->mDecodingFinished = true;
-		decoderState->mRenderingFinished = true;
+		OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+		OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 	}
 	
 	// Signal the collector to collect 

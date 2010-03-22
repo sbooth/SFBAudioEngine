@@ -179,7 +179,7 @@ private:
 	PCMConverter						*mPCMConverter;
 	AudioBufferList						*mConversionBuffer;
 
-	UInt32								mFlags;
+	volatile UInt32						mFlags;
 
 	bool								mIsPlaying;
 
