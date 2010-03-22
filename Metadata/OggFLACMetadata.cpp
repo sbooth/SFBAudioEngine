@@ -141,7 +141,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 
 	if(file.tag())
 		SetMetadataFromXiphComment(this, file.tag());
-	CFShow(mMetadata);
+
 	return true;
 }
 
