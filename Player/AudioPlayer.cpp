@@ -213,11 +213,11 @@ collectorEntry(void *arg)
 // AudioConverter input callback
 // ========================================
 static OSStatus
-myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
-									 UInt32							*ioNumberDataPackets,
-									 AudioBufferList				*ioData,
-									 AudioStreamPacketDescription	**outDataPacketDescription,
-									 void*							inUserData)
+myConverterInputProc(AudioConverterRef				inAudioConverter,
+					 UInt32							*ioNumberDataPackets,
+					 AudioBufferList				*ioData,
+					 AudioStreamPacketDescription	**outDataPacketDescription,
+					 void*							inUserData)
 {
 	
 #pragma unused(inAudioConverter)
@@ -1360,7 +1360,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	}
 	else {
 		OSStatus result = AudioConverterFillComplexBuffer(mConverter, 
-														  myAudioConverterComplexInputDataProc,
+														  myConverterInputProc,
 														  this,
 														  &desiredFrames, 
 														  outOutputData,
@@ -1575,23 +1575,14 @@ OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
 #pragma unused(inAudioConverter)
 #pragma unused(outDataPacketDescription)
 
-//	CARingBuffer::SampleTime startTime = 0, endTime = 0;
-//
-//	CARingBufferError result = mRingBuffer->GetTimeBounds(startTime, endTime);
-//	if(kCARingBufferError_OK != result) {
-//		ERR("CARingBuffer::GetTimeBounds() failed: %d", result);
-//		return ioErr;
-//	}
-//	
-//	UInt32 framesAvailableToRead = static_cast<UInt32>(endTime - startTime);
 	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
 
 	// Nothing to read
 	if(0 == framesAvailableToRead) {
 		*ioNumberDataPackets = 0;
-		return noErr;
+		return ioErr;
 	}
-	
+
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = std::min(framesAvailableToRead, *ioNumberDataPackets);
 
@@ -1599,6 +1590,7 @@ OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
 
 	if(kCARingBufferError_OK != result) {
 		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
+		*ioNumberDataPackets = 0;
 		return ioErr;
 	}
 	
@@ -1614,7 +1606,7 @@ OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
 		ioData->mBuffers[bufferIndex] = mConversionBuffer->mBuffers[bufferIndex];
 	
 	*ioNumberDataPackets = framesToRead;
-	
+
 	return noErr;
 }
 
@@ -1658,7 +1650,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(NULL != decoder) {
-			
+
 #if DEBUG
 			fprintf(stderr, "Starting decoder for: ");
 			CFShow(decoder->GetURL());
@@ -1825,8 +1817,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 							// Decoding is complete
 							// The local variable decodingFinished is necessary because once 
-							// decoderStateData->mKeepDecoding is set to true, the decoderStateData object may
-							// be free'd at any time by the collector thread and thus may no longer be accessed
+							// eDecoderStateDataFlagDecodingFinished is set, the decoderStateData object may
+							// be freed at any time by the collector thread and thus may no longer be accessed
 							decodingFinished = true;
 
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
