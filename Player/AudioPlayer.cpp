@@ -1760,11 +1760,6 @@ void * AudioPlayer::DecoderThreadEntry()
 
 								// This is safe to call at this point, because eAudioPlayerFlagIsSeeking is set so
 								// no rendering is being performed
-								result = AudioConverterReset(mConverter);
-								
-								if(noErr != result)
-									ERR("AudioConverterReset failed: %d", result);
-								
 								ResetOutput();
 							}
 
@@ -2119,6 +2114,15 @@ bool AudioPlayer::OutputIsRunning()
 // NOT thread safe
 bool AudioPlayer::ResetOutput()
 {
+	if(NULL != mConverter) {
+		OSStatus result = AudioConverterReset(mConverter);
+		
+		if(noErr != result) {
+			ERR("AudioConverterReset failed: %d", result);
+			return false;
+		}
+	}
+
 	return true;
 }
 
