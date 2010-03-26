@@ -196,15 +196,10 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 					while(counter--) {
 						SInt64 sample = 0;
 
+						sample |= (*input++ << 16);
+						sample |= (*input++ << 8);
 						sample |= *input++;
-						sample <<= 8;
-
-						sample |= *input++;
-						sample <<= 8;
-
-						sample |= *input++;
-						sample <<= 8;
-
+						
 						*output++ = sample << shift;
 					}
 				}
