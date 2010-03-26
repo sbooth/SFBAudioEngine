@@ -299,6 +299,44 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 	
 	// Work around bugs in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
 	// Synopsis: ExtAudioFileTell() and ExtAudioFileSeek() are broken for m4a files
+	AudioFileID audioFile;
+	dataSize = sizeof(audioFile);
+	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_AudioFile, &dataSize, &audioFile);
+	
+	if(noErr != result) {
+		ERR("ExtAudioFileGetProperty (kExtAudioFileProperty_AudioFile) failed: %i", result);
+		
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
+		
+		mExtAudioFile = NULL;
+		
+		return false;
+	}
+	
+	AudioFileTypeID fileFormat;
+	dataSize = sizeof(fileFormat);
+	result = AudioFileGetProperty(audioFile, kAudioFilePropertyFileFormat, &dataSize, &fileFormat);
+
+	if(noErr != result) {
+		ERR("AudioFileGetProperty (kAudioFilePropertyFileFormat) failed: %i", result);
+		
+		result = ExtAudioFileDispose(mExtAudioFile);
+		if(noErr != result)
+			ERR("ExtAudioFileDispose failed: %i", result);
+		
+		mExtAudioFile = NULL;
+		
+		return false;
+	}
+	
+	if(kAudioFileM4AType == fileFormat)
+		mUseM4AWorkarounds = true;
+	
+#if 0
+	// This was supposed to determine if ExtAudioFile had been fixed, but even though
+	// it passes on 10.6.2 things are not behaving properly
 	SInt64 currentFrame = -1;	
 	result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
 
@@ -316,7 +354,8 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 	
 	if(0 > currentFrame)
 		mUseM4AWorkarounds = true;
-	
+#endif
+
 	return true;
 }
 
