@@ -179,32 +179,32 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 			case 3:
 			{
 				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + (3 * startingFrame);
-				
+
 				UInt32 counter = frameCount;
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
 					while(counter--) {
 						SInt64 sample = 0;
-						
+
 						sample |= *input++;
-						sample <<= 8;
-						
-						sample |= *input++;
-						sample <<= 8;
-						
-						sample |= *input++;
-						sample <<= 8;
-						
+						sample |= (*input++ << 8);
+						sample |= (*input++ << 16);
+
 						*output++ = sample << shift;
 					}
 				}
 				else {
 					while(counter--) {
 						SInt64 sample = 0;
-						
+
 						sample |= *input++;
-						sample |= (*input++ << 8);
-						sample |= (*input++ << 16);
-						
+						sample <<= 8;
+
+						sample |= *input++;
+						sample <<= 8;
+
+						sample |= *input++;
+						sample <<= 8;
+
 						*output++ = sample << shift;
 					}
 				}
