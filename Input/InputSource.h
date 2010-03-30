@@ -45,6 +45,14 @@ enum {
 
 
 // ========================================
+// Flags
+// ========================================
+enum {
+	InputSourceFlagMemoryMapFiles			= 1 << 0
+};
+
+
+// ========================================
 // An abstract class presenting access to a stream of bytes
 // ========================================
 class InputSource
@@ -54,7 +62,7 @@ public:
 
 	// ========================================
 	// Factory methods that return an InputSource for the specified URL, or NULL on failure
-	static InputSource * CreateInputSourceForURL(CFURLRef url, CFErrorRef *error = NULL);
+	static InputSource * CreateInputSourceForURL(CFURLRef url, int flags = 0, CFErrorRef *error = NULL);
 
 	// ========================================
 	// Destruction

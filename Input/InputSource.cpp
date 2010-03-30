@@ -31,6 +31,7 @@
 #include "AudioEngineDefines.h"
 #include "InputSource.h"
 #include "FileInputSource.h"
+#include "MemoryMappedFileInputSource.h"
 
 
 // ========================================
@@ -42,7 +43,7 @@ const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.SFBAudioEngine.Er
 #pragma mark Static Methods
 
 
-InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, CFErrorRef *error)
+InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
 	assert(NULL != url);
 	
@@ -57,7 +58,11 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, CFErrorRef *err
 		
 		if(NULL != fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
-				inputSource = new FileInputSource(url);
+				if(InputSourceFlagMemoryMapFiles & flags)
+					inputSource = new MemoryMappedFileInputSource(url);
+				else
+					inputSource = new FileInputSource(url);
+
 				if(!inputSource->Open(error))
 					delete inputSource, inputSource = NULL;
 			}
