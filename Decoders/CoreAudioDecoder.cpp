@@ -37,6 +37,45 @@
 #include "CreateDisplayNameForURL.h"
 
 
+#pragma mark Callbacks
+
+
+static OSStatus
+myAudioFile_ReadProc(void		*inClientData,
+					 SInt64		inPosition, 
+					 UInt32		requestCount, 
+					 void		*buffer, 
+					 UInt32		*actualCount)
+{
+	assert(NULL != inClientData);
+
+	CoreAudioDecoder *decoder = static_cast<CoreAudioDecoder *>(inClientData);
+	InputSource *inputSource = decoder->GetInputSource();
+	
+	if(inPosition != inputSource->GetOffset() && !inputSource->SupportsSeeking())
+		return ioErr;
+	
+	if(!inputSource->SeekToOffset(inPosition))
+		return ioErr;
+	
+	*actualCount = static_cast<UInt32>(inputSource->Read(buffer, requestCount));
+	
+	if(0 == *actualCount)
+		return (inputSource->AtEOF() ? eofErr : ioErr);
+	
+	return noErr;
+}
+
+static SInt64
+myAudioFile_GetSizeProc(void *inClientData)
+{
+	assert(NULL != inClientData);
+
+	CoreAudioDecoder *decoder = static_cast<CoreAudioDecoder *>(inClientData);
+	return decoder->GetInputSource()->GetLength();
+}
+
+
 #pragma mark Static Methods
 
 
@@ -146,8 +185,8 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-CoreAudioDecoder::CoreAudioDecoder(CFURLRef url)
-	: AudioDecoder(url), mExtAudioFile(NULL), mUseM4AWorkarounds(false), mCurrentFrame(0)
+CoreAudioDecoder::CoreAudioDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mAudioFile(NULL), mExtAudioFile(NULL), mUseM4AWorkarounds(false), mCurrentFrame(0)
 {}
 
 CoreAudioDecoder::~CoreAudioDecoder()
@@ -163,7 +202,50 @@ CoreAudioDecoder::~CoreAudioDecoder()
 bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 {
 	// Open the input file
-	OSStatus result = ExtAudioFileOpenURL(mURL, &mExtAudioFile);
+	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, NULL, myAudioFile_GetSizeProc, NULL, 0, &mAudioFile);
+
+	if(noErr != result) {
+		ERR("AudioFileOpenWithCallbacks failed: %i", result);
+		
+		if(NULL != error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		return false;
+	}
+	
+	result = ExtAudioFileWrapAudioFileID(mAudioFile, false, &mExtAudioFile);
 
 	if(noErr != result) {
 		ERR("ExtAudioFileOpenURL failed: %i", result);
@@ -174,7 +256,7 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
@@ -203,6 +285,12 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;
+		
 		return false;
 	}
 	
@@ -217,6 +305,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -276,6 +369,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -292,6 +390,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -310,6 +413,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -326,6 +434,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -347,6 +460,11 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		if(noErr != result)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
+		result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;		
 		mExtAudioFile = NULL;
 		
 		return false;
@@ -368,6 +486,14 @@ bool CoreAudioDecoder::CloseFile(CFErrorRef */*error*/)
 			ERR("ExtAudioFileDispose failed: %i", result);
 		
 		mExtAudioFile = NULL;
+	}
+
+	if(mAudioFile) {
+		OSStatus result = AudioFileClose(mAudioFile);
+		if(noErr != result)
+			ERR("AudioFileClose failed: %i", result);
+		
+		mAudioFile = NULL;
 	}
 	
 	return true;

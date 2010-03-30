@@ -52,7 +52,7 @@ public:
 
 	// ========================================
 	// Creation
-	CoreAudioDecoder(CFURLRef url);
+	CoreAudioDecoder(InputSource *inputSource);
 	
 	// ========================================
 	// Destruction
@@ -76,11 +76,12 @@ public:
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 	
 private:
 	
+	AudioFileID			mAudioFile;
 	ExtAudioFileRef		mExtAudioFile;
 	bool				mUseM4AWorkarounds;
 	SInt64				mCurrentFrame;	

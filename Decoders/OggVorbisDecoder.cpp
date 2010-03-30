@@ -40,6 +40,55 @@
 #define BUFFER_SIZE_FRAMES 2048
 
 
+#pragma mark Callbacks
+
+
+static size_t
+read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
+{
+	assert(NULL != datasource);
+	
+	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+	return decoder->GetInputSource()->Read(ptr, size * nmemb);
+}
+
+static int
+seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
+{
+	assert(NULL != datasource);
+	
+	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+	InputSource *inputSource = decoder->GetInputSource();
+	
+	if(!inputSource->SupportsSeeking())
+		return -1;
+	
+	// Adjust offset as required
+	switch(whence) {
+		case SEEK_SET:
+			// offset remains unchanged
+			break;
+		case SEEK_CUR:
+			offset = inputSource->GetOffset() - offset;
+			break;
+		case SEEK_END:
+			offset = inputSource->GetLength() - offset;
+			break;
+	}
+	
+	return (!inputSource->SeekToOffset(offset));
+}
+
+static long
+tell_func_callback(void *datasource)
+{
+	assert(NULL != datasource);
+	
+	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+	return static_cast<long>(decoder->GetInputSource()->GetOffset());
+}
+
+
 #pragma mark Static Methods
 
 
@@ -81,8 +130,8 @@ bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-OggVorbisDecoder::OggVorbisDecoder(CFURLRef url)
-	: AudioDecoder(url)
+OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource)
 {
 	memset(&mVorbisFile, 0, sizeof(mVorbisFile));
 }
@@ -99,58 +148,20 @@ OggVorbisDecoder::~OggVorbisDecoder()
 
 bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 {
-	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		return false;
+	ov_callbacks callbacks;
+	callbacks.read_func = read_func_callback;
+	callbacks.seek_func = seek_func_callback;
+	callbacks.tell_func = tell_func_callback;
+	callbacks.close_func = NULL;
 	
-	FILE *file = fopen(reinterpret_cast<const char *>(buf), "r");
-	if(NULL == file) {
+	if(0 != ov_test_callbacks(this, &mVorbisFile, NULL, 0, callbacks)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” was not found."), ""), 
-															   displayName);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("File Not Found"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file may have been renamed or deleted, or exist on removable media."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;
-		}
-		
-		return false;
-	}
-	
-	if(0 != ov_test(file, &mVorbisFile, NULL, 0)) {
-		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
@@ -179,16 +190,10 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 		
-		if(0 != fclose(file))
-			ERR("fclose() failed");
-		
 		return false;
 	}
 	
 	if(0 != ov_test_open(&mVorbisFile)) {
-		if(0 != fclose(file))
-			ERR("fclose() failed");
-		
 		if(0 != ov_clear(&mVorbisFile))
 			ERR("ov_clear failed");
 		

@@ -55,7 +55,7 @@ public:
 	
 	// ========================================
 	// Creation
-	MPEGDecoder(CFURLRef url);
+	MPEGDecoder(InputSource *inputSource);
 	
 	// ========================================
 	// Destruction
@@ -66,7 +66,7 @@ public:
 	virtual bool OpenFile(CFErrorRef *error = NULL);
 	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen()						{ return (NULL != mFile); }
+	virtual inline bool FileIsOpen()						{ return (0 != mFormat.mSampleRate); }
 
 	// ========================================
 	// The native format of the source audio
@@ -83,7 +83,7 @@ public:
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 
 private:
@@ -92,7 +92,6 @@ private:
 	SInt64 SeekToFrameApproximately(SInt64 frame);
 	SInt64 SeekToFrameAccurately(SInt64 frame);
 	
-	FILE				*mFile;
 	unsigned char		*mInputBuffer;
 	
 	AudioBufferList		*mBufferList;
@@ -114,7 +113,6 @@ private:
 	bool				mFoundXingHeader;
 	bool				mFoundLAMEHeader;
 	
-	off_t				mFileBytes;
 	uint8_t				mXingTOC [100];
 	
 	struct mad_stream	mStream;

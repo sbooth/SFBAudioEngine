@@ -55,7 +55,7 @@ public:
 	
 	// ========================================
 	// Creation
-	OggVorbisDecoder(CFURLRef url);
+	OggVorbisDecoder(InputSource *inputSource);
 	
 	// ========================================
 	// Destruction
@@ -83,7 +83,7 @@ public:
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 
 private:

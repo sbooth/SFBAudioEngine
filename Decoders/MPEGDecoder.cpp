@@ -133,14 +133,14 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-MPEGDecoder::MPEGDecoder(CFURLRef url)
-: AudioDecoder(url), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0), mFileBytes(0)
+MPEGDecoder::MPEGDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0)
 {
 	mInputBuffer = static_cast<unsigned char *>(calloc(INPUT_BUFFER_SIZE + MAD_BUFFER_GUARD, sizeof(unsigned char)));
 	
 	if(NULL == mInputBuffer)
 		throw std::bad_alloc();
-
+	
 	mad_stream_init(&mStream);
 	mad_frame_init(&mFrame);
 	mad_synth_init(&mSynth);
@@ -167,59 +167,15 @@ MPEGDecoder::~MPEGDecoder()
 
 bool MPEGDecoder::OpenFile(CFErrorRef *error)
 {
-	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		return false;
-	
-	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
-	if(NULL == mFile) {
-		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” was not found."), ""), 
-															   displayName);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("File Not Found"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file may have been renamed or deleted, or exist on removable media."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;
-		}
-
-		return false;
-	}
-	
 	// Scan file to determine sample rate, channels, total frames, etc
-	if(false == this->ScanFile()) {
+	if(!this->ScanFile()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
@@ -248,8 +204,6 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
 		
-		fclose(mFile), mFile = NULL;
-		
 		return false;
 	}
 
@@ -271,7 +225,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	if(NULL == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
-		fclose(mFile), mFile = NULL;
+
 		return false;
 	}
 	
@@ -284,8 +238,6 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 			if(error)
 				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 
-			fclose(mFile), mFile = NULL;
-			
 			for(UInt32 j = 0; j < i; ++j)
 				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
 			free(mBufferList), mBufferList = NULL;
@@ -301,9 +253,6 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 
 bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 {
-	if(mFile)
-		fclose(mFile), mFile = NULL;
-	
 	if(mBufferList) {
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
@@ -351,7 +300,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription()
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
-	if(true == mFoundLAMEHeader)
+	if(mFoundLAMEHeader)
 		return this->SeekToFrameAccurately(frame);
 	else
 		return this->SeekToFrameApproximately(frame);
@@ -407,11 +356,11 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		
 		// If the file contains a Xing header but not LAME gapless information,
 		// decode the number of MPEG frames specified by the Xing header
-		if(true == mFoundXingHeader && false == mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
+		if(mFoundXingHeader && !mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
 			break;
 		
 		// The LAME header indicates how many samples are in the file
-		if(true == mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
+		if(mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
 			break;
 		
 		// Feed the input buffer if necessary
@@ -430,16 +379,16 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			}
 			
 			// Read raw bytes from the MP3 file
-			size_t bytesRead = fread(readStartPointer, 1, bytesToRead, mFile);
-			if(ferror(mFile)) {
+			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
+			if(0 == bytesRead && !mInputSource->AtEOF()) {
 #if DEBUG
-				LOG("Read error: %s.", strerror(errno));
+				LOG("Read error");
 #endif
 				break;
 			}
 			
 			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
-			if(feof(mFile)) {
+			if(mInputSource->AtEOF()) {
 				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
 				bytesRead	+= MAD_BUFFER_GUARD;
 				readEOF		= true;
@@ -498,10 +447,10 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		uint32_t startingSample = mSamplesToSkipInNextFrame;
 
 		// Skip the Xing header (it contains empty audio)
-		if(true == mFoundXingHeader && 1 == mMPEGFramesDecoded)
+		if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
 			continue;
 		// Adjust the first real audio frame for gapless playback
-		else if(true == mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
+		else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
 			startingSample += mEncoderDelay;
 
 		// The number of samples in this frame
@@ -516,7 +465,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		
 		// If a LAME header was found, the total number of audio frames (AKA samples) 
 		// is known.  Ensure only that many are output
-		if(true == mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
+		if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
 			sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
 
 		// Output samples in 32-bit float PCM
@@ -544,27 +493,18 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 {
 	uint32_t			framesDecoded = 0;
 	UInt32				bytesToRead, bytesRemaining;
-	size_t				bytesRead;
 	unsigned char		*readStartPointer;
 	bool				readEOF			= false;
 
 	struct mad_stream	stream;
 	struct mad_frame	frame;
 	
-	int					result;
-	struct stat			stat;
 	uint32_t			id3_length		= 0;
 	
 	// Set up	
 	mad_stream_init(&stream);
 	mad_frame_init(&frame);
 
-	result = fstat(fileno(mFile), &stat);
-	if(-1 == result)
-		return false;
-	
-	mFileBytes = stat.st_size;
-	
 	for(;;) {
 		if(NULL == stream.buffer || MAD_ERROR_BUFLEN == stream.error) {
 			if(stream.next_frame) {
@@ -581,8 +521,8 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 			}
 			
 			// Read raw bytes from the MP3 file
-			bytesRead = fread(readStartPointer, 1, bytesToRead, mFile);
-			if(ferror(mFile)) {
+			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
+			if(0 == bytesRead && !mInputSource->AtEOF()) {
 #if DEBUG
 				LOG("Read error: %s.", strerror(errno));
 #endif
@@ -590,7 +530,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 			}
 			
 			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
-			if(feof(mFile)) {
+			if(mInputSource->AtEOF()) {
 				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
 				bytesRead	+= MAD_BUFFER_GUARD;
 				readEOF		= true;
@@ -600,7 +540,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 			stream.error = MAD_ERROR_NONE;
 		}
 		
-		result = mad_header_decode(&frame.header, &stream);
+		int result = mad_header_decode(&frame.header, &stream);
 		if(-1 == result) {
 			if(MAD_RECOVERABLE(stream.error)) {
 				// Prevent ID3 tags from reporting recoverable frame errors
@@ -795,7 +735,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 		}
 		else if(estimateTotalFrames) {
 			// Estimate the number of frames based on the file's size
-			mTotalFrames = static_cast<SInt64>(static_cast<float>(frame.header.samplerate) * ((mFileBytes - id3_length) / (frame.header.bitrate / 8.0)));
+			mTotalFrames = static_cast<SInt64>(static_cast<float>(frame.header.samplerate) * ((mInputSource->GetLength() - id3_length) / (frame.header.bitrate / 8.0)));
 			break;
 		}
 	}
@@ -809,7 +749,7 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 	mad_stream_finish(&stream);
 	
 	// Rewind to the beginning of file
-	if(-1 == fseek(mFile, 0, SEEK_SET))
+	if(!mInputSource->SeekToOffset(0))
 		return false;
 	
 	return true;
@@ -835,13 +775,13 @@ SInt64 MPEGDecoder::SeekToFrameApproximately(SInt64 frame)
 			secondOffset = mXingTOC[firstIndex + 1];;
 			
 			double x = firstOffset + (secondOffset - firstOffset) * (percent - firstIndex);
-			seekPoint = static_cast<long>((1.0 / 256.0) * x * mFileBytes);
+			seekPoint = static_cast<long>((1.0 / 256.0) * x * mInputSource->GetLength());
 	}
 	else
-		seekPoint = static_cast<long>(mFileBytes * fraction);
+		seekPoint = static_cast<long>(mInputSource->GetLength() * fraction);
 	
-	int result = fseek(mFile, seekPoint, SEEK_SET);
-	if(0 == result) {
+	bool result = mInputSource->SeekToOffset(seekPoint);
+	if(result) {
 		mad_stream_buffer(&mStream, NULL, 0);
 		
 		// Reset frame count to prevent early termination of playback
@@ -853,7 +793,7 @@ SInt64 MPEGDecoder::SeekToFrameApproximately(SInt64 frame)
 	}
 	
 	// Right now it's only possible to return an approximation of the audio frame
-	return (-1 == result ? -1 : frame);
+	return (result ? frame : -1);
 }
 
 SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
@@ -873,7 +813,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 	
 	// To seek to a frame earlier in the file, rewind to the beginning
 	if(this->GetCurrentFrame() > frame) {
-		if(-1 == fseek(mFile, 0, SEEK_SET))
+		if(!mInputSource->SeekToOffset(0))
 			return -1;
 		
 		// Reset decoder parameters
@@ -899,11 +839,11 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 
 		// If the file contains a Xing header but not LAME gapless information,
 		// decode the number of MPEG frames specified by the Xing header
-		if(true == mFoundXingHeader && false == mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
+		if(mFoundXingHeader && !mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
 			break;
 		
 		// The LAME header indicates how many samples are in the file
-		if(true == mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
+		if(mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
 			break;
 		
 		// Feed the input buffer if necessary
@@ -922,8 +862,8 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 			}
 			
 			// Read raw bytes from the MP3 file
-			size_t bytesRead = fread(readStartPointer, 1, bytesToRead, mFile);
-			if(ferror(mFile)) {
+			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
+			if(0 == bytesRead && !mInputSource->AtEOF()) {
 #if DEBUG
 				LOG("Read error: %s.", strerror(errno));
 #endif
@@ -931,7 +871,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 			}
 			
 			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
-			if(feof(mFile)) {
+			if(mInputSource->AtEOF()) {
 				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
 				bytesRead	+= MAD_BUFFER_GUARD;
 				readEOF		= true;
@@ -990,7 +930,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 		if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
 			continue;
 		// Adjust the first real audio frame for gapless playback
-		else if(true == mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
+		else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
 			startingSample += mEncoderDelay;
 
 		// The number of samples in this frame
@@ -1006,7 +946,7 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 		
 		// If a LAME header was found, the total number of audio frames (AKA samples) 
 		// is known.  Ensure only that many are output
-		if(true == mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
+		if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
 			sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
 
 		// If this MPEG frame contains the desired seek frame, synthesize its audio to PCM

@@ -174,126 +174,114 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
 	assert(NULL != url);
+
+	// Create the input source which will feed the decoder
+	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 	
+	if(NULL == inputSource)
+		return NULL;
+	
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSource(inputSource, error);
+	
+	if(NULL == decoder)
+		delete inputSource, inputSource = NULL;
+	
+	return decoder;
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
+{
+	assert(NULL != inputSource);
+
 	AudioDecoder *decoder = NULL;
+
+	// Open the input source if it isn't already
+	if(!inputSource->IsOpen() && !inputSource->Open(error))
+		return NULL;
 	
 	// If this is a file URL, use the extension-based resolvers
+	CFURLRef url = inputSource->GetURL();
 	CFStringRef scheme = CFURLCopyScheme(url);
+
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
-		// Verify the file exists
-		SInt32 errorCode = noErr;
-		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
+		CFStringRef pathExtension = CFURLCopyPathExtension(url);
 		
-		if(NULL != fileExists) {
-			if(CFBooleanGetValue(fileExists)) {
-				CFStringRef pathExtension = CFURLCopyPathExtension(url);
-				
-				if(NULL != pathExtension) {
-
-					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-					
-					// As a factory this class has knowledge of its subclasses
-					// It would be possible (and perhaps preferable) to switch to a generic
-					// plugin interface at a later date
-					if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new FLACDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new WavPackDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new MPEGDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new OggVorbisDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new MusepackDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
-						decoder = new CoreAudioDecoder(url);
-						if(!decoder->OpenFile(error))
-							delete decoder, decoder = NULL;
-					}
-					
-					CFRelease(pathExtension), pathExtension = NULL;
-				}				
+		if(NULL != pathExtension) {
+			// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
+			
+			// As a factory this class has knowledge of its subclasses
+			// It would be possible (and perhaps preferable) to switch to a generic
+			// plugin interface at a later date
+			if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new FLACDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
 			}
-			else {
-				LOG("The requested URL doesn't exist");
-				
-				if(error) {
-					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																					   32,
-																					   &kCFTypeDictionaryKeyCallBacks,
-																					   &kCFTypeDictionaryValueCallBacks);
-					
-					CFStringRef displayName = CFURLCopyLastPathComponent(url);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("File not found"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					*error = CFErrorCreate(kCFAllocatorDefault, 
-										   AudioDecoderErrorDomain, 
-										   AudioDecoderInputOutputError, 
-										   errorDictionary);
-					
-					CFRelease(errorDictionary), errorDictionary = NULL;				
-				}				
+			if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new WavPackDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
 			}
+			if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new MPEGDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
+			}
+			if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new OggVorbisDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
+			}
+			if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new MusepackDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
+			}
+			if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new CoreAudioDecoder(inputSource);
+				if(!decoder->OpenFile(error))
+					delete decoder, decoder = NULL;
+			}
+			
+			CFRelease(pathExtension), pathExtension = NULL;
 		}
-		else
-			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		
-
-		CFRelease(fileExists), fileExists = NULL;
+		else if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CFURLCopyLastPathComponent(url);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Unknown file type"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   InputSourceErrorDomain, 
+								   InputSourceFileNotFoundError,
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
 	}
 	// Determine the MIME type for the URL
 	else {
-		// Get the UTI for this URL
-		FSRef ref;
-		Boolean success = CFURLGetFSRef(url, &ref);
-		if(FALSE == success) {
-			ERR("Unable to get FSRef for URL");
-			
-			return NULL;
-		}
-		
-		CFStringRef uti = NULL;
-		OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemContentType, (CFTypeRef *)&uti);
-		
-		if(noErr != result) {
-			ERR("LSCopyItemAttribute (kLSItemContentType) failed: %i", result);
-			
-			return NULL;
-		}
-		
-		CFRelease(uti), uti = NULL;
 	}
 	
 	CFRelease(scheme), scheme = NULL;
@@ -352,18 +340,16 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 
 
 AudioDecoder::AudioDecoder()
-	: mURL(NULL)
+	: mInputSource(NULL)
 {
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
-AudioDecoder::AudioDecoder(CFURLRef url)
-	: mURL(NULL)
+AudioDecoder::AudioDecoder(InputSource *inputSource)
+	: mInputSource(inputSource)
 {
-	assert(NULL != url);
-	
-	mURL = static_cast<CFURLRef>(CFRetain(url));
+	assert(NULL != inputSource);
 
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mFormat, 0, sizeof(mSourceFormat));
@@ -372,15 +358,15 @@ AudioDecoder::AudioDecoder(CFURLRef url)
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
-	: mURL(NULL)
+	: mInputSource(NULL)
 {
 	*this = rhs;
 }
 
 AudioDecoder::~AudioDecoder()
 {
-	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+	if(mInputSource)
+		delete mInputSource, mInputSource = NULL;
 }
 
 
@@ -389,12 +375,12 @@ AudioDecoder::~AudioDecoder()
 
 AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 {
-	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+	if(mInputSource)
+		delete mInputSource, mInputSource = NULL;
 	
-	if(rhs.mURL)
-		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
-	
+	if(rhs.mInputSource)
+		mInputSource = rhs.mInputSource;
+
 	mFormat				= rhs.mFormat;
 	mChannelLayout		= rhs.mChannelLayout;
 	mSourceFormat		= rhs.mSourceFormat;

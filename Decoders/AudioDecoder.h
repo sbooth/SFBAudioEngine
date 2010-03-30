@@ -33,6 +33,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
+#include "InputSource.h"
+
 
 // ========================================
 // Typedefs
@@ -86,6 +88,7 @@ public:
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error = NULL);
 
 	// Limit decoding to a specified file region
 	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = NULL);
@@ -98,7 +101,11 @@ public:
 	
 	// ========================================
 	// The URL this decoder will process
-	inline CFURLRef GetURL()								{ return mURL; }
+	inline CFURLRef GetURL()								{ return mInputSource->GetURL(); }
+	
+	// ========================================
+	// The input source feeding the decoder
+	inline InputSource * GetInputSource()					{ return mInputSource; }
 	
 	// ========================================
 	// File access (must be implemented by subclasses)
@@ -146,7 +153,7 @@ public:
 
 protected:
 
-	CFURLRef						mURL;				// The location of the stream to be decoded
+	InputSource						*mInputSource;		// The input source feeding the decoder
 	
 	AudioStreamBasicDescription		mFormat;			// The type of PCM data provided by this decoder
 	AudioChannelLayout				mChannelLayout;		// The channel layout for the PCM data	
@@ -156,7 +163,7 @@ protected:
 	// ========================================
 	// For subclass use only
 	AudioDecoder();
-	AudioDecoder(CFURLRef url);
+	AudioDecoder(InputSource *inputSource);
 	AudioDecoder(const AudioDecoder& rhs);
 	AudioDecoder& operator=(const AudioDecoder& rhs);
 

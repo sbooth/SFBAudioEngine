@@ -41,12 +41,85 @@
 #include "CreateDisplayNameForURL.h"
 
 
-//__attribute__ ((constructor)) static void register_decoder()
-//{
-//}
-
 #pragma mark Callbacks
 
+
+static FLAC__StreamDecoderReadStatus
+readCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+{
+#pragma unused(decoder)
+	assert(NULL != client_data);
+	
+	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
+	InputSource *inputSource = flacDecoder->GetInputSource();
+
+	*bytes = inputSource->Read(buffer, *bytes);
+	
+	if(0 == *bytes)
+		return (inputSource->AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
+	
+	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+}
+
+static FLAC__StreamDecoderSeekStatus
+seekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+{
+#pragma unused(decoder)
+	assert(NULL != client_data);
+	
+	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
+	InputSource *inputSource = flacDecoder->GetInputSource();
+	
+	if(!inputSource->SupportsSeeking())
+		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
+	
+	if(!inputSource->SeekToOffset(absolute_byte_offset))
+		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+	
+	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
+}
+
+static FLAC__StreamDecoderTellStatus
+tellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+{
+#pragma unused(decoder)
+	assert(NULL != client_data);
+	
+	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
+
+	*absolute_byte_offset = flacDecoder->GetInputSource()->GetOffset();
+	
+	if(-1ULL == *absolute_byte_offset)
+		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
+
+	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
+}
+
+static FLAC__StreamDecoderLengthStatus
+lengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
+{
+#pragma unused(decoder)
+	assert(NULL != client_data);
+	
+	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
+
+	*stream_length = flacDecoder->GetInputSource()->GetLength();
+	
+	if(-1ULL == *stream_length)
+		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
+	
+	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
+}
+
+static FLAC__bool
+eofCallback(const FLAC__StreamDecoder *decoder, void *client_data)
+{
+#pragma unused(decoder)
+	assert(NULL != client_data);
+	
+	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
+	return flacDecoder->GetInputSource()->AtEOF();
+}
 
 static FLAC__StreamDecoderWriteStatus 
 writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
@@ -119,8 +192,8 @@ bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-FLACDecoder::FLACDecoder(CFURLRef url)
-	: AudioDecoder(url), mFLAC(NULL), mCurrentFrame(0), mBufferList(NULL)
+FLACDecoder::FLACDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mFLAC(NULL), mCurrentFrame(0), mBufferList(NULL)
 {}
 
 FLACDecoder::~FLACDecoder()
@@ -135,11 +208,6 @@ FLACDecoder::~FLACDecoder()
 
 bool FLACDecoder::OpenFile(CFErrorRef *error)
 {
-	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(false == success)
-		return false;
-	
 	// Create FLAC decoder
 	mFLAC = FLAC__stream_decoder_new();
 	if(NULL == mFLAC) {
@@ -148,7 +216,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 		return false;
 	}
 	
-	CFStringRef extension = CFURLCopyPathExtension(mURL);
+	CFStringRef extension = CFURLCopyPathExtension(GetURL());
 	if(NULL == extension) {
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 		return false;
@@ -159,20 +227,28 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	
 	// Attempt to create a stream decoder based on the file's extension
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
-		status = FLAC__stream_decoder_init_file(mFLAC, 
-												reinterpret_cast<const char *>(buf),
-												writeCallback, 
-												metadataCallback, 
-												errorCallback,
-												this);
+		status = FLAC__stream_decoder_init_stream(mFLAC,
+												  readCallback,
+												  seekCallback,
+												  tellCallback,
+												  lengthCallback,
+												  eofCallback,
+												  writeCallback,
+												  metadataCallback,
+												  errorCallback,
+												  this);
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
-		status = FLAC__stream_decoder_init_ogg_file(mFLAC, 
-													reinterpret_cast<const char *>(buf),
-													writeCallback, 
-													metadataCallback, 
-													errorCallback,
-													this);
-	
+		status = FLAC__stream_decoder_init_ogg_stream(mFLAC,
+													  readCallback,
+													  seekCallback,
+													  tellCallback,
+													  lengthCallback,
+													  eofCallback,
+													  writeCallback,
+													  metadataCallback,
+													  errorCallback,
+													  this);
+												  
 	CFRelease(extension), extension = NULL;
 	
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
@@ -182,7 +258,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
@@ -224,7 +300,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 

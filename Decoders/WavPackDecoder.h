@@ -55,7 +55,7 @@ public:
 	
 	// ========================================
 	// Creation
-	WavPackDecoder(CFURLRef url);
+	WavPackDecoder(InputSource *inputSource);
 	
 	// ========================================
 	// Destruction
@@ -83,11 +83,12 @@ public:
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 	
 private:
 	
+	WavpackStreamReader mStreamReader;
 	WavpackContext		*mWPC;
 	
 	int32_t				*mBuffer;

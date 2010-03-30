@@ -38,6 +38,53 @@
 #include "CreateDisplayNameForURL.h"
 
 
+#pragma mark Callbacks
+
+static mpc_int32_t
+read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
+{
+	assert(NULL != p_reader);
+	
+	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+	return static_cast<mpc_int32_t>(decoder->GetInputSource()->Read(ptr, size));
+}
+
+static mpc_bool_t
+seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
+{
+	assert(NULL != p_reader);
+	
+	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+	return decoder->GetInputSource()->SeekToOffset(offset);
+}
+
+static mpc_int32_t
+tell_callback(mpc_reader *p_reader)
+{
+	assert(NULL != p_reader);
+	
+	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetOffset());
+}
+
+static mpc_int32_t
+get_size_callback(mpc_reader *p_reader)
+{
+	assert(NULL != p_reader);
+	
+	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetLength());
+}
+
+static mpc_bool_t
+canseek_callback(mpc_reader *p_reader)
+{
+	assert(NULL != p_reader);
+	
+	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+	return decoder->GetInputSource()->SupportsSeeking();
+}
+
 #pragma mark Static Methods
 
 
@@ -77,8 +124,8 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-MusepackDecoder::MusepackDecoder(CFURLRef url)
-	: AudioDecoder(url), mDemux(NULL), mTotalFrames(0), mCurrentFrame(0)
+MusepackDecoder::MusepackDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mDemux(NULL), mTotalFrames(0), mCurrentFrame(0)
 {}
 
 MusepackDecoder::~MusepackDecoder()
@@ -94,47 +141,15 @@ MusepackDecoder::~MusepackDecoder()
 bool MusepackDecoder::OpenFile(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
+	if(FALSE == CFURLGetFileSystemRepresentation(mInputSource->GetURL(), FALSE, buf, PATH_MAX))
 		return false;
-	
-	if(MPC_STATUS_OK != mpc_reader_init_stdio(&mReader, reinterpret_cast<char *>(buf))) {
-		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
-															   displayName);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
-		}
-		
-		return false;
-	}
+
+	mReader.read = read_callback;
+	mReader.seek = seek_callback;
+	mReader.tell = tell_callback;
+	mReader.get_size = get_size_callback;
+	mReader.canseek = canseek_callback;
+	mReader.data = this;
 	
 	mDemux = mpc_demux_init(&mReader);
 	if(NULL == mDemux) {
@@ -144,7 +159,7 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 

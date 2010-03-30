@@ -40,6 +40,101 @@
 #define BUFFER_SIZE_FRAMES 2048
 
 
+#pragma mark Callbacks
+
+
+static int32_t
+read_bytes_callback(void *id, void *data, int32_t bcount)
+{
+	assert(NULL != id);
+
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	return static_cast<int32_t>(decoder->GetInputSource()->Read(data, bcount));
+}
+
+static uint32_t
+get_pos_callback(void *id)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	return static_cast<uint32_t>(decoder->GetInputSource()->GetOffset());
+}
+
+static int
+set_pos_abs_callback(void *id, uint32_t pos)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	return !decoder->GetInputSource()->SeekToOffset(pos);
+}
+
+static int
+set_pos_rel_callback(void *id, int32_t delta, int mode)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	InputSource *inputSource = decoder->GetInputSource();
+
+	if(!inputSource->SupportsSeeking())
+		return -1;
+	
+	// Adjust offset as required
+	SInt64 offset;
+	switch(mode) {
+		case SEEK_SET:
+			// offset remains unchanged
+			break;
+		case SEEK_CUR:
+			offset = inputSource->GetOffset() - delta;
+			break;
+		case SEEK_END:
+			offset = inputSource->GetLength() - delta;
+			break;
+	}
+	
+	return (!inputSource->SeekToOffset(offset));
+}
+
+// FIXME: How does one emulate ungetc when the data is non-seekable?
+static int
+push_back_byte_callback(void *id, int c)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	InputSource *inputSource = decoder->GetInputSource();
+	
+	if(!inputSource->SupportsSeeking())
+		return EOF;
+	
+	if(!inputSource->SeekToOffset(inputSource->GetOffset() - 1))
+		return EOF;
+	
+	return c;
+}
+
+static uint32_t
+get_length_callback(void *id)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	return static_cast<uint32_t>(decoder->GetInputSource()->GetLength());
+}
+
+static int
+can_seek_callback(void *id)
+{
+	assert(NULL != id);
+	
+	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+	return static_cast<uint32_t>(decoder->GetInputSource()->SupportsSeeking());
+}
+
+
 #pragma mark Static Methods
 
 
@@ -79,9 +174,11 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 
-WavPackDecoder::WavPackDecoder(CFURLRef url)
-	: AudioDecoder(url), mWPC(NULL), mTotalFrames(0), mCurrentFrame(0)
-{}
+WavPackDecoder::WavPackDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mWPC(NULL), mTotalFrames(0), mCurrentFrame(0)
+{
+	memset(&mStreamReader, 0, sizeof(mStreamReader));
+}
 
 WavPackDecoder::~WavPackDecoder()
 {
@@ -95,14 +192,18 @@ WavPackDecoder::~WavPackDecoder()
 
 bool WavPackDecoder::OpenFile(CFErrorRef *error)
 {
-	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
-		return false;
+	mStreamReader.read_bytes = read_bytes_callback;
+	mStreamReader.get_pos = get_pos_callback;
+	mStreamReader.set_pos_abs = set_pos_abs_callback;
+	mStreamReader.set_pos_rel = set_pos_rel_callback;
+	mStreamReader.push_back_byte = push_back_byte_callback;
+	mStreamReader.get_length = get_length_callback;
+	mStreamReader.can_seek = can_seek_callback;
 	
 	char errorBuf [80];
 	
 	// Setup converter
-	mWPC = WavpackOpenFileInput(reinterpret_cast<char *>(buf), errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
+	mWPC = WavpackOpenFileInputEx(&mStreamReader, this, NULL, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
 	if(NULL == mWPC) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -110,7 +211,7 @@ bool WavPackDecoder::OpenFile(CFErrorRef *error)
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
@@ -203,6 +304,8 @@ bool WavPackDecoder::OpenFile(CFErrorRef *error)
 
 bool WavPackDecoder::CloseFile(CFErrorRef */*error*/)
 {
+	memset(&mStreamReader, 0, sizeof(mStreamReader));
+
 	if(mWPC)
 		WavpackCloseFile(mWPC), mWPC = NULL;
 	

@@ -87,6 +87,12 @@
 		32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32CA90F810B9E514005A85DA /* mpcdec.framework */; };
 		32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7379510B9978200094C8A /* MusepackDecoder.cpp */; };
 		32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7379610B9978200094C8A /* MusepackDecoder.h */; };
+		32D6552D115FC58C002B275C /* FileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D65529115FC58C002B275C /* FileInputSource.cpp */; };
+		32D6552E115FC58C002B275C /* FileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552A115FC58C002B275C /* FileInputSource.h */; };
+		32D6552F115FC58C002B275C /* InputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6552B115FC58C002B275C /* InputSource.cpp */; };
+		32D65530115FC58C002B275C /* InputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552C115FC58C002B275C /* InputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32D6556C115FE7EA002B275C /* MemoryMappedFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */; };
+		32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
 		32D7374B112A61E40058B41F /* AudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D73749112A61E40058B41F /* AudioConverter.h */; };
 		32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D7374A112A61E40058B41F /* AudioConverter.cpp */; };
 		32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D73759112A66E80058B41F /* PCMConverter.cpp */; };
@@ -242,6 +248,12 @@
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
+		32D65529115FC58C002B275C /* FileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileInputSource.cpp; sourceTree = "<group>"; };
+		32D6552A115FC58C002B275C /* FileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileInputSource.h; sourceTree = "<group>"; };
+		32D6552B115FC58C002B275C /* InputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InputSource.cpp; sourceTree = "<group>"; };
+		32D6552C115FC58C002B275C /* InputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputSource.h; sourceTree = "<group>"; };
+		32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryMappedFileInputSource.h; sourceTree = "<group>"; };
+		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
 		32D73749112A61E40058B41F /* AudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverter.h; sourceTree = "<group>"; };
 		32D7374A112A61E40058B41F /* AudioConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverter.cpp; sourceTree = "<group>"; };
 		32D73759112A66E80058B41F /* PCMConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PCMConverter.cpp; sourceTree = "<group>"; };
@@ -325,6 +337,7 @@
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
 				32D73747112A61860058B41F /* Converter */,
 				32EA67F5112BC4AE006C26F1 /* Metadata */,
+				32D65528115FC570002B275C /* Input */,
 				29B97315FDCFA39411CA2CEA /* Other */,
 				322B5B2B108BA68E00CA9BDE /* Configs */,
 				3252E83610CC9E3000F1AA23 /* SimplePlayer */,
@@ -458,6 +471,19 @@
 			path = SimplePlayer;
 			sourceTree = "<group>";
 		};
+		32D65528115FC570002B275C /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				32D65529115FC58C002B275C /* FileInputSource.cpp */,
+				32D6552A115FC58C002B275C /* FileInputSource.h */,
+				32D6552B115FC58C002B275C /* InputSource.cpp */,
+				32D6552C115FC58C002B275C /* InputSource.h */,
+				32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */,
+				32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
 		32D73747112A61860058B41F /* Converter */ = {
 			isa = PBXGroup;
 			children = (
@@ -559,6 +585,9 @@
 				3294BE391144AF22003EB595 /* CAMath.h in Headers */,
 				3294BE3C1144AF3E003EB595 /* CADebugMacros.h in Headers */,
 				3294BE3E1144AF3F003EB595 /* CADebugPrintf.h in Headers */,
+				32D6552E115FC58C002B275C /* FileInputSource.h in Headers */,
+				32D65530115FC58C002B275C /* InputSource.h in Headers */,
+				32D6556C115FE7EA002B275C /* MemoryMappedFileInputSource.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -709,6 +738,9 @@
 				3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */,
 				3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */,
 				3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */,
+				32D6552D115FC58C002B275C /* FileInputSource.cpp in Sources */,
+				32D6552F115FC58C002B275C /* InputSource.cpp in Sources */,
+				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
