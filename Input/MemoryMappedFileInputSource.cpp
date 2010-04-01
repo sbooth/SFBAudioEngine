@@ -141,6 +141,11 @@ SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
 	assert(NULL != buffer);
 
+	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
+	
+	if(byteCount > remaining)
+		byteCount = remaining;
+	
 	memcpy(buffer, mCurrentPosition, byteCount);
 	mCurrentPosition += byteCount;
 	return byteCount;
@@ -148,6 +153,9 @@ SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 
 bool MemoryMappedFileInputSource::SeekToOffset(SInt64 offset)
 {
+	if(offset > mFilestats.st_size)
+		return false;
+
 	mCurrentPosition = mMemory + offset;
 	return true;
 }
