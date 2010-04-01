@@ -168,7 +168,7 @@ MPEGDecoder::~MPEGDecoder()
 bool MPEGDecoder::OpenFile(CFErrorRef *error)
 {
 	// Scan file to determine sample rate, channels, total frames, etc
-	if(!this->ScanFile()) {
+	if(!this->ScanFile(!mInputSource->SupportsSeeking())) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -312,15 +312,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
-	uint32_t		bytesToRead;
-	uint32_t		bytesRemaining;
-	unsigned char	*readStartPointer;
-	int32_t			audioSample;
-	
-	bool			readEOF					= false;
-	float			scaleFactor				= (1L << (BIT_RESOLUTION - 1));
-	
-	UInt32			framesRead				= 0;
+	UInt32 framesRead = 0;
 
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
@@ -363,10 +355,31 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		if(mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
 			break;
 		
+		// Decode and synthesize the next MPEG frame
+		if(!DecodeMPEGFrame())
+			break;
+
+		SynthesizeMPEGFrame();
+	}
+	
+	mCurrentFrame += framesRead;
+
+	return framesRead;
+}
+
+bool MPEGDecoder::DecodeMPEGFrame(bool decoderHeaderOnly)
+{
+	bool readEOF = false;
+
+	for(;;) {
 		// Feed the input buffer if necessary
 		if(NULL == mStream.buffer || MAD_ERROR_BUFLEN == mStream.error) {
+			SInt64 bytesToRead;
+			ptrdiff_t bytesRemaining;
+			unsigned char *readStartPointer;
+			
 			if(NULL != mStream.next_frame) {
-				bytesRemaining = static_cast<uint32_t>(mStream.bufend - mStream.next_frame);
+				bytesRemaining = mStream.bufend - mStream.next_frame;
 				memmove(mInputBuffer, mStream.next_frame, bytesRemaining);
 				
 				readStartPointer	= mInputBuffer + bytesRemaining;
@@ -384,27 +397,32 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 #if DEBUG
 				LOG("Read error");
 #endif
-				break;
+				return false;
 			}
 			
-			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
+			// MAD_BUFFER_GUARD zeroes are required to decode the last MPEG frame of the file
 			if(mInputSource->AtEOF()) {
 				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
-				bytesRead	+= MAD_BUFFER_GUARD;
-				readEOF		= true;
+				bytesRead += MAD_BUFFER_GUARD;
+				readEOF = true;
 			}
 			
 			mad_stream_buffer(&mStream, mInputBuffer, bytesRead + bytesRemaining);
 			mStream.error = MAD_ERROR_NONE;
 		}
 		
-		// Decode the MPEG frame
-		int result = mad_frame_decode(&mFrame, &mStream);
+		// Decode the MPEG frame's header
+		int result;
+		if(decoderHeaderOnly)
+			result = mad_header_decode(&mFrame.header, &mStream);
+		else
+			result = mad_frame_decode(&mFrame, &mStream);
+
 		if(-1 == result) {
 			if(MAD_RECOVERABLE(mStream.error)) {
 				// Prevent ID3 tags from reporting recoverable frame errors
 				const uint8_t	*buffer			= mStream.this_frame;
-				uint32_t		buflen			= static_cast<uint32_t>(mStream.bufend - mStream.this_frame);
+				ptrdiff_t		buflen			= mStream.bufend - mStream.this_frame;
 				uint32_t		id3_length		= 0;
 				
 				if(10 <= buflen && 0x49 == buffer[0] && 0x44 == buffer[1] && 0x33 == buffer[2]) {
@@ -425,7 +443,8 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			}
 			// EOS for non-Xing streams occurs when EOF is reached and no further frames can be decoded
 			else if(MAD_ERROR_BUFLEN == mStream.error && readEOF)
-				break;
+				return false;
+			// The buffer did not contain the desired data
 			else if(MAD_ERROR_BUFLEN == mStream.error)
 				continue;
 			else {
@@ -436,322 +455,259 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			}
 		}
 		
-		// Housekeeping
+		// At this point a frame was successfully decoded
 		++mMPEGFramesDecoded;
-
-		// Synthesize the frame into PCM
-		mad_synth_frame(&mSynth, &mFrame);
 		
-		// Skip any samples that remain from last frame
-		// This can happen if the encoder delay is greater than the number of samples in a frame
-		uint32_t startingSample = mSamplesToSkipInNextFrame;
+		break;
+	}
 
-		// Skip the Xing header (it contains empty audio)
-		if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
-			continue;
-		// Adjust the first real audio frame for gapless playback
-		else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
-			startingSample += mEncoderDelay;
+	return true;
+}
 
-		// The number of samples in this frame
-		uint32_t sampleCount = mSynth.pcm.length;
-		// Skip this entire frame if necessary
-		if(startingSample > sampleCount) {
-			mSamplesToSkipInNextFrame += startingSample - sampleCount;
-			continue;
+bool MPEGDecoder::SynthesizeMPEGFrame()
+{
+	const float scaleFactor = (1L << (BIT_RESOLUTION - 1));
+
+	// Synthesize the frame into PCM
+	mad_synth_frame(&mSynth, &mFrame);
+	
+	// Skip any samples that remain from last frame
+	// This can happen if the encoder delay is greater than the number of samples in a frame
+	uint32_t startingSample = mSamplesToSkipInNextFrame;
+	
+	// Skip the Xing header (it contains empty audio)
+	if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
+		return true;
+	// Adjust the first real audio frame for gapless playback
+	else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
+		startingSample += mEncoderDelay;
+	
+	// The number of samples in this frame
+	uint32_t sampleCount = mSynth.pcm.length;
+	// Skip this entire frame if necessary
+	if(startingSample > sampleCount) {
+		mSamplesToSkipInNextFrame += startingSample - sampleCount;
+		return true;
+	}
+	else
+		mSamplesToSkipInNextFrame = 0;
+	
+	// If a LAME header was found, the total number of audio frames (AKA samples) 
+	// is known.  Ensure only that many are output
+	if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
+		sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
+	
+	// Output samples in 32-bit float PCM
+	int32_t audioSample;
+	for(uint32_t channel = 0; channel < MAD_NCHANNELS(&mFrame.header); ++channel) {
+		float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
+		
+		for(uint32_t sample = startingSample; sample < sampleCount; ++sample) {
+			audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
+			*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
 		}
-		else
-			mSamplesToSkipInNextFrame = 0;
 		
-		// If a LAME header was found, the total number of audio frames (AKA samples) 
-		// is known.  Ensure only that many are output
-		if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
-			sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
-
-		// Output samples in 32-bit float PCM
-		for(uint32_t channel = 0; channel < MAD_NCHANNELS(&mFrame.header); ++channel) {
-			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
-			
-			for(uint32_t sample = startingSample; sample < sampleCount; ++sample) {
-				audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
-				*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
-			}
-			
-			mBufferList->mBuffers[channel].mNumberChannels	= 1;
-			mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>((sampleCount - startingSample) * sizeof(float));
-		}
-		
-		mSamplesDecoded += (sampleCount - startingSample);
+		mBufferList->mBuffers[channel].mNumberChannels	= 1;
+		mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>((sampleCount - startingSample) * sizeof(float));
 	}
 	
-	mCurrentFrame += framesRead;
-
-	return framesRead;
+	mSamplesDecoded += (sampleCount - startingSample);
+	
+	return true;
 }
 
 bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 {
-	uint32_t			framesDecoded = 0;
-	UInt32				bytesToRead, bytesRemaining;
-	unsigned char		*readStartPointer;
-	bool				readEOF			= false;
+	// Attempt to decode the first MPEG frame, in hope of a Xing header
+	if(!DecodeMPEGFrame()) {
+		ERR("Could not decode first MPEG frame");
+		return false;
+	}
 
-	struct mad_stream	stream;
-	struct mad_frame	frame;
+	// Save the relevant parameters
+	mMPEGLayer					= mFrame.header.layer;
+	mMode						= mFrame.header.mode;
+	mEmphasis					= mFrame.header.emphasis;
+
+	mFormat.mSampleRate			= mFrame.header.samplerate;
+	mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&mFrame.header);
 	
-	uint32_t			id3_length		= 0;
-	
-	// Set up	
-	mad_stream_init(&stream);
-	mad_frame_init(&frame);
+	mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&mFrame.header);
 
-	for(;;) {
-		if(NULL == stream.buffer || MAD_ERROR_BUFLEN == stream.error) {
-			if(stream.next_frame) {
-				bytesRemaining = static_cast<uint32_t>(stream.bufend - stream.next_frame);
-				memmove(mInputBuffer, stream.next_frame, bytesRemaining);
-				
-				readStartPointer	= mInputBuffer + bytesRemaining;
-				bytesToRead			= INPUT_BUFFER_SIZE - bytesRemaining;
-			}
-			else {
-				bytesToRead			= INPUT_BUFFER_SIZE,
-				readStartPointer	= mInputBuffer,
-				bytesRemaining		= 0;
-			}
-			
-			// Read raw bytes from the MP3 file
-			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
-			if(0 == bytesRead && !mInputSource->AtEOF()) {
-#if DEBUG
-				LOG("Read error: %s.", strerror(errno));
-#endif
-				break;
-			}
-			
-			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
-			if(mInputSource->AtEOF()) {
-				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
-				bytesRead	+= MAD_BUFFER_GUARD;
-				readEOF		= true;
-			}
-			
-			mad_stream_buffer(&stream, mInputBuffer, bytesRead + bytesRemaining);
-			stream.error = MAD_ERROR_NONE;
-		}
-		
-		int result = mad_header_decode(&frame.header, &stream);
-		if(-1 == result) {
-			if(MAD_RECOVERABLE(stream.error)) {
-				// Prevent ID3 tags from reporting recoverable frame errors
-				const uint8_t	*buffer			= stream.this_frame;
-				unsigned		buflen			= static_cast<uint32_t>(stream.bufend - stream.this_frame);
-				
-				if(10 <= buflen && 0x49 == buffer[0] && 0x44 == buffer[1] && 0x33 == buffer[2]) {
-					id3_length = (((buffer[6] & 0x7F) << (3 * 7)) | ((buffer[7] & 0x7F) << (2 * 7)) |
-								  ((buffer[8] & 0x7F) << (1 * 7)) | ((buffer[9] & 0x7F) << (0 * 7)));
-					
-					// Add 10 bytes for ID3 header
-					id3_length += 10;
-					
-					mad_stream_skip(&stream, id3_length);
-				}
-#if DEBUG
-				else
-					LOG("Recoverable frame level error (%s)", mad_stream_errorstr(&stream));
-#endif
-				
-				continue;
-			}
-			// EOS for non-Xing streams occurs when EOF is reached and no further frames can be decoded
-			else if(MAD_ERROR_BUFLEN == stream.error && readEOF)
-				break;
-			else if(MAD_ERROR_BUFLEN == stream.error)
-				continue;
-			else {
-#if DEBUG
-				LOG("Unrecoverable frame level error (%s)", mad_stream_errorstr(&stream));
-#endif
-				break;
-			}
-		}
-		
-		++framesDecoded;
-		
-		// Look for a Xing header in the first frame that was successfully decoded
-		// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp
-		if(1 == framesDecoded) {
-			mMPEGLayer					= frame.header.layer;
-			mMode						= frame.header.mode;
-			mEmphasis					= frame.header.emphasis;
-
-			mFormat.mSampleRate			= frame.header.samplerate;
-			mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&frame.header);
-			
-			mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&frame.header);
-
-			// Set up the source format
-			switch(mMPEGLayer) {
-				case MAD_LAYER_I:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;	break;
-				case MAD_LAYER_II:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;	break;
-				case MAD_LAYER_III:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;	break;
-			}
-			
-			mSourceFormat.mSampleRate			= frame.header.samplerate;
-			mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&frame.header);
-			mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
-
-			// MAD_NCHANNELS always returns 1 or 2
-			mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&frame.header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
-
-			// To get the ancillary bits it is necessary to decode the frame
-			result = mad_frame_decode(&frame, &stream);
-			if(-1 == result)
-				ERR("Could not decode first MPEG frame");
-
-			unsigned ancillaryBitsRemaining = stream.anc_bitlen;
-			if(32 > ancillaryBitsRemaining)
-				continue;
-			
-			unsigned long magic = mad_bit_read(&stream.anc_ptr, 32);
-			ancillaryBitsRemaining -= 32;
-			
-			if('Xing' == magic || 'Info' == magic) {
-				if(32 > ancillaryBitsRemaining)
-					continue;
-				
-				unsigned long flags = mad_bit_read(&stream.anc_ptr, 32);
-				ancillaryBitsRemaining -= 32;
-				
-				// 4 byte value containing total frames
-				// For LAME-encoded MP3s, the number of MPEG frames in the file is one greater than this frame
-				if(FRAMES_FLAG & flags) {
-					if(32 > ancillaryBitsRemaining)
-						continue;
-					
-					unsigned long frames = mad_bit_read(&stream.anc_ptr, 32);
-					ancillaryBitsRemaining -= 32;
-					
-					mTotalMPEGFrames = static_cast<uint32_t>(frames);
-					
-					// Determine number of samples, discounting encoder delay and padding
-					// Our concept of a frame is the same as CoreAudio's- one sample across all channels
-					mTotalFrames = frames * mSamplesPerMPEGFrame;
-				}
-				
-				// 4 byte value containing total bytes
-				if(BYTES_FLAG & flags) {
-					if(32 > ancillaryBitsRemaining)
-						continue;
-					
-					/*uint32_t bytes =*/ mad_bit_read(&stream.anc_ptr, 32);
-					ancillaryBitsRemaining -= 32;
-				}
-				
-				// 100 bytes containing TOC information
-				if(TOC_FLAG & flags) {
-					if(8 * 100 > ancillaryBitsRemaining)
-						continue;
-					
-					for(unsigned i = 0; i < 100; ++i)
-						mXingTOC[i] = mad_bit_read(&stream.anc_ptr, 8);
-					
-					ancillaryBitsRemaining -= (8 * 100);
-				}
-				
-				// 4 byte value indicating encoded vbr scale
-				if(VBR_SCALE_FLAG & flags) {
-					if(32 > ancillaryBitsRemaining)
-						continue;
-					
-					/*uint32_t vbrScale =*/ mad_bit_read(&stream.anc_ptr, 32);
-					ancillaryBitsRemaining -= 32;
-				}
-				
-				mFoundXingHeader = true;
-				
-				// Loook for the LAME header next
-				// http://gabriel.mp3-tech.org/mp3infotag.html				
-				if(32 > ancillaryBitsRemaining)
-					continue;
-				magic = mad_bit_read(&stream.anc_ptr, 32);
-				
-				ancillaryBitsRemaining -= 32;
-				
-				if('LAME' == magic) {
-					
-					if(LAME_HEADER_SIZE > ancillaryBitsRemaining)
-						continue;
-					
-					/*unsigned char versionString [5 + 1];
-					memset(versionString, 0, 6);*/
-					
-					for(unsigned i = 0; i < 5; ++i)
-						/*versionString[i] =*/ mad_bit_read(&stream.anc_ptr, 8);
-					
-					/*uint8_t infoTagRevision =*/ mad_bit_read(&stream.anc_ptr, 4);
-					/*uint8_t vbrMethod =*/ mad_bit_read(&stream.anc_ptr, 4);
-					
-					/*uint8_t lowpassFilterValue =*/ mad_bit_read(&stream.anc_ptr, 8);
-					
-					/*float peakSignalAmplitude =*/ mad_bit_read(&stream.anc_ptr, 32);
-					/*uint16_t radioReplayGain =*/ mad_bit_read(&stream.anc_ptr, 16);
-					/*uint16_t audiophileReplayGain =*/ mad_bit_read(&stream.anc_ptr, 16);
-					
-					/*uint8_t encodingFlags =*/ mad_bit_read(&stream.anc_ptr, 4);
-					/*uint8_t athType =*/ mad_bit_read(&stream.anc_ptr, 4);
-					
-					/*uint8_t lameBitrate =*/ mad_bit_read(&stream.anc_ptr, 8);
-					
-					uint16_t encoderDelay = mad_bit_read(&stream.anc_ptr, 12);
-					uint16_t encoderPadding = mad_bit_read(&stream.anc_ptr, 12);
-										
-					// Adjust encoderDelay and encoderPadding for MDCT/filterbank delays
-					mEncoderDelay = encoderDelay + 528 + 1;
-					mEncoderPadding = encoderPadding - (528 + 1);
-
-					mTotalFrames = this->GetTotalFrames() - (mEncoderDelay + mEncoderPadding);
-					
-					/*uint8_t misc =*/ mad_bit_read(&stream.anc_ptr, 8);
-					
-					/*uint8_t mp3Gain =*/ mad_bit_read(&stream.anc_ptr, 8);
-					
-					/*uint8_t unused =*/mad_bit_read(&stream.anc_ptr, 2);
-					/*uint8_t surroundInfo =*/ mad_bit_read(&stream.anc_ptr, 3);
-					/*uint16_t presetInfo =*/ mad_bit_read(&stream.anc_ptr, 11);
-					
-					/*uint32_t musicGain =*/ mad_bit_read(&stream.anc_ptr, 32);
-					
-					/*uint32_t musicCRC =*/ mad_bit_read(&stream.anc_ptr, 32);
-					
-					/*uint32_t tagCRC =*/ mad_bit_read(&stream.anc_ptr, 32);
-					
-					ancillaryBitsRemaining -= LAME_HEADER_SIZE;
-					
-					mFoundLAMEHeader = true;
-					break;
-				}
-			}
-		}
-		else if(estimateTotalFrames) {
-			// Estimate the number of frames based on the file's size
-			mTotalFrames = static_cast<SInt64>(static_cast<float>(frame.header.samplerate) * ((mInputSource->GetLength() - id3_length) / (frame.header.bitrate / 8.0)));
-			break;
-		}
+	// Set up the source format
+	switch(mMPEGLayer) {
+		case MAD_LAYER_I:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;	break;
+		case MAD_LAYER_II:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;	break;
+		case MAD_LAYER_III:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;	break;
 	}
 	
-	// If no Xing or LAME header was found, gapless playback won't be possible but the total number of frames is still known
-	if(!estimateTotalFrames && (!mFoundXingHeader || (mFoundXingHeader && 0 == mTotalFrames) || !mFoundLAMEHeader))
-		mTotalFrames = mSamplesPerMPEGFrame * framesDecoded;
+	mSourceFormat.mSampleRate			= mFrame.header.samplerate;
+	mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&mFrame.header);
+	mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
 
-	// Clean up
-	mad_frame_finish(&frame);
-	mad_stream_finish(&stream);
+	// MAD_NCHANNELS always returns 1 or 2
+	mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&mFrame.header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
+
+	// Look for a Xing header in the first MPEG frame
+	// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp
+	unsigned long magic;
+	unsigned ancillaryBitsRemaining = mStream.anc_bitlen;
+	if(32 > ancillaryBitsRemaining)
+		goto frame2;
 	
-	// Rewind to the beginning of file
-	if(!mInputSource->SeekToOffset(0))
-		return false;
+	/*unsigned long*/ magic = mad_bit_read(&mStream.anc_ptr, 32);
+	ancillaryBitsRemaining -= 32;
 	
+	if('Xing' == magic || 'Info' == magic) {
+		if(32 > ancillaryBitsRemaining)
+			goto frame2;
+		
+		unsigned long flags = mad_bit_read(&mStream.anc_ptr, 32);
+		ancillaryBitsRemaining -= 32;
+		
+		// 4 byte value containing total frames
+		// For LAME-encoded MP3s, the number of MPEG frames in the file is one greater than this frame
+		if(FRAMES_FLAG & flags) {
+			if(32 > ancillaryBitsRemaining)
+				goto frame2;
+			
+			unsigned long frames = mad_bit_read(&mStream.anc_ptr, 32);
+			ancillaryBitsRemaining -= 32;
+			
+			mTotalMPEGFrames = static_cast<uint32_t>(frames);
+			
+			// Determine number of samples, discounting encoder delay and padding
+			// Our concept of a frame is the same as CoreAudio's- one sample across all channels
+			mTotalFrames = frames * mSamplesPerMPEGFrame;
+		}
+		
+		// 4 byte value containing total bytes
+		if(BYTES_FLAG & flags) {
+			if(32 > ancillaryBitsRemaining)
+				goto frame2;
+			
+			/*uint32_t bytes =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			ancillaryBitsRemaining -= 32;
+		}
+		
+		// 100 bytes containing TOC information
+		if(TOC_FLAG & flags) {
+			if(8 * 100 > ancillaryBitsRemaining)
+				goto frame2;
+			
+			for(unsigned i = 0; i < 100; ++i)
+				mXingTOC[i] = mad_bit_read(&mStream.anc_ptr, 8);
+			
+			ancillaryBitsRemaining -= (8 * 100);
+		}
+		
+		// 4 byte value indicating encoded vbr scale
+		if(VBR_SCALE_FLAG & flags) {
+			if(32 > ancillaryBitsRemaining)
+				goto frame2;
+			
+			/*uint32_t vbrScale =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			ancillaryBitsRemaining -= 32;
+		}
+		
+		mFoundXingHeader = true;
+		
+		// Loook for the LAME header next
+		// http://gabriel.mp3-tech.org/mp3infotag.html				
+		if(32 > ancillaryBitsRemaining)
+			goto frame2;
+		magic = mad_bit_read(&mStream.anc_ptr, 32);
+		
+		ancillaryBitsRemaining -= 32;
+		
+		if('LAME' == magic) {
+			if(LAME_HEADER_SIZE > ancillaryBitsRemaining)
+				goto frame2;
+			
+			/*unsigned char versionString [5 + 1];
+			memset(versionString, 0, 6);*/
+			
+			for(unsigned i = 0; i < 5; ++i)
+				/*versionString[i] =*/ mad_bit_read(&mStream.anc_ptr, 8);
+			
+			/*uint8_t infoTagRevision =*/ mad_bit_read(&mStream.anc_ptr, 4);
+			/*uint8_t vbrMethod =*/ mad_bit_read(&mStream.anc_ptr, 4);
+			
+			/*uint8_t lowpassFilterValue =*/ mad_bit_read(&mStream.anc_ptr, 8);
+			
+			/*float peakSignalAmplitude =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			/*uint16_t radioReplayGain =*/ mad_bit_read(&mStream.anc_ptr, 16);
+			/*uint16_t audiophileReplayGain =*/ mad_bit_read(&mStream.anc_ptr, 16);
+			
+			/*uint8_t encodingFlags =*/ mad_bit_read(&mStream.anc_ptr, 4);
+			/*uint8_t athType =*/ mad_bit_read(&mStream.anc_ptr, 4);
+			
+			/*uint8_t lameBitrate =*/ mad_bit_read(&mStream.anc_ptr, 8);
+			
+			uint16_t encoderDelay = mad_bit_read(&mStream.anc_ptr, 12);
+			uint16_t encoderPadding = mad_bit_read(&mStream.anc_ptr, 12);
+								
+			// Adjust encoderDelay and encoderPadding for MDCT/filterbank delays
+			mEncoderDelay = encoderDelay + 528 + 1;
+			mEncoderPadding = encoderPadding - (528 + 1);
+
+			mTotalFrames -= (mEncoderDelay + mEncoderPadding);
+			
+			/*uint8_t misc =*/ mad_bit_read(&mStream.anc_ptr, 8);
+			
+			/*uint8_t mp3Gain =*/ mad_bit_read(&mStream.anc_ptr, 8);
+			
+			/*uint8_t unused =*/mad_bit_read(&mStream.anc_ptr, 2);
+			/*uint8_t surroundInfo =*/ mad_bit_read(&mStream.anc_ptr, 3);
+			/*uint16_t presetInfo =*/ mad_bit_read(&mStream.anc_ptr, 11);
+			
+			/*uint32_t musicGain =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			
+			/*uint32_t musicCRC =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			
+			/*uint32_t tagCRC =*/ mad_bit_read(&mStream.anc_ptr, 32);
+			
+			ancillaryBitsRemaining -= LAME_HEADER_SIZE;
+			
+			mFoundLAMEHeader = true;
+		}
+	}
+
+	// If a Xing or LAME header was found, the total number of MPEG frames or sample frames is known
+	if((mFoundXingHeader && 0 != mTotalFrames) || mFoundLAMEHeader)
+		return true;
+	
+frame2:
+
+	// Estimate the number of frames based on the file's size (for non-seekable input sources)
+	if(estimateTotalFrames) {
+		mTotalFrames = static_cast<SInt64>(static_cast<float>(mFrame.header.samplerate) * ((mInputSource->GetLength() /*- id3_length*/) / (mFrame.header.bitrate / 8.0)));
+
+		// If the frame didn't contain a Xing header, synthesize the audio
+		if(!mFoundXingHeader)
+			SynthesizeMPEGFrame();
+	}
+	// Scan the file for each frame's header and keep count of the number of MPEG frames found
+	else {
+		// Decode the header for all MPEG frames
+		while(DecodeMPEGFrame(true))
+			;
+
+		mTotalFrames = mSamplesPerMPEGFrame * mMPEGFramesDecoded;
+		
+		// Rewind to the beginning of the file
+		if(!mInputSource->SeekToOffset(0))
+			return false;
+		
+		// Reset decoder parameters
+		mMPEGFramesDecoded			= 0;
+		mCurrentFrame				= 0;
+		mSamplesToSkipInNextFrame	= 0;
+		mSamplesDecoded				= 0;
+		
+		mad_stream_buffer(&mStream, NULL, 0);
+	}
+
 	return true;
 }
 
@@ -803,14 +759,6 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 	
 	// Brute force seeking is necessary since frame-accurate seeking is required
 	
-	uint32_t		bytesToRead;
-	uint32_t		bytesRemaining;
-	unsigned char	*readStartPointer;
-	int32_t			audioSample;
-	
-	bool			readEOF					= false;
-	float			scaleFactor				= (1L << (BIT_RESOLUTION - 1));
-	
 	// To seek to a frame earlier in the file, rewind to the beginning
 	if(this->GetCurrentFrame() > frame) {
 		if(!mInputSource->SeekToOffset(0))
@@ -837,149 +785,29 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 		if(mSamplesDecoded >= frame)
 			break;
 
-		// If the file contains a Xing header but not LAME gapless information,
-		// decode the number of MPEG frames specified by the Xing header
-		if(mFoundXingHeader && !mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
+		// Decode and synthesize the next MPEG frame
+		if(!DecodeMPEGFrame())
 			break;
+
+		SynthesizeMPEGFrame();
 		
-		// The LAME header indicates how many samples are in the file
-		if(mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
-			break;
-		
-		// Feed the input buffer if necessary
-		if(NULL == mStream.buffer || MAD_ERROR_BUFLEN == mStream.error) {
-			if(NULL != mStream.next_frame) {
-				bytesRemaining = static_cast<uint32_t>(mStream.bufend - mStream.next_frame);
-				memmove(mInputBuffer, mStream.next_frame, bytesRemaining);
-				
-				readStartPointer	= mInputBuffer + bytesRemaining;
-				bytesToRead			= INPUT_BUFFER_SIZE - bytesRemaining;
-			}
-			else {
-				bytesToRead			= INPUT_BUFFER_SIZE,
-				readStartPointer	= mInputBuffer,
-				bytesRemaining		= 0;
+		// If the MPEG frame that was just decoded contains the desired frame, adjust the buffers
+		// so the desired frame is first
+
+		if(mSamplesDecoded >= frame) {
+			UInt32 framesInBuffer = static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+			UInt32 framesToSkip = static_cast<UInt32>(mSamplesDecoded - frame);
+
+			for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
+				float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
+				memmove(floatBuffer, floatBuffer + framesToSkip, (framesInBuffer - framesToSkip) * sizeof(float));
+			
+				mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToSkip * sizeof(float));
 			}
 			
-			// Read raw bytes from the MP3 file
-			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
-			if(0 == bytesRead && !mInputSource->AtEOF()) {
-#if DEBUG
-				LOG("Read error: %s.", strerror(errno));
-#endif
-				break;
-			}
-			
-			// MAD_BUFFER_GUARD zeroes are required to decode the last frame of the file
-			if(mInputSource->AtEOF()) {
-				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
-				bytesRead	+= MAD_BUFFER_GUARD;
-				readEOF		= true;
-			}
-			
-			mad_stream_buffer(&mStream, mInputBuffer, bytesRead + bytesRemaining);
-			mStream.error = MAD_ERROR_NONE;
-		}
-		
-		// Decode the MPEG frame
-		int result = mad_frame_decode(&mFrame, &mStream);
-		if(-1 == result) {
-			if(MAD_RECOVERABLE(mStream.error)) {
-				// Prevent ID3 tags from reporting recoverable frame errors
-				const uint8_t	*buffer			= mStream.this_frame;
-				unsigned		buflen			= static_cast<uint32_t>(mStream.bufend - mStream.this_frame);
-				uint32_t		id3_length		= 0;
-				
-				if(10 <= buflen && 0x49 == buffer[0] && 0x44 == buffer[1] && 0x33 == buffer[2]) {
-					id3_length = (((buffer[6] & 0x7F) << (3 * 7)) | ((buffer[7] & 0x7F) << (2 * 7)) |
-								  ((buffer[8] & 0x7F) << (1 * 7)) | ((buffer[9] & 0x7F) << (0 * 7)));
-					
-					// Add 10 bytes for ID3 header
-					id3_length += 10;
-					
-					mad_stream_skip(&mStream, id3_length);
-				}
-#if DEBUG
-				else
-					LOG("Recoverable frame level error (%s)", mad_stream_errorstr(&mStream));
-#endif
-				
-				continue;
-			}
-			// EOS for non-Xing streams occurs when EOF is reached and no further frames can be decoded
-			else if(MAD_ERROR_BUFLEN == mStream.error && readEOF)
-				break;
-			else if(MAD_ERROR_BUFLEN == mStream.error)
-				continue;
-			else {
-#if DEBUG
-				LOG("Unrecoverable frame level error (%s)", mad_stream_errorstr(&mStream));
-#endif
-				break;
-			}
-		}
-		
-		// Housekeeping
-		++mMPEGFramesDecoded;
-
-		// Skip any samples that remain from last frame
-		// This can happen if the encoder delay is greater than the number of samples in a frame
-		uint32_t startingSample = mSamplesToSkipInNextFrame;
-		
-		// Skip the Xing header (it contains empty audio)
-		if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
-			continue;
-		// Adjust the first real audio frame for gapless playback
-		else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
-			startingSample += mEncoderDelay;
-
-		// The number of samples in this frame
-		uint32_t sampleCount = 32 * MAD_NSBSAMPLES(&mFrame.header);
-		
-		// Skip this entire frame if necessary
-		if(startingSample > sampleCount) {
-			mSamplesToSkipInNextFrame += startingSample - sampleCount;
-			continue;
-		}
-		else
-			mSamplesToSkipInNextFrame = 0;
-		
-		// If a LAME header was found, the total number of audio frames (AKA samples) 
-		// is known.  Ensure only that many are output
-		if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
-			sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
-
-		// If this MPEG frame contains the desired seek frame, synthesize its audio to PCM
-		if(mSamplesDecoded + (sampleCount - startingSample) > frame) {
-			// Synthesize the frame into PCM
-			mad_synth_frame(&mSynth, &mFrame);
-
-			// Skip any audio frames before the sample we are seeking to
-			uint32_t additionalSamplesToSkip = static_cast<uint32_t>(frame - mSamplesDecoded);
-			
-			// Output samples in 32-bit float PCM
-			for(unsigned channel = 0; channel < MAD_NCHANNELS(&mFrame.header); ++channel) {
-				float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
-				
-				for(unsigned sample = startingSample + additionalSamplesToSkip; sample < sampleCount; ++sample) {
-					audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
-					*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
-				}
-				
-				mBufferList->mBuffers[channel].mNumberChannels	= 1;
-				mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>((sampleCount - (startingSample + additionalSamplesToSkip)) * sizeof(float));
-			}
-
-			// Only a portion of the frame was skipped- the rest was synthesized and stored in our buffers
-			mSamplesDecoded		+= (sampleCount - startingSample);
-			mCurrentFrame		+= additionalSamplesToSkip;
-		}
-		// The entire frame was skipped
-		else {
-			mSamplesDecoded		+= (sampleCount - startingSample);
-			mCurrentFrame		+= (sampleCount - startingSample);
+			mCurrentFrame -= framesToSkip;
 		}
 	}
 	
-	return this->GetCurrentFrame();
+	return mCurrentFrame;
 }

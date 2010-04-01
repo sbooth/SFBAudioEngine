@@ -87,7 +87,10 @@ public:
 	virtual SInt64 SeekToFrame(SInt64 frame);
 
 private:
-	
+
+	bool DecodeMPEGFrame(bool decoderHeaderOnly = false);
+	bool SynthesizeMPEGFrame();
+
 	bool ScanFile(bool estimateTotalFrames = false);
 	SInt64 SeekToFrameApproximately(SInt64 frame);
 	SInt64 SeekToFrameAccurately(SInt64 frame);
