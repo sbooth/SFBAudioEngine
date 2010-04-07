@@ -212,8 +212,13 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 DSPAudioPlayer::DSPAudioPlayer()
-	: mDecoderQueue(), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false)
+	: mDecoderQueue(NULL), mRingBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mPreGain(0), mPerformHardLimiting(false)
 {
+	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+	
+	if(NULL == mDecoderQueue)
+		throw std::bad_alloc();
+
 	mRingBuffer = new CARingBuffer();
 
 	// ========================================
@@ -224,6 +229,7 @@ DSPAudioPlayer::DSPAudioPlayer()
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		throw std::runtime_error("semaphore_create failed");
@@ -235,6 +241,7 @@ DSPAudioPlayer::DSPAudioPlayer()
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -250,6 +257,7 @@ DSPAudioPlayer::DSPAudioPlayer()
 	if(0 != success) {
 		ERR("pthread_mutex_init failed: %i", success);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 		
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -279,6 +287,7 @@ DSPAudioPlayer::DSPAudioPlayer()
 	if(0 != creationResult) {
 		ERR("pthread_create failed: %i", creationResult);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 		
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -312,6 +321,7 @@ DSPAudioPlayer::DSPAudioPlayer()
 		
 		mDecoderThread = static_cast<pthread_t>(0);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -388,12 +398,14 @@ DSPAudioPlayer::~DSPAudioPlayer()
 	}
 	
 	// Clean up any queued decoders
-	while(false == mDecoderQueue.empty()) {
-		AudioDecoder *decoder = mDecoderQueue.front();
-		mDecoderQueue.pop_front();
+	while(0 < CFArrayGetCount(mDecoderQueue)) {
+		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
-
+	
+	CFRelease(mDecoderQueue), mDecoderQueue = NULL;
+	
 	// Clean up the ring buffer
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
@@ -1269,7 +1281,7 @@ bool DSPAudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	bool queueEmpty = mDecoderQueue.empty();
+	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));
 		
 	lockResult = pthread_mutex_unlock(&mMutex);
 		
@@ -1321,7 +1333,7 @@ bool DSPAudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	mDecoderQueue.push_back(decoder);
+	CFArrayAppendValue(mDecoderQueue, decoder);
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
@@ -1342,9 +1354,9 @@ bool DSPAudioPlayer::ClearQueuedDecoders()
 		return false;
 	}
 	
-	while(false == mDecoderQueue.empty()) {
-		AudioDecoder *decoder = mDecoderQueue.front();
-		mDecoderQueue.pop_front();
+	while(0 < CFArrayGetCount(mDecoderQueue)) {
+		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
 	
@@ -1509,11 +1521,11 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 			continue;
 		}
 		
-		if(false == mDecoderQueue.empty()) {
-			decoder = mDecoderQueue.front();
-			mDecoderQueue.pop_front();
+		if(0 < CFArrayGetCount(mDecoderQueue)) {
+			decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+			CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		}
-
+		
 		lockResult = pthread_mutex_unlock(&mMutex);
 		
 		if(0 != lockResult)

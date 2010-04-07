@@ -30,7 +30,6 @@
 
 #pragma once
 
-#include <deque>
 #include <AudioToolbox/AudioToolbox.h>
 
 
@@ -183,7 +182,7 @@ private:
 
 	bool								mIsPlaying;
 
-	std::deque<AudioDecoder *>			mDecoderQueue;
+	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	CARingBuffer						*mRingBuffer;

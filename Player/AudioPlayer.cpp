@@ -269,8 +269,13 @@ myDeinterleaverInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFlags(0), mDecoderQueue(), mRingBuffer(NULL), mConverter(NULL), mPCMConverter(NULL), mConversionBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mConverter(NULL), mPCMConverter(NULL), mConversionBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
+	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+	
+	if(NULL == mDecoderQueue)
+		throw std::bad_alloc();
+
 	mRingBuffer = new CARingBuffer();
 
 	// ========================================
@@ -281,6 +286,7 @@ AudioPlayer::AudioPlayer()
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		throw std::runtime_error("semaphore_create failed");
@@ -292,6 +298,7 @@ AudioPlayer::AudioPlayer()
 		mach_error(const_cast<char *>("semaphore_create"), result);
 #endif
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -307,6 +314,7 @@ AudioPlayer::AudioPlayer()
 	if(0 != success) {
 		ERR("pthread_mutex_init failed: %i", success);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -336,6 +344,7 @@ AudioPlayer::AudioPlayer()
 	if(0 != creationResult) {
 		ERR("pthread_create failed: %i", creationResult);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -369,6 +378,7 @@ AudioPlayer::AudioPlayer()
 		
 		mDecoderThread = static_cast<pthread_t>(0);
 		
+		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
 		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
@@ -452,11 +462,13 @@ AudioPlayer::~AudioPlayer()
 	}
 	
 	// Clean up any queued decoders
-	while(false == mDecoderQueue.empty()) {
-		AudioDecoder *decoder = mDecoderQueue.front();
-		mDecoderQueue.pop_front();
+	while(0 < CFArrayGetCount(mDecoderQueue)) {
+		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
+	
+	CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 
 	// Clean up the ring buffer
 	if(mRingBuffer)
@@ -1199,7 +1211,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	bool queueEmpty = mDecoderQueue.empty();
+	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));
 		
 	lockResult = pthread_mutex_unlock(&mMutex);
 		
@@ -1253,7 +1265,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		return false;
 	}
 	
-	mDecoderQueue.push_back(decoder);
+	CFArrayAppendValue(mDecoderQueue, decoder);
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
@@ -1274,9 +1286,9 @@ bool AudioPlayer::ClearQueuedDecoders()
 		return false;
 	}
 	
-	while(false == mDecoderQueue.empty()) {
-		AudioDecoder *decoder = mDecoderQueue.front();
-		mDecoderQueue.pop_front();
+	while(0 < CFArrayGetCount(mDecoderQueue)) {
+		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
 	
@@ -1636,10 +1648,10 @@ void * AudioPlayer::DecoderThreadEntry()
 			// Stop now, to avoid risking data corruption
 			continue;
 		}
-		
-		if(false == mDecoderQueue.empty()) {
-			decoder = mDecoderQueue.front();
-			mDecoderQueue.pop_front();
+
+		if(0 < CFArrayGetCount(mDecoderQueue)) {
+			decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+			CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		}
 		
 		lockResult = pthread_mutex_unlock(&mMutex);
