@@ -54,15 +54,17 @@ bool FileInputSource::Open(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(false == success)
+	if(false == success) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
+	}
 	
 	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
 	
 	if(NULL == mFile) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-
 		return false;
 	}
 	

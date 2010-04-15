@@ -55,8 +55,11 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(false == success)
+	if(false == success) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
+	}
 	
 	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
 	
