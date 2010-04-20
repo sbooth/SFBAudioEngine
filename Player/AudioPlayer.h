@@ -127,6 +127,7 @@ public:
 	bool SetOutputStreamID(AudioStreamID streamID);
 	
 	bool GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat);
+	bool SetOutputStreamVirtualFormat(const AudioStreamBasicDescription& virtualFormat);
 	
 	bool GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
 	bool SetOutputStreamPhysicalFormat(const AudioStreamBasicDescription& physicalFormat);

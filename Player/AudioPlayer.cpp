@@ -1131,6 +1131,29 @@ bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virt
 	return true;
 }
 
+bool AudioPlayer::SetOutputStreamVirtualFormat(const AudioStreamBasicDescription& virtualFormat)
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioStreamPropertyVirtualFormat, 
+		kAudioObjectPropertyScopeGlobal, 
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	OSStatus result = AudioObjectSetPropertyData(mOutputStreamID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 sizeof(virtualFormat),
+												 &virtualFormat);	
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectSetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+		return false;
+	}
+	
+	return true;
+}
+
 bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat)
 {
 	AudioObjectPropertyAddress propertyAddress = { 
