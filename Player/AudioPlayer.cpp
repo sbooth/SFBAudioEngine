@@ -1749,11 +1749,10 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
-			bool decodingFinished = false;
-			while(!decodingFinished && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)) {
+			while(decoderState && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)) {
 				
 				// Fill the ring buffer with as much data as possible
-				while(!decodingFinished) {
+				while(decoderState) {
 					// Determine how many frames are available in the ring buffer
 					UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 					
@@ -1836,9 +1835,6 @@ void * AudioPlayer::DecoderThreadEntry()
 						if(0 == framesDecoded) {
 							decoder->PerformDecodingFinishedCallback();
 							
-							// Free unneeded memory
-							decoderState->DeallocateBufferList();
-							
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							// Rather than require preprocessing to ensure an accurate frame count, update 
@@ -1846,13 +1842,10 @@ void * AudioPlayer::DecoderThreadEntry()
 							decoderState->mTotalFrames = startingFrameNumber;
 
 							// Decoding is complete
-							// The local variable decodingFinished is necessary because once 
-							// eDecoderStateDataFlagDecodingFinished is set, the decoderStateData object may
-							// be freed at any time by the collector thread and thus may no longer be accessed
-							decodingFinished = true;
-
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-							
+
+							decoderState = NULL;
+
 							break;
 						}
 					}
@@ -1901,7 +1894,7 @@ void * AudioPlayer::CollectorThreadEntry()
 			
 			if(NULL == decoderState)
 				continue;
-			
+
 			if(!(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) || !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags))
 				continue;
 
