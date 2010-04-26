@@ -110,12 +110,12 @@ UInt32 PCMConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList
 	while(0 < framesRemaining) {
 		UInt32 framesToConvert = std::min(static_cast<UInt32>(CHUNK_SIZE_FRAMES), framesRemaining);
 		
-		UInt32 framesRead = ReadInteger(inputBuffer, mTransferBuffer, framesConverted, framesToConvert);
+		UInt32 framesRead = ReadInteger(inputBuffer, framesConverted, mTransferBuffer, 0, framesToConvert);
 		
 		if(framesRead != framesToConvert)
 			ERR("fnord");
 		
-		UInt32 framesWritten = WriteInteger(mTransferBuffer, outputBuffer, framesConverted, framesRead);
+		UInt32 framesWritten = WriteInteger(mTransferBuffer, 0, outputBuffer, framesConverted, framesRead);
 		
 		if(framesWritten != framesRead)
 			ERR("fnord!");
@@ -128,7 +128,7 @@ UInt32 PCMConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList
 	return framesConverted;	
 }
 
-UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 startingFrame, UInt32 frameCount)
+UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount)
 {
 	assert(NULL != inputBuffer);
 	assert(NULL != outputBuffer);
@@ -145,12 +145,12 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 	
 	// The input and transfer buffers are always deinterleaved
 	for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-		SInt64 *output = static_cast<SInt64 *>(outputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+		SInt64 *output = static_cast<SInt64 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
 
 		switch(mSourceFormat.mBytesPerFrame) {
 			case 1:
 			{
-				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
 				
 				UInt32 counter = frameCount;
 				while(counter--)
@@ -161,7 +161,7 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 				
 			case 2:
 			{
-				UInt16 *input = static_cast<UInt16 *>(inputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+				UInt16 *input = static_cast<UInt16 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
 				
 				UInt32 counter = frameCount;
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
@@ -178,7 +178,7 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 				
 			case 3:
 			{
-				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + (3 * startingFrame);
+				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + (3 * inputFramesToSkip);
 
 				UInt32 counter = frameCount;
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
@@ -209,7 +209,7 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 				
 			case 4:
 			{
-				UInt32 *input = static_cast<UInt32 *>(inputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+				UInt32 *input = static_cast<UInt32 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
 				
 				UInt32 counter = frameCount;
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
@@ -235,7 +235,7 @@ UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, AudioBuffer
 	return frameCount;
 }
 
-UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 startingFrame, UInt32 frameCount)
+UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount)
 {
 	assert(NULL != inputBuffer);
 	assert(NULL != outputBuffer);
@@ -254,12 +254,12 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 	if(kAudioFormatFlagIsNonInterleaved & mDestinationFormat.mFormatFlags) {
 		
 		for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
 
 			switch(mDestinationFormat.mBytesPerFrame) {
 				case 1:
 				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
 					
 					UInt32 counter = frameCount;
 					while(counter--)
@@ -270,7 +270,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 2:
 				{
-					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
@@ -287,7 +287,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 3:
 				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + (3 * startingFrame);
+					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + (3 * outputFramesToSkip);
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
@@ -314,7 +314,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 4:
 				{
-					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
@@ -343,12 +343,12 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 	// The destination is interleaved, but the transfer buffer is always deinterleaved
 	else {
 		for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + startingFrame;
+			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
 
 			switch(mDestinationFormat.mBytesPerFrame / mDestinationFormat.mChannelsPerFrame) {
 				case 1:
 				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * startingFrame) + bufferIndex;
+					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
 					
 					UInt32 counter = frameCount;
 					while(counter--) {
@@ -361,7 +361,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 2:
 				{
-					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * startingFrame) + bufferIndex;
+					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
@@ -382,7 +382,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 3:
 				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (3 * ((mDestinationFormat.mChannelsPerFrame * startingFrame) + bufferIndex));
+					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (3 * ((mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex));
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
@@ -413,7 +413,7 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, AudioBuffe
 					
 				case 4:
 				{
-					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * startingFrame) + bufferIndex;
+					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
 					
 					UInt32 counter = frameCount;
 					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {

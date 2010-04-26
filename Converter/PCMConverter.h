@@ -46,8 +46,8 @@ public:
 	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	
 private:
-	UInt32 ReadInteger(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 startingFrame, UInt32 frameCount);
-	UInt32 WriteInteger(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 startingFrame, UInt32 frameCount);
+	UInt32 ReadInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount);
+	UInt32 WriteInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount);
 
 	AudioBufferList *mTransferBuffer;
 };
