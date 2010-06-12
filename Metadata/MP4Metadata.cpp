@@ -198,7 +198,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
-	
+
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
@@ -244,6 +244,31 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+
+	// Read the properties
+	MP4Duration mp4Duration = MP4GetDuration(file);
+	uint32_t mp4TimeScale = MP4GetTimeScale(file);
+	
+	CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
+	CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+	CFRelease(totalFrames), totalFrames = NULL;
+
+	CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
+	CFDictionaryAddValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
+	CFRelease(sampleRate), sampleRate = NULL;
+	
+//	CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.channels);
+//	CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
+//	CFRelease(channelsPerFrame), channelsPerFrame = NULL;
+	
+//	CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.bits_per_sample);
+//	CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+//	CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+	
+	double length = static_cast<double>(mp4Duration / mp4TimeScale);
+	CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+	CFDictionaryAddValue(mMetadata, kPropertiesDurationKey, duration);
+	CFRelease(duration), duration = NULL;
 
 	// Read the tags
 	const MP4Tags *tags = MP4TagsAlloc();

@@ -35,6 +35,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "SetMetadataFromXiphComment.h"
 #include "SetXiphCommentFromMetadata.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 
 #pragma mark Static Methods
@@ -98,7 +99,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf));
 		
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -139,6 +140,9 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	if(file.audioProperties())
+		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+	
 	if(file.tag())
 		SetMetadataFromXiphComment(this, file.tag());
 

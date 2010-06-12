@@ -245,6 +245,42 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	// Add the audio properties
+	uint32_t sampleRate = WavpackGetSampleRate(wpc);
+	if(sampleRate) {
+		CFNumberRef rate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleRate);
+		CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, rate);
+		CFRelease(rate), rate = NULL;
+	}
+
+	uint32_t numSamples = WavpackGetNumSamples(wpc);
+	if(numSamples) {
+		CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &numSamples);
+		CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+		CFRelease(totalFrames), totalFrames = NULL;		
+	}
+	
+	if(sampleRate && numSamples) {
+		double length = static_cast<double>(numSamples / sampleRate);
+		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+		CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
+		CFRelease(duration), duration = NULL;
+	}
+	
+	int channels = WavpackGetNumChannels(wpc);
+	if(channels) {
+		CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels);
+		CFDictionarySetValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
+		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
+	}
+
+	double averageBitrate = WavpackGetAverageBitrate(wpc, 1);
+	if(averageBitrate) {
+		CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &averageBitrate);
+		CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
+		CFRelease(bitrate), bitrate = NULL;
+	}
+	
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																		  32,
 																		  &kCFTypeDictionaryKeyCallBacks,

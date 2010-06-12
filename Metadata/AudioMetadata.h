@@ -46,6 +46,42 @@ enum {
 
 
 // ========================================
+// Key names for the metadata dictionary (for subclass use)
+// ========================================
+extern const CFStringRef		kPropertiesTotalFramesKey;
+extern const CFStringRef		kPropertiesChannelsPerFrameKey;
+extern const CFStringRef		kPropertiesBitsPerChannelKey;
+extern const CFStringRef		kPropertiesSampleRateKey;
+extern const CFStringRef		kPropertiesDurationKey;
+extern const CFStringRef		kPropertiesBitrateKey;
+extern const CFStringRef		kMetadataTitleKey;
+extern const CFStringRef		kMetadataAlbumTitleKey;
+extern const CFStringRef		kMetadataArtistKey;
+extern const CFStringRef		kMetadataAlbumArtistKey;
+extern const CFStringRef		kMetadataGenreKey;
+extern const CFStringRef		kMetadataComposerKey;
+extern const CFStringRef		kMetadataReleaseDateKey;
+extern const CFStringRef		kMetadataCompilationKey;
+extern const CFStringRef		kMetadataTrackNumberKey;
+extern const CFStringRef		kMetadataTrackTotalKey;
+extern const CFStringRef		kMetadataDiscNumberKey;
+extern const CFStringRef		kMetadataDiscTotalKey;
+extern const CFStringRef		kMetadataLyricsKey;
+extern const CFStringRef		kMetadataCommentKey;
+extern const CFStringRef		kMetadataISRCKey;
+extern const CFStringRef		kMetadataMCNKey;
+extern const CFStringRef		kMetadataMusicBrainzAlbumIDKey;
+extern const CFStringRef		kMetadataMusicBrainzTrackIDKey;
+extern const CFStringRef		kMetadataAdditionalMetadataKey;
+extern const CFStringRef		kReplayGainReferenceLoudnessKey;
+extern const CFStringRef		kReplayGainTrackGainKey;
+extern const CFStringRef		kReplayGainTrackPeakKey;
+extern const CFStringRef		kReplayGainAlbumGainKey;
+extern const CFStringRef		kReplayGainAlbumPeakKey;
+extern const CFStringRef		kAlbumArtFrontCoverKey;
+
+
+// ========================================
 // Base class for all audio metadata reader/writer classes
 // ========================================
 class AudioMetadata
@@ -74,6 +110,15 @@ public:
 	virtual bool ReadMetadata(CFErrorRef *error = NULL) = 0;
 	virtual bool WriteMetadata(CFErrorRef *error = NULL) = 0;
 	
+	// ========================================
+	// Properties access (if available)
+	CFNumberRef GetTotalFrames();
+	CFNumberRef GetChannelsPerFrame();
+	CFNumberRef GetBitsPerChannel();
+	CFNumberRef GetSampleRate();
+	CFNumberRef GetDuration();
+	CFNumberRef GetBitrate();
+
 	// ========================================
 	// Metadata access
 	CFStringRef GetTitle();

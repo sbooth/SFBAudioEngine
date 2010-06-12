@@ -35,6 +35,7 @@
 #include "MusepackMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "TagLibStringFromCFString.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 
 #pragma mark Static Methods
@@ -66,7 +67,7 @@ bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	assert(NULL != mimeType);	
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
@@ -96,7 +97,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::MPC::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::MPC::File file(reinterpret_cast<const char *>(buf));
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -136,6 +137,9 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+
+	if(file.audioProperties())
+		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 
 	// Album title
 	if(!file.tag()->album().isNull()) {

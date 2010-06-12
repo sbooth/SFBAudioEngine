@@ -463,7 +463,31 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 			}
 			break;
 				
-			case FLAC__METADATA_TYPE_STREAMINFO:					break;
+			case FLAC__METADATA_TYPE_STREAMINFO:
+			{
+				CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.sample_rate);
+				CFDictionaryAddValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
+				CFRelease(sampleRate), sampleRate = NULL;
+
+				CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.channels);
+				CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
+				CFRelease(channelsPerFrame), channelsPerFrame = NULL;
+
+				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.bits_per_sample);
+				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+				
+				CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &block->data.stream_info.total_samples);
+				CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+				CFRelease(totalFrames), totalFrames = NULL;
+
+				double length = static_cast<double>(block->data.stream_info.total_samples / block->data.stream_info.sample_rate);
+				CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+				CFDictionaryAddValue(mMetadata, kPropertiesDurationKey, duration);
+				CFRelease(duration), duration = NULL;
+			}
+			break;
+
 			case FLAC__METADATA_TYPE_PADDING:						break;
 			case FLAC__METADATA_TYPE_APPLICATION:					break;
 			case FLAC__METADATA_TYPE_SEEKTABLE:						break;

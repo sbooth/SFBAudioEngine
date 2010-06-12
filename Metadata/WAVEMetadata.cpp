@@ -35,6 +35,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "SetMetadataFromID3v2Tag.h"
 #include "SetID3v2TagFromMetadata.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 
 #pragma mark Static Methods
@@ -98,7 +99,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::RIFF::WAV::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::RIFF::WAV::File file(reinterpret_cast<const char *>(buf));
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -138,6 +139,9 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+	
+	if(file.audioProperties())
+		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
 	if(file.tag())
 		SetMetadataFromID3v2Tag(this, file.tag());

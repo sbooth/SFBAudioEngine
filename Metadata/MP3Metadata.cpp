@@ -29,12 +29,15 @@
  */
 
 #include <taglib/mpegfile.h>
+#include <taglib/mpegproperties.h>
+#include <taglib/xingheader.h>
 
 #include "AudioEngineDefines.h"
 #include "MP3Metadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "SetMetadataFromID3v2Tag.h"
 #include "SetID3v2TagFromMetadata.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 
 #pragma mark Static Methods
@@ -96,7 +99,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf));
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -135,6 +138,18 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 		}
 		
 		return false;
+	}
+	
+	if(file.audioProperties()) {
+		TagLib::MPEG::Properties *properties = file.audioProperties();
+		AddAudioPropertiesToDictionary(mMetadata, properties);
+		
+		if(properties->xingHeader() && properties->xingHeader()->totalFrames()) {
+			TagLib::uint frames = properties->xingHeader()->totalFrames();
+			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &frames);
+			CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+			CFRelease(totalFrames), totalFrames = NULL;			
+		}
 	}
 	
 	// TODO: ID3v1 ??

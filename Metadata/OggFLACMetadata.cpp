@@ -29,12 +29,14 @@
  */
 
 #include <taglib/oggflacfile.h>
+#include <taglib/flacproperties.h>
 
 #include "AudioEngineDefines.h"
 #include "OggFLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "SetMetadataFromXiphComment.h"
 #include "SetXiphCommentFromMetadata.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 
 #pragma mark Static Methods
@@ -98,7 +100,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf));
 		
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -137,6 +139,16 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 		}
 		
 		return false;
+	}
+
+	if(file.audioProperties()) {
+		TagLib::FLAC::Properties *properties = file.audioProperties();
+		AddAudioPropertiesToDictionary(mMetadata, properties);
+		
+		int sampleWidth = properties->sampleWidth();
+		CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleWidth);
+		CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+		CFRelease(bitsPerChannel), bitsPerChannel = NULL;			
 	}
 
 	if(file.tag())
