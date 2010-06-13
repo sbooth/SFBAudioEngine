@@ -790,7 +790,9 @@ SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
 			break;
 
 		SynthesizeMPEGFrame();
-		
+
+		mCurrentFrame += mSamplesPerMPEGFrame;
+
 		// If the MPEG frame that was just decoded contains the desired frame, adjust the buffers
 		// so the desired frame is first
 
