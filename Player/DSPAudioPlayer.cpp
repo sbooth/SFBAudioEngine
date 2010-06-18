@@ -567,14 +567,15 @@ bool DSPAudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 
 bool DSPAudioPlayer::SeekToFrame(SInt64 frame)
 {
-	assert(0 <= frame);
-
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
 		return false;
 	
 	if(false == currentDecoderState->mDecoder->SupportsSeeking())
+		return false;
+
+	if(0 > frame || frame >= currentDecoderState->mTotalFrames)
 		return false;
 	
 //	Float64 graphLatency = GetAUGraphLatency();

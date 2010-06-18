@@ -642,8 +642,6 @@ bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 
 bool AudioPlayer::SeekToFrame(SInt64 frame)
 {
-	assert(0 <= frame);
-
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
 	if(NULL == currentDecoderState)
@@ -652,6 +650,9 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	if(false == currentDecoderState->mDecoder->SupportsSeeking())
 		return false;
 	
+	if(0 > frame || frame >= currentDecoderState->mTotalFrames)
+		return false;
+
 	if(false == OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
