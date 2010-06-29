@@ -552,6 +552,9 @@ CFBooleanRef AudioMetadata::GetCompilation()
 {
 	CFTypeRef value = GetValue(kMetadataCompilationKey);
 	
+	if(NULL == value)
+		return NULL;
+
 	if(CFBooleanGetTypeID() != CFGetTypeID(value))
 		return NULL;
 	else
@@ -671,6 +674,9 @@ CFDictionaryRef AudioMetadata::GetAdditionalMetadata()
 {
 	CFTypeRef value = GetValue(kMetadataAdditionalMetadataKey);
 	
+	if(NULL == value)
+		return NULL;
+
 	if(CFDictionaryGetTypeID() != CFGetTypeID(value))
 		return NULL;
 	else
@@ -744,6 +750,9 @@ CFDataRef AudioMetadata::GetFrontCoverArt()
 {
 	CFTypeRef value = GetValue(kAlbumArtFrontCoverKey);
 	
+	if(NULL == value)
+		return NULL;
+
 	if(CFDataGetTypeID() != CFGetTypeID(value))
 		return NULL;
 	else
