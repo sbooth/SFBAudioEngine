@@ -35,7 +35,7 @@
 // ========================================
 //
 // ========================================
-class PCMConverter : AudioConverter
+class PCMConverter : public AudioConverter
 {
 public:
 	// ========================================
