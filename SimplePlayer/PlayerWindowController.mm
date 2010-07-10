@@ -5,6 +5,8 @@
 
 #import "PlayerWindowController.h"
 
+#include <libkern/OSAtomic.h>
+
 #define DSP_ENABLED 1
 
 #if DSP_ENABLED
@@ -20,9 +22,17 @@
 #  define PLAYER (static_cast<AudioPlayer *>(_player))
 #endif /* DSP_ENABLED */
 
+// ========================================
+// Player flags
+// ========================================
+enum {
+	ePlayerFlagRenderingStarted			= 1 << 0,
+	ePlayerFlagRenderingFinished		= 1 << 1
+};
+
+volatile static uint32_t sPlayerFlags = 0;
+
 @interface PlayerWindowController (Callbacks)
-- (void) renderingStarted:(AudioDecoder *)decoder;
-- (void) renderingFinished:(AudioDecoder *)decoder;
 - (void) uiTimerFired:(NSTimer *)timer;
 @end
 
@@ -30,20 +40,20 @@
 - (void) updateWindowUI;
 @end
 
+// This is called from the realtime rendering thread and as such MUST NOT BLOCK!!
 static void renderingStarted(void *context, const AudioDecoder *decoder)
 {
-	NSCParameterAssert(NULL != context);
-	
-	PlayerWindowController *wc = static_cast<PlayerWindowController *>(context);
-	[wc renderingStarted:const_cast<AudioDecoder *>(decoder)];
+#pragma unused(context)
+#pragma unused(decoder)
+	OSAtomicTestAndSetBarrier(7 /* ePlayerFlagRenderingStarted */, &sPlayerFlags);
 }
 
+// This is called from the realtime rendering thread and as such MUST NOT BLOCK!!
 static void renderingFinished(void *context, const AudioDecoder *decoder)
 {
-	NSCParameterAssert(NULL != context);
-	
-	PlayerWindowController *wc = static_cast<PlayerWindowController *>(context);
-	[wc renderingFinished:const_cast<AudioDecoder *>(decoder)];
+#pragma unused(context)
+#pragma unused(decoder)
+	OSAtomicTestAndSetBarrier(6 /* ePlayerFlagRenderingFinished */, &sPlayerFlags);
 }
 
 @implementation PlayerWindowController
@@ -67,9 +77,6 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 #else	
 	_player = new AudioPlayer();
 #endif
-
-	if(false == PLAYER->SetOutputDeviceUID(CFSTR("AppleUSBAudioEngine:Texas Instruments:Benchmark 1.0:fd111000:1")))
-		puts("Couldn't set output device UID");
 
 	// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
 	_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
@@ -159,30 +166,25 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 @implementation PlayerWindowController (Callbacks)
 
-// This is called from the real-time rendering thread so it shouldn't do much!
-- (void) renderingStarted:(AudioDecoder *)decoder
-{
-#pragma unused(decoder)
-	
-	// No autorelease pool is required since no Objective-C objects are created
-	
-	[self performSelectorOnMainThread:@selector(updateWindowUI) withObject:nil waitUntilDone:NO];
-}
-
-// This is also called from the rendering thread
-- (void) renderingFinished:(AudioDecoder *)decoder
-{
-#pragma unused(decoder)
-	
-	// No autorelease pool is required since no Objective-C objects are created
-	
-	// If there isn't another decoder queued, the UI should be disabled
-	[self performSelectorOnMainThread:@selector(updateWindowUI) withObject:nil waitUntilDone:NO];
-}
-
 - (void) uiTimerFired:(NSTimer *)timer
 {
 #pragma unused(timer)
+	// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
+	if(ePlayerFlagRenderingStarted & sPlayerFlags) {
+		OSAtomicTestAndClearBarrier(7 /* ePlayerFlagRenderingStarted */, &sPlayerFlags);
+		
+		[self updateWindowUI];
+		
+		return;
+	}
+	else if(ePlayerFlagRenderingFinished & sPlayerFlags) {
+		OSAtomicTestAndClearBarrier(6 /* ePlayerFlagRenderingFinished */, &sPlayerFlags);
+		
+		[self updateWindowUI];
+		
+		return;
+	}
+
 	if(false == PLAYER->IsPlaying())
 		[_playButton setTitle:@"Resume"];
 	else
