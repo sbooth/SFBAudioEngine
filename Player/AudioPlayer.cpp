@@ -278,6 +278,9 @@ AudioPlayer::AudioPlayer()
 
 	mRingBuffer = new CARingBuffer();
 
+	memset(&mRingBufferFormat, 0, sizeof(AudioStreamBasicDescription));
+	memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
+
 	// ========================================
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
 	kern_return_t result = semaphore_create(mach_task_self(), &mDecoderSemaphore, SYNC_POLICY_FIFO, 0);
@@ -1072,6 +1075,7 @@ bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
 	mOutputStreamID = streamID;
 	
 	// Get the stream's virtual format
+	memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
 	if(false == GetOutputStreamVirtualFormat(mStreamVirtualFormat))
 		return false;
 	
@@ -1558,6 +1562,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagVirtualFormatChanged */, &mFlags);
 
 					// Get the new virtual format
+					memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
 					if(false == GetOutputStreamVirtualFormat(mStreamVirtualFormat))
 						ERR("Couldn't get stream virtual format");
 
