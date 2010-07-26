@@ -52,11 +52,10 @@ myAudioFile_ReadProc(void		*inClientData,
 	CoreAudioDecoder *decoder = static_cast<CoreAudioDecoder *>(inClientData);
 	InputSource *inputSource = decoder->GetInputSource();
 	
-	if(inPosition != inputSource->GetOffset() && !inputSource->SupportsSeeking())
-		return ioErr;
-	
-	if(!inputSource->SeekToOffset(inPosition))
-		return ioErr;
+	if(inPosition != inputSource->GetOffset()) {
+		if(!inputSource->SupportsSeeking() || !inputSource->SeekToOffset(inPosition))
+			return kAudioFileOperationNotSupportedError;
+	} 
 	
 	*actualCount = static_cast<UInt32>(inputSource->Read(buffer, requestCount));
 	
