@@ -31,10 +31,10 @@
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
 
-#include "SetMetadataFromXiphComment.h"
+#include "AddXiphCommentToDictionary.h"
 
 bool
-SetMetadataFromXiphComment(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag)
+AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag)
 {
 	assert(NULL != dictionary);
 	assert(NULL != tag);

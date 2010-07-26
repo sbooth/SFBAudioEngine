@@ -34,6 +34,6 @@
 #include <taglib/xiphcomment.h>
 
 // ========================================
-// Fill in an AudioMetadata class from the specified Xiph comment
+// Add the metadata specified in the Ogg::XiphComment instance to dictionary
 // ========================================
-bool SetMetadataFromXiphComment(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag);
+bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag);

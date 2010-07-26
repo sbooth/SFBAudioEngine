@@ -36,4 +36,4 @@
 // ========================================
 // Add the metadata specified in the ID3v2::Tag instance to dictionary
 // ========================================
-bool SetMetadataFromID3v2Tag(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag);
+bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag);

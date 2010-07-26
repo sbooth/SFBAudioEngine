@@ -33,7 +33,7 @@
 #include "AudioEngineDefines.h"
 #include "OggVorbisMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromXiphComment.h"
+#include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
@@ -144,7 +144,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
 	if(file.tag())
-		SetMetadataFromXiphComment(mMetadata, file.tag());
+		AddXiphCommentToDictionary(mMetadata, file.tag());
 
 	return true;
 }

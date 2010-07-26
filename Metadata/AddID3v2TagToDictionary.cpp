@@ -36,10 +36,10 @@
 #include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
 
-#include "SetMetadataFromID3v2Tag.h"
+#include "AddID3v2TagToDictionary.h"
 
 bool
-SetMetadataFromID3v2Tag(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag)
+AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag)
 {
 	assert(NULL != dictionary);
 	assert(NULL != tag);

@@ -35,7 +35,7 @@
 #include "AudioEngineDefines.h"
 #include "MP3Metadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromID3v2Tag.h"
+#include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
@@ -155,7 +155,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	// TODO: ID3v1 ??
 	
 	if(file.ID3v2Tag())
-		SetMetadataFromID3v2Tag(mMetadata, file.ID3v2Tag());
+		AddID3v2TagToDictionary(mMetadata, file.ID3v2Tag());
 	
 	return true;
 }

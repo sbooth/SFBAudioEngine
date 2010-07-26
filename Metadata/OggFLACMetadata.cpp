@@ -34,7 +34,7 @@
 #include "AudioEngineDefines.h"
 #include "OggFLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromXiphComment.h"
+#include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
@@ -152,7 +152,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 	}
 
 	if(file.tag())
-		SetMetadataFromXiphComment(mMetadata, file.tag());
+		AddXiphCommentToDictionary(mMetadata, file.tag());
 
 	return true;
 }

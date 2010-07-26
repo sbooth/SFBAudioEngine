@@ -33,7 +33,7 @@
 #include "AudioEngineDefines.h"
 #include "WAVEMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "SetMetadataFromID3v2Tag.h"
+#include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
@@ -144,7 +144,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
 	if(file.tag())
-		SetMetadataFromID3v2Tag(mMetadata, file.tag());
+		AddID3v2TagToDictionary(mMetadata, file.tag());
 	
 	return true;
 }
