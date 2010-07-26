@@ -250,11 +250,11 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	uint32_t mp4TimeScale = MP4GetTimeScale(file);
 	
 	CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
-	CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+	CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
 	CFRelease(totalFrames), totalFrames = NULL;
 
 	CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
-	CFDictionaryAddValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
+	CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
 	CFRelease(sampleRate), sampleRate = NULL;
 	
 //	CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.channels);
@@ -267,7 +267,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	
 	double length = static_cast<double>(mp4Duration / mp4TimeScale);
 	CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
-	CFDictionaryAddValue(mMetadata, kPropertiesDurationKey, duration);
+	CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
 	CFRelease(duration), duration = NULL;
 
 	// Read the tags
@@ -287,56 +287,56 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Album title
 	if(tags->album) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->album, kCFStringEncodingUTF8);
-		SetAlbumTitle(str);
+		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Artist
 	if(tags->artist) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->artist, kCFStringEncodingUTF8);
-		SetArtist(str);
+		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Album Artist
 	if(tags->albumArtist) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->albumArtist, kCFStringEncodingUTF8);
-		SetAlbumArtist(str);
+		CFDictionarySetValue(mMetadata, kMetadataAlbumArtistKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Genre
 	if(tags->genre) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->genre, kCFStringEncodingUTF8);
-		SetGenre(str);
+		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Release date
 	if(tags->releaseDate) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->releaseDate, kCFStringEncodingUTF8);
-		SetReleaseDate(str);
+		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Composer
 	if(tags->composer) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->composer, kCFStringEncodingUTF8);
-		SetComposer(str);
+		CFDictionarySetValue(mMetadata, kMetadataComposerKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Comment
 	if(tags->comments) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->comments, kCFStringEncodingUTF8);
-		SetComment(str);
+		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Track title
 	if(tags->name) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->name, kCFStringEncodingUTF8);
-		SetTitle(str);
+		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -344,13 +344,13 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	if(tags->track) {
 		if(tags->track->index) {
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index);
-			SetTrackNumber(num);
+			CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
 			CFRelease(num), num = NULL;
 		}
 		
 		if(tags->track->total) {
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total);
-			SetTrackTotal(num);
+			CFDictionarySetValue(mMetadata, kMetadataTrackTotalKey, num);
 			CFRelease(num), num = NULL;
 		}
 	}
@@ -359,20 +359,20 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	if(tags->disk) {
 		if(tags->disk->index) {
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->index);
-			SetDiscNumber(num);
+			CFDictionarySetValue(mMetadata, kMetadataDiscNumberKey, num);
 			CFRelease(num), num = NULL;
 		}
 		
 		if(tags->disk->total) {
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->total);
-			SetDiscTotal(num);
+			CFDictionarySetValue(mMetadata, kMetadataDiscTotalKey, num);
 			CFRelease(num), num = NULL;
 		}
 	}
 	
 	// Compilation
 	if(tags->compilation)
-		SetCompilation(*(tags->compilation) ? kCFBooleanTrue : kCFBooleanFalse);
+		CFDictionarySetValue(mMetadata, kMetadataCompilationKey, *(tags->compilation) ? kCFBooleanTrue : kCFBooleanFalse);
 	
 	// BPM
 	if(tags->tempo) {
@@ -382,7 +382,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Lyrics
 	if(tags->lyrics) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->lyrics, kCFStringEncodingUTF8);
-		SetLyrics(str);
+		CFDictionarySetValue(mMetadata, kMetadataLyricsKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -390,7 +390,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	if(tags->artworkCount) {
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {
 			CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(tags->artwork[i].data), tags->artwork[i].size);
-			SetFrontCoverArt(data);
+			CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
 			CFRelease(data), data = NULL;
 		}
 	}

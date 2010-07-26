@@ -144,42 +144,42 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	// Album title
 	if(!file.tag()->album().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->album().toCString(true), kCFStringEncodingUTF8);
-		SetAlbumTitle(str);
+		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Artist
 	if(!file.tag()->artist().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->artist().toCString(true), kCFStringEncodingUTF8);
-		SetArtist(str);
+		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Genre
 	if(!file.tag()->genre().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->genre().toCString(true), kCFStringEncodingUTF8);
-		SetGenre(str);
+		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Year
 	if(file.tag()->year()) {
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), file.tag()->year());
-		SetReleaseDate(str);
+		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Comment
 	if(!file.tag()->comment().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->comment().toCString(true), kCFStringEncodingUTF8);
-		SetComment(str);
+		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Track title
 	if(!file.tag()->title().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->title().toCString(true), kCFStringEncodingUTF8);
-		SetTitle(str);
+		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -187,7 +187,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.tag()->track()) {
 		int trackNum = file.tag()->track();
 		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		SetTrackNumber(num);
+		CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
 		CFRelease(num), num = NULL;
 	}
 
