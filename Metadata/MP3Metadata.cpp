@@ -155,7 +155,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	// TODO: ID3v1 ??
 	
 	if(file.ID3v2Tag())
-		SetMetadataFromID3v2Tag(this, file.ID3v2Tag());
+		SetMetadataFromID3v2Tag(mMetadata, file.ID3v2Tag());
 	
 	return true;
 }

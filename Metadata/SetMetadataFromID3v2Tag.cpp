@@ -39,50 +39,50 @@
 #include "SetMetadataFromID3v2Tag.h"
 
 bool
-SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
+SetMetadataFromID3v2Tag(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag)
 {
-	assert(NULL != metadata);
+	assert(NULL != dictionary);
 	assert(NULL != tag);
 	
 	// Album title
 	if(!tag->album().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->album().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetAlbumTitle(str);
+		CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Artist
 	if(!tag->artist().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->artist().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetArtist(str);
+		CFDictionarySetValue(dictionary, kMetadataArtistKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Genre
 	if(!tag->genre().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->genre().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetGenre(str);
+		CFDictionarySetValue(dictionary, kMetadataGenreKey, str);
 		CFRelease(str), str = NULL;
 	}
 
 	// Year
 	if(tag->year()) {
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), tag->year());
-		metadata->SetReleaseDate(str);
+		CFDictionarySetValue(dictionary, kMetadataReleaseDateKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Comment
 	if(!tag->comment().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->comment().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetComment(str);
+		CFDictionarySetValue(dictionary, kMetadataCommentKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
 	// Track title
 	if(!tag->title().isNull()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->title().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetTitle(str);
+		CFDictionarySetValue(dictionary, kMetadataTitleKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -90,7 +90,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	if(tag->track()) {
 		int trackNum = tag->track();
 		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		metadata->SetTrackNumber(num);
+		CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, num);
 		CFRelease(num), num = NULL;
 	}
 	
@@ -98,7 +98,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	TagLib::ID3v2::FrameList frameList = tag->frameListMap()["TCOM"];
 	if(!frameList.isEmpty()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetComposer(str);
+		CFDictionarySetValue(dictionary, kMetadataComposerKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -106,7 +106,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	frameList = tag->frameListMap()["TPE2"];
 	if(!frameList.isEmpty()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetAlbumArtist(str);
+		CFDictionarySetValue(dictionary, kMetadataAlbumArtistKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -128,17 +128,17 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 			int trackTotal = s.substr(pos + 1).toInt();
 			
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-			metadata->SetTrackNumber(num);
+			CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, num);
 			CFRelease(num), num = NULL;			
 
 			num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackTotal);
-			metadata->SetTrackTotal(num);
+			CFDictionarySetValue(dictionary, kMetadataTrackTotalKey, num);
 			CFRelease(num), num = NULL;			
 		}
 		else if(s.length()) {
 			int trackNum = s.toInt();
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-			metadata->SetTrackNumber(num);
+			CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, num);
 			CFRelease(num), num = NULL;			
 		}
 	}
@@ -156,17 +156,17 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 			int discTotal = s.substr(pos + 1).toInt();
 			
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &discNum);
-			metadata->SetDiscNumber(num);
+			CFDictionarySetValue(dictionary, kMetadataDiscNumberKey, num);
 			CFRelease(num), num = NULL;			
 			
 			num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &discTotal);
-			metadata->SetDiscTotal(num);
+			CFDictionarySetValue(dictionary, kMetadataDiscTotalKey, num);
 			CFRelease(num), num = NULL;			
 		}
 		else if(s.length()) {
 			int discNum = s.toInt();
 			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &discNum);
-			metadata->SetDiscNumber(num);
+			CFDictionarySetValue(dictionary, kMetadataDiscNumberKey, num);
 			CFRelease(num), num = NULL;			
 		}
 	}
@@ -175,7 +175,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	frameList = tag->frameListMap()["USLT"];
 	if(!frameList.isEmpty()) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, frameList.front()->toString().toCString(true), kCFStringEncodingUTF8);
-		metadata->SetLyrics(str);
+		CFDictionarySetValue(dictionary, kMetadataLyricsKey, str);
 		CFRelease(str), str = NULL;
 	}
 	
@@ -185,7 +185,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	if(!frameList.isEmpty() && NULL != (picture = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(frameList.front()))) {
 		TagLib::ByteVector pictureBytes = picture->picture();
 		CFDataRef pictureData = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(pictureBytes.data()), pictureBytes.size());
-		metadata->SetFrontCoverArt(pictureData);
+		CFDictionarySetValue(dictionary, kAlbumArtFrontCoverKey, pictureData);
 		CFRelease(pictureData), pictureData = NULL;
 	}
 
@@ -193,7 +193,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	frameList = tag->frameListMap()["TCMP"];
 	if(!frameList.isEmpty())
 		// It seems that the presence of this frame indicates a compilation
-		metadata->SetCompilation(kCFBooleanTrue);
+		CFDictionarySetValue(dictionary, kMetadataCompilationKey, kCFBooleanTrue);
 	
 	// ReplayGain
 	bool foundReplayGain = false;
@@ -212,12 +212,12 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 
 		CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainTrackGain(number);
+		CFDictionarySetValue(dictionary, kReplayGainTrackGainKey, number);
 		CFRelease(number), number = NULL;
 
 		num = 89;
 		number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainReferenceLoudness(number);
+		CFDictionarySetValue(dictionary, kReplayGainReferenceLoudnessKey, number);
 		CFRelease(number), number = NULL;
 		
 		foundReplayGain = true;
@@ -231,7 +231,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 		
 		CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainTrackPeak(number);
+		CFDictionarySetValue(dictionary, kReplayGainTrackPeakKey, number);
 		CFRelease(number), number = NULL;
 	}
 	
@@ -243,12 +243,12 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 		
 		CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainAlbumGain(number);
+		CFDictionarySetValue(dictionary, kReplayGainAlbumGainKey, number);
 		CFRelease(number), number = NULL;
 		
 		num = 89;
 		number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainReferenceLoudness(number);
+		CFDictionarySetValue(dictionary, kReplayGainReferenceLoudnessKey, number);
 		CFRelease(number), number = NULL;
 		
 		foundReplayGain = true;
@@ -262,7 +262,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 		CFRelease(str), str = NULL;
 		
 		CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-		metadata->SetReplayGainAlbumPeak(number);
+		CFDictionarySetValue(dictionary, kReplayGainAlbumPeakKey, number);
 		CFRelease(number), number = NULL;
 	}
 	
@@ -289,7 +289,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 				
 				if(volumeAdjustment) {
 					CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &volumeAdjustment);
-					metadata->SetReplayGainTrackGain(number);
+					CFDictionarySetValue(dictionary, kReplayGainTrackGainKey, number);
 					CFRelease(number), number = NULL;
 
 					foundReplayGain = true;
@@ -308,7 +308,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 				
 				if(volumeAdjustment) {
 					CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &volumeAdjustment);
-					metadata->SetReplayGainAlbumGain(number);
+					CFDictionarySetValue(dictionary, kReplayGainAlbumGainKey, number);
 					CFRelease(number), number = NULL;
 					
 					foundReplayGain = true;
@@ -328,7 +328,7 @@ SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 				
 				if(volumeAdjustment) {
 					CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &volumeAdjustment);
-					metadata->SetReplayGainAlbumGain(number);
+					CFDictionarySetValue(dictionary, kReplayGainAlbumGainKey, number);
 					CFRelease(number), number = NULL;
 					
 					foundReplayGain = true;

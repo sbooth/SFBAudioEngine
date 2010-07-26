@@ -33,9 +33,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <taglib/xiphcomment.h>
 
-class AudioMetadata;
-
 // ========================================
 // Fill in an AudioMetadata class from the specified Xiph comment
 // ========================================
-bool SetMetadataFromXiphComment(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag);
+bool SetMetadataFromXiphComment(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag);

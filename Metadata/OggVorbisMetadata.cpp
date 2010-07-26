@@ -144,7 +144,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
 	if(file.tag())
-		SetMetadataFromXiphComment(this, file.tag());
+		SetMetadataFromXiphComment(mMetadata, file.tag());
 
 	return true;
 }

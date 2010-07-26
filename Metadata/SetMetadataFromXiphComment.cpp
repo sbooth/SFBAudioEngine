@@ -34,9 +34,9 @@
 #include "SetMetadataFromXiphComment.h"
 
 bool
-SetMetadataFromXiphComment(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag)
+SetMetadataFromXiphComment(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag)
 {
-	assert(NULL != metadata);
+	assert(NULL != dictionary);
 	assert(NULL != tag);
 	
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -58,79 +58,79 @@ SetMetadataFromXiphComment(AudioMetadata *metadata, TagLib::Ogg::XiphComment *ta
 													  kCFStringEncodingUTF8);
 		
 		if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
-			metadata->SetAlbumTitle(value);
+			CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTIST"), kCFCompareCaseInsensitive))
-			metadata->SetArtist(value);
+			CFDictionarySetValue(dictionary, kMetadataArtistKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTIST"), kCFCompareCaseInsensitive))
-			metadata->SetAlbumArtist(value);
+			CFDictionarySetValue(dictionary, kMetadataAlbumArtistKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSER"), kCFCompareCaseInsensitive))
-			metadata->SetComposer(value);
+			CFDictionarySetValue(dictionary, kMetadataComposerKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GENRE"), kCFCompareCaseInsensitive))
-			metadata->SetGenre(value);
+			CFDictionarySetValue(dictionary, kMetadataGenreKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DATE"), kCFCompareCaseInsensitive))
-			metadata->SetReleaseDate(value);
+			CFDictionarySetValue(dictionary, kMetadataReleaseDateKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DESCRIPTION"), kCFCompareCaseInsensitive))
-			metadata->SetComment(value);
+			CFDictionarySetValue(dictionary, kMetadataCommentKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLE"), kCFCompareCaseInsensitive))
-			metadata->SetTitle(value);
+			CFDictionarySetValue(dictionary, kMetadataTitleKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive)) {
 			int num = CFStringGetIntValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			metadata->SetTrackNumber(number);
+			CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive)) {
 			int num = CFStringGetIntValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			metadata->SetTrackTotal(number);
+			CFDictionarySetValue(dictionary, kMetadataTrackTotalKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPILATION"), kCFCompareCaseInsensitive))
-			metadata->SetCompilation(CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
+			CFDictionarySetValue(dictionary, kMetadataCompilationKey, CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive)) {
 			int num = CFStringGetIntValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			metadata->SetDiscNumber(number);
+			CFDictionarySetValue(dictionary, kMetadataDiscNumberKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive)) {
 			int num = CFStringGetIntValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			metadata->SetDiscTotal(number);
+			CFDictionarySetValue(dictionary, kMetadataDiscTotalKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
-			metadata->SetISRC(value);
+			CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
-			metadata->SetMCN(value);
+			CFDictionarySetValue(dictionary, kMetadataMCNKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive)) {
 			double num = CFStringGetDoubleValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			metadata->SetReplayGainReferenceLoudness(number);
+			CFDictionarySetValue(dictionary, kReplayGainReferenceLoudnessKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive)) {
 			double num = CFStringGetDoubleValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			metadata->SetReplayGainTrackGain(number);
+			CFDictionarySetValue(dictionary, kReplayGainTrackGainKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive)) {
 			double num = CFStringGetDoubleValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			metadata->SetReplayGainTrackPeak(number);
+			CFDictionarySetValue(dictionary, kReplayGainTrackPeakKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive)) {
 			double num = CFStringGetDoubleValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			metadata->SetReplayGainAlbumGain(number);
+			CFDictionarySetValue(dictionary, kReplayGainAlbumGainKey, number);
 			CFRelease(number), number = NULL;
 		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive)) {
 			double num = CFStringGetDoubleValue(value);
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			metadata->SetReplayGainAlbumPeak(number);
+			CFDictionarySetValue(dictionary, kReplayGainAlbumPeakKey, number);
 			CFRelease(number), number = NULL;
 		}
 		// Put all unknown tags into the additional metadata
@@ -142,7 +142,7 @@ SetMetadataFromXiphComment(AudioMetadata *metadata, TagLib::Ogg::XiphComment *ta
 	}
 	
 	if(CFDictionaryGetCount(additionalMetadata))
-		metadata->SetAdditionalMetadata(additionalMetadata);
+		CFDictionarySetValue(dictionary, kMetadataAdditionalMetadataKey, additionalMetadata);
 	
 	CFRelease(additionalMetadata), additionalMetadata = NULL;
 	

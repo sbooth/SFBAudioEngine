@@ -33,9 +33,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <taglib/id3v2tag.h>
 
-class AudioMetadata;
-
 // ========================================
-// Fill in an AudioMetadata class from the specified ID3v2 tag
+// Add the metadata specified in the ID3v2::Tag instance to dictionary
 // ========================================
-bool SetMetadataFromID3v2Tag(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag);
+bool SetMetadataFromID3v2Tag(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag);

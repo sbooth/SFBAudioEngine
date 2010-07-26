@@ -144,7 +144,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
 	if(file.tag())
-		SetMetadataFromID3v2Tag(this, file.tag());
+		SetMetadataFromID3v2Tag(mMetadata, file.tag());
 	
 	return true;
 }

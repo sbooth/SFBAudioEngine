@@ -106,9 +106,13 @@ public:
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
-	// File access
+	// File access (subclasses should update mHasUnsavedChanges as appropriate)
 	virtual bool ReadMetadata(CFErrorRef *error = NULL) = 0;
 	virtual bool WriteMetadata(CFErrorRef *error = NULL) = 0;
+	
+	// ========================================
+	// Indicates if metadata has unsaved changes
+	inline bool HasUnsavedChanges()							{ return mHasUnsavedChanges;}
 	
 	// ========================================
 	// Properties access (if available)
@@ -209,6 +213,7 @@ protected:
 	// Data members
 	CFURLRef						mURL;				// The location of the stream to be read/written
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
+	bool							mHasUnsavedChanges;	// Indicates if metadata has unsaved changes
 	
 	// ========================================
 	// For subclass use only

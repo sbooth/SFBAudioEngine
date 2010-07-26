@@ -817,4 +817,6 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 		CFDictionaryRemoveValue(mMetadata, key);
 	else
 		CFDictionarySetValue(mMetadata, key, value);
+
+	mHasUnsavedChanges = true;
 }
