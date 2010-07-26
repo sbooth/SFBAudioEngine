@@ -32,6 +32,7 @@
 #include "InputSource.h"
 #include "FileInputSource.h"
 #include "MemoryMappedFileInputSource.h"
+#include "HTTPInputSource.h"
 
 
 // ========================================
@@ -49,7 +50,6 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 	
 	InputSource *inputSource = NULL;
 	
-	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		// Verify the file exists
@@ -110,7 +110,11 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}
-	else {
+	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive)) {
+		inputSource = new HTTPInputSource(url);
+
+		if(!inputSource->Open(error))
+			delete inputSource, inputSource = NULL;
 	}
 	
 	CFRelease(scheme), scheme = NULL;
