@@ -387,6 +387,11 @@ AudioMetadata::AudioMetadata()
 										  32,
 										  &kCFTypeDictionaryKeyCallBacks,
 										  &kCFTypeDictionaryValueCallBacks);
+
+	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+												 32,
+												 &kCFTypeDictionaryKeyCallBacks,
+												 &kCFTypeDictionaryValueCallBacks);
 }
 
 AudioMetadata::AudioMetadata(CFURLRef url)
@@ -400,6 +405,11 @@ AudioMetadata::AudioMetadata(CFURLRef url)
 										  32,
 										  &kCFTypeDictionaryKeyCallBacks,
 										  &kCFTypeDictionaryValueCallBacks);
+
+	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+												 32,
+												 &kCFTypeDictionaryKeyCallBacks,
+												 &kCFTypeDictionaryValueCallBacks);
 }
 
 AudioMetadata::AudioMetadata(const AudioMetadata& rhs)
@@ -415,6 +425,9 @@ AudioMetadata::~AudioMetadata()
 
 	if(mMetadata)
 		CFRelease(mMetadata), mMetadata = NULL;
+
+	if(mChangedMetadata)
+		CFRelease(mChangedMetadata), mChangedMetadata = NULL;
 }
 
 
@@ -437,6 +450,11 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 												  32, 
 												  rhs.mMetadata);
 
+	if(rhs.mChangedMetadata)
+		mChangedMetadata = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 
+														 32, 
+														 rhs.mMetadata);
+	
 	return *this;
 }
 
@@ -806,6 +824,11 @@ CFTypeRef AudioMetadata::GetValue(CFStringRef key)
 {
 	assert(NULL != key);
 	
+	if(CFDictionaryContainsValue(mChangedMetadata, key)) {
+		CFTypeRef value = CFDictionaryGetValue(mChangedMetadata, key);
+		return (kCFNull == value ? NULL : value);
+	}
+
 	return CFDictionaryGetValue(mMetadata, key);
 }
 
@@ -813,10 +836,27 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 {
 	assert(NULL != key);
 	
-	if(NULL == value)
-		CFDictionaryRemoveValue(mMetadata, key);
-	else
-		CFDictionarySetValue(mMetadata, key, value);
+	CFDictionarySetValue(mChangedMetadata, key, (NULL == value ? kCFNull : value));
+}
 
-	mHasUnsavedChanges = true;
+void AudioMetadata::MergeChangedMetadataIntoMetadata()
+{
+	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
+	
+	CFTypeRef *keys = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
+	CFTypeRef *values = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
+	
+	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
+	
+	for(CFIndex i = 0; i < count; ++i) {
+		if(kCFNull == values[i])
+			CFDictionaryRemoveValue(mMetadata, keys[i]);
+		else
+			CFDictionarySetValue(mMetadata, keys[i], values[i]);
+	}
+	
+	free(keys), keys = NULL;
+	free(values), values = NULL;
+	
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 }

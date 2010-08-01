@@ -94,6 +94,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -247,6 +248,8 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+	
+	MergeChangedMetadataIntoMetadata();
 	
 	return true;
 }

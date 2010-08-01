@@ -204,6 +204,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -828,6 +829,8 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	
 	FLAC__metadata_chain_delete(chain), chain = NULL;
 	FLAC__metadata_iterator_delete(iterator), iterator = NULL;
+	
+	MergeChangedMetadataIntoMetadata();
 	
 	return true;
 }

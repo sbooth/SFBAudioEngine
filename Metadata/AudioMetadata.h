@@ -106,13 +106,14 @@ public:
 	inline CFURLRef GetURL()								{ return mURL; }
 	
 	// ========================================
-	// File access (subclasses should update mHasUnsavedChanges as appropriate)
+	// File access
 	virtual bool ReadMetadata(CFErrorRef *error = NULL) = 0;
 	virtual bool WriteMetadata(CFErrorRef *error = NULL) = 0;
 	
 	// ========================================
-	// Indicates if metadata has unsaved changes
-	inline bool HasUnsavedChanges()							{ return mHasUnsavedChanges;}
+	// Change management
+	inline bool HasUnsavedChanges()							{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
+	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
 	
 	// ========================================
 	// Properties access (if available)
@@ -213,7 +214,7 @@ protected:
 	// Data members
 	CFURLRef						mURL;				// The location of the stream to be read/written
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
-	bool							mHasUnsavedChanges;	// Indicates if metadata has unsaved changes
+	CFMutableDictionaryRef			mChangedMetadata;	// The metadata information that has been changed but not saved
 	
 	// ========================================
 	// For subclass use only
@@ -222,6 +223,9 @@ protected:
 	AudioMetadata(const AudioMetadata& rhs);
 	AudioMetadata& operator=(const AudioMetadata& rhs);
 
+	// Subclasses should call this after a successful save operation
+	void MergeChangedMetadataIntoMetadata();
+	
 	// Type-specific access
 	CFStringRef GetStringValue(CFStringRef key);
 	CFNumberRef GetNumberValue(CFStringRef key);

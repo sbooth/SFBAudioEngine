@@ -92,6 +92,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -242,40 +243,22 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 	}
 
 	// Album title
-	if(GetAlbumTitle())
-		file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
-	else
-		file.tag()->setAlbum(TagLib::String::null);
+	file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
 	
 	// Artist
-	if(GetArtist())
-		file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
-	else
-		file.tag()->setArtist(TagLib::String::null);
+	file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
 	
 	// Genre
-	if(GetGenre())
-		file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
-	else
-		file.tag()->setGenre(TagLib::String::null);
+	file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
 	
 	// Year
-	if(GetReleaseDate())
-		file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
-	else
-		file.tag()->setYear(0);
+	file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
 	
 	// Comment
-	if(GetComment())
-		file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
-	else
-		file.tag()->setComment(TagLib::String::null);
+	file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
 	
 	// Track title
-	if(GetTitle())
-		file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
-	else
-		file.tag()->setTitle(TagLib::String::null);
+	file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
 	
 	// Track number
 	int trackNum = 0;
@@ -322,6 +305,8 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+	
+	MergeChangedMetadataIntoMetadata();
 	
 	return true;
 }

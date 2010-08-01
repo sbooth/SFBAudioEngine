@@ -198,6 +198,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
@@ -726,5 +727,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	MP4TagsFree(tags), tags = NULL;
 	MP4Close(file), file = NULL;
 
+	MergeChangedMetadataIntoMetadata();
+	
 	return true;
 }

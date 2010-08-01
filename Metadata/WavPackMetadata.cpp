@@ -194,6 +194,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
 	if(false == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
@@ -645,5 +646,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 	
+	MergeChangedMetadataIntoMetadata();
+
 	return true;
 }
