@@ -1054,10 +1054,8 @@ bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
 															myAudioObjectPropertyListenerProc, 
 															this);
 		
-		if(kAudioHardwareNoError != result) {
+		if(kAudioHardwareNoError != result)
 			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
-			return false;
-		}
 
 		propertyAddress.mSelector = kAudioStreamPropertyVirtualFormat;
 		
@@ -1066,10 +1064,8 @@ bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
 												   myAudioObjectPropertyListenerProc, 
 												   this);
 		
-		if(kAudioHardwareNoError != result) {
+		if(kAudioHardwareNoError != result)
 			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
-			return false;
-		}
 	}
 	
 	mOutputStreamID = streamID;
@@ -1351,13 +1347,10 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// ========================================
 	// RENDERING
 
-	// If the stream's virtual format changed and IO is running, stop it immediately or bad things will happen
-	if(eAudioPlayerFlagVirtualFormatChanged & mFlags) {
-		StopOutput();
-		
+	// Don't render during format changes
+	if(eAudioPlayerFlagVirtualFormatChanged & mFlags)
 		// The buffers are pre-zeroed so just return
 		return kAudioHardwareNoError;
-	}
 
 	// Don't render during seeks
 	if(eAudioPlayerFlagIsSeeking & mFlags)
@@ -1474,9 +1467,9 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 			AudioObjectPropertyAddress currentAddress = inAddresses[addressIndex];
 
 			switch(currentAddress.mSelector) {
+#if DEBUG
 				case kAudioDevicePropertyDeviceIsRunning:
 				{
-#if DEBUG
 					UInt32 isRunning = 0;
 					UInt32 dataSize = sizeof(isRunning);
 					
@@ -1492,14 +1485,18 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 
-					LOG("-> kAudioDevicePropertyDeviceIsRunning is %s", isRunning ? "True" : "False");
-#endif
+					LOG("-> kAudioDevicePropertyDeviceIsRunning [%#x]: %s", inObjectID, isRunning ? "True" : "False");
 
 					break;
 				}
 					
+#endif
 				case kAudioDevicePropertyStreams:
 				{
+					// If the streams changed, the virtual format may have changed as well
+					// Once this flag is set, rendering will cease if output is running
+					OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagVirtualFormatChanged */, &mFlags);
+					
 					UInt32 dataSize = sizeof(currentAddress);
 					
 					OSStatus result = AudioObjectGetPropertyDataSize(inObjectID, 
@@ -1517,7 +1514,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					AudioStreamID audioStreams [streamCount];
 					
 					if(1 != streamCount)
-						LOG("Found %i AudioStream(s) on device %x", streamCount, mOutputDeviceID);
+						LOG("Found %i AudioStream(s) on device %#x", streamCount, mOutputDeviceID);
 					
 					result = AudioObjectGetPropertyData(inObjectID, 
 														&currentAddress, 
@@ -1534,6 +1531,14 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					// For now, use the first stream
 					if(false == SetOutputStreamID(audioStreams[0])) 
 						ERR("Unable to set output stream ID");
+
+					if(false == CreateConverterAndConversionBuffer())
+						ERR("Couldn't create AudioConverter");
+					
+					// It is now safe to resume rendering
+					OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagVirtualFormatChanged */, &mFlags);
+
+					LOG("-> kAudioDevicePropertyStreams [%#x] changed, using %#x", inObjectID, audioStreams[0]);
 
 					break;
 				}
@@ -1554,11 +1559,8 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 			switch(currentAddress.mSelector) {
 				case kAudioStreamPropertyVirtualFormat:
 				{
-					// Stop IO
-					StopOutput();
-					
 					// Changing virtual formats involves numerous thread-unsafe operations
-					// Once this flag is set, rendering will cease until it is clear
+					// Once this flag is set, rendering will cease if output is running
 					OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagVirtualFormatChanged */, &mFlags);
 
 					// Get the new virtual format
@@ -1569,7 +1571,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 #if DEBUG
 					else {
 						CAStreamBasicDescription virtualFormat(mStreamVirtualFormat);
-						fprintf(stderr, "-> Virtual format changed: ");
+						fprintf(stderr, "-> Virtual format changed [%#x]: ", inObjectID);
 						virtualFormat.Print(stderr);
 					}
 #endif
@@ -1580,9 +1582,6 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					// It is now safe to resume rendering
 					OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagVirtualFormatChanged */, &mFlags);
 
-					if(IsPlaying())
-						StartOutput();
-					
 					break;
 				}
 					
@@ -1594,7 +1593,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					if(false == GetOutputStreamPhysicalFormat(physicalFormat))
 						ERR("Couldn't get stream physical format");
 					else {
-						fprintf(stderr, "-> Physical format changed: ");
+						fprintf(stderr, "-> Physical format changed [%#x]: ", inObjectID);
 						physicalFormat.Print(stderr);
 					}
 #endif
@@ -1964,20 +1963,8 @@ bool AudioPlayer::OpenOutput()
 		return false;
 	}
 	
-	// Listen for changes to the device's sample rate and streams
-	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
-
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
-		return false;
-	}
-
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
+	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
 	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
 											&propertyAddress,
@@ -1989,9 +1976,6 @@ bool AudioPlayer::OpenOutput()
 		return false;
 	}
 
-	propertyAddress.mSelector = kAudioDevicePropertyStreams;
-	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
-	
     result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
 											&propertyAddress, 
 											0,
@@ -2066,18 +2050,6 @@ bool AudioPlayer::CloseOutput()
 		return false;
 	}
 
-	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
-		return false;
-	}
-	
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
 	
 	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
@@ -2292,7 +2264,7 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 			ERR("AudioConverterNew failed: %i", result);
 			return false;
 		}
-		
+
 		// Calculate how large the conversion buffer must be
 		UInt32 bufferSizeBytes = bufferSizeFrames * mStreamVirtualFormat.mBytesPerFrame;
 		dataSize = sizeof(bufferSizeBytes);
