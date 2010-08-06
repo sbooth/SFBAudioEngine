@@ -108,6 +108,9 @@ public:
 	CFStringRef CreateOutputDeviceUID();
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
 
+	AudioDeviceID GetOutputDeviceID();
+	bool SetOutputDeviceID(AudioDeviceID deviceID);
+
 	bool GetOutputDeviceSampleRate(Float64& sampleRate);
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
 

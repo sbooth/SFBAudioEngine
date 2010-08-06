@@ -992,32 +992,11 @@ bool DSPAudioPlayer::RemoveEffect(AudioUnit effectUnit)
 
 CFStringRef DSPAudioPlayer::CreateOutputDeviceUID()
 {
-	AudioUnit au = NULL;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, 
-									  mOutputNode, 
-									  NULL, 
-									  &au);
-	
-	if(noErr != result) {
-		ERR("AUGraphNodeInfo failed: %i", result);
-		return NULL;
-	}
+	AudioDeviceID deviceID = GetOutputDeviceID();
 
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	UInt32 dataSize = sizeof(deviceID);
-
-	result = AudioUnitGetProperty(au,
-								  kAudioOutputUnitProperty_CurrentDevice,
-								  kAudioUnitScope_Global,
-								  0,
-								  &deviceID,
-								  &dataSize);
-		
-	if(noErr != result) {
-		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+	if(kAudioDeviceUnknown == deviceID)
 		return NULL;
-	}
-	
+
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceUID, 
 		kAudioObjectPropertyScopeGlobal,
@@ -1025,14 +1004,14 @@ CFStringRef DSPAudioPlayer::CreateOutputDeviceUID()
 	};
 	
 	CFStringRef deviceUID = NULL;
-	dataSize = sizeof(deviceUID);
+	UInt32 dataSize = sizeof(deviceUID);
 	
-	result = AudioObjectGetPropertyData(deviceID,
-										&propertyAddress,
-										0,
-										NULL,
-										&dataSize,
-										&deviceUID);
+	OSStatus result = AudioObjectGetPropertyData(deviceID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &deviceUID);
 
 	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %i", result);
@@ -1100,17 +1079,55 @@ bool DSPAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	if(kAudioDeviceUnknown == deviceID)
 		return false;
 
+	return SetOutputDeviceID(deviceID);
+}
+
+AudioDeviceID DSPAudioPlayer::GetOutputDeviceID()
+{
 	AudioUnit au = NULL;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, 
 									  mOutputNode, 
 									  NULL, 
 									  &au);
+	
+	if(noErr != result) {
+		ERR("AUGraphNodeInfo failed: %i", result);
+		return kAudioDeviceUnknown;
+	}
+	
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	UInt32 dataSize = sizeof(deviceID);
+	
+	result = AudioUnitGetProperty(au,
+								  kAudioOutputUnitProperty_CurrentDevice,
+								  kAudioUnitScope_Global,
+								  0,
+								  &deviceID,
+								  &dataSize);
+	
+	if(noErr != result) {
+		ERR("AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
+		return kAudioDeviceUnknown;
+	}
+	
+	return deviceID;
+}
 
+bool DSPAudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
+{
+	assert(kAudioDeviceUnknown != deviceID);
+
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, 
+									  mOutputNode, 
+									  NULL, 
+									  &au);
+	
 	if(noErr != result) {
 		ERR("AUGraphNodeInfo failed: %i", result);
 		return false;
 	}
-
+	
 	// Update our output AU to use the specified device
 	result = AudioUnitSetProperty(au,
 								  kAudioOutputUnitProperty_CurrentDevice,
@@ -1118,12 +1135,12 @@ bool DSPAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 								  0,
 								  &deviceID,
 								  sizeof(deviceID));
-
+	
 	if(noErr != result) {
 		ERR("AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %i", result);
 		return false;
 	}
-
+	
 	return true;
 }
 
