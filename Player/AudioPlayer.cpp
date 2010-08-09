@@ -1544,7 +1544,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				}
 					
 				case kAudioDeviceProcessorOverload:
-					ERR("kAudioDeviceProcessorOverload: Unable to meet IOProc time constraints");
+					ERR("kAudioDeviceProcessorOverload [%#x]: Unable to meet IOProc time constraints", inObjectID);
 					break;
 			}
 			
