@@ -824,7 +824,7 @@ CFTypeRef AudioMetadata::GetValue(CFStringRef key)
 {
 	assert(NULL != key);
 	
-	if(CFDictionaryContainsValue(mChangedMetadata, key)) {
+	if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 		CFTypeRef value = CFDictionaryGetValue(mChangedMetadata, key);
 		return (kCFNull == value ? NULL : value);
 	}
