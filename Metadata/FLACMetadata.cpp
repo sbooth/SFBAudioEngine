@@ -111,7 +111,9 @@ SetVorbisCommentBoolean(FLAC__StreamMetadata	*block,
 	assert(NULL != block);
 	assert(NULL != key);
 	
-	if(CFBooleanGetValue(value))
+	if(NULL == value)
+		return SetVorbisComment(block, key, NULL);
+	else if(CFBooleanGetValue(value))
 		return SetVorbisComment(block, key, CFSTR("1"));
 	else
 		return SetVorbisComment(block, key, CFSTR("0"));
