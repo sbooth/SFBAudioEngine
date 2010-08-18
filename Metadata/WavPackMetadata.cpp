@@ -100,8 +100,10 @@ SetWavPackTagBoolean(WavpackContext		*wpc,
 {
 	assert(NULL != wpc);
 	assert(NULL != key);
-	
-	if(CFBooleanGetValue(value))
+
+	if(NULL == value)
+		return SetWavPackTag(wpc, key, NULL);
+	else if(CFBooleanGetValue(value))
 		return SetWavPackTag(wpc, key, CFSTR("1"));
 	else
 		return SetWavPackTag(wpc, key, CFSTR("0"));

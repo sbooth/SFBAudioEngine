@@ -89,8 +89,10 @@ SetXiphCommentBoolean(TagLib::Ogg::XiphComment	*tag,
 {
 	assert(NULL != tag);
 	assert(NULL != key);
-	
-	if(CFBooleanGetValue(value))
+
+	if(NULL == value)
+		return SetXiphComment(tag, key, NULL);
+	else if(CFBooleanGetValue(value))
 		return SetXiphComment(tag, key, CFSTR("1"));
 	else
 		return SetXiphComment(tag, key, CFSTR("0"));
