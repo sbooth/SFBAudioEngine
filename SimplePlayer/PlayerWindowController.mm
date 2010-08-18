@@ -92,6 +92,13 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	[_uiTimer invalidate], _uiTimer = nil;
 	
 	delete PLAYER, _player = NULL;
+
+	[_slider release], _slider = nil;
+	[_elapsed release], _elapsed = nil;
+	[_remaining release], _remaining = nil;
+	[_playButton release], _playButton = nil;
+	[_forwardButton release], _forwardButton = nil;
+	[_backwardButton release], _backwardButton = nil;
 	
 	[super dealloc];
 }
