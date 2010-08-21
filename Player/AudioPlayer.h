@@ -52,7 +52,9 @@ class PCMConverter;
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagIsSeeking				= 1 << 0
+	eAudioPlayerFlagIsSeeking				= 1 << 0,
+	eAudioPlayerFlagSampleRateChanging		= 1 << 1,
+	eAudioPlayerFlagMuteOutput				= 1 << 2
 };
 
 // ========================================
