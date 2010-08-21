@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,9 @@
 #if DEBUG
 #  define LOG(format, args ...) fprintf(stderr, format "\n", ## args)
 #  ifdef __cplusplus
-#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __PRETTY_FUNCTION__, __FILE__, __LINE__, ## args)
+#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __PRETTY_FUNCTION__, strrchr("/" __FILE__, '/') + 1, __LINE__, ## args)
 #  else
-#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __func__, __FILE__, __LINE__, ## args)
+#    define ERR(format, args ...) fprintf(stderr, "[%s] (%s:%i): " format "\n", __func__, strrchr("/" __FILE__, '/') + 1, __LINE__, ## args)
 #  endif
 #else
 #  define LOG(format, args ...)
