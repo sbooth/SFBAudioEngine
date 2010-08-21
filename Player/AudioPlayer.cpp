@@ -1993,11 +1993,10 @@ bool AudioPlayer::OpenOutput()
 											myAudioObjectPropertyListenerProc,
 											this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDeviceProcessorOverload) failed: %i", result);
-		return false;
-	}
 
+#if DEBUG
 	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
 	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
@@ -2005,10 +2004,9 @@ bool AudioPlayer::OpenOutput()
 											myAudioObjectPropertyListenerProc,
 											this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
-		return false;
-	}
+#endif
 
 	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
 	
@@ -2035,32 +2033,32 @@ bool AudioPlayer::OpenOutput()
 										&dataSize, 
 										&deviceName);
 
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %i", result);
-		return false;
+	if(kAudioHardwareNoError == result) {
+		CFRange range = CFRangeMake(0, CFStringGetLength(deviceName));
+		CFIndex count;
+		
+		// Determine the length of the string in UTF-8
+		CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
+		
+		char buf [count + 1];
+		
+		// Convert it
+		CFIndex used;
+		CFIndex converted = CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
+		
+		if(CFStringGetLength(deviceName) != converted)
+			LOG("CFStringGetBytes failed: converted %ld of %ld characters", converted, CFStringGetLength(deviceName));
+		
+		// Add terminator
+		buf[used] = '\0';
+		
+		LOG("Opening output for device %#x (%s)", mOutputDeviceID, buf);
 	}
+	else
+		ERR("AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %i", result);
 
-	CFRange range = CFRangeMake(0, CFStringGetLength(deviceName));
-	CFIndex count;
-	
-	// Determine the length of the string in UTF-8
-	CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
-	
-	char buf [count + 1];
-	
-	// Convert it
-	CFIndex used;
-	CFIndex converted = CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
-	
-	if(CFStringGetLength(deviceName) != converted)
-		LOG("CFStringGetBytes failed: converted %ld of %ld characters", converted, CFStringGetLength(deviceName));
-	
-	// Add terminator
-	buf[used] = '\0';
-	
-	LOG("Opening output for device %#x (%s)", mOutputDeviceID, buf);
-
-	CFRelease(deviceName), deviceName = NULL;
+	if(deviceName)
+		CFRelease(deviceName), deviceName = NULL;
 #endif
 
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
@@ -2071,10 +2069,8 @@ bool AudioPlayer::OpenOutput()
 											myAudioObjectPropertyListenerProc,
 											this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyStreams) failed: %i", result);
-		return false;
-	}
 
     result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
 											&propertyAddress, 
@@ -2135,11 +2131,10 @@ bool AudioPlayer::CloseOutput()
 											   myAudioObjectPropertyListenerProc, 
 											   this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDeviceProcessorOverload) failed: %i", result);
-		return false;
-	}
 
+#if DEBUG
 	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
 	
 	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
@@ -2147,10 +2142,9 @@ bool AudioPlayer::CloseOutput()
 											   myAudioObjectPropertyListenerProc, 
 											   this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
-		return false;
-	}
+#endif
 
 	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
 	
@@ -2171,10 +2165,8 @@ bool AudioPlayer::CloseOutput()
 											   myAudioObjectPropertyListenerProc, 
 											   this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyStreams) failed: %i", result);
-		return false;
-	}
 
 	return true;
 }
@@ -2336,7 +2328,7 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 	
 	if(mConversionBuffer)
 		deallocateBufferList(mConversionBuffer), mConversionBuffer = NULL;
-	
+
 	// Get the output buffer size for the stream
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyBufferFrameSize,
