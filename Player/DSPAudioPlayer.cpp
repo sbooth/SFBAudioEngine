@@ -36,6 +36,7 @@
 #include <mach/semaphore.h>
 #include <mach/sync_policy.h>
 #include <stdexcept>
+#include <Accelerate/Accelerate.h>
 
 #include "AudioEngineDefines.h"
 #include "DSPAudioPlayer.h"
@@ -1686,8 +1687,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								// Apply pre-gain to the decoded samples
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
-									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex)
-										*buffer++ *= linearGain;
+									vDSP_vsmul(buffer, 1, &linearGain, buffer, 1, framesDecoded);
 								}
 							}
 							
@@ -1700,20 +1700,12 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 									bitsPerChannel = 24;
 								
 								// The maximum allowable sample value
+								float minValue = -1.f;
 								float maxValue = 1.f - (1.f / (1 << (bitsPerChannel - 1)));
 								
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
-									for(UInt32 frameIndex = 0; frameIndex < framesDecoded; ++frameIndex) {
-										float sample = *buffer;
-										
-										if(sample > maxValue)
-											*buffer = maxValue;
-										else if(sample < -1.f)
-											*buffer = -1.f;
-										
-										++buffer;
-									}
+									vDSP_vclip(buffer, 1, &minValue, &maxValue, buffer, 1, framesDecoded);
 								}
 							}
 							
