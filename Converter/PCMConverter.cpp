@@ -244,10 +244,14 @@ UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, UInt32 inp
 	if(kAudioFormatFlagIsPacked & mDestinationFormat.mFormatFlags)
 		shift = 64 - mDestinationFormat.mBitsPerChannel;	
 	else {
+		UInt32 frameSize = mDestinationFormat.mBytesPerFrame;
+		if(!(kAudioFormatFlagIsNonInterleaved & mDestinationFormat.mFormatFlags))
+			frameSize /= mDestinationFormat.mChannelsPerFrame;
+		
 		if(kAudioFormatFlagIsAlignedHigh & mDestinationFormat.mFormatFlags)
-			shift = 64 - (8 * mDestinationFormat.mBytesPerFrame);
+			shift = 64 - mDestinationFormat.mBitsPerChannel;
 		else
-			shift = 64 - (8 * mDestinationFormat.mBytesPerFrame) + mDestinationFormat.mBitsPerChannel;
+			shift = 64 - (8 * frameSize);
 	}
 
 	// The destination is deinterleaved, so just convert
