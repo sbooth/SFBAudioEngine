@@ -486,7 +486,7 @@ AudioPlayer::~AudioPlayer()
 		
 		mConverter = NULL;
 	}
-	
+
 	if(mPCMConverter)
 		delete mPCMConverter, mPCMConverter = NULL;
 	
@@ -841,6 +841,9 @@ bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 {
 	assert(kAudioDeviceUnknown != deviceID);
 	
+	if(deviceID == mOutputDeviceID)
+		return true;
+
 	if(false == CloseOutput())
 		return false;
 	
@@ -1256,14 +1259,15 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		// The ring buffer's format will be the same as the decoder's, except
 		// the ring buffer will contain deinterleaved samples
 		mRingBufferFormat = decoder->GetFormat();
-		
+
 		if(!(kAudioFormatFlagIsNonInterleaved & mRingBufferFormat.mFormatFlags)) {
 			mRingBufferFormat.mFormatFlags		|= kAudioFormatFlagIsNonInterleaved;			
 			mRingBufferFormat.mBytesPerFrame	/= mRingBufferFormat.mChannelsPerFrame;
 			mRingBufferFormat.mBytesPerPacket	/= mRingBufferFormat.mChannelsPerFrame;
 		}
 
-		CreateConverterAndConversionBuffer();
+		if(!CreateConverterAndConversionBuffer())
+			return false;
 		
 		// Allocate enough space in the ring buffer for the new format
 		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame,
@@ -1381,6 +1385,10 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		return kAudioHardwareNoError;
 	}
 
+	// If an audio converter doesn't exist, return silence
+	if(NULL == mPCMConverter && NULL == mConverter)
+		return kAudioHardwareNoError;
+
 	UInt32 desiredFrames = outOutputData->mBuffers[0].mDataByteSize / mStreamVirtualFormat.mBytesPerFrame;
 
 	// Reset state
@@ -1416,7 +1424,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		if(noErr != result)
 			ERR("AudioConverterFillComplexBuffer failed: %i", result);		
 	}
-	
+
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 
@@ -2328,6 +2336,15 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 	
 	if(mConversionBuffer)
 		deallocateBufferList(mConversionBuffer), mConversionBuffer = NULL;
+
+#if DEBUG
+	CAStreamBasicDescription ringBufferFormat(mRingBufferFormat);
+	fprintf(stderr, "Ring buffer format: ");
+	ringBufferFormat.Print(stderr);
+	CAStreamBasicDescription virtualFormat(mStreamVirtualFormat);
+	fprintf(stderr, "Virtual format    : ");
+	virtualFormat.Print(stderr);
+#endif
 
 	// Get the output buffer size for the stream
 	AudioObjectPropertyAddress propertyAddress = { 
