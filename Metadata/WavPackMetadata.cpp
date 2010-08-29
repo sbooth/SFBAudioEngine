@@ -277,13 +277,20 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
 	}
 
+	int bitsPerSample = WavpackGetBitsPerSample(wpc);
+	if(bitsPerSample) {
+		CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &bitsPerSample);
+		CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+		CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+	}
+	
 	double averageBitrate = WavpackGetAverageBitrate(wpc, 1);
 	if(averageBitrate) {
 		CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &averageBitrate);
 		CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 		CFRelease(bitrate), bitrate = NULL;
 	}
-	
+
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																		  32,
 																		  &kCFTypeDictionaryKeyCallBacks,

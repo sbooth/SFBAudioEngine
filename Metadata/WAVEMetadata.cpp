@@ -141,8 +141,16 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
-	if(file.audioProperties())
+	if(file.audioProperties()) {
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+		
+		if(0 != file.audioProperties()->sampleWidth()) {
+			int value = file.audioProperties()->sampleWidth();
+			CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
+			CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+			CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+		}
+	}
 	
 	if(file.tag())
 		AddID3v2TagToDictionary(mMetadata, file.tag());
