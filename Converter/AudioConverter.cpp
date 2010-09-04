@@ -30,6 +30,16 @@
 
 #include "AudioConverter.h"
 
+AudioConverter::AudioConverter()
+{
+	memset(&mSourceFormat, 0, sizeof(AudioStreamBasicDescription));
+	memset(&mDestinationFormat, 0, sizeof(AudioStreamBasicDescription));
+}
+
+AudioConverter::AudioConverter(const AudioConverter& converter)
+	: mSourceFormat(converter.GetSourceFormat()), mDestinationFormat(converter.GetDestinationFormat())
+{}
+
 AudioConverter::AudioConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat)
 	: mSourceFormat(sourceFormat), mDestinationFormat(destinationFormat)
 {}

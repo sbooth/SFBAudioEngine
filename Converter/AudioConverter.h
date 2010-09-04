@@ -34,13 +34,12 @@
 #include <CoreAudio/CoreAudioTypes.h>
 
 // ========================================
-//
+// Base class for 1:1 PCM converters
 // ========================================
 class AudioConverter
 {
 public:
 	// ========================================
-	AudioConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat);
 	virtual ~AudioConverter();
 
 	virtual bool Reset();
@@ -52,6 +51,10 @@ public:
 	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount) = 0;
 	
 protected:
+	AudioConverter();
+	AudioConverter(const AudioConverter& converter);
+	AudioConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat);
+	
 	AudioStreamBasicDescription mSourceFormat;
 	AudioStreamBasicDescription mDestinationFormat;
 };
