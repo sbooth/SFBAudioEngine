@@ -218,7 +218,6 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 	double maxSignedSampleValue = 1 << 7;
 	double unsignedSampleDelta = -maxSignedSampleValue;
 	
-	// Input is signed bytes
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
@@ -233,7 +232,6 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 			}
 		}
 	}
-	// Input is unsigned bytes
 	else {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
@@ -259,81 +257,52 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 	double maxSignedSampleValue = 1 << 15;
 	double unsignedSampleDelta = -maxSignedSampleValue;
 	
-	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
-		// Input is native signed shorts
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					short *input = static_cast<short *>(inputBuffer->mBuffers[inputBufferIndex].mData);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				short *input = static_cast<short *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags))
 					vDSP_vflt16D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-				}
-			}
-		}
-		// Input is native unsigned shorts
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned short *input = static_cast<unsigned short *>(inputBuffer->mBuffers[inputBufferIndex].mData);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					vDSP_vfltu16D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-				}
-			}
-		}
-	}
-	else {
-		// Input is swapped signed shorts
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					short *input = static_cast<short *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+				else {
+					input += inputChannelIndex;
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<short>(OSSwapInt16(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-					
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
-		// Input is swapped unsigned shorts
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned short *input = static_cast<unsigned short *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	}
+	else {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				unsigned short *input = static_cast<unsigned short *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
+					vDSP_vfltu16D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
+					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
+				}
+				else {
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<unsigned short>(OSSwapInt16(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
 	}
@@ -348,93 +317,62 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 	double unsignedSampleDelta = -maxSignedSampleValue;
 	double specialNormFactor = 1 << 8;
 
-	if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
 						input += 3 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-
-					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-
-					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
-			}
-		}
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					for(UInt32 count = 0; count < frameCount; ++count) {
-						*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
-						input += 3 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
-					}
-					
-					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-					
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-				}
-			}
-		}
-	}
-	else {
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+				else {
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
 						input += 3 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-					
-					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-					
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+
+				output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+
+				vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	}
+	else {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+
+				if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+						input += 3 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
+					}
+				}
+				else {
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<unsigned int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
 						input += 3 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-					
-					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-					
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+				
+				output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
+				vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
 	}
@@ -448,81 +386,52 @@ DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBu
 	double maxSignedSampleValue = 1 << 31;
 	double unsignedSampleDelta = -maxSignedSampleValue;
 	
-	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
-		// Input is native signed ints
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					int *input = static_cast<int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				int *input = static_cast<int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags))
 					vDSP_vflt32D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-				}
-			}
-		}
-		// Input is native unsigned ints
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned int *input = static_cast<unsigned int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
-					vDSP_vfltu32D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-				}
-			}
-		}
-	}
-	else {
-		// Input is swapped signed ints
-		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					int *input = static_cast<int *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+				else {
+					input += inputChannelIndex;
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<int>(OSSwapInt32(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-					
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+				
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
-		// Input is swapped unsigned ints
-		else {
-			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-					unsigned int *input = static_cast<unsigned int *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
-					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-					
+	}
+	else {
+		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+				unsigned int *input = static_cast<unsigned int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
+					vDSP_vfltu32D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
+					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
+				}
+				else {
 					for(UInt32 count = 0; count < frameCount; ++count) {
-						*output++ = static_cast<unsigned int>(OSSwapInt32(*input));
+						*output++ = static_cast<unsigned int>(OSSwapInt16(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
-					
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-
-					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-
-					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
+				
+				vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 			}
 		}
 	}
@@ -564,97 +473,66 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 		double unsignedSampleDelta = -maxSignedSampleValue;
 		double specialNormFactor = 1 << 8;
 		
-		if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
-			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-					for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-						unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
-						double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
+		if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
+			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
+					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+					
+					if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 						for(UInt32 count = 0; count < frameCount; ++count) {
 							*output++ = static_cast<int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
 							input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 						}
-						
-						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
-						vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-						
-						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 					}
-				}
-			}
-			else {
-				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-					for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-						unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
-						double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
-						for(UInt32 count = 0; count < frameCount; ++count) {
-							*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
-							input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
-						}
-						
-						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
-						vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-						
-						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
-					}
-				}
-			}
-		}
-		else {
-			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
-				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-					for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-						unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
-						double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
+					else {
 						for(UInt32 count = 0; count < frameCount; ++count) {
 							*output++ = static_cast<int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
 							input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 						}
-						
-						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
-						vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-						
-						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 					}
+					
+					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+					
+					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
+					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+					
+					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
 			}
-			else {
-				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
-					for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-						unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
-						double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
+		}
+		else {
+			for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
+				for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
+					unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (4 * inputChannelIndex);
+					double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+					
+					if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
+						for(UInt32 count = 0; count < frameCount; ++count) {
+							*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+							input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
+						}
+					}
+					else {
 						for(UInt32 count = 0; count < frameCount; ++count) {
 							*output++ = static_cast<unsigned int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
 							input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 						}
-						
-						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
-						
-						vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
-						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
-						
-						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
-						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 					}
+					
+					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+					
+					vDSP_vsdivD(output, 1, &specialNormFactor, output, 1, frameCount);
+					vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
+					vDSP_vsdivD(output, 1, &maxSignedSampleValue, output, 1, frameCount);
+					
+					outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
+					outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
 				}
 			}
 		}
-		
+
 		return frameCount;
 	}
 
