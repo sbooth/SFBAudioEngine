@@ -44,5 +44,24 @@ public:
 	virtual ~DeinterleavingFloatConverter();
 	
 	// ========================================
-	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);	
+	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+
+private:
+	UInt32 ConvertFromFloat(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromDouble(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+
+	UInt32 ConvertFromPacked8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromPacked16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromPacked24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromPacked32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+
+	UInt32 ConvertFromHighAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromHighAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+//	UInt32 ConvertFromHighAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromHighAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+
+	UInt32 ConvertFromLowAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromLowAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+//	UInt32 ConvertFromLowAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertFromLowAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);	
 };
