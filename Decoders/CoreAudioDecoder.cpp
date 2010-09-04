@@ -336,7 +336,7 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		else if(kAppleLosslessFormatFlag_32BitSourceData & mSourceFormat.mFormatFlags)
 			mFormat.mBitsPerChannel	= 32;
 		
-		mFormat.mBytesPerPacket		= sizeof(SInt32);
+		mFormat.mBytesPerPacket		= sizeof(SInt32) * mFormat.mChannelsPerFrame;
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 		
