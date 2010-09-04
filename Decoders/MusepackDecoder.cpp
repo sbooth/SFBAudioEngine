@@ -36,6 +36,8 @@
 #include "AudioEngineDefines.h"
 #include "MusepackDecoder.h"
 #include "CreateDisplayNameForURL.h"
+#include "AllocateABL.h"
+#include "DeallocateABL.h"
 
 
 #pragma mark Callbacks
@@ -228,8 +230,8 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
-	
+	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(float), false, MPC_FRAME_LENGTH);
+
 	if(NULL == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
@@ -238,29 +240,6 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 		mpc_reader_exit_stdio(&mReader);
 		
 		return false;
-	}
-	
-	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
-	
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = calloc(MPC_FRAME_LENGTH, sizeof(float));
-		
-		if(NULL == mBufferList->mBuffers[i].mData) {
-			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
-
-			mpc_demux_exit(mDemux), mDemux = NULL;
-			mpc_reader_exit_stdio(&mReader);
-			
-			for(UInt32 j = 0; j < i; ++j)
-				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
-			
-			free(mBufferList), mBufferList = NULL;
-			
-			return false;
-		}
-		
-		mBufferList->mBuffers[i].mNumberChannels = 1;
 	}
 	
 	return true;
@@ -273,12 +252,9 @@ bool MusepackDecoder::CloseFile(CFErrorRef */*error*/)
 	
     mpc_reader_exit_stdio(&mReader);
 	
-	if(mBufferList) {
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
-		free(mBufferList), mBufferList = NULL;
-	}
-	
+	if(mBufferList)
+		mBufferList = DeallocateABL(mBufferList);
+
 	return true;
 }
 

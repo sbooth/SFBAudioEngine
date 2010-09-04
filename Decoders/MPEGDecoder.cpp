@@ -37,6 +37,8 @@
 #include "AudioEngineDefines.h"
 #include "MPEGDecoder.h"
 #include "CreateDisplayNameForURL.h"
+#include "AllocateABL.h"
+#include "DeallocateABL.h"
 
 
 #define INPUT_BUFFER_SIZE	(5 * 8192)
@@ -220,7 +222,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 		
 	// Allocate the buffer list
-	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
+	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(float), false, mSamplesPerMPEGFrame);
 	
 	if(NULL == mBufferList) {
 		if(error)
@@ -228,37 +230,15 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 
 		return false;
 	}
-	
-	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
-	
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = calloc(mSamplesPerMPEGFrame, sizeof(float));
-		
-		if(NULL == mBufferList->mBuffers[i].mData) {
-			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 
-			for(UInt32 j = 0; j < i; ++j)
-				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
-			free(mBufferList), mBufferList = NULL;
-			
-			return false;
-		}
-		
-		mBufferList->mBuffers[i].mNumberChannels = 1;
-	}
-	
 	return true;
 }
 
 bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 {
-	if(mBufferList) {
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
-		free(mBufferList), mBufferList = NULL;
-	}
-	
+	if(mBufferList)
+		mBufferList = DeallocateABL(mBufferList);
+
 	return true;
 }
 

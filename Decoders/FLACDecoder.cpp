@@ -39,6 +39,8 @@
 #include "AudioEngineDefines.h"
 #include "FLACDecoder.h"
 #include "CreateDisplayNameForURL.h"
+#include "AllocateABL.h"
+#include "DeallocateABL.h"
 
 
 #pragma mark Callbacks
@@ -370,7 +372,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
+	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(FLAC__int32), false, mStreamInfo.max_blocksize);
 	
 	if(NULL == mBufferList) {
 		if(error)
@@ -383,32 +385,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 		
 		return false;
 	}
-	
-	mBufferList->mNumberBuffers = mFormat.mChannelsPerFrame;
-	
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = calloc(mStreamInfo.max_blocksize, sizeof(FLAC__int32));
-		
-		if(NULL == mBufferList->mBuffers[i].mData) {
-			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 
-			if(false == FLAC__stream_decoder_finish(mFLAC))
-				ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-			
-			FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
-			
-			for(UInt32 j = 0; j < i; ++j)
-				free(mBufferList->mBuffers[j].mData), mBufferList->mBuffers[j].mData = NULL;
-			
-			free(mBufferList), mBufferList = NULL;
-			
-			return false;
-		}
-		
-		mBufferList->mBuffers[i].mNumberChannels = 1;
-	}
-	
 	return true;
 }
 
@@ -420,12 +397,9 @@ bool FLACDecoder::CloseFile(CFErrorRef */*error*/)
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 	}
-	
-	if(mBufferList) {
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-			free(mBufferList->mBuffers[i].mData), mBufferList->mBuffers[i].mData = NULL;	
-		free(mBufferList), mBufferList = NULL;
-	}
+
+	if(mBufferList)
+		mBufferList = DeallocateABL(mBufferList);
 	
 	return true;
 }
