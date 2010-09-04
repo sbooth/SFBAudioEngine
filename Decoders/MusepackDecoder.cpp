@@ -30,6 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
+#include <Accelerate/Accelerate.h>
 #include <algorithm>
 #include <stdexcept>
 
@@ -337,7 +338,13 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 #error "Fixed point not yet supported"
 #else
 		float *inputBuffer = reinterpret_cast<float *>(buffer);
-		
+
+		// Clip the samples to [-1, 1)
+		float minValue = -1.f;
+		float maxValue = 8388607.f / 8388608.f;
+
+		vDSP_vclip(inputBuffer, 1, &minValue, &maxValue, inputBuffer, 1, frame.samples * mFormat.mChannelsPerFrame);
+
 		// Deinterleave the normalized samples
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
