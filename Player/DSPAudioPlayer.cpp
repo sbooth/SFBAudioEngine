@@ -55,35 +55,6 @@
 
 
 // ========================================
-// Utility functions
-// ========================================
-static bool
-channelLayoutsAreEqual(AudioChannelLayout *lhs,
-					   AudioChannelLayout *rhs)
-{
-	assert(NULL != lhs);
-	assert(NULL != rhs);
-	
-	// First check if the tags are equal
-	if(lhs->mChannelLayoutTag != rhs->mChannelLayoutTag)
-		return false;
-	
-	// If the tags are equal, check for special values
-	if(kAudioChannelLayoutTag_UseChannelBitmap == lhs->mChannelLayoutTag)
-		return (lhs->mChannelBitmap == rhs->mChannelBitmap);
-	
-	if(kAudioChannelLayoutTag_UseChannelDescriptions == lhs->mChannelLayoutTag) {
-		if(lhs->mNumberChannelDescriptions != rhs->mNumberChannelDescriptions)
-			return false;
-		
-		size_t bytesToCompare = lhs->mNumberChannelDescriptions * sizeof(AudioChannelDescription);
-		return (0 == memcmp(&lhs->mChannelDescriptions, &rhs->mChannelDescriptions, bytesToCompare));
-	}
-	
-	return true;
-}
-
-// ========================================
 // Set the calling thread's timesharing and importance
 // ========================================
 static bool
@@ -183,7 +154,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 									 UInt32							*ioNumberDataPackets,
 									 AudioBufferList				*ioData,
 									 AudioStreamPacketDescription	**outDataPacketDescription,
-									 void*							inUserData)
+									 void							*inUserData)
 {
 
 #pragma unused(inAudioConverter)
@@ -1701,7 +1672,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								
 								// The maximum allowable sample value
 								float minValue = -1.f;
-								float maxValue = 1.f - (1.f / (1 << (bitsPerChannel - 1)));
+								float maxValue = ((1u << (bitsPerChannel - 1)) - 1) / (1u << (bitsPerChannel - 1));
 								
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
