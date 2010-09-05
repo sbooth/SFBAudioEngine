@@ -39,7 +39,7 @@
 class AudioDecoder;
 class CARingBuffer;
 class DecoderStateData;
-class PCMConverter;
+class AudioConverter;
 
 
 // ========================================
@@ -176,9 +176,9 @@ private:
 	AudioStreamBasicDescription			mStreamVirtualFormat;
 //	AudioChannelLayout					mChannelLayout;
 
-	AudioConverterRef					mConverter;
-	PCMConverter						*mPCMConverter;
+	AudioConverterRef					mSampleRateConverter;
 	AudioBufferList						*mConversionBuffer;
+	AudioConverter						*mOutputConverter;
 
 	volatile UInt32						mFlags;
 
