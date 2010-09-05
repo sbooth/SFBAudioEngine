@@ -102,6 +102,14 @@
 		32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D7374A112A61E40058B41F /* AudioConverter.cpp */; };
 		32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D73759112A66E80058B41F /* PCMConverter.cpp */; };
 		32D7375C112A66E80058B41F /* PCMConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7375A112A66E80058B41F /* PCMConverter.h */; };
+		32DEDA08122C07AF00C25252 /* AllocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA06122C07AF00C25252 /* AllocateABL.h */; };
+		32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
+		32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA12122C095600C25252 /* DeallocateABL.h */; };
+		32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
+		32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */; };
+		32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
+		32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */; };
+		32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */; };
 		32E6AB3B1096745400DA998D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB391096744C00DA998D /* main.cpp */; };
 		32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; };
@@ -267,6 +275,14 @@
 		32D7374A112A61E40058B41F /* AudioConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverter.cpp; sourceTree = "<group>"; };
 		32D73759112A66E80058B41F /* PCMConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PCMConverter.cpp; sourceTree = "<group>"; };
 		32D7375A112A66E80058B41F /* PCMConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PCMConverter.h; sourceTree = "<group>"; };
+		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AllocateABL.h; sourceTree = "<group>"; };
+		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AllocateABL.cpp; sourceTree = "<group>"; };
+		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
+		32DEDA13122C095600C25252 /* DeallocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeallocateABL.cpp; sourceTree = "<group>"; };
+		32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChannelLayoutsAreEqual.h; sourceTree = "<group>"; };
+		32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChannelLayoutsAreEqual.cpp; sourceTree = "<group>"; };
+		32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeinterleavingFloatConverter.h; sourceTree = "<group>"; };
+		32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeinterleavingFloatConverter.cpp; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
@@ -368,6 +384,12 @@
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
 				32C212D61091116D00BA2493 /* Info.plist */,
 				3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */,
+				32DEDA06122C07AF00C25252 /* AllocateABL.h */,
+				32DEDA07122C07AF00C25252 /* AllocateABL.cpp */,
+				32DEDA12122C095600C25252 /* DeallocateABL.h */,
+				32DEDA13122C095600C25252 /* DeallocateABL.cpp */,
+				32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */,
+				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -505,6 +527,8 @@
 				32D7375A112A66E80058B41F /* PCMConverter.h */,
 				32D73749112A61E40058B41F /* AudioConverter.h */,
 				32D7374A112A61E40058B41F /* AudioConverter.cpp */,
+				32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */,
+				32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */,
 			);
 			path = Converter;
 			sourceTree = "<group>";
@@ -605,6 +629,10 @@
 				32D6556C115FE7EA002B275C /* MemoryMappedFileInputSource.h in Headers */,
 				32A319FD11C2072C009AE255 /* AddAudioPropertiesToDictionary.h in Headers */,
 				328EDB8311FD384800266816 /* AddXiphCommentToDictionary.h in Headers */,
+				32DEDA08122C07AF00C25252 /* AllocateABL.h in Headers */,
+				32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */,
+				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
+				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -762,6 +790,10 @@
 				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
 				32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */,
 				328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */,
+				32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */,
+				32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */,
+				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
+				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
