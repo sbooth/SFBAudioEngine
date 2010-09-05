@@ -32,8 +32,9 @@
 
 #include "AudioConverter.h"
 
+
 // ========================================
-//
+// A PCM converter
 // ========================================
 class PCMConverter : public AudioConverter
 {
@@ -44,10 +45,23 @@ public:
 
 	// ========================================
 	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
-	
-private:
-	UInt32 ReadInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount);
-	UInt32 WriteInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount);
 
-	AudioBufferList *mTransferBuffer;
+private:
+	UInt32 ConvertToFloat(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToDouble(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	
+	UInt32 ConvertToPacked8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 7);
+	UInt32 ConvertToPacked16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 15);
+	UInt32 ConvertToPacked24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 23);
+	UInt32 ConvertToPacked32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 31);
+	
+	UInt32 ConvertToHighAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToHighAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToHighAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToHighAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	
+	UInt32 ConvertToLowAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToLowAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToLowAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);	
 };

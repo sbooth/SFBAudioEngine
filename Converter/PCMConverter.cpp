@@ -29,13 +29,9 @@
  */
 
 #include <stdexcept>
-#include <algorithm>
+#include <Accelerate/Accelerate.h>
 
 #include "PCMConverter.h"
-#include "AudioEngineDefines.h"
-
-
-#define CHUNK_SIZE_FRAMES 512
 
 
 PCMConverter::PCMConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat)
@@ -43,53 +39,22 @@ PCMConverter::PCMConverter(const AudioStreamBasicDescription& sourceFormat, cons
 {
 	if(kAudioFormatLinearPCM != mSourceFormat.mFormatID || kAudioFormatLinearPCM != mDestinationFormat.mFormatID)
 		throw std::runtime_error("Only PCM to PCM conversions are supported by PCMConverter");
-	
+
 	if(mSourceFormat.mSampleRate != mDestinationFormat.mSampleRate)
 		throw std::runtime_error("Sample rate conversion is not supported by PCMConverter");
 
-	if(mSourceFormat.mChannelsPerFrame != mDestinationFormat.mChannelsPerFrame)
-		throw std::runtime_error("Channel mapping is not supported by PCMConverter");
+	if(!(kAudioFormatFlagsNativeFloatPacked & mSourceFormat.mFormatFlags) || (8 * sizeof(double) != mSourceFormat.mBitsPerChannel))
+		throw std::runtime_error("Only 64 bit floating point source formats are supported by PCMConverter");
 	
-	if(kAudioFormatFlagIsFloat & mSourceFormat.mFormatFlags || kAudioFormatFlagIsFloat & mDestinationFormat.mFormatFlags)
-		throw std::runtime_error("Only integer to integer conversions are supported by PCMConverter");
-
 	if(1 < mSourceFormat.mChannelsPerFrame && !(kAudioFormatFlagIsNonInterleaved & mSourceFormat.mFormatFlags))
 		throw std::runtime_error("Only deinterleaved source formats are supported by PCMConverter");
-	
-	// Allocate the transfer buffer
-	// The transfer buffer always contains native endian, signed integer, deinterleaved audio stored as SInt64
-	mTransferBuffer = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mSourceFormat.mChannelsPerFrame)));
-	
-	if(!mTransferBuffer)
-		throw std::bad_alloc();
-	
-	mTransferBuffer->mNumberBuffers = mSourceFormat.mChannelsPerFrame;
-	
-	for(UInt32 i = 0; i < mTransferBuffer->mNumberBuffers; ++i) {
-		mTransferBuffer->mBuffers[i].mData = static_cast<void *>(calloc(CHUNK_SIZE_FRAMES, sizeof(SInt64)));
-		
-		if(!mTransferBuffer->mBuffers[i].mData) {
-			for(UInt32 j = 0; j < i; ++j)
-				free(mTransferBuffer->mBuffers[j].mData), mTransferBuffer->mBuffers[j].mData = NULL;
-			free(mTransferBuffer), mTransferBuffer = NULL;
-			
-			throw std::bad_alloc();
-		}
-		
-		mTransferBuffer->mBuffers[i].mDataByteSize = CHUNK_SIZE_FRAMES * sizeof(SInt64);
-		mTransferBuffer->mBuffers[i].mNumberChannels = 1;
-	}
+
+//	if(mSourceFormat.mChannelsPerFrame != mDestinationFormat.mChannelsPerFrame)
+//		throw std::runtime_error("Channel mapping is not supported by PCMConverter");
 }
 
 PCMConverter::~PCMConverter()
-{
-	if(mTransferBuffer) {
-		for(UInt32 bufferIndex = 0; bufferIndex < mTransferBuffer->mNumberBuffers; ++bufferIndex)
-			free(mTransferBuffer->mBuffers[bufferIndex].mData), mTransferBuffer->mBuffers[bufferIndex].mData = NULL;
-		
-		free(mTransferBuffer), mTransferBuffer = NULL;
-	}
-}
+{}
 
 UInt32 PCMConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
 {
@@ -98,355 +63,418 @@ UInt32 PCMConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList
 	
 	// Nothing to do
 	if(0 == frameCount) {
-		for(UInt32 bufferIndex = 0; bufferIndex < outputBuffer->mNumberBuffers; ++bufferIndex)
-			outputBuffer->mBuffers[bufferIndex].mDataByteSize = 0;
-
+		for(UInt32 outputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex)
+			outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = 0;
 		return 0;
 	}
 	
-	UInt32 framesConverted = 0;
-	UInt32 framesRemaining = frameCount;
+	UInt32 interleavedChannelCount = kAudioFormatFlagIsNonInterleaved & mDestinationFormat.mFormatFlags ? 1 : mDestinationFormat.mChannelsPerFrame;
+	UInt32 sampleWidth = mDestinationFormat.mBytesPerFrame / interleavedChannelCount;
 	
-	while(0 < framesRemaining) {
-		UInt32 framesToConvert = std::min(static_cast<UInt32>(CHUNK_SIZE_FRAMES), framesRemaining);
-		
-		UInt32 framesRead = ReadInteger(inputBuffer, framesConverted, mTransferBuffer, 0, framesToConvert);
-		
-		if(framesRead != framesToConvert)
-			ERR("fnord");
-		
-		UInt32 framesWritten = WriteInteger(mTransferBuffer, 0, outputBuffer, framesConverted, framesRead);
-		
-		if(framesWritten != framesRead)
-			ERR("fnord!");
-		
-		framesRemaining -= framesWritten;
-		framesConverted += framesWritten;
+	// Float-to-float conversion
+	if(kAudioFormatFlagIsFloat & mDestinationFormat.mFormatFlags) {
+		switch(mDestinationFormat.mBitsPerChannel) {
+			case 32:	return ConvertToFloat(inputBuffer, outputBuffer, frameCount);
+			case 64:	return ConvertToDouble(inputBuffer, outputBuffer, frameCount);
+			default:	throw std::runtime_error("Unsupported floating point size");
+		}
 	}
 	
-	// We're finished!
-	return framesConverted;	
+	// Packed conversions
+	else if(kAudioFormatFlagIsPacked & mDestinationFormat.mFormatFlags) {
+		switch(sampleWidth) {
+			case 1:		return ConvertToPacked8(inputBuffer, outputBuffer, frameCount);
+			case 2:		return ConvertToPacked16(inputBuffer, outputBuffer, frameCount);
+			case 3:		return ConvertToPacked24(inputBuffer, outputBuffer, frameCount);
+			case 4:		return ConvertToPacked32(inputBuffer, outputBuffer, frameCount);
+			default:	throw std::runtime_error("Unsupported packed sample width");
+		}
+	}
+	
+	// High-aligned conversions
+	else if(kAudioFormatFlagIsAlignedHigh & mDestinationFormat.mFormatFlags) {
+		switch(sampleWidth) {
+			case 1:		return ConvertToHighAligned8(inputBuffer, outputBuffer, frameCount);
+			case 2:		return ConvertToHighAligned16(inputBuffer, outputBuffer, frameCount);
+			case 3:		return ConvertToHighAligned24(inputBuffer, outputBuffer, frameCount);
+			case 4:		return ConvertToHighAligned32(inputBuffer, outputBuffer, frameCount);
+			default:	throw std::runtime_error("Unsupported high-aligned sample width");
+		}
+	}
+	
+	// Low-aligned conversions
+	else {
+		switch(sampleWidth) {
+			case 1:		return ConvertToLowAligned8(inputBuffer, outputBuffer, frameCount);
+			case 2:		return ConvertToLowAligned16(inputBuffer, outputBuffer, frameCount);
+			case 3:		return ConvertToLowAligned24(inputBuffer, outputBuffer, frameCount);
+			case 4:		return ConvertToLowAligned32(inputBuffer, outputBuffer, frameCount);
+			default:	throw std::runtime_error("Unsupported low-aligned sample width");
+		}
+	}
+	
+	return 0;	
 }
 
-UInt32 PCMConverter::ReadInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount)
+#pragma mark Float Conversions
+
+UInt32 
+PCMConverter::ConvertToFloat(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
 {
-	assert(NULL != inputBuffer);
-	assert(NULL != outputBuffer);
-
-	UInt32 shift = 0;
-	if(kAudioFormatFlagIsPacked & mSourceFormat.mFormatFlags)
-		shift = 64 - mSourceFormat.mBitsPerChannel;	
-	else {
-		if(kAudioFormatFlagIsAlignedHigh & mSourceFormat.mFormatFlags)
-			shift = 64 - (8 * mSourceFormat.mBytesPerFrame);
-		else
-			shift = 64 - (8 * mSourceFormat.mBytesPerFrame) + mSourceFormat.mBitsPerChannel;
-	}
-	
-	// The input and transfer buffers are always deinterleaved
-	for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-		SInt64 *output = static_cast<SInt64 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
-
-		switch(mSourceFormat.mBytesPerFrame) {
-			case 1:
-			{
-				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
+	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				float *output = static_cast<float *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
-				UInt32 counter = frameCount;
-				while(counter--)
-					*output++ = static_cast<SInt64>(*input++) << shift;
-
-				break;
+				vDSP_vdpsp(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(float));
 			}
-				
-			case 2:
-			{
-				UInt16 *input = static_cast<UInt16 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
-				
-				UInt32 counter = frameCount;
-				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
-					while(counter--)
-						*output++ = static_cast<SInt64>(*input++) << shift;
-				}
-				else {
-					while(counter--)
-						*output++ = static_cast<SInt64>(OSSwapInt16(*input++)) << shift;
-				}
-
-				break;
-			}
-				
-			case 3:
-			{
-				UInt8 *input = static_cast<UInt8 *>(inputBuffer->mBuffers[bufferIndex].mData) + (3 * inputFramesToSkip);
-
-				UInt32 counter = frameCount;
-				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
-					while(counter--) {
-						SInt64 sample = 0;
-
-						sample |= *input++;
-						sample |= (*input++ << 8);
-						sample |= (*input++ << 16);
-
-						*output++ = sample << shift;
-					}
-				}
-				else {
-					while(counter--) {
-						SInt64 sample = 0;
-
-						sample |= (*input++ << 16);
-						sample |= (*input++ << 8);
-						sample |= *input++;
-						
-						*output++ = sample << shift;
-					}
-				}
-
-				break;
-			}
-				
-			case 4:
-			{
-				UInt32 *input = static_cast<UInt32 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
-				
-				UInt32 counter = frameCount;
-				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) {
-					while(counter--)
-						*output++ = static_cast<SInt64>(*input++) << shift;
-				}
-				else {
-					while(counter--)
-						*output++ = static_cast<SInt64>(OSSwapInt32(*input++)) << shift;
-				}
-
-				break;
-			}
-				
-			default:
-				outputBuffer->mBuffers[bufferIndex].mDataByteSize = 0;
-				return 0;
 		}
-
-		outputBuffer->mBuffers[bufferIndex].mDataByteSize = 8 * frameCount;
+	}
+	else {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				float *output = static_cast<float *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vdpsp(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Swapped floats
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					unsigned int *swappedOutput = static_cast<unsigned int *>(outputBuffer->mBuffers[outputBufferIndex].mData) + outputChannelIndex;
+					
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*swappedOutput = OSSwapInt32(*swappedOutput);
+						swappedOutput += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(float));
+			}
+		}
 	}
 	
 	return frameCount;
 }
 
-UInt32 PCMConverter::WriteInteger(const AudioBufferList *inputBuffer, UInt32 inputFramesToSkip, AudioBufferList *outputBuffer, UInt32 outputFramesToSkip, UInt32 frameCount)
+UInt32 
+PCMConverter::ConvertToDouble(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
 {
-	assert(NULL != inputBuffer);
-	assert(NULL != outputBuffer);
-	
-	UInt32 shift = 0;
-	if(kAudioFormatFlagIsPacked & mDestinationFormat.mFormatFlags)
-		shift = 64 - mDestinationFormat.mBitsPerChannel;	
-	else {
-		UInt32 frameSize = mDestinationFormat.mBytesPerFrame;
-		if(!(kAudioFormatFlagIsNonInterleaved & mDestinationFormat.mFormatFlags))
-			frameSize /= mDestinationFormat.mChannelsPerFrame;
-		
-		if(kAudioFormatFlagIsAlignedHigh & mDestinationFormat.mFormatFlags)
-			shift = 64 - mDestinationFormat.mBitsPerChannel;
-		else
-			shift = 64 - (8 * frameSize);
-	}
+	double zero = 0;
 
-	// The destination is deinterleaved, so just convert
-	if(kAudioFormatFlagIsNonInterleaved & mDestinationFormat.mFormatFlags) {
-		
-		for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
-
-			switch(mDestinationFormat.mBytesPerFrame) {
-				case 1:
-				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
-					
-					UInt32 counter = frameCount;
-					while(counter--)
-						*output++ = static_cast<UInt8>(*input++ >> shift);
-					
-					break;
-				}
-					
-				case 2:
-				{
-					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--)
-							*output++ = static_cast<UInt16>(*input++ >> shift);
-					}
-					else {
-						while(counter--)
-							*output++ = OSSwapInt16(*input++ >> shift);
-					}
-					
-					break;
-				}
-					
-				case 3:
-				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[bufferIndex].mData) + (3 * outputFramesToSkip);
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--) {
-							SInt64 sample = *input++ >> shift;
-							
-							*output++ = static_cast<UInt8>(sample & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 8) & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 16) & 0xff);
-						}
-					}
-					else {
-						while(counter--) {
-							SInt64 sample = *input++ >> shift;
-							
-							*output++ = static_cast<UInt8>((sample >> 16) & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 8) & 0xff);
-							*output++ = static_cast<UInt8>(sample & 0xff);
-						}
-					}
-					
-					break;
-				}
-					
-				case 4:
-				{
-					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[bufferIndex].mData) + outputFramesToSkip;
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--)
-							*output++ = static_cast<UInt32>(*input++ >> shift);
-					}
-					else {
-						while(counter--)
-							*output++ = OSSwapInt32(static_cast<UInt32>(*input++ >> shift));
-					}
-					
-					
-					break;
-				}
-					
-				default:
-					outputBuffer->mBuffers[bufferIndex].mDataByteSize = 0;
-					return 0;
+	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsaddD(input, 1, &zero, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(double));
 			}
-
-			outputBuffer->mBuffers[bufferIndex].mDataByteSize = mDestinationFormat.mBytesPerFrame * frameCount;
 		}
-		
-		return frameCount;
 	}
-	// The destination is interleaved, but the transfer buffer is always deinterleaved
 	else {
-		for(UInt32 bufferIndex = 0; bufferIndex < inputBuffer->mNumberBuffers; ++bufferIndex) {
-			SInt64 *input = static_cast<SInt64 *>(inputBuffer->mBuffers[bufferIndex].mData) + inputFramesToSkip;
-
-			switch(mDestinationFormat.mBytesPerFrame / mDestinationFormat.mChannelsPerFrame) {
-				case 1:
-				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsaddD(input, 1, &zero, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Swapped floats
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					unsigned int *swappedOutput = static_cast<unsigned int *>(outputBuffer->mBuffers[outputBufferIndex].mData) + outputChannelIndex;
 					
-					UInt32 counter = frameCount;
-					while(counter--) {
-						*output = static_cast<UInt8>(*input++ >> shift);
-						output += mDestinationFormat.mChannelsPerFrame;
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*swappedOutput = OSSwapInt32(*swappedOutput);
+						swappedOutput += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
 					}
-					
-					break;
 				}
-					
-				case 2:
-				{
-					UInt16 *output = static_cast<UInt16 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--) {
-							*output = static_cast<UInt16>(*input++ >> shift);
-							output += mDestinationFormat.mChannelsPerFrame;
-						}
-					}
-					else {
-						while(counter--) {
-							*output = OSSwapInt16(*input++ >> shift);
-							output += mDestinationFormat.mChannelsPerFrame;
-						}
-					}
-					
-					break;
-				}
-					
-				case 3:
-				{
-					UInt8 *output = static_cast<UInt8 *>(outputBuffer->mBuffers[0].mData) + (3 * ((mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex));
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--) {
-							SInt64 sample = *input++ >> shift;
-							
-							*output++ = static_cast<UInt8>(sample & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 8) & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 16) & 0xff);
-
-							output += 3 * (mDestinationFormat.mChannelsPerFrame - 1);
-						}
-					}
-					else {
-						while(counter--) {
-							SInt64 sample = *input++ >> shift;
-
-							*output++ = static_cast<UInt8>((sample >> 16) & 0xff);
-							*output++ = static_cast<UInt8>((sample >> 8) & 0xff);
-							*output++ = static_cast<UInt8>(sample & 0xff);
-
-							output += 3 * (mDestinationFormat.mChannelsPerFrame - 1);
-						}
-					}
-					
-					break;
-				}
-					
-				case 4:
-				{
-					UInt32 *output = static_cast<UInt32 *>(outputBuffer->mBuffers[0].mData) + (mDestinationFormat.mChannelsPerFrame * outputFramesToSkip) + bufferIndex;
-					
-					UInt32 counter = frameCount;
-					if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
-						while(counter--) {
-							*output = static_cast<UInt32>(*input++ >> shift);
-							output += mDestinationFormat.mChannelsPerFrame;
-						}
-					}
-					else {
-						while(counter--) {
-							*output = OSSwapInt32(static_cast<UInt32>(*input++ >> shift));
-							output += mDestinationFormat.mChannelsPerFrame;
-						}
-					}
-					
-					
-					break;
-				}
-					
-				default:
-					outputBuffer->mBuffers[bufferIndex].mDataByteSize = 0;
-					return 0;
-			}			
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(double));
+			}
 		}
-		
-		outputBuffer->mBuffers[0].mDataByteSize = mDestinationFormat.mBytesPerFrame * frameCount;
-		
-		return frameCount;
 	}
 	
-	return 0;
+	return frameCount;
+}
+
+#pragma mark Packed Conversions
+
+UInt32 
+PCMConverter::ConvertToPacked8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
+{
+	double maxSignedSampleValue = scale;
+	double unsignedSampleDelta = -maxSignedSampleValue;
+	
+	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				char *output = static_cast<char *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vfixr8D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(char));
+			}
+		}
+	}
+	else {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vsaddD(input, 1, &unsignedSampleDelta, input, 1, frameCount);
+				vDSP_vfixru8D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(unsigned char));
+				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
+			}
+		}
+	}
+	
+	return frameCount;
+}
+
+UInt32 
+PCMConverter::ConvertToPacked16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
+{
+	double maxSignedSampleValue = scale;
+	double unsignedSampleDelta = -maxSignedSampleValue;
+	
+	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				short *output = static_cast<short *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vfixr16D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Byte swap if required
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					output += outputChannelIndex;
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*output = static_cast<short>(OSSwapInt16(*output));
+						output += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(short));
+			}
+		}
+	}
+	else {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				unsigned short *output = static_cast<unsigned short *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vsaddD(input, 1, &unsignedSampleDelta, input, 1, frameCount);
+				vDSP_vfixru16D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Byte swap if required
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					output += outputChannelIndex;
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*output = static_cast<unsigned short>(OSSwapInt16(*output));
+						output += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(unsigned short));
+			}
+		}
+	}
+	
+	return frameCount;
+}
+
+UInt32 
+PCMConverter::ConvertToPacked24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
+{
+	double maxSignedSampleValue = scale;
+	double unsignedSampleDelta = -maxSignedSampleValue;
+	
+	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + 3 * outputChannelIndex;
+
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+
+				int sample;
+				if(kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags) {
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						sample = static_cast<int>(*input++);
+						output[0] = static_cast<unsigned char>((sample >> 16) & 0xff);
+						output[1] = static_cast<unsigned char>((sample >> 8) & 0xff);
+						output[2] = static_cast<unsigned char>(sample & 0xff);
+						output += 3 * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				else {
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						sample = static_cast<int>(*input++);
+						output[0] = static_cast<unsigned char>(sample & 0xff);
+						output[1] = static_cast<unsigned char>((sample >> 8) & 0xff);
+						output[2] = static_cast<unsigned char>((sample >> 16) & 0xff);
+						output += 3 * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * 3 * sizeof(unsigned char));
+			}
+		}
+	}
+	else {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + 3 * outputChannelIndex;
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vsaddD(input, 1, &unsignedSampleDelta, input, 1, frameCount);
+				
+				unsigned int sample;
+				if(kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags) {
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						sample = static_cast<unsigned int>(*input++);
+						output[0] = static_cast<unsigned char>((sample >> 16) & 0xff);
+						output[1] = static_cast<unsigned char>((sample >> 8) & 0xff);
+						output[2] = static_cast<unsigned char>(sample & 0xff);
+						output += 3 * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				else {
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						sample = static_cast<unsigned int>(*input++);
+						output[0] = static_cast<unsigned char>(sample & 0xff);
+						output[1] = static_cast<unsigned char>((sample >> 8) & 0xff);
+						output[2] = static_cast<unsigned char>((sample >> 16) & 0xff);
+						output += 3 * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * 3 * sizeof(unsigned char));
+			}
+		}
+	}
+	
+	return frameCount;
+}
+
+UInt32 
+PCMConverter::ConvertToPacked32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
+{
+	double maxSignedSampleValue = scale;
+	double unsignedSampleDelta = -maxSignedSampleValue;
+	
+	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				int *output = static_cast<int *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vfixr32D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Byte swap if required
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					output += outputChannelIndex;
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*output = static_cast<int>(OSSwapInt32(*output));
+						output += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(int));
+			}
+		}
+	}
+	else {
+		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
+			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
+				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				unsigned int *output = static_cast<unsigned int *>(outputBuffer->mBuffers[outputBufferIndex].mData);
+				
+				vDSP_vsmulD(input, 1, &maxSignedSampleValue, input, 1, frameCount);
+				vDSP_vsaddD(input, 1, &unsignedSampleDelta, input, 1, frameCount);
+				vDSP_vfixru32D(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
+				
+				// Byte swap if required
+				if(kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
+					output += outputChannelIndex;
+					for(UInt32 count = 0; count < frameCount; ++count) {
+						*output = static_cast<unsigned int>(OSSwapInt32(*output));
+						output += outputBuffer->mBuffers[outputBufferIndex].mNumberChannels;
+					}
+				}
+				
+				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * outputBuffer->mBuffers[outputBufferIndex].mNumberChannels * sizeof(unsigned int));
+			}
+		}
+	}
+	
+	return frameCount;
+}
+
+#pragma mark High-Aligned Conversions
+
+UInt32 
+PCMConverter::ConvertToHighAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked8(inputBuffer, outputBuffer, frameCount);
+}
+
+UInt32 
+PCMConverter::ConvertToHighAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked16(inputBuffer, outputBuffer, frameCount);
+}
+
+UInt32 
+PCMConverter::ConvertToHighAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked24(inputBuffer, outputBuffer, frameCount);
+}
+
+UInt32 
+PCMConverter::ConvertToHighAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked32(inputBuffer, outputBuffer, frameCount);
+}
+
+#pragma mark Low-Aligned Conversions
+
+UInt32 
+PCMConverter::ConvertToLowAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked8(inputBuffer, outputBuffer, frameCount, 1u << mDestinationFormat.mBitsPerChannel);
+}
+
+UInt32 
+PCMConverter::ConvertToLowAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked16(inputBuffer, outputBuffer, frameCount, 1u << mDestinationFormat.mBitsPerChannel);
+}
+
+UInt32 
+PCMConverter::ConvertToLowAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked24(inputBuffer, outputBuffer, frameCount, 1u << mDestinationFormat.mBitsPerChannel);
+}
+
+UInt32 
+PCMConverter::ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
+{
+	return ConvertToPacked32(inputBuffer, outputBuffer, frameCount, 1u << mDestinationFormat.mBitsPerChannel);
 }
