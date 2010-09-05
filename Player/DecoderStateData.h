@@ -58,8 +58,10 @@ public:
 	
 	void AllocateBufferList(UInt32 capacityFrames);
 	void DeallocateBufferList();
-	
+
 	void ResetBufferList();
+	
+	UInt32 ReadAudio(UInt32 frameCount);
 	
 	AudioDecoder			*mDecoder;
 

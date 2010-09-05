@@ -30,6 +30,8 @@
 
 #include "DecoderStateData.h"
 #include "AudioDecoder.h"
+#include "AllocateABL.h"
+#include "DeallocateABL.h"
 
 
 DecoderStateData::DecoderStateData()
@@ -62,29 +64,17 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 
 	AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
 	
-	UInt32 numBuffers = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? formatDescription.mChannelsPerFrame : 1;
-	UInt32 channelsPerBuffer = (kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags) ? 1 : formatDescription.mChannelsPerFrame;
-	
-	mBufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers)));
-	
-	mBufferList->mNumberBuffers = numBuffers;
-	
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-		mBufferList->mBuffers[i].mData = static_cast<void *>(calloc(mBufferCapacityFrames, formatDescription.mBytesPerFrame));
-		mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
-		mBufferList->mBuffers[i].mNumberChannels = channelsPerBuffer;
-	}
+	mBufferList = AllocateABL(formatDescription.mChannelsPerFrame, 
+							  formatDescription.mBytesPerFrame, 
+							  !(kAudioFormatFlagIsNonInterleaved & formatDescription.mFormatFlags), 
+							  mBufferCapacityFrames);
 }
 
 void DecoderStateData::DeallocateBufferList()
 {
 	if(NULL != mBufferList) {
 		mBufferCapacityFrames = 0;
-
-		for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
-			free(mBufferList->mBuffers[bufferIndex].mData), mBufferList->mBuffers[bufferIndex].mData = NULL;
-		
-		free(mBufferList), mBufferList = NULL;
+		mBufferList = DeallocateABL(mBufferList);
 	}
 }
 
@@ -94,4 +84,14 @@ void DecoderStateData::ResetBufferList()
 		
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
+}
+
+UInt32 DecoderStateData::ReadAudio(UInt32 frameCount)
+{
+	if(NULL == mDecoder)
+		return 0;
+
+	ResetBufferList();
+
+	return mDecoder->ReadAudio(mBufferList, frameCount);
 }
