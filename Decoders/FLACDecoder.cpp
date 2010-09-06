@@ -341,13 +341,13 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
 	
 	mFormat.mSampleRate			= mStreamInfo.sample_rate;
 	mFormat.mChannelsPerFrame	= mStreamInfo.channels;
 	mFormat.mBitsPerChannel		= mStreamInfo.bits_per_sample;
 	
-	mFormat.mBytesPerPacket		= sizeof(FLAC__int32);
+	mFormat.mBytesPerPacket		= (mStreamInfo.bits_per_sample + 7) / 8;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
@@ -372,7 +372,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(FLAC__int32), false, mStreamInfo.max_blocksize);
+	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, mFormat.mBytesPerPacket, false, mStreamInfo.max_blocksize);
 	
 	if(NULL == mBufferList) {
 		if(error)
@@ -447,23 +447,23 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	
 	for(;;) {
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(FLAC__int32));
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(FLAC__int32));
+		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
+		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			FLAC__int32 *pullBuffer = static_cast<FLAC__int32 *>(bufferList->mBuffers[i].mData);
-			memcpy(pullBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(FLAC__int32));
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(FLAC__int32));
+			unsigned char *pullBuffer = static_cast<unsigned char *>(bufferList->mBuffers[i].mData);
+			memcpy(pullBuffer + (framesToSkip * mFormat.mBytesPerFrame), mBufferList->mBuffers[i].mData, framesToCopy * mFormat.mBytesPerFrame);
+			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * mFormat.mBytesPerFrame);
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				pullBuffer = static_cast<FLAC__int32 *>(mBufferList->mBuffers[i].mData);
-				memmove(pullBuffer, pullBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(FLAC__int32));
+				pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[i].mData);
+				memmove(pullBuffer, pullBuffer + (framesToCopy * mFormat.mBytesPerFrame), (framesInBuffer - framesToCopy) * mFormat.mBytesPerFrame);
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(FLAC__int32));
+			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * mFormat.mBytesPerFrame);
 		}
 		
 		framesRead += framesToCopy;
@@ -499,18 +499,91 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 	// Avoid segfaults
 	if(NULL == mBufferList || mBufferList->mNumberBuffers != frame->header.channels)
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-	
-	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
-	UInt32 shift = static_cast<UInt32>((8 * sizeof(FLAC__int32)) - frame->header.bits_per_sample);
-	
-	for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-		FLAC__int32 *pullBuffer = static_cast<FLAC__int32 *>(mBufferList->mBuffers[channel].mData);
-		
-		for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-			*pullBuffer++ = buffer[channel][sample] << shift;
-		
-		mBufferList->mBuffers[channel].mNumberChannels		= 1;
-		mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(FLAC__int32));
+
+	// Convert to native endian packed samples
+	switch(mFormat.mBytesPerFrame) {
+		case 1:
+		{
+			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+				char *pullBuffer = static_cast<char *>(mBufferList->mBuffers[channel].mData);
+				
+				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
+					*pullBuffer++ = static_cast<char>(buffer[channel][sample]);
+				
+				mBufferList->mBuffers[channel].mNumberChannels		= 1;
+				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(char));
+			}
+
+			break;
+		}
+
+		case 2:
+		{
+			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+				short *pullBuffer = static_cast<short *>(mBufferList->mBuffers[channel].mData);
+				
+				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
+					*pullBuffer++ = static_cast<short>(buffer[channel][sample]);
+				
+				mBufferList->mBuffers[channel].mNumberChannels		= 1;
+				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(short));
+			}
+			
+			break;
+		}
+
+		case 3:
+		{
+			if(OSBigEndian == OSHostByteOrder()) {
+				for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+					unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
+					
+					FLAC__int32 value;
+					for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
+						value = buffer[channel][sample];
+						*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
+						*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
+						*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
+					}
+					
+					mBufferList->mBuffers[channel].mNumberChannels		= 1;
+					mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
+				}
+			}
+			else if(OSLittleEndian == OSHostByteOrder()) {
+				for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+					unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
+					
+					FLAC__int32 value;
+					for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
+						value = buffer[channel][sample];
+						*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
+						*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
+						*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
+					}
+					
+					mBufferList->mBuffers[channel].mNumberChannels		= 1;
+					mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
+				}
+			}
+			
+			break;
+		}
+
+		case 4:
+		{
+			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+				int *pullBuffer = static_cast<int *>(mBufferList->mBuffers[channel].mData);
+				
+				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
+					*pullBuffer++ = static_cast<int>(buffer[channel][sample]);
+				
+				mBufferList->mBuffers[channel].mNumberChannels		= 1;
+				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(int));
+			}
+			
+			break;
+		}
 	}
 	
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;	
