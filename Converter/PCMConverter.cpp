@@ -49,8 +49,8 @@ PCMConverter::PCMConverter(const AudioStreamBasicDescription& sourceFormat, cons
 	if(1 < mSourceFormat.mChannelsPerFrame && !(kAudioFormatFlagIsNonInterleaved & mSourceFormat.mFormatFlags))
 		throw std::runtime_error("Only deinterleaved source formats are supported by PCMConverter");
 
-	if(mSourceFormat.mChannelsPerFrame != mDestinationFormat.mChannelsPerFrame)
-		throw std::runtime_error("Channel mapping is not supported by PCMConverter");
+	for(UInt32 i = 0; i < std::min(mSourceFormat.mChannelsPerFrame, mDestinationFormat.mChannelsPerFrame); ++i)
+		mChannelMap[i] = i;
 }
 
 PCMConverter::~PCMConverter()
@@ -120,7 +120,11 @@ PCMConverter::ConvertToFloat(const AudioBufferList *inputBuffer, AudioBufferList
 	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				float *output = static_cast<float *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vdpsp(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
@@ -132,7 +136,11 @@ PCMConverter::ConvertToFloat(const AudioBufferList *inputBuffer, AudioBufferList
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				float *output = static_cast<float *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vdpsp(input, 1, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
@@ -163,7 +171,11 @@ PCMConverter::ConvertToDouble(const AudioBufferList *inputBuffer, AudioBufferLis
 	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mDestinationFormat.mFormatFlags)) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsaddD(input, 1, &zero, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
@@ -175,7 +187,11 @@ PCMConverter::ConvertToDouble(const AudioBufferList *inputBuffer, AudioBufferLis
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsaddD(input, 1, &zero, output + outputChannelIndex, outputBuffer->mBuffers[outputBufferIndex].mNumberChannels, frameCount);
@@ -208,7 +224,11 @@ PCMConverter::ConvertToPacked8(const AudioBufferList *inputBuffer, AudioBufferLi
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				char *output = static_cast<char *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -221,7 +241,11 @@ PCMConverter::ConvertToPacked8(const AudioBufferList *inputBuffer, AudioBufferLi
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -245,7 +269,11 @@ PCMConverter::ConvertToPacked16(const AudioBufferList *inputBuffer, AudioBufferL
 	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				short *output = static_cast<short *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -267,7 +295,11 @@ PCMConverter::ConvertToPacked16(const AudioBufferList *inputBuffer, AudioBufferL
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				unsigned short *output = static_cast<unsigned short *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -299,7 +331,11 @@ PCMConverter::ConvertToPacked24(const AudioBufferList *inputBuffer, AudioBufferL
 	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (3 * outputChannelIndex);
 
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -331,7 +367,11 @@ PCMConverter::ConvertToPacked24(const AudioBufferList *inputBuffer, AudioBufferL
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (3 * outputChannelIndex);
 				
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -373,7 +413,11 @@ PCMConverter::ConvertToPacked32(const AudioBufferList *inputBuffer, AudioBufferL
 	if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				int *output = static_cast<int *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -395,7 +439,11 @@ PCMConverter::ConvertToPacked32(const AudioBufferList *inputBuffer, AudioBufferL
 	else {
 		for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 			for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-				double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+				if(mChannelMap.end() == it)
+					continue;
+				
+				double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 				unsigned int *output = static_cast<unsigned int *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -446,7 +494,11 @@ PCMConverter::ConvertToHighAligned32(const AudioBufferList *inputBuffer, AudioBu
 			if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
 				for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 					for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-						double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+						std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+						if(mChannelMap.end() == it)
+							continue;
+						
+						double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 						unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (4 * outputChannelIndex);
 						
 						vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -480,7 +532,11 @@ PCMConverter::ConvertToHighAligned32(const AudioBufferList *inputBuffer, AudioBu
 			else {
 				for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 					for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-						double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+						std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+						if(mChannelMap.end() == it)
+							continue;
+						
+						double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 						unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (4 * outputChannelIndex);
 						
 						vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -549,7 +605,11 @@ PCMConverter::ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBuf
 			if(kAudioFormatFlagIsSignedInteger & mDestinationFormat.mFormatFlags) {
 				for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 					for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-						double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+						std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+						if(mChannelMap.end() == it)
+							continue;
+						
+						double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 						unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (4 * outputChannelIndex);
 						
 						vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);
@@ -583,7 +643,11 @@ PCMConverter::ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBuf
 			else {
 				for(UInt32 outputBufferIndex = 0, inputBufferIndex = 0; outputBufferIndex < outputBuffer->mNumberBuffers; ++outputBufferIndex) {
 					for(UInt32 outputChannelIndex = 0; outputChannelIndex < outputBuffer->mBuffers[outputBufferIndex].mNumberChannels; ++outputChannelIndex, ++inputBufferIndex) {
-						double *input = static_cast<double *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+						std::map<int, int>::iterator it = mChannelMap.find(inputBufferIndex);
+						if(mChannelMap.end() == it)
+							continue;
+						
+						double *input = static_cast<double *>(inputBuffer->mBuffers[it->second].mData);
 						unsigned char *output = static_cast<unsigned char *>(outputBuffer->mBuffers[outputBufferIndex].mData) + (4 * outputChannelIndex);
 						
 						vDSP_vsmulD(input, 1, &maxSampleValue, input, 1, frameCount);

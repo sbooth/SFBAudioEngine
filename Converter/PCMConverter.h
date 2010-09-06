@@ -31,7 +31,7 @@
 #pragma once
 
 #include "AudioConverter.h"
-
+#include <map>
 
 // ========================================
 // A PCM converter
@@ -42,6 +42,9 @@ public:
 	// ========================================
 	PCMConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat);
 	virtual ~PCMConverter();
+
+	// The mapping of input channels to output channels
+	inline std::map<int, int>& GetChannelMap()							{ return mChannelMap; }
 
 	// ========================================
 	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
@@ -60,4 +63,6 @@ private:
 	
 	UInt32 ConvertToLowAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	UInt32 ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);	
+
+	std::map<int, int> mChannelMap;
 };
