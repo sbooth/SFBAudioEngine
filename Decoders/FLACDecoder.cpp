@@ -30,7 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
-#include <libkern/OSAtomic.h>
+#include <libkern/OSByteOrder.h>
 #include <stdexcept>
 #include <typeinfo>
 
