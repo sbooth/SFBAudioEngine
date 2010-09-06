@@ -42,8 +42,6 @@ public:
 	// ========================================
 	virtual ~AudioConverter();
 
-	virtual bool Reset();
-	
 	inline AudioStreamBasicDescription GetSourceFormat() const			{ return mSourceFormat; }
 	inline AudioStreamBasicDescription GetDestinationFormat() const		{ return mDestinationFormat; }
 	

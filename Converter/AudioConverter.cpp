@@ -46,8 +46,3 @@ AudioConverter::AudioConverter(const AudioStreamBasicDescription& sourceFormat, 
 
 AudioConverter::~AudioConverter()
 {}
-
-bool AudioConverter::Reset()
-{
-	return true;
-}
