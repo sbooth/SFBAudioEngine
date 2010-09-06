@@ -58,10 +58,14 @@ private:
 	UInt32 ConvertToPacked24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 23);
 	UInt32 ConvertToPacked32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale = 1u << 31);
 	
+	UInt32 ConvertToHighAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	UInt32 ConvertToHighAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToHighAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	UInt32 ConvertToHighAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	
+	UInt32 ConvertToLowAligned8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	UInt32 ConvertToLowAligned16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
+	UInt32 ConvertToLowAligned24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
 	UInt32 ConvertToLowAligned32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);	
 
 	std::map<int, int> mChannelMap;
