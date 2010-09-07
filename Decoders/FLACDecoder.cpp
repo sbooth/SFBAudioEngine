@@ -30,9 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
-#include <libkern/OSByteOrder.h>
 #include <stdexcept>
-#include <typeinfo>
 
 #include <FLAC/metadata.h>
 
@@ -341,7 +339,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 	
 	mFormat.mSampleRate			= mStreamInfo.sample_rate;
 	mFormat.mChannelsPerFrame	= mStreamInfo.channels;
@@ -352,6 +350,69 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
 	mFormat.mReserved			= 0;
+
+	// FLAC supports from 4 to 32 bits per sample
+	switch(mFormat.mBitsPerChannel) {
+		case 8:
+		case 16:
+		case 24:
+		case 32:
+			mFormat.mFormatFlags |= kAudioFormatFlagIsPacked;
+			break;
+
+		case 4 ... 7:
+		case 9 ... 15:
+		case 17 ... 23:
+		case 25 ... 31:
+			// Align high because Apple's AudioConverter doesn't handle low alignment
+			mFormat.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+			break;
+
+		default:
+		{
+			if(error) {
+				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																				   32,
+																				   &kCFTypeDictionaryKeyCallBacks,
+																				   &kCFTypeDictionaryValueCallBacks);
+				
+				CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																   NULL, 
+																   CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), ""), 
+																   displayName);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedDescriptionKey, 
+									 errorString);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedFailureReasonKey, 
+									 CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedRecoverySuggestionKey, 
+									 CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
+				
+				CFRelease(errorString), errorString = NULL;
+				CFRelease(displayName), displayName = NULL;
+				
+				*error = CFErrorCreate(kCFAllocatorDefault, 
+									   AudioDecoderErrorDomain, 
+									   AudioDecoderInputOutputError, 
+									   errorDictionary);
+				
+				CFRelease(errorDictionary), errorDictionary = NULL;				
+			}
+			
+			if(false == FLAC__stream_decoder_finish(mFLAC))
+				ERR("FLAC__stream_decoder_finish failed: %s", FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			
+			FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
+			
+			return false;
+		}
+	}
 	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'FLAC';
@@ -500,15 +561,18 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 	if(NULL == mBufferList || mBufferList->mNumberBuffers != frame->header.channels)
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-	// Convert to native endian packed samples
+	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
+	UInt32 shift = (kAudioFormatFlagIsPacked & mFormat.mFormatFlags) ? 0 : (8 * mFormat.mBytesPerFrame) - mFormat.mBitsPerChannel;
+
+	// Convert to native endian samples, high-aligned if necessary
 	switch(mFormat.mBytesPerFrame) {
 		case 1:
 		{
 			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
 				char *pullBuffer = static_cast<char *>(mBufferList->mBuffers[channel].mData);
-				
+
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<char>(buffer[channel][sample]);
+					*pullBuffer++ = static_cast<char>(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
 				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(char));
@@ -523,7 +587,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 				short *pullBuffer = static_cast<short *>(mBufferList->mBuffers[channel].mData);
 				
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<short>(buffer[channel][sample]);
+					*pullBuffer++ = static_cast<short>(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
 				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(short));
@@ -534,39 +598,29 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 
 		case 3:
 		{
-			if(OSBigEndian == OSHostByteOrder()) {
-				for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-					unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
-					
-					FLAC__int32 value;
-					for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
-						value = buffer[channel][sample];
-						*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
-						*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
-						*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
-					}
-					
-					mBufferList->mBuffers[channel].mNumberChannels		= 1;
-					mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
+			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
+				unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
+
+				FLAC__int32 value;
+				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
+					value = buffer[channel][sample] << shift;
+#if __BIG_ENDIAN__
+					*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
+					*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
+					*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
+#elif __LITTLE_ENDIAN__
+					*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
+					*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
+					*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
+#else
+#  error Unknown OS byte order
+#endif
 				}
+
+				mBufferList->mBuffers[channel].mNumberChannels		= 1;
+				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
 			}
-			else if(OSLittleEndian == OSHostByteOrder()) {
-				for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-					unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
-					
-					FLAC__int32 value;
-					for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
-						value = buffer[channel][sample];
-						*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
-						*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
-						*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
-					}
-					
-					mBufferList->mBuffers[channel].mNumberChannels		= 1;
-					mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
-				}
-			}
-			
+
 			break;
 		}
 
@@ -576,7 +630,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 				int *pullBuffer = static_cast<int *>(mBufferList->mBuffers[channel].mData);
 				
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<int>(buffer[channel][sample]);
+					*pullBuffer++ = static_cast<int>(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
 				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(int));
