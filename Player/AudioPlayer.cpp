@@ -1695,10 +1695,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
 			decoderState->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 
-			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat.mChannelsPerFrame, 
-													  mRingBufferFormat.mBytesPerFrame, 
-													  !(kAudioFormatFlagIsNonInterleaved & mRingBufferFormat.mFormatFlags), 
-													  RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -2291,11 +2288,7 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 	}
 
 	// Allocate the conversion buffer (data is read from the ring buffer into this buffer before conversion for output)
-	mConversionBuffer = AllocateABL(conversionBufferFormat.mChannelsPerFrame, 
-									conversionBufferFormat.mBytesPerFrame, 
-									!(kAudioFormatFlagIsNonInterleaved & conversionBufferFormat.mFormatFlags), 
-									bufferSizeFrames);
-	
+	mConversionBuffer = AllocateABL(conversionBufferFormat, bufferSizeFrames);
 	mOutputConverter = new PCMConverter(conversionBufferFormat, mStreamVirtualFormat);
 
 	return true;

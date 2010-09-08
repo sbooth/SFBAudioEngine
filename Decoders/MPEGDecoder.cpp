@@ -222,7 +222,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 		
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(float), false, mSamplesPerMPEGFrame);
+	mBufferList = AllocateABL(mFormat, mSamplesPerMPEGFrame);
 	
 	if(NULL == mBufferList) {
 		if(error)

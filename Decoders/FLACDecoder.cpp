@@ -433,7 +433,7 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, mFormat.mBytesPerPacket, false, mStreamInfo.max_blocksize);
+	mBufferList = AllocateABL(mFormat, mStreamInfo.max_blocksize);
 	
 	if(NULL == mBufferList) {
 		if(error)

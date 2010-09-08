@@ -231,7 +231,7 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat.mChannelsPerFrame, sizeof(float), false, MPC_FRAME_LENGTH);
+	mBufferList = AllocateABL(mFormat, MPC_FRAME_LENGTH);
 
 	if(NULL == mBufferList) {
 		if(error)

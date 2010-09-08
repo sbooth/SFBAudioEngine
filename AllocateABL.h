@@ -36,4 +36,5 @@
 // ========================================
 // Utility function for allocating an AudioBufferList struct
 // ========================================
+AudioBufferList * AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
 AudioBufferList * AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames);
