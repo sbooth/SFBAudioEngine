@@ -310,7 +310,7 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 {
 	double maxSampleValue = scale;
 	double unsignedSampleDelta = -maxSampleValue;
-	double normalizingFactor = 1 << 8;
+	double normalizingFactor = 1u << 8;
 
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
