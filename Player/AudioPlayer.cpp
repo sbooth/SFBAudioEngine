@@ -38,6 +38,7 @@
 #include <Accelerate/Accelerate.h>
 #include <stdexcept>
 #include <new>
+#include <algorithm>
 
 #include "AudioEngineDefines.h"
 #include "AudioPlayer.h"
@@ -158,22 +159,17 @@ collectorEntry(void *arg)
 // AudioConverter input callback
 // ========================================
 static OSStatus
-myConverterInputProc(AudioConverterRef				inAudioConverter,
-					 UInt32							*ioNumberDataPackets,
-					 AudioBufferList				*ioData,
-					 AudioStreamPacketDescription	**outDataPacketDescription,
-					 void*							inUserData)
-{
-	
-#pragma unused(inAudioConverter)
-#pragma unused(outDataPacketDescription)
-	
+mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
+							   UInt32							*ioNumberDataPackets,
+							   AudioBufferList					*ioData,
+							   AudioStreamPacketDescription		**outDataPacketDescription,
+							   void								*inUserData)
+{	
 	assert(NULL != inUserData);
 	assert(NULL != ioNumberDataPackets);
 	
-	AudioPlayer *player = static_cast<AudioPlayer *>(inUserData);
-	
-	return player->FillConversionBuffer(inAudioConverter, ioNumberDataPackets, ioData, outDataPacketDescription);
+	AudioPlayer *player = static_cast<AudioPlayer *>(inUserData);	
+	return player->FillSampleRateConversionBuffer(inAudioConverter, ioNumberDataPackets, ioData, outDataPacketDescription);
 }
 
 
@@ -181,7 +177,7 @@ myConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputStreamID(kAudioStreamUnknown), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mSampleRateConverter(NULL), mConversionBuffer(NULL), mOutputConverter(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mSampleRateConverters(NULL), mSampleRateConversionBuffers(NULL), mOutputConverters(NULL), mConversionBuffers(NULL), mFramesDecoded(0), mFramesRendered(0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -189,9 +185,6 @@ AudioPlayer::AudioPlayer()
 		throw std::bad_alloc();
 
 	mRingBuffer = new CARingBuffer();
-
-	memset(&mRingBufferFormat, 0, sizeof(AudioStreamBasicDescription));
-	memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
 
 	// ========================================
 	// Create the semaphore and mutex to be used by the decoding and rendering threads
@@ -404,22 +397,37 @@ AudioPlayer::~AudioPlayer()
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
 
-	// Clean up the converter and conversion buffer
-	if(mSampleRateConverter) {
-		OSStatus result = AudioConverterDispose(mSampleRateConverter);
+	// Clean up the converters and conversion buffers
+	if(mSampleRateConverters) {
+		for(UInt32 i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+			OSStatus result = AudioConverterDispose(mSampleRateConverters[i]);
+			mSampleRateConverters[i] = NULL;
+
+			if(noErr != result)
+				ERR("AudioConverterDispose failed: %i", result);
+		}
 		
-		if(noErr != result)
-			ERR("AudioConverterDispose failed: %i", result);
-		
-		mSampleRateConverter = NULL;
+		delete [] mSampleRateConverters, mSampleRateConverters = NULL;
 	}
 
-	if(mConversionBuffer)
-		mConversionBuffer = DeallocateABL(mConversionBuffer);
+	if(mSampleRateConversionBuffers) {
+		for(UInt32 i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+			mSampleRateConversionBuffers[i] = DeallocateABL(mSampleRateConversionBuffers[i]);
+		delete [] mSampleRateConversionBuffers, mSampleRateConversionBuffers = NULL;
+	}
 	
-	if(mOutputConverter)
-		delete mOutputConverter, mOutputConverter = NULL;
-	
+	if(mOutputConverters) {
+		for(UInt32 i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+		delete [] mOutputConverters, mOutputConverters = NULL;
+	}
+
+	if(mConversionBuffers) {
+		for(UInt32 i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+			mConversionBuffers[i] = DeallocateABL(mConversionBuffers[i]);
+		delete [] mConversionBuffers, mConversionBuffers = NULL;
+	}
+
 	// Destroy the decoder and collector semaphores
 	kern_return_t result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
 #if DEBUG
@@ -972,82 +980,61 @@ bool AudioPlayer::StopHoggingOutputDevice()
 	return true;
 }
 
-bool AudioPlayer::SetOutputStreamID(AudioStreamID streamID)
+
+#pragma mark Stream Management
+
+
+bool AudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams)
 {
-	assert(kAudioStreamUnknown != streamID);
-	
-	// Get rid of any unneeded property listeners
-	if(kAudioStreamUnknown != mOutputStreamID) {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
+	streams.clear();
 
-		OSStatus result = AudioObjectRemovePropertyListener(mOutputStreamID, 
-															&propertyAddress, 
-															myAudioObjectPropertyListenerProc, 
-															this);
-		
-		if(kAudioHardwareNoError != result)
-			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
-
-#if DEBUG
-		propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
-		
-		result = AudioObjectRemovePropertyListener(mOutputStreamID, 
-												   &propertyAddress, 
-												   myAudioObjectPropertyListenerProc, 
-												   this);
-		
-		if(kAudioHardwareNoError != result)
-			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
-#endif
-	}
-	
-	mOutputStreamID = streamID;
-	
-	// Get the stream's virtual format
-	memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
-	if(false == GetOutputStreamVirtualFormat(mStreamVirtualFormat))
-		return false;
-	
-	// Listen for changes to the stream's formats
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyVirtualFormat, 
-		kAudioObjectPropertyScopeGlobal, 
+		kAudioDevicePropertyStreams, 
+		kAudioDevicePropertyScopeOutput, 
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	OSStatus result = AudioObjectAddPropertyListener(mOutputStreamID, 
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
 													 &propertyAddress, 
-													 myAudioObjectPropertyListenerProc, 
-													 this);
+													 0,
+													 NULL,
+													 &dataSize);
 	
 	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectAddPropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+		ERR("AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams) failed: %i", result);
+		return false;
+	}
+	
+	UInt32 streamCount = static_cast<UInt32>(dataSize / sizeof(AudioStreamID));
+	AudioStreamID audioStreamIDs [streamCount];
+	
+	result = AudioObjectGetPropertyData(mOutputDeviceID, 
+										&propertyAddress, 
+										0, 
+										NULL, 
+										&dataSize, 
+										audioStreamIDs);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyStreams) failed: %i", result);
 		return false;
 	}
 
-#if DEBUG
-	propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
-	
-	result = AudioObjectAddPropertyListener(mOutputStreamID, 
-											&propertyAddress, 
-											myAudioObjectPropertyListenerProc, 
-											this);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectAddPropertyListener (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
-		return false;
-	}
-#endif
-	
+	streams.reserve(streamCount);
+	for(UInt32 i = 0; i < streamCount; ++i)
+		streams.push_back(audioStreamIDs[i]);
+
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat)
+bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat)
 {
+	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
+		ERR("Unknown AudioStreamID: %#x", streamID);
+		return false;
+	}
+
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioStreamPropertyVirtualFormat,
 		kAudioObjectPropertyScopeGlobal, 
@@ -1056,7 +1043,7 @@ bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virt
 	
 	UInt32 dataSize = sizeof(virtualFormat);
 	
-	OSStatus result = AudioObjectGetPropertyData(mOutputStreamID,
+	OSStatus result = AudioObjectGetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
 												 NULL,
@@ -1068,18 +1055,23 @@ bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virt
 		return false;
 	}
 	
-	return true;
+	return true;	
 }
 
-bool AudioPlayer::SetOutputStreamVirtualFormat(const AudioStreamBasicDescription& virtualFormat)
+bool AudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat)
 {
+	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
+		ERR("Unknown AudioStreamID: %#x", streamID);
+		return false;
+	}
+	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioStreamPropertyVirtualFormat, 
 		kAudioObjectPropertyScopeGlobal, 
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	OSStatus result = AudioObjectSetPropertyData(mOutputStreamID,
+	OSStatus result = AudioObjectSetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
 												 NULL,
@@ -1094,8 +1086,13 @@ bool AudioPlayer::SetOutputStreamVirtualFormat(const AudioStreamBasicDescription
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat)
+bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat)
 {
+	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
+		ERR("Unknown AudioStreamID: %#x", streamID);
+		return false;
+	}
+	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioStreamPropertyPhysicalFormat, 
 		kAudioObjectPropertyScopeGlobal, 
@@ -1104,7 +1101,7 @@ bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& phy
 	
 	UInt32 dataSize = sizeof(physicalFormat);
 	
-	OSStatus result = AudioObjectGetPropertyData(mOutputStreamID,
+	OSStatus result = AudioObjectGetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
 												 NULL,
@@ -1119,15 +1116,20 @@ bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& phy
 	return true;
 }
 
-bool AudioPlayer::SetOutputStreamPhysicalFormat(const AudioStreamBasicDescription& physicalFormat)
+bool AudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat)
 {
+	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
+		ERR("Unknown AudioStreamID: %#x", streamID);
+		return false;
+	}
+	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioStreamPropertyPhysicalFormat, 
 		kAudioObjectPropertyScopeGlobal, 
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	OSStatus result = AudioObjectSetPropertyData(mOutputStreamID,
+	OSStatus result = AudioObjectSetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
 												 NULL,
@@ -1189,7 +1191,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBufferFormat.mSampleRate			= format.mSampleRate;
 		mRingBufferFormat.mChannelsPerFrame		= format.mChannelsPerFrame;
 
-		if(!CreateConverterAndConversionBuffer())
+		if(!CreateConvertersAndConversionBuffers())
 			return false;
 		
 		// Allocate enough space in the ring buffer for the new format
@@ -1203,7 +1205,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
 		bool	formatsMatch			= (nextFormat.mSampleRate == mRingBufferFormat.mSampleRate && nextFormat.mChannelsPerFrame == mRingBufferFormat.mChannelsPerFrame);
-	//	bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(&nextChannelLayout, &mChannelLayout);
+	//	bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(&nextChannelLayout, &mRingBufferChannelLayout);
 		
 		// The two files can be joined seamlessly only if they have the same formats and channel layouts
 		if(false == formatsMatch /*|| false == channelLayoutsMatch*/)
@@ -1301,47 +1303,55 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		return kAudioHardwareNoError;
 	}
 
-	// If an output converter doesn't exist, return silence
-	if(NULL == mOutputConverter)
-		return kAudioHardwareNoError;
+	// Iterate through each stream and render output in the stream's format
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
 
-	UInt32 desiredFrames = outOutputData->mBuffers[0].mDataByteSize / mStreamVirtualFormat.mBytesPerFrame;
-
-	// Reset state
-	mFramesRenderedLastPass = 0;
-	
-	UInt32 framesToRead = std::min(framesAvailableToRead, desiredFrames);
-
-	// Convert the sample rate, if required
-	if(mSampleRateConverter) {
-		OSStatus result = AudioConverterFillComplexBuffer(mSampleRateConverter, 
-														  myConverterInputProc,
-														  this,
-														  &framesToRead, 
-														  mConversionBuffer,
-														  NULL);
-		
-		if(noErr != result)
-			ERR("AudioConverterFillComplexBuffer failed: %i", result);		
-	}
-	else {
-		CARingBufferError result = mRingBuffer->Fetch(mConversionBuffer, framesToRead, mFramesRendered, false);
-		
-		if(kCARingBufferError_OK != result) {
-			ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
-			return ioErr;
+		std::map<AudioStreamID, AudioStreamBasicDescription>::const_iterator it = mStreamVirtualFormats.find(streamID);
+		if(mStreamVirtualFormats.end() == it) {
+			ERR("Unknown virtual format for stream %#x", streamID);
+			continue;
 		}
 
-		OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
+		UInt32 desiredFrames = outOutputData->mBuffers[0].mDataByteSize / it->second.mBytesPerFrame;
 		
-		mFramesRenderedLastPass += framesToRead;
+		// Reset state
+		mFramesRenderedLastPass = 0;
+		
+		UInt32 framesToRead = std::min(framesAvailableToRead, desiredFrames);
+		
+		// Convert to the stream's sample rate, if required
+		if(mSampleRateConverters[i]) {
+			OSStatus result = AudioConverterFillComplexBuffer(mSampleRateConverters[i], 
+															  mySampleRateConverterInputProc,
+															  this,
+															  &framesToRead, 
+															  mConversionBuffers[i],
+															  NULL);
+			
+			if(noErr != result)
+				ERR("AudioConverterFillComplexBuffer failed: %i", result);		
+		}
+		// Otherwise just pull audio from the ring buffer
+		else {
+			CARingBufferError result = mRingBuffer->Fetch(mConversionBuffers[i], framesToRead, mFramesRendered, false);
+			
+			if(kCARingBufferError_OK != result) {
+				ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
+				return ioErr;
+			}
+			
+			OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
+			
+			mFramesRenderedLastPass += framesToRead;
+		}
+		
+		// Convert to the output device's format
+		UInt32 framesConverted = mOutputConverters[i]->Convert(mConversionBuffers[i], outOutputData, framesToRead);
+		
+		if(framesConverted != framesToRead)
+			ERR("Conversion to output format failed; all frames may not be rendered");
 	}
-
-	// Convert to the output device's format
-	UInt32 framesConverted = mOutputConverter->Convert(mConversionBuffer, outOutputData, framesToRead);
-	
-	if(framesConverted != framesToRead)
-		ERR("Conversion to output format failed; all frames may not be rendered");
 	
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
@@ -1400,6 +1410,8 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 												 UInt32								inNumberAddresses,
 												 const AudioObjectPropertyAddress	inAddresses[])
 {
+	// The HAL automatically stops output before this is called, and restarts output afterward if necessary
+
 	// ========================================
 	// AudioDevice properties
 	if(inObjectID == mOutputDeviceID) {
@@ -1435,54 +1447,27 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				{
 					OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
-					if(OutputIsRunning())
-						StopOutput();
+					// Stop observing properties on the defunct streams
+					if(!RemoveVirtualFormatPropertyListeners())
+						ERR("RemoveVirtualFormatPropertyListeners failed");
 
-					// If the streams changed, the virtual format may have changed as well					
-					UInt32 dataSize = sizeof(currentAddress);
-					
-					OSStatus result = AudioObjectGetPropertyDataSize(inObjectID, 
-																	 &currentAddress, 
-																	 0,
-																	 NULL,
-																	 &dataSize);
-					
-					if(kAudioHardwareNoError != result) {
-						ERR("AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams) failed: %i", result);
+					// Update our list of cached streams
+					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
 						continue;
-					}
-					
-					UInt32 streamCount = static_cast<UInt32>(dataSize / sizeof(AudioStreamID));
-					AudioStreamID audioStreams [streamCount];
-					
-					if(1 != streamCount)
-						LOG("Found %i AudioStream(s) on device %#x", streamCount, mOutputDeviceID);
-					
-					result = AudioObjectGetPropertyData(inObjectID, 
-														&currentAddress, 
-														0, 
-														NULL, 
-														&dataSize, 
-														audioStreams);
-					
-					if(kAudioHardwareNoError != result) {
-						ERR("AudioObjectGetPropertyData (kAudioDevicePropertyStreams) failed: %i", result);
-						continue;
-					}
-					
-					// For now, use the first stream
-					if(false == SetOutputStreamID(audioStreams[0])) 
-						ERR("Unable to set output stream ID");
 
-					if(false == CreateConverterAndConversionBuffer())
-						ERR("Couldn't create AudioConverter");
+					// Populate the virtual formats and observe the new streams for changes
+					if(!BuildVirtualFormatsCache())
+						ERR("BuildVirtualFormatsCache failed");
 
-					if(IsPlaying() && !OutputIsRunning() && !(eAudioPlayerFlagSampleRateChanging & mFlags))
-						StartOutput();
+					if(!AddVirtualFormatPropertyListeners())
+						ERR("AddVirtualFormatPropertyListeners failed");
+					
+					if(!CreateConvertersAndConversionBuffers())
+						ERR("CreateConvertersAndConversionBuffers failed");
 
 					OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 					
-					LOG("-> kAudioDevicePropertyStreams [%#x] changed, using %#x", inObjectID, audioStreams[0]);
+					LOG("-> kAudioDevicePropertyStreams [%#x] changed", inObjectID);
 
 					break;
 				}
@@ -1520,7 +1505,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 	}
 	// ========================================
 	// AudioStream properties
-	else if(inObjectID == mOutputStreamID) {
+	else if(mOutputDeviceStreamIDs.end() != std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), inObjectID)) {
 		for(UInt32 addressIndex = 0; addressIndex < inNumberAddresses; ++addressIndex) {
 			AudioObjectPropertyAddress currentAddress = inAddresses[addressIndex];
 			
@@ -1529,27 +1514,32 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				{
 					OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
-					if(OutputIsRunning())
-						StopOutput();
-
 					// Get the new virtual format
-					memset(&mStreamVirtualFormat, 0, sizeof(AudioStreamBasicDescription));
-					if(false == GetOutputStreamVirtualFormat(mStreamVirtualFormat))
-						ERR("Couldn't get stream virtual format");
+					AudioStreamBasicDescription virtualFormat;
+					UInt32 dataSize = sizeof(virtualFormat);
+					
+					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
+																 &currentAddress, 
+																 0,
+																 NULL, 
+																 &dataSize,
+																 &virtualFormat);
+					
+					if(kAudioHardwareNoError != result) {
+						ERR("AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+						continue;
+					}
 
 #if DEBUG
-					else {
-						CAStreamBasicDescription virtualFormat(mStreamVirtualFormat);
-						fprintf(stderr, "-> kAudioStreamPropertyVirtualFormat [%#x]: ", inObjectID);
-						virtualFormat.Print(stderr);
-					}
+					CAStreamBasicDescription streamVirtualFormat(virtualFormat);
+					fprintf(stderr, "-> kAudioStreamPropertyVirtualFormat [%#x]: ", inObjectID);
+					streamVirtualFormat.Print(stderr);
 #endif
 
-					if(false == CreateConverterAndConversionBuffer())
-						ERR("Couldn't create AudioConverter");
+					mStreamVirtualFormats[inObjectID] = virtualFormat;
 
-					if(IsPlaying() && !OutputIsRunning() && !(eAudioPlayerFlagSampleRateChanging & mFlags))
-						StartOutput();
+					if(false == CreateConvertersAndConversionBuffers())
+						ERR("CreateConvertersAndConversionBuffers failed");
 
 					OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
@@ -1561,12 +1551,23 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				{
 					// Get the new physical format
 					CAStreamBasicDescription physicalFormat;
-					if(false == GetOutputStreamPhysicalFormat(physicalFormat))
-						ERR("Couldn't get stream physical format");
-					else {
-						fprintf(stderr, "-> kAudioStreamPropertyPhysicalFormat [%#x]: ", inObjectID);
-						physicalFormat.Print(stderr);
+					UInt32 dataSize = sizeof(physicalFormat);
+					
+					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
+																 &currentAddress, 
+																 0,
+																 NULL, 
+																 &dataSize,
+																 &physicalFormat);
+					
+					if(kAudioHardwareNoError != result) {
+						ERR("AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: %i", result);
+						continue;
 					}
+
+					fprintf(stderr, "-> kAudioStreamPropertyPhysicalFormat [%#x]: ", inObjectID);
+					physicalFormat.Print(stderr);
+
 					break;
 				}
 #endif
@@ -1577,12 +1578,11 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 	return kAudioHardwareNoError;			
 }
 
-OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
-										   UInt32						*ioNumberDataPackets,
-										   AudioBufferList				*ioData,
-										   AudioStreamPacketDescription	**outDataPacketDescription)
+OSStatus AudioPlayer::FillSampleRateConversionBuffer(AudioConverterRef				inAudioConverter,
+													 UInt32							*ioNumberDataPackets,
+													 AudioBufferList				*ioData,
+													 AudioStreamPacketDescription	**outDataPacketDescription)
 {
-#pragma unused(inAudioConverter)
 #pragma unused(outDataPacketDescription)
 
 	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
@@ -1596,28 +1596,37 @@ OSStatus AudioPlayer::FillConversionBuffer(AudioConverterRef			inAudioConverter,
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = std::min(framesAvailableToRead, *ioNumberDataPackets);
 
-	CARingBufferError result = mRingBuffer->Fetch(mConversionBuffer, framesToRead, mFramesRendered, false);
-
-	if(kCARingBufferError_OK != result) {
-		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
-		*ioNumberDataPackets = 0;
-		return ioErr;
+	// Determine which sample rate conversion buffer should be written to
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(inAudioConverter == 	mSampleRateConverters[i]) {
+			CARingBufferError result = mRingBuffer->Fetch(mSampleRateConversionBuffers[i], framesToRead, mFramesRendered, false);
+			
+			if(kCARingBufferError_OK != result) {
+				ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
+				*ioNumberDataPackets = 0;
+				return ioErr;
+			}
+			
+			OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
+			
+			// This may be called multiple times from AudioConverterFillComplexBuffer, so keep an additive tally
+			// of how many frames were rendered
+			mFramesRenderedLastPass += framesToRead;
+			
+			// Point ioData at our converted audio
+			ioData->mNumberBuffers = mSampleRateConversionBuffers[i]->mNumberBuffers;
+			for(UInt32 bufferIndex = 0; bufferIndex < mSampleRateConversionBuffers[i]->mNumberBuffers; ++bufferIndex)
+				ioData->mBuffers[bufferIndex] = mSampleRateConversionBuffers[i]->mBuffers[bufferIndex];
+			
+			*ioNumberDataPackets = framesToRead;
+			
+			return noErr;
+		}	
 	}
-	
-	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
-	
-	// This may be called multiple times from AudioConverterFillComplexBuffer, so keep an additive tally
-	// of how many frames were rendered
-	mFramesRenderedLastPass += framesToRead;
 
-	// Point ioData at our decoded audio
-	ioData->mNumberBuffers = mConversionBuffer->mNumberBuffers;
-	for(UInt32 bufferIndex = 0; bufferIndex < mConversionBuffer->mNumberBuffers; ++bufferIndex)
-		ioData->mBuffers[bufferIndex] = mConversionBuffer->mBuffers[bufferIndex];
-	
-	*ioNumberDataPackets = framesToRead;
-
-	return noErr;
+	// The converter wasn't found
+	*ioNumberDataPackets = 0;
+	return ioErr;
 }
 
 
@@ -1880,7 +1889,8 @@ bool AudioPlayer::OpenOutput()
 		ERR("AudioDeviceCreateIOProcID failed: %i", result);
 		return false;
 	}
-	
+
+	// Register device property listeners
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDeviceProcessorOverload, 
 		kAudioObjectPropertyScopeGlobal, 
@@ -1897,18 +1907,6 @@ bool AudioPlayer::OpenOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDeviceProcessorOverload) failed: %i", result);
 
-#if DEBUG
-	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result)
-		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
-#endif
-
 	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
 	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
@@ -1922,6 +1920,16 @@ bool AudioPlayer::OpenOutput()
 	}
 
 #if DEBUG
+	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
+	
+    result = AudioObjectAddPropertyListener(mOutputDeviceID,
+											&propertyAddress,
+											myAudioObjectPropertyListenerProc,
+											this);
+	
+	if(kAudioHardwareNoError != result)
+		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
+
 	propertyAddress.mSelector = kAudioObjectPropertyName;
 
 	CFStringRef deviceName = NULL;
@@ -1973,39 +1981,29 @@ bool AudioPlayer::OpenOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyStreams) failed: %i", result);
 
-    result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
-											&propertyAddress, 
-											0,
-											NULL,
-											&dataSize);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams) failed: %i", result);
+	// Get the device's stream information
+	if(!GetOutputStreams(mOutputDeviceStreamIDs))
 		return false;
-	}
-	
-	UInt32 streamCount = static_cast<UInt32>(dataSize / sizeof(AudioStreamID));
-	AudioStreamID audioStreams [streamCount];
-	
-	if(1 != streamCount)
-		LOG("Found %i AudioStream(s) on device %x", streamCount, mOutputDeviceID);
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										&dataSize, 
-										audioStreams);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyStreams) failed: %i", result);
-		return false;
-	}
-	
-	// For now, use the first stream
-	if(false == SetOutputStreamID(audioStreams[0]))
+
+	// Populate the virtual formats
+	if(!BuildVirtualFormatsCache())
 		return false;
 	
+	if(!AddVirtualFormatPropertyListeners())
+		return false;
+
+	mSampleRateConverters = new AudioConverterRef [mOutputDeviceStreamIDs.size()];
+	memset(mSampleRateConverters, 0, sizeof(mSampleRateConverters));
+
+	mSampleRateConversionBuffers = new AudioBufferList * [mOutputDeviceStreamIDs.size()];
+	memset(mSampleRateConversionBuffers, 0, sizeof(mSampleRateConversionBuffers));
+
+	mConversionBuffers = new AudioBufferList * [mOutputDeviceStreamIDs.size()];
+	memset(mConversionBuffers, 0, sizeof(mConversionBuffers));
+
+	mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
+	memset(mOutputConverters, 0, sizeof(mOutputConverters));
+
 	return true;
 }
 
@@ -2069,6 +2067,16 @@ bool AudioPlayer::CloseOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyStreams) failed: %i", result);
 
+	RemoveVirtualFormatPropertyListeners();
+
+	mOutputDeviceStreamIDs.clear();
+	mStreamVirtualFormats.clear();
+
+	delete [] mSampleRateConverters, mSampleRateConverters = NULL;
+	delete [] mSampleRateConversionBuffers, mSampleRateConversionBuffers = NULL;
+	delete [] mConversionBuffers, mConversionBuffers = NULL;
+	delete [] mOutputConverters, mOutputConverters = NULL;
+	
 	return true;
 }
 
@@ -2133,12 +2141,14 @@ bool AudioPlayer::ResetOutput()
 {
 	LOG("Resetting output");
 
-	if(NULL != mSampleRateConverter) {
-		OSStatus result = AudioConverterReset(mSampleRateConverter);
-		
-		if(noErr != result) {
-			ERR("AudioConverterReset failed: %d", result);
-			return false;
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mSampleRateConverters[i]) {
+			OSStatus result = AudioConverterReset(mSampleRateConverters[i]);
+			
+			if(noErr != result) {
+				ERR("AudioConverterReset failed: %d", result);
+				return false;
+			}
 		}
 	}
 
@@ -2212,23 +2222,34 @@ void AudioPlayer::StopActiveDecoders()
 	semaphore_signal(mCollectorSemaphore);
 }
 
-bool AudioPlayer::CreateConverterAndConversionBuffer()
+bool AudioPlayer::CreateConvertersAndConversionBuffers()
 {
 	// Clean up
-	if(mSampleRateConverter) {
-		OSStatus result = AudioConverterDispose(mSampleRateConverter);
-		
-		if(noErr != result)
-			ERR("AudioConverterDispose failed: %i", result);
-		
-		mSampleRateConverter = NULL;
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mSampleRateConverters[i]) {
+			OSStatus result = AudioConverterDispose(mSampleRateConverters[i]);
+			
+			if(noErr != result)
+				ERR("AudioConverterDispose failed: %i", result);
+
+			mSampleRateConverters[i] = NULL;
+		}
 	}
 	
-	if(mConversionBuffer)
-		mConversionBuffer = DeallocateABL(mConversionBuffer);
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mSampleRateConversionBuffers[i])
+			mSampleRateConversionBuffers[i] = DeallocateABL(mSampleRateConversionBuffers[i]);
+	}
 	
-	if(mOutputConverter)
-		delete mOutputConverter, mOutputConverter = NULL;
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mConversionBuffers[i])
+			mConversionBuffers[i] = DeallocateABL(mConversionBuffers[i]);
+	}
+	
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mOutputConverters[i])
+			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+	}
 
 	// Get the output buffer size for the device
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -2252,44 +2273,247 @@ bool AudioPlayer::CreateConverterAndConversionBuffer()
 		return false;
 	}
 
-	AudioStreamBasicDescription conversionBufferFormat = mRingBufferFormat;
+	propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelsForStereo;
+	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
+	
+	UInt32 preferredStereoChannels [2] = { 1, 2 };
+	dataSize = sizeof(preferredStereoChannels);
+	
+	result = AudioObjectGetPropertyData(mOutputDeviceID,
+										&propertyAddress,
+										0,
+										NULL,
+										&dataSize,
+										&preferredStereoChannels);	
+	
+	if(kAudioHardwareNoError != result)
+		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: %i", result);
 
-	// Create a sample rate converter if necessary
-	if(conversionBufferFormat.mSampleRate != mStreamVirtualFormat.mSampleRate) {
-		conversionBufferFormat.mSampleRate = mStreamVirtualFormat.mSampleRate;
+	// Create the sample rate converter, conversion buffer and output converter for each stream
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
 
-		result = AudioConverterNew(&mRingBufferFormat, &conversionBufferFormat, &mSampleRateConverter);
+#if DEBUG
+		LOG("Stream %#x information:", streamID);
+		CAStreamBasicDescription ringBufferFormat(mRingBufferFormat);
+#endif
+
+		std::map<AudioStreamID, AudioStreamBasicDescription>::const_iterator virtualFormatIterator = mStreamVirtualFormats.find(streamID);
+		if(mStreamVirtualFormats.end() == virtualFormatIterator) {
+			ERR("Unknown virtual format for AudioStreamID %#x", streamID);
+			return false;
+		}
+
+		AudioStreamBasicDescription virtualFormat = virtualFormatIterator->second;
+		AudioStreamBasicDescription conversionBufferFormat = mRingBufferFormat;
+
+#if DEBUG
+		CAStreamBasicDescription streamVirtualFormat(virtualFormat);
+		fprintf(stderr, "  Virtual format: ");
+		streamVirtualFormat.Print(stderr);
+#endif
+
+		// Create a sample rate converter if necessary
+		if(conversionBufferFormat.mSampleRate != virtualFormat.mSampleRate) {
+			conversionBufferFormat.mSampleRate = virtualFormat.mSampleRate;
+			
+			result = AudioConverterNew(&mRingBufferFormat, &conversionBufferFormat, &mSampleRateConverters[i]);
+			
+			if(noErr != result) {
+				ERR("AudioConverterNew failed: %i", result);
+				return false;
+			}
+			
+#if DEBUG
+			fprintf(stderr, "  Using sample rate converter: ");
+			CAShow(mSampleRateConverters[i]);
+#endif
+			
+			// Calculate how large the conversion buffer must be
+			UInt32 bufferSizeBytes = bufferSizeFrames * conversionBufferFormat.mBytesPerFrame;
+			dataSize = sizeof(bufferSizeBytes);
+			
+			result = AudioConverterGetProperty(mSampleRateConverters[i], 
+											   kAudioConverterPropertyCalculateInputBufferSize, 
+											   &dataSize, 
+											   &bufferSizeBytes);
+			
+			if(noErr != result) {
+				ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
+				return false;
+			}
+			
+			bufferSizeFrames = std::max(bufferSizeFrames, bufferSizeBytes / conversionBufferFormat.mBytesPerFrame);
+
+			mSampleRateConversionBuffers[i] = AllocateABL(mRingBufferFormat, bufferSizeFrames);
+		}
 		
-		if(noErr != result) {
-			ERR("AudioConverterNew failed: %i", result);
+		// Allocate the conversion buffer (data is read from the ring buffer into this buffer before conversion for output)
+		mConversionBuffers[i] = AllocateABL(conversionBufferFormat, bufferSizeFrames);
+		mOutputConverters[i] = new PCMConverter(conversionBufferFormat, virtualFormat);
+		
+		// Set up the channel mapping
+		propertyAddress.mSelector = kAudioStreamPropertyStartingChannel;
+		propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
+		
+		UInt32 startingChannel;
+		dataSize = sizeof(startingChannel);
+		
+		result = AudioObjectGetPropertyData(streamID,
+											&propertyAddress,
+											0,
+											NULL,
+											&dataSize,
+											&startingChannel);	
+
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectGetPropertyData (kAudioStreamPropertyStartingChannel) failed: %i", result);
+			return false;
+		}
+		
+		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
+
+		std::map<int, int>& channelMap = mOutputConverters[i]->GetChannelMap();
+		channelMap.clear();
+
+		// TODO: Handle files with non-standard channel layouts
+
+		// Map mono to stereo
+		if(1 == conversionBufferFormat.mChannelsPerFrame)  {
+			if(1 >= startingChannel && 1 < endingChannel)
+				channelMap[1 - startingChannel] = 0;
+			if(2 >= startingChannel && 2 < endingChannel)
+				channelMap[2 - startingChannel] = 0;
+		}
+		// Stereo
+		else if(2 == conversionBufferFormat.mChannelsPerFrame) {
+			if(preferredStereoChannels[0] >= startingChannel && preferredStereoChannels[0] < endingChannel)
+				channelMap[preferredStereoChannels[0] - startingChannel] = 0;
+			if(preferredStereoChannels[1] >= startingChannel && preferredStereoChannels[1] < endingChannel)
+				channelMap[preferredStereoChannels[1] - startingChannel] = 1;
+		}
+		// Multichannel
+		else {
+			UInt32 channelCount = std::min(conversionBufferFormat.mChannelsPerFrame, virtualFormat.mChannelsPerFrame);
+			for(UInt32 channel = 1; channel <= channelCount; ++channel) {
+				if(channel >= startingChannel && channel < endingChannel)
+					channelMap[channel - startingChannel] = channel - 1;
+			}
+		}
+
+#if DEBUG
+		fprintf(stderr, "  Channel map: ");
+		for(std::map<int, int>::const_iterator mapIterator = channelMap.begin(); mapIterator != channelMap.end(); ++mapIterator)
+			fprintf(stderr, "%d -> %d  ", mapIterator->first, mapIterator->second);
+		fputc('\n', stderr);
+#endif		
+	}
+
+	return true;
+}
+
+bool AudioPlayer::BuildVirtualFormatsCache()
+{
+	mStreamVirtualFormats.clear();
+
+	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioStreamPropertyVirtualFormat,
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+		
+		AudioStreamBasicDescription virtualFormat;
+		UInt32 dataSize = sizeof(virtualFormat);
+		OSStatus result = AudioObjectGetPropertyData(*iter, 
+													 &propertyAddress, 
+													 0, 
+													 NULL, 
+													 &dataSize, 
+													 &virtualFormat);
+		
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+			return false;
+		}
+		
+		mStreamVirtualFormats[*iter] = virtualFormat;		
+	}
+	
+	return true;
+}
+
+bool AudioPlayer::AddVirtualFormatPropertyListeners()
+{
+	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioStreamPropertyVirtualFormat,
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+		
+		// Observe virtual format changes for the streams
+		OSStatus result = AudioObjectAddPropertyListener(*iter,
+														 &propertyAddress,
+														 myAudioObjectPropertyListenerProc,
+														 this);
+		
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectAddPropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
 			return false;
 		}
 		
 #if DEBUG
-		fprintf(stderr, "Using sample rate converter: ");
-		CAShow(mSampleRateConverter);
-#endif
+		propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
 		
-		// Calculate how large the conversion buffer must be
-		UInt32 bufferSizeBytes = bufferSizeFrames * conversionBufferFormat.mBytesPerFrame;
-		dataSize = sizeof(bufferSizeBytes);
+		result = AudioObjectAddPropertyListener(*iter,
+												&propertyAddress,
+												myAudioObjectPropertyListenerProc,
+												this);
 		
-		result = AudioConverterGetProperty(mSampleRateConverter, 
-										   kAudioConverterPropertyCalculateInputBufferSize, 
-										   &dataSize, 
-										   &bufferSizeBytes);
-		
-		if(noErr != result) {
-			ERR("AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %i", result);
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectAddPropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
 			return false;
 		}
-		
-		bufferSizeFrames = std::max(bufferSizeFrames, bufferSizeBytes / conversionBufferFormat.mBytesPerFrame);
+#endif
 	}
 
-	// Allocate the conversion buffer (data is read from the ring buffer into this buffer before conversion for output)
-	mConversionBuffer = AllocateABL(conversionBufferFormat, bufferSizeFrames);
-	mOutputConverter = new PCMConverter(conversionBufferFormat, mStreamVirtualFormat);
+	return true;
+}
 
+bool AudioPlayer::RemoveVirtualFormatPropertyListeners()
+{
+	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioStreamPropertyVirtualFormat,
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+		
+		OSStatus result = AudioObjectRemovePropertyListener(*iter,
+															&propertyAddress,
+															myAudioObjectPropertyListenerProc,
+															this);
+		
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+			continue;
+		}
+		
+#if DEBUG
+		propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
+		
+		result = AudioObjectRemovePropertyListener(*iter,
+												   &propertyAddress,
+												   myAudioObjectPropertyListenerProc,
+												   this);
+		
+		if(kAudioHardwareNoError != result) {
+			ERR("AudioObjectRemovePropertyListener (kAudioStreamPropertyVirtualFormat) failed: %i", result);
+			continue;
+		}
+#endif
+	}
+	
 	return true;
 }

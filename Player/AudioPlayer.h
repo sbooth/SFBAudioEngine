@@ -31,6 +31,8 @@
 #pragma once
 
 #include <AudioToolbox/AudioToolbox.h>
+#include <vector>
+#include <map>
 
 
 // ========================================
@@ -39,7 +41,7 @@
 class AudioDecoder;
 class CARingBuffer;
 class DecoderStateData;
-class AudioConverter;
+class PCMConverter;
 
 
 // ========================================
@@ -59,6 +61,12 @@ enum {
 
 // ========================================
 // An audio player class
+// The player primarily uses two threads:
+//  1) A decoding thread, which reads audio via an AudioDecoder instance and stores it in the ring buffer.
+//     The audio is stored as deinterleaved, normalized [-1, 1) native floating point data in 64 bits (AKA doubles)
+//  2) A rendering thread, which reads audio from the ring buffer and performs conversion to the required output format.
+//     Sample rate conversion is done using Apple's AudioConverter API.
+//     Final conversion to the stream's format is done using PCMConverter.
 // ========================================
 class AudioPlayer
 {
@@ -124,15 +132,14 @@ public:
 
 	// ========================================
 	// Stream Management
-	AudioStreamID GetOutputStreamID()				{ return mOutputStreamID; }
-	bool SetOutputStreamID(AudioStreamID streamID);
+	bool GetOutputStreams(std::vector<AudioStreamID>& streams);
 	
-	bool GetOutputStreamVirtualFormat(AudioStreamBasicDescription& virtualFormat);
-	bool SetOutputStreamVirtualFormat(const AudioStreamBasicDescription& virtualFormat);
-	
-	bool GetOutputStreamPhysicalFormat(AudioStreamBasicDescription& physicalFormat);
-	bool SetOutputStreamPhysicalFormat(const AudioStreamBasicDescription& physicalFormat);
-	
+	bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat);
+	bool SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat);
+
+	bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat);
+	bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
+
 	// ========================================
 	// Playlist Management
 	// The player will take ownership of decoder
@@ -163,31 +170,38 @@ private:
 	DecoderStateData * GetCurrentDecoderState();
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
 
-	bool CreateConverterAndConversionBuffer();
+	bool CreateConvertersAndConversionBuffers();
 	
+	bool BuildVirtualFormatsCache();
+	bool AddVirtualFormatPropertyListeners();
+	bool RemoveVirtualFormatPropertyListeners();
+
 	// ========================================
 	// Data Members
 	AudioDeviceID						mOutputDeviceID;
 	AudioDeviceIOProcID					mOutputDeviceIOProcID;
 	
-	AudioStreamID						mOutputStreamID;
-
+	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
-	AudioStreamBasicDescription			mStreamVirtualFormat;
-//	AudioChannelLayout					mChannelLayout;
+//	AudioChannelLayout					mRingBufferChannelLayout;
 
-	AudioConverterRef					mSampleRateConverter;
-	AudioBufferList						*mConversionBuffer;
-	AudioConverter						*mOutputConverter;
+	std::vector<AudioStreamID>			mOutputDeviceStreamIDs;
+	std::map<AudioStreamID, AudioStreamBasicDescription> mStreamVirtualFormats;
 
-	volatile UInt32						mFlags;
+	// The following members have a 1:1 correspondence to the AudioStreams owned by the device
+	PCMConverter						**mOutputConverters;
+	AudioBufferList						**mConversionBuffers;
+
+	AudioConverterRef					*mSampleRateConverters;
+	AudioBufferList						**mSampleRateConversionBuffers;
+
+	volatile uint32_t					mFlags;
 
 	bool								mIsPlaying;
 
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
-	CARingBuffer						*mRingBuffer;
 	pthread_mutex_t						mMutex;
 	
 	pthread_t							mDecoderThread;
@@ -198,9 +212,9 @@ private:
 	semaphore_t							mCollectorSemaphore;
 	bool								mKeepCollecting;
 
-	SInt64								mFramesDecoded;
-	SInt64								mFramesRendered;
-	UInt32								mFramesRenderedLastPass;
+	int64_t								mFramesDecoded;
+	int64_t								mFramesRendered;
+	int64_t								mFramesRenderedLastPass;
 
 public:
 
@@ -217,10 +231,10 @@ public:
 										UInt32								inNumberAddresses,
 										const AudioObjectPropertyAddress	inAddresses[]);
 
-	OSStatus FillConversionBuffer(AudioConverterRef				inAudioConverter,
-								  UInt32						*ioNumberDataPackets,
-								  AudioBufferList				*ioData,
-								  AudioStreamPacketDescription	**outDataPacketDescription);
+	OSStatus FillSampleRateConversionBuffer(AudioConverterRef				inAudioConverter,
+											UInt32							*ioNumberDataPackets,
+											AudioBufferList					*ioData,
+											AudioStreamPacketDescription	**outDataPacketDescription);
 	
 	// ========================================
 	// Thread entry points
