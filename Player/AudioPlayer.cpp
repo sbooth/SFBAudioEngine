@@ -1897,8 +1897,6 @@ bool AudioPlayer::OpenOutput()
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	UInt32 dataSize = sizeof(mOutputDeviceID);
-	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
 											&propertyAddress,
 											myAudioObjectPropertyListenerProc,
