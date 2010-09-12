@@ -1931,7 +1931,7 @@ bool AudioPlayer::OpenOutput()
 	propertyAddress.mSelector = kAudioObjectPropertyName;
 
 	CFStringRef deviceName = NULL;
-	dataSize = sizeof(deviceName);
+	UInt32 dataSize = sizeof(deviceName);
 	
 	result = AudioObjectGetPropertyData(mOutputDeviceID, 
 										&propertyAddress, 
