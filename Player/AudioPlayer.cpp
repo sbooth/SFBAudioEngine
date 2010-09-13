@@ -1306,8 +1306,10 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 														  mOutputBuffer,
 														  NULL);
 		
-		if(noErr != result)
+		if(noErr != result) {
 			ERR("AudioConverterFillComplexBuffer failed: %i", result);
+			return result;
+		}
 	}
 	// Otherwise fetch the output from the ring buffer
 	else {
@@ -2356,7 +2358,7 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 		}
 		
 		// Allocate the sample rate conversion buffer (data is at the ring buffer's sample rate)
-		mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / outputBufferFormat.mBytesPerFrame);
+		mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
 	}
 
 	// Allocate the output buffer (data is at the device's sample rate)
