@@ -110,6 +110,8 @@
 		32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
 		32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */; };
 		32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */; };
+		32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */; };
+		32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */; };
 		32E6AB3B1096745400DA998D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB391096744C00DA998D /* main.cpp */; };
 		32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; };
@@ -283,6 +285,8 @@
 		32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChannelLayoutsAreEqual.cpp; sourceTree = "<group>"; };
 		32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeinterleavingFloatConverter.h; sourceTree = "<group>"; };
 		32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeinterleavingFloatConverter.cpp; sourceTree = "<group>"; };
+		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
+		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
@@ -516,6 +520,8 @@
 				32D6552C115FC58C002B275C /* InputSource.h */,
 				32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */,
 				32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */,
+				32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */,
+				32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */,
 			);
 			path = Input;
 			sourceTree = "<group>";
@@ -633,6 +639,7 @@
 				32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */,
 				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
 				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
+				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -794,6 +801,7 @@
 				32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */,
 				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
 				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
+				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

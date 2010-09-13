@@ -30,78 +30,50 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
+#include <sys/stat.h>
+#include "InputSource.h"
 
 
 // ========================================
-// Error Codes
+// InputSource serving bytes from a file fully loaded in RAM
 // ========================================
-extern const CFStringRef		InputSourceErrorDomain;
-
-enum {
-	InputSourceFileNotFoundError			= 0,
-	InputSourceInputOutputError				= 1
-};
-
-
-// ========================================
-// Flags
-// ========================================
-enum {
-	InputSourceFlagMemoryMapFiles			= 1 << 0,
-	InputSourceFlagLoadFilesInMemory		= 1 << 1
-};
-
-
-// ========================================
-// An abstract class presenting access to a stream of bytes
-// ========================================
-class InputSource
+class InMemoryFileInputSource : public InputSource
 {
-
+	
 public:
-
+	
 	// ========================================
-	// Factory methods that return an InputSource for the specified URL, or NULL on failure
-	static InputSource * CreateInputSourceForURL(CFURLRef url, int flags = 0, CFErrorRef *error = NULL);
-
+	// Creation
+	InMemoryFileInputSource(CFURLRef url);
+	
 	// ========================================
 	// Destruction
-	virtual ~InputSource();
+	virtual ~InMemoryFileInputSource();
 	
 	// ========================================
-	// The URL this source will process
-	inline CFURLRef GetURL()								{ return mURL; }
+	// Bytestream access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
+	
+	virtual inline bool IsOpen()							{ return (NULL != mMemory);}
 	
 	// ========================================
-	// Bytestream access (must be implemented by subclasses)
-	virtual bool Open(CFErrorRef *error = NULL) = 0;
-	virtual bool Close(CFErrorRef *error = NULL) = 0;
+	//
+	virtual SInt64 Read(void *buffer, SInt64 byteCount);
+	virtual bool AtEOF()									{ return ((mCurrentPosition - mMemory) == mFilestats.st_size); }
 	
-	virtual bool IsOpen() = 0;
-
+	virtual inline SInt64 GetOffset()						{ return (mCurrentPosition - mMemory); }
+	virtual inline SInt64 GetLength()						{ return mFilestats.st_size; }
+	
 	// ========================================
-	// Returns the number of bytes actually read
-	virtual SInt64 Read(void *buffer, SInt64 byteCount) = 0;
-	virtual bool AtEOF() = 0;
+	// Seeking support
+	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual bool SeekToOffset(SInt64 offset);
 	
-	virtual SInt64 GetOffset() = 0;
-	virtual SInt64 GetLength() = 0;
-
-	// ========================================
-	// Seeking support (optional)
-	virtual bool SupportsSeeking()							{ return false; }
-	virtual bool SeekToOffset(SInt64 /*offset*/)			{ return false; }
+private:
 	
-protected:
+	struct stat						mFilestats;
+	int8_t							*mMemory;
+	int8_t							*mCurrentPosition;
 	
-	CFURLRef						mURL;				// The location of the bytes to be read
-
-	// ========================================
-	// For subclass use only
-	InputSource();
-	InputSource(CFURLRef url);
-	InputSource(const InputSource& rhs);
-	InputSource& operator=(const InputSource& rhs);
-
 };

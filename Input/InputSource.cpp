@@ -32,6 +32,7 @@
 #include "InputSource.h"
 #include "FileInputSource.h"
 #include "MemoryMappedFileInputSource.h"
+#include "InMemoryFileInputSource.h"
 
 
 // ========================================
@@ -60,6 +61,8 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 			if(CFBooleanGetValue(fileExists)) {
 				if(InputSourceFlagMemoryMapFiles & flags)
 					inputSource = new MemoryMappedFileInputSource(url);
+				else if(InputSourceFlagLoadFilesInMemory & flags)
+					inputSource = new InMemoryFileInputSource(url);
 				else
 					inputSource = new FileInputSource(url);
 
