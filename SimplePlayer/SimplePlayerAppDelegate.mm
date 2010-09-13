@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -11,6 +11,12 @@
 @implementation SimplePlayerAppDelegate
 
 @synthesize playerWindowController = _playerWindowController;
+
+- (void) dealloc
+{
+	[_playerWindowController release], _playerWindowController = nil;
+	[super dealloc];
+}
 
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
