@@ -1268,11 +1268,9 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// ========================================
 	// RENDERING
 
-	// Stop output during sample rate changes, to prevent glitching
-	if(eAudioPlayerFlagSampleRateChanging & mFlags) {
-		StopOutput();
+	// Don't render during sample rate changes
+	if(eAudioPlayerFlagSampleRateChanging & mFlags)
 		return kAudioHardwareNoError;		
-	}
 
 	// Mute functionality
 	if(eAudioPlayerFlagMuteOutput & mFlags)
