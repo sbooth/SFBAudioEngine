@@ -180,20 +180,18 @@ private:
 	// Data Members
 	AudioDeviceID						mOutputDeviceID;
 	AudioDeviceIOProcID					mOutputDeviceIOProcID;
+	UInt32								mOutputDeviceBufferFrameSize;
+	std::vector<AudioStreamID>			mOutputDeviceStreamIDs;
+	std::map<AudioStreamID, AudioStreamBasicDescription> mStreamVirtualFormats;
 	
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
 //	AudioChannelLayout					mRingBufferChannelLayout;
 
-	std::vector<AudioStreamID>			mOutputDeviceStreamIDs;
-	std::map<AudioStreamID, AudioStreamBasicDescription> mStreamVirtualFormats;
-
-	// The following members have a 1:1 correspondence to the AudioStreams owned by the device
 	PCMConverter						**mOutputConverters;
-	AudioBufferList						**mConversionBuffers;
-
-	AudioConverterRef					*mSampleRateConverters;
-	AudioBufferList						**mSampleRateConversionBuffers;
+	AudioConverterRef					mSampleRateConverter;
+	AudioBufferList						*mSampleRateConversionBuffer;
+	AudioBufferList						*mOutputBuffer;
 
 	volatile uint32_t					mFlags;
 
