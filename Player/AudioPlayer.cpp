@@ -1826,9 +1826,9 @@ void * AudioPlayer::DecoderThreadEntry()
 								bitsPerChannel = 24;
 							
 							// The maximum allowable sample value
-							double minValue = -1;
-							double maxValue = ((1u << (bitsPerChannel - 1)) - 1) / (1u << (bitsPerChannel - 1));
-							
+							double minValue = -1.;
+							double maxValue = static_cast<double>((1u << (bitsPerChannel - 1)) - 1) / static_cast<double>(1u << (bitsPerChannel - 1));
+
 							for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 								double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
 								vDSP_vclipD(buffer, 1, &minValue, &maxValue, buffer, 1, framesConverted);

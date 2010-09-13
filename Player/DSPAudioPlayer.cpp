@@ -1672,8 +1672,8 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								
 								// The maximum allowable sample value
 								float minValue = -1.f;
-								float maxValue = ((1u << (bitsPerChannel - 1)) - 1) / (1u << (bitsPerChannel - 1));
-								
+								float maxValue = static_cast<float>((1u << (bitsPerChannel - 1)) - 1) / static_cast<float>(1u << (bitsPerChannel - 1));
+
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
 									vDSP_vclip(buffer, 1, &minValue, &maxValue, buffer, 1, framesDecoded);
