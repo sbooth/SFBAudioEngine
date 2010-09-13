@@ -30,6 +30,7 @@
 
 #include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
+#include <Accelerate/Accelerate.h>
 #include <stdexcept>
 
 #include "AudioEngineDefines.h"
@@ -553,7 +554,26 @@ UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		ERR("ExtAudioFileRead failed: %i", result);
 		return 0;
 	}
-	
+
+	// Ensure floating point data is in the proper range
+	if(kAudioFormatFlagIsFloat & mFormat.mFormatFlags) {
+		UInt32 bitsPerChannel = mSourceFormat.mBitsPerChannel;
+
+		// For compressed formats, pretend the samples are 24-bit
+		if(0 == bitsPerChannel)
+			bitsPerChannel = 24;
+		
+		// The maximum allowable sample value
+		float minValue = -1.f;
+		float maxValue = static_cast<float>((1u << (bitsPerChannel - 1)) - 1) / static_cast<float>(1u << (bitsPerChannel - 1));
+
+		// Clip the samples to [-1, 1)
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+			float *buffer = static_cast<float *>(bufferList->mBuffers[bufferIndex].mData);
+			vDSP_vclip(buffer, 1, &minValue, &maxValue, buffer, 1, frameCount * bufferList->mBuffers[bufferIndex].mNumberChannels);
+		}
+	}
+
 	if(mUseM4AWorkarounds)
 		mCurrentFrame += frameCount;
 	
