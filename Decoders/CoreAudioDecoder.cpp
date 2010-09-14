@@ -94,7 +94,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 		return NULL;
 	}
 	
-	return CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
+	return supportedExtensions;
 }
 
 CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
