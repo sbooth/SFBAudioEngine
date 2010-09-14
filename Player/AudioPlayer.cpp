@@ -2339,7 +2339,7 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 		}
 		
 #if DEBUG
-		fprintf(stderr, "  Using sample rate converter: ");
+		fprintf(stderr, "Using sample rate converter: ");
 		CAShow(mSampleRateConverter);
 #endif
 		
@@ -2381,14 +2381,13 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: %i", result);
 
+	LOG("Device preferred stereo channels: %d %d", preferredStereoChannels[0], preferredStereoChannels[1]);
+
 	// Create the output converter for each stream
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
 		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
 
-#if DEBUG
 		LOG("Stream %#x information:", streamID);
-		CAStreamBasicDescription ringBufferFormat(mRingBufferFormat);
-#endif
 
 		std::map<AudioStreamID, AudioStreamBasicDescription>::const_iterator virtualFormatIterator = mStreamVirtualFormats.find(streamID);
 		if(mStreamVirtualFormats.end() == virtualFormatIterator) {
@@ -2425,6 +2424,8 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 			return false;
 		}
 		
+		LOG("  Starting channel: %d", startingChannel);
+		
 		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
 
 		std::map<int, int>& channelMap = mOutputConverters[i]->GetChannelMap();
@@ -2432,26 +2433,26 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 
 		// TODO: Handle files with non-standard channel layouts
 
-		// Map mono to stereo
+		// Map mono to stereo using the preferred stereo channels
 		if(1 == outputBufferFormat.mChannelsPerFrame)  {
-			if(1 >= startingChannel && 1 < endingChannel)
-				channelMap[1 - startingChannel] = 0;
-			if(2 >= startingChannel && 2 < endingChannel)
-				channelMap[2 - startingChannel] = 0;
+			if(preferredStereoChannels[0] >= startingChannel && preferredStereoChannels[0] < endingChannel)
+				channelMap[preferredStereoChannels[0] - 1] = 0;
+			if(preferredStereoChannels[1] >= startingChannel && preferredStereoChannels[1] < endingChannel)
+				channelMap[preferredStereoChannels[1] - 1] = 0;
 		}
 		// Stereo
 		else if(2 == outputBufferFormat.mChannelsPerFrame) {
 			if(preferredStereoChannels[0] >= startingChannel && preferredStereoChannels[0] < endingChannel)
-				channelMap[preferredStereoChannels[0] - startingChannel] = 0;
+				channelMap[preferredStereoChannels[0] - 1] = 0;
 			if(preferredStereoChannels[1] >= startingChannel && preferredStereoChannels[1] < endingChannel)
-				channelMap[preferredStereoChannels[1] - startingChannel] = 1;
+				channelMap[preferredStereoChannels[1] - 1] = 1;
 		}
 		// Multichannel
 		else {
 			UInt32 channelCount = std::min(outputBufferFormat.mChannelsPerFrame, virtualFormat.mChannelsPerFrame);
 			for(UInt32 channel = 1; channel <= channelCount; ++channel) {
 				if(channel >= startingChannel && channel < endingChannel)
-					channelMap[channel - startingChannel] = channel - 1;
+					channelMap[channel - 1] = channel - 1;
 			}
 		}
 
