@@ -43,7 +43,8 @@ public:
 	PCMConverter(const AudioStreamBasicDescription& sourceFormat, const AudioStreamBasicDescription& destinationFormat);
 	virtual ~PCMConverter();
 
-	// The mapping of input channels to output channels
+	// The mapping which specifies how input channels should map to output channels
+	// The key is the output channel number, and the value is the input channel number (zero indexed)
 	inline std::map<int, int>& GetChannelMap()							{ return mChannelMap; }
 
 	// ========================================
