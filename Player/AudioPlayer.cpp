@@ -809,8 +809,6 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 {
 	LOG("Setting device %#x sample rate to %.0f Hz", mOutputDeviceID, deviceSampleRate);
 
-	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagSampleRateChanging */, &mFlags);
-	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
 		kAudioObjectPropertyScopeGlobal,
@@ -826,7 +824,6 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 	
 	if(kAudioHardwareNoError != result) {
 		ERR("AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
-		OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagSampleRateChanging */, &mFlags);
 		return false;
 	}
 
@@ -1268,10 +1265,6 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// ========================================
 	// RENDERING
 
-	// Don't render during sample rate changes
-	if(eAudioPlayerFlagSampleRateChanging & mFlags)
-		return kAudioHardwareNoError;		
-
 	// Mute functionality
 	if(eAudioPlayerFlagMuteOutput & mFlags)
 		return kAudioHardwareNoError;
@@ -1422,36 +1415,6 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					break;
 				}
-#endif
-
-				case kAudioDevicePropertyStreams:
-				{
-					OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-
-					// Stop observing properties on the defunct streams
-					if(!RemoveVirtualFormatPropertyListeners())
-						ERR("RemoveVirtualFormatPropertyListeners failed");
-
-					// Update our list of cached streams
-					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
-						continue;
-
-					// Populate the virtual formats and observe the new streams for changes
-					if(!BuildVirtualFormatsCache())
-						ERR("BuildVirtualFormatsCache failed");
-
-					if(!AddVirtualFormatPropertyListeners())
-						ERR("AddVirtualFormatPropertyListeners failed");
-					
-					if(!CreateConvertersAndConversionBuffers())
-						ERR("CreateConvertersAndConversionBuffers failed");
-
-					OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-					
-					LOG("-> kAudioDevicePropertyStreams [%#x] changed", inObjectID);
-
-					break;
-				}
 
 				case kAudioDevicePropertyNominalSampleRate:
 				{
@@ -1471,15 +1434,51 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					}
 					
 					LOG("-> kAudioDevicePropertyNominalSampleRate [%#x]: %.0f Hz", inObjectID, deviceSampleRate);
-
-					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagSampleRateChanging */, &mFlags);
 					
+					break;
+				}
+					
+#endif
+
+				case kAudioDevicePropertyStreams:
+				{
+					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+
+					bool restartIO = false;
+					if(OutputIsRunning())
+						restartIO = StopOutput();
+
+					// Stop observing properties on the defunct streams
+					if(!RemoveVirtualFormatPropertyListeners())
+						ERR("RemoveVirtualFormatPropertyListeners failed");
+
+					// Update our list of cached streams
+					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
+						continue;
+
+					// Populate the virtual formats and observe the new streams for changes
+					if(!BuildVirtualFormatsCache())
+						ERR("BuildVirtualFormatsCache failed");
+
+					if(!AddVirtualFormatPropertyListeners())
+						ERR("AddVirtualFormatPropertyListeners failed");
+					
+					if(!CreateConvertersAndConversionBuffers())
+						ERR("CreateConvertersAndConversionBuffers failed");
+
+					if(restartIO)
+						StartOutput();
+
+					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					
+					LOG("-> kAudioDevicePropertyStreams [%#x] changed", inObjectID);
+
 					break;
 				}
 
 				case kAudioDevicePropertyBufferFrameSize:
 				{
-					OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 					// Clean up
 					if(mSampleRateConversionBuffer)
@@ -1541,7 +1540,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					// Allocate the output buffer (data is at the device's sample rate)
 					mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
 
-					OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 					LOG("-> kAudioDevicePropertyBufferFrameSize [%#x]: %d", inObjectID, mOutputDeviceBufferFrameSize);
 
@@ -1564,7 +1563,11 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 			switch(currentAddress.mSelector) {
 				case kAudioStreamPropertyVirtualFormat:
 				{
-					OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+
+					bool restartIO = false;
+					if(OutputIsRunning())
+						restartIO = StopOutput();
 
 					// Get the new virtual format
 					AudioStreamBasicDescription virtualFormat;
@@ -1593,7 +1596,10 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					if(false == CreateConvertersAndConversionBuffers())
 						ERR("CreateConvertersAndConversionBuffers failed");
 
-					OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					if(restartIO)
+						StartOutput();
+
+					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 					break;
 				}
@@ -1949,18 +1955,6 @@ bool AudioPlayer::OpenOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDeviceProcessorOverload) failed: %i", result);
 
-	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
-		return false;
-	}
-
 	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
 	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
@@ -1984,6 +1978,18 @@ bool AudioPlayer::OpenOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
 
+	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
+	
+    result = AudioObjectAddPropertyListener(mOutputDeviceID,
+											&propertyAddress,
+											myAudioObjectPropertyListenerProc,
+											this);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectAddPropertyListener (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
+		return false;
+	}
+	
 	propertyAddress.mSelector = kAudioObjectPropertyName;
 
 	CFStringRef deviceName = NULL;
@@ -2088,7 +2094,6 @@ bool AudioPlayer::CloseOutput()
 	
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: %i", result);
-#endif
 
 	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
 	
@@ -2101,6 +2106,7 @@ bool AudioPlayer::CloseOutput()
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyNominalSampleRate) failed: %i", result);
 		return false;
 	}
+#endif
 
 	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
 	
