@@ -189,6 +189,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 	return decoder;
 }
 
+// If this returns NULL, the caller is responsible for deleting inputSource
+// If this returns an AudioDecoder instance, the instance takes ownership of inputSource
 AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
 {
 	assert(NULL != inputSource);
@@ -214,33 +216,45 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			// plugin interface at a later date
 			if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new FLACDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new WavPackDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MPEGDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new OggVorbisDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MusepackDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new CoreAudioDecoder(inputSource);
-				if(!decoder->OpenFile(error))
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
+				}
 			}
 			
 			CFRelease(pathExtension), pathExtension = NULL;
