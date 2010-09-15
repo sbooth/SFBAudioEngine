@@ -881,35 +881,36 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		return false;
 	}
 	
-	// The device isn't hogged, so attempt to hog it
-	if(hogPID == static_cast<pid_t>(-1)) {
-		// If IO is enabled, disable it while hog mode is acquired because the HAL
-		// does not automatically restart IO after hog mode is taken
-		bool wasPlaying = IsPlaying();
-		if(wasPlaying)
-			Pause();
-				
-		hogPID = getpid();
-		
-		result = AudioObjectSetPropertyData(mOutputDeviceID, 
-											&propertyAddress, 
-											0, 
-											NULL, 
-											sizeof(hogPID), 
-											&hogPID);
-		
-		if(kAudioHardwareNoError != result) {
-			ERR("AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %i", result);
-			return false;
-		}
-
-		// If IO was enabled before, re-enable it
-		if(wasPlaying)
-			Play();
-	}
-	else
+	// The device is already hogged
+	if(hogPID != static_cast<pid_t>(-1)) {
 		LOG("Device is already hogged by pid: %d", hogPID);
+		return false;
+	}
+
+	// If IO is enabled, disable it while hog mode is acquired because the HAL
+	// does not automatically restart IO after hog mode is taken
+	bool wasPlaying = IsPlaying();
+	if(wasPlaying)
+		Pause();
+			
+	hogPID = getpid();
 	
+	result = AudioObjectSetPropertyData(mOutputDeviceID, 
+										&propertyAddress, 
+										0, 
+										NULL, 
+										sizeof(hogPID), 
+										&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %i", result);
+		return false;
+	}
+
+	// If IO was enabled before, re-enable it
+	if(wasPlaying)
+		Play();
+
 	return true;
 }
 
