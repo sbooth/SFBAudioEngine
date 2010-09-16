@@ -100,7 +100,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf));
+	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), TagLib::ID3v2::FrameFactory::instance());
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
