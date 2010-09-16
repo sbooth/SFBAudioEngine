@@ -121,7 +121,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an MPEG file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -132,7 +132,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
+								   AudioMetadataFileFormatNotRecognizedError, 
 								   errorDictionary);
 			
 			CFRelease(errorDictionary), errorDictionary = NULL;				
@@ -142,29 +142,135 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	}
 
 	// Read the properties
-	MP4Duration mp4Duration = MP4GetDuration(file);
-	uint32_t mp4TimeScale = MP4GetTimeScale(file);
-	
-	CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
-	CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-	CFRelease(totalFrames), totalFrames = NULL;
+	if(0 < MP4GetNumberOfTracks(file)) {
+		// Should be type 'soun', media data name'mp4a'
+		MP4TrackId trackID = MP4FindTrackId(file, 0);
 
-	CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
-	CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
-	CFRelease(sampleRate), sampleRate = NULL;
-	
-//	CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.channels);
-//	CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-//	CFRelease(channelsPerFrame), channelsPerFrame = NULL;
-	
-//	CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.bits_per_sample);
-//	CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-//	CFRelease(bitsPerChannel), bitsPerChannel = NULL;
-	
-	double length = static_cast<double>(mp4Duration / mp4TimeScale);
-	CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
-	CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
-	CFRelease(duration), duration = NULL;
+		// Verify this is an MPEG-4 audio file
+		if(MP4_INVALID_TRACK_ID == trackID || strncmp("soun", MP4GetTrackType(file, trackID), 4)) {
+			MP4Close(file), file = NULL;
+			
+			if(error) {
+				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																				   32,
+																				   &kCFTypeDictionaryKeyCallBacks,
+																				   &kCFTypeDictionaryValueCallBacks);
+				
+				CFStringRef displayName = CreateDisplayNameForURL(mURL);
+				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																   NULL, 
+																   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""), 
+																   displayName);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedDescriptionKey, 
+									 errorString);
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedFailureReasonKey, 
+									 CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+				
+				CFDictionarySetValue(errorDictionary, 
+									 kCFErrorLocalizedRecoverySuggestionKey, 
+									 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+				
+				CFRelease(errorString), errorString = NULL;
+				CFRelease(displayName), displayName = NULL;
+				
+				*error = CFErrorCreate(kCFAllocatorDefault, 
+									   AudioMetadataErrorDomain, 
+									   AudioMetadataFileFormatNotSupportedError, 
+									   errorDictionary);
+				
+				CFRelease(errorDictionary), errorDictionary = NULL;				
+			}
+			
+			return false;
+		}
+		
+		MP4Duration mp4Duration = MP4GetTrackDuration(file, trackID);
+		uint32_t mp4TimeScale = MP4GetTrackTimeScale(file, trackID);
+		
+		CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
+		CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+		CFRelease(totalFrames), totalFrames = NULL;
+		
+		CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
+		CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
+		CFRelease(sampleRate), sampleRate = NULL;
+		
+		double length = static_cast<double>(mp4Duration / mp4TimeScale);
+		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+		CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
+		CFRelease(duration), duration = NULL;
+
+		// "mdia.minf.stbl.stsd.*[0].channels"
+		int channels = MP4GetTrackAudioChannels(file, trackID);
+		CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels);
+		CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
+		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
+
+		// Sample size for ALAC files
+		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
+			uint64_t sampleSize;
+			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
+				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
+				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+			}
+		}
+
+		// Bitrate for AAC files
+		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.mp4a")) {
+			uint64_t avgBitrate;
+			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.mp4a.avgBitrate", &avgBitrate)) {
+				CFNumberRef averageBitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &avgBitrate);
+				CFDictionaryAddValue(mMetadata, kPropertiesBitrateKey, averageBitrate);
+				CFRelease(averageBitrate), averageBitrate = NULL;
+			}
+		}
+	}
+	// No valid tracks in file
+	else {
+		MP4Close(file), file = NULL;
+		
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioMetadataErrorDomain, 
+								   AudioMetadataFileFormatNotSupportedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		return false;
+	}
 
 	// Read the tags
 	const MP4Tags *tags = MP4TagsAlloc();
