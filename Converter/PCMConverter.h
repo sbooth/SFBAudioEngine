@@ -45,7 +45,8 @@ public:
 
 	// The mapping which specifies how input channels should map to output channels
 	// The key is the output channel number, and the value is the input channel number (zero indexed)
-	inline std::map<int, int>& GetChannelMap()							{ return mChannelMap; }
+	inline std::map<int, int> GetChannelMap()							{ return mChannelMap; }
+	inline void SetChannelMap(const std::map<int, int>& channelMap)		{ mChannelMap = channelMap; }
 
 	// ========================================
 	virtual UInt32 Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount);
