@@ -1321,6 +1321,9 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// Iterate through each stream and render output in the stream's format
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL == mOutputConverters[i])
+			continue;
+
 		// Convert to the output device's format
 		UInt32 framesConverted = mOutputConverters[i]->Convert(mOutputBuffer, outOutputData, framesToRead);
 		
@@ -2376,21 +2379,30 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
 	
 	UInt32 preferredStereoChannels [2] = { 1, 2 };
-	dataSize = sizeof(preferredStereoChannels);
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID,
-										&propertyAddress,
-										0,
-										NULL,
-										&dataSize,
-										&preferredStereoChannels);	
-	
-	if(kAudioHardwareNoError != result)
-		ERR("AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: %i", result);
+	if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		dataSize = sizeof(preferredStereoChannels);
+		
+		result = AudioObjectGetPropertyData(mOutputDeviceID,
+											&propertyAddress,
+											0,
+											NULL,
+											&dataSize,
+											&preferredStereoChannels);	
+		
+		if(kAudioHardwareNoError != result)
+			ERR("AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: %i", result);
+	}
 
 	LOG("Device preferred stereo channels: %d %d", preferredStereoChannels[0], preferredStereoChannels[1]);
 
-	// Create the output converter for each stream
+	// For efficiency disable streams that aren't needed
+	size_t streamUsageSize = offsetof(AudioHardwareIOProcStreamUsage, mStreamIsOn) + (sizeof(UInt32) * mOutputDeviceStreamIDs.size());
+	AudioHardwareIOProcStreamUsage *streamUsage = static_cast<AudioHardwareIOProcStreamUsage *>(calloc(1, streamUsageSize));
+	
+	streamUsage->mIOProc = reinterpret_cast<void *>(mOutputDeviceIOProcID);
+	streamUsage->mNumberStreams = static_cast<UInt32>(mOutputDeviceStreamIDs.size());
+
+	// Create the output converter for each stream as required
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
 		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
 
@@ -2410,9 +2422,7 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 		streamVirtualFormat.Print(stderr);
 #endif
 
-		mOutputConverters[i] = new PCMConverter(outputBufferFormat, virtualFormat);
-		
-		// Set up the channel mapping
+		// Set up the channel mapping to determine if this stream is needed
 		propertyAddress.mSelector = kAudioStreamPropertyStartingChannel;
 		propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
 		
@@ -2435,8 +2445,7 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 		
 		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
 
-		std::map<int, int>& channelMap = mOutputConverters[i]->GetChannelMap();
-		channelMap.clear();
+		std::map<int, int> channelMap;
 
 		// TODO: Handle files with non-standard channel layouts
 
@@ -2463,12 +2472,31 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 			}
 		}
 
+		// If the channel map isn't empty, the stream is used and an output converter is necessary
+		if(!channelMap.empty()) {
+			mOutputConverters[i] = new PCMConverter(outputBufferFormat, virtualFormat);			
+			mOutputConverters[i]->SetChannelMap(channelMap);
+
 #if DEBUG
-		fprintf(stderr, "  Channel map: ");
-		for(std::map<int, int>::const_iterator mapIterator = channelMap.begin(); mapIterator != channelMap.end(); ++mapIterator)
-			fprintf(stderr, "%d -> %d  ", mapIterator->first, mapIterator->second);
-		fputc('\n', stderr);
-#endif		
+			fprintf(stderr, "  Channel map: ");
+			for(std::map<int, int>::const_iterator mapIterator = channelMap.begin(); mapIterator != channelMap.end(); ++mapIterator)
+				fprintf(stderr, "%d -> %d  ", mapIterator->first, mapIterator->second);
+			fputc('\n', stderr);
+#endif
+
+			streamUsage->mStreamIsOn[i] = true;
+		}
+	}
+
+	// Disable the unneeded streams
+	propertyAddress.mSelector = kAudioDevicePropertyIOProcStreamUsage;
+	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
+
+	result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, static_cast<UInt32>(streamUsageSize), streamUsage);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectSetPropertyData (kAudioDevicePropertyIOProcStreamUsage) failed: %i", result);
+		return false;
 	}
 
 	return true;
