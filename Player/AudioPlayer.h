@@ -126,6 +126,8 @@ public:
 	bool GetOutputDeviceSampleRate(Float64& sampleRate);
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
 
+	bool OutputDeviceIsHogged();
+
 	bool StartHoggingOutputDevice();
 	bool StopHoggingOutputDevice();
 
@@ -160,8 +162,6 @@ private:
 	bool OutputIsRunning();
 	bool ResetOutput();
 	
-	bool OutputDeviceIsHogged();
-
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
