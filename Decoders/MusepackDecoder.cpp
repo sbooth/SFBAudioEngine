@@ -242,7 +242,10 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 		
 		return false;
 	}
-	
+
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
+		mBufferList->mBuffers[i].mDataByteSize = 0;
+
 	return true;
 }
 
