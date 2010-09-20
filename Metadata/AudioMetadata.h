@@ -122,9 +122,9 @@ public:
 	CFNumberRef GetTotalFrames();
 	CFNumberRef GetChannelsPerFrame();
 	CFNumberRef GetBitsPerChannel();
-	CFNumberRef GetSampleRate();
-	CFNumberRef GetDuration();
-	CFNumberRef GetBitrate();
+	CFNumberRef GetSampleRate(); // in Hz
+	CFNumberRef GetDuration(); // in sec
+	CFNumberRef GetBitrate(); // in KiB/sec
 
 	// ========================================
 	// Metadata access
