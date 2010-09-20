@@ -210,7 +210,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
 		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
 
-		// Sample size for ALAC files
+		// ALAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Apple Lossless"));
 			uint64_t sampleSize;
@@ -218,18 +218,24 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+
+				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * sampleSize) / 1000;
+				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
+				CFRelease(bitrate), bitrate = NULL;
 			}
 		}
 
-		// Bitrate for AAC files
+		// AAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.mp4a")) {
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("AAC"));
-			uint64_t avgBitrate;
-			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.mp4a.avgBitrate", &avgBitrate)) {
-				CFNumberRef averageBitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &avgBitrate);
-				CFDictionaryAddValue(mMetadata, kPropertiesBitrateKey, averageBitrate);
-				CFRelease(averageBitrate), averageBitrate = NULL;
-			}
+
+			// "mdia.minf.stbl.stsd.*.esds.decConfigDescr.avgBitrate"
+			uint32_t trackBitrate = MP4GetTrackBitRate(file, trackID) / 1000;
+			CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackBitrate);
+			CFDictionaryAddValue(mMetadata, kPropertiesBitrateKey, bitrate);
+			CFRelease(bitrate), bitrate = NULL;
+			
 		}
 	}
 	// No valid tracks in file
@@ -400,60 +406,75 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	}
 	
 	// ReplayGain
-	MP4ItmfItemList *itemList = MP4ItmfGetItemsByMeaning(file, "replaygain_reference_loudness", NULL);
+	// Reference loudness
+	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
+	if(NULL != items) {
+		float referenceLoudnessValue;
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &referenceLoudnessValue)) {
+			CFNumberRef referenceLoudness = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &referenceLoudnessValue);
+			CFDictionaryAddValue(mMetadata, kReplayGainReferenceLoudnessKey, referenceLoudness);
+			CFRelease(referenceLoudness), referenceLoudness = NULL;
+		}
+		
+		MP4ItmfItemListFree(items), items = NULL;
+	}
 	
+	// Track gain
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_gain");
+	if(NULL != items) {
+		float trackGainValue;
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &trackGainValue)) {
+			CFNumberRef trackGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackGainValue);
+			CFDictionaryAddValue(mMetadata, kReplayGainTrackGainKey, trackGain);
+			CFRelease(trackGain), trackGain = NULL;
+		}
+		
+		MP4ItmfItemListFree(items), items = NULL;
+	}		
+	
+	// Track peak
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_peak");
+	if(NULL != items) {
+		float trackPeakValue;
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &trackPeakValue)) {
+			CFNumberRef trackPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackPeakValue);
+			CFDictionaryAddValue(mMetadata, kReplayGainTrackPeakKey, trackPeak);
+			CFRelease(trackPeak), trackPeak = NULL;
+		}
+		
+		MP4ItmfItemListFree(items), items = NULL;
+	}		
+	
+	// Album gain
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_gain");
+	if(NULL != items) {
+		float albumGainValue;
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &albumGainValue)) {
+			CFNumberRef albumGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumGainValue);
+			CFDictionaryAddValue(mMetadata, kReplayGainAlbumGainKey, albumGain);
+			CFRelease(albumGain), albumGain = NULL;
+		}
+		
+		MP4ItmfItemListFree(items), items = NULL;
+	}		
+	
+	// Album peak
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_peak");
+	if(NULL != items) {
+		float albumPeakValue;
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &albumPeakValue)) {
+			CFNumberRef albumPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &albumPeakValue);
+			CFDictionaryAddValue(mMetadata, kReplayGainAlbumPeakKey, albumPeak);
+			CFRelease(albumPeak), albumPeak = NULL;
+		}
+		
+		MP4ItmfItemListFree(items), items = NULL;
+	}
 
-	MP4ItmfItemListFree(itemList), itemList = NULL;
-	
-//	if(MP4GetMetadataFreeForm(file, "replaygain_reference_loudness", &rawValue, &rawValueSize, NULL)) {
-//		NSString	*value			= [[NSString alloc] initWithBytes:rawValue length:rawValueSize encoding:NSUTF8StringEncoding];
-//		NSScanner	*scanner		= [NSScanner scannerWithString:value];
-//		double		doubleValue		= 0.0;
-//		
-//		if([scanner scanDouble:&doubleValue])
-//			[metadataDictionary setValue:[NSNumber numberWithDouble:doubleValue] forKey:ReplayGainReferenceLoudnessKey];
-//		
-//		[value release];
-//	}
-//	
-//	if(MP4GetMetadataFreeForm(file, "replaygain_track_gain", &rawValue, &rawValueSize, NULL)) {
-//		NSString	*value			= [[NSString alloc] initWithBytes:rawValue length:rawValueSize encoding:NSUTF8StringEncoding];
-//		NSScanner	*scanner		= [NSScanner scannerWithString:value];
-//		double		doubleValue		= 0.0;
-//		
-//		if([scanner scanDouble:&doubleValue])
-//			[metadataDictionary setValue:[NSNumber numberWithDouble:doubleValue] forKey:ReplayGainTrackGainKey];
-//		
-//		[value release];
-//	}
-//	
-//	if(MP4GetMetadataFreeForm(file, "replaygain_track_peak", &rawValue, &rawValueSize, NULL)) {
-//		NSString *value = [[NSString alloc] initWithBytes:rawValue length:rawValueSize encoding:NSUTF8StringEncoding];
-//		[metadataDictionary setValue:[NSNumber numberWithDouble:[value doubleValue]] forKey:ReplayGainTrackPeakKey];
-//		[value release];
-//	}
-//	
-//	if(MP4GetMetadataFreeForm(file, "replaygain_album_gain", &rawValue, &rawValueSize, NULL)) {
-//		NSString	*value			= [[NSString alloc] initWithBytes:rawValue length:rawValueSize encoding:NSUTF8StringEncoding];
-//		NSScanner	*scanner		= [NSScanner scannerWithString:value];
-//		double		doubleValue		= 0.0;
-//		
-//		if([scanner scanDouble:&doubleValue])
-//			[metadataDictionary setValue:[NSNumber numberWithDouble:doubleValue] forKey:ReplayGainAlbumGainKey];
-//		
-//		[value release];
-//	}
-//	
-//	if(MP4GetMetadataFreeForm(file, "replaygain_album_peak", &rawValue, &rawValueSize, NULL)) {
-//		NSString *value = [[NSString alloc] initWithBytes:rawValue length:rawValueSize encoding:NSUTF8StringEncoding];
-//		[metadataDictionary setValue:[NSNumber numberWithDouble:[value doubleValue]] forKey:ReplayGainAlbumPeakKey];
-//		[value release];
-//	}
-	
 	// Clean up
 	MP4TagsFree(tags), tags = NULL;
 	MP4Close(file), file = NULL;
-	
+
 	return true;
 }
 
@@ -716,16 +737,160 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		MP4TagsAddArtwork(tags, &artwork);
 	}
 	
-	// Application version
-//	NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
-//	NSString *shortVersionNumber = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-//	NSString *versionNumber = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];	
-//	
-//	MP4TagsSetEncodingTool(tags, [[NSString stringWithFormat:@"%@ %@ (%@)", appName, shortVersionNumber, versionNumber] UTF8String]);
-	
 	// Save our changes
 	MP4TagsStore(tags, file);
 	
+	// Replay Gain
+	// Reference loudness
+	if(GetReplayGainReferenceLoudness()) {
+		float f;
+		if(!CFNumberGetValue(GetReplayGainReferenceLoudness(), kCFNumberFloatType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+
+		char value [8];
+		snprintf(value, sizeof(value), "%2.1f dB", f);
+
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(NULL != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("replaygain_reference_loudness");
+			
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
+			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+		}
+	}
+	else {
+		MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
+		if(items) {
+			for(uint32_t i = 0; i < items->size; ++i)
+				MP4ItmfRemoveItem(file, items->elements + i);
+		}
+		MP4ItmfItemListFree(items), items = NULL;
+	}
+
+	// Track gain
+	if(GetReplayGainTrackGain()) {
+		float f;
+		if(!CFNumberGetValue(GetReplayGainTrackGain(), kCFNumberFloatType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		char value [10];
+		snprintf(value, sizeof(value), "%+2.2f dB", f);
+		
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(NULL != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("replaygain_track_gain");
+			
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
+			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+		}
+	}
+	else {
+		MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_gain");
+		if(items) {
+			for(uint32_t i = 0; i < items->size; ++i)
+				MP4ItmfRemoveItem(file, items->elements + i);
+		}
+		MP4ItmfItemListFree(items), items = NULL;
+	}
+
+	// Track peak
+	if(GetReplayGainTrackPeak()) {
+		float f;
+		if(!CFNumberGetValue(GetReplayGainTrackPeak(), kCFNumberFloatType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		char value [12];
+		snprintf(value, sizeof(value), "%1.8f", f);
+		
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(NULL != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("replaygain_track_peak");
+			
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
+			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+		}
+	}
+	else {
+		MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_peak");
+		if(items) {
+			for(uint32_t i = 0; i < items->size; ++i)
+				MP4ItmfRemoveItem(file, items->elements + i);
+		}
+		MP4ItmfItemListFree(items), items = NULL;
+	}
+
+	// Album gain
+	if(GetReplayGainAlbumGain()) {
+		float f;
+		if(!CFNumberGetValue(GetReplayGainAlbumGain(), kCFNumberFloatType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		char value [10];
+		snprintf(value, sizeof(value), "%+2.2f dB", f);
+		
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(NULL != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("replaygain_album_gain");
+			
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
+			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+		}
+	}
+	else {
+		MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_gain");
+		if(items) {
+			for(uint32_t i = 0; i < items->size; ++i)
+				MP4ItmfRemoveItem(file, items->elements + i);
+		}
+		MP4ItmfItemListFree(items), items = NULL;
+	}
+	
+	// Album peak
+	if(GetReplayGainAlbumPeak()) {
+		float f;
+		if(!CFNumberGetValue(GetReplayGainAlbumPeak(), kCFNumberFloatType, &f)) {
+			ERR("CFNumberGetValue failed");
+			return false;
+		}
+		
+		char value [12];
+		snprintf(value, sizeof(value), "%1.8f", f);
+		
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(NULL != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("replaygain_album_peak");
+			
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
+			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+		}
+	}
+	else {
+		MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_peak");
+		if(items) {
+			for(uint32_t i = 0; i < items->size; ++i)
+				MP4ItmfRemoveItem(file, items->elements + i);
+		}
+		MP4ItmfItemListFree(items), items = NULL;
+	}
+
 	// Clean up
 	MP4TagsFree(tags), tags = NULL;
 	MP4Close(file), file = NULL;
