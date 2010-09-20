@@ -288,6 +288,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	
 	double averageBitrate = WavpackGetAverageBitrate(wpc, 1);
 	if(averageBitrate) {
+		averageBitrate /= 1000;
 		CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &averageBitrate);
 		CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 		CFRelease(bitrate), bitrate = NULL;

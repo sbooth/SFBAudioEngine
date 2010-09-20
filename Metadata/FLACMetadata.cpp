@@ -490,6 +490,11 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 				CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
 				CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
 				CFRelease(duration), duration = NULL;
+
+				double losslessBitrate = static_cast<double>(block->data.stream_info.sample_rate * block->data.stream_info.channels * block->data.stream_info.bits_per_sample) / 1000;
+				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
+				CFRelease(bitrate), bitrate = NULL;
 			}
 			break;
 
