@@ -1653,7 +1653,7 @@ OSStatus AudioPlayer::FillSampleRateConversionBuffer(AudioConverterRef				inAudi
 	// Nothing to read
 	if(0 == framesAvailableToRead) {
 		*ioNumberDataPackets = 0;
-		return ioErr;
+		return noErr;
 	}
 
 	// Restrict reads to valid decoded audio
