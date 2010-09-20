@@ -141,6 +141,8 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MP3"));
+
 	if(file.audioProperties()) {
 		TagLib::MPEG::Properties *properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);

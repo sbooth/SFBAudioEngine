@@ -249,6 +249,8 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	}
 
 	// Add the audio properties
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("WavPack"));
+
 	uint32_t sampleRate = WavpackGetSampleRate(wpc);
 	if(sampleRate) {
 		CFNumberRef rate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleRate);

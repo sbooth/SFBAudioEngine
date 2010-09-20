@@ -141,6 +141,8 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("AIFF"));
+
 	if(file.audioProperties()) {
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 

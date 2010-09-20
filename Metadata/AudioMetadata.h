@@ -48,6 +48,7 @@ enum {
 // ========================================
 // Key names for the metadata dictionary (for subclass use)
 // ========================================
+extern const CFStringRef		kPropertiesFormatNameKey;
 extern const CFStringRef		kPropertiesTotalFramesKey;
 extern const CFStringRef		kPropertiesChannelsPerFrameKey;
 extern const CFStringRef		kPropertiesBitsPerChannelKey;
@@ -117,6 +118,7 @@ public:
 	
 	// ========================================
 	// Properties access (if available)
+	CFStringRef GetFormatName();
 	CFNumberRef GetTotalFrames();
 	CFNumberRef GetChannelsPerFrame();
 	CFNumberRef GetBitsPerChannel();

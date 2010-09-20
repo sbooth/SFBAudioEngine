@@ -212,6 +212,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 
 		// Sample size for ALAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Apple Lossless"));
 			uint64_t sampleSize;
 			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
 				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
@@ -222,6 +223,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 
 		// Bitrate for AAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.mp4a")) {
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("AAC"));
 			uint64_t avgBitrate;
 			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.mp4a.avgBitrate", &avgBitrate)) {
 				CFNumberRef averageBitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &avgBitrate);

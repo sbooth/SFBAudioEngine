@@ -141,6 +141,8 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("WAVE"));
+
 	if(file.audioProperties()) {
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 		

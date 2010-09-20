@@ -328,6 +328,8 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("FLAC"));
+
 	FLAC__metadata_iterator_init(iterator, chain);
 	
 	FLAC__StreamMetadata *block = NULL;

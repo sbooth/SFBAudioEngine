@@ -139,6 +139,8 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Musepack"));
+
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 

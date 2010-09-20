@@ -53,6 +53,7 @@ const CFStringRef	AudioMetadataErrorDomain				= CFSTR("org.sbooth.SFBAudioEngine
 // ========================================
 // Key names for the metadata dictionary
 // ========================================
+const CFStringRef	kPropertiesFormatNameKey				= CFSTR("Format Name");
 const CFStringRef	kPropertiesTotalFramesKey				= CFSTR("Total Frames");
 const CFStringRef	kPropertiesChannelsPerFrameKey			= CFSTR("Channels Per Frame");
 const CFStringRef	kPropertiesBitsPerChannelKey			= CFSTR("Bits per Channel");
@@ -461,6 +462,11 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 
 #pragma mark Properties Access
 
+
+CFStringRef AudioMetadata::GetFormatName()
+{
+	return GetStringValue(kPropertiesFormatNameKey);
+}
 
 CFNumberRef AudioMetadata::GetTotalFrames()
 {

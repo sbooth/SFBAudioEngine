@@ -142,6 +142,8 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Ogg FLAC"));
+
 	if(file.audioProperties()) {
 		TagLib::FLAC::Properties *properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
