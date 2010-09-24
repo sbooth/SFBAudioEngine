@@ -1330,7 +1330,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		if(framesConverted != framesToRead)
 			ERR("Conversion to output format failed; all frames may not be rendered");
 	}
-	
+
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(RING_BUFFER_SIZE_FRAMES - (mFramesDecoded - mFramesRendered));
 
@@ -1597,7 +1597,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					mStreamVirtualFormats[inObjectID] = virtualFormat;
 
-					if(false == CreateConvertersAndConversionBuffers())
+					if(!CreateConvertersAndConversionBuffers())
 						ERR("CreateConvertersAndConversionBuffers failed");
 
 					if(restartIO)
@@ -2306,6 +2306,12 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 	if(NULL != mOutputBuffer)
 		mOutputBuffer = DeallocateABL(mOutputBuffer);
 	
+	// If the ring buffer does not yet have a format, no buffers can be allocated
+	if(0 == mRingBufferFormat.mChannelsPerFrame || 0 == mRingBufferFormat.mSampleRate) {
+		LOG("Ring buffer has invalid format");
+		return false;
+	}
+
 	// Get the output buffer size for the device
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyBufferFrameSize,
