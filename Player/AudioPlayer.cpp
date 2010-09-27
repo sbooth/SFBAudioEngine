@@ -1279,8 +1279,13 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	if(0 == framesAvailableToRead) {
 		// If there are no decoders in the queue, stop IO
+		// Calling Stop() here will subsequently call StopActiveDecoders(), which will force
+		// all existing decoders to be collected
+		// However, if the decoder's DecodingFinished callback takes too long, a segfault can occur
+		// because the decoder is collected before the callback returns
+		// Until a better alternative arises, just call Pause()
 		if(NULL == GetCurrentDecoderState())
-			Stop();
+			Pause();
 		
 		return kAudioHardwareNoError;
 	}
@@ -1857,14 +1862,14 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded) {
-							decoder->PerformDecodingFinishedCallback();
-							
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							// Rather than require preprocessing to ensure an accurate frame count, update 
 							// it here so EOS is correctly detected in DidRender()
 							decoderState->mTotalFrames = startingFrameNumber;
 
+							decoder->PerformDecodingFinishedCallback();
+							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 

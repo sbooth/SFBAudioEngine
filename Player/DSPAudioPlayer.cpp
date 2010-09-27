@@ -1439,7 +1439,7 @@ OSStatus DSPAudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		if(0 == mFramesRenderedLastPass) {
 			// If there are no more active decoders, stop playback
 			if(NULL == GetCurrentDecoderState())
-				Stop();
+				Pause();
 
 			return noErr;
 		}
@@ -1693,14 +1693,14 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 						if(0 == framesDecoded) {
 							OSMemoryBarrier();
 
-							decoder->PerformDecodingFinishedCallback();
-
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
 							// Rather than require preprocessing to ensure an accurate frame count, update 
 							// it here so EOS is correctly detected in DidRender()
 							decoderState->mTotalFrames = startingFrameNumber;
 
+							decoder->PerformDecodingFinishedCallback();
+							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 							
