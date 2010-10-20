@@ -328,13 +328,13 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		mFormat.mSampleRate			= mSourceFormat.mSampleRate;
 		mFormat.mChannelsPerFrame	= mSourceFormat.mChannelsPerFrame;
 		
-		if(kAppleLosslessFormatFlag_16BitSourceData & mSourceFormat.mFormatFlags)
+		if(kAppleLosslessFormatFlag_16BitSourceData == mSourceFormat.mFormatFlags)
 			mFormat.mBitsPerChannel	= 16;
-		else if(kAppleLosslessFormatFlag_20BitSourceData & mSourceFormat.mFormatFlags)
+		else if(kAppleLosslessFormatFlag_20BitSourceData == mSourceFormat.mFormatFlags)
 			mFormat.mBitsPerChannel	= 20;
-		else if(kAppleLosslessFormatFlag_24BitSourceData & mSourceFormat.mFormatFlags)
+		else if(kAppleLosslessFormatFlag_24BitSourceData == mSourceFormat.mFormatFlags)
 			mFormat.mBitsPerChannel	= 24;
-		else if(kAppleLosslessFormatFlag_32BitSourceData & mSourceFormat.mFormatFlags)
+		else if(kAppleLosslessFormatFlag_32BitSourceData == mSourceFormat.mFormatFlags)
 			mFormat.mBitsPerChannel	= 32;
 		
 		mFormat.mBytesPerPacket		= 4 * mFormat.mChannelsPerFrame;
