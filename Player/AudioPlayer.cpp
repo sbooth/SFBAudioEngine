@@ -2510,6 +2510,8 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 		return false;
 	}
 
+	free(streamUsage), streamUsage = NULL;
+
 	return true;
 }
 
