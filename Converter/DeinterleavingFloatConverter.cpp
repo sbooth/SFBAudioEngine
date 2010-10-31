@@ -667,13 +667,21 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 						
 						if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+#else
+								*output++ = static_cast<int>((input[1] << 24) | (input[2] << 16) | (input[3] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
 						else {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
+#else
+								*output++ = static_cast<int>((input[3] << 24) | (input[2] << 16) | (input[1] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
@@ -696,13 +704,21 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 						
 						if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+#else
+								*output++ = static_cast<unsigned int>((input[1] << 24) | (input[2] << 16) | (input[3] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
 						else {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<unsigned int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
+#else
+								*output++ = static_cast<unsigned int>((input[3] << 24) | (input[2] << 16) | (input[1] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
@@ -966,13 +982,21 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 						
 						if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<int>((input[1] << 24) | (input[2] << 16) | (input[3] << 8));
+#else
+								*output++ = static_cast<int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
 						else {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<int>((input[3] << 24) | (input[2] << 16) | (input[1] << 8));
+#else
+								*output++ = static_cast<int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
@@ -995,13 +1019,21 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 						
 						if(kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<unsigned int>((input[1] << 24) | (input[2] << 16) | (input[3] << 8));
+#else
+								*output++ = static_cast<unsigned int>((input[0] << 24) | (input[1] << 16) | (input[2] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
 						else {
 							for(UInt32 count = 0; count < frameCount; ++count) {
+#if __BIG_ENDIAN__
 								*output++ = static_cast<unsigned int>((input[3] << 24) | (input[2] << 16) | (input[1] << 8));
+#else
+								*output++ = static_cast<unsigned int>((input[2] << 24) | (input[1] << 16) | (input[0] << 8));
+#endif
 								input += 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 							}
 						}
