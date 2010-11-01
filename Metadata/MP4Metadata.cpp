@@ -213,8 +213,26 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		// ALAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Apple Lossless"));
+			
 			uint64_t sampleSize;
-			if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
+			uint8_t *decoderConfig;
+			uint32_t decoderConfigSize;
+			if(MP4GetTrackBytesProperty(file, trackID, "mdia.minf.stbl.stsd.alac.alac.decoderConfig", &decoderConfig, &decoderConfigSize) && 28 <= decoderConfigSize) {
+				// The ALAC magic cookie seems to have the following layout (28 bytes, BE):
+				// Byte 10: Sample size
+				// Bytes 25-28: Sample rate
+				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, decoderConfig + 9);
+				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+
+				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * sampleSize) / 1000;
+				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
+				CFRelease(bitrate), bitrate = NULL;
+
+				free(decoderConfig), decoderConfig = NULL;
+			}			
+			else if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
 				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
