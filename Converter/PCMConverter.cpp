@@ -42,7 +42,7 @@ PCMConverter::PCMConverter(const AudioStreamBasicDescription& sourceFormat, cons
 	if(mSourceFormat.mSampleRate != mDestinationFormat.mSampleRate)
 		throw std::runtime_error("Sample rate conversion is not supported by PCMConverter");
 
-	if(!(kAudioFormatFlagsNativeFloatPacked & mSourceFormat.mFormatFlags) || (8 * sizeof(double) != mSourceFormat.mBitsPerChannel))
+	if(!(kAudioFormatFlagIsFloat & mSourceFormat.mFormatFlags) || !(kAudioFormatFlagIsPacked & mSourceFormat.mFormatFlags) || (kAudioFormatFlagsNativeEndian != (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags)) || (8 * sizeof(double) != mSourceFormat.mBitsPerChannel))
 		throw std::runtime_error("Only 64 bit floating point source formats are supported by PCMConverter");
 	
 	if(1 < mSourceFormat.mChannelsPerFrame && !(kAudioFormatFlagIsNonInterleaved & mSourceFormat.mFormatFlags))
