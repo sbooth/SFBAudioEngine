@@ -1460,7 +1460,17 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					// Stop observing properties on the defunct streams
 					if(!RemoveVirtualFormatPropertyListeners())
 						ERR("RemoveVirtualFormatPropertyListeners failed");
-
+					
+					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+						if(NULL != mOutputConverters[i])
+							delete mOutputConverters[i], mOutputConverters[i] = NULL;
+					}
+					
+					delete [] mOutputConverters, mOutputConverters = NULL;
+					
+					mOutputDeviceStreamIDs.clear();
+					mStreamVirtualFormats.clear();
+					
 					// Update our list of cached streams
 					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
 						continue;
@@ -1472,6 +1482,10 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					if(!AddVirtualFormatPropertyListeners())
 						ERR("AddVirtualFormatPropertyListeners failed");
 					
+					mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
+					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+						mOutputConverters[i] = NULL;
+
 					if(!CreateConvertersAndConversionBuffers())
 						ERR("CreateConvertersAndConversionBuffers failed");
 
@@ -2062,7 +2076,8 @@ bool AudioPlayer::OpenOutput()
 		return false;
 
 	mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
-	memset(mOutputConverters, 0, sizeof(mOutputConverters));
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+		mOutputConverters[i] = NULL;
 
 	return true;
 }
@@ -2093,6 +2108,18 @@ bool AudioPlayer::CloseOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDeviceProcessorOverload) failed: %i", result);
 
+	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
+	
+	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
+											   &propertyAddress, 
+											   myAudioObjectPropertyListenerProc, 
+											   this);
+	
+	if(kAudioHardwareNoError != result) {
+		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyBufferFrameSize) failed: %i", result);
+		return false;
+	}
+	
 #if DEBUG
 	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
 	
@@ -2117,18 +2144,6 @@ bool AudioPlayer::CloseOutput()
 	}
 #endif
 
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result) {
-		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyBufferFrameSize) failed: %i", result);
-		return false;
-	}
-	
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
 	
 	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
@@ -2139,13 +2154,19 @@ bool AudioPlayer::CloseOutput()
 	if(kAudioHardwareNoError != result)
 		ERR("AudioObjectRemovePropertyListener (kAudioDevicePropertyStreams) failed: %i", result);
 
-	RemoveVirtualFormatPropertyListeners();
+	if(!RemoveVirtualFormatPropertyListeners())
+		ERR("RemoveVirtualFormatPropertyListeners failed");
 
+	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
+		if(NULL != mOutputConverters[i])
+			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+	}
+	
+	delete [] mOutputConverters, mOutputConverters = NULL;
+	
 	mOutputDeviceStreamIDs.clear();
 	mStreamVirtualFormats.clear();
 
-	delete [] mOutputConverters, mOutputConverters = NULL;
-	
 	return true;
 }
 
