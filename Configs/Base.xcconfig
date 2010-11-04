@@ -1,8 +1,8 @@
 ARCHS = x86_64 i386 ppc64
 SDKROOT = macosx10.5
 
-//GCC_VERSION = com.apple.compilers.llvm.clang.1_0
-GCC_VERSION = com.apple.compilers.llvmgcc42
+GCC_VERSION = com.apple.compilers.llvm.clang.1_0
+//GCC_VERSION = com.apple.compilers.llvmgcc42
 GCC_C_LANGUAGE_STANDARD = c99
 
 ALWAYS_SEARCH_USER_PATHS = NO

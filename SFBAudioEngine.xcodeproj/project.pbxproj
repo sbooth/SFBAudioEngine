@@ -209,9 +209,6 @@
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		322B5B2E108BA69F00CA9BDE /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
-		322B5B2F108BA69F00CA9BDE /* AudioEngine-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AudioEngine-Debug.xcconfig"; sourceTree = "<group>"; };
-		322B5B30108BA69F00CA9BDE /* AudioEngine-Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AudioEngine-Release.xcconfig"; sourceTree = "<group>"; };
-		322B5B31108BA69F00CA9BDE /* AudioEngine-Version.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AudioEngine-Version.xcconfig"; sourceTree = "<group>"; };
 		322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDecoder.h; sourceTree = "<group>"; };
 		322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioDecoder.cpp; sourceTree = "<group>"; };
 		322B5C16108BB59600CA9BDE /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
@@ -426,9 +423,6 @@
 				322B5B2C108BA69F00CA9BDE /* Base.xcconfig */,
 				322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */,
 				322B5B2E108BA69F00CA9BDE /* Release.xcconfig */,
-				322B5B2F108BA69F00CA9BDE /* AudioEngine-Debug.xcconfig */,
-				322B5B30108BA69F00CA9BDE /* AudioEngine-Release.xcconfig */,
-				322B5B31108BA69F00CA9BDE /* AudioEngine-Version.xcconfig */,
 			);
 			path = Configs;
 			sourceTree = "<group>";
@@ -885,7 +879,7 @@
 		};
 		32C212D71091116D00BA2493 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 322B5B2F108BA69F00CA9BDE /* AudioEngine-Debug.xcconfig */;
+			baseConfigurationReference = 322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
@@ -900,7 +894,6 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
@@ -911,7 +904,7 @@
 		};
 		32C212D81091116D00BA2493 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 322B5B30108BA69F00CA9BDE /* AudioEngine-Release.xcconfig */;
+			baseConfigurationReference = 322B5B2E108BA69F00CA9BDE /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -924,7 +917,6 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_MODEL_TUNING = G5;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
