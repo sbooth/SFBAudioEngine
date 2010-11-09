@@ -29,6 +29,8 @@
 		3205E5DA11319E6400FD9DAD /* TagLibStringFromCFString.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */; };
 		320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
 		320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E117E1289D13100DAA041 /* libssl.dylib */; };
+		320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E11821289D18000DAA041 /* libcrypto.dylib */; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
@@ -205,6 +207,8 @@
 		3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetXiphCommentFromMetadata.h; sourceTree = "<group>"; };
 		3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringFromCFString.cpp; sourceTree = "<group>"; };
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
+		320E117E1289D13100DAA041 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
+		320E11821289D18000DAA041 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		321643761220AAC00010AE57 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -332,6 +336,8 @@
 				322D79B911304794006676FC /* mp4v2.framework in Frameworks */,
 				32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */,
 				321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */,
+				320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */,
+				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -413,6 +419,8 @@
 				322D79FA11304B3C006676FC /* taglib.framework */,
 				32B4379A11BAF23B0027F642 /* CoreServices.framework */,
 				321643761220AAC00010AE57 /* Accelerate.framework */,
+				320E117E1289D13100DAA041 /* libssl.dylib */,
+				320E11821289D18000DAA041 /* libcrypto.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
