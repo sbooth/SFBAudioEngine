@@ -444,7 +444,7 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		return false;
 	}
 	
-	if(kAudioFileM4AType == fileFormat || kAudioFileMPEG4Type == fileFormat)
+	if(kAudioFileM4AType == fileFormat || kAudioFileMPEG4Type == fileFormat || kAudioFileAAC_ADTSType == fileFormat)
 		mUseM4AWorkarounds = true;
 	
 #if 0
