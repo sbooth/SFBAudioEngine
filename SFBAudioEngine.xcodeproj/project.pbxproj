@@ -31,6 +31,8 @@
 		320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E11821289D18000DAA041 /* libcrypto.dylib */; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
+		3212D0331291912A0065D061 /* StringFromCFString.h in Headers */ = {isa = PBXBuildFile; fileRef = 3212D0311291912A0065D061 /* StringFromCFString.h */; };
+		3212D0341291912A0065D061 /* StringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3212D0321291912A0065D061 /* StringFromCFString.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321643761220AAC00010AE57 /* Accelerate.framework */; };
 		32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
@@ -209,6 +211,8 @@
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
 		320E117E1289D13100DAA041 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 		320E11821289D18000DAA041 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		3212D0311291912A0065D061 /* StringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringFromCFString.h; sourceTree = "<group>"; };
+		3212D0321291912A0065D061 /* StringFromCFString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringFromCFString.cpp; sourceTree = "<group>"; };
 		321643761220AAC00010AE57 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -397,6 +401,8 @@
 				32DEDA13122C095600C25252 /* DeallocateABL.cpp */,
 				32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */,
 				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
+				3212D0311291912A0065D061 /* StringFromCFString.h */,
+				3212D0321291912A0065D061 /* StringFromCFString.cpp */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -641,6 +647,7 @@
 				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
 				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
 				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
+				3212D0331291912A0065D061 /* StringFromCFString.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -803,6 +810,7 @@
 				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
 				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
+				3212D0341291912A0065D061 /* StringFromCFString.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

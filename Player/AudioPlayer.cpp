@@ -54,6 +54,7 @@
 #include "DeinterleavingFloatConverter.h"
 #include "PCMConverter.h"
 #include "CreateDisplayNameForURL.h"
+#include "StringFromCFString.h"
 
 #include "CARingBuffer.h"
 #include "CAStreamBasicDescription.h"
@@ -1770,7 +1771,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			char buf [256];
 			CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-			LOG4CXX_DEBUG(logger, "Starting decoder for: " << displayName);
+			LOG4CXX_DEBUG(logger, "Starting decoder for \"" << StringFromCFString(displayName) << "\"");
 			CFRelease(displayName), displayName = NULL;
 			CAStreamBasicDescription decoderASBD = decoder->GetFormat();
 			LOG4CXX_DEBUG(logger, "Decoder format: " << decoderASBD.AsString(buf, 256));
@@ -1816,6 +1817,8 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
+							LOG4CXX_TRACE(logger, "Seeking to frame " << decoderState->mFrameToSeek);
+
 							OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagIsSeeking */, &mFlags);
 							
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
