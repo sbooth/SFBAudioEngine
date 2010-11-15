@@ -32,7 +32,7 @@
 #include "AudioMetadata.h"
 
 bool
-AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag)
+AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag)
 {
 	assert(NULL != dictionary);
 	assert(NULL != tag);

@@ -54,28 +54,28 @@ public:
 	virtual bool OpenFile(CFErrorRef *error = NULL);
 	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen()						{ return mDecoder->FileIsOpen(); }
+	virtual inline bool FileIsOpen() const					{ return mDecoder->FileIsOpen(); }
 
 	// ========================================
 	// The native format of the source audio
-	virtual inline CFStringRef CreateSourceFormatDescription() { return mDecoder->CreateSourceFormatDescription(); }
+	virtual inline CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
 
 	// ========================================
 	// The starting frame for this audio file region
-	inline SInt64 GetStartingFrame()						{ return mStartingFrame; }
+	inline SInt64 GetStartingFrame() const					{ return mStartingFrame; }
 	inline void SetStartingFrame(SInt64 startingFrame)		{ mStartingFrame = startingFrame; }
 	
 	// ========================================
 	// The number of frames to decode
-	inline UInt32 GetFrameCount()							{ return mFrameCount; }
+	inline UInt32 GetFrameCount() const						{ return mFrameCount; }
 	inline void SetFrameCount(UInt32 frameCount)			{ mFrameCount = frameCount; }
 	
 	// ========================================
 	// The number of times to repeat the audio
-	inline UInt32 GetRepeatCount()							{ return mRepeatCount; }
+	inline UInt32 GetRepeatCount() const					{ return mRepeatCount; }
 	inline void SetRepeatCount(UInt32 repeatCount)			{ mRepeatCount = repeatCount; }
 	
-	inline UInt32 GetCompletedPasses()						{ return mCompletedPasses; }
+	inline UInt32 GetCompletedPasses() const				{ return mCompletedPasses; }
 	
 	// ========================================
 	// Reset to initial state
@@ -87,12 +87,12 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames()					{ return ((mRepeatCount + 1) * mFrameCount);}
-	virtual inline SInt64 GetCurrentFrame()					{ return mTotalFramesRead;}
+	virtual inline SInt64 GetTotalFrames() const			{ return ((mRepeatCount + 1) * mFrameCount);}
+	virtual inline SInt64 GetCurrentFrame() const			{ return mTotalFramesRead;}
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return mDecoder->SupportsSeeking(); }
+	virtual inline bool SupportsSeeking() const				{ return mDecoder->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 	
 protected:

@@ -36,4 +36,4 @@
 // ========================================
 // Add the metadata specified in the Ogg::XiphComment instance to dictionary
 // ========================================
-bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag);
+bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag);

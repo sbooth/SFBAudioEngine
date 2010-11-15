@@ -98,33 +98,33 @@ public:
 	
 	// ========================================
 	// The URL this decoder will process
-	inline CFURLRef GetURL()								{ return mInputSource->GetURL(); }
+	inline CFURLRef GetURL() const								{ return mInputSource->GetURL(); }
 	
 	// ========================================
 	// The input source feeding the decoder
-	inline InputSource * GetInputSource()					{ return mInputSource; }
+	inline InputSource * GetInputSource() const					{ return mInputSource; }
 	
 	// ========================================
 	// File access (must be implemented by subclasses)
 	virtual bool OpenFile(CFErrorRef *error = NULL) = 0;
 	virtual bool CloseFile(CFErrorRef *error = NULL) = 0;
 	
-	virtual bool FileIsOpen() = 0;
+	virtual bool FileIsOpen() const = 0;
 
 	// ========================================
 	// The native format of the source audio
-	inline AudioStreamBasicDescription GetSourceFormat()	{ return mSourceFormat; }
-	virtual CFStringRef CreateSourceFormatDescription();
+	inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mSourceFormat; }
+	virtual CFStringRef CreateSourceFormatDescription() const;
 	
 	// ========================================
 	// The type of PCM data provided by this decoder
-	inline AudioStreamBasicDescription GetFormat()			{ return mFormat; }
-	CFStringRef CreateFormatDescription();
+	inline AudioStreamBasicDescription GetFormat()	const		{ return mFormat; }
+	CFStringRef CreateFormatDescription() const;
 	
 	// ========================================
 	// The layout of the channels this decoder provides
-	inline AudioChannelLayout GetChannelLayout()			{ return mChannelLayout; }
-	CFStringRef CreateChannelLayoutDescription();
+	inline AudioChannelLayout GetChannelLayout() const			{ return mChannelLayout; }
+	CFStringRef CreateChannelLayoutDescription() const;
 	
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
@@ -132,14 +132,14 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual SInt64 GetTotalFrames() = 0;
-	virtual SInt64 GetCurrentFrame() = 0;
-	inline SInt64 GetFramesRemaining()						{ return GetTotalFrames() - GetCurrentFrame(); }
+	virtual SInt64 GetTotalFrames() const = 0;
+	virtual SInt64 GetCurrentFrame() const = 0;
+	inline SInt64 GetFramesRemaining() const					{ return GetTotalFrames() - GetCurrentFrame(); }
 	
 	// ========================================
 	// Seeking support
-	virtual bool SupportsSeeking()							{ return false; }
-	virtual SInt64 SeekToFrame(SInt64 /*frame*/)			{ return -1; }
+	virtual bool SupportsSeeking() const						{ return false; }
+	virtual SInt64 SeekToFrame(SInt64 /*frame*/)				{ return -1; }
 
 	// ========================================
 	// AudioPlayer callback support

@@ -72,7 +72,7 @@ CreateStringFromNumberWithFormat(CFNumberRef	value,
 
 
 bool
-SetID3v2TagFromMetadata(AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
+SetID3v2TagFromMetadata(const AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 {
 	assert(NULL != metadata);
 	assert(NULL != tag);

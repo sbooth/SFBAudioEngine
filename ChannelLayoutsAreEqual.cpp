@@ -31,7 +31,7 @@
 #include "ChannelLayoutsAreEqual.h"
 
 bool
-ChannelLayoutsAreEqual(AudioChannelLayout *lhs, AudioChannelLayout *rhs)
+ChannelLayoutsAreEqual(const AudioChannelLayout *lhs, const AudioChannelLayout *rhs)
 {
 	assert(NULL != lhs);
 	assert(NULL != rhs);

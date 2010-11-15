@@ -259,7 +259,7 @@ bool MusepackDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef MusepackDecoder::CreateSourceFormatDescription()
+CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 

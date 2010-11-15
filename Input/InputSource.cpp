@@ -158,6 +158,9 @@ InputSource::~InputSource()
 
 InputSource& InputSource::operator=(const InputSource& rhs)
 {
+	if(this == &rhs)
+		return *this;
+
 	if(mURL)
 		CFRelease(mURL), mURL = NULL;
 	

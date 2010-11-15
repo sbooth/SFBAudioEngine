@@ -38,4 +38,4 @@ class AudioMetadata;
 // ========================================
 // Fill in a Xiph comment from the specified AudioMetadata
 // ========================================
-bool SetXiphCommentFromMetadata(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag);
+bool SetXiphCommentFromMetadata(const AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag);

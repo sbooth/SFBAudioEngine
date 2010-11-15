@@ -62,7 +62,7 @@ public:
 	virtual bool OpenFile(CFErrorRef *error = NULL);
 	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen()						{ return (NULL != mExtAudioFile); }
+	virtual inline bool FileIsOpen() const					{ return (NULL != mExtAudioFile); }
 
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
@@ -70,12 +70,12 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual SInt64 GetTotalFrames();
-	virtual SInt64 GetCurrentFrame();
+	virtual SInt64 GetTotalFrames() const;
+	virtual SInt64 GetCurrentFrame() const;
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
+	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 	
 private:

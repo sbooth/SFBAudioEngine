@@ -32,7 +32,7 @@
 #include "AudioMetadata.h"
 
 bool
-AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, TagLib::AudioProperties *properties)
+AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties)
 {
 	assert(NULL != dictionary);
 	assert(NULL != properties);

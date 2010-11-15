@@ -38,4 +38,4 @@ class AudioMetadata;
 // ========================================
 // Add the properties specified in the AudioProperties instance to dictionary
 // ========================================
-bool AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, TagLib::AudioProperties *properties);
+bool AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties);

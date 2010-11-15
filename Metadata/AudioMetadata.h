@@ -101,7 +101,7 @@ public:
 	
 	// ========================================
 	// The URL containing this metadata
-	inline CFURLRef GetURL()								{ return mURL; }
+	inline CFURLRef GetURL() const							{ return mURL; }
 	
 	// ========================================
 	// File access
@@ -110,100 +110,100 @@ public:
 	
 	// ========================================
 	// Change management
-	inline bool HasUnsavedChanges()							{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
+	inline bool HasUnsavedChanges() const					{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
 	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
 	
 	// ========================================
 	// Properties access (if available)
-	CFStringRef GetFormatName();
-	CFNumberRef GetTotalFrames();
-	CFNumberRef GetChannelsPerFrame();
-	CFNumberRef GetBitsPerChannel();
-	CFNumberRef GetSampleRate(); // in Hz
-	CFNumberRef GetDuration(); // in sec
-	CFNumberRef GetBitrate(); // in KiB/sec
+	CFStringRef GetFormatName() const;
+	CFNumberRef GetTotalFrames() const;
+	CFNumberRef GetChannelsPerFrame() const;
+	CFNumberRef GetBitsPerChannel() const;
+	CFNumberRef GetSampleRate() const; // in Hz
+	CFNumberRef GetDuration() const; // in sec
+	CFNumberRef GetBitrate() const; // in KiB/sec
 
 	// ========================================
 	// Metadata access
-	CFStringRef GetTitle();
+	CFStringRef GetTitle() const;
 	void SetTitle(CFStringRef title);
 
-	CFStringRef GetAlbumTitle();
+	CFStringRef GetAlbumTitle() const;
 	void SetAlbumTitle(CFStringRef albumTitle);
 
-	CFStringRef GetArtist();
+	CFStringRef GetArtist() const;
 	void SetArtist(CFStringRef artist);
 
-	CFStringRef GetAlbumArtist();
+	CFStringRef GetAlbumArtist() const;
 	void SetAlbumArtist(CFStringRef albumArtist);
 
-	CFStringRef GetGenre();
+	CFStringRef GetGenre() const;
 	void SetGenre(CFStringRef genre);
 
-	CFStringRef GetComposer();
+	CFStringRef GetComposer() const;
 	void SetComposer(CFStringRef composer);
 
-	CFStringRef GetReleaseDate();
+	CFStringRef GetReleaseDate() const;
 	void SetReleaseDate(CFStringRef releaseDate);
 
-	CFBooleanRef GetCompilation();
+	CFBooleanRef GetCompilation() const;
 	void SetCompilation(CFBooleanRef releaseDate);
 
-	CFNumberRef GetTrackNumber();
+	CFNumberRef GetTrackNumber() const;
 	void SetTrackNumber(CFNumberRef trackNumber);
 
-	CFNumberRef GetTrackTotal();
+	CFNumberRef GetTrackTotal() const;
 	void SetTrackTotal(CFNumberRef trackTotal);
 
-	CFNumberRef GetDiscNumber();
+	CFNumberRef GetDiscNumber() const;
 	void SetDiscNumber(CFNumberRef discNumber);
 
-	CFNumberRef GetDiscTotal();
+	CFNumberRef GetDiscTotal() const;
 	void SetDiscTotal(CFNumberRef discTotal);
 
-	CFStringRef GetLyrics();
+	CFStringRef GetLyrics() const;
 	void SetLyrics(CFStringRef lyrics);
 	
-	CFStringRef GetComment();
+	CFStringRef GetComment() const;
 	void SetComment(CFStringRef comment);
 
-	CFStringRef GetMCN();
+	CFStringRef GetMCN() const;
 	void SetMCN(CFStringRef mcn);
 
-	CFStringRef GetISRC();
+	CFStringRef GetISRC() const;
 	void SetISRC(CFStringRef isrc);
 
-	CFStringRef GetMusicBrainzAlbumID();
+	CFStringRef GetMusicBrainzAlbumID() const;
 	void SetMusicBrainzAlbumID(CFStringRef albumID);
 
-	CFStringRef GetMusicBrainzTrackID();
+	CFStringRef GetMusicBrainzTrackID() const;
 	void SetMusicBrainzTrackID(CFStringRef trackID);
 
 	// ========================================
 	// Additional metadata
-	CFDictionaryRef GetAdditionalMetadata();
+	CFDictionaryRef GetAdditionalMetadata() const;
 	void SetAdditionalMetadata(CFDictionaryRef additionalMetadata);
 	
 	// ========================================
 	// Replay gain information
-	CFNumberRef GetReplayGainReferenceLoudness();
+	CFNumberRef GetReplayGainReferenceLoudness() const;
 	void SetReplayGainReferenceLoudness(CFNumberRef referenceLoudness);
 
-	CFNumberRef GetReplayGainTrackGain();
+	CFNumberRef GetReplayGainTrackGain() const;
 	void SetReplayGainTrackGain(CFNumberRef trackGain);
 
-	CFNumberRef GetReplayGainTrackPeak();
+	CFNumberRef GetReplayGainTrackPeak() const;
 	void SetReplayGainTrackPeak(CFNumberRef trackPeak);
 
-	CFNumberRef GetReplayGainAlbumGain();
+	CFNumberRef GetReplayGainAlbumGain() const;
 	void SetReplayGainAlbumGain(CFNumberRef albumGain);
 
-	CFNumberRef GetReplayGainAlbumPeak();
+	CFNumberRef GetReplayGainAlbumPeak() const;
 	void SetReplayGainAlbumPeak(CFNumberRef albumPeak);
 
 	// ========================================
 	// Album artwork
-	CFDataRef GetFrontCoverArt();
+	CFDataRef GetFrontCoverArt() const;
 	void SetFrontCoverArt(CFDataRef frontCoverArt);
 
 protected:
@@ -225,10 +225,10 @@ protected:
 	void MergeChangedMetadataIntoMetadata();
 	
 	// Type-specific access
-	CFStringRef GetStringValue(CFStringRef key);
-	CFNumberRef GetNumberValue(CFStringRef key);
+	CFStringRef GetStringValue(CFStringRef key) const;
+	CFNumberRef GetNumberValue(CFStringRef key) const;
 
 	// Generic access
-	CFTypeRef GetValue(CFStringRef key);
+	CFTypeRef GetValue(CFStringRef key) const;
 	void SetValue(CFStringRef key, CFTypeRef value);
 };

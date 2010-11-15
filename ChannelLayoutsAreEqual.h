@@ -35,4 +35,4 @@
 // ========================================
 // Utility function for determining if two AudioChannelLayouts are equal
 // ========================================
-bool ChannelLayoutsAreEqual(AudioChannelLayout *lhs, AudioChannelLayout *rhs);
+bool ChannelLayoutsAreEqual(const AudioChannelLayout *lhs, const AudioChannelLayout *rhs);

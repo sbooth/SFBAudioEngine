@@ -250,7 +250,7 @@ bool OggVorbisDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef OggVorbisDecoder::CreateSourceFormatDescription()
+CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 

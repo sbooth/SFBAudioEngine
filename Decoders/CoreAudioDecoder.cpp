@@ -520,7 +520,7 @@ bool CoreAudioDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-SInt64 CoreAudioDecoder::GetTotalFrames()
+SInt64 CoreAudioDecoder::GetTotalFrames() const
 {
 	SInt64 totalFrames = -1;
 	UInt32 dataSize = sizeof(totalFrames);
@@ -534,7 +534,7 @@ SInt64 CoreAudioDecoder::GetTotalFrames()
 	return totalFrames;
 }
 
-SInt64 CoreAudioDecoder::GetCurrentFrame()
+SInt64 CoreAudioDecoder::GetCurrentFrame() const
 {
 	if(mUseM4AWorkarounds)
 		return mCurrentFrame;

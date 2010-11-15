@@ -239,24 +239,13 @@ bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef MPEGDecoder::CreateSourceFormatDescription()
+CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 {
 	CFStringRef layerDescription = NULL;
 	switch(mMPEGLayer) {
-		case MAD_LAYER_I:
-			mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;
-			layerDescription = CFSTR("Layer I");
-			break;
-
-		case MAD_LAYER_II:
-			mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;
-			layerDescription = CFSTR("Layer II");
-			break;
-		
-		case MAD_LAYER_III:
-			mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;
-			layerDescription = CFSTR("Layer III");
-			break;
+		case MAD_LAYER_I:				layerDescription = CFSTR("Layer I");			break;
+		case MAD_LAYER_II:				layerDescription = CFSTR("Layer II");			break;
+		case MAD_LAYER_III:				layerDescription = CFSTR("Layer III");			break;
 	}
 	
 	CFStringRef channelDescription = NULL;

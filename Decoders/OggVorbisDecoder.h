@@ -66,11 +66,11 @@ public:
 	virtual bool OpenFile(CFErrorRef *error = NULL);
 	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen()						{ return (NULL != mVorbisFile.datasource); }
+	virtual inline bool FileIsOpen() const					{ return (NULL != mVorbisFile.datasource); }
 
 	// ========================================
 	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription();
+	virtual CFStringRef CreateSourceFormatDescription() const;
 
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
@@ -78,12 +78,12 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames()					{ return ov_pcm_total(&mVorbisFile, -1); }
-	virtual inline SInt64 GetCurrentFrame()					{ return ov_pcm_tell(&mVorbisFile); }
+	virtual inline SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
+	virtual inline SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return mInputSource->SupportsSeeking(); }
+	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 
 private:

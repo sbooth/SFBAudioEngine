@@ -305,7 +305,7 @@ bool WavPackDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef WavPackDecoder::CreateSourceFormatDescription()
+CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 

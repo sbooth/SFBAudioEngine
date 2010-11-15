@@ -383,6 +383,9 @@ AudioDecoder::~AudioDecoder()
 
 AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 {
+	if(this == &rhs)
+		return *this;
+
 	if(mInputSource)
 		delete mInputSource, mInputSource = NULL;
 	
@@ -400,7 +403,7 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 
 #pragma mark Base Functionality
 
-CFStringRef AudioDecoder::CreateSourceFormatDescription()
+CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 {
 	CFStringRef		sourceFormatDescription		= NULL;
 	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
@@ -420,7 +423,7 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription()
 	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::CreateFormatDescription()
+CFStringRef AudioDecoder::CreateFormatDescription() const
 {
 	CFStringRef		sourceFormatDescription		= NULL;
 	UInt32			specifierSize				= sizeof(sourceFormatDescription);
@@ -440,7 +443,7 @@ CFStringRef AudioDecoder::CreateFormatDescription()
 	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::CreateChannelLayoutDescription()
+CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 {
 	CFStringRef		channelLayoutDescription	= NULL;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);

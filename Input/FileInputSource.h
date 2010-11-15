@@ -53,19 +53,19 @@ public:
 	virtual bool Open(CFErrorRef *error = NULL);
 	virtual bool Close(CFErrorRef *error = NULL);
 	
-	virtual inline bool IsOpen()							{ return (NULL != mFile);}
+	virtual inline bool IsOpen() const						{ return (NULL != mFile);}
 	
 	// ========================================
 	//
 	virtual SInt64 Read(void *buffer, SInt64 byteCount);
-	virtual inline bool AtEOF()								{ return feof(mFile); }
+	virtual inline bool AtEOF() const						{ return feof(mFile); }
 	
-	virtual inline SInt64 GetOffset()						{ return ftello(mFile); }
-	virtual inline SInt64 GetLength()						{ return mFilestats.st_size; }
+	virtual inline SInt64 GetOffset() const					{ return ftello(mFile); }
+	virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return true; }
+	virtual inline bool SupportsSeeking() const				{ return true; }
 	virtual bool SeekToOffset(SInt64 offset);
 	
 private:

@@ -471,7 +471,7 @@ bool FLACDecoder::CloseFile(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef FLACDecoder::CreateSourceFormatDescription()
+CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 {
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 

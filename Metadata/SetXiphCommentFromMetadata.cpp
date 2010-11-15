@@ -132,7 +132,7 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment	*tag,
 }
 
 bool
-SetXiphCommentFromMetadata(AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag)
+SetXiphCommentFromMetadata(const AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag)
 {
 	assert(NULL != metadata);
 	assert(NULL != tag);

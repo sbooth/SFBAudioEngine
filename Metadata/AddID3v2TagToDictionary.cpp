@@ -38,7 +38,7 @@
 #include "AudioMetadata.h"
 
 bool
-AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag)
+AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::Tag *tag)
 {
 	assert(NULL != dictionary);
 	assert(NULL != tag);
@@ -198,13 +198,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *t
 	bool foundReplayGain = false;
 	
 	// Preference is TXXX frames, RVA2 frame, then LAME header
-	TagLib::ID3v2::UserTextIdentificationFrame *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_TRACK_GAIN");
-	TagLib::ID3v2::UserTextIdentificationFrame *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_TRACK_PEAK");
-	TagLib::ID3v2::UserTextIdentificationFrame *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_ALBUM_GAIN");
-	TagLib::ID3v2::UserTextIdentificationFrame *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "REPLAYGAIN_ALBUM_PEAK");
+	TagLib::ID3v2::UserTextIdentificationFrame *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_TRACK_GAIN");
+	TagLib::ID3v2::UserTextIdentificationFrame *trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_TRACK_PEAK");
+	TagLib::ID3v2::UserTextIdentificationFrame *albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_ALBUM_GAIN");
+	TagLib::ID3v2::UserTextIdentificationFrame *albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_ALBUM_PEAK");
 	
 	if(!trackGainFrame)
-		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");
+		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
@@ -223,7 +223,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *t
 	}
 	
 	if(!trackPeakFrame)
-		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_peak");
+		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
@@ -235,7 +235,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *t
 	}
 	
 	if(!albumGainFrame)
-		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_gain");
+		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
@@ -254,7 +254,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *t
 	}
 	
 	if(!albumPeakFrame)
-		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_album_peak");
+		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);

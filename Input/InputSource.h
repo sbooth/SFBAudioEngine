@@ -68,26 +68,26 @@ public:
 	
 	// ========================================
 	// The URL this source will process
-	inline CFURLRef GetURL()								{ return mURL; }
+	inline CFURLRef GetURL() const							{ return mURL; }
 	
 	// ========================================
 	// Bytestream access (must be implemented by subclasses)
 	virtual bool Open(CFErrorRef *error = NULL) = 0;
 	virtual bool Close(CFErrorRef *error = NULL) = 0;
 	
-	virtual bool IsOpen() = 0;
+	virtual bool IsOpen() const = 0;
 
 	// ========================================
 	// Returns the number of bytes actually read
 	virtual SInt64 Read(void *buffer, SInt64 byteCount) = 0;
-	virtual bool AtEOF() = 0;
+	virtual bool AtEOF() const = 0;
 	
-	virtual SInt64 GetOffset() = 0;
-	virtual SInt64 GetLength() = 0;
+	virtual SInt64 GetOffset() const = 0;
+	virtual SInt64 GetLength() const = 0;
 
 	// ========================================
 	// Seeking support (optional)
-	virtual bool SupportsSeeking()							{ return false; }
+	virtual bool SupportsSeeking() const					{ return false; }
 	virtual bool SeekToOffset(SInt64 /*offset*/)			{ return false; }
 	
 protected:
