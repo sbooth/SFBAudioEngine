@@ -33,7 +33,6 @@
 #include <sys/stat.h>
 #include "InputSource.h"
 
-
 // ========================================
 // InputSource serving bytes from a memory-mapped file
 // ========================================

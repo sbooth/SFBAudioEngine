@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright ï¿½ 2007 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -73,6 +73,8 @@ public:
 	void					Allocate(int nChannels, UInt32 bytesPerFrame, UInt32 capacityFrames);
 								// capacityFrames will be rounded up to a power of 2
 	void					Deallocate();
+	
+	inline UInt32			GetCapacityFrames() const { return mCapacityFrames; }
 	
 	CARingBufferError	Store(const AudioBufferList *abl, UInt32 nFrames, SampleTime frameNumber);
 							// Copy nFrames of data into the ring buffer at the specified sample time.

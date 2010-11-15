@@ -32,7 +32,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "MemoryMappedFileInputSource.h"
 
 
@@ -55,7 +56,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(false == success) {
+	if(!success) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
@@ -73,8 +74,10 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 
-		if(-1 == close(fd))
-			ERR("Unable to close the file: %i", errno);
+		if(-1 == close(fd)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
+		}
 
 		return false;
 	}
@@ -84,8 +87,10 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EBADF, NULL);
 		
-		if(-1 == close(fd))
-			ERR("Unable to close the file: %i", errno);
+		if(-1 == close(fd)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
+		}
 		
 		memset(&mFilestats, 0, sizeof(mFilestats));
 
@@ -98,8 +103,10 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
-		if(-1 == close(fd))
-			ERR("Unable to close the file: %i", errno);
+		if(-1 == close(fd)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
+		}
 		
 		memset(&mFilestats, 0, sizeof(mFilestats));
 

@@ -34,12 +34,12 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "MusepackDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
-
 
 #pragma mark Callbacks
 
@@ -90,7 +90,6 @@ canseek_callback(mpc_reader *p_reader)
 
 #pragma mark Static Methods
 
-
 CFArrayRef MusepackDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
@@ -123,9 +122,7 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 MusepackDecoder::MusepackDecoder(InputSource *inputSource)
 	: AudioDecoder(inputSource), mDemux(NULL), mTotalFrames(0), mCurrentFrame(0)
@@ -144,7 +141,7 @@ MusepackDecoder::~MusepackDecoder()
 bool MusepackDecoder::OpenFile(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(FALSE == CFURLGetFileSystemRepresentation(mInputSource->GetURL(), FALSE, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mInputSource->GetURL(), FALSE, buf, PATH_MAX))
 		return false;
 
 	mReader.read = read_callback;
@@ -329,7 +326,8 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 
 		mpc_status result = mpc_demux_decode(mDemux, &frame);
 		if(MPC_STATUS_OK != result) {
-			LOG("Musepack decoding error");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MusePack");
+			LOG4CXX_WARN(logger, "Musepack decoding error");
 			break;
 		}
 

@@ -30,10 +30,10 @@
 
 #include <algorithm>
 
-#include "LoopableRegionDecoder.h"
-#include "AudioEngineDefines.h"
-#include "AudioDecoder.h"
+#include <log4cxx/logger.h>
 
+#include "LoopableRegionDecoder.h"
+#include "AudioDecoder.h"
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
@@ -94,9 +94,7 @@ void LoopableRegionDecoder::Reset()
 	mCompletedPasses			= 0;
 }
 
-
 #pragma mark Functionality
-
 
 bool LoopableRegionDecoder::OpenFile(CFErrorRef *error)
 {
@@ -142,7 +140,8 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
 	
 	if(NULL == bufferListAlias) {
-		ERR("Unable to allocate memory");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
+		LOG4CXX_ERROR(logger, "Unable to allocate memory")
 		return 0;
 	}	
 

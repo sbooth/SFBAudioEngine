@@ -32,7 +32,6 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-
 // ========================================
 // Error Codes
 // ========================================
@@ -43,7 +42,6 @@ enum {
 	InputSourceInputOutputError				= 1
 };
 
-
 // ========================================
 // Flags
 // ========================================
@@ -51,7 +49,6 @@ enum {
 	InputSourceFlagMemoryMapFiles			= 1 << 0,
 	InputSourceFlagLoadFilesInMemory		= 1 << 1
 };
-
 
 // ========================================
 // An abstract class presenting access to a stream of bytes

@@ -28,12 +28,12 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
+
+#include <log4cxx/logger.h>
 
 #include "SetXiphCommentFromMetadata.h"
 #include "TagLibStringFromCFString.h"
-
 
 // ========================================
 // Xiph comment utilities
@@ -111,8 +111,9 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment	*tag,
 	
 	if(NULL != value) {
 		double f;
-		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			ERR("CFNumberGetValue failed");
+		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+			LOG4CXX_ERROR(logger, "CFNumberGetValue failed");
 			return false;
 		}
 		
@@ -197,8 +198,9 @@ SetXiphCommentFromMetadata(AudioMetadata *metadata, TagLib::Ogg::XiphComment *ta
 			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
 			char key [keySize + 1];
 			
-			if(false == CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				ERR("CFStringGetCString failed");
+			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+				LOG4CXX_ERROR(logger, "CFStringGetCString failed");
 				continue;
 			}
 			

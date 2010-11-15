@@ -31,12 +31,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "FileInputSource.h"
 
-
 #pragma mark Creation and Destruction
-
 
 FileInputSource::FileInputSource(CFURLRef url)
 	: InputSource(url), mFile(NULL)
@@ -54,7 +53,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
-	if(false == success) {
+	if(!success) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
@@ -72,8 +71,10 @@ bool FileInputSource::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
-		if(0 != fclose(mFile))
-			ERR("Unable to close the file: %i", errno);
+		if(0 != fclose(mFile)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.FileInputSource");
+			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
+		}
 		
 		mFile = NULL;
 		

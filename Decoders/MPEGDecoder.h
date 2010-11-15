@@ -32,10 +32,10 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
-#import "AudioDecoder.h"
 
 #include <mad/mad.h>
 
+#import "AudioDecoder.h"
 
 // ========================================
 // An AudioDecoder subclass supporting MPEG Layers I, II and III

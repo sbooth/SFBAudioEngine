@@ -35,7 +35,6 @@
 
 #include "InputSource.h"
 
-
 // ========================================
 // Typedefs
 // ========================================
@@ -51,7 +50,6 @@ struct AudioDecoderCallbackAndContext
 	void					*mContext;
 };
 
-
 // ========================================
 // Error Codes
 // ========================================
@@ -62,7 +60,6 @@ enum {
 	AudioDecoderFileFormatNotSupportedError			= 1,
 	AudioDecoderInputOutputError					= 2
 };
-
 
 // ========================================
 // Abstract superclass for an audio decoder

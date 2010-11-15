@@ -33,10 +33,9 @@
 #include <taglib/relativevolumeframe.h>
 #include <taglib/textidentificationframe.h>
 
-#include "AudioEngineDefines.h"
-#include "AudioMetadata.h"
-
 #include "AddID3v2TagToDictionary.h"
+
+#include "AudioMetadata.h"
 
 bool
 AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, TagLib::ID3v2::Tag *tag)

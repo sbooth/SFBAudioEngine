@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+
 #include "InputSource.h"
 
 class FileInputSource : public InputSource

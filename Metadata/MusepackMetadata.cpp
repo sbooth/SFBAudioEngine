@@ -31,15 +31,12 @@
 #include <taglib/mpcfile.h>
 #include <taglib/tag.h>
 
-#include "AudioEngineDefines.h"
 #include "MusepackMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "TagLibStringFromCFString.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef MusepackMetadata::CreateSupportedFileExtensions()
 {
@@ -73,9 +70,7 @@ bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 MusepackMetadata::MusepackMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -84,9 +79,7 @@ MusepackMetadata::MusepackMetadata(CFURLRef url)
 MusepackMetadata::~MusepackMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -95,7 +88,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::MPC::File file(reinterpret_cast<const char *>(buf));
@@ -200,7 +193,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::MPC::File file(reinterpret_cast<const char *>(buf), false);

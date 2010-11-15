@@ -32,10 +32,10 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
-#import "AudioDecoder.h"
 
 #include <FLAC/stream_decoder.h>
 
+#import "AudioDecoder.h"
 
 // ========================================
 // An AudioDecoder subclass supporting the Free Lossless Audio Codec (FLAC)

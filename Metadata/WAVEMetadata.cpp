@@ -30,16 +30,13 @@
 
 #include <taglib/wavfile.h>
 
-#include "AudioEngineDefines.h"
 #include "WAVEMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef WAVEMetadata::CreateSupportedFileExtensions()
 {
@@ -75,9 +72,7 @@ bool WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 WAVEMetadata::WAVEMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -86,9 +81,7 @@ WAVEMetadata::WAVEMetadata(CFURLRef url)
 WAVEMetadata::~WAVEMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -97,7 +90,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::RIFF::WAV::File file(reinterpret_cast<const char *>(buf));
@@ -163,7 +156,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::RIFF::WAV::File file(reinterpret_cast<const char *>(buf), false);

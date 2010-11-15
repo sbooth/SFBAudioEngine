@@ -1,4 +1,5 @@
-ARCHS = x86_64 i386 ppc64
+//ARCHS = x86_64 i386 ppc64
+ARCHS = i386 x86_64
 SDKROOT = macosx10.5
 
 GCC_VERSION = com.apple.compilers.llvm.clang.1_0

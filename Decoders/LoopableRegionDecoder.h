@@ -32,8 +32,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <AudioToolbox/ExtendedAudioFile.h>
-#include "AudioDecoder.h"
 
+#include "AudioDecoder.h"
 
 // ========================================
 // A wrapper around an AudioDecoder that decodes a specific file region

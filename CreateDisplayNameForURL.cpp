@@ -30,9 +30,9 @@
 
 #include <Carbon/Carbon.h>
 
-#include "AudioEngineDefines.h"
-#include "CreateDisplayNameForURL.h"
+#include <log4cxx/logger.h>
 
+#include "CreateDisplayNameForURL.h"
 
 CFStringRef
 CreateDisplayNameForURL(CFURLRef url)
@@ -46,20 +46,11 @@ CreateDisplayNameForURL(CFURLRef url)
 	CFRelease(scheme), scheme = NULL;
 
 	if(isFileURL) {
-		FSRef ref;
+		OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
 
-		if(false == CFURLGetFSRef(url, &ref)) {
-			ERR("Unable to get FSRef for URL");
-			return NULL;
-		}
-		
-		OSStatus result = LSCopyItemAttribute(&ref, 
-											  kLSRolesAll, 
-											  kLSItemDisplayName, 
-											  reinterpret_cast<CFTypeRef *>(&displayName));
-		
 		if(noErr != result) {
-			ERR("LSCopyItemAttribute (kLSItemDisplayName) failed: %i", result);
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+			LOG4CXX_WARN(logger, "LSCopyDisplayNameForURL failed: " << result);
 			return NULL;
 		}
 	}

@@ -31,7 +31,8 @@
 #include <stdexcept>
 #include <CoreServices/CoreServices.h>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "AudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "FLACMetadata.h"
@@ -48,7 +49,7 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	AudioMetadataErrorDomain				= CFSTR("org.sbooth.SFBAudioEngine.ErrorDomain.AudioMetadata");
+const CFStringRef	AudioMetadataErrorDomain				= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioMetadata");
 
 // ========================================
 // Key names for the metadata dictionary
@@ -306,7 +307,8 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				}				
 			}
 			else {
-				LOG("The requested URL doesn't exist");
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
+				LOG4CXX_WARN(logger, "The requested URL doesn't exist");
 				
 				if(error) {
 					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -344,8 +346,10 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				}				
 			}
 		}
-		else
-			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		
+		else {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
+			LOG4CXX_WARN(logger, "CFURLCreatePropertyFromResource failed: " << errorCode);
+		}
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}
@@ -354,9 +358,9 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		// Get the UTI for this URL
 		FSRef ref;
 		Boolean success = CFURLGetFSRef(url, &ref);
-		if(FALSE == success) {
-			ERR("Unable to get FSRef for URL");
-			
+		if(!success) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
+			LOG4CXX_WARN(logger, "Unable to get FSRef for URL");			
 			return NULL;
 		}
 		
@@ -364,8 +368,8 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemContentType, (CFTypeRef *)&uti);
 		
 		if(noErr != result) {
-			ERR("LSCopyItemAttribute (kLSItemContentType) failed: %i", result);
-			
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
+			LOG4CXX_WARN(logger, "LSCopyItemAttribute (kLSItemContentType) failed: " << result);			
 			return NULL;
 		}
 		
@@ -377,9 +381,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 	return metadata;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 AudioMetadata::AudioMetadata()
 	: mURL(NULL)
@@ -459,9 +461,7 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 	return *this;
 }
 
-
 #pragma mark Properties Access
-
 
 CFStringRef AudioMetadata::GetFormatName()
 {
@@ -498,9 +498,7 @@ CFNumberRef AudioMetadata::GetBitrate()
 	return GetNumberValue(kPropertiesBitrateKey);
 }
 
-
 #pragma mark Metadata Access
-
 
 CFStringRef AudioMetadata::GetTitle()
 {
@@ -690,9 +688,7 @@ void AudioMetadata::SetMusicBrainzTrackID(CFStringRef trackID)
 	SetValue(kMetadataMusicBrainzTrackIDKey, trackID);
 }
 
-
 #pragma mark Additional Metadata
-
 
 CFDictionaryRef AudioMetadata::GetAdditionalMetadata()
 {
@@ -712,9 +708,7 @@ void AudioMetadata::SetAdditionalMetadata(CFDictionaryRef additionalMetadata)
 	SetValue(kMetadataAdditionalMetadataKey, additionalMetadata);
 }
 
-
 #pragma mark Replay Gain Information
-
 
 CFNumberRef AudioMetadata::GetReplayGainReferenceLoudness()
 {
@@ -766,9 +760,7 @@ void AudioMetadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 	SetValue(kReplayGainAlbumPeakKey, albumPeak);
 }
 
-
 #pragma mark Album Artwork
-
 
 CFDataRef AudioMetadata::GetFrontCoverArt()
 {
@@ -788,9 +780,7 @@ void AudioMetadata::SetFrontCoverArt(CFDataRef frontCoverArt)
 	SetValue(kAlbumArtFrontCoverKey, frontCoverArt);
 }
 
-
 #pragma mark Type-Specific Access
-
 
 CFStringRef AudioMetadata::GetStringValue(CFStringRef key)
 {
@@ -822,9 +812,7 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key)
 		return reinterpret_cast<CFNumberRef>(value);
 }
 
-
 #pragma mark Generic Access
-
 
 CFTypeRef AudioMetadata::GetValue(CFStringRef key)
 {

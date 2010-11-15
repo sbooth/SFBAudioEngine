@@ -45,14 +45,12 @@
 
 #include "CARingBuffer.h"
 
-
 // ========================================
 // Macros
 // ========================================
 #define RING_BUFFER_SIZE_FRAMES					16384
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
-
 
 // ========================================
 // Set the calling thread's timesharing and importance
@@ -328,10 +326,10 @@ DSPAudioPlayer::DSPAudioPlayer()
 	
 	// ========================================
 	// Set up our AUGraph and set pregain to 0
-	if(false == OpenOutput())
+	if(!OpenOutput())
 		throw std::runtime_error("OpenOutput failed");
 	
-	if(false == SetPreGain(0))
+	if(!SetPreGain(0))
 		ERR("SetPreGain failed");
 }
 
@@ -415,7 +413,7 @@ void DSPAudioPlayer::Play()
 
 void DSPAudioPlayer::Pause()
 {
-	if(false == IsPlaying())
+	if(!IsPlaying())
 		return;
 	
 	StopOutput();
@@ -544,7 +542,7 @@ bool DSPAudioPlayer::SeekToFrame(SInt64 frame)
 	if(NULL == currentDecoderState)
 		return false;
 	
-	if(false == currentDecoderState->mDecoder->SupportsSeeking())
+	if(!currentDecoderState->mDecoder->SupportsSeeking())
 		return false;
 
 	if(0 > frame || frame >= currentDecoderState->mTotalFrames)
@@ -556,7 +554,7 @@ bool DSPAudioPlayer::SeekToFrame(SInt64 frame)
 //		frame -= graphLatencyFrames;
 //	}
 	
-	if(false == OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
+	if(!OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
 	semaphore_signal(mDecoderSemaphore);
@@ -1254,7 +1252,7 @@ bool DSPAudioPlayer::Enqueue(CFURLRef url)
 	
 	bool success = Enqueue(decoder);
 	
-	if(false == success)
+	if(!success)
 		delete decoder;
 	
 	return success;
@@ -1311,7 +1309,7 @@ bool DSPAudioPlayer::Enqueue(AudioDecoder *decoder)
 	//	bool	channelLayoutsMatch		= channelLayoutsAreEqual(&nextChannelLayout, &mChannelLayout);
 		
 		// The two files can be joined seamlessly only if they have the same formats and channel layouts
-		if(false == formatsMatch /*|| false == channelLayoutsMatch*/)
+		if(!formatsMatch /*|| !channelLayoutsMatch*/)
 			return false;
 	}
 
@@ -1393,7 +1391,7 @@ OSStatus DSPAudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
 	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered, false);
 	if(kCARingBufferError_OK != result) {
-		ERR("CARingBuffer::Fetch() failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
+		ERR("CARingBuffer::Fetch failed: %d, requested %d frames from %lld", result, framesToRead, mFramesRendered);
 		return ioErr;
 	}
 
@@ -1491,7 +1489,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 {
 	// ========================================
 	// Make ourselves a high priority thread
-	if(false == setThreadPolicy(DECODER_THREAD_IMPORTANCE))
+	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
 		ERR("Couldn't set decoder thread importance");
 
 	// Two seconds and zero nanoseconds
@@ -1603,7 +1601,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								ERR("Error seeking to frame %lld", decoderState->mFrameToSeek);
 							
 							// Update the seek request
-							if(false == OSAtomicCompareAndSwap64Barrier(decoderState->mFrameToSeek, -1, &decoderState->mFrameToSeek))
+							if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFrameToSeek, -1, &decoderState->mFrameToSeek))
 								ERR("OSAtomicCompareAndSwap64Barrier failed");
 							
 							// If the seek failed do not update the counters
@@ -1611,11 +1609,11 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 								SInt64 framesSkipped = newFrame - currentFrameBeforeSeeking;
 								
 								// Treat the skipped frames as if they were rendered, and update the counters accordingly
-								if(false == OSAtomicCompareAndSwap64Barrier(decoderState->mFramesRendered, newFrame, &decoderState->mFramesRendered))
+								if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFramesRendered, newFrame, &decoderState->mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
 								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
-								if(false == OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
+								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									ERR("OSAtomicCompareAndSwap64Barrier failed");
 								
 								// Reset the converter and output to flush any buffers
@@ -1684,7 +1682,7 @@ void * DSPAudioPlayer::DecoderThreadEntry()
 							result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 
 							if(kCARingBufferError_OK != result)
-								ERR("CARingBuffer::Store() failed: %i", result);
+								ERR("CARingBuffer::Store failed: %i", result);
 							
 							OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 						}

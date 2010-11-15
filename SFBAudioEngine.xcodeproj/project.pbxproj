@@ -27,8 +27,6 @@
 		3205E52D1130F49700FD9DAD /* SetXiphCommentFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */; };
 		3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */; };
 		3205E5DA11319E6400FD9DAD /* TagLibStringFromCFString.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */; };
-		320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA025111149970091D56B /* DSPAudioPlayer.cpp */; };
-		320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA026111149970091D56B /* DSPAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E117E1289D13100DAA041 /* libssl.dylib */; };
 		320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E11821289D18000DAA041 /* libcrypto.dylib */; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -58,6 +56,8 @@
 		3255602C1092A38F00580566 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
 		325560671092A89600580566 /* FLAC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
 		325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
+		3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
+		3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		326EE8F3117DF3060076D6E0 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322B5C16108BB59600CA9BDE /* AudioToolbox.framework */; };
 		328AA519111615060091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
 		328AA51A1116151C0091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
@@ -80,7 +80,6 @@
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
 		32C212E1109111A700BA2493 /* CoreAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5C1D108BC70600CA9BDE /* CoreAudioDecoder.h */; };
-		32C212E2109111AC00BA2493 /* AudioEngineDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */; };
 		32C212E3109111B300BA2493 /* CAAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D99108C223900CA9BDE /* CAAtomic.h */; };
 		32C212E4109111B300BA2493 /* CAAutoDisposer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */; };
 		32C212E5109111B400BA2493 /* CABitOperations.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D9B108C223900CA9BDE /* CABitOperations.h */; };
@@ -170,6 +169,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */,
 				322D7A4C11304B4F006676FC /* taglib.framework in Copy Embedded Frameworks */,
 				322D79BA113047A2006676FC /* mp4v2.framework in Copy Embedded Frameworks */,
 				32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */,
@@ -246,7 +246,7 @@
 		325560291092A38F00580566 /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACDecoder.cpp; sourceTree = "<group>"; };
 		3255602A1092A38F00580566 /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
 		325560661092A89600580566 /* FLAC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FLAC.framework; path = Frameworks/FLAC.framework; sourceTree = "<group>"; };
-		3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioEngineDefines.h; sourceTree = "<group>"; };
+		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
 		328AA025111149970091D56B /* DSPAudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSPAudioPlayer.cpp; sourceTree = "<group>"; };
 		328AA026111149970091D56B /* DSPAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSPAudioPlayer.h; sourceTree = "<group>"; };
 		328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CAStreamBasicDescription.cpp; sourceTree = "<group>"; };
@@ -338,6 +338,7 @@
 				321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */,
 				320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */,
 				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
+				3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,7 +391,6 @@
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
 				32C212D61091116D00BA2493 /* Info.plist */,
-				3268C0BA108E8E470017C0B0 /* AudioEngineDefines.h */,
 				32DEDA06122C07AF00C25252 /* AllocateABL.h */,
 				32DEDA07122C07AF00C25252 /* AllocateABL.cpp */,
 				32DEDA12122C095600C25252 /* DeallocateABL.h */,
@@ -421,6 +421,7 @@
 				321643761220AAC00010AE57 /* Accelerate.framework */,
 				320E117E1289D13100DAA041 /* libssl.dylib */,
 				320E11821289D18000DAA041 /* libcrypto.dylib */,
+				32676759128F497400C7FE3B /* log4cxx.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -598,7 +599,6 @@
 				32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */,
 				32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */,
 				32C212E1109111A700BA2493 /* CoreAudioDecoder.h in Headers */,
-				32C212E2109111AC00BA2493 /* AudioEngineDefines.h in Headers */,
 				32C212E3109111B300BA2493 /* CAAtomic.h in Headers */,
 				32C212E4109111B300BA2493 /* CAAutoDisposer.h in Headers */,
 				32C212E5109111B400BA2493 /* CABitOperations.h in Headers */,
@@ -610,7 +610,6 @@
 				32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */,
 				32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */,
 				320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */,
-				320C1C4E112001EE00D644F2 /* DSPAudioPlayer.h in Headers */,
 				32D7374B112A61E40058B41F /* AudioConverter.h in Headers */,
 				32D7375C112A66E80058B41F /* PCMConverter.h in Headers */,
 				32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */,
@@ -775,7 +774,6 @@
 				32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */,
 				32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */,
 				320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */,
-				320C1C4D112001EE00D644F2 /* DSPAudioPlayer.cpp in Sources */,
 				32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */,
 				32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */,
 				32EA67F9112BC4D9006C26F1 /* AudioMetadata.cpp in Sources */,
@@ -839,6 +837,10 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Frameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
@@ -866,6 +868,10 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Frameworks\"",
+				);
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -897,6 +903,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
+					"\"$(SRCROOT)/../AyreWave/SFBAudioEngine.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -922,6 +929,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
+					"\"$(SRCROOT)/../AyreWave/SFBAudioEngine.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_MODEL_TUNING = G5;

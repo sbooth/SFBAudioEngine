@@ -35,7 +35,6 @@
 
 class AudioDecoder;
 
-
 // ========================================
 // Enums
 // ========================================
@@ -43,7 +42,6 @@ enum {
 	eDecoderStateDataFlagDecodingFinished	= 1 << 0,
 	eDecoderStateDataFlagRenderingFinished	= 1 << 1
 };
-
 
 // ========================================
 // State data for decoders that are decoding and/or rendering

@@ -33,7 +33,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-
 // ========================================
 // An AudioMetadata subclass supporting the Free Lossless Audio Codec (FLAC)
 // ========================================

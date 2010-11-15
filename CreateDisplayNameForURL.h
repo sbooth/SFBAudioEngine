@@ -32,7 +32,6 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-
 // ========================================
 // Get the localized display name for a URL
 // ========================================

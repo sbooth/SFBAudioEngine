@@ -33,7 +33,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-
 // ========================================
 // An AudioMetadata subclass supporting WAVE files
 // ========================================

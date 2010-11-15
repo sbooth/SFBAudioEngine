@@ -28,10 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
-#include "AudioMetadata.h"
-
 #include "AddXiphCommentToDictionary.h"
+#include "AudioMetadata.h"
 
 bool
 AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, TagLib::Ogg::XiphComment *tag)

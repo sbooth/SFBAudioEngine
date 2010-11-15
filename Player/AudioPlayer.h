@@ -34,7 +34,6 @@
 #include <vector>
 #include <map>
 
-
 // ========================================
 // Forward declarations
 // ========================================
@@ -43,12 +42,10 @@ class CARingBuffer;
 class DecoderStateData;
 class PCMConverter;
 
-
 // ========================================
 // Constants
 // ========================================
 #define kActiveDecoderArraySize 8
-
 
 // ========================================
 // Enums

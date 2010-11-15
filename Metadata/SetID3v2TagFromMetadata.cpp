@@ -34,7 +34,6 @@
 #include <taglib/textidentificationframe.h>
 #include <taglib/unsynchronizedlyricsframe.h>
 
-#include "AudioEngineDefines.h"
 #include "AudioMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "TagLibStringFromCFString.h"

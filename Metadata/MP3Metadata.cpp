@@ -32,16 +32,13 @@
 #include <taglib/mpegproperties.h>
 #include <taglib/xingheader.h>
 
-#include "AudioEngineDefines.h"
 #include "MP3Metadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef MP3Metadata::CreateSupportedFileExtensions()
 {
@@ -75,9 +72,7 @@ bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 MP3Metadata::MP3Metadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -86,9 +81,7 @@ MP3Metadata::MP3Metadata(CFURLRef url)
 MP3Metadata::~MP3Metadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 {
@@ -97,7 +90,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), TagLib::ID3v2::FrameFactory::instance());
@@ -193,7 +186,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), false);

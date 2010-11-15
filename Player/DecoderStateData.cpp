@@ -33,7 +33,6 @@
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 
-
 DecoderStateData::DecoderStateData()
 	: mDecoder(NULL), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 {}

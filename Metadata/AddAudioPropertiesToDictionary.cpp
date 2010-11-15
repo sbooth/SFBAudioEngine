@@ -28,10 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
-#include "AudioMetadata.h"
-
 #include "AddAudioPropertiesToDictionary.h"
+#include "AudioMetadata.h"
 
 bool
 AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, TagLib::AudioProperties *properties)

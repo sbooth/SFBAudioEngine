@@ -30,8 +30,9 @@
 
 #pragma once
 
-#include "AudioConverter.h"
 #include <map>
+
+#include "AudioConverter.h"
 
 // ========================================
 // A PCM converter

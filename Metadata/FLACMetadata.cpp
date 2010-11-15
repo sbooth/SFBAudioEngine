@@ -30,10 +30,10 @@
 
 #include <FLAC/metadata.h>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "FLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
-
 
 // ========================================
 // Vorbis comment utilities
@@ -48,7 +48,8 @@ SetVorbisComment(FLAC__StreamMetadata		*block,
 
 	// Remove the existing comment with this name
 	if(-1 == FLAC__metadata_object_vorbiscomment_remove_entry_matching(block, key)) {
-		ERR("FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
 		return false;
 	}
 	
@@ -59,20 +60,23 @@ SetVorbisComment(FLAC__StreamMetadata		*block,
 	CFIndex valueCStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(value), kCFStringEncodingUTF8)  + 1;
 	char valueCString [valueCStringSize];
 	
-	if(false == CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
-		ERR("CFStringGetCString failed");
+	if(!CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+		LOG4CXX_WARN(logger, "CFStringGetCString() failed");
 		return false;
 	}
 	
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 	
-	if(false == FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, key, valueCString)) {
-		ERR("FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair failed");
+	if(!FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, key, valueCString)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair() failed");
 		return false;
 	}
 	
-	if(false == FLAC__metadata_object_vorbiscomment_replace_comment(block, entry, false, false)) {
-		ERR("FLAC__metadata_object_vorbiscomment_replace_comment failed");
+	if(!FLAC__metadata_object_vorbiscomment_replace_comment(block, entry, false, false)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_replace_comment() failed");
 		return false;
 	}
 	
@@ -132,8 +136,9 @@ SetVorbisCommentDouble(FLAC__StreamMetadata		*block,
 	
 	if(NULL != value) {
 		double f;
-		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			ERR("CFNumberGetValue failed");
+		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
 			return false;
 		}
 
@@ -151,9 +156,7 @@ SetVorbisCommentDouble(FLAC__StreamMetadata		*block,
 	return result;
 }
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef FLACMetadata::CreateSupportedFileExtensions()
 {
@@ -187,9 +190,7 @@ bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 FLACMetadata::FLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -198,9 +199,7 @@ FLACMetadata::FLACMetadata(CFURLRef url)
 FLACMetadata::~FLACMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -209,7 +208,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
@@ -218,7 +217,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	if(NULL == chain)
 		return false;
 	
-	if(false == FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
+	if(!FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
 
 		// Attempt to provide a descriptive error message
 		if(NULL != error) {
@@ -353,7 +352,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 					char *fieldValue = NULL;
 					
 					// Let FLAC parse the comment for us
-					if(false == FLAC__metadata_object_vorbiscomment_entry_to_name_value_pair(block->data.vorbis_comment.comments[i], &fieldName, &fieldValue)) {
+					if(!FLAC__metadata_object_vorbiscomment_entry_to_name_value_pair(block->data.vorbis_comment.comments[i], &fieldName, &fieldValue)) {
 						// Ignore malformed comments
 						continue;
 					}
@@ -522,7 +521,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
@@ -531,7 +530,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	if(NULL == chain)
 		return false;
 	
-	if(false == FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
+	if(!FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
 		
 		// Attempt to provide a descriptive error message
 		if(NULL != error) {
@@ -648,7 +647,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	
 	// Seek to the vorbis comment block if it exists
 	while(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator)) {
-		if(false == FLAC__metadata_iterator_next(iterator))
+		if(!FLAC__metadata_iterator_next(iterator))
 			break; // Already at end
 	}
 	
@@ -671,7 +670,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		}
 		
 		// Add our metadata
-		if(false == FLAC__metadata_iterator_insert_block_after(iterator, block)) {
+		if(!FLAC__metadata_iterator_insert_block_after(iterator, block)) {
 			if(NULL != error) {
 				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																				   32,
@@ -777,8 +776,9 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
 			char key [keySize + 1];
 			       
-			if(false == CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				ERR("CFStringGetCString failed");
+			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
+				LOG4CXX_WARN(logger, "CFStringGetCString() failed");
 				continue;
 			}
 			
@@ -794,7 +794,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
 	// Write the new metadata to the file
-	if(false == FLAC__metadata_chain_write(chain, true, false)) {
+	if(!FLAC__metadata_chain_write(chain, true, false)) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,

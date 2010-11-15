@@ -29,17 +29,15 @@
  */
 
 #include <taglib/aifffile.h>
+#include <log4cxx/logger.h>
 
-#include "AudioEngineDefines.h"
 #include "AIFFMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef AIFFMetadata::CreateSupportedFileExtensions()
 {
@@ -75,9 +73,7 @@ bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 AIFFMetadata::AIFFMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -86,9 +82,7 @@ AIFFMetadata::AIFFMetadata(CFURLRef url)
 AIFFMetadata::~AIFFMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -97,7 +91,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf));
@@ -163,7 +157,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf), false);

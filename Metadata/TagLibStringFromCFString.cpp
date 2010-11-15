@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
 #include "TagLibStringFromCFString.h"
 
 TagLib::String 
@@ -63,8 +63,10 @@ TagLib::StringFromCFString(CFStringRef s)
 										 count, 
 										 &used);
 	
-	if(CFStringGetLength(s) != converted)
-		LOG("CFStringGetBytes failed: converted %ld of %ld characters", converted, CFStringGetLength(s));
+	if(CFStringGetLength(s) != converted) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		LOG4CXX_WARN(logger, "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
+	}
 	
 	// Add terminator
 	buf[used] = '\0';

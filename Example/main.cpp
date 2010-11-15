@@ -79,7 +79,7 @@ int main(int argc, char *argv [])
 		decoder->SetRenderingStartedCallback(renderingStarted, NULL);
 		decoder->SetRenderingFinishedCallback(renderingFinished, NULL);
 		
-		if(false == player.Enqueue(decoder)) {
+		if(!player.Enqueue(decoder)) {
 			puts("Couldn't enqueue decoder");
 			delete decoder, decoder = NULL;
 		}

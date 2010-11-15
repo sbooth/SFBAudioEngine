@@ -32,16 +32,14 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "OggVorbisDecoder.h"
 #include "CreateDisplayNameForURL.h"
 
-
 #define BUFFER_SIZE_FRAMES 2048
 
-
 #pragma mark Callbacks
-
 
 static size_t
 read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
@@ -88,9 +86,7 @@ tell_func_callback(void *datasource)
 	return static_cast<long>(decoder->GetInputSource()->GetOffset());
 }
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef OggVorbisDecoder::CreateSupportedFileExtensions()
 {
@@ -126,9 +122,7 @@ bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
 	: AudioDecoder(inputSource)
@@ -142,9 +136,7 @@ OggVorbisDecoder::~OggVorbisDecoder()
 		CloseFile();
 }
 
-
 #pragma mark Functionality
-
 
 bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 {
@@ -194,16 +186,22 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	if(0 != ov_test_open(&mVorbisFile)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+		LOG4CXX_FATAL(logger, "ov_test_open failed");
+
 		if(0 != ov_clear(&mVorbisFile))
-			ERR("ov_clear failed");
+			LOG4CXX_WARN(logger, "ov_clear failed");
 		
 		return false;
 	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
 	if(NULL == ovInfo) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+		LOG4CXX_FATAL(logger, "ov_info failed");
+
 		if(0 != ov_clear(&mVorbisFile))
-			ERR("ov_clear failed");
+			LOG4CXX_WARN(logger, "ov_clear failed");
 		
 		return false;
 	}
@@ -244,8 +242,10 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 
 bool OggVorbisDecoder::CloseFile(CFErrorRef */*error*/)
 {
-	if(0 != ov_clear(&mVorbisFile))
-		ERR("ov_clear failed");
+	if(0 != ov_clear(&mVorbisFile)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+		LOG4CXX_WARN(logger, "ov_clear failed");
+	}
 	
 	return true;
 }
@@ -295,7 +295,8 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 										&currentSection);
 			
 		if(0 > framesRead) {
-			LOG("Ogg Vorbis decode error");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+			LOG4CXX_WARN(logger, "Ogg Vorbis decoding error");
 			return 0;
 		}
 		

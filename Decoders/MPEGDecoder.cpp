@@ -34,12 +34,12 @@
 #include <sys/stat.h>
 #include <stdexcept>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "MPEGDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
-
 
 #define INPUT_BUFFER_SIZE	(5 * 8192)
 #define LAME_HEADER_SIZE	((8 * 5) + 4 + 4 + 8 + 32 + 16 + 16 + 4 + 4 + 8 + 12 + 12 + 8 + 8 + 2 + 3 + 11 + 32 + 32 + 32)
@@ -95,9 +95,7 @@ audio_linear_round(unsigned int bits,
 }
 // End madplay code
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef MPEGDecoder::CreateSupportedFileExtensions()
 {
@@ -131,9 +129,7 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 MPEGDecoder::MPEGDecoder(InputSource *inputSource)
 	: AudioDecoder(inputSource), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0)
@@ -163,9 +159,7 @@ MPEGDecoder::~MPEGDecoder()
 	mad_stream_finish(&mStream);
 }
 
-
 #pragma mark Functionality
-
 
 bool MPEGDecoder::OpenFile(CFErrorRef *error)
 {
@@ -377,9 +371,8 @@ bool MPEGDecoder::DecodeMPEGFrame(bool decoderHeaderOnly)
 			// Read raw bytes from the MP3 file
 			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
 			if(0 == bytesRead && !mInputSource->AtEOF()) {
-#if DEBUG
-				LOG("Read error");
-#endif
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+				LOG4CXX_ERROR(logger, "Read error");
 				return false;
 			}
 			
@@ -417,10 +410,10 @@ bool MPEGDecoder::DecodeMPEGFrame(bool decoderHeaderOnly)
 					
 					mad_stream_skip(&mStream, id3_length);
 				}
-#if DEBUG
-				else
-					LOG("Recoverable frame level error (%s)", mad_stream_errorstr(&mStream));
-#endif
+				else {
+					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+					LOG4CXX_WARN(logger, "Recoverable frame level error (" << mad_stream_errorstr(&mStream) << ")");
+				}
 				
 				continue;
 			}
@@ -431,9 +424,8 @@ bool MPEGDecoder::DecodeMPEGFrame(bool decoderHeaderOnly)
 			else if(MAD_ERROR_BUFLEN == mStream.error)
 				continue;
 			else {
-#if DEBUG
-				LOG("Unrecoverable frame level error (%s)", mad_stream_errorstr(&mStream));
-#endif
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+				LOG4CXX_ERROR(logger, "Unrecoverable frame level error (" << mad_stream_errorstr(&mStream) << ")");
 				break;
 			}
 		}
@@ -503,7 +495,8 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 {
 	// Attempt to decode the first MPEG frame, in hope of a Xing header
 	if(!DecodeMPEGFrame()) {
-		ERR("Could not decode first MPEG frame");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+		LOG4CXX_ERROR(logger, "Could not decode first MPEG frame");
 		return false;
 	}
 

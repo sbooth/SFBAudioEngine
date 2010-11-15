@@ -33,7 +33,6 @@
 #include <AudioToolbox/ExtendedAudioFile.h>
 #include "AudioDecoder.h"
 
-
 // ========================================
 // An AudioDecoder subclass supporting all formats handled by Core Audio
 // ========================================

@@ -29,11 +29,10 @@
  */
 
 #include <wavpack/wavpack.h>
+#include <log4cxx/logger.h>
 
-#include "AudioEngineDefines.h"
 #include "WavPackMetadata.h"
 #include "CreateDisplayNameForURL.h"
-
 
 // ========================================
 // WavPack comment utilities
@@ -56,13 +55,15 @@ SetWavPackTag(WavpackContext	*wpc,
 	CFIndex valueCStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(value), kCFStringEncodingUTF8)  + 1;
 	char valueCString [valueCStringSize];
 	
-	if(false == CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
-		ERR("CFStringGetCString failed");
+	if(!CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
+		LOG4CXX_WARN(logger, "CFStringGetCString() failed");
 		return false;
 	}
 	
-	if(false == WavpackAppendTagItem(wpc, key, valueCString, static_cast<int>(strlen(valueCString)))) {
-		ERR("WavpackAppendTagItem failed");
+	if(!WavpackAppendTagItem(wpc, key, valueCString, static_cast<int>(strlen(valueCString)))) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
+		LOG4CXX_WARN(logger, "WavpackAppendTagItem() failed");
 		return false;
 	}
 	
@@ -122,8 +123,9 @@ SetWavPackTagDouble(WavpackContext		*wpc,
 	
 	if(NULL != value) {
 		double f;
-		if(false == CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			ERR("CFNumberGetValue failed");
+		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
+			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
 			return false;
 		}
 		
@@ -141,9 +143,7 @@ SetWavPackTagDouble(WavpackContext		*wpc,
 	return result;
 }
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef WavPackMetadata::CreateSupportedFileExtensions()
 {
@@ -177,9 +177,7 @@ bool WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 WavPackMetadata::WavPackMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -188,9 +186,7 @@ WavPackMetadata::WavPackMetadata(CFURLRef url)
 WavPackMetadata::~WavPackMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -199,7 +195,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
 	
 
@@ -454,7 +450,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	
@@ -564,8 +560,9 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
 			char key [keySize + 1];
 			
-			if(false == CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				ERR("CFStringGetCString failed");
+			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
+				LOG4CXX_WARN(logger, "CFStringGetCString() failed");
 				continue;
 			}
 			
@@ -580,7 +577,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	SetWavPackTagDouble(wpc, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
 	SetWavPackTagDouble(wpc, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
-	if(false == WavpackWriteTag(wpc)) {
+	if(!WavpackWriteTag(wpc)) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,

@@ -32,7 +32,6 @@
 
 #include <CoreAudio/CoreAudio.h>
 
-
 // ========================================
 // Utility function for allocating an AudioBufferList struct
 // ========================================

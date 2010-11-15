@@ -28,17 +28,17 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "InputSource.h"
 #include "FileInputSource.h"
 #include "MemoryMappedFileInputSource.h"
 #include "InMemoryFileInputSource.h"
 
-
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.SFBAudioEngine.ErrorDomain.InputSource");
+const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
 
 
 #pragma mark Static Methods
@@ -70,7 +70,8 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 					delete inputSource, inputSource = NULL;
 			}
 			else {
-				LOG("The requested URL doesn't exist");
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource");
+				LOG4CXX_WARN(logger, "The requested URL doesn't exist");
 				
 				if(error) {
 					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -108,8 +109,10 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 				}				
 			}
 		}
-		else
-			ERR("CFURLCreatePropertyFromResource failed: %i", errorCode);		
+		else {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource");
+			LOG4CXX_WARN(logger, "CFURLCreatePropertyFromResource failed: " << errorCode);
+		}
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}

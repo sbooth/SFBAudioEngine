@@ -32,7 +32,8 @@
 #include <CoreServices/CoreServices.h>
 #include <stdexcept>
 
-#include "AudioEngineDefines.h"
+#include <log4cxx/logger.h>
+
 #include "AudioDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "LoopableRegionDecoder.h"
@@ -43,15 +44,12 @@
 #include "OggVorbisDecoder.h"
 #include "MusepackDecoder.h"
 
-
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	AudioDecoderErrorDomain					= CFSTR("org.sbooth.SFBAudioEngine.ErrorDomain.AudioDecoder");
-
+const CFStringRef	AudioDecoderErrorDomain					= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioDecoder");
 
 #pragma mark Static Methods
-
 
 CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 {
@@ -310,7 +308,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(NULL == decoder)
 		return NULL;
 	
-	if(false == decoder->SupportsSeeking()) {
+	if(!decoder->SupportsSeeking()) {
 		delete decoder;
 		return NULL;
 	}
@@ -325,7 +323,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(NULL == decoder)
 		return NULL;
 	
-	if(false == decoder->SupportsSeeking()) {
+	if(!decoder->SupportsSeeking()) {
 		delete decoder;
 		return NULL;
 	}
@@ -341,7 +339,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 		return NULL;
 	
 	// In order to repeat a decoder must support seeking
-	if(false == decoder->SupportsSeeking()) {
+	if(!decoder->SupportsSeeking()) {
 		delete decoder;
 		return NULL;
 	}
@@ -349,9 +347,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount, repeatCount);
 }
 
-
 #pragma mark Creation and Destruction
-
 
 AudioDecoder::AudioDecoder()
 	: mInputSource(NULL)
@@ -383,9 +379,7 @@ AudioDecoder::~AudioDecoder()
 		delete mInputSource, mInputSource = NULL;
 }
 
-
 #pragma mark Operator Overloads
-
 
 AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 {
@@ -404,9 +398,7 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 	return *this;
 }
 
-
 #pragma mark Base Functionality
-
 
 CFStringRef AudioDecoder::CreateSourceFormatDescription()
 {
@@ -418,8 +410,12 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription()
 																		 &sourceFormatNameSize, 
 																		 &sourceFormatDescription);
 
-	if(noErr != result)
-		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+		CFStringRef osType = UTCreateStringForOSType(result);
+		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
+		CFRelease(osType), osType = NULL;
+	}
 	
 	return sourceFormatDescription;
 }
@@ -434,8 +430,12 @@ CFStringRef AudioDecoder::CreateFormatDescription()
 																		 &specifierSize, 
 																		 &sourceFormatDescription);
 
-	if(noErr != result)
-		ERR("AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
+		CFStringRef osType = UTCreateStringForOSType(result);
+		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
+		CFRelease(osType), osType = NULL;
+	}
 	
 	return sourceFormatDescription;
 }
@@ -450,15 +450,17 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription()
 																		 &specifierSize, 
 																		 &channelLayoutDescription);
 
-	if(noErr != result)
-		ERR("AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %i (%.4s)", result, reinterpret_cast<const char *>(&result));
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
+		CFStringRef osType = UTCreateStringForOSType(result);
+		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
+		CFRelease(osType), osType = NULL;
+	}
 	
 	return channelLayoutDescription;
 }
 
-
 #pragma mark Callbacks
-
 
 void AudioDecoder::SetDecodingStartedCallback(AudioDecoderCallback callback, void *context)
 {

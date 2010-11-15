@@ -31,16 +31,13 @@
 #include <taglib/oggflacfile.h>
 #include <taglib/flacproperties.h>
 
-#include "AudioEngineDefines.h"
 #include "OggFLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef OggFLACMetadata::CreateSupportedFileExtensions()
 {
@@ -76,9 +73,7 @@ bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 OggFLACMetadata::OggFLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -87,9 +82,7 @@ OggFLACMetadata::OggFLACMetadata(CFURLRef url)
 OggFLACMetadata::~OggFLACMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -98,7 +91,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf));
@@ -163,7 +156,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 bool OggFLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::Ogg::FLAC::File file(reinterpret_cast<const char *>(buf), false);

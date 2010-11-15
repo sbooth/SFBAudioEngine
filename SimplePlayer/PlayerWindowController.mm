@@ -7,7 +7,7 @@
 
 #include <libkern/OSAtomic.h>
 
-#define DSP_ENABLED 1
+#define DSP_ENABLED 0
 
 #if DSP_ENABLED
 #  include <SFBAudioEngine/DSPAudioPlayer.h>
@@ -192,7 +192,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 		return;
 	}
 
-	if(false == PLAYER->IsPlaying())
+	if(!PLAYER->IsPlaying())
 		[_playButton setTitle:@"Resume"];
 	else
 		[_playButton setTitle:@"Pause"];

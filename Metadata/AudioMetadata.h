@@ -32,7 +32,6 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-
 // ========================================
 // Error Codes
 // ========================================
@@ -43,7 +42,6 @@ enum {
 	AudioMetadataFileFormatNotSupportedError		= 1,
 	AudioMetadataInputOutputError					= 2
 };
-
 
 // ========================================
 // Key names for the metadata dictionary (for subclass use)
@@ -80,7 +78,6 @@ extern const CFStringRef		kReplayGainTrackPeakKey;
 extern const CFStringRef		kReplayGainAlbumGainKey;
 extern const CFStringRef		kReplayGainAlbumPeakKey;
 extern const CFStringRef		kAlbumArtFrontCoverKey;
-
 
 // ========================================
 // Base class for all audio metadata reader/writer classes
@@ -209,9 +206,8 @@ public:
 	CFDataRef GetFrontCoverArt();
 	void SetFrontCoverArt(CFDataRef frontCoverArt);
 
-	
 protected:
-	
+
 	// ========================================
 	// Data members
 	CFURLRef						mURL;				// The location of the stream to be read/written

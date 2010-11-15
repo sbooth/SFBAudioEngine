@@ -32,7 +32,6 @@
 
 #include "AudioConverter.h"
 
-
 // ========================================
 // An AudioConverter subclass that takes most input in most formats and converts it to 64-bit deinterleaved floats
 // ========================================

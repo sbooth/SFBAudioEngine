@@ -32,16 +32,12 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include "AudioEngineDefines.h"
 #include "WavPackDecoder.h"
 #include "CreateDisplayNameForURL.h"
 
-
 #define BUFFER_SIZE_FRAMES 2048
 
-
 #pragma mark Callbacks
-
 
 static int32_t
 read_bytes_callback(void *id, void *data, int32_t bcount)
@@ -134,9 +130,7 @@ can_seek_callback(void *id)
 	return static_cast<uint32_t>(decoder->GetInputSource()->SupportsSeeking());
 }
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef WavPackDecoder::CreateSupportedFileExtensions()
 {
@@ -170,9 +164,7 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 WavPackDecoder::WavPackDecoder(InputSource *inputSource)
 	: AudioDecoder(inputSource), mWPC(NULL), mTotalFrames(0), mCurrentFrame(0)
@@ -186,9 +178,7 @@ WavPackDecoder::~WavPackDecoder()
 		CloseFile();
 }
 
-
 #pragma mark Functionality
-
 
 bool WavPackDecoder::OpenFile(CFErrorRef *error)
 {

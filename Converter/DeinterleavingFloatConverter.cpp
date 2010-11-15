@@ -33,7 +33,6 @@
 
 #include "DeinterleavingFloatConverter.h"
 
-
 DeinterleavingFloatConverter::DeinterleavingFloatConverter(const AudioStreamBasicDescription& sourceFormat)
 {
 	if(kAudioFormatLinearPCM != sourceFormat.mFormatID)

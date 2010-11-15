@@ -32,10 +32,10 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
-#import "AudioDecoder.h"
 
 #include <mpcdec/mpcdec.h>
 
+#import "AudioDecoder.h"
 
 // ========================================
 // An AudioDecoder subclass supporting Musepack

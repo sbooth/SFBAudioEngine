@@ -28,22 +28,19 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+
 #include <taglib/vorbisfile.h>
 #include <taglib/flacpicture.h>
 
-#include "AudioEngineDefines.h"
 #include "OggVorbisMetadata.h"
 #include "CreateDisplayNameForURL.h"
 #include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-#include <openssl/bio.h>
-#include <openssl/evp.h>
-
-
 #pragma mark Base64 Utilities
-
 
 static TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 {
@@ -86,9 +83,7 @@ static TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
 	return result;
 }
 
-
 #pragma mark Static Methods
-
 
 CFArrayRef OggVorbisMetadata::CreateSupportedFileExtensions()
 {
@@ -124,9 +119,7 @@ bool OggVorbisMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-
 #pragma mark Creation and Destruction
-
 
 OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
 	: AudioMetadata(url)
@@ -135,9 +128,7 @@ OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
 OggVorbisMetadata::~OggVorbisMetadata()
 {}
 
-
 #pragma mark Functionality
-
 
 bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 {
@@ -146,7 +137,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 	
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
 	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf));
@@ -225,7 +216,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
-	if(false == CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::Ogg::Vorbis::File file(reinterpret_cast<const char *>(buf), false);
