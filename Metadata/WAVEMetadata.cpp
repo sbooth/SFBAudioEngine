@@ -200,7 +200,7 @@ bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetID3v2TagFromMetadata(this, file.tag());
+	SetID3v2TagFromMetadata(*this, file.tag());
 
 	if(!file.save()) {
 		if(error) {

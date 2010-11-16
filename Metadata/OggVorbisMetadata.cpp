@@ -260,7 +260,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetXiphCommentFromMetadata(this, file.tag());
+	SetXiphCommentFromMetadata(*this, file.tag());
 
 	if(!file.save()) {
 		if(error) {

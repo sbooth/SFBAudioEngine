@@ -41,27 +41,13 @@ TagLib::StringFromCFString(CFStringRef s)
 	CFIndex count;
 
 	// Determine the length of the string in UTF-8
-	CFStringGetBytes(s, 
-					 range, 
-					 kCFStringEncodingUTF8, 
-					 0, 
-					 false, 
-					 NULL, 
-					 0, 
-					 &count);
+	CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
 	
 	char *buf = new char [count + 1];
 
 	// Convert it
 	CFIndex used;
-	CFIndex converted = CFStringGetBytes(s, 
-										 range, 
-										 kCFStringEncodingUTF8, 
-										 0, 
-										 false, 
-										 reinterpret_cast<UInt8 *>(buf), 
-										 count, 
-										 &used);
+	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
 	
 	if(CFStringGetLength(s) != converted) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");

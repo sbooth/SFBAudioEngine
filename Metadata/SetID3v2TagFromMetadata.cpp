@@ -72,63 +72,62 @@ CreateStringFromNumberWithFormat(CFNumberRef	value,
 
 
 bool
-SetID3v2TagFromMetadata(const AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
+SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 {
-	assert(NULL != metadata);
 	assert(NULL != tag);
 	
 	// Use UTF-8 as the default encoding
 	(TagLib::ID3v2::FrameFactory::instance())->setDefaultTextEncoding(TagLib::String::UTF8);
 
 	// Album title
-	tag->setAlbum(TagLib::StringFromCFString(metadata->GetAlbumTitle()));
+	tag->setAlbum(TagLib::StringFromCFString(metadata.GetAlbumTitle()));
 
 	// Artist
-	tag->setArtist(TagLib::StringFromCFString(metadata->GetArtist()));
+	tag->setArtist(TagLib::StringFromCFString(metadata.GetArtist()));
 	
 	// Composer
 	tag->removeFrames("TCOM");
-	if(metadata->GetComposer()) {
+	if(metadata.GetComposer()) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TCOM", TagLib::String::Latin1);
-		frame->setText(TagLib::StringFromCFString(metadata->GetComposer()));
+		frame->setText(TagLib::StringFromCFString(metadata.GetComposer()));
 		tag->addFrame(frame);
 	}
 	
 	// Genre
-	tag->setGenre(TagLib::StringFromCFString(metadata->GetGenre()));
+	tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
 	
 	// Date
 	int year = 0;
-	if(metadata->GetReleaseDate())
-		year = CFStringGetIntValue(metadata->GetReleaseDate());
+	if(metadata.GetReleaseDate())
+		year = CFStringGetIntValue(metadata.GetReleaseDate());
 	tag->setYear(year);
 	
 	// Comment
-	tag->setComment(TagLib::StringFromCFString(metadata->GetComment()));
+	tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
 	
 	// Album artist
 	tag->removeFrames("TPE2");
-	if(metadata->GetAlbumArtist()) {
+	if(metadata.GetAlbumArtist()) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TPE2", TagLib::String::Latin1);
-		frame->setText(TagLib::StringFromCFString(metadata->GetAlbumArtist()));
+		frame->setText(TagLib::StringFromCFString(metadata.GetAlbumArtist()));
 		tag->addFrame(frame);
 	}
 	
 	// Track title
-	tag->setTitle(TagLib::StringFromCFString(metadata->GetTitle()));
+	tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));
 	
 	// BPM
 //	tag->removeFrames("TBPM");
-//	if(metadata->GetBPM()) {
+//	if(metadata.GetBPM()) {
 //		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
-//		frame->setText(TagLib::StringFromCFString(metadata->GetBPM()));
+//		frame->setText(TagLib::StringFromCFString(metadata.GetBPM()));
 //		tag->addFrame(frame);
 //	}
 	
 	// Track number and total tracks
 	tag->removeFrames("TRCK");
-	CFNumberRef trackNumber	= metadata->GetTrackNumber();
-	CFNumberRef trackTotal	= metadata->GetTrackTotal();
+	CFNumberRef trackNumber	= metadata.GetTrackNumber();
+	CFNumberRef trackTotal	= metadata.GetTrackTotal();
 	if(trackNumber && trackTotal) {
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), trackNumber, trackTotal);
 
@@ -160,16 +159,16 @@ SetID3v2TagFromMetadata(const AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	// Compilation
 	// iTunes uses the TCMP frame for this, which isn't in the standard, but we'll use it for compatibility
 	tag->removeFrames("TCMP");
-	if(metadata->GetCompilation()) {
+	if(metadata.GetCompilation()) {
 		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TCMP", TagLib::String::Latin1);
-		frame->setText(CFBooleanGetValue(metadata->GetCompilation()) ? "1" : "0");
+		frame->setText(CFBooleanGetValue(metadata.GetCompilation()) ? "1" : "0");
 		tag->addFrame(frame);
 	}
 	
 	// Disc number and total discs
 	tag->removeFrames("TPOS");
-	CFNumberRef discNumber	= metadata->GetDiscNumber();
-	CFNumberRef discTotal	= metadata->GetDiscTotal();
+	CFNumberRef discNumber	= metadata.GetDiscNumber();
+	CFNumberRef discTotal	= metadata.GetDiscTotal();
 	if(discNumber && discTotal) {
 		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@/%@"), discNumber, discTotal);
 		
@@ -200,15 +199,15 @@ SetID3v2TagFromMetadata(const AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	
 	// Lyrics
 	tag->removeFrames("USLT");
-	if(metadata->GetLyrics()) {
+	if(metadata.GetLyrics()) {
 		TagLib::ID3v2::UnsynchronizedLyricsFrame *frame = new TagLib::ID3v2::UnsynchronizedLyricsFrame(TagLib::String::UTF8);
-		frame->setText(TagLib::StringFromCFString(metadata->GetLyrics()));
+		frame->setText(TagLib::StringFromCFString(metadata.GetLyrics()));
 		tag->addFrame(frame);
 	}
 	
 	// Album art
 	tag->removeFrames("APIC");
-	CFDataRef pictureData = metadata->GetFrontCoverArt();
+	CFDataRef pictureData = metadata.GetFrontCoverArt();
 	if(pictureData) {
 		TagLib::ByteVector pictureBytes(reinterpret_cast<const char *>(CFDataGetBytePtr(pictureData)), static_cast<TagLib::uint>(CFDataGetLength(pictureData)));
 		TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame(pictureBytes);
@@ -216,10 +215,10 @@ SetID3v2TagFromMetadata(const AudioMetadata *metadata, TagLib::ID3v2::Tag *tag)
 	}
 
 	// ReplayGain
-	CFNumberRef trackGain = metadata->GetReplayGainTrackGain();
-	CFNumberRef trackPeak = metadata->GetReplayGainTrackPeak();
-	CFNumberRef albumGain = metadata->GetReplayGainAlbumGain();
-	CFNumberRef albumPeak = metadata->GetReplayGainAlbumPeak();
+	CFNumberRef trackGain = metadata.GetReplayGainTrackGain();
+	CFNumberRef trackPeak = metadata.GetReplayGainTrackPeak();
+	CFNumberRef albumGain = metadata.GetReplayGainAlbumGain();
+	CFNumberRef albumPeak = metadata.GetReplayGainAlbumPeak();
 	
 	// Write TXXX frames
 	TagLib::ID3v2::UserTextIdentificationFrame *trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "replaygain_track_gain");

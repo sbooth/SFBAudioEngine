@@ -132,58 +132,57 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment	*tag,
 }
 
 bool
-SetXiphCommentFromMetadata(const AudioMetadata *metadata, TagLib::Ogg::XiphComment *tag)
+SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag)
 {
-	assert(NULL != metadata);
 	assert(NULL != tag);
 
 	// Album title
-	SetXiphComment(tag, "ALBUM", metadata->GetAlbumTitle());
+	SetXiphComment(tag, "ALBUM", metadata.GetAlbumTitle());
 	
 	// Artist
-	SetXiphComment(tag, "ARTIST", metadata->GetArtist());
+	SetXiphComment(tag, "ARTIST", metadata.GetArtist());
 	
 	// Album Artist
-	SetXiphComment(tag, "ALBUMARTIST", metadata->GetAlbumArtist());
+	SetXiphComment(tag, "ALBUMARTIST", metadata.GetAlbumArtist());
 	
 	// Composer
-	SetXiphComment(tag, "COMPOSER", metadata->GetComposer());
+	SetXiphComment(tag, "COMPOSER", metadata.GetComposer());
 	
 	// Genre
-	SetXiphComment(tag, "GENRE", metadata->GetGenre());
+	SetXiphComment(tag, "GENRE", metadata.GetGenre());
 	
 	// Date
-	SetXiphComment(tag, "DATE", metadata->GetReleaseDate());
+	SetXiphComment(tag, "DATE", metadata.GetReleaseDate());
 	
 	// Comment
-	SetXiphComment(tag, "DESCRIPTION", metadata->GetComment());
+	SetXiphComment(tag, "DESCRIPTION", metadata.GetComment());
 	
 	// Track title
-	SetXiphComment(tag, "TITLE", metadata->GetTitle());
+	SetXiphComment(tag, "TITLE", metadata.GetTitle());
 	
 	// Track number
-	SetXiphCommentNumber(tag, "TRACKNUMBER", metadata->GetTrackNumber());
+	SetXiphCommentNumber(tag, "TRACKNUMBER", metadata.GetTrackNumber());
 	
 	// Total tracks
-	SetXiphCommentNumber(tag, "TRACKTOTAL", metadata->GetTrackTotal());
+	SetXiphCommentNumber(tag, "TRACKTOTAL", metadata.GetTrackTotal());
 	
 	// Compilation
-	SetXiphCommentBoolean(tag, "COMPILATION", metadata->GetCompilation());
+	SetXiphCommentBoolean(tag, "COMPILATION", metadata.GetCompilation());
 	
 	// Disc number
-	SetXiphCommentNumber(tag, "DISCNUMBER", metadata->GetDiscNumber());
+	SetXiphCommentNumber(tag, "DISCNUMBER", metadata.GetDiscNumber());
 	
 	// Disc total
-	SetXiphCommentNumber(tag, "DISCTOTAL", metadata->GetDiscTotal());
+	SetXiphCommentNumber(tag, "DISCTOTAL", metadata.GetDiscTotal());
 	
 	// ISRC
-	SetXiphComment(tag, "ISRC", metadata->GetISRC());
+	SetXiphComment(tag, "ISRC", metadata.GetISRC());
 	
 	// MCN
-	SetXiphComment(tag, "MCN", metadata->GetMCN());
+	SetXiphComment(tag, "MCN", metadata.GetMCN());
 	
 	// Additional metadata
-	CFDictionaryRef additionalMetadata = metadata->GetAdditionalMetadata();
+	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
 	if(NULL != additionalMetadata) {
 		CFIndex count = CFDictionaryGetCount(additionalMetadata);
 		
@@ -209,11 +208,11 @@ SetXiphCommentFromMetadata(const AudioMetadata *metadata, TagLib::Ogg::XiphComme
 	}
 	
 	// ReplayGain info
-	SetXiphCommentDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata->GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata->GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata->GetReplayGainTrackGain(), CFSTR("%1.8f"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata->GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata->GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata.GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata.GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata.GetReplayGainTrackGain(), CFSTR("%1.8f"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata.GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
+	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 	
 	return true;
 }

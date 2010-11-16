@@ -230,7 +230,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetID3v2TagFromMetadata(this, file.ID3v2Tag(true));
+	SetID3v2TagFromMetadata(*this, file.ID3v2Tag(true));
 
 	if(!file.save()) {
 		if(error) {
