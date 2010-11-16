@@ -7,7 +7,6 @@
 
 #include "SFBAudioEngine/AudioDecoder.h"
 #include "SFBAudioEngine/AudioPlayer.h"
-#include "SFBAudioEngine/DSPAudioPlayer.h"
 
 #include <unistd.h>
 
