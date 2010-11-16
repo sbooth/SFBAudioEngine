@@ -1620,7 +1620,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						restartIO = StopOutput();
 
 					// Get the new virtual format
-					AudioStreamBasicDescription virtualFormat;
+					CAStreamBasicDescription virtualFormat;
 					UInt32 dataSize = sizeof(virtualFormat);
 					
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
@@ -1635,9 +1635,8 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 
-					CAStreamBasicDescription streamVirtualFormat(virtualFormat);
-					fprintf(stderr, "-> kAudioStreamPropertyVirtualFormat [%#x]: ", inObjectID);
-					streamVirtualFormat.Print(stderr);
+					char buf [512];
+					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::setbase(16) << inObjectID << "]: " << virtualFormat.AsString(buf, 512));
 
 					mStreamVirtualFormats[inObjectID] = virtualFormat;
 
