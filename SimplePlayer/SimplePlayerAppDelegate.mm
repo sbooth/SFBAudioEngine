@@ -34,7 +34,7 @@
 {
 #pragma unused(theApplication)
 	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();	
-	BOOL extensionValid = [reinterpret_cast<const NSArray *>(supportedTypes) containsObject:[filename pathExtension]];
+	BOOL extensionValid = [(NSArray *)supportedTypes containsObject:[filename pathExtension]];
 	CFRelease(supportedTypes), supportedTypes = NULL;
 	
 	if(NO == extensionValid)
@@ -53,7 +53,7 @@
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
 
-	if(NSFileHandlingPanelOKButton == [openPanel runModalForTypes:reinterpret_cast<const NSArray *>(supportedTypes)]) {
+	if(NSFileHandlingPanelOKButton == [openPanel runModalForTypes:(NSArray *)supportedTypes]) {
 		NSArray *filenames = [openPanel filenames];
 		[_playerWindowController playFile:[filenames objectAtIndex:0]];	
 	}	

@@ -210,7 +210,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 - (void) updateWindowUI
 {
-	NSURL *url = reinterpret_cast<const NSURL *>(PLAYER->GetPlayingURL());
+	NSURL *url = (NSURL *)PLAYER->GetPlayingURL();
 	
 	// Nothing happening, reset the window
 	if(NULL == url) {
