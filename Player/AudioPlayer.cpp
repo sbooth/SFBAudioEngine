@@ -813,7 +813,7 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate)
 bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting device " << std::setbase(16) << mOutputDeviceID << " sample rate to " << std::setw(4) << deviceSampleRate << " Hz");
+	LOG4CXX_DEBUG(logger, "Setting device 0x" << std::setbase(16) << mOutputDeviceID << " sample rate to " << std::setw(4) << deviceSampleRate << " Hz");
 
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
@@ -1471,7 +1471,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 					
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyNominalSampleRate [0x" << std::setbase(16) << inObjectID << "]: " << deviceSampleRate);
+					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyNominalSampleRate [0x" << std::setbase(16) << inObjectID << "]: " << deviceSampleRate << " Hz");
 					
 					break;
 				}
@@ -2413,8 +2413,7 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 			return false;
 		}
 		
-		LOG4CXX_DEBUG(logger, "Using sample rate converter: " << mSampleRateConverter);
-//		CAShow(mSampleRateConverter);
+		LOG4CXX_DEBUG(logger, "Using sample rate converter for " << mRingBufferFormat.mSampleRate << " Hz to " << deviceSampleRate << " Hz conversion");
 		
 		// Calculate how large the sample rate conversion buffer must be
 		UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
