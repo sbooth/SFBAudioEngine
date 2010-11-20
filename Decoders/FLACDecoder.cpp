@@ -208,7 +208,16 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 		return false;
 	}
 	
-	CFStringRef extension = CFURLCopyPathExtension(GetURL());
+	CFStringRef fileSystemPath = CFURLCopyFileSystemPath(GetURL(), kCFURLPOSIXPathStyle);
+	CFStringRef extension = NULL;
+	
+	CFRange range;
+	if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
+		extension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
+	}
+	
+	CFRelease(fileSystemPath), fileSystemPath = NULL;
+
 	if(NULL == extension) {
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 		return false;

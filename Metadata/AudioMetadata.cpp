@@ -248,8 +248,16 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		if(NULL != fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
-				CFStringRef pathExtension = CFURLCopyPathExtension(url);
-				
+				CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+				CFStringRef pathExtension = NULL;
+
+				CFRange range;
+				if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
+					pathExtension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
+				}
+
+				CFRelease(fileSystemPath), fileSystemPath = NULL;
+
 				if(NULL != pathExtension) {
 					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
