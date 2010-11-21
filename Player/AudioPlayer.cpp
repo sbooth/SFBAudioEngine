@@ -1174,11 +1174,16 @@ bool AudioPlayer::Enqueue(CFURLRef url)
 bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	assert(NULL != decoder);
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+
+	CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
+	LOG4CXX_DEBUG(logger, "Enqueuing \"" << StringFromCFString(displayName) << "\"");
+	CFRelease(displayName), displayName = NULL;
 	
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
 		return false;
 	}
@@ -1187,10 +1192,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		
 	lockResult = pthread_mutex_unlock(&mMutex);
 		
-	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	if(0 != lockResult)
 		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
-	}
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && queueEmpty) {
@@ -1213,19 +1216,24 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
 		
-		bool	formatsMatch			= (nextFormat.mSampleRate == mRingBufferFormat.mSampleRate && nextFormat.mChannelsPerFrame == mRingBufferFormat.mChannelsPerFrame);
+		bool	sampleRatesMatch		= (nextFormat.mSampleRate == mRingBufferFormat.mSampleRate);
+		bool	channelCountsMatch		= (nextFormat.mChannelsPerFrame == mRingBufferFormat.mChannelsPerFrame);
 	//	bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(&nextChannelLayout, &mRingBufferChannelLayout);
-		
-		// The two files can be joined seamlessly only if they have the same formats and channel layouts
-		if(!formatsMatch /*|| !channelLayoutsMatch*/)
+
+		// The two files can be joined seamlessly only if they have the same sample rates, channel counts and channel layouts
+		if(!sampleRatesMatch || !channelCountsMatch /*|| !channelLayoutsMatch*/) {
+			if(!sampleRatesMatch)
+				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+			if(!channelCountsMatch)
+				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 			return false;
+		}
 	}
 	
 	// Add the decoder to the queue
 	lockResult = pthread_mutex_lock(&mMutex);
 	
 	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
 		return false;
 	}
@@ -1234,10 +1242,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	
 	lockResult = pthread_mutex_unlock(&mMutex);
 	
-	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	if(0 != lockResult)
 		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
-	}
 	
 	semaphore_signal(mDecoderSemaphore);
 	
@@ -1770,7 +1776,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			char buf [256];
 			CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-			LOG4CXX_DEBUG(logger, "Starting decoder for \"" << StringFromCFString(displayName) << "\"");
+			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << StringFromCFString(displayName) << "\"");
 			CFRelease(displayName), displayName = NULL;
 			CAStreamBasicDescription decoderASBD = decoder->GetFormat();
 			LOG4CXX_DEBUG(logger, "Decoder format: " << decoderASBD.AsString(buf, 256));
@@ -1865,7 +1871,6 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// Convert and store the decoded audio
 						if(0 != framesDecoded) {
-							
 							UInt32 framesConverted = converter->Convert(decoderState->mBufferList, bufferList, framesDecoded);
 							
 							if(framesConverted != framesDecoded)
@@ -1901,7 +1906,9 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded) {
-							LOG4CXX_DEBUG(logger, "Decoding finished");
+							CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
+							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << StringFromCFString(displayName) << "\"");
+							CFRelease(displayName), displayName = NULL;
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
