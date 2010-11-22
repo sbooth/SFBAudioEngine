@@ -866,6 +866,9 @@ bool AudioPlayer::OutputDeviceIsHogged()
 
 bool AudioPlayer::StartHoggingOutputDevice()
 {
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Taking hog mode for device 0x" << std::setbase(16) << mOutputDeviceID);
+
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyHogMode, 
@@ -884,14 +887,12 @@ bool AudioPlayer::StartHoggingOutputDevice()
 												 &hogPID);
 	
 	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 	
 	// The device is already hogged
 	if(hogPID != static_cast<pid_t>(-1)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_DEBUG(logger, "Device is already hogged by pid: " << hogPID);
 		return false;
 	}
@@ -912,7 +913,6 @@ bool AudioPlayer::StartHoggingOutputDevice()
 										&hogPID);
 	
 	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
@@ -926,6 +926,9 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 bool AudioPlayer::StopHoggingOutputDevice()
 {
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Releasing hog mode for device 0x" << std::setbase(16) << mOutputDeviceID);
+
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyHogMode, 
@@ -944,7 +947,6 @@ bool AudioPlayer::StopHoggingOutputDevice()
 												 &hogPID);
 	
 	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
@@ -969,7 +971,6 @@ bool AudioPlayer::StopHoggingOutputDevice()
 										&hogPID);
 	
 	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
@@ -1906,7 +1907,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded) {
-							CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
+							displayName = CreateDisplayNameForURL(decoder->GetURL());
 							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << StringFromCFString(displayName) << "\"");
 							CFRelease(displayName), displayName = NULL;
 
@@ -2062,25 +2063,7 @@ bool AudioPlayer::OpenOutput()
 										&deviceName);
 
 	if(kAudioHardwareNoError == result) {
-		CFRange range = CFRangeMake(0, CFStringGetLength(deviceName));
-		CFIndex count;
-		
-		// Determine the length of the string in UTF-8
-		CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
-		
-		char buf [count + 1];
-		
-		// Convert it
-		CFIndex used;
-		CFIndex converted = CFStringGetBytes(deviceName, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
-		
-		if(CFStringGetLength(deviceName) != converted)
-			LOG4CXX_WARN(logger, "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(deviceName) << " characters");
-		
-		// Add terminator
-		buf[used] = '\0';
-		
-		LOG4CXX_DEBUG(logger, "Opening output for device 0x" << std::setbase(16) << mOutputDeviceID << " (" << buf << ")");
+		LOG4CXX_DEBUG(logger, "Opening output for device 0x" << std::setbase(16) << mOutputDeviceID << " (" << StringFromCFString(deviceName) << ")");
 	}
 	else
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: " << result);
