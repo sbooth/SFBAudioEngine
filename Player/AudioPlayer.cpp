@@ -54,10 +54,9 @@
 #include "DeinterleavingFloatConverter.h"
 #include "PCMConverter.h"
 #include "CreateDisplayNameForURL.h"
-#include "StringFromCFString.h"
+#include "CFOperatorOverloads.h"
 
 #include "CARingBuffer.h"
-#include "CAStreamBasicDescription.h"
 
 // ========================================
 // Macros
@@ -647,7 +646,7 @@ bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume)
 bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device 0x" << std::setbase(16) << mOutputDeviceID << " channel " << channel << " volume to " << volume);
+	LOG4CXX_DEBUG(logger, "Setting output device 0x" << std::hex << mOutputDeviceID << " channel " << channel << " volume to " << volume);
 
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyVolumeScalar, 
@@ -707,7 +706,7 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID()
 bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device UID to " << StringFromCFString(deviceUID));
+	LOG4CXX_DEBUG(logger, "Setting output device UID to " << deviceUID);
 
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
@@ -773,7 +772,7 @@ bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 	assert(kAudioDeviceUnknown != deviceID);
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device ID to 0x" << std::setbase(16) << deviceID);
+	LOG4CXX_DEBUG(logger, "Setting output device ID to 0x" << std::hex << deviceID);
 	
 	if(deviceID == mOutputDeviceID)
 		return true;
@@ -818,7 +817,7 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate)
 bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting device 0x" << std::setbase(16) << mOutputDeviceID << " sample rate to " << deviceSampleRate << " Hz");
+	LOG4CXX_DEBUG(logger, "Setting device 0x" << std::hex << mOutputDeviceID << " sample rate to " << deviceSampleRate << " Hz");
 
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
@@ -872,7 +871,7 @@ bool AudioPlayer::OutputDeviceIsHogged()
 bool AudioPlayer::StartHoggingOutputDevice()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Taking hog mode for device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_DEBUG(logger, "Taking hog mode for device 0x" << std::hex << mOutputDeviceID);
 
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -932,7 +931,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 bool AudioPlayer::StopHoggingOutputDevice()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Releasing hog mode for device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_DEBUG(logger, "Releasing hog mode for device 0x" << std::hex << mOutputDeviceID);
 
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1038,7 +1037,7 @@ bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStre
 {
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::setbase(16) << streamID);
+		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
 		return false;
 	}
 
@@ -1069,12 +1068,10 @@ bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStre
 bool AudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-
-	char buf [512];
-	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::setbase(16) << streamID << " virtual format to: " << CAStreamBasicDescription(virtualFormat).AsString(buf, 512));
+	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::hex << streamID << " virtual format to: " << virtualFormat);
 
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::setbase(16) << streamID);
+		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
 		return false;
 	}
 	
@@ -1103,7 +1100,7 @@ bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStr
 {
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::setbase(16) << streamID);
+		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
 		return false;
 	}
 	
@@ -1134,12 +1131,10 @@ bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStr
 bool AudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-
-	char buf [512];
-	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::setbase(16) << streamID << " physical format to: " << CAStreamBasicDescription(physicalFormat).AsString(buf, 512));
+	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::hex << streamID << " physical format to: " << physicalFormat);
 
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::setbase(16) << streamID);
+		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
 		return false;
 	}
 	
@@ -1190,7 +1185,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 
 	CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-	LOG4CXX_DEBUG(logger, "Enqueuing \"" << StringFromCFString(displayName) << "\"");
+	LOG4CXX_DEBUG(logger, "Enqueuing \"" << displayName << "\"");
 	CFRelease(displayName), displayName = NULL;
 	
 	int lockResult = pthread_mutex_lock(&mMutex);
@@ -1467,7 +1462,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyDeviceIsRunning [0x" << std::setbase(16) << inObjectID << "]: " << (isRunning ? "True" : "False"));
+					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyDeviceIsRunning [0x" << std::hex << inObjectID << "]: " << (isRunning ? "True" : "False"));
 
 					break;
 				}
@@ -1489,7 +1484,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 					
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyNominalSampleRate [0x" << std::setbase(16) << inObjectID << "]: " << deviceSampleRate << " Hz");
+					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyNominalSampleRate [0x" << std::hex << inObjectID << "]: " << deviceSampleRate << " Hz");
 					
 					break;
 				}
@@ -1539,7 +1534,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 					
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyStreams [0x" << std::setbase(16) << inObjectID << "]");
+					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyStreams [0x" << std::hex << inObjectID << "]");
 
 					break;
 				}
@@ -1610,13 +1605,13 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyBufferFrameSize [0x" << std::setbase(16) << inObjectID << "]: " << mOutputDeviceBufferFrameSize);
+					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyBufferFrameSize [0x" << std::hex << inObjectID << "]: " << mOutputDeviceBufferFrameSize);
 
 					break;
 				}
 
 				case kAudioDeviceProcessorOverload:
-					LOG4CXX_WARN(logger, "-> kAudioDeviceProcessorOverload [0x" << std::setbase(16) << inObjectID << "]: Unable to meet IOProc time constraints");
+					LOG4CXX_WARN(logger, "-> kAudioDeviceProcessorOverload [0x" << std::hex << inObjectID << "]: Unable to meet IOProc time constraints");
 					break;
 			}
 			
@@ -1638,7 +1633,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						restartIO = StopOutput();
 
 					// Get the new virtual format
-					CAStreamBasicDescription virtualFormat;
+					AudioStreamBasicDescription virtualFormat;
 					UInt32 dataSize = sizeof(virtualFormat);
 					
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
@@ -1653,8 +1648,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 
-					char buf [512];
-					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::setbase(16) << inObjectID << "]: " << virtualFormat.AsString(buf, 512));
+					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
 
 					mStreamVirtualFormats[inObjectID] = virtualFormat;
 
@@ -1672,7 +1666,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				case kAudioStreamPropertyPhysicalFormat:
 				{
 					// Get the new physical format
-					CAStreamBasicDescription physicalFormat;
+					AudioStreamBasicDescription physicalFormat;
 					UInt32 dataSize = sizeof(physicalFormat);
 					
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
@@ -1687,8 +1681,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						continue;
 					}
 
-					char buf [512];
-					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyPhysicalFormat [0x" << std::setbase(16) << inObjectID << "]: " << physicalFormat.AsString(buf, 512));
+					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyPhysicalFormat [0x" << std::hex << inObjectID << "]: " << physicalFormat);
 
 					break;
 				}
@@ -1786,12 +1779,10 @@ void * AudioPlayer::DecoderThreadEntry()
 		// If a decoder was found at the head of the queue, process it
 		if(NULL != decoder) {
 
-			char buf [256];
 			CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << StringFromCFString(displayName) << "\"");
+			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << displayName << "\"");
 			CFRelease(displayName), displayName = NULL;
-			CAStreamBasicDescription decoderASBD = decoder->GetFormat();
-			LOG4CXX_DEBUG(logger, "Decoder format: " << decoderASBD.AsString(buf, 256));
+			LOG4CXX_DEBUG(logger, "Decoder format: " << decoder->GetFormat());
 			
 			// ========================================
 			// Create the decoder state and append to the list of active decoders
@@ -1919,7 +1910,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded) {
 							displayName = CreateDisplayNameForURL(decoder->GetURL());
-							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << StringFromCFString(displayName) << "\"");
+							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << displayName << "\"");
 							CFRelease(displayName), displayName = NULL;
 
 							// Some formats (MP3) may not know the exact number of frames in advance
@@ -1999,7 +1990,7 @@ void * AudioPlayer::CollectorThreadEntry()
 bool AudioPlayer::OpenOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Opening output for device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "Opening output for device 0x" << std::hex << mOutputDeviceID);
 	
 	// Create the IOProc which will feed audio to the device
 	OSStatus result = AudioDeviceCreateIOProcID(mOutputDeviceID, 
@@ -2074,7 +2065,7 @@ bool AudioPlayer::OpenOutput()
 										&deviceName);
 
 	if(kAudioHardwareNoError == result) {
-		LOG4CXX_DEBUG(logger, "Opening output for device 0x" << std::setbase(16) << mOutputDeviceID << " (" << StringFromCFString(deviceName) << ")");
+		LOG4CXX_DEBUG(logger, "Opening output for device 0x" << std::hex << mOutputDeviceID << " (" << deviceName << ")");
 	}
 	else
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: " << result);
@@ -2114,7 +2105,7 @@ bool AudioPlayer::OpenOutput()
 bool AudioPlayer::CloseOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Closing output for device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "Closing output for device 0x" << std::hex << mOutputDeviceID);
 
 	OSStatus result = AudioDeviceDestroyIOProcID(mOutputDeviceID, 
 												 mOutputDeviceIOProcID);
@@ -2201,7 +2192,7 @@ bool AudioPlayer::CloseOutput()
 bool AudioPlayer::StartOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Starting device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "Starting device 0x" << std::hex << mOutputDeviceID);
 
 	OSStatus result = AudioDeviceStart(mOutputDeviceID, 
 									   mOutputDeviceIOProcID);
@@ -2217,7 +2208,7 @@ bool AudioPlayer::StartOutput()
 bool AudioPlayer::StopOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Stopping device 0x" << std::setbase(16) << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "Stopping device 0x" << std::hex << mOutputDeviceID);
 
 	OSStatus result = AudioDeviceStop(mOutputDeviceID, 
 									  mOutputDeviceIOProcID);
@@ -2468,19 +2459,17 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
 		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
 
-		LOG4CXX_DEBUG(logger, "Stream 0x" << std::setbase(16) << streamID << " information: ");
+		LOG4CXX_DEBUG(logger, "Stream 0x" << std::hex << streamID << " information: ");
 
 		std::map<AudioStreamID, AudioStreamBasicDescription>::const_iterator virtualFormatIterator = mStreamVirtualFormats.find(streamID);
 		if(mStreamVirtualFormats.end() == virtualFormatIterator) {
-			LOG4CXX_ERROR(logger, "Unknown virtual format for AudioStreamID 0x" << std::setbase(16) << streamID);
+			LOG4CXX_ERROR(logger, "Unknown virtual format for AudioStreamID 0x" << std::hex << streamID);
 			return false;
 		}
 
 		AudioStreamBasicDescription virtualFormat = virtualFormatIterator->second;
 
-		CAStreamBasicDescription streamVirtualFormat(virtualFormat);
-		char buf [512];
-		LOG4CXX_DEBUG(logger, "  Virtual format: " << streamVirtualFormat.AsString(buf, 512));
+		LOG4CXX_DEBUG(logger, "  Virtual format: " << virtualFormat);
 
 		// Set up the channel mapping to determine if this stream is needed
 		propertyAddress.mSelector = kAudioStreamPropertyStartingChannel;

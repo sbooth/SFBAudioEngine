@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */ = {isa = PBXBuildFile; fileRef = 32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */; };
 		3205E3BF1130787300FD9DAD /* WAVEMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */; };
 		3205E3C01130787300FD9DAD /* WAVEMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E3BE1130787300FD9DAD /* WAVEMetadata.h */; };
 		3205E3CD11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */; };
@@ -31,11 +33,8 @@
 		320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E11821289D18000DAA041 /* libcrypto.dylib */; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
-		3212D0331291912A0065D061 /* StringFromCFString.h in Headers */ = {isa = PBXBuildFile; fileRef = 3212D0311291912A0065D061 /* StringFromCFString.h */; };
-		3212D0341291912A0065D061 /* StringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3212D0321291912A0065D061 /* StringFromCFString.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
 		321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321643761220AAC00010AE57 /* Accelerate.framework */; };
-		32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
 		322D78A9112F971C006676FC /* WavPackMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78A7112F971C006676FC /* WavPackMetadata.cpp */; };
 		322D78AA112F971C006676FC /* WavPackMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78A8112F971C006676FC /* WavPackMetadata.h */; };
 		322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */; };
@@ -66,7 +65,6 @@
 		328AA51F111615390091D56B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
 		328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */; };
 		328EDB8311FD384800266816 /* AddXiphCommentToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */; };
-		3294BE371144AF0A003EB595 /* CAStreamBasicDescription.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA4B6111613F10091D56B /* CAStreamBasicDescription.h */; };
 		3294BE391144AF22003EB595 /* CAMath.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA4CC111614540091D56B /* CAMath.h */; };
 		3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4C8111614540091D56B /* CADebugMacros.cpp */; };
 		3294BE3C1144AF3E003EB595 /* CADebugMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA4C9111614540091D56B /* CADebugMacros.h */; };
@@ -75,7 +73,6 @@
 		32A319FD11C2072C009AE255 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */; };
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
 		32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32B4379A11BAF23B0027F642 /* CoreServices.framework */; };
-		32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
 		32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* DecoderStateData.h */; };
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
@@ -187,6 +184,8 @@
 
 /* Begin PBXFileReference section */
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFOperatorOverloads.h; sourceTree = "<group>"; };
+		32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFOperatorOverloads.cpp; sourceTree = "<group>"; };
 		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
 		3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WAVEMetadata.cpp; sourceTree = "<group>"; };
@@ -211,8 +210,6 @@
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
 		320E117E1289D13100DAA041 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 		320E11821289D18000DAA041 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
-		3212D0311291912A0065D061 /* StringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StringFromCFString.h; sourceTree = "<group>"; };
-		3212D0321291912A0065D061 /* StringFromCFString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringFromCFString.cpp; sourceTree = "<group>"; };
 		321643761220AAC00010AE57 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -253,8 +250,6 @@
 		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
 		328AA025111149970091D56B /* DSPAudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSPAudioPlayer.cpp; sourceTree = "<group>"; };
 		328AA026111149970091D56B /* DSPAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSPAudioPlayer.h; sourceTree = "<group>"; };
-		328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CAStreamBasicDescription.cpp; sourceTree = "<group>"; };
-		328AA4B6111613F10091D56B /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAStreamBasicDescription.h; sourceTree = "<group>"; };
 		328AA4C8111614540091D56B /* CADebugMacros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugMacros.cpp; sourceTree = "<group>"; };
 		328AA4C9111614540091D56B /* CADebugMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugMacros.h; sourceTree = "<group>"; };
 		328AA4CA111614540091D56B /* CADebugPrintf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugPrintf.cpp; sourceTree = "<group>"; };
@@ -401,8 +396,8 @@
 				32DEDA13122C095600C25252 /* DeallocateABL.cpp */,
 				32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */,
 				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
-				3212D0311291912A0065D061 /* StringFromCFString.h */,
-				3212D0321291912A0065D061 /* StringFromCFString.cpp */,
+				32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */,
+				32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -494,8 +489,6 @@
 				328AA4CA111614540091D56B /* CADebugPrintf.cpp */,
 				328AA4CB111614540091D56B /* CADebugPrintf.h */,
 				328AA4CC111614540091D56B /* CAMath.h */,
-				328AA4B5111613F10091D56B /* CAStreamBasicDescription.cpp */,
-				328AA4B6111613F10091D56B /* CAStreamBasicDescription.h */,
 				322B5D99108C223900CA9BDE /* CAAtomic.h */,
 				322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */,
 				322B5D9B108C223900CA9BDE /* CABitOperations.h */,
@@ -633,7 +626,6 @@
 				3205E4C611309CA300FD9DAD /* OggVorbisMetadata.h in Headers */,
 				3205E52D1130F49700FD9DAD /* SetXiphCommentFromMetadata.h in Headers */,
 				3205E5DA11319E6400FD9DAD /* TagLibStringFromCFString.h in Headers */,
-				3294BE371144AF0A003EB595 /* CAStreamBasicDescription.h in Headers */,
 				3294BE391144AF22003EB595 /* CAMath.h in Headers */,
 				3294BE3C1144AF3E003EB595 /* CADebugMacros.h in Headers */,
 				3294BE3E1144AF3F003EB595 /* CADebugPrintf.h in Headers */,
@@ -647,7 +639,7 @@
 				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
 				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
 				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
-				3212D0331291912A0065D061 /* StringFromCFString.h in Headers */,
+				32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -779,7 +771,6 @@
 				32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */,
 				32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */,
 				32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */,
-				32BA2914111B362B00E325DE /* CAStreamBasicDescription.cpp in Sources */,
 				320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */,
 				32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */,
 				32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */,
@@ -810,7 +801,7 @@
 				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
 				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
-				3212D0341291912A0065D061 /* StringFromCFString.cpp in Sources */,
+				32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -819,7 +810,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				32E6AB3B1096745400DA998D /* main.cpp in Sources */,
-				32200CC11119F45500F753AA /* CAStreamBasicDescription.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
