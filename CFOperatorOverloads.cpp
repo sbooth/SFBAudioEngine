@@ -84,10 +84,10 @@ std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& f
 		// Sign
 		bool isInteger = !(kLinearPCMFormatFlagIsFloat & format.mFormatFlags);
 		if(isInteger)
-			out << ((kLinearPCMFormatFlagIsSignedInteger & format.mFormatFlags) ? " signed " : " unsigned ");
+			out << ((kLinearPCMFormatFlagIsSignedInteger & format.mFormatFlags) ? " signed" : " unsigned");
 		
 		// Integer or floating
-		out << (isInteger ? "integer" : "float");
+		out << (isInteger ? " integer" : " float");
 		
 		// Packedness
 		if(0 < sampleSize && ((sampleSize << 3) != format.mBitsPerChannel))
