@@ -38,4 +38,5 @@
 
 // Useful ostream overloads
 std::ostream& operator<<(std::ostream& out, CFStringRef s);
+std::ostream& operator<<(std::ostream& out, CFURLRef u);
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);

@@ -53,7 +53,6 @@
 #include "DeallocateABL.h"
 #include "DeinterleavingFloatConverter.h"
 #include "PCMConverter.h"
-#include "CreateDisplayNameForURL.h"
 #include "CFOperatorOverloads.h"
 
 #include "CARingBuffer.h"
@@ -1183,10 +1182,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	assert(NULL != decoder);
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-
-	CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-	LOG4CXX_DEBUG(logger, "Enqueuing \"" << displayName << "\"");
-	CFRelease(displayName), displayName = NULL;
+	LOG4CXX_DEBUG(logger, "Enqueuing \"" << decoder->GetURL() << "\"");
 	
 	int lockResult = pthread_mutex_lock(&mMutex);
 	
@@ -1779,9 +1775,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		// If a decoder was found at the head of the queue, process it
 		if(NULL != decoder) {
 
-			CFStringRef displayName = CreateDisplayNameForURL(decoder->GetURL());
-			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << displayName << "\"");
-			CFRelease(displayName), displayName = NULL;
+			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOG4CXX_DEBUG(logger, "Decoder format: " << decoder->GetFormat());
 			
 			// ========================================
@@ -1909,9 +1903,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded) {
-							displayName = CreateDisplayNameForURL(decoder->GetURL());
-							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << displayName << "\"");
-							CFRelease(displayName), displayName = NULL;
+							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << decoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation

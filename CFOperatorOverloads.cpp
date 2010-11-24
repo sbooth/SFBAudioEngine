@@ -28,8 +28,10 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CFOperatorOverloads.h"
+#include <CoreServices/CoreServices.h>
 #include <iomanip>
+
+#include "CFOperatorOverloads.h"
 
 #define BUFFER_LENGTH 512
 
@@ -51,6 +53,26 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 		out.write(buf, bytesWritten);
 	};
 
+	return out;
+}
+
+std::ostream& operator<<(std::ostream& out, CFURLRef u)
+{
+	assert(NULL != u);
+
+	CFStringRef s = CFURLGetString(u);
+	if(CFStringHasPrefix(s, CFSTR("file:"))) {
+		CFStringRef displayName = NULL;
+		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
+
+		if(noErr == result && NULL != displayName) {
+			out << displayName;
+			CFRelease(displayName), displayName = NULL;
+		}
+	}
+	else
+		out << s;
+	
 	return out;
 }
 
