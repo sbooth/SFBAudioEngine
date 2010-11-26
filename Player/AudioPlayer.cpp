@@ -183,7 +183,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -472,7 +472,7 @@ void AudioPlayer::Stop()
 	mFramesRendered = 0;
 }
 
-CFURLRef AudioPlayer::GetPlayingURL()
+CFURLRef AudioPlayer::GetPlayingURL() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -484,7 +484,7 @@ CFURLRef AudioPlayer::GetPlayingURL()
 
 #pragma mark Playback Properties
 
-SInt64 AudioPlayer::GetCurrentFrame()
+SInt64 AudioPlayer::GetCurrentFrame() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -494,7 +494,7 @@ SInt64 AudioPlayer::GetCurrentFrame()
 	return (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 }
 
-SInt64 AudioPlayer::GetTotalFrames()
+SInt64 AudioPlayer::GetTotalFrames() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -504,7 +504,7 @@ SInt64 AudioPlayer::GetTotalFrames()
 	return currentDecoderState->mTotalFrames;
 }
 
-CFTimeInterval AudioPlayer::GetCurrentTime()
+CFTimeInterval AudioPlayer::GetCurrentTime() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -514,7 +514,7 @@ CFTimeInterval AudioPlayer::GetCurrentTime()
 	return static_cast<CFTimeInterval>(GetCurrentFrame() / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
-CFTimeInterval AudioPlayer::GetTotalTime()
+CFTimeInterval AudioPlayer::GetTotalTime() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -588,7 +588,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
-bool AudioPlayer::SupportsSeeking()
+bool AudioPlayer::SupportsSeeking() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -600,7 +600,7 @@ bool AudioPlayer::SupportsSeeking()
 
 #pragma mark Player Parameters
 
-bool AudioPlayer::GetMasterVolume(Float32& volume)
+bool AudioPlayer::GetMasterVolume(Float32& volume) const
 {
 	return GetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
@@ -610,7 +610,7 @@ bool AudioPlayer::SetMasterVolume(Float32 volume)
 	return SetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
-bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume)
+bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyVolumeScalar, 
@@ -673,9 +673,49 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 	return true;
 }
 
+void AudioPlayer::EnableDigitalVolume(bool enableDigitalVolume)
+{
+	if(enableDigitalVolume)
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
+	else
+		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
+}
+
+bool AudioPlayer::GetDigitalVolume(double& volume) const
+{
+	volume = mDigitalVolume;
+	return true;
+}
+
+bool AudioPlayer::SetDigitalVolume(double volume)
+{
+	mDigitalVolume = std::min(1.0, std::max(0.0, volume));
+	return true;
+}
+
+void AudioPlayer::EnableDigitalPreGain(bool enableDigitalPreGain)
+{
+	if(enableDigitalPreGain)
+		OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
+	else
+		OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
+}
+
+bool AudioPlayer::GetDigitalPreGain(double& preGain) const
+{
+	preGain = mDigitalPreGain;
+	return true;
+}
+
+bool AudioPlayer::SetDigitalPreGain(double preGain)
+{
+	mDigitalVolume = std::min(15.0, std::max(-15.0, preGain));
+	return true;
+}
+
 #pragma mark Device Management
 
-CFStringRef AudioPlayer::CreateOutputDeviceUID()
+CFStringRef AudioPlayer::CreateOutputDeviceUID() const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceUID, 
@@ -787,7 +827,7 @@ bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 	return true;
 }
 
-bool AudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate)
+bool AudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyNominalSampleRate, 
@@ -839,7 +879,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 	return true;
 }
 
-bool AudioPlayer::OutputDeviceIsHogged()
+bool AudioPlayer::OutputDeviceIsHogged() const
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -986,7 +1026,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 
 #pragma mark Stream Management
 
-bool AudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams)
+bool AudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams) const
 {
 	streams.clear();
 
@@ -1032,7 +1072,7 @@ bool AudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams)
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat)
+bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const
 {
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -1095,7 +1135,7 @@ bool AudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, const Aud
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat)
+bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const
 {
 	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -1358,6 +1398,16 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 		
 		mFramesRenderedLastPass += framesToRead;
+	}
+
+	// Apply digital volume
+	if(eAudioPlayerFlagDigitalVolumeEnabled & mFlags) {
+		for(UInt32 bufferIndex = 0; bufferIndex < mOutputBuffer->mNumberBuffers; ++bufferIndex) {
+			double *buffer = static_cast<double *>(mOutputBuffer->mBuffers[bufferIndex].mData);
+			vDSP_vsmulD(buffer, 1, &mDigitalVolume, buffer, 1, framesToRead);
+		}
+
+		// FIXME: Apply dithering
 	}
 
 	// Iterate through each stream and render output in the stream's format
@@ -1873,23 +1923,14 @@ void * AudioPlayer::DecoderThreadEntry()
 							if(framesConverted != framesDecoded)
 								LOG4CXX_ERROR(logger, "Incomplete conversion:  " << framesConverted <<  "/" << framesDecoded << " frames");
 
-#if 0
-							// Clip the samples to [-1, +1)
-							UInt32 bitsPerChannel = decoder->GetSourceFormat().mBitsPerChannel;
-							
-							// For compressed formats, pretend the samples are 24-bit
-							if(0 == bitsPerChannel)
-								bitsPerChannel = 24;
-							
-							// The maximum allowable sample value
-							double minValue = -1.;
-							double maxValue = static_cast<double>((1u << (bitsPerChannel - 1)) - 1) / static_cast<double>(1u << (bitsPerChannel - 1));
-
-							for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-								double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
-								vDSP_vclipD(buffer, 1, &minValue, &maxValue, buffer, 1, framesConverted);
+							// Apply digital pre-gain
+							if(eAudioPlayerFlagDigitalPreGainEnabled & mFlags) {
+								double linearGain = pow(10.0, mDigitalPreGain / 20.0);
+								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+									double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
+									vDSP_vsmulD(buffer, 1, &linearGain, buffer, 1, framesConverted);
+								}
 							}
-#endif
 
 							CARingBufferError result = mRingBuffer->Store(bufferList, 
 																		  framesConverted, 
@@ -2213,7 +2254,7 @@ bool AudioPlayer::StopOutput()
 	return true;
 }
 
-bool AudioPlayer::OutputIsRunning()
+bool AudioPlayer::OutputIsRunning() const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceIsRunning, 
@@ -2260,7 +2301,7 @@ bool AudioPlayer::ResetOutput()
 
 #pragma mark Other Utilities
 
-DecoderStateData * AudioPlayer::GetCurrentDecoderState()
+DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 {
 	DecoderStateData *result = NULL;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -2284,7 +2325,7 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState()
 	return result;
 }
 
-DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp)
+DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
 {
 	DecoderStateData *result = NULL;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {

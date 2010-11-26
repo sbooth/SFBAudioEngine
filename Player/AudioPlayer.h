@@ -52,7 +52,9 @@ class PCMConverter;
 // ========================================
 enum {
 	eAudioPlayerFlagIsSeeking				= 1 << 0,
-	eAudioPlayerFlagMuteOutput				= 1 << 1
+	eAudioPlayerFlagMuteOutput				= 1 << 1,
+	eAudioPlayerFlagDigitalVolumeEnabled	= 1 << 2,
+	eAudioPlayerFlagDigitalPreGainEnabled	= 1 << 3
 };
 
 // ========================================
@@ -81,17 +83,17 @@ public:
 	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
-	inline bool IsPlaying()							{ return mIsPlaying; }
-	CFURLRef GetPlayingURL();
+	inline bool IsPlaying() const					{ return mIsPlaying; }
+	CFURLRef GetPlayingURL() const;
 
 	// ========================================
 	// Playback Properties
-	SInt64 GetCurrentFrame();
-	SInt64 GetTotalFrames();
-	inline SInt64 GetRemainingFrames()				{ return GetTotalFrames() - GetCurrentFrame(); }
+	SInt64 GetCurrentFrame() const;
+	SInt64 GetTotalFrames() const;
+	inline SInt64 GetRemainingFrames() const		{ return GetTotalFrames() - GetCurrentFrame(); }
 	
-	CFTimeInterval GetCurrentTime();
-	CFTimeInterval GetTotalTime();
+	CFTimeInterval GetCurrentTime() const;
+	CFTimeInterval GetTotalTime() const;
 	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
 	
 	// ========================================
@@ -102,40 +104,54 @@ public:
 	bool SeekToTime(CFTimeInterval timeInSeconds);
 	bool SeekToFrame(SInt64 frame);
 	
-	bool SupportsSeeking();
+	bool SupportsSeeking() const;
 	
 	// ========================================
 	// Player Parameters
-	bool GetMasterVolume(Float32& volume);
+	bool GetMasterVolume(Float32& volume) const;
 	bool SetMasterVolume(Float32 volume);
 
-	bool GetVolumeForChannel(UInt32 channel, Float32& volume);
+	bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
 	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
+
+	inline bool DigitalVolumeIsEnabled() const		{ return (eAudioPlayerFlagDigitalVolumeEnabled & mFlags); }
+	void EnableDigitalVolume(bool enableDigitalVolume);
+
+	// volume should be in the range [0, 1] (linear)
+	bool GetDigitalVolume(double& volume) const;
+	bool SetDigitalVolume(double volume);
+	
+	inline bool DigitalPreGainIsEnabled() const		{ return (eAudioPlayerFlagDigitalPreGainEnabled & mFlags); }
+	void EnableDigitalPreGain(bool enableDigitalPreGain);
+
+	// preGain should be in the range [-15, 15] (dB)
+	bool GetDigitalPreGain(double& preGain) const;
+	bool SetDigitalPreGain(double preGain);
 
 	// ========================================
 	// Device Management
-	CFStringRef CreateOutputDeviceUID();
+	CFStringRef CreateOutputDeviceUID() const;
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
 	
-	AudioDeviceID GetOutputDeviceID()				{ return mOutputDeviceID; }
+	AudioDeviceID GetOutputDeviceID() const			{ return mOutputDeviceID; }
 	bool SetOutputDeviceID(AudioDeviceID deviceID);
 
-	bool GetOutputDeviceSampleRate(Float64& sampleRate);
+	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
 
-	bool OutputDeviceIsHogged();
+	bool OutputDeviceIsHogged() const;
 
 	bool StartHoggingOutputDevice();
 	bool StopHoggingOutputDevice();
 
 	// ========================================
 	// Stream Management
-	bool GetOutputStreams(std::vector<AudioStreamID>& streams);
+	bool GetOutputStreams(std::vector<AudioStreamID>& streams) const;
 	
-	bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat);
+	bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const;
 	bool SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat);
 
-	bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat);
+	bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const;
 	bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
 
 	// ========================================
@@ -156,15 +172,15 @@ private:
 	bool StartOutput();
 	bool StopOutput();
 
-	bool OutputIsRunning();
+	bool OutputIsRunning() const;
 	bool ResetOutput();
 	
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
 	
-	DecoderStateData * GetCurrentDecoderState();
-	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp);
+	DecoderStateData * GetCurrentDecoderState() const;
+	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
 	bool CreateConvertersAndConversionBuffers();
 	
@@ -192,6 +208,8 @@ private:
 	volatile uint32_t					mFlags;
 
 	bool								mIsPlaying;
+	double								mDigitalVolume;
+	double								mDigitalPreGain;
 
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
