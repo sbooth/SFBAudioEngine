@@ -70,7 +70,6 @@ class AudioDecoder
 {
 	
 	friend class AudioPlayer;
-	friend class DSPAudioPlayer;
 	
 public:
 
