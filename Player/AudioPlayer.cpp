@@ -1406,8 +1406,6 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 			double *buffer = static_cast<double *>(mOutputBuffer->mBuffers[bufferIndex].mData);
 			vDSP_vsmulD(buffer, 1, &mDigitalVolume, buffer, 1, framesToRead);
 		}
-
-		// FIXME: Apply dithering
 	}
 
 	// Iterate through each stream and render output in the stream's format
