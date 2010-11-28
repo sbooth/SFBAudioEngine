@@ -105,7 +105,7 @@ public:
 	bool SeekToFrame(SInt64 frame);
 	
 	bool SupportsSeeking() const;
-	
+
 	// ========================================
 	// Player Parameters
 	bool GetMasterVolume(Float32& volume) const;
@@ -159,7 +159,9 @@ public:
 	// The player will take ownership of decoder
 	bool Enqueue(CFURLRef url);
 	bool Enqueue(AudioDecoder *decoder);
-	
+
+	bool SkipToNextTrack();
+
 	bool ClearQueuedDecoders();
 
 private:

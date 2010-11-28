@@ -1293,6 +1293,23 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
+bool AudioPlayer::SkipToNextTrack()
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+	
+	if(NULL == currentDecoderState)
+		return false;
+	
+	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+	
+	OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
+	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
+	
+	OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+	
+	return true;
+}
+
 bool AudioPlayer::ClearQueuedDecoders()
 {
 	int lockResult = pthread_mutex_lock(&mMutex);
@@ -1803,7 +1820,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		int lockResult = pthread_mutex_lock(&mMutex);
 		
 		if(0 != lockResult) {
-			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << lockResult);
+			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
 			
 			// Stop now, to avoid risking data corruption
 			continue;
@@ -1817,7 +1834,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		lockResult = pthread_mutex_unlock(&mMutex);
 		
 		if(0 != lockResult)
-			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << lockResult);
+			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
 		
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
@@ -1904,8 +1921,10 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 
-						if(-1 == startingFrameNumber)
+						if(-1 == startingFrameNumber) {
+							LOG4CXX_ERROR(logger, "Unable to determine starting frame number ");
 							break;
+						}
 
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber)
