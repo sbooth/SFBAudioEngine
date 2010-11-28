@@ -40,6 +40,7 @@ class AudioDitherer
 {
 public:
 	enum DitherType {
+		eNoDither,
 		eRectangularDither,
 		eTriangularDither
 	};

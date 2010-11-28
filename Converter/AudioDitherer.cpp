@@ -55,6 +55,7 @@ UInt32 AudioDitherer::Dither(AudioBuffer *buffer, UInt32 frameCount)
 	assert(NULL != buffer);
 
 	switch(mDitherType) {
+		case eNoDither:					return frameCount;
 		case eRectangularDither:		return ApplyRectangularDither(buffer, frameCount);
 		case eTriangularDither:			return ApplyTriangularDither(buffer, frameCount);
 	}
@@ -66,7 +67,7 @@ UInt32 AudioDitherer::ApplyRectangularDither(AudioBuffer *buffer, UInt32 frameCo
 {
 	double *doubleBuffer = static_cast<double *>(buffer->mData);
 	UInt32 framesToProcess = frameCount;
-	while(--framesToProcess)
+	while(framesToProcess--)
 		*doubleBuffer++ -= rand() / (double)RAND_MAX - 0.5;
 	return frameCount;
 }
@@ -76,7 +77,7 @@ UInt32 AudioDitherer::ApplyTriangularDither(AudioBuffer *buffer, UInt32 frameCou
 	double *doubleBuffer = static_cast<double *>(buffer->mData);
 	double r;
 	UInt32 framesToProcess = frameCount;
-	while(--framesToProcess) {
+	while(framesToProcess--) {
 		r = rand() / (double)RAND_MAX - 0.5;
 		*doubleBuffer++ += r - mTriangleState;
 		mTriangleState = r;	
