@@ -610,6 +610,84 @@ bool AudioPlayer::SetMasterVolume(Float32 volume)
 	return SetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
+bool AudioPlayer::GetChannelCount(UInt32& channelCount) const
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyStreamConfiguration,
+		kAudioDevicePropertyScopeOutput,
+		kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
+		return false;
+	}
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		return false;
+	}
+
+	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
+
+	if(NULL == bufferList) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Unable to allocate << " << dataSize << " bytes");
+		return false;
+	}
+	
+	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
+	
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		free(bufferList), bufferList = NULL;
+		return false;
+	}
+	
+	channelCount = 0;
+	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
+
+	free(bufferList), bufferList = NULL;
+	return true;
+}
+
+bool AudioPlayer::GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyPreferredChannelsForStereo, 
+		kAudioDevicePropertyScopeOutput,
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
+		return false;
+	}
+	
+	UInt32 preferredChannels [2];
+	UInt32 dataSize = sizeof(preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
+		return false;
+	}
+
+	preferredStereoChannels.first = preferredChannels[0];
+	preferredStereoChannels.second = preferredChannels[1];
+
+	return true;
+}
+
 bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -620,22 +698,16 @@ bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 	
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar [kAudioDevicePropertyScopeOutput, " << channel << "]) is false");
+		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 	
 	UInt32 dataSize = sizeof(volume);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &volume);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	
 	if(kAudioHardwareNoError != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar [kAudioDevicePropertyScopeOutput, " << channel << "]) failed: " << result);
+		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 	
@@ -654,19 +726,14 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 	};
 	
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar [kAudioDevicePropertyScopeOutput, " << channel << "]) is false");
+		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 sizeof(volume),
-												 &volume);
+	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
 	
 	if(kAudioHardwareNoError != result) {
-		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar [kAudioDevicePropertyScopeOutput, " << channel << "]) failed: " << result);
+		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 	

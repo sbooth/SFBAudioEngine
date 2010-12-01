@@ -33,6 +33,7 @@
 #include <AudioToolbox/AudioToolbox.h>
 #include <vector>
 #include <map>
+#include <utility>
 
 // ========================================
 // Forward declarations
@@ -110,6 +111,9 @@ public:
 	// Player Parameters
 	bool GetMasterVolume(Float32& volume) const;
 	bool SetMasterVolume(Float32 volume);
+
+	bool GetChannelCount(UInt32& channelCount) const;
+	bool GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
 
 	bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
 	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
