@@ -1407,8 +1407,8 @@ bool AudioPlayer::SkipToNextTrack()
 	
 	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 	
-	OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
-	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
+	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
+	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
 	
 	OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 	
@@ -1572,15 +1572,17 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
 		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
 		
-		if(0 == decoderState->mFramesRendered)
+		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
 			decoderState->mDecoder->PerformRenderingStartedCallback();
+			OSAtomicTestAndSetBarrier(5 /* eDecoderStateDataFlagRenderingStarted */, &decoderState->mFlags);
+		}
 		
 		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
 		
-		if(decoderState->mFramesRendered == decoderState->mTotalFrames) {
+		if(decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
 			decoderState->mDecoder->PerformRenderingFinishedCallback();			
 
-			OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 
 			// Since rendering is finished, signal the collector to clean up this decoder
 			semaphore_signal(mCollectorSemaphore);
@@ -2032,9 +2034,11 @@ void * AudioPlayer::DecoderThreadEntry()
 						}
 
 						// If this is the first frame, decoding is just starting
-						if(0 == startingFrameNumber)
+						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
 							decoder->PerformDecodingStartedCallback();
-						
+							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
+						}
+
 						// Read the input chunk
 						UInt32 framesDecoded = decoderState->ReadAudio(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
 						
@@ -2065,7 +2069,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						}
 						
 						// If no frames were returned, this is the end of stream
-						if(0 == framesDecoded) {
+						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)*/) {
 							LOG4CXX_DEBUG(logger, "Decoding finished for \"" << decoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
@@ -2077,7 +2081,7 @@ void * AudioPlayer::DecoderThreadEntry()
 							decoder->PerformDecodingFinishedCallback();
 							
 							// Decoding is complete
-							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+							OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 
 							decoderState = NULL;
 
@@ -2477,8 +2481,8 @@ void AudioPlayer::StopActiveDecoders()
 		if(NULL == decoderState)
 			continue;
 		
-		OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-		OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+		OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+		OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 	}
 	
 	// Signal the collector to collect 
