@@ -132,6 +132,10 @@ public:
 	bool GetDigitalPreGain(double& preGain) const;
 	bool SetDigitalPreGain(double preGain);
 
+	// Will return false if SRC is not being performed
+	bool SetSampleRateConverterQuality(UInt32 srcQuality);
+	bool SetSampleRateConverterComplexity(OSType srcComplexity);
+
 	// ========================================
 	// Device Management
 	CFStringRef CreateOutputDeviceUID() const;

@@ -698,7 +698,7 @@ bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 	
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 	
@@ -777,6 +777,44 @@ bool AudioPlayer::GetDigitalPreGain(double& preGain) const
 bool AudioPlayer::SetDigitalPreGain(double preGain)
 {
 	mDigitalVolume = std::min(15.0, std::max(-15.0, preGain));
+	return true;
+}
+
+bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
+{
+	if(NULL == mSampleRateConverter)
+		return false;
+
+	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
+												kAudioConverterSampleRateConverterQuality, 
+												sizeof(srcQuality), 
+												&srcQuality);
+
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterQuality) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
+{
+	if(NULL == mSampleRateConverter)
+		return false;
+	
+	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
+												kAudioConverterSampleRateConverterComplexity, 
+												sizeof(srcComplexity), 
+												&srcComplexity);
+	
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
+		return false;
+	}
+	
 	return true;
 }
 
