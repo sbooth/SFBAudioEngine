@@ -1711,6 +1711,10 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 				{
 					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
+					bool restartIO = false;
+					if(OutputIsRunning())
+						restartIO = StopOutput();
+
 					// Clean up
 					if(mSampleRateConversionBuffer)
 						mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
@@ -1770,6 +1774,9 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					
 					// Allocate the output buffer (data is at the device's sample rate)
 					mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
+
+					if(restartIO)
+						StartOutput();
 
 					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
@@ -2543,7 +2550,12 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 	}
 
 	// FIXME: Handle devices with variable output buffer sizes
-	
+	propertyAddress.mSelector = kAudioDevicePropertyUsesVariableBufferFrameSizes;
+	if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		LOG4CXX_ERROR(logger, "Devices with variable buffer sizes not supported");
+		return false;
+	}
+
 	AudioStreamBasicDescription outputBufferFormat = mRingBufferFormat;
 
 	// Create a sample rate converter if required
