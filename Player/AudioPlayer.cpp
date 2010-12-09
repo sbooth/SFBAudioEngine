@@ -275,7 +275,9 @@ AudioPlayer::AudioPlayer()
 		LOG4CXX_FATAL(logger, "pthread_create failed: " << strerror(creationResult));
 		
 		mKeepDecoding = false;
-		semaphore_signal(mDecoderSemaphore);
+		kern_return_t error = semaphore_signal(mDecoderSemaphore);
+		if(KERN_SUCCESS != error)
+			LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
 		
 		int joinResult = pthread_join(mDecoderThread, NULL);
 		if(0 != joinResult)
@@ -357,8 +359,12 @@ AudioPlayer::~AudioPlayer()
 	
 	// End the decoding thread
 	mKeepDecoding = false;
-	semaphore_signal(mDecoderSemaphore);
-	
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
+
 	int joinResult = pthread_join(mDecoderThread, NULL);
 	if(0 != joinResult) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
@@ -369,7 +375,11 @@ AudioPlayer::~AudioPlayer()
 
 	// End the collector thread
 	mKeepCollecting = false;
-	semaphore_signal(mCollectorSemaphore);
+	error = semaphore_signal(mCollectorSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
+	}
 	
 	joinResult = pthread_join(mCollectorThread, NULL);
 	if(0 != joinResult) {
@@ -583,7 +593,11 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	if(!OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
 	
-	semaphore_signal(mDecoderSemaphore);
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
 
 	return true;	
 }
@@ -1393,7 +1407,9 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	if(0 != lockResult)
 		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
 	
-	semaphore_signal(mDecoderSemaphore);
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error)
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
 	
 	return true;
 }
@@ -1401,17 +1417,30 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 bool AudioPlayer::SkipToNextTrack()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
-	
+
 	if(NULL == currentDecoderState)
 		return false;
-	
+
 	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-	
+
 	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
 	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
+
+	// If the player is paused effectively flush the ring buffer by syncing the rendered/decoded frame counts
+	if(!IsPlaying() && !OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered)) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "OSAtomicCompareAndSwap64Barrier() failed ");
+	}
 	
+	// Signal the decoding thread to start the next decoder
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
+
 	OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-	
+
 	return true;
 }
 
@@ -1547,8 +1576,13 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 
-	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite)
-		semaphore_signal(mDecoderSemaphore);
+	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite) {
+		kern_return_t error = semaphore_signal(mDecoderSemaphore);
+		if(KERN_SUCCESS != error) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+		}
+	}
 
 	// ========================================
 	// POST-RENDERING HOUSEKEEPING
@@ -1585,7 +1619,11 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 
 			// Since rendering is finished, signal the collector to clean up this decoder
-			semaphore_signal(mCollectorSemaphore);
+			kern_return_t error = semaphore_signal(mCollectorSemaphore);
+			if(KERN_SUCCESS != error) {
+				log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+				LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
+			}
 		}
 		
 		framesRemainingToDistribute -= framesFromThisDecoder;
@@ -2101,7 +2139,9 @@ void * AudioPlayer::DecoderThreadEntry()
 				}
 				
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
-				semaphore_timedwait(mDecoderSemaphore, timeout);
+				kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
+				if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
+					LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
 			}
 			
 			// ========================================
@@ -2112,11 +2152,16 @@ void * AudioPlayer::DecoderThreadEntry()
 			if(NULL != converter)
 				delete converter, converter = NULL;
 		}
-		
-		// Wait for the audio rendering thread to wake us, or for the timeout to happen
-		semaphore_timedwait(mDecoderSemaphore, timeout);
+		// No decoder was found in the queue, so wait for another thread to wake us, or for the timeout to happen
+		else {
+			kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
+			if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
+				LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
+		}
 	}
 	
+	LOG4CXX_DEBUG(logger, "Decoding thread terminating");
+
 	log4cxx::NDC::pop();
 
 	return NULL;
@@ -2145,7 +2190,11 @@ void * AudioPlayer::CollectorThreadEntry()
 		}
 		
 		// Wait for any thread to signal us to try and collect finished decoders
-		semaphore_timedwait(mCollectorSemaphore, timeout);
+		kern_return_t error = semaphore_timedwait(mCollectorSemaphore, timeout);
+		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_WARN(logger, "Collector semaphore couldn't wait: " << mach_error_string(error));
+		}
 	}
 	
 	return NULL;
@@ -2493,8 +2542,17 @@ void AudioPlayer::StopActiveDecoders()
 	}
 	
 	// Signal the collector to collect 
-	semaphore_signal(mDecoderSemaphore);
-	semaphore_signal(mCollectorSemaphore);
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
+
+	error = semaphore_signal(mCollectorSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
+	}
 }
 
 bool AudioPlayer::CreateConvertersAndConversionBuffers()
