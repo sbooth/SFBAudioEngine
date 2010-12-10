@@ -1424,16 +1424,22 @@ bool AudioPlayer::SkipToNextTrack()
 	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
+
+	// Signal the decoding thread that decoding is finished (inner loop)
+	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	if(KERN_SUCCESS != error) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
+
 	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
 
-	// If the player is paused effectively flush the ring buffer by syncing the rendered/decoded frame counts
-	if(!IsPlaying() && !OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_ERROR(logger, "OSAtomicCompareAndSwap64Barrier() failed ");
-	}
+	// Effect a flush of the ring buffer
+	mFramesDecoded = 0;
+	mFramesRendered = 0;
 	
-	// Signal the decoding thread to start the next decoder
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
+	// Signal the decoding thread to start the next decoder (outer loop)
+	error = semaphore_signal(mDecoderSemaphore);
 	if(KERN_SUCCESS != error) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
@@ -2152,12 +2158,11 @@ void * AudioPlayer::DecoderThreadEntry()
 			if(NULL != converter)
 				delete converter, converter = NULL;
 		}
-		// No decoder was found in the queue, so wait for another thread to wake us, or for the timeout to happen
-		else {
-			kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
-			if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
-				LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
-		}
+
+		// Wait for another thread to wake us, or for the timeout to happen
+		kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
+		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
+			LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
 	}
 	
 	LOG4CXX_DEBUG(logger, "Decoding thread terminating");
