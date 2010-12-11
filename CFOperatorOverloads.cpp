@@ -37,7 +37,10 @@
 
 std::ostream& operator<<(std::ostream& out, CFStringRef s)
 {
-	assert(NULL != s);
+	if(NULL == s) {
+		out << "(null)";
+		return out;
+	}
 
 	char buf [BUFFER_LENGTH];
 
@@ -58,7 +61,10 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 
 std::ostream& operator<<(std::ostream& out, CFURLRef u)
 {
-	assert(NULL != u);
+	if(NULL == u) {
+		out << "(null)";
+		return out;
+	}
 
 	CFStringRef s = CFURLGetString(u);
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
