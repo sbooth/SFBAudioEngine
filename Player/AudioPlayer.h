@@ -194,7 +194,6 @@ private:
 
 	bool CreateConvertersAndConversionBuffers();
 	
-	bool BuildVirtualFormatsCache();
 	bool AddVirtualFormatPropertyListeners();
 	bool RemoveVirtualFormatPropertyListeners();
 
@@ -204,7 +203,6 @@ private:
 	AudioDeviceIOProcID					mOutputDeviceIOProcID;
 	UInt32								mOutputDeviceBufferFrameSize;
 	std::vector<AudioStreamID>			mOutputDeviceStreamIDs;
-	std::map<AudioStreamID, AudioStreamBasicDescription> mStreamVirtualFormats;
 	
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;

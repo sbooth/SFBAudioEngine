@@ -1721,16 +1721,12 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					delete [] mOutputConverters, mOutputConverters = NULL;
 					
 					mOutputDeviceStreamIDs.clear();
-					mStreamVirtualFormats.clear();
 					
 					// Update our list of cached streams
 					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
 						continue;
 
-					// Populate the virtual formats and observe the new streams for changes
-					if(!BuildVirtualFormatsCache())
-						LOG4CXX_WARN(logger, "BuildVirtualFormatsCache failed");
-
+					// Observe the new streams for changes
 					if(!AddVirtualFormatPropertyListeners())
 						LOG4CXX_WARN(logger, "AddVirtualFormatPropertyListeners failed");
 					
@@ -1868,8 +1864,6 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					}
 
 					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
-
-					mStreamVirtualFormats[inObjectID] = virtualFormat;
 
 					if(!CreateConvertersAndConversionBuffers())
 						LOG4CXX_WARN(logger, "CreateConvertersAndConversionBuffers failed");
@@ -2308,10 +2302,6 @@ bool AudioPlayer::OpenOutput()
 	if(!GetOutputStreams(mOutputDeviceStreamIDs))
 		return false;
 
-	// Populate the virtual formats
-	if(!BuildVirtualFormatsCache())
-		return false;
-	
 	if(!AddVirtualFormatPropertyListeners())
 		return false;
 
@@ -2404,7 +2394,6 @@ bool AudioPlayer::CloseOutput()
 	delete [] mOutputConverters, mOutputConverters = NULL;
 	
 	mOutputDeviceStreamIDs.clear();
-	mStreamVirtualFormats.clear();
 
 	return true;
 }
@@ -2695,13 +2684,18 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 
 		LOG4CXX_DEBUG(logger, "Stream 0x" << std::hex << streamID << " information: ");
 
-		std::map<AudioStreamID, AudioStreamBasicDescription>::const_iterator virtualFormatIterator = mStreamVirtualFormats.find(streamID);
-		if(mStreamVirtualFormats.end() == virtualFormatIterator) {
+		AudioStreamBasicDescription virtualFormat;
+		if(!GetOutputStreamVirtualFormat(streamID, virtualFormat)) {
 			LOG4CXX_ERROR(logger, "Unknown virtual format for AudioStreamID 0x" << std::hex << streamID);
 			return false;
 		}
 
-		AudioStreamBasicDescription virtualFormat = virtualFormatIterator->second;
+		// In some cases when this function is called from Enqueue() immediately after a device sample rate change, the device's
+		// nominal sample rate has changed but the virtual formats have not
+		if(deviceSampleRate != virtualFormat.mSampleRate) {
+			LOG4CXX_ERROR(logger, "Internal inconsistency: device sample rate (" << deviceSampleRate << " Hz) and virtual format sample rate (" << virtualFormat.mSampleRate << " Hz) don't match");
+			return false;			
+		}
 
 		LOG4CXX_DEBUG(logger, "  Virtual format: " << virtualFormat);
 
@@ -2781,38 +2775,6 @@ bool AudioPlayer::CreateConvertersAndConversionBuffers()
 
 	free(streamUsage), streamUsage = NULL;
 
-	return true;
-}
-
-bool AudioPlayer::BuildVirtualFormatsCache()
-{
-	mStreamVirtualFormats.clear();
-
-	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat,
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
-		
-		AudioStreamBasicDescription virtualFormat;
-		UInt32 dataSize = sizeof(virtualFormat);
-		OSStatus result = AudioObjectGetPropertyData(*iter, 
-													 &propertyAddress, 
-													 0, 
-													 NULL, 
-													 &dataSize, 
-													 &virtualFormat);
-		
-		if(kAudioHardwareNoError != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
-			return false;
-		}
-		
-		mStreamVirtualFormats[*iter] = virtualFormat;		
-	}
-	
 	return true;
 }
 
