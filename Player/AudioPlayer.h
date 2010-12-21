@@ -192,7 +192,7 @@ private:
 	DecoderStateData * GetCurrentDecoderState() const;
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
-	bool CreateConvertersAndConversionBuffers();
+	bool CreateConvertersAndSRCBuffer();
 	
 	bool AddVirtualFormatPropertyListeners();
 	bool RemoveVirtualFormatPropertyListeners();

@@ -1343,19 +1343,17 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Enqueuing \"" << decoder->GetURL() << "\"");
 	
-	int lockResult = pthread_mutex_lock(&mMutex);
-	
-	if(0 != lockResult) {
-		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
+	int result = pthread_mutex_lock(&mMutex);
+	if(0 != result) {
+		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
 		return false;
 	}
 	
 	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));
 		
-	lockResult = pthread_mutex_unlock(&mMutex);
-		
-	if(0 != lockResult)
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
+	result = pthread_mutex_unlock(&mMutex);
+	if(0 != result)
+		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && queueEmpty) {
@@ -1365,9 +1363,19 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBufferFormat.mSampleRate			= format.mSampleRate;
 		mRingBufferFormat.mChannelsPerFrame		= format.mChannelsPerFrame;
 
-		if(!CreateConvertersAndConversionBuffers())
+		result = pthread_mutex_lock(&mMutex);
+		if(0 != result) {
+			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
 			return false;
-		
+		}
+
+		if(!CreateConvertersAndSRCBuffer())
+			LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+
+		result = pthread_mutex_unlock(&mMutex);
+		if(0 != result)
+			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
+
 		// Allocate enough space in the ring buffer for the new format
 		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame,
 							  mRingBufferFormat.mBytesPerFrame,
@@ -1393,19 +1401,17 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	}
 	
 	// Add the decoder to the queue
-	lockResult = pthread_mutex_lock(&mMutex);
-	
-	if(0 != lockResult) {
-		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
+	result = pthread_mutex_lock(&mMutex);
+	if(0 != result) {
+		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
 		return false;
 	}
 	
 	CFArrayAppendValue(mDecoderQueue, decoder);
 	
-	lockResult = pthread_mutex_unlock(&mMutex);
-	
-	if(0 != lockResult)
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
+	result = pthread_mutex_unlock(&mMutex);
+	if(0 != result)
+		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 	
 	kern_return_t error = semaphore_signal(mDecoderSemaphore);
 	if(KERN_SUCCESS != error)
@@ -1452,25 +1458,23 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	int lockResult = pthread_mutex_lock(&mMutex);
-	
-	if(0 != lockResult) {
+	int result = pthread_mutex_lock(&mMutex);
+	if(0 != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
+		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
 		return false;
 	}
-	
+
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
 		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
 		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
-	
-	lockResult = pthread_mutex_unlock(&mMutex);
-	
-	if(0 != lockResult) {
+
+	result = pthread_mutex_unlock(&mMutex);
+	if(0 != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
+		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 	}
 	
 	return true;	
@@ -1734,8 +1738,18 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
 						mOutputConverters[i] = NULL;
 
-					if(!CreateConvertersAndConversionBuffers())
-						LOG4CXX_WARN(logger, "CreateConvertersAndConversionBuffers failed");
+					int result = pthread_mutex_lock(&mMutex);
+					if(0 != result) {
+						LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
+						continue;
+					}
+
+					if(!CreateConvertersAndSRCBuffer())
+						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+
+					result = pthread_mutex_unlock(&mMutex);
+					if(0 != result)
+						LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 
 					if(restartIO)
 						StartOutput();
@@ -1865,8 +1879,18 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
 
-					if(!CreateConvertersAndConversionBuffers())
-						LOG4CXX_WARN(logger, "CreateConvertersAndConversionBuffers failed");
+					result = pthread_mutex_lock(&mMutex);
+					if(0 != result) {
+						LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
+						continue;
+					}
+
+					if(!CreateConvertersAndSRCBuffer())
+						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+
+					result = pthread_mutex_unlock(&mMutex);
+					if(0 != result)
+						LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 
 					if(restartIO)
 						StartOutput();
@@ -1970,7 +1994,6 @@ void * AudioPlayer::DecoderThreadEntry()
 		// ========================================
 		// Lock the queue and remove the head element, which contains the next decoder to use
 		int lockResult = pthread_mutex_lock(&mMutex);
-		
 		if(0 != lockResult) {
 			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
 			
@@ -1984,7 +2007,6 @@ void * AudioPlayer::DecoderThreadEntry()
 		}
 		
 		lockResult = pthread_mutex_unlock(&mMutex);
-		
 		if(0 != lockResult)
 			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
 		
@@ -2549,10 +2571,10 @@ void AudioPlayer::StopActiveDecoders()
 	}
 }
 
-bool AudioPlayer::CreateConvertersAndConversionBuffers()
+bool AudioPlayer::CreateConvertersAndSRCBuffer()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "CreateConvertersAndConversionBuffers");
+	LOG4CXX_TRACE(logger, "CreateConvertersAndSRCBuffer");
 
 	// Clean up
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
