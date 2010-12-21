@@ -1544,7 +1544,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	}
 	// Otherwise fetch the output from the ring buffer
 	else {
-		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered, false);
+		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered);
 		
 		if(kCARingBufferError_OK != result) {
 			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -1924,7 +1924,7 @@ OSStatus AudioPlayer::FillSampleRateConversionBuffer(AudioConverterRef				inAudi
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = std::min(framesAvailableToRead, *ioNumberDataPackets);
 
-	CARingBufferError result = mRingBuffer->Fetch(mSampleRateConversionBuffer, framesToRead, mFramesRendered, false);
+	CARingBufferError result = mRingBuffer->Fetch(mSampleRateConversionBuffer, framesToRead, mFramesRendered);
 	
 	if(kCARingBufferError_OK != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
