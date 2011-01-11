@@ -46,6 +46,12 @@
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
 		322D7A5411304C24006676FC /* MP4Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D7A5211304C24006676FC /* MP4Metadata.h */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
+		324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */; };
+		324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */; };
+		324DB1B712DC17480055AF3F /* mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 324DB1B612DC17480055AF3F /* mac.framework */; };
+		324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 324DB1B612DC17480055AF3F /* mac.framework */; };
+		324DB31312DC27FE0055AF3F /* MonkeysAudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */; };
+		324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */; };
 		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		3252E85B10CC9EFD00F1AA23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85510CC9EFD00F1AA23 /* main.m */; };
 		3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */; };
@@ -168,6 +174,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */,
 				3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */,
 				322D7A4C11304B4F006676FC /* taglib.framework in Copy Embedded Frameworks */,
 				322D79BA113047A2006676FC /* mp4v2.framework in Copy Embedded Frameworks */,
@@ -235,6 +242,11 @@
 		322D7A5111304C24006676FC /* MP4Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MP4Metadata.cpp; sourceTree = "<group>"; };
 		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Metadata.h; sourceTree = "<group>"; };
 		32379E8A1093D35700DD5B34 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
+		324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioDecoder.h; sourceTree = "<group>"; };
+		324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonkeysAudioDecoder.cpp; sourceTree = "<group>"; };
+		324DB1B612DC17480055AF3F /* mac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mac.framework; path = Frameworks/mac.framework; sourceTree = "<group>"; };
+		324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioMetadata.h; sourceTree = "<group>"; };
+		324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonkeysAudioMetadata.cpp; sourceTree = "<group>"; };
 		3252E83B10CC9E4500F1AA23 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimplePlayer-Info.plist"; sourceTree = "<group>"; };
 		3252E85510CC9EFD00F1AA23 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -336,6 +348,7 @@
 				320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */,
 				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
 				3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */,
+				324DB1B712DC17480055AF3F /* mac.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,6 +434,7 @@
 				320E117E1289D13100DAA041 /* libssl.dylib */,
 				320E11821289D18000DAA041 /* libcrypto.dylib */,
 				32676759128F497400C7FE3B /* log4cxx.framework */,
+				324DB1B612DC17480055AF3F /* mac.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -454,6 +468,8 @@
 				322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */,
 				322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */,
 				322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */,
+				324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */,
+				324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */,
 			);
 			path = Decoders;
 			sourceTree = "<group>";
@@ -580,6 +596,8 @@
 				32EA6824112CD84B006C26F1 /* FLACMetadata.h */,
 				32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */,
 				32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */,
+				324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */,
+				324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -636,6 +654,8 @@
 				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
 				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
 				32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */,
+				324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */,
+				324DB31312DC27FE0055AF3F /* MonkeysAudioMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -798,6 +818,8 @@
 				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
 				32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */,
+				324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */,
+				324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -897,7 +919,6 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
-					"\"$(SRCROOT)/../AyreWave/SFBAudioEngine.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -923,7 +944,6 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
-					"\"$(SRCROOT)/../AyreWave/SFBAudioEngine.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_MODEL_TUNING = G5;

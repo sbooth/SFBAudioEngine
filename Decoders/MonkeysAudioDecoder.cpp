@@ -1,0 +1,332 @@
+/*
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  All Rights Reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are
+ *  met:
+ *
+ *    - Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    - Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *    - Neither the name of Stephen F. Booth nor the names of its 
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <CoreServices/CoreServices.h>
+#include <AudioToolbox/AudioFormat.h>
+#include <stdexcept>
+
+#include <log4cxx/logger.h>
+#include <mac/All.h>
+#include <mac/MACLib.h>
+#include <mac/IO.h>
+
+#include "MonkeysAudioDecoder.h"
+#include "CreateDisplayNameForURL.h"
+
+#pragma mark IO Interface
+
+// ========================================
+// The I/O interface for MAC
+// ========================================
+class APEIOInterface : public CIO
+{
+public:
+    APEIOInterface(InputSource *inputSource)
+		: mInputSource(inputSource)
+	{}
+
+    virtual ~APEIOInterface()
+	{
+		mInputSource = NULL;
+	};
+	
+    virtual int Open(const wchar_t * pName)
+	{
+#pragma unused(pName)
+		return ERROR_INVALID_INPUT_FILE;
+	}
+    
+	virtual int Close()
+	{
+		return ERROR_SUCCESS;
+	}
+    
+    virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+	{
+		SInt64 bytesRead = mInputSource->Read(pBuffer, nBytesToRead);
+		if(-1 == bytesRead)
+			return ERROR_IO_READ;
+
+		*pBytesRead = static_cast<unsigned int>(bytesRead);
+
+		return ERROR_SUCCESS;
+	}
+
+    virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+	{
+#pragma unused(pBuffer)
+#pragma unused(nBytesToWrite)
+#pragma unused(pBytesWritten)
+		return ERROR_IO_WRITE;
+	}
+    
+    virtual int Seek(int nDistance, unsigned int nMoveMode)
+	{
+		if(!mInputSource->SupportsSeeking())
+			return ERROR_IO_READ;
+		
+		SInt64 offset;
+		switch(nMoveMode) {
+			case SEEK_SET:
+				offset = nDistance;
+				break;
+			case SEEK_CUR:
+				offset = mInputSource->GetOffset() - nDistance;
+				break;
+			case SEEK_END:
+				offset = mInputSource->GetLength() - nDistance;
+				break;
+		}
+		
+		return (!mInputSource->SeekToOffset(offset));
+	}
+    
+    virtual int Create(const wchar_t * pName)
+	{
+#pragma unused(pName)
+		return ERROR_IO_WRITE;
+	}
+
+    virtual int Delete()
+	{
+		return ERROR_IO_WRITE;
+	}
+	
+    virtual int SetEOF()
+	{
+		return ERROR_IO_WRITE;
+	}
+	
+    virtual int GetPosition()
+	{
+		SInt64 offset = mInputSource->GetOffset();
+		return static_cast<int>(offset);
+	}
+
+    virtual int GetSize()
+	{
+		SInt64 length = mInputSource->GetLength();
+		return static_cast<int>(length);
+	}
+
+    virtual int GetName(wchar_t * pBuffer)
+	{
+#pragma unused(pBuffer)
+		return ERROR_SUCCESS;
+	}
+
+private:
+	InputSource *mInputSource;
+};
+
+#pragma mark Static Methods
+
+CFArrayRef MonkeysAudioDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("ape") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
+bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
+{
+	assert(NULL != extension);
+	
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
+		return true;
+	
+	return false;
+}
+
+bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
+{
+	assert(NULL != mimeType);	
+	
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
+		return true;
+	
+	return false;
+}
+
+#pragma mark Creation and Destruction
+
+MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mDecompressor(NULL)
+{}
+
+MonkeysAudioDecoder::~MonkeysAudioDecoder()
+{
+	if(FileIsOpen())
+		CloseFile();
+}
+
+#pragma mark Functionality
+
+bool MonkeysAudioDecoder::OpenFile(CFErrorRef *error)
+{
+	mIOInterface = new APEIOInterface(GetInputSource());
+
+	int errorCode;
+	mDecompressor = CreateIAPEDecompressEx(mIOInterface, &errorCode);
+	
+	if(NULL == mDecompressor) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		return false;
+	}
+
+	// The file format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
+	
+	mFormat.mBitsPerChannel		= mDecompressor->GetInfo(APE_INFO_BITS_PER_SAMPLE);
+	mFormat.mSampleRate			= mDecompressor->GetInfo(APE_INFO_SAMPLE_RATE);
+	mFormat.mChannelsPerFrame	= mDecompressor->GetInfo(APE_INFO_CHANNELS);
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
+	
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'APE ';
+	
+	mSourceFormat.mSampleRate			= mFormat.mSampleRate;
+	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
+	
+	switch(mFormat.mChannelsPerFrame) {
+			// Default channel layouts from Vorbis I specification section 4.3.9
+		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
+		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
+			// FIXME: Is this the right tag for 3 channels?
+		case 3:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_3_0_A;		break;
+		case 4:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Quadraphonic;		break;
+		case 5:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_0_C;		break;
+		case 6:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_MPEG_5_1_C;		break;
+	}
+	
+	return true;
+}
+
+bool MonkeysAudioDecoder::CloseFile(CFErrorRef */*error*/)
+{
+	if(mIOInterface)
+		delete mIOInterface, mIOInterface = NULL;
+
+	if(mDecompressor)
+		delete mDecompressor, mDecompressor = NULL;
+
+	return true;
+}
+
+CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
+
+SInt64 MonkeysAudioDecoder::GetTotalFrames() const
+{
+	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
+}
+
+SInt64 MonkeysAudioDecoder::GetCurrentFrame() const
+{
+	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
+}
+
+SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
+{
+	assert(0 <= frame);
+	assert(frame < this->GetTotalFrames());
+	
+	if(ERROR_SUCCESS != mDecompressor->Seek(static_cast<int>(frame)))
+		return -1;
+
+	return this->GetCurrentFrame();
+}
+
+UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+{
+	assert(NULL != bufferList);
+//	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
+	assert(0 < frameCount);
+
+	int blocksRead = 0;
+	if(ERROR_SUCCESS != mDecompressor->GetData(reinterpret_cast<char *>(bufferList->mBuffers[0].mData), frameCount, &blocksRead)) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
+		LOG4CXX_WARN(logger, "Monkey's Audio invalid checksum");
+		return 0;
+	}
+
+	return blocksRead;
+}

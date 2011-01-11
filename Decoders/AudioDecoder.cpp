@@ -43,6 +43,7 @@
 #include "MPEGDecoder.h"
 #include "OggVorbisDecoder.h"
 #include "MusepackDecoder.h"
+#include "MonkeysAudioDecoder.h"
 
 // ========================================
 // Error Codes
@@ -72,6 +73,10 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
 	decoderExtensions = MusepackDecoder::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = MonkeysAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
@@ -110,6 +115,10 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
+	decoderMIMETypes = MonkeysAudioDecoder::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
 	decoderMIMETypes = CoreAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
@@ -250,6 +259,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			}
 			if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MusepackDecoder(inputSource);
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
+					delete decoder, decoder = NULL;
+				}
+			}
+			if(NULL == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new MonkeysAudioDecoder(inputSource);
 				if(!decoder->OpenFile(error)) {
 					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
