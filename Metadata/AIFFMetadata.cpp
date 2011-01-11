@@ -106,7 +106,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -115,7 +115,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an AIFF file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -172,7 +172,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -181,7 +181,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a WAVE file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an AIFF file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -213,7 +213,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WAVE file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
