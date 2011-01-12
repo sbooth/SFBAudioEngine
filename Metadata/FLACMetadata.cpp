@@ -29,7 +29,6 @@
  */
 
 #include <FLAC/metadata.h>
-
 #include <log4cxx/logger.h>
 
 #include "FLACMetadata.h"
@@ -39,9 +38,7 @@
 // Vorbis comment utilities
 // ========================================
 static bool
-SetVorbisComment(FLAC__StreamMetadata		*block,
-				 const char					*key,
-				 CFStringRef				value)
+SetVorbisComment(FLAC__StreamMetadata *block, const char *key, CFStringRef value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
@@ -84,9 +81,7 @@ SetVorbisComment(FLAC__StreamMetadata		*block,
 }
 
 static bool
-SetVorbisCommentNumber(FLAC__StreamMetadata		*block,
-					   const char				*key,
-					   CFNumberRef				value)
+SetVorbisCommentNumber(FLAC__StreamMetadata *block, const char *key, CFNumberRef value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
@@ -94,10 +89,7 @@ SetVorbisCommentNumber(FLAC__StreamMetadata		*block,
 	CFStringRef numberString = NULL;
 	
 	if(NULL != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-												NULL, 
-												CFSTR("%@"), 
-												value);
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), value);
 	
 	bool result = SetVorbisComment(block, key, numberString);
 	
@@ -108,9 +100,7 @@ SetVorbisCommentNumber(FLAC__StreamMetadata		*block,
 }
 
 static bool
-SetVorbisCommentBoolean(FLAC__StreamMetadata	*block,
-						const char				*key,
-						CFBooleanRef			value)
+SetVorbisCommentBoolean(FLAC__StreamMetadata *block, const char *key, CFBooleanRef value)
 {
 	assert(NULL != block);
 	assert(NULL != key);
@@ -124,10 +114,7 @@ SetVorbisCommentBoolean(FLAC__StreamMetadata	*block,
 }
 
 static bool
-SetVorbisCommentDouble(FLAC__StreamMetadata		*block,
-					   const char				*key,
-					   CFNumberRef				value,
-					   CFStringRef				format = NULL)
+SetVorbisCommentDouble(FLAC__StreamMetadata *block, const char *key, CFNumberRef value, CFStringRef format = NULL)
 {
 	assert(NULL != block);
 	assert(NULL != key);
@@ -142,10 +129,7 @@ SetVorbisCommentDouble(FLAC__StreamMetadata		*block,
 			return false;
 		}
 
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-												NULL, 
-												NULL == format ? CFSTR("%f") : format, 
-												f);
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, NULL == format ? CFSTR("%f") : format, f);
 	}
 	
 	bool result = SetVorbisComment(block, key, numberString);
@@ -715,49 +699,21 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	else
 		block = FLAC__metadata_iterator_get_block(iterator);
 	
-	// Album title
+	// Standard tags
 	SetVorbisComment(block, "ALBUM", GetAlbumTitle());
-	
-	// Artist
 	SetVorbisComment(block, "ARTIST", GetArtist());
-	
-	// Album Artist
 	SetVorbisComment(block, "ALBUMARTIST", GetAlbumArtist());
-	
-	// Composer
 	SetVorbisComment(block, "COMPOSER", GetComposer());
-	
-	// Genre
 	SetVorbisComment(block, "GENRE", GetGenre());
-	
-	// Date
 	SetVorbisComment(block, "DATE", GetReleaseDate());
-	
-	// Comment
 	SetVorbisComment(block, "DESCRIPTION", GetComment());
-	
-	// Track title
 	SetVorbisComment(block, "TITLE", GetTitle());
-	
-	// Track number
 	SetVorbisCommentNumber(block, "TRACKNUMBER", GetTrackNumber());
-	
-	// Total tracks
 	SetVorbisCommentNumber(block, "TRACKTOTAL", GetTrackTotal());
-	
-	// Compilation
 	SetVorbisCommentBoolean(block, "COMPILATION", GetCompilation());
-	
-	// Disc number
 	SetVorbisCommentNumber(block, "DISCNUMBER", GetDiscNumber());
-	
-	// Disc total
 	SetVorbisCommentNumber(block, "DISCTOTAL", GetDiscTotal());
-	
-	// ISRC
 	SetVorbisComment(block, "ISRC", GetISRC());
-	
-	// MCN
 	SetVorbisComment(block, "MCN", GetMCN());
 
 	// Additional metadata
