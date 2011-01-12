@@ -34,7 +34,6 @@
 #include <taglib/textidentificationframe.h>
 
 #include "AddID3v2TagToDictionary.h"
-
 #include "AudioMetadata.h"
 
 bool
