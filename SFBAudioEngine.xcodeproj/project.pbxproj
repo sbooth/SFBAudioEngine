@@ -137,6 +137,14 @@
 		32EA67F9112BC4D9006C26F1 /* AudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */; };
 		32EA6825112CD84B006C26F1 /* FLACMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */; };
 		32EA6826112CD84B006C26F1 /* FLACMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EA6824112CD84B006C26F1 /* FLACMetadata.h */; };
+		32EE7D4912DD3D1500533884 /* AddID3v1TagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */; };
+		32EE7D4A12DD3D1500533884 /* AddID3v1TagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */; };
+		32EE7D5612DD3E3100533884 /* SetID3v1TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */; };
+		32EE7D5712DD3E3100533884 /* SetID3v1TagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */; };
+		32EE7D6B12DD408000533884 /* AddAPETagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */; };
+		32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */; };
+		32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */; };
+		32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -315,6 +323,14 @@
 		32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioMetadata.cpp; sourceTree = "<group>"; };
 		32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACMetadata.cpp; sourceTree = "<group>"; };
 		32EA6824112CD84B006C26F1 /* FLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACMetadata.h; sourceTree = "<group>"; };
+		32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddID3v1TagToDictionary.h; sourceTree = "<group>"; };
+		32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddID3v1TagToDictionary.cpp; sourceTree = "<group>"; };
+		32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v1TagFromMetadata.h; sourceTree = "<group>"; };
+		32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetID3v1TagFromMetadata.cpp; sourceTree = "<group>"; };
+		32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAPETagToDictionary.h; sourceTree = "<group>"; };
+		32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAPETagToDictionary.cpp; sourceTree = "<group>"; };
+		32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetAPETagFromMetadata.h; sourceTree = "<group>"; };
+		32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetAPETagFromMetadata.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -598,6 +614,14 @@
 				32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */,
 				324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */,
 				324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */,
+				32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */,
+				32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */,
+				32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */,
+				32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */,
+				32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */,
+				32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */,
+				32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */,
+				32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -656,6 +680,10 @@
 				32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */,
 				324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */,
 				324DB31312DC27FE0055AF3F /* MonkeysAudioMetadata.h in Headers */,
+				32EE7D4912DD3D1500533884 /* AddID3v1TagToDictionary.h in Headers */,
+				32EE7D5612DD3E3100533884 /* SetID3v1TagFromMetadata.h in Headers */,
+				32EE7D6B12DD408000533884 /* AddAPETagToDictionary.h in Headers */,
+				32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -820,6 +848,10 @@
 				32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */,
 				324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */,
 				324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */,
+				32EE7D4A12DD3D1500533884 /* AddID3v1TagToDictionary.cpp in Sources */,
+				32EE7D5712DD3E3100533884 /* SetID3v1TagFromMetadata.cpp in Sources */,
+				32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */,
+				32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
