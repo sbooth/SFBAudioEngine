@@ -34,6 +34,7 @@
 
 #include "MP3Metadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
@@ -174,12 +175,13 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(totalFrames), totalFrames = NULL;			
 		}
 	}
-	
-	// TODO: ID3v1 ??
-	
+
+	if(file.ID3v1Tag())
+		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
+
 	if(file.ID3v2Tag())
 		AddID3v2TagToDictionary(mMetadata, file.ID3v2Tag());
-	
+
 	return true;
 }
 
