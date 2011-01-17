@@ -401,7 +401,7 @@ bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	const SpeexMode *mode = speex_lib_get_mode(header->mode);
-	if(mode->bitstream_version != header->speex_version_id) {
+	if(mode->bitstream_version != header->mode_bitstream_version) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
