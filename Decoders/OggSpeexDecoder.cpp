@@ -1,0 +1,732 @@
+/*
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  All Rights Reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are
+ *  met:
+ *
+ *    - Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    - Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *    - Neither the name of Stephen F. Booth nor the names of its 
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <CoreServices/CoreServices.h>
+#include <AudioToolbox/AudioFormat.h>
+#include <Accelerate/Accelerate.h>
+#include <stdexcept>
+
+#include <log4cxx/logger.h>
+#include <speex/speex.h>
+#include <speex/speex_header.h>
+#include <speex/speex_callbacks.h>
+
+#include "OggSpeexDecoder.h"
+#include "CreateDisplayNameForURL.h"
+#include "AllocateABL.h"
+#include "DeallocateABL.h"
+
+#define MAX_FRAME_SIZE 2000
+#define READ_SIZE_BYTES 4096
+
+#pragma mark Static Methods
+
+CFArrayRef OggSpeexDecoder::CreateSupportedFileExtensions()
+{
+	CFStringRef supportedExtensions [] = { CFSTR("spx") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+}
+
+CFArrayRef OggSpeexDecoder::CreateSupportedMIMETypes()
+{
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+}
+
+bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
+{
+	assert(NULL != extension);
+	
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
+		return true;
+	
+	return false;
+}
+
+bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
+{
+	assert(NULL != mimeType);	
+	
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
+		return true;
+	
+	return false;
+}
+
+#pragma mark Creation and Destruction
+
+OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
+	: AudioDecoder(inputSource), mSpeexDecoder(NULL), mCurrentFrame(0), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0)
+{}
+
+OggSpeexDecoder::~OggSpeexDecoder()
+{
+	if(FileIsOpen())
+		CloseFile();
+}
+
+#pragma mark Functionality
+
+bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
+{
+	// Initialize Ogg data struct
+	ogg_sync_init(&mOggSyncState);
+
+	// Get the ogg buffer for writing
+	char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
+	
+	// Read bitstream from input file
+	ssize_t bytesRead = GetInputSource()->Read(data, READ_SIZE_BYTES);
+	if(-1 == bytesRead) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Read error"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("Unable to read from the input file."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	// Tell the sync layer how many bytes were written to its internal buffer
+	int result = ogg_sync_wrote(&mOggSyncState, bytesRead);
+	if(-1 == result) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” does not appear to be an Ogg file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotRecognizedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	// Turn the data we wrote into an ogg page
+	result = ogg_sync_pageout(&mOggSyncState, &mOggPage);
+	if(1 != result) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” does not appear to be an Ogg file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotRecognizedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+
+	// Initialize the stream and grab the serial number
+	ogg_stream_init(&mOggStreamState, ogg_page_serialno(&mOggPage));
+	
+	// Get the first Ogg page
+	result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
+	if(0 != result) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” does not appear to be an Ogg file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotRecognizedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	// Get the first packet (should be the header) from the page
+	ogg_packet op;
+	result = ogg_stream_packetout(&mOggStreamState, &op);
+	if(1 != result) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” does not appear to be an Ogg file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotRecognizedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+
+	++mOggPacketCount;
+	
+	// Convert the packet to the Speex header
+	SpeexHeader *header = speex_packet_to_header((char *)op.packet, static_cast<int>(op.bytes));
+	if(NULL == header) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” does not appear to be an Ogg Speex file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotRecognizedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	else if(SPEEX_NB_MODES <= header->mode) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The Speex mode in the file “%@” is not supported."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file mode"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("This file may have been encoded with a newer version of Speex."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotSupportedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		speex_header_free(header), header = NULL;
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	const SpeexMode *mode = speex_lib_get_mode(header->mode);
+	if(mode->bitstream_version != header->speex_version_id) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The Speex version in the file “%@” is not supported."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file version"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("This file was encoded with a different version of Speex."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderFileFormatNotSupportedError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		speex_header_free(header), header = NULL;
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	// Initialize the decoder
+	mSpeexDecoder = speex_decoder_init(mode);
+	if(NULL== mSpeexDecoder) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 CFCopyLocalizedString(CFSTR("Unable to initialize the Speex decoder."), ""));
+			
+//			CFDictionarySetValue(errorDictionary, 
+//								 kCFErrorLocalizedFailureReasonKey, 
+//								 CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file version"), ""));
+			
+//			CFDictionarySetValue(errorDictionary, 
+//								 kCFErrorLocalizedRecoverySuggestionKey, 
+//								 CFCopyLocalizedString(CFSTR("This file was encoded with a different version of Speex."), ""));
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		speex_header_free(header), header = NULL;
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	speex_decoder_ctl(mSpeexDecoder, SPEEX_SET_SAMPLING_RATE, &header->rate);
+	
+	mSpeexFramesPerOggPacket = (0 == header->frames_per_packet ? 1 : header->frames_per_packet);
+	mExtraSpeexHeaderCount = header->extra_headers;
+
+	// Initialize the speex bit-packing data structure
+	speex_bits_init(&mSpeexBits);
+	
+	// Initialize the stereo mode
+	mSpeexStereoState = speex_stereo_state_init();
+	
+	if(2 == header->nb_channels) {
+		SpeexCallback callback;
+		callback.callback_id = SPEEX_INBAND_STEREO;
+		callback.func = speex_std_stereo_request_handler;
+		callback.data = mSpeexStereoState;
+		speex_decoder_ctl(mSpeexDecoder, SPEEX_SET_HANDLER, &callback);
+	}
+	
+	// Canonical Core Audio format
+	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
+	
+	mFormat.mBitsPerChannel		= 8 * sizeof(float);
+	mFormat.mSampleRate			= header->rate;
+	mFormat.mChannelsPerFrame	= header->nb_channels;
+	
+	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
+	mFormat.mFramesPerPacket	= 1;
+	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	
+	mFormat.mReserved			= 0;
+	
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'SPEE';
+	
+	mSourceFormat.mSampleRate			= header->rate;
+	mSourceFormat.mChannelsPerFrame		= header->nb_channels;
+	
+	switch(header->nb_channels) {
+		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
+		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
+	}
+	
+	speex_header_free(header), header = NULL;
+
+	// Allocate the buffer list
+	spx_int32_t speexFrameSize = 0;
+	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
+	
+	mBufferList = AllocateABL(mFormat, speexFrameSize);
+	if(NULL == mBufferList) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+
+		speex_header_free(header), header = NULL;
+		speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = NULL;
+		speex_decoder_destroy(mSpeexDecoder), mSpeexDecoder = NULL;
+		speex_bits_destroy(&mSpeexBits);
+
+		ogg_sync_destroy(&mOggSyncState);
+		return false;
+	}
+	
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
+		mBufferList->mBuffers[i].mDataByteSize = 0;
+
+	return true;
+}
+
+bool OggSpeexDecoder::CloseFile(CFErrorRef */*error*/)
+{
+	if(mBufferList)
+		mBufferList = DeallocateABL(mBufferList);
+
+	// Speex cleanup
+	speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = NULL;
+	speex_decoder_destroy(mSpeexDecoder), mSpeexDecoder = NULL;
+	speex_bits_destroy(&mSpeexBits);
+
+	// Ogg cleanup
+	ogg_stream_clear(&mOggStreamState);
+	ogg_sync_clear(&mOggSyncState);
+
+	return true;
+}
+
+CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
+{
+	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+									NULL, 
+									CFSTR("Ogg Speex, %u channels, %u Hz"), 
+									mSourceFormat.mChannelsPerFrame, 
+									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+}
+
+UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+{
+	assert(NULL != bufferList);
+	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
+	assert(0 < frameCount);
+
+	UInt32 framesRead = 0;
+	
+	// Reset output buffer data size
+	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
+		bufferList->mBuffers[i].mDataByteSize = 0;
+
+	for(;;) {
+		
+		UInt32	framesRemaining	= frameCount - framesRead;
+		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
+		
+		// Copy data from the buffer to output
+		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
+			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[i].mData);
+			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
+			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(float));
+			
+			// Move remaining data in buffer to beginning
+			if(framesToCopy != framesInBuffer) {
+				floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
+				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
+			}
+			
+			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(float));
+		}
+		
+		framesRead += framesToCopy;
+		
+		// All requested frames were read
+		if(framesRead == frameCount)
+			break;
+		
+		// Attempt to process the desired number of packets
+		unsigned packetsDesired = 1;
+		while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
+			
+			// Process any packets in the current page
+			while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
+				
+				// Grab a packet from the streaming layer
+				ogg_packet oggPacket;
+				int result = ogg_stream_packetout(&mOggStreamState, &oggPacket);
+				if(-1 == result) {
+					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+					LOG4CXX_ERROR(logger, "Ogg Speex decoding error: Ogg loss of streaming");
+					return false;
+				}
+				
+				// If result is 0, there is insufficient data to assemble a packet
+				if(0 == result)
+					break;
+				
+				// Otherwise, we got a valid packet for processing
+				if(1 == result) {
+					
+					// Ignore the following:
+					//  - Speex comments in packet #2
+					//  - Extra headers (optionally) in packets 3+
+					if(1 != mOggPacketCount && 1 + mExtraSpeexHeaderCount <= mOggPacketCount) {
+						// SPEEX_GET_FRAME_SIZE is in samples
+						spx_int32_t speexFrameSize;
+						speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
+						float buffer [(2 == mFormat.mChannelsPerFrame) ? 2 * speexFrameSize : speexFrameSize];
+						
+						// Copy the Ogg packet to the Speex bitstream
+						speex_bits_read_from(&mSpeexBits, (char *)oggPacket.packet, static_cast<int>(oggPacket.bytes));
+						
+						// Decode each frame in the Speex packet
+						for(spx_int32_t i = 0; i < mSpeexFramesPerOggPacket; ++i) {
+							
+							result = speex_decode(mSpeexDecoder, &mSpeexBits, buffer);
+
+							// -1 indicates EOS
+							if(-1 == result)
+								break;
+							else if(-2 == result) {
+								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+								LOG4CXX_ERROR(logger, "Ogg Speex decoding error: possible corrupted stream");
+								return false;
+							}
+							
+							if(0 > speex_bits_remaining(&mSpeexBits)) {
+								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+								LOG4CXX_ERROR(logger, "Ogg Speex decoding overflow: possible corrupted stream");
+								return false;
+							}
+							
+							// Normalize the values
+							float maxSampleValue = 1u << 15;
+							vDSP_vsdiv(buffer, 1, &maxSampleValue, buffer, 1, speexFrameSize);
+
+							// Copy the frames from the decoding buffer to the output buffer, skipping over any frames already decoded
+							framesInBuffer = static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+							memcpy(static_cast<float *>(mBufferList->mBuffers[0].mData) + framesInBuffer, buffer, speexFrameSize * sizeof(float));
+							mBufferList->mBuffers[0].mDataByteSize += static_cast<UInt32>(speexFrameSize * sizeof(float));
+							
+							// Process stereo channel, if present
+							if(2 == mFormat.mChannelsPerFrame) {
+								speex_decode_stereo(buffer, speexFrameSize, mSpeexStereoState);
+								vDSP_vsdiv(buffer + speexFrameSize, 1, &maxSampleValue, buffer + speexFrameSize, 1, speexFrameSize);
+
+								memcpy(static_cast<float *>(mBufferList->mBuffers[1].mData) + framesInBuffer, buffer + speexFrameSize, speexFrameSize * sizeof(float));
+								mBufferList->mBuffers[1].mDataByteSize += static_cast<UInt32>(speexFrameSize * sizeof(float));
+							}
+							
+							// Packet processing finished
+							--packetsDesired;
+						}
+					}
+
+					++mOggPacketCount;
+				}
+			}
+			
+			// Grab a new Ogg page for processing, if necessary
+			if(!ogg_stream_eos(&mOggStreamState) && 0 < packetsDesired) {
+				while(1 != ogg_sync_pageout(&mOggSyncState, &mOggPage)) {
+					// Get the ogg buffer for writing
+					char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
+					
+					// Read bitstream from input file
+					ssize_t bytesRead = GetInputSource()->Read(data, READ_SIZE_BYTES);
+					if(-1 == bytesRead) {
+						log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+						LOG4CXX_ERROR(logger, "Unable to read from the input file");
+						return false;
+					}
+					
+					ogg_sync_wrote(&mOggSyncState, bytesRead);
+
+					// No more data available from input file
+					if(0 == bytesRead)
+						break;
+				}
+				
+				// Get the resultant Ogg page
+				int result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
+				if(0 != result) {
+					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+					LOG4CXX_ERROR(logger, "Error reading Ogg page");
+					return false;
+				}
+			}
+		}
+	}
+	
+	mCurrentFrame += framesRead;
+
+	return framesRead;
+}

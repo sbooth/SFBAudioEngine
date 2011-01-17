@@ -63,6 +63,10 @@
 		3255602C1092A38F00580566 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
 		325560671092A89600580566 /* FLAC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
 		325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
+		3258AE1C12DF8FA800ADA052 /* speex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3258AE1B12DF8FA800ADA052 /* speex.framework */; };
+		3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3258AE1B12DF8FA800ADA052 /* speex.framework */; };
+		3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */; };
+		3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */; };
 		3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		326EE8F3117DF3060076D6E0 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322B5C16108BB59600CA9BDE /* AudioToolbox.framework */; };
@@ -182,6 +186,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */,
 				324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */,
 				3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */,
 				322D7A4C11304B4F006676FC /* taglib.framework in Copy Embedded Frameworks */,
@@ -267,6 +272,9 @@
 		325560291092A38F00580566 /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACDecoder.cpp; sourceTree = "<group>"; };
 		3255602A1092A38F00580566 /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
 		325560661092A89600580566 /* FLAC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FLAC.framework; path = Frameworks/FLAC.framework; sourceTree = "<group>"; };
+		3258AE1B12DF8FA800ADA052 /* speex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = speex.framework; path = Frameworks/speex.framework; sourceTree = "<group>"; };
+		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
+		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
 		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
 		328AA4C8111614540091D56B /* CADebugMacros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugMacros.cpp; sourceTree = "<group>"; };
 		328AA4C9111614540091D56B /* CADebugMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugMacros.h; sourceTree = "<group>"; };
@@ -365,6 +373,7 @@
 				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
 				3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */,
 				324DB1B712DC17480055AF3F /* mac.framework in Frameworks */,
+				3258AE1C12DF8FA800ADA052 /* speex.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -451,6 +460,7 @@
 				320E11821289D18000DAA041 /* libcrypto.dylib */,
 				32676759128F497400C7FE3B /* log4cxx.framework */,
 				324DB1B612DC17480055AF3F /* mac.framework */,
+				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -486,6 +496,8 @@
 				322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */,
 				324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */,
 				324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */,
+				3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */,
+				3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */,
 			);
 			path = Decoders;
 			sourceTree = "<group>";
@@ -684,6 +696,7 @@
 				32EE7D5612DD3E3100533884 /* SetID3v1TagFromMetadata.h in Headers */,
 				32EE7D6B12DD408000533884 /* AddAPETagToDictionary.h in Headers */,
 				32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */,
+				3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -852,6 +865,7 @@
 				32EE7D5712DD3E3100533884 /* SetID3v1TagFromMetadata.cpp in Sources */,
 				32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */,
 				32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */,
+				3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

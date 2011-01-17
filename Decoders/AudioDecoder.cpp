@@ -44,6 +44,7 @@
 #include "OggVorbisDecoder.h"
 #include "MusepackDecoder.h"
 #include "MonkeysAudioDecoder.h"
+#include "OggSpeexDecoder.h"
 
 // ========================================
 // Error Codes
@@ -77,6 +78,10 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
 	decoderExtensions = MonkeysAudioDecoder::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = OggSpeexDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
@@ -116,6 +121,10 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
 	decoderMIMETypes = MonkeysAudioDecoder::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = OggSpeexDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
@@ -266,6 +275,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			}
 			if(NULL == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MonkeysAudioDecoder(inputSource);
+				if(!decoder->OpenFile(error)) {
+					decoder->mInputSource = NULL;
+					delete decoder, decoder = NULL;
+				}
+			}
+			if(NULL == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new OggSpeexDecoder(inputSource);
 				if(!decoder->OpenFile(error)) {
 					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
