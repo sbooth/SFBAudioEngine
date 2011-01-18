@@ -83,7 +83,7 @@ bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mSpeexDecoder(NULL), mCurrentFrame(0), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0)
+	: AudioDecoder(inputSource), mSpeexDecoder(NULL), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0)
 {}
 
 OggSpeexDecoder::~OggSpeexDecoder()
@@ -612,20 +612,24 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 		if(framesRead == frameCount)
 			break;
 		
+		// EOS reached
+		if(ogg_stream_eos(&mOggStreamState))
+			break;
+
 		// Attempt to process the desired number of packets
 		unsigned packetsDesired = 1;
 		while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
-			
+
 			// Process any packets in the current page
 			while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
-				
+
 				// Grab a packet from the streaming layer
 				ogg_packet oggPacket;
 				int result = ogg_stream_packetout(&mOggStreamState, &oggPacket);
 				if(-1 == result) {
 					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
 					LOG4CXX_ERROR(logger, "Ogg Speex decoding error: Ogg loss of streaming");
-					return false;
+					break;
 				}
 				
 				// If result is 0, there is insufficient data to assemble a packet
@@ -658,13 +662,13 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 							else if(-2 == result) {
 								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
 								LOG4CXX_ERROR(logger, "Ogg Speex decoding error: possible corrupted stream");
-								return false;
+								break;
 							}
 							
 							if(0 > speex_bits_remaining(&mSpeexBits)) {
 								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
 								LOG4CXX_ERROR(logger, "Ogg Speex decoding overflow: possible corrupted stream");
-								return false;
+								break;
 							}
 							
 							// Normalize the values
@@ -705,7 +709,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 					if(-1 == bytesRead) {
 						log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
 						LOG4CXX_ERROR(logger, "Unable to read from the input file");
-						return false;
+						break;
 					}
 					
 					ogg_sync_wrote(&mOggSyncState, bytesRead);
@@ -720,13 +724,16 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				if(0 != result) {
 					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
 					LOG4CXX_ERROR(logger, "Error reading Ogg page");
-					return false;
+					break;
 				}
 			}
 		}
 	}
 	
 	mCurrentFrame += framesRead;
+
+	if(0 == framesRead && ogg_stream_eos(&mOggStreamState))
+		mTotalFrames = mCurrentFrame;
 
 	return framesRead;
 }

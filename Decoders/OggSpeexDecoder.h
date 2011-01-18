@@ -80,13 +80,14 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return -1; }
+	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 	
 private:
 
 	AudioBufferList		*mBufferList;
 	SInt64				mCurrentFrame;
+	SInt64				mTotalFrames;
 
 	ogg_sync_state		mOggSyncState;
 	ogg_page			mOggPage;
