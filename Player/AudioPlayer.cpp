@@ -1528,6 +1528,10 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// Reset state
 	mFramesRenderedLastPass = 0;
 
+	// The format of mOutputBuffer is the same as mRingBufferFormat except possibly mSampleRate
+	for(UInt32 i = 0; i < mOutputBuffer->mNumberBuffers; ++i)
+		mOutputBuffer->mBuffers[i].mDataByteSize = mRingBufferFormat.mBytesPerFrame * mOutputDeviceBufferFrameSize;
+
 	// Determine how many frames to read
 	UInt32 framesToRead = std::min(framesAvailableToRead, mOutputDeviceBufferFrameSize);
 
