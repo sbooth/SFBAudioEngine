@@ -97,6 +97,8 @@ private:
 	SpeexBits			mSpeexBits;
 	SpeexStereoState	*mSpeexStereoState;
 	
+	long				mSpeexSerialNumber;
+	bool				mSpeexEOSReached;
 	spx_int32_t			mSpeexFramesPerOggPacket;
 	UInt32				mOggPacketCount;
 	UInt32				mExtraSpeexHeaderCount;

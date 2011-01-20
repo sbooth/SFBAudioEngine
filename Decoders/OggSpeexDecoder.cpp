@@ -83,7 +83,7 @@ bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mSpeexDecoder(NULL), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0)
+	: AudioDecoder(inputSource), mSpeexDecoder(NULL), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
 {}
 
 OggSpeexDecoder::~OggSpeexDecoder()
@@ -315,6 +315,9 @@ bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
+
+	if(op.bytes >= 5 && !memcmp(op.packet, "Speex", 5))
+		mSpeexSerialNumber = mOggStreamState.serialno;
 
 	++mOggPacketCount;
 	
@@ -613,15 +616,15 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 			break;
 		
 		// EOS reached
-		if(ogg_stream_eos(&mOggStreamState))
+		if(mSpeexEOSReached)
 			break;
 
 		// Attempt to process the desired number of packets
 		unsigned packetsDesired = 1;
-		while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
+		while(0 < packetsDesired && !mSpeexEOSReached) {
 
 			// Process any packets in the current page
-			while(0 < packetsDesired && !ogg_stream_eos(&mOggStreamState)) {
+			while(0 < packetsDesired && !mSpeexEOSReached) {
 
 				// Grab a packet from the streaming layer
 				ogg_packet oggPacket;
@@ -635,14 +638,23 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				// If result is 0, there is insufficient data to assemble a packet
 				if(0 == result)
 					break;
-				
+
 				// Otherwise, we got a valid packet for processing
 				if(1 == result) {
+					if(5 <= oggPacket.bytes && !memcmp(oggPacket.packet, "Speex", 5))
+						mSpeexSerialNumber = mOggStreamState.serialno;
+					
+					if(-1 == mSpeexSerialNumber || mOggStreamState.serialno != mSpeexSerialNumber)
+						break;
 					
 					// Ignore the following:
 					//  - Speex comments in packet #2
 					//  - Extra headers (optionally) in packets 3+
 					if(1 != mOggPacketCount && 1 + mExtraSpeexHeaderCount <= mOggPacketCount) {
+						// Detect Speex EOS
+						if(oggPacket.e_o_s && mOggStreamState.serialno == mSpeexSerialNumber)
+							mSpeexEOSReached = true;
+
 						// SPEEX_GET_FRAME_SIZE is in samples
 						spx_int32_t speexFrameSize;
 						speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
@@ -699,7 +711,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 			}
 			
 			// Grab a new Ogg page for processing, if necessary
-			if(!ogg_stream_eos(&mOggStreamState) && 0 < packetsDesired) {
+			if(!mSpeexEOSReached && 0 < packetsDesired) {
 				while(1 != ogg_sync_pageout(&mOggSyncState, &mOggPage)) {
 					// Get the ogg buffer for writing
 					char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
@@ -719,6 +731,10 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 						break;
 				}
 				
+				// Ensure all Ogg streams are read
+				if(ogg_page_serialno(&mOggPage) != mOggStreamState.serialno)
+					ogg_stream_reset_serialno(&mOggStreamState, ogg_page_serialno(&mOggPage));
+
 				// Get the resultant Ogg page
 				int result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 				if(0 != result) {
@@ -732,7 +748,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 	
 	mCurrentFrame += framesRead;
 
-	if(0 == framesRead && ogg_stream_eos(&mOggStreamState))
+	if(0 == framesRead && mSpeexEOSReached)
 		mTotalFrames = mCurrentFrame;
 
 	return framesRead;
