@@ -152,7 +152,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -161,7 +161,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -231,7 +231,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
@@ -240,7 +240,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
 			
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -272,7 +272,7 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
 															   displayName);
 			
 			CFDictionarySetValue(errorDictionary, 
