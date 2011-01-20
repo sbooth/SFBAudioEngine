@@ -1510,9 +1510,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		return kAudioHardwareNoError;
 	
 	// If the ring buffer doesn't contain any valid audio, skip some work
-	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
-
-	if(0 == framesAvailableToRead) {
+	if(mFramesDecoded == mFramesRendered) {
 		// If there are no decoders in the queue, stop IO
 		// Calling Stop() here will subsequently call StopActiveDecoders(), which will force
 		// all existing decoders to be collected
@@ -1532,11 +1530,14 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	for(UInt32 i = 0; i < mOutputBuffer->mNumberBuffers; ++i)
 		mOutputBuffer->mBuffers[i].mDataByteSize = mRingBufferFormat.mBytesPerFrame * mOutputDeviceBufferFrameSize;
 
-	// Determine how many frames to read
-	UInt32 framesToRead = std::min(framesAvailableToRead, mOutputDeviceBufferFrameSize);
-
+	// The number of frames to read, at the output device's sample rate
+	UInt32 framesToRead = 0;
+	
 	// Convert to the stream's sample rate, if required
 	if(mSampleRateConverter) {
+		// The number of frames read will be limited to valid decoded frames in the converter callback
+		framesToRead = mOutputDeviceBufferFrameSize;
+
 		OSStatus result = AudioConverterFillComplexBuffer(mSampleRateConverter, 
 														  mySampleRateConverterInputProc,
 														  this,
@@ -1552,6 +1553,9 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	}
 	// Otherwise fetch the output from the ring buffer
 	else {
+		UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
+		framesToRead = std::min(framesAvailableToRead, mOutputDeviceBufferFrameSize);
+
 		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered);
 		
 		if(kCARingBufferError_OK != result) {
