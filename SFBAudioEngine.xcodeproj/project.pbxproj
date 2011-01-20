@@ -98,6 +98,8 @@
 		32C380AA1091177B0024EB87 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
 		32C381B8109117C50024EB87 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C381B7109117C50024EB87 /* CoreServices.framework */; };
 		32C381C1109117D00024EB87 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C381C0109117D00024EB87 /* AudioUnit.framework */; };
+		32C613A712E7E28D00F714C9 /* OggSpeexMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */; };
+		32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */; };
 		32CA90F910B9E514005A85DA /* mpcdec.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32CA90F810B9E514005A85DA /* mpcdec.framework */; };
 		32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32CA90F810B9E514005A85DA /* mpcdec.framework */; };
 		32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7379510B9978200094C8A /* MusepackDecoder.cpp */; };
@@ -292,6 +294,8 @@
 		32C213101091129F00BA2493 /* AudioEngineExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AudioEngineExample; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C381B7109117C50024EB87 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32C381C0109117D00024EB87 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
+		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexMetadata.h; sourceTree = "<group>"; };
+		32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexMetadata.cpp; sourceTree = "<group>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
 		32D65529115FC58C002B275C /* FileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileInputSource.cpp; sourceTree = "<group>"; };
 		32D6552A115FC58C002B275C /* FileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileInputSource.h; sourceTree = "<group>"; };
@@ -634,6 +638,8 @@
 				32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */,
 				32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */,
 				32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */,
+				32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */,
+				32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -697,6 +703,7 @@
 				32EE7D6B12DD408000533884 /* AddAPETagToDictionary.h in Headers */,
 				32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */,
 				3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */,
+				32C613A712E7E28D00F714C9 /* OggSpeexMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -866,6 +873,7 @@
 				32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */,
 				32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */,
 				3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */,
+				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

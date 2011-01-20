@@ -45,6 +45,7 @@
 #include "OggVorbisMetadata.h"
 #include "OggFLACMetadata.h"
 #include "MonkeysAudioMetadata.h"
+#include "OggSpeexMetadata.h"
 
 
 // ========================================
@@ -136,6 +137,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 	
+	decoderExtensions = OggSpeexMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
 	CFRelease(supportedExtensions), supportedExtensions = NULL;
@@ -184,6 +189,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
 	decoderMIMETypes = MonkeysAudioMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = OggSpeexMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
@@ -321,6 +330,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					}
 					if(!metadata && MonkeysAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MonkeysAudioMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
+					}
+					if(!metadata && OggSpeexMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new OggSpeexMetadata(url);
 						if(!metadata->ReadMetadata(error))
 							delete metadata, metadata = NULL;
 					}
