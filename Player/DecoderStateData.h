@@ -75,7 +75,7 @@ public:
 
 	SInt64					mFrameToSeek;
 	
-	volatile UInt32			mFlags;
+	volatile uint32_t		mFlags;
 
 private:
 
