@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright ï¿½ 2007 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -132,7 +132,11 @@ inline UInt32 Log2Ceil(UInt32 x)
 // next power of two greater or equal to x
 inline UInt32 NextPowerOfTwo(UInt32 x)
 {
-	return 1L << Log2Ceil(x);
+#if __LP64__
+	return 1U << Log2Ceil(x);
+#else
+	return 1UL << Log2Ceil(x);
+#endif
 }
 
 // counting the one bits in a word
@@ -176,7 +180,11 @@ inline UInt32 MSBitPos(UInt32 x)
 // isolate the most significant bit
 inline UInt32 MSBit(UInt32 x)
 {
+#if __LP64__
+	return 1U << MSBitPos(x);
+#else
 	return 1UL << MSBitPos(x);
+#endif
 }
 
 // Division optimized for power of 2 denominators
