@@ -189,7 +189,8 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	
 	[_slider setDoubleValue:fractionComplete];
 	[_elapsed setDoubleValue:PLAYER->GetCurrentTime()];
-	[_remaining setDoubleValue:(-1 * PLAYER->GetRemainingTime())];
+	if(-1 != PLAYER->GetTotalFrames())
+		[_remaining setDoubleValue:(-1 * PLAYER->GetRemainingTime())];
 }
 
 @end
@@ -233,7 +234,8 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	
 	// Show the times
 	[_elapsed setHidden:NO];
-	[_remaining setHidden:NO];	
+	if(-1 != PLAYER->GetTotalFrames())
+		[_remaining setHidden:NO];	
 }
 
 @end
