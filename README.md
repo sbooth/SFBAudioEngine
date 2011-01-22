@@ -56,8 +56,14 @@ A command line audio player using SFBAudioEngine is as simple as:
 		}
 	
 		player.Play();
+	
+		// Display progress every 2 seconds
+		while(player.IsPlaying()) {
+			CFRunLoopRunInMode(kCFRunLoopDefaultMode, 2, true);
+	
+			printf("%.2f / %.2f [%.2f]\n", player.GetCurrentTime(), player.GetTotalTime(), player.GetRemainingTime());
 		}
-		
+
 		player.Stop();
 	
 		return EXIT_SUCCESS;
