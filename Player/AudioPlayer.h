@@ -52,10 +52,11 @@ class PCMConverter;
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagIsSeeking				= 1 << 0,
-	eAudioPlayerFlagMuteOutput				= 1 << 1,
-	eAudioPlayerFlagDigitalVolumeEnabled	= 1 << 2,
-	eAudioPlayerFlagDigitalPreGainEnabled	= 1 << 3
+	eAudioPlayerFlagIsPlaying				= 1u << 0,
+	eAudioPlayerFlagMuteOutput				= 1u << 1,
+	eAudioPlayerFlagStopRequested			= 1u << 2,
+	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 3,
+	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 4
 };
 
 // ========================================
@@ -84,7 +85,7 @@ public:
 	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
 	
-	inline bool IsPlaying() const					{ return mIsPlaying; }
+	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
 	CFURLRef GetPlayingURL() const;
 
 	// ========================================
@@ -215,7 +216,6 @@ private:
 
 	volatile uint32_t					mFlags;
 
-	bool								mIsPlaying;
 	double								mDigitalVolume;
 	double								mDigitalPreGain;
 

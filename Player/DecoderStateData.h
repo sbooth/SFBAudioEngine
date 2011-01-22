@@ -39,10 +39,11 @@ class AudioDecoder;
 // Enums
 // ========================================
 enum {
-	eDecoderStateDataFlagDecodingStarted	= 1 << 0,
-	eDecoderStateDataFlagDecodingFinished	= 1 << 1,
-	eDecoderStateDataFlagRenderingStarted	= 1 << 2,
-	eDecoderStateDataFlagRenderingFinished	= 1 << 3
+	eDecoderStateDataFlagDecodingStarted	= 1u << 0,
+	eDecoderStateDataFlagDecodingFinished	= 1u << 1,
+	eDecoderStateDataFlagRenderingStarted	= 1u << 2,
+	eDecoderStateDataFlagRenderingFinished	= 1u << 3,
+	eDecoderStateDataFlagStopDecoding		= 1u << 4
 };
 
 // ========================================

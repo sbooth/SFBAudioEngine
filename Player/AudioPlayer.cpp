@@ -63,6 +63,7 @@
 #define RING_BUFFER_SIZE_FRAMES					16384
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
+#define SLEEP_TIME_USEC							1000
 
 static void InitializationLoggingSubsystem() __attribute__ ((constructor));
 static void InitializationLoggingSubsystem()
@@ -183,7 +184,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mIsPlaying(false), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -456,18 +457,14 @@ AudioPlayer::~AudioPlayer()
 
 void AudioPlayer::Play()
 {
-	if(IsPlaying())
-		return;
-
-	mIsPlaying = StartOutput();
+	if(!IsPlaying())
+		StartOutput();
 }
 
 void AudioPlayer::Pause()
 {
-	if(!IsPlaying())
-		return;
-	
-	mIsPlaying = !StopOutput();
+	if(IsPlaying())
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 }
 
 void AudioPlayer::Stop()
@@ -757,9 +754,9 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 void AudioPlayer::EnableDigitalVolume(bool enableDigitalVolume)
 {
 	if(enableDigitalVolume)
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
+		OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
 	else
-		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
+		OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
 }
 
 bool AudioPlayer::GetDigitalVolume(double& volume) const
@@ -777,9 +774,9 @@ bool AudioPlayer::SetDigitalVolume(double volume)
 void AudioPlayer::EnableDigitalPreGain(bool enableDigitalPreGain)
 {
 	if(enableDigitalPreGain)
-		OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
+		OSAtomicTestAndSetBarrier(3 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
 	else
-		OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
+		OSAtomicTestAndClearBarrier(3 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
 }
 
 bool AudioPlayer::GetDigitalPreGain(double& preGain) const
@@ -1429,13 +1426,22 @@ bool AudioPlayer::SkipToNextTrack()
 
 	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
-	OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &currentDecoderState->mFlags);
+	OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &currentDecoderState->mFlags);
 
 	// Signal the decoding thread that decoding is finished (inner loop)
 	kern_return_t error = semaphore_signal(mDecoderSemaphore);
 	if(KERN_SUCCESS != error) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	}
+
+	// Wait for decoding to finish or a SIGSEGV could occur if the collector collects an active decoder
+	while(!(eDecoderStateDataFlagDecodingFinished & currentDecoderState->mFlags)) {
+		int result = usleep(SLEEP_TIME_USEC);
+		if(0 != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_WARN(logger, "Couldn't wait for decoding to finish: " << strerror(errno));
+		}
 	}
 
 	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
@@ -1501,24 +1507,24 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// ========================================
 	// RENDERING
 
+	// Stop output if requested
+	if(eAudioPlayerFlagStopRequested & mFlags) {
+		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+
+		StopOutput();
+
+		return kAudioHardwareNoError;
+	}
+
 	// Mute functionality
 	if(eAudioPlayerFlagMuteOutput & mFlags)
 		return kAudioHardwareNoError;
 
-	// Don't render during seeks
-	if(eAudioPlayerFlagIsSeeking & mFlags)
-		return kAudioHardwareNoError;
-	
 	// If the ring buffer doesn't contain any valid audio, skip some work
 	if(mFramesDecoded == mFramesRendered) {
 		// If there are no decoders in the queue, stop IO
-		// Calling Stop() here will subsequently call StopActiveDecoders(), which will force
-		// all existing decoders to be collected
-		// However, if the decoder's DecodingFinished callback takes too long, a segfault can occur
-		// because the decoder is collected before the callback returns
-		// Until a better alternative arises, just call Pause()
 		if(NULL == GetCurrentDecoderState())
-			Pause();
+			StopOutput();
 		
 		return kAudioHardwareNoError;
 	}
@@ -1621,7 +1627,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	while(NULL != decoderState) {
 		SInt64 timeStamp = decoderState->mTimeStamp;
 		
-		SInt64 decoderFramesRemaining = decoderState->mTotalFrames - decoderState->mFramesRendered;
+		SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
 		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
 		
 		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
@@ -1685,6 +1691,11 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceIsRunning) failed: " << result);
 						continue;
 					}
+
+					if(isRunning)
+						OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
+					else
+						OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
 
 					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyDeviceIsRunning [0x" << std::hex << inObjectID << "]: " << (isRunning ? "True" : "False"));
 
@@ -2054,10 +2065,10 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
-			while(decoderState && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)) {
+			while(decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
 				
 				// Fill the ring buffer with as much data as possible
-				while(decoderState) {
+				for(;;) {
 					// Determine how many frames are available in the ring buffer
 					UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 					
@@ -2068,7 +2079,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						if(-1 != decoderState->mFrameToSeek) {
 							LOG4CXX_TRACE(logger, "Seeking to frame " << decoderState->mFrameToSeek);
 
-							OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagIsSeeking */, &mFlags);
+							OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 							
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
 							
@@ -2093,12 +2104,12 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									LOG4CXX_ERROR(logger, "OSAtomicCompareAndSwap64Barrier() failed ");
 								
-								// This is safe to call at this point, because eAudioPlayerFlagIsSeeking is set so
+								// This is safe to call at this point, because eAudioPlayerFlagMuteOutput is set so
 								// no rendering is being performed
 								ResetOutput();
 							}
 
-							OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagIsSeeking */, &mFlags);
+							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 						}
 						
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
@@ -2139,7 +2150,7 @@ void * AudioPlayer::DecoderThreadEntry()
 							
 							if(kCARingBufferError_OK != result)
 								LOG4CXX_ERROR(logger, "CARingBuffer::Store failed: " << result);
-							
+
 							OSAtomicAdd64Barrier(framesConverted, &mFramesDecoded);
 						}
 						
@@ -2176,6 +2187,12 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			// ========================================
 			// Clean up
+			// Set the appropriate flags for collection if decoding was stopped early
+			if(decoderState) {
+				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+				decoderState = NULL;
+			}
+
 			if(NULL != bufferList)
 				bufferList = DeallocateABL(bufferList);
 			
@@ -2198,6 +2215,9 @@ void * AudioPlayer::DecoderThreadEntry()
 
 void * AudioPlayer::CollectorThreadEntry()
 {
+	log4cxx::NDC::push("Collecting Thread");
+	log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
 
@@ -2220,12 +2240,14 @@ void * AudioPlayer::CollectorThreadEntry()
 		
 		// Wait for any thread to signal us to try and collect finished decoders
 		kern_return_t error = semaphore_timedwait(mCollectorSemaphore, timeout);
-		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
 			LOG4CXX_WARN(logger, "Collector semaphore couldn't wait: " << mach_error_string(error));
-		}
 	}
 	
+	LOG4CXX_DEBUG(logger, "Collecting thread terminating");
+	
+	log4cxx::NDC::pop();
+
 	return NULL;
 }
 
@@ -2554,24 +2576,40 @@ DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 tim
 
 void AudioPlayer::StopActiveDecoders()
 {
-	// End any still-active decoders
+	// Request that any decoders still actively decoding stop
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
 		if(NULL == decoderState)
 			continue;
 		
-		OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-		OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+		OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &decoderState->mFlags);
 	}
 	
-	// Signal the collector to collect 
 	kern_return_t error = semaphore_signal(mDecoderSemaphore);
 	if(KERN_SUCCESS != error) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
 	}
 
+	// Wait for the player to stop or a SIGSEGV could occur if the collector collects a rendering decoder
+	while(IsPlaying()) {
+		int result = usleep(SLEEP_TIME_USEC);
+		if(0 != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_WARN(logger, "Couldn't wait for player to stop: " << strerror(errno));
+		}
+	}
+	
+	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
+		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
+		
+		if(NULL == decoderState)
+			continue;
+		
+		OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+	}
+	
 	error = semaphore_signal(mCollectorSemaphore);
 	if(KERN_SUCCESS != error) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
