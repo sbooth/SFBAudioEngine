@@ -149,3 +149,23 @@ std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& f
 	
 	return out;	
 }
+
+// Most of this is stolen from Apple's CAAudioChannelLayout::CAShowAudioChannelLayout()
+std::ostream& operator<<(std::ostream& out, const AudioChannelLayout& layout)
+{
+	out << "Layout tag 0x" << std::hex << std::setw(8) << std::setfill('0') << layout.mChannelLayoutTag << std::dec << ", ";
+
+	if(kAudioChannelLayoutTag_UseChannelBitmap == layout.mChannelLayoutTag)
+		out << "using channel bitmap 0x" << std::hex << std::setw(8) << std::setfill('0') << layout.mChannelBitmap << std::dec;
+	else {
+		out << "using " << layout.mNumberChannelDescriptions << " channel descriptions: " << std::endl;
+
+		const AudioChannelDescription *desc = layout.mChannelDescriptions;
+		for(UInt32 i = 0; i < layout.mNumberChannelDescriptions; ++i, ++desc) {
+			out << "\t" << i << ". Label: 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelLabel << std::dec << ", flags: 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelFlags << std::dec << ", ";
+			out << "(azimuth = " << desc->mCoordinates[0] << ", elevation = " << desc->mCoordinates[1] << ", distance = " << desc->mCoordinates[2]<< ")" << std::endl;
+		}
+	}
+
+	return out;		
+}

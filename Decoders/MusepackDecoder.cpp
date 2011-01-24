@@ -40,6 +40,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
+#include "CreateChannelLayout.h"
 
 #pragma mark Callbacks
 
@@ -223,8 +224,9 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(streaminfo.channels) {
-		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
-		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
 	// Allocate the buffer list

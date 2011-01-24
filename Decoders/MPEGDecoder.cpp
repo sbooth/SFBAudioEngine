@@ -40,6 +40,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
+#include "CreateChannelLayout.h"
 
 #define INPUT_BUFFER_SIZE	(5 * 8192)
 #define LAME_HEADER_SIZE	((8 * 5) + 4 + 4 + 8 + 32 + 16 + 16 + 4 + 4 + 8 + 12 + 12 + 8 + 8 + 2 + 3 + 11 + 32 + 32 + 32)
@@ -511,7 +512,10 @@ bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
 	mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
 
 	// MAD_NCHANNELS always returns 1 or 2
-	mChannelLayout.mChannelLayoutTag	= (1 == MAD_NCHANNELS(&mFrame.header) ? kAudioChannelLayoutTag_Mono : kAudioChannelLayoutTag_Stereo);
+	switch(MAD_NCHANNELS(&mFrame.header)) {
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+	}
 
 	// Look for a Xing header in the first MPEG frame
 	// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp

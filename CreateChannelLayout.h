@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,14 +30,12 @@
 
 #pragma once
 
-#include <ostream>
-#include <string>
+#include <AudioToolbox/AudioToolbox.h>
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudio.h>
+size_t GetChannelLayoutSize(const AudioChannelLayout *layout);
 
-// Useful ostream overloads
-std::ostream& operator<<(std::ostream& out, CFStringRef s);
-std::ostream& operator<<(std::ostream& out, CFURLRef u);
-std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);
-std::ostream& operator<<(std::ostream& out, const AudioChannelLayout& layout);
+AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions = 0);
+AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag);
+AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap);
+
+AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs);

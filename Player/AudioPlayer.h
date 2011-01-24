@@ -207,7 +207,7 @@ private:
 	
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
-//	AudioChannelLayout					mRingBufferChannelLayout;
+	AudioChannelLayout					*mRingBufferChannelLayout;
 
 	PCMConverter						**mOutputConverters;
 	AudioConverterRef					mSampleRateConverter;

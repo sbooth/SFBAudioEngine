@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,50 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "CreateChannelLayout.h"
 
-#include <ostream>
-#include <string>
+static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
+{
+	return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));
+}
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudio.h>
+size_t GetChannelLayoutSize(const AudioChannelLayout *layout)
+{
+	assert(NULL != layout);
+	return GetChannelLayoutSize(layout->mNumberChannelDescriptions);
+}
 
-// Useful ostream overloads
-std::ostream& operator<<(std::ostream& out, CFStringRef s);
-std::ostream& operator<<(std::ostream& out, CFURLRef u);
-std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);
-std::ostream& operator<<(std::ostream& out, const AudioChannelLayout& layout);
+AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions)
+{
+	size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
+	AudioChannelLayout *channelLayout = static_cast<AudioChannelLayout *>(malloc(layoutSize));
+	memset(channelLayout, 0, layoutSize);
+
+	return channelLayout;
+}
+
+AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
+{
+	AudioChannelLayout *channelLayout = CreateChannelLayout();
+	channelLayout->mChannelLayoutTag = layoutTag;
+	return channelLayout;
+}
+
+AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap)
+{
+	AudioChannelLayout *channelLayout = CreateChannelLayout();
+	channelLayout->mChannelBitmap = channelBitmap;
+	return channelLayout;
+}
+
+AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs)
+{
+	if(NULL == rhs)
+		return NULL;
+
+	size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
+	AudioChannelLayout *channelLayout = static_cast<AudioChannelLayout *>(malloc(layoutSize));
+	memcpy(channelLayout, rhs, layoutSize);
+	
+	return channelLayout;
+}

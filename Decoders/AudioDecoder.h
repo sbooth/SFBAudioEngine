@@ -122,7 +122,7 @@ public:
 	
 	// ========================================
 	// The layout of the channels this decoder provides
-	inline AudioChannelLayout GetChannelLayout() const			{ return mChannelLayout; }
+	inline AudioChannelLayout * GetChannelLayout() const		{ return mChannelLayout; }
 	CFStringRef CreateChannelLayoutDescription() const;
 	
 	// ========================================
@@ -152,7 +152,7 @@ protected:
 	InputSource						*mInputSource;		// The input source feeding the decoder
 	
 	AudioStreamBasicDescription		mFormat;			// The type of PCM data provided by this decoder
-	AudioChannelLayout				mChannelLayout;		// The channel layout for the PCM data	
+	AudioChannelLayout				*mChannelLayout;	// The channel layout for the PCM data, or NULL if unknown/unspecified
 	
 	AudioStreamBasicDescription		mSourceFormat;		// The native format of the source file
 	

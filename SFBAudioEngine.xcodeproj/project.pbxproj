@@ -70,6 +70,8 @@
 		3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		326EE8F3117DF3060076D6E0 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322B5C16108BB59600CA9BDE /* AudioToolbox.framework */; };
+		3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
+		3285714D12ED5C5D0001AF20 /* CreateChannelLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */; };
 		328AA519111615060091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
 		328AA51A1116151C0091D56B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 328AA4E0111614D20091D56B /* CoreFoundation.framework */; };
 		328AA51F111615390091D56B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
@@ -278,6 +280,8 @@
 		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
 		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
 		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
+		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
+		3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateChannelLayout.h; sourceTree = "<group>"; };
 		328AA4C8111614540091D56B /* CADebugMacros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugMacros.cpp; sourceTree = "<group>"; };
 		328AA4C9111614540091D56B /* CADebugMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugMacros.h; sourceTree = "<group>"; };
 		328AA4CA111614540091D56B /* CADebugPrintf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugPrintf.cpp; sourceTree = "<group>"; };
@@ -427,6 +431,8 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */,
+				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
 				32C212D61091116D00BA2493 /* Info.plist */,
@@ -704,6 +710,7 @@
 				32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */,
 				3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */,
 				32C613A712E7E28D00F714C9 /* OggSpeexMetadata.h in Headers */,
+				3285714D12ED5C5D0001AF20 /* CreateChannelLayout.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -874,6 +881,7 @@
 				32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */,
 				3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */,
 				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
+				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -37,6 +37,7 @@
 
 #include "CoreAudioDecoder.h"
 #include "CreateDisplayNameForURL.h"
+#include "CreateChannelLayout.h"
 
 #pragma mark Callbacks
 
@@ -393,27 +394,34 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Setup the channel layout
-	dataSize = sizeof(mChannelLayout);
-	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, &mChannelLayout);
-	
-	if(noErr != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		LOG4CXX_ERROR(logger, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, NULL);
+	if(noErr == result) {
+		mChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
+		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
 		
-		result = ExtAudioFileDispose(mExtAudioFile);
-		if(noErr != result)
-			LOG4CXX_WARN(logger, "ExtAudioFileDispose failed: " << result);
-		
-		result = AudioFileClose(mAudioFile);
-		if(noErr != result)
-			LOG4CXX_WARN(logger, "AudioFileClose failed: " << result);
-		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
-		
-		return false;
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
+			LOG4CXX_ERROR(logger, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+			
+			result = ExtAudioFileDispose(mExtAudioFile);
+			if(noErr != result)
+				LOG4CXX_WARN(logger, "ExtAudioFileDispose failed: " << result);
+			
+			result = AudioFileClose(mAudioFile);
+			if(noErr != result)
+				LOG4CXX_WARN(logger, "AudioFileClose failed: " << result);
+			
+			mAudioFile = NULL;		
+			mExtAudioFile = NULL;
+			
+			return false;
+		}
 	}
-	
+	else {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
+		LOG4CXX_ERROR(logger, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+	}
+
 	// Work around bugs in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
 	// Synopsis: ExtAudioFileTell() and ExtAudioFileSeek() are broken for m4a files
 	AudioFileID audioFile;

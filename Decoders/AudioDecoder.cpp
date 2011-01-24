@@ -35,6 +35,7 @@
 #include <log4cxx/logger.h>
 
 #include "AudioDecoder.h"
+#include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
@@ -390,25 +391,24 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 #pragma mark Creation and Destruction
 
 AudioDecoder::AudioDecoder()
-	: mInputSource(NULL)
+	: mInputSource(NULL), mChannelLayout(NULL)
 {
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 AudioDecoder::AudioDecoder(InputSource *inputSource)
-	: mInputSource(inputSource)
+	: mInputSource(inputSource), mChannelLayout(NULL)
 {
 	assert(NULL != inputSource);
 
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mFormat, 0, sizeof(mSourceFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
-	memset(&mChannelLayout, 0, sizeof(mChannelLayout));
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
-	: mInputSource(NULL)
+	: mInputSource(NULL), mChannelLayout(NULL)
 {
 	*this = rhs;
 }
@@ -417,6 +417,9 @@ AudioDecoder::~AudioDecoder()
 {
 	if(mInputSource)
 		delete mInputSource, mInputSource = NULL;
+
+	if(mChannelLayout)
+		free(mChannelLayout),mChannelLayout = NULL;
 }
 
 #pragma mark Operator Overloads
@@ -429,13 +432,16 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 	if(mInputSource)
 		delete mInputSource, mInputSource = NULL;
 	
+	if(mChannelLayout)
+		free(mChannelLayout), mChannelLayout = NULL;
+
 	if(rhs.mInputSource)
 		mInputSource = rhs.mInputSource;
 
 	mFormat				= rhs.mFormat;
-	mChannelLayout		= rhs.mChannelLayout;
 	mSourceFormat		= rhs.mSourceFormat;
-	
+	mChannelLayout		= CopyChannelLayout(rhs.mChannelLayout);
+
 	memcpy(&mCallbacks, &rhs.mCallbacks, sizeof(rhs.mCallbacks));
 
 	return *this;
@@ -489,7 +495,7 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);
 	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
 																		 sizeof(mChannelLayout), 
-																		 &mChannelLayout, 
+																		 mChannelLayout, 
 																		 &specifierSize, 
 																		 &channelLayoutDescription);
 

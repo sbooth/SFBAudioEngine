@@ -42,6 +42,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
+#include "CreateChannelLayout.h"
 
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
@@ -519,8 +520,8 @@ bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= header->nb_channels;
 	
 	switch(header->nb_channels) {
-		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
-		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
 	}
 	
 	speex_header_free(header), header = NULL;

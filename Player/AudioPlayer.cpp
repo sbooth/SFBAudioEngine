@@ -51,9 +51,11 @@
 #include "DecoderStateData.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
+#include "ChannelLayoutsAreEqual.h"
 #include "DeinterleavingFloatConverter.h"
 #include "PCMConverter.h"
 #include "CFOperatorOverloads.h"
+#include "CreateChannelLayout.h"
 
 #include "CARingBuffer.h"
 
@@ -184,7 +186,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -405,9 +407,12 @@ AudioPlayer::~AudioPlayer()
 	
 	CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 
-	// Clean up the ring buffer
+	// Clean up the ring buffer and associated resources
 	if(mRingBuffer)
 		delete mRingBuffer, mRingBuffer = NULL;
+
+	if(mRingBufferChannelLayout)
+		free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
 
 	// Clean up the converters and conversion buffers
 	if(mOutputConverters) {
@@ -1354,11 +1359,15 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && queueEmpty) {
+		if(mRingBufferChannelLayout)
+			free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
+
 		AudioStreamBasicDescription format = decoder->GetFormat();
 
-		// The ring buffer contains deinterleaved floats at the decoder's sample rate and number of channels
+		// The ring buffer contains deinterleaved floats at the decoder's sample rate and channel layout
 		mRingBufferFormat.mSampleRate			= format.mSampleRate;
 		mRingBufferFormat.mChannelsPerFrame		= format.mChannelsPerFrame;
+		mRingBufferChannelLayout				= CopyChannelLayout(decoder->GetChannelLayout());
 
 		result = pthread_mutex_lock(&mMutex);
 		if(0 != result) {
@@ -1381,18 +1390,20 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	// Otherwise, enqueue this decoder if the format matches
 	else {
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
-	//	AudioChannelLayout				nextChannelLayout	= decoder->GetChannelLayout();
+		AudioChannelLayout				*nextChannelLayout	= decoder->GetChannelLayout();
 		
 		bool	sampleRatesMatch		= (nextFormat.mSampleRate == mRingBufferFormat.mSampleRate);
 		bool	channelCountsMatch		= (nextFormat.mChannelsPerFrame == mRingBufferFormat.mChannelsPerFrame);
-	//	bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(&nextChannelLayout, &mRingBufferChannelLayout);
+		bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout);
 
 		// The two files can be joined seamlessly only if they have the same sample rates, channel counts and channel layouts
-		if(!sampleRatesMatch || !channelCountsMatch /*|| !channelLayoutsMatch*/) {
+		if(!sampleRatesMatch || !channelCountsMatch || !channelLayoutsMatch) {
 			if(!sampleRatesMatch)
 				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 			if(!channelCountsMatch)
 				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+			if(!channelLayoutsMatch)
+				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel layout (" << *mRingBufferChannelLayout << ") and decoder channel layout (" << *nextChannelLayout << ") don't match");
 			return false;
 		}
 	}
@@ -2593,7 +2604,7 @@ void AudioPlayer::StopActiveDecoders()
 	}
 
 	// Wait for the player to stop or a SIGSEGV could occur if the collector collects a rendering decoder
-	while(IsPlaying()) {
+	while(OutputIsRunning()) {
 		int result = usleep(SLEEP_TIME_USEC);
 		if(0 != result) {
 			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -2701,10 +2712,7 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 		UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
 		dataSize = sizeof(bufferSizeBytes);
 		
-		result = AudioConverterGetProperty(mSampleRateConverter, 
-										   kAudioConverterPropertyCalculateInputBufferSize, 
-										   &dataSize, 
-										   &bufferSizeBytes);
+		result = AudioConverterGetProperty(mSampleRateConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &bufferSizeBytes);
 		
 		if(noErr != result) {
 			LOG4CXX_ERROR(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
@@ -2717,27 +2725,101 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 
 	// Allocate the output buffer (data is at the device's sample rate)
 	mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
-	
-	// Determine the device's preferred stereo channels for output mapping
-	propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelsForStereo;
-	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
-	
-	UInt32 preferredStereoChannels [2] = { 1, 2 };
-	if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		dataSize = sizeof(preferredStereoChannels);
-		
-		result = AudioObjectGetPropertyData(mOutputDeviceID,
-											&propertyAddress,
-											0,
-											NULL,
-											&dataSize,
-											&preferredStereoChannels);	
-		
-		if(kAudioHardwareNoError != result)
-			LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
+
+	// Determine the channel map to use when mapping channels to the device for output
+	UInt32 deviceChannelCount = 0;
+	if(!GetChannelCount(deviceChannelCount)) {
+		LOG4CXX_ERROR(logger, "Unable to determine the total number of channels");
+		return false;
 	}
 
-	LOG4CXX_DEBUG(logger, "Device preferred stereo channels: " << preferredStereoChannels[0] << " " << preferredStereoChannels[1]);
+	// The default channel map is silence
+	SInt32 deviceChannelMap [deviceChannelCount];
+	for(UInt32 i = 0; i < deviceChannelCount; ++i)
+		deviceChannelMap[i] = -1;
+	
+	// Determine the device's preferred stereo channels for output mapping
+	if(1 == outputBufferFormat.mChannelsPerFrame || 2 == outputBufferFormat.mChannelsPerFrame) {
+		propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelsForStereo;
+		propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
+		
+		UInt32 preferredStereoChannels [2] = { 1, 2 };
+		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+			dataSize = sizeof(preferredStereoChannels);
+			
+			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredStereoChannels);	
+			
+			if(kAudioHardwareNoError != result)
+				LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
+		}
+		
+		LOG4CXX_DEBUG(logger, "Device preferred stereo channels: " << preferredStereoChannels[0] << " " << preferredStereoChannels[1]);
+
+		AudioChannelLayout stereoLayout;		
+		stereoLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
+		
+		const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, &stereoLayout };
+		
+		SInt32 stereoChannelMap [2] = { 1, 2 };
+		dataSize = sizeof(stereoChannelMap);
+		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, stereoChannelMap);
+		
+		if(noErr == result) {
+			deviceChannelMap[preferredStereoChannels[0] - 1] = stereoChannelMap[0];
+			deviceChannelMap[preferredStereoChannels[1] - 1] = stereoChannelMap[1];
+		}
+		else {
+			LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+			
+			// Just use a channel map that makes sense
+			deviceChannelMap[preferredStereoChannels[0] - 1] = 0;
+			deviceChannelMap[preferredStereoChannels[1] - 1] = 1;
+		}
+	}
+	// Determine the device's preferred multichannel layout
+	else {
+		propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelLayout;
+		propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
+
+		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+			result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
+			
+			if(kAudioHardwareNoError != result)
+				LOG4CXX_WARN(logger, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
+
+			AudioChannelLayout *preferredChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
+			
+			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);	
+			
+			if(kAudioHardwareNoError != result)
+				LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
+
+			LOG4CXX_DEBUG(logger, "Device preferred channel layout: " << *preferredChannelLayout);
+			
+			const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, preferredChannelLayout };
+
+			// Not all channel layouts can be mapped, so handle failure with a generic mapping
+			dataSize = sizeof(deviceChannelMap);
+			result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, deviceChannelMap);
+				
+			if(noErr != result) {
+				LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+
+				// Just use a channel map that makes sense
+				for(UInt32 i = 0; i < std::min(outputBufferFormat.mChannelsPerFrame, deviceChannelCount); ++i)
+					deviceChannelMap[i] = i;
+			}
+			
+			free(preferredChannelLayout), preferredChannelLayout = NULL;		
+		}
+		else {
+			LOG4CXX_WARN(logger, "No preferred multichannel layout");
+			
+			// Just use a channel map that makes sense
+			for(UInt32 i = 0; i < deviceChannelCount; ++i)
+				deviceChannelMap[i] = i;
+		}
+	}
 
 	// For efficiency disable streams that aren't needed
 	size_t streamUsageSize = offsetof(AudioHardwareIOProcStreamUsage, mStreamIsOn) + (sizeof(UInt32) * mOutputDeviceStreamIDs.size());
@@ -2774,12 +2856,7 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 		UInt32 startingChannel;
 		dataSize = sizeof(startingChannel);
 		
-		result = AudioObjectGetPropertyData(streamID,
-											&propertyAddress,
-											0,
-											NULL,
-											&dataSize,
-											&startingChannel);	
+		result = AudioObjectGetPropertyData(streamID, &propertyAddress, 0, NULL, &dataSize, &startingChannel);	
 
 		if(kAudioHardwareNoError != result) {
 			LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyStartingChannel) failed: " << result);
@@ -2791,30 +2868,9 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
 
 		std::map<int, int> channelMap;
-
-		// TODO: Handle files with non-standard channel layouts
-
-		// Map mono to stereo using the preferred stereo channels
-		if(1 == outputBufferFormat.mChannelsPerFrame)  {
-			if(preferredStereoChannels[0] >= startingChannel && preferredStereoChannels[0] < endingChannel)
-				channelMap[preferredStereoChannels[0] - 1] = 0;
-			if(preferredStereoChannels[1] >= startingChannel && preferredStereoChannels[1] < endingChannel)
-				channelMap[preferredStereoChannels[1] - 1] = 0;
-		}
-		// Stereo
-		else if(2 == outputBufferFormat.mChannelsPerFrame) {
-			if(preferredStereoChannels[0] >= startingChannel && preferredStereoChannels[0] < endingChannel)
-				channelMap[preferredStereoChannels[0] - 1] = 0;
-			if(preferredStereoChannels[1] >= startingChannel && preferredStereoChannels[1] < endingChannel)
-				channelMap[preferredStereoChannels[1] - 1] = 1;
-		}
-		// Multichannel
-		else {
-			UInt32 channelCount = std::min(outputBufferFormat.mChannelsPerFrame, virtualFormat.mChannelsPerFrame);
-			for(UInt32 channel = 1; channel <= channelCount; ++channel) {
-				if(channel >= startingChannel && channel < endingChannel)
-					channelMap[channel - 1] = channel - 1;
-			}
+		for(UInt32 channel = startingChannel; channel < endingChannel; ++channel) {
+			if(-1 != deviceChannelMap[channel - 1])
+				channelMap[channel - 1] = deviceChannelMap[channel - 1];
 		}
 
 		// If the channel map isn't empty, the stream is used and an output converter is necessary

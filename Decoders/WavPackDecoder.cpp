@@ -34,6 +34,7 @@
 
 #include "WavPackDecoder.h"
 #include "CreateDisplayNameForURL.h"
+#include "CreateChannelLayout.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -276,8 +277,9 @@ bool WavPackDecoder::OpenFile(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
-		case 1:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;				break;
-		case 2:		mChannelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;			break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
 	mBuffer = static_cast<int32_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t)));
