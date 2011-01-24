@@ -27,7 +27,7 @@ A command line audio player using SFBAudioEngine is as simple as:
 	int main(int argc, char *argv [])
 	{
 		if(1 == argc) {
-			printf("Usage: %s file [file ...]", argv[0]);
+			printf("Usage: %s file [file ...]\n", argv[0]);
 			return EXIT_FAILURE;
 		}
 		
