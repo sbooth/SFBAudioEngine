@@ -35,6 +35,70 @@
 
 #define BUFFER_LENGTH 512
 
+static const char * GetChannelLayoutTagName(AudioChannelLayoutTag layoutTag)
+{
+	switch(layoutTag) {
+		case kAudioChannelLayoutTag_Mono:					return "kAudioChannelLayoutTag_Mono";
+		case kAudioChannelLayoutTag_Stereo:					return "kAudioChannelLayoutTag_Stereo";
+		case kAudioChannelLayoutTag_StereoHeadphones:		return "kAudioChannelLayoutTag_StereoHeadphones";
+		case kAudioChannelLayoutTag_MatrixStereo:			return "kAudioChannelLayoutTag_MatrixStereo";
+		case kAudioChannelLayoutTag_MidSide:				return "kAudioChannelLayoutTag_MidSide";
+		case kAudioChannelLayoutTag_XY:						return "kAudioChannelLayoutTag_XY";
+		case kAudioChannelLayoutTag_Binaural:				return "kAudioChannelLayoutTag_Binaural";
+		case kAudioChannelLayoutTag_Ambisonic_B_Format:		return "kAudioChannelLayoutTag_Ambisonic_B_Format";
+		case kAudioChannelLayoutTag_Quadraphonic:			return "kAudioChannelLayoutTag_Quadraphonic";
+		case kAudioChannelLayoutTag_Pentagonal:				return "kAudioChannelLayoutTag_Pentagonal";
+		case kAudioChannelLayoutTag_Hexagonal:				return "kAudioChannelLayoutTag_Hexagonal";		
+		case kAudioChannelLayoutTag_Octagonal:				return "kAudioChannelLayoutTag_Octagonal";
+		case kAudioChannelLayoutTag_Cube:					return "kAudioChannelLayoutTag_Cube";
+		case kAudioChannelLayoutTag_MPEG_3_0_A:				return "kAudioChannelLayoutTag_MPEG_3_0_A";
+		case kAudioChannelLayoutTag_MPEG_3_0_B:				return "kAudioChannelLayoutTag_MPEG_3_0_B";
+		case kAudioChannelLayoutTag_MPEG_4_0_A:				return "kAudioChannelLayoutTag_MPEG_4_0_A";
+		case kAudioChannelLayoutTag_MPEG_4_0_B:				return "kAudioChannelLayoutTag_MPEG_4_0_B";
+		case kAudioChannelLayoutTag_MPEG_5_0_A:				return "kAudioChannelLayoutTag_MPEG_5_0_A";
+		case kAudioChannelLayoutTag_MPEG_5_0_B:				return "kAudioChannelLayoutTag_MPEG_5_0_B";
+		case kAudioChannelLayoutTag_MPEG_5_0_C:				return "kAudioChannelLayoutTag_MPEG_5_0_C";
+		case kAudioChannelLayoutTag_MPEG_5_0_D:				return "kAudioChannelLayoutTag_MPEG_5_0_D";
+		case kAudioChannelLayoutTag_MPEG_5_1_A:				return "kAudioChannelLayoutTag_MPEG_5_1_A";
+		case kAudioChannelLayoutTag_MPEG_5_1_B:				return "kAudioChannelLayoutTag_MPEG_5_1_B";
+		case kAudioChannelLayoutTag_MPEG_5_1_C:				return "kAudioChannelLayoutTag_MPEG_5_1_C";
+		case kAudioChannelLayoutTag_MPEG_5_1_D:				return "kAudioChannelLayoutTag_MPEG_5_1_D";
+		case kAudioChannelLayoutTag_MPEG_6_1_A:				return "kAudioChannelLayoutTag_MPEG_6_1_A";
+		case kAudioChannelLayoutTag_MPEG_7_1_A:				return "kAudioChannelLayoutTag_MPEG_7_1_A";
+		case kAudioChannelLayoutTag_MPEG_7_1_B:				return "kAudioChannelLayoutTag_MPEG_7_1_B";
+		case kAudioChannelLayoutTag_MPEG_7_1_C:				return "kAudioChannelLayoutTag_MPEG_7_1_C";
+		case kAudioChannelLayoutTag_Emagic_Default_7_1:		return "kAudioChannelLayoutTag_Emagic_Default_7_1";
+		case kAudioChannelLayoutTag_SMPTE_DTV:				return "kAudioChannelLayoutTag_SMPTE_DTV";
+		case kAudioChannelLayoutTag_ITU_2_1:				return "kAudioChannelLayoutTag_ITU_2_1";
+		case kAudioChannelLayoutTag_ITU_2_2:				return "kAudioChannelLayoutTag_ITU_2_2";
+		case kAudioChannelLayoutTag_DVD_4:					return "kAudioChannelLayoutTag_DVD_4";
+		case kAudioChannelLayoutTag_DVD_5:					return "kAudioChannelLayoutTag_DVD_5";
+		case kAudioChannelLayoutTag_DVD_6:					return "kAudioChannelLayoutTag_DVD_6";
+		case kAudioChannelLayoutTag_DVD_10:					return "kAudioChannelLayoutTag_DVD_10";
+		case kAudioChannelLayoutTag_DVD_11:					return "kAudioChannelLayoutTag_DVD_11";
+		case kAudioChannelLayoutTag_DVD_18:					return "kAudioChannelLayoutTag_DVD_18";
+		case kAudioChannelLayoutTag_AudioUnit_6_0:			return "kAudioChannelLayoutTag_AudioUnit_6_0";
+		case kAudioChannelLayoutTag_AudioUnit_7_0:			return "kAudioChannelLayoutTag_AudioUnit_7_0";
+		case kAudioChannelLayoutTag_AudioUnit_7_0_Front:	return "kAudioChannelLayoutTag_AudioUnit_7_0_Front";
+		case kAudioChannelLayoutTag_AAC_6_0:				return "kAudioChannelLayoutTag_AAC_6_0";
+		case kAudioChannelLayoutTag_AAC_6_1:				return "kAudioChannelLayoutTag_AAC_6_1";
+		case kAudioChannelLayoutTag_AAC_7_0:				return "kAudioChannelLayoutTag_AAC_7_0";
+		case kAudioChannelLayoutTag_AAC_Octagonal:			return "kAudioChannelLayoutTag_AAC_Octagonal";		
+		case kAudioChannelLayoutTag_TMH_10_2_std:			return "kAudioChannelLayoutTag_TMH_10_2_std";
+		case kAudioChannelLayoutTag_TMH_10_2_full:			return "kAudioChannelLayoutTag_TMH_10_2_full";
+		case kAudioChannelLayoutTag_AC3_1_0_1:				return "kAudioChannelLayoutTag_AC3_1_0_1";
+		case kAudioChannelLayoutTag_AC3_3_0:				return "kAudioChannelLayoutTag_AC3_3_0";
+		case kAudioChannelLayoutTag_AC3_3_1:				return "kAudioChannelLayoutTag_AC3_3_1";
+		case kAudioChannelLayoutTag_AC3_3_0_1:				return "kAudioChannelLayoutTag_AC3_3_0_1";
+		case kAudioChannelLayoutTag_AC3_2_1_1:				return "kAudioChannelLayoutTag_AC3_2_1_1";
+		case kAudioChannelLayoutTag_AC3_3_1_1:				return "kAudioChannelLayoutTag_AC3_3_1_1";
+		case kAudioChannelLayoutTag_DiscreteInOrder:		return "kAudioChannelLayoutTag_DiscreteInOrder";
+		case kAudioChannelLayoutTag_Unknown:				return "kAudioChannelLayoutTag_Unknown";
+
+		default:											return NULL;
+	}	
+}
+
 std::ostream& operator<<(std::ostream& out, CFStringRef s)
 {
 	if(NULL == s) {
@@ -150,22 +214,31 @@ std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& f
 	return out;	
 }
 
-// Most of this is stolen from Apple's CAAudioChannelLayout::CAShowAudioChannelLayout()
-std::ostream& operator<<(std::ostream& out, const AudioChannelLayout& layout)
+std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout)
 {
-	out << "Layout tag 0x" << std::hex << std::setw(8) << std::setfill('0') << layout.mChannelLayoutTag << std::dec << ", ";
-
-	if(kAudioChannelLayoutTag_UseChannelBitmap == layout.mChannelLayoutTag)
-		out << "using channel bitmap 0x" << std::hex << std::setw(8) << std::setfill('0') << layout.mChannelBitmap << std::dec;
-	else {
-		out << "using " << layout.mNumberChannelDescriptions << " channel descriptions: " << std::endl;
-
-		const AudioChannelDescription *desc = layout.mChannelDescriptions;
-		for(UInt32 i = 0; i < layout.mNumberChannelDescriptions; ++i, ++desc) {
-			out << "\t" << i << ". Label: 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelLabel << std::dec << ", flags: 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelFlags << std::dec << ", ";
-			out << "(azimuth = " << desc->mCoordinates[0] << ", elevation = " << desc->mCoordinates[1] << ", distance = " << desc->mCoordinates[2]<< ")" << std::endl;
-		}
+	if(NULL == layout) {
+		out << "(null)";
+		return out;
 	}
 
-	return out;		
+	if(kAudioChannelLayoutTag_UseChannelBitmap == layout->mChannelLayoutTag)
+		out << "Channel bitmap: 0x" << std::hex << std::setw(8) << std::setfill('0') << layout->mChannelBitmap << std::dec;
+	else if(kAudioChannelLayoutTag_UseChannelDescriptions == layout->mChannelLayoutTag){
+		out << layout->mNumberChannelDescriptions << " channel descriptions: " << std::endl;
+
+		const AudioChannelDescription *desc = layout->mChannelDescriptions;
+		for(UInt32 i = 0; i < layout->mNumberChannelDescriptions; ++i, ++desc) {
+			if(kAudioChannelLabel_UseCoordinates == desc->mChannelLabel)
+				out << "\t" << i << ". Coordinates = (" << desc->mCoordinates[0] << ", " << desc->mCoordinates[1] << ", " << desc->mCoordinates[2] << "), flags = 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelFlags << std::dec;
+			else
+				out << "\t" << i << ". Label =  0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelLabel << std::dec;
+			if(i < layout->mNumberChannelDescriptions - 1)
+				out << std::endl;
+		}
+	}
+	else
+		out << GetChannelLayoutTagName(layout->mChannelLayoutTag) << " (0x" << std::hex << std::setw(8) << std::setfill('0') << layout->mChannelLayoutTag << std::dec << ")";
+
+
+	return out;
 }

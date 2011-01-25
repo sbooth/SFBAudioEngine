@@ -1403,7 +1403,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 			if(!channelCountsMatch)
 				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 			if(!channelLayoutsMatch)
-				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel layout (" << *mRingBufferChannelLayout << ") and decoder channel layout (" << *nextChannelLayout << ") don't match");
+				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 			return false;
 		}
 	}
@@ -2046,6 +2046,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOG4CXX_DEBUG(logger, "Decoder format: " << decoder->GetFormat());
+			LOG4CXX_DEBUG(logger, "Decoder channel layout: " << decoder->GetChannelLayout());
 			
 			// ========================================
 			// Create the decoder state and append to the list of active decoders
@@ -2794,7 +2795,7 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 			if(kAudioHardwareNoError != result)
 				LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
 
-			LOG4CXX_DEBUG(logger, "Device preferred channel layout: " << *preferredChannelLayout);
+			LOG4CXX_DEBUG(logger, "Device preferred channel layout: " << preferredChannelLayout);
 			
 			const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, preferredChannelLayout };
 
