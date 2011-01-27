@@ -35,7 +35,10 @@ ChannelLayoutsAreEqual(const AudioChannelLayout *lhs, const AudioChannelLayout *
 {
 	assert(NULL != lhs);
 	assert(NULL != rhs);
-	
+
+	if(lhs == rhs)
+		return true;
+
 	// First check if the tags are equal
 	if(lhs->mChannelLayoutTag != rhs->mChannelLayoutTag)
 		return false;
