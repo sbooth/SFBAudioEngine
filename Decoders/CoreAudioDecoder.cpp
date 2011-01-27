@@ -404,7 +404,8 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 
 		if(noErr != result) {
 			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-			LOG4CXX_ERROR(logger, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+//			LOG4CXX_ERROR(logger, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+			LOG4CXX_ERROR(logger, "AudioFileGetProperty (kAudioFilePropertyChannelLayout) failed: " << result);
 			
 			result = ExtAudioFileDispose(mExtAudioFile);
 			if(noErr != result)
@@ -422,7 +423,8 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 	}
 	else {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		LOG4CXX_ERROR(logger, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+//		LOG4CXX_ERROR(logger, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
+		LOG4CXX_ERROR(logger, "AudioFileGetPropertyInfo (kAudioFilePropertyChannelLayout) failed: " << result);
 	}
 
 	// Work around bugs in ExtAudioFile: http://lists.apple.com/archives/coreaudio-api/2009/Nov/msg00119.html
