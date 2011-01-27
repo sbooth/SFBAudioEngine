@@ -1369,6 +1369,21 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBufferFormat.mChannelsPerFrame		= format.mChannelsPerFrame;
 		mRingBufferChannelLayout				= CopyChannelLayout(decoder->GetChannelLayout());
 
+		// Assign a default channel layout to the ring buffer if the decoder has an unknown layout
+		if(NULL == mRingBufferChannelLayout) {
+			switch(mRingBufferFormat.mChannelsPerFrame) {
+				case 1:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);				break;
+				case 2:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+				case 4:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);		break;
+				case 6:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
+				case 8:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
+
+				default:
+					mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Unknown | mRingBufferFormat.mChannelsPerFrame);
+					break;
+			}
+		}
+
 		result = pthread_mutex_lock(&mMutex);
 		if(0 != result) {
 			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
@@ -2756,7 +2771,7 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 		
 		LOG4CXX_DEBUG(logger, "Device preferred stereo channels: " << preferredStereoChannels[0] << " " << preferredStereoChannels[1]);
 
-		AudioChannelLayout stereoLayout;		
+		AudioChannelLayout stereoLayout;	
 		stereoLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
 		
 		const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, &stereoLayout };
