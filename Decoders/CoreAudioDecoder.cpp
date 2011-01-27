@@ -394,11 +394,14 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 	}
 	
 	// Setup the channel layout
-	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, NULL);
+	// There is a bug in EAF where if the underlying AF doesn't return a channel layout it returns an empty struct
+//	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, NULL);
+	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, NULL);
 	if(noErr == result) {
 		mChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
-		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
-		
+//		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
+		result = AudioFileGetProperty(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, mChannelLayout);
+
 		if(noErr != result) {
 			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
 			LOG4CXX_ERROR(logger, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
