@@ -39,3 +39,5 @@ AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
 AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap);
 
 AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs);
+
+AudioChannelLayout * CreateDefaultAudioChannelLayout(UInt32 channelsPerFrame);

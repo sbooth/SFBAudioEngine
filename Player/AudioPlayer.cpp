@@ -1370,19 +1370,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBufferChannelLayout				= CopyChannelLayout(decoder->GetChannelLayout());
 
 		// Assign a default channel layout to the ring buffer if the decoder has an unknown layout
-		if(NULL == mRingBufferChannelLayout) {
-			switch(mRingBufferFormat.mChannelsPerFrame) {
-				case 1:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);				break;
-				case 2:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-				case 4:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);		break;
-				case 6:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
-				case 8:		mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
-
-				default:
-					mRingBufferChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Unknown | mRingBufferFormat.mChannelsPerFrame);
-					break;
-			}
-		}
+		if(NULL == mRingBufferChannelLayout)
+			mRingBufferChannelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
 
 		result = pthread_mutex_lock(&mMutex);
 		if(0 != result) {
@@ -1398,28 +1387,38 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 
 		// Allocate enough space in the ring buffer for the new format
-		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame,
-							  mRingBufferFormat.mBytesPerFrame,
-							  RING_BUFFER_SIZE_FRAMES);
+		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, RING_BUFFER_SIZE_FRAMES);
 	}
 	// Otherwise, enqueue this decoder if the format matches
 	else {
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 		AudioChannelLayout				*nextChannelLayout	= decoder->GetChannelLayout();
 		
-		bool	sampleRatesMatch		= (nextFormat.mSampleRate == mRingBufferFormat.mSampleRate);
-		bool	channelCountsMatch		= (nextFormat.mChannelsPerFrame == mRingBufferFormat.mChannelsPerFrame);
-		bool	channelLayoutsMatch		= ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout);
-
-		// The two files can be joined seamlessly only if they have the same sample rates, channel counts and channel layouts
-		if(!sampleRatesMatch || !channelCountsMatch || !channelLayoutsMatch) {
-			if(!sampleRatesMatch)
-				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
-			if(!channelCountsMatch)
-				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
-			if(!channelLayoutsMatch)
-				LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+		// The two files can be joined seamlessly only if they have the same sample rates and channel counts
+		if(nextFormat.mSampleRate != mRingBufferFormat.mSampleRate) {
+			LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 			return false;
+		}
+		else if(nextFormat.mChannelsPerFrame != mRingBufferFormat.mChannelsPerFrame) {
+			LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+			return false;
+		}
+
+		// If the decoder has an explicit channel layout, enqueue it if it matches the ring buffer's channel layout
+		if(NULL != nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
+			LOG4CXX_WARN(logger, "Enqueue failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+			return false;
+		}
+		// If the decoder doesn't have an explicit channel layout, enqueue it if the default layout matches
+		else if(NULL == nextChannelLayout) {
+			AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
+			bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
+			free(defaultLayout), defaultLayout = NULL;
+
+			if(!layoutsMatch) {
+				LOG4CXX_WARN(logger, "Enqueue failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
+				return false;
+			}
 		}
 	}
 	
