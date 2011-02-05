@@ -536,6 +536,54 @@ CFTimeInterval AudioPlayer::GetTotalTime() const
 	return static_cast<CFTimeInterval>(currentDecoderState->mTotalFrames / currentDecoderState->mDecoder->GetFormat().mSampleRate);
 }
 
+bool AudioPlayer::GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames)
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return false;
+
+	currentFrame = (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
+	totalFrames = currentDecoderState->mTotalFrames;
+
+	return true;
+}
+
+bool AudioPlayer::GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime)
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return false;
+
+	SInt64 currentFrame = (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
+	SInt64 totalFrames = currentDecoderState->mTotalFrames;
+	Float64 sampleRate = currentDecoderState->mDecoder->GetFormat().mSampleRate;
+
+	currentTime = currentFrame / sampleRate;
+	totalTime = totalFrames / sampleRate;
+
+	return true;
+}
+
+bool AudioPlayer::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime)
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return false;
+
+	currentFrame = (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
+	totalFrames = currentDecoderState->mTotalFrames;
+
+	Float64 sampleRate = currentDecoderState->mDecoder->GetFormat().mSampleRate;
+
+	currentTime = currentFrame / sampleRate;
+	totalTime = totalFrames / sampleRate;
+
+	return true;	
+}
+
 #pragma mark Seeking
 
 bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)

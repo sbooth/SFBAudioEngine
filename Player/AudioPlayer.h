@@ -93,11 +93,15 @@ public:
 	SInt64 GetCurrentFrame() const;
 	SInt64 GetTotalFrames() const;
 	inline SInt64 GetRemainingFrames() const		{ return GetTotalFrames() - GetCurrentFrame(); }
-	
+
 	CFTimeInterval GetCurrentTime() const;
 	CFTimeInterval GetTotalTime() const;
 	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
-	
+
+	bool GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames);
+	bool GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime);
+	bool GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime);
+
 	// ========================================
 	// Seeking
 	bool SeekForward(CFTimeInterval secondsToSkip = 3);
