@@ -90,17 +90,15 @@ public:
 
 	// ========================================
 	// Playback Properties
-	SInt64 GetCurrentFrame() const;
-	SInt64 GetTotalFrames() const;
-	inline SInt64 GetRemainingFrames() const		{ return GetTotalFrames() - GetCurrentFrame(); }
+	bool GetCurrentFrame(SInt64& currentFrame) const;
+	bool GetTotalFrames(SInt64& totalFrames) const;
+	bool GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames) const;
 
-	CFTimeInterval GetCurrentTime() const;
-	CFTimeInterval GetTotalTime() const;
-	inline CFTimeInterval GetRemainingTime()		{ return GetTotalTime() - GetCurrentTime(); }
+	bool GetCurrentTime(CFTimeInterval& currentTime) const;
+	bool GetTotalTime(CFTimeInterval& totalTime) const;
+	bool GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime) const;
 
-	bool GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames);
-	bool GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime);
-	bool GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime);
+	bool GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime) const;
 
 	// ========================================
 	// Seeking

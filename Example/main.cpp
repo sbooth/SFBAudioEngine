@@ -90,7 +90,9 @@ int main(int argc, char *argv [])
 	while(player.IsPlaying()) {
 		CFRunLoopRunInMode(kCFRunLoopDefaultMode, 2, true);
 
-		printf("%.2f / %.2f [%.2f]\n", player.GetCurrentTime(), player.GetTotalTime(), player.GetRemainingTime());
+		CFTimeInterval currentTime, totalTime;
+		if(player.GetPlaybackTime(currentTime, totalTime))
+			printf("%.2f / %.2f [%.2f]\n", currentTime, totalTime, totalTime - currentTime);
 	}
 	
 	player.Stop();

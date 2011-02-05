@@ -124,7 +124,11 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 {
 	NSParameterAssert(nil != sender);
 	
-	SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * PLAYER->GetTotalFrames());
+	SInt64 totalFrames;
+	if(!PLAYER->GetTotalFrames(totalFrames))
+		return;
+
+	SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * totalFrames);
 	
 	PLAYER->SeekToFrame(desiredFrame);
 }
@@ -184,13 +188,17 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 		[_playButton setTitle:@"Resume"];
 	else
 		[_playButton setTitle:@"Pause"];
-	
-	double fractionComplete = static_cast<double>(PLAYER->GetCurrentFrame()) / static_cast<double>(PLAYER->GetTotalFrames());
-	
-	[_slider setDoubleValue:fractionComplete];
-	[_elapsed setDoubleValue:PLAYER->GetCurrentTime()];
-	if(-1 != PLAYER->GetTotalFrames())
-		[_remaining setDoubleValue:(-1 * PLAYER->GetRemainingTime())];
+
+	SInt64 currentFrame, totalFrames;
+	CFTimeInterval currentTime, totalTime;
+
+	if(PLAYER->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
+		double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
+		
+		[_slider setDoubleValue:fractionComplete];
+		[_elapsed setDoubleValue:currentTime];
+		[_remaining setDoubleValue:(-1 * (totalTime - currentTime))];
+	}
 }
 
 @end
@@ -234,7 +242,9 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	
 	// Show the times
 	[_elapsed setHidden:NO];
-	if(-1 != PLAYER->GetTotalFrames())
+
+	SInt64 totalFrames;
+	if(PLAYER->GetTotalFrames(totalFrames) && -1 != totalFrames)
 		[_remaining setHidden:NO];	
 }
 
