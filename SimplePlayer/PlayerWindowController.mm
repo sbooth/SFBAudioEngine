@@ -125,12 +125,10 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSParameterAssert(nil != sender);
 	
 	SInt64 totalFrames;
-	if(!PLAYER->GetTotalFrames(totalFrames))
-		return;
-
-	SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * totalFrames);
-	
-	PLAYER->SeekToFrame(desiredFrame);
+	if(PLAYER->GetTotalFrames(totalFrames)) {
+		SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * totalFrames);
+		PLAYER->SeekToFrame(desiredFrame);
+	}
 }
 
 - (BOOL) playFile:(NSString *)file
