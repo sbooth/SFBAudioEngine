@@ -30,12 +30,14 @@
 
 #include <libkern/OSAtomic.h>
 #include <pthread.h>
+#include <mach/mach_init.h>
 #include <mach/thread_act.h>
 #include <mach/mach_error.h>
 #include <mach/task.h>
 #include <mach/semaphore.h>
 #include <mach/sync_policy.h>
 #include <Accelerate/Accelerate.h>
+#include <CoreServices/CoreServices.h>
 #include <stdexcept>
 #include <new>
 #include <algorithm>
@@ -1624,7 +1626,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 			LOG4CXX_ERROR(logger, "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
 			return ioErr;
 		}
-		
+
 		OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 		
 		mFramesRenderedLastPass += framesToRead;
