@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include <CoreAudio/CoreAudio.h>
 #include <AudioToolbox/AudioToolbox.h>
 #include <vector>
 #include <map>
