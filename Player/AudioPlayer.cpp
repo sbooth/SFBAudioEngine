@@ -798,12 +798,18 @@ void AudioPlayer::EnableDigitalVolume(bool enableDigitalVolume)
 
 bool AudioPlayer::GetDigitalVolume(double& volume) const
 {
+	if(!DigitalVolumeIsEnabled())
+		return false;
+
 	volume = mDigitalVolume;
 	return true;
 }
 
 bool AudioPlayer::SetDigitalVolume(double volume)
 {
+	if(!DigitalVolumeIsEnabled())
+		return false;
+
 	mDigitalVolume = std::min(1.0, std::max(0.0, volume));
 	return true;
 }
@@ -818,13 +824,19 @@ void AudioPlayer::EnableDigitalPreGain(bool enableDigitalPreGain)
 
 bool AudioPlayer::GetDigitalPreGain(double& preGain) const
 {
+	if(!DigitalPreGainIsEnabled())
+		return false;
+
 	preGain = mDigitalPreGain;
 	return true;
 }
 
 bool AudioPlayer::SetDigitalPreGain(double preGain)
 {
-	mDigitalVolume = std::min(15.0, std::max(-15.0, preGain));
+	if(!DigitalPreGainIsEnabled())
+		return false;
+
+	mDigitalPreGain = std::min(15.0, std::max(-15.0, preGain));
 	return true;
 }
 
@@ -1633,7 +1645,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	}
 
 	// Apply digital volume
-	if(eAudioPlayerFlagDigitalVolumeEnabled & mFlags) {
+	if(eAudioPlayerFlagDigitalVolumeEnabled & mFlags /*&& 1.0 != mDigitalVolume*/) {
 		for(UInt32 bufferIndex = 0; bufferIndex < mOutputBuffer->mNumberBuffers; ++bufferIndex) {
 			double *buffer = static_cast<double *>(mOutputBuffer->mBuffers[bufferIndex].mData);
 			vDSP_vsmulD(buffer, 1, &mDigitalVolume, buffer, 1, framesToRead);
