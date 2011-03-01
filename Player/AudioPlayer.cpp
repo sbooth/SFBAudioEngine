@@ -811,6 +811,10 @@ bool AudioPlayer::SetDigitalVolume(double volume)
 		return false;
 
 	mDigitalVolume = std::min(1.0, std::max(0.0, volume));
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Digital volume set to " << mDigitalVolume);
+
 	return true;
 }
 
@@ -837,6 +841,10 @@ bool AudioPlayer::SetDigitalPreGain(double preGain)
 		return false;
 
 	mDigitalPreGain = std::min(15.0, std::max(-15.0, preGain));
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Digital pregain set to " << mDigitalPreGain << " dB");
+
 	return true;
 }
 
