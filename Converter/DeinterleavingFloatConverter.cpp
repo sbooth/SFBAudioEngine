@@ -149,11 +149,11 @@ DeinterleavingFloatConverter::ConvertFromFloat(const AudioBufferList *inputBuffe
 	else {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-				unsigned int *input = static_cast<unsigned int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				CFSwappedFloat32 *input = static_cast<CFSwappedFloat32 *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
 				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				for(UInt32 count = 0; count < frameCount; ++count) {
-					*output++ = static_cast<float>(OSSwapInt32(*input));
+					*output++ = static_cast<double>(CFConvertFloatSwappedToHost(*input));
 					input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 				}
 
@@ -188,11 +188,11 @@ DeinterleavingFloatConverter::ConvertFromDouble(const AudioBufferList *inputBuff
 	else {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
-				unsigned long long *input = static_cast<unsigned long long *>(inputBuffer->mBuffers[inputBufferIndex].mData);
+				CFSwappedFloat64 *input = static_cast<CFSwappedFloat64 *>(inputBuffer->mBuffers[inputBufferIndex].mData) + inputChannelIndex;
 				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				for(UInt32 count = 0; count < frameCount; ++count) {
-					*output++ = static_cast<double>(OSSwapInt64(*input));
+					*output++ = CFConvertDoubleSwappedToHost(*input);
 					input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 				}
 
@@ -285,6 +285,7 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags))
 					vDSP_vfltu16D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 				else {
+					input += inputChannelIndex;
 					for(UInt32 count = 0; count < frameCount; ++count) {
 						*output++ = static_cast<unsigned short>(OSSwapInt16(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
@@ -413,8 +414,9 @@ DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBu
 				if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags))
 					vDSP_vfltu32D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 				else {
+					input += inputChannelIndex;
 					for(UInt32 count = 0; count < frameCount; ++count) {
-						*output++ = static_cast<unsigned int>(OSSwapInt16(*input));
+						*output++ = static_cast<unsigned int>(OSSwapInt32(*input));
 						input += inputBuffer->mBuffers[inputBufferIndex].mNumberChannels;
 					}
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
