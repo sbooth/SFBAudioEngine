@@ -594,8 +594,8 @@ UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		return 0;
 	}
 
-	// Ensure floating point data is in the proper range
-	if(kAudioFormatFlagIsFloat & mFormat.mFormatFlags) {
+	// Ensure native endian floating point data is in the proper range
+	if(kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mSourceFormat.mFormatFlags) && kAudioFormatFlagIsFloat & mFormat.mFormatFlags) {
 		UInt32 bitsPerChannel = mSourceFormat.mBitsPerChannel;
 
 		// For compressed formats, pretend the samples are 24-bit
