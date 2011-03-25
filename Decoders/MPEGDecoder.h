@@ -33,7 +33,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
-#include <mad/mad.h>
+#include <mpg123/mpg123.h>
 
 #import "AudioDecoder.h"
 
@@ -66,7 +66,7 @@ public:
 	virtual bool OpenFile(CFErrorRef *error = NULL);
 	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen() const					{ return (0 != mFormat.mSampleRate); }
+	virtual inline bool FileIsOpen() const					{ return (NULL != mDecoder); }
 
 	// ========================================
 	// The native format of the source audio
@@ -78,7 +78,7 @@ public:
 	
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
+	virtual inline SInt64 GetTotalFrames() const			{ return mpg123_length(mDecoder); }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 	
 	// ========================================
@@ -88,41 +88,7 @@ public:
 
 private:
 
-	bool DecodeMPEGFrame(bool decoderHeaderOnly = false);
-	bool SynthesizeMPEGFrame();
-
-	bool ScanFile(bool estimateTotalFrames = false);
-	SInt64 SeekToFrameApproximately(SInt64 frame);
-	SInt64 SeekToFrameAccurately(SInt64 frame);
-	
-	unsigned char		*mInputBuffer;
-	
+	mpg123_handle		*mDecoder;
 	AudioBufferList		*mBufferList;
-	
-	uint32_t			mMPEGFramesDecoded;
-	uint32_t			mTotalMPEGFrames;
-	
-	uint32_t			mSamplesToSkipInNextFrame;
-	
 	SInt64				mCurrentFrame;
-	SInt64				mTotalFrames;
-	
-	uint16_t			mEncoderDelay;
-	uint16_t			mEncoderPadding;
-	
-	SInt64				mSamplesDecoded;
-	uint32_t			mSamplesPerMPEGFrame;
-	
-	bool				mFoundXingHeader;
-	bool				mFoundLAMEHeader;
-	
-	uint8_t				mXingTOC [100];
-	
-	struct mad_stream	mStream;
-	struct mad_frame	mFrame;
-	struct mad_synth	mSynth;
-	
-	enum mad_layer		mMPEGLayer;
-	enum mad_mode		mMode;
-	enum mad_emphasis	mEmphasis;
 };

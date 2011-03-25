@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdexcept>
+#include <Accelerate/Accelerate.h>
 
 #include <log4cxx/logger.h>
 
@@ -42,59 +43,65 @@
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 
-#define INPUT_BUFFER_SIZE	(5 * 8192)
-#define LAME_HEADER_SIZE	((8 * 5) + 4 + 4 + 8 + 32 + 16 + 16 + 4 + 4 + 8 + 12 + 12 + 8 + 8 + 2 + 3 + 11 + 32 + 32 + 32)
+#pragma mark Initialization
 
-#define BIT_RESOLUTION		24
-
-// From vbrheadersdk:
-// ========================================
-// A Xing header may be present in the ancillary
-// data field of the first frame of an mp3 bitstream
-// The Xing header (optionally) contains
-//      frames      total number of audio frames in the bitstream
-//      bytes       total number of bytes in the bitstream
-//      toc         table of contents
-
-// toc (table of contents) gives seek points
-// for random access
-// the ith entry determines the seek point for
-// i-percent duration
-// seek point in bytes = (toc[i]/256.0) * total_bitstream_bytes
-// e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
-
-#define FRAMES_FLAG     0x0001
-#define BYTES_FLAG      0x0002
-#define TOC_FLAG        0x0004
-#define VBR_SCALE_FLAG  0x0008
-
-// Clipping and rounding code from madplay(audio.c):
-/*
- * madplay - MPEG audio decoder and player
- * Copyright (C) 2000-2004 Robert Leslie
- */
-static int32_t 
-audio_linear_round(unsigned int bits, 
-				   mad_fixed_t sample)
+static void Setupmpg123() __attribute__ ((constructor));
+static void Setupmpg123()
 {
-	enum {
-		MIN = -MAD_F_ONE,
-		MAX =  MAD_F_ONE - 1
-	};
-	
-	/* round */
-	sample += (1 << (MAD_F_FRACBITS - bits));
-	
-	/* clip */
-	if(MAX < sample)
-		sample = MAX;
-	else if(MIN > sample)
-		sample = MIN;
-	
-	/* quantize and scale */
-	return sample >> (MAD_F_FRACBITS + 1 - bits);
+	// What happens if this fails?
+	int result = mpg123_init();
+	if(MPG123_OK != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+		LOG4CXX_WARN(logger, "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
+	}
 }
-// End madplay code
+
+static void Teardownmpg123() __attribute__ ((destructor));
+static void Teardownmpg123()
+{
+	mpg123_exit();
+}
+
+#pragma mark Callbacks
+
+static ssize_t
+read_callback(void *dataSource, void *ptr, size_t size)
+{
+	assert(NULL != dataSource);
+	
+	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
+	return decoder->GetInputSource()->Read(ptr, size);
+}
+
+static off_t
+lseek_callback(void *datasource, off_t offset, int whence)
+{
+	assert(NULL != datasource);
+	
+	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(datasource);
+	InputSource *inputSource = decoder->GetInputSource();
+	
+	if(!inputSource->SupportsSeeking())
+		return -1;
+	
+	// Adjust offset as required
+	switch(whence) {
+		case SEEK_SET:
+			// offset remains unchanged
+			break;
+		case SEEK_CUR:
+			offset += inputSource->GetOffset();
+			break;
+		case SEEK_END:
+			offset += inputSource->GetLength();
+			break;
+	}
+	
+	if(!inputSource->SeekToOffset(offset))
+		return -1;
+
+	return offset;
+}
 
 #pragma mark Static Methods
 
@@ -133,39 +140,21 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 MPEGDecoder::MPEGDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mMPEGFramesDecoded(0), mTotalMPEGFrames(0), mSamplesToSkipInNextFrame(0), mCurrentFrame(0), mTotalFrames(0), mEncoderDelay(0), mEncoderPadding(0), mSamplesDecoded(0), mSamplesPerMPEGFrame(0), mFoundXingHeader(0), mFoundLAMEHeader(0)
-{
-	mInputBuffer = static_cast<unsigned char *>(calloc(INPUT_BUFFER_SIZE + MAD_BUFFER_GUARD, sizeof(unsigned char)));
-	
-	if(NULL == mInputBuffer)
-		throw std::bad_alloc();
-	
-	mad_stream_init(&mStream);
-	mad_frame_init(&mFrame);
-	mad_synth_init(&mSynth);
-	
-	memset(mXingTOC, 0, 100 * sizeof(uint8_t));
-}
+	: AudioDecoder(inputSource), mDecoder(NULL), mBufferList(NULL), mCurrentFrame(0)
+{}
 
 MPEGDecoder::~MPEGDecoder()
 {
 	if(FileIsOpen())
 		CloseFile();
-
-	if(mInputBuffer)
-		free(mInputBuffer), mInputBuffer = NULL;
-	
-	mad_synth_finish(&mSynth);
-	mad_frame_finish(&mFrame);
-	mad_stream_finish(&mStream);
 }
 
 #pragma mark Functionality
 
 bool MPEGDecoder::OpenFile(CFErrorRef *error)
 {
-	// Scan file to determine sample rate, channels, total frames, etc
-	if(!this->ScanFile(!mInputSource->SupportsSeeking())) {
+	mDecoder = mpg123_new(NULL, NULL);
+	if(NULL == mDecoder) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
@@ -204,10 +193,143 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 		return false;
 	}
 
+	// Force decode to floating point instead of 16-bit signed integer
+	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT, 0);
+
+	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, NULL)) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+
+		return false;
+	}
+
+	if(MPG123_OK != mpg123_open_handle(mDecoder, this)) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+		
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+
+		return false;
+ 	}
+
+	long rate;
+	int channels, encoding;
+	if(MPG123_OK != mpg123_getformat(mDecoder, &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+
+		return false;
+	}
+
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
 	
+	mFormat.mSampleRate			= rate;
+	mFormat.mChannelsPerFrame	= channels;
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
@@ -215,17 +337,79 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
 	mFormat.mReserved			= 0;
-		
+
+	size_t bufferSizeBytes = mpg123_outblock(mDecoder);
+	UInt32 framesPerMPEGFrame = static_cast<UInt32>(bufferSizeBytes / (channels * sizeof(float)));
+
+	// Set up the source format
+	mSourceFormat.mFormatID				= 'MPEG';
+	
+	mSourceFormat.mSampleRate			= rate;
+	mSourceFormat.mChannelsPerFrame		= channels;
+
+	mSourceFormat.mFramesPerPacket		= framesPerMPEGFrame;
+	
+	// Setup the channel layout
+	switch(channels) {
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+	}
+
+	if(MPG123_OK != mpg123_scan(mDecoder)) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   32,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+			
+			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
+															   displayName);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
+			
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+			
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+			
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioDecoderErrorDomain, 
+								   AudioDecoderInputOutputError, 
+								   errorDictionary);
+			
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+
+		return false;
+	}
+	
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat, mSamplesPerMPEGFrame);
+	mBufferList = AllocateABL(mFormat, framesPerMPEGFrame);
 	
 	if(NULL == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
-
+		
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+		
 		return false;
 	}
-
+	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
@@ -234,6 +418,11 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 
 bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 {
+	if(mDecoder) {
+		mpg123_close(mDecoder);
+		mpg123_delete(mDecoder), mDecoder = NULL;
+	}
+
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
 
@@ -242,19 +431,28 @@ bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 
 CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 {
+	mpg123_frameinfo mi;
+	if(MPG123_OK != mpg123_info(mDecoder, &mi)) {
+		return CFStringCreateWithFormat(kCFAllocatorDefault, 
+										NULL, 
+										CFSTR("MPEG-1 Audio, %u channels, %u Hz"), 
+										mSourceFormat.mChannelsPerFrame, 
+										static_cast<unsigned int>(mSourceFormat.mSampleRate));
+	}
+
 	CFStringRef layerDescription = NULL;
-	switch(mMPEGLayer) {
-		case MAD_LAYER_I:				layerDescription = CFSTR("Layer I");			break;
-		case MAD_LAYER_II:				layerDescription = CFSTR("Layer II");			break;
-		case MAD_LAYER_III:				layerDescription = CFSTR("Layer III");			break;
+	switch(mi.layer) {
+		case 1:							layerDescription = CFSTR("Layer I");			break;
+		case 2:							layerDescription = CFSTR("Layer II");			break;
+		case 3:							layerDescription = CFSTR("Layer III");			break;
 	}
 	
 	CFStringRef channelDescription = NULL;
-	switch(mMode) {  
-		case MAD_MODE_SINGLE_CHANNEL:	channelDescription = CFSTR("Single Channel");	break;
-		case MAD_MODE_DUAL_CHANNEL:		channelDescription = CFSTR("Dual Channel");		break;
-		case MAD_MODE_JOINT_STEREO:		channelDescription = CFSTR("Joint Stereo");		break;
-		case MAD_MODE_STEREO:			channelDescription = CFSTR("Stereo");			break;
+	switch(mi.mode) {  
+		case MPG123_M_MONO:				channelDescription = CFSTR("Single Channel");	break;
+		case MPG123_M_DUAL:				channelDescription = CFSTR("Dual Channel");		break;
+		case MPG123_M_JOINT:			channelDescription = CFSTR("Joint Stereo");		break;
+		case MPG123_M_STEREO:			channelDescription = CFSTR("Stereo");			break;
 	}
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
@@ -267,10 +465,14 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
-	if(mFoundLAMEHeader)
-		return this->SeekToFrameAccurately(frame);
-	else
-		return this->SeekToFrameApproximately(frame);
+	assert(0 <= frame);
+	assert(frame < this->GetTotalFrames());
+	
+	frame = mpg123_seek(mDecoder, frame, SEEK_SET);
+	if(0 <= frame)
+		mCurrentFrame = frame;
+	
+	return ((0 <= frame) ? mCurrentFrame : -1);
 }
 
 UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
@@ -278,7 +480,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
-	
+
 	UInt32 framesRead = 0;
 
 	// Reset output buffer data size
@@ -312,473 +514,38 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		// All requested frames were read
 		if(framesRead == frameCount)
 			break;
-		
-		// If the file contains a Xing header but not LAME gapless information,
-		// decode the number of MPEG frames specified by the Xing header
-		if(mFoundXingHeader && !mFoundLAMEHeader && 1 + mMPEGFramesDecoded == mTotalMPEGFrames)
-			break;
-		
-		// The LAME header indicates how many samples are in the file
-		if(mFoundLAMEHeader && this->GetTotalFrames() == mSamplesDecoded)
-			break;
-		
-		// Decode and synthesize the next MPEG frame
-		if(!DecodeMPEGFrame())
-			break;
 
-		SynthesizeMPEGFrame();
+		// Read and decode an MPEG frame
+		off_t frameNumber;
+		unsigned char *audioData = NULL;
+		size_t bytesDecoded;
+		int result = mpg123_decode_frame(mDecoder, &frameNumber, &audioData, &bytesDecoded);
+
+		if(MPG123_DONE == result)
+			break;
+		else if(MPG123_OK != result) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+			LOG4CXX_WARN(logger, "mpg123_info failed: " << mpg123_strerror(mDecoder));
+			break;
+		}
+
+		UInt32 framesDecoded = static_cast<UInt32>(bytesDecoded / (sizeof(float) * mFormat.mChannelsPerFrame));
+
+		// Deinterleave the samples
+		// In my experiments adding zero using Accelerate.framework is faster than looping through the buffer and copying each sample
+		float zero = 0;
+		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+			float *inputBuffer = reinterpret_cast<float *>(audioData) + channel;
+			float *outputBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
+
+			vDSP_vsadd(inputBuffer, mFormat.mChannelsPerFrame, &zero, outputBuffer, 1, framesDecoded);
+
+			mBufferList->mBuffers[channel].mNumberChannels	= 1;
+			mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>(framesDecoded * sizeof(float));
+		}		
 	}
 	
 	mCurrentFrame += framesRead;
 
 	return framesRead;
-}
-
-bool MPEGDecoder::DecodeMPEGFrame(bool decoderHeaderOnly)
-{
-	bool readEOF = false;
-
-	for(;;) {
-		// Feed the input buffer if necessary
-		if(NULL == mStream.buffer || MAD_ERROR_BUFLEN == mStream.error) {
-			SInt64 bytesToRead;
-			ptrdiff_t bytesRemaining;
-			unsigned char *readStartPointer;
-			
-			if(NULL != mStream.next_frame) {
-				bytesRemaining = mStream.bufend - mStream.next_frame;
-				memmove(mInputBuffer, mStream.next_frame, bytesRemaining);
-				
-				readStartPointer	= mInputBuffer + bytesRemaining;
-				bytesToRead			= INPUT_BUFFER_SIZE - bytesRemaining;
-			}
-			else {
-				bytesToRead			= INPUT_BUFFER_SIZE,
-				readStartPointer	= mInputBuffer,
-				bytesRemaining		= 0;
-			}
-			
-			// Read raw bytes from the MP3 file
-			SInt64 bytesRead = mInputSource->Read(readStartPointer, bytesToRead);
-			if(0 == bytesRead && !mInputSource->AtEOF()) {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-				LOG4CXX_ERROR(logger, "Read error");
-				return false;
-			}
-			
-			// MAD_BUFFER_GUARD zeroes are required to decode the last MPEG frame of the file
-			if(mInputSource->AtEOF()) {
-				memset(readStartPointer + bytesRead, 0, MAD_BUFFER_GUARD);
-				bytesRead += MAD_BUFFER_GUARD;
-				readEOF = true;
-			}
-			
-			mad_stream_buffer(&mStream, mInputBuffer, bytesRead + bytesRemaining);
-			mStream.error = MAD_ERROR_NONE;
-		}
-		
-		// Decode the MPEG frame's header
-		int result;
-		if(decoderHeaderOnly)
-			result = mad_header_decode(&mFrame.header, &mStream);
-		else
-			result = mad_frame_decode(&mFrame, &mStream);
-
-		if(-1 == result) {
-			if(MAD_RECOVERABLE(mStream.error)) {
-				// Prevent ID3 tags from reporting recoverable frame errors
-				const uint8_t	*buffer			= mStream.this_frame;
-				ptrdiff_t		buflen			= mStream.bufend - mStream.this_frame;
-				uint32_t		id3_length		= 0;
-				
-				if(10 <= buflen && 0x49 == buffer[0] && 0x44 == buffer[1] && 0x33 == buffer[2]) {
-					id3_length = (((buffer[6] & 0x7F) << (3 * 7)) | ((buffer[7] & 0x7F) << (2 * 7)) |
-								  ((buffer[8] & 0x7F) << (1 * 7)) | ((buffer[9] & 0x7F) << (0 * 7)));
-					
-					// Add 10 bytes for ID3 header
-					id3_length += 10;
-					
-					mad_stream_skip(&mStream, id3_length);
-				}
-				else {
-					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-					LOG4CXX_WARN(logger, "Recoverable frame level error (" << mad_stream_errorstr(&mStream) << ")");
-				}
-				
-				continue;
-			}
-			// EOS for non-Xing streams occurs when EOF is reached and no further frames can be decoded
-			else if(MAD_ERROR_BUFLEN == mStream.error && readEOF)
-				return false;
-			// The buffer did not contain the desired data
-			else if(MAD_ERROR_BUFLEN == mStream.error)
-				continue;
-			else {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-				LOG4CXX_ERROR(logger, "Unrecoverable frame level error (" << mad_stream_errorstr(&mStream) << ")");
-				break;
-			}
-		}
-		
-		// At this point a frame was successfully decoded
-		++mMPEGFramesDecoded;
-		
-		break;
-	}
-
-	return true;
-}
-
-bool MPEGDecoder::SynthesizeMPEGFrame()
-{
-	const float scaleFactor = (1L << (BIT_RESOLUTION - 1));
-
-	// Synthesize the frame into PCM
-	mad_synth_frame(&mSynth, &mFrame);
-	
-	// Skip any samples that remain from last frame
-	// This can happen if the encoder delay is greater than the number of samples in a frame
-	uint32_t startingSample = mSamplesToSkipInNextFrame;
-	
-	// Skip the Xing header (it contains empty audio)
-	if(mFoundXingHeader && 1 == mMPEGFramesDecoded)
-		return true;
-	// Adjust the first real audio frame for gapless playback
-	else if(mFoundLAMEHeader && 2 == mMPEGFramesDecoded)
-		startingSample += mEncoderDelay;
-	
-	// The number of samples in this frame
-	uint32_t sampleCount = mSynth.pcm.length;
-	// Skip this entire frame if necessary
-	if(startingSample > sampleCount) {
-		mSamplesToSkipInNextFrame += startingSample - sampleCount;
-		return true;
-	}
-	else
-		mSamplesToSkipInNextFrame = 0;
-	
-	// If a LAME header was found, the total number of audio frames (AKA samples) 
-	// is known.  Ensure only that many are output
-	if(mFoundLAMEHeader && this->GetTotalFrames() < mSamplesDecoded + (sampleCount - startingSample))
-		sampleCount = static_cast<uint32_t>(this->GetTotalFrames() - mSamplesDecoded);
-	
-	// Output samples in 32-bit float PCM
-	int32_t audioSample;
-	for(uint32_t channel = 0; channel < MAD_NCHANNELS(&mFrame.header); ++channel) {
-		float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
-		
-		for(uint32_t sample = startingSample; sample < sampleCount; ++sample) {
-			audioSample = audio_linear_round(BIT_RESOLUTION, mSynth.pcm.samples[channel][sample]);
-			*floatBuffer++ = static_cast<float>(audioSample / scaleFactor);
-		}
-		
-		mBufferList->mBuffers[channel].mNumberChannels	= 1;
-		mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>((sampleCount - startingSample) * sizeof(float));
-	}
-	
-	mSamplesDecoded += (sampleCount - startingSample);
-	
-	return true;
-}
-
-bool MPEGDecoder::ScanFile(bool estimateTotalFrames)
-{
-	// Attempt to decode the first MPEG frame, in hope of a Xing header
-	if(!DecodeMPEGFrame()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-		LOG4CXX_ERROR(logger, "Could not decode first MPEG frame");
-		return false;
-	}
-
-	// Save the relevant parameters
-	mMPEGLayer					= mFrame.header.layer;
-	mMode						= mFrame.header.mode;
-	mEmphasis					= mFrame.header.emphasis;
-
-	mFormat.mSampleRate			= mFrame.header.samplerate;
-	mFormat.mChannelsPerFrame	= MAD_NCHANNELS(&mFrame.header);
-	
-	mSamplesPerMPEGFrame		= 32 * MAD_NSBSAMPLES(&mFrame.header);
-
-	// Set up the source format
-	switch(mMPEGLayer) {
-		case MAD_LAYER_I:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer1;	break;
-		case MAD_LAYER_II:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer2;	break;
-		case MAD_LAYER_III:		mSourceFormat.mFormatID = kAudioFormatMPEGLayer3;	break;
-	}
-	
-	mSourceFormat.mSampleRate			= mFrame.header.samplerate;
-	mSourceFormat.mChannelsPerFrame		= MAD_NCHANNELS(&mFrame.header);
-	mSourceFormat.mFramesPerPacket		= mSamplesPerMPEGFrame;
-
-	// MAD_NCHANNELS always returns 1 or 2
-	switch(MAD_NCHANNELS(&mFrame.header)) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-	}
-
-	// Look for a Xing header in the first MPEG frame
-	// Reference http://www.codeproject.com/audio/MPEGAudioInfo.asp
-	unsigned long magic;
-	unsigned ancillaryBitsRemaining = mStream.anc_bitlen;
-	if(32 > ancillaryBitsRemaining)
-		goto frame2;
-	
-	/*unsigned long*/ magic = mad_bit_read(&mStream.anc_ptr, 32);
-	ancillaryBitsRemaining -= 32;
-	
-	if('Xing' == magic || 'Info' == magic) {
-		if(32 > ancillaryBitsRemaining)
-			goto frame2;
-		
-		unsigned long flags = mad_bit_read(&mStream.anc_ptr, 32);
-		ancillaryBitsRemaining -= 32;
-		
-		// 4 byte value containing total frames
-		// For LAME-encoded MP3s, the number of MPEG frames in the file is one greater than this frame
-		if(FRAMES_FLAG & flags) {
-			if(32 > ancillaryBitsRemaining)
-				goto frame2;
-			
-			unsigned long frames = mad_bit_read(&mStream.anc_ptr, 32);
-			ancillaryBitsRemaining -= 32;
-			
-			mTotalMPEGFrames = static_cast<uint32_t>(frames);
-			
-			// Determine number of samples, discounting encoder delay and padding
-			// Our concept of a frame is the same as CoreAudio's- one sample across all channels
-			mTotalFrames = frames * mSamplesPerMPEGFrame;
-		}
-		
-		// 4 byte value containing total bytes
-		if(BYTES_FLAG & flags) {
-			if(32 > ancillaryBitsRemaining)
-				goto frame2;
-			
-			/*uint32_t bytes =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			ancillaryBitsRemaining -= 32;
-		}
-		
-		// 100 bytes containing TOC information
-		if(TOC_FLAG & flags) {
-			if(8 * 100 > ancillaryBitsRemaining)
-				goto frame2;
-			
-			for(unsigned i = 0; i < 100; ++i)
-				mXingTOC[i] = mad_bit_read(&mStream.anc_ptr, 8);
-			
-			ancillaryBitsRemaining -= (8 * 100);
-		}
-		
-		// 4 byte value indicating encoded vbr scale
-		if(VBR_SCALE_FLAG & flags) {
-			if(32 > ancillaryBitsRemaining)
-				goto frame2;
-			
-			/*uint32_t vbrScale =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			ancillaryBitsRemaining -= 32;
-		}
-		
-		mFoundXingHeader = true;
-		
-		// Loook for the LAME header next
-		// http://gabriel.mp3-tech.org/mp3infotag.html				
-		if(32 > ancillaryBitsRemaining)
-			goto frame2;
-		magic = mad_bit_read(&mStream.anc_ptr, 32);
-		
-		ancillaryBitsRemaining -= 32;
-		
-		if('LAME' == magic) {
-			if(LAME_HEADER_SIZE > ancillaryBitsRemaining)
-				goto frame2;
-			
-			/*unsigned char versionString [5 + 1];
-			memset(versionString, 0, 6);*/
-			
-			for(unsigned i = 0; i < 5; ++i)
-				/*versionString[i] =*/ mad_bit_read(&mStream.anc_ptr, 8);
-			
-			/*uint8_t infoTagRevision =*/ mad_bit_read(&mStream.anc_ptr, 4);
-			/*uint8_t vbrMethod =*/ mad_bit_read(&mStream.anc_ptr, 4);
-			
-			/*uint8_t lowpassFilterValue =*/ mad_bit_read(&mStream.anc_ptr, 8);
-			
-			/*float peakSignalAmplitude =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			/*uint16_t radioReplayGain =*/ mad_bit_read(&mStream.anc_ptr, 16);
-			/*uint16_t audiophileReplayGain =*/ mad_bit_read(&mStream.anc_ptr, 16);
-			
-			/*uint8_t encodingFlags =*/ mad_bit_read(&mStream.anc_ptr, 4);
-			/*uint8_t athType =*/ mad_bit_read(&mStream.anc_ptr, 4);
-			
-			/*uint8_t lameBitrate =*/ mad_bit_read(&mStream.anc_ptr, 8);
-			
-			uint16_t encoderDelay = mad_bit_read(&mStream.anc_ptr, 12);
-			uint16_t encoderPadding = mad_bit_read(&mStream.anc_ptr, 12);
-								
-			// Adjust encoderDelay and encoderPadding for MDCT/filterbank delays
-			mEncoderDelay = encoderDelay + 528 + 1;
-			mEncoderPadding = encoderPadding - (528 + 1);
-
-			mTotalFrames -= (mEncoderDelay + mEncoderPadding);
-			
-			/*uint8_t misc =*/ mad_bit_read(&mStream.anc_ptr, 8);
-			
-			/*uint8_t mp3Gain =*/ mad_bit_read(&mStream.anc_ptr, 8);
-			
-			/*uint8_t unused =*/mad_bit_read(&mStream.anc_ptr, 2);
-			/*uint8_t surroundInfo =*/ mad_bit_read(&mStream.anc_ptr, 3);
-			/*uint16_t presetInfo =*/ mad_bit_read(&mStream.anc_ptr, 11);
-			
-			/*uint32_t musicGain =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			
-			/*uint32_t musicCRC =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			
-			/*uint32_t tagCRC =*/ mad_bit_read(&mStream.anc_ptr, 32);
-			
-			ancillaryBitsRemaining -= LAME_HEADER_SIZE;
-			
-			mFoundLAMEHeader = true;
-		}
-	}
-
-	// If a Xing or LAME header was found, the total number of MPEG frames or sample frames is known
-	if((mFoundXingHeader && 0 != mTotalFrames) || mFoundLAMEHeader)
-		return true;
-	
-frame2:
-
-	// Estimate the number of frames based on the file's size (for non-seekable input sources)
-	if(estimateTotalFrames) {
-		mTotalFrames = static_cast<SInt64>(static_cast<float>(mFrame.header.samplerate) * ((mInputSource->GetLength() /*- id3_length*/) / (mFrame.header.bitrate / 8.0)));
-
-		// If the frame didn't contain a Xing header, synthesize the audio
-		if(!mFoundXingHeader)
-			SynthesizeMPEGFrame();
-	}
-	// Scan the file for each frame's header and keep count of the number of MPEG frames found
-	else {
-		// Decode the header for all MPEG frames
-		while(DecodeMPEGFrame(true))
-			;
-
-		mTotalFrames = mSamplesPerMPEGFrame * mMPEGFramesDecoded;
-		
-		// Rewind to the beginning of the file
-		if(!mInputSource->SeekToOffset(0))
-			return false;
-		
-		// Reset decoder parameters
-		mMPEGFramesDecoded			= 0;
-		mCurrentFrame				= 0;
-		mSamplesToSkipInNextFrame	= 0;
-		mSamplesDecoded				= 0;
-		
-		mad_stream_buffer(&mStream, NULL, 0);
-	}
-
-	return true;
-}
-
-SInt64 MPEGDecoder::SeekToFrameApproximately(SInt64 frame)
-{
-	double	fraction	= static_cast<double>(frame) / this->GetTotalFrames();
-	long	seekPoint	= 0;
-	
-	// If a Xing header was found, interpolate in TOC
-	if(mFoundXingHeader) {
-		double		percent		= 100 * fraction;
-		uint32_t	firstIndex	= static_cast<uint32_t>(ceil(percent));
-		
-		if(99 < firstIndex)
-			firstIndex = 99;
-		
-		double firstOffset	= mXingTOC[firstIndex];
-		double secondOffset	= 256;
-		
-		if(99 > firstIndex)
-			secondOffset = mXingTOC[firstIndex + 1];;
-			
-			double x = firstOffset + (secondOffset - firstOffset) * (percent - firstIndex);
-			seekPoint = static_cast<long>((1.0 / 256.0) * x * mInputSource->GetLength());
-	}
-	else
-		seekPoint = static_cast<long>(mInputSource->GetLength() * fraction);
-	
-	bool result = mInputSource->SeekToOffset(seekPoint);
-	if(result) {
-		mad_stream_buffer(&mStream, NULL, 0);
-		
-		// Reset frame count to prevent early termination of playback
-		mMPEGFramesDecoded			= 0;
-		mSamplesDecoded				= 0;
-		mSamplesToSkipInNextFrame	= 0;
-		
-		mCurrentFrame				= frame;
-	}
-	
-	// Right now it's only possible to return an approximation of the audio frame
-	return (result ? frame : -1);
-}
-
-SInt64 MPEGDecoder::SeekToFrameAccurately(SInt64 frame)
-{
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
-	
-	// Brute force seeking is necessary since frame-accurate seeking is required
-	
-	// To seek to a frame earlier in the file, rewind to the beginning
-	if(this->GetCurrentFrame() > frame) {
-		if(!mInputSource->SeekToOffset(0))
-			return -1;
-		
-		// Reset decoder parameters
-		mMPEGFramesDecoded			= 0;
-		mCurrentFrame				= 0;
-		mSamplesToSkipInNextFrame	= 0;
-		mSamplesDecoded				= 0;
-
-		mad_stream_buffer(&mStream, NULL, 0);
-	}
-	// Mark any buffered audio as read
-	else
-		mCurrentFrame += mBufferList->mBuffers[0].mDataByteSize / sizeof(float);
-	
-	// Zero the buffers
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-		mBufferList->mBuffers[i].mDataByteSize = 0;
-	
-	for(;;) {
-		// All requested frames were skipped or read
-		if(mSamplesDecoded >= frame)
-			break;
-
-		// Decode and synthesize the next MPEG frame
-		if(!DecodeMPEGFrame())
-			break;
-
-		SynthesizeMPEGFrame();
-
-		mCurrentFrame += mSamplesPerMPEGFrame;
-
-		// If the MPEG frame that was just decoded contains the desired frame, adjust the buffers
-		// so the desired frame is first
-
-		if(mSamplesDecoded >= frame) {
-			UInt32 framesInBuffer = static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
-			UInt32 framesToSkip = static_cast<UInt32>(mSamplesDecoded - frame);
-
-			for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-				float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
-				memmove(floatBuffer, floatBuffer + framesToSkip, (framesInBuffer - framesToSkip) * sizeof(float));
-			
-				mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToSkip * sizeof(float));
-			}
-			
-			mCurrentFrame -= framesToSkip;
-		}
-	}
-	
-	return mCurrentFrame;
 }

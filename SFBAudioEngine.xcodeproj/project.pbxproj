@@ -34,6 +34,8 @@
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320FB6B3111E1AE600CE061E /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D81108C213800CA9BDE /* AudioPlayer.cpp */; };
 		32150C5710AB3778008913B5 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
+		32161CEC133AF8DE008449C3 /* mpg123.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32161CE8133AF8C8008449C3 /* mpg123.framework */; };
+		32161CF5133AF907008449C3 /* mpg123.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32161CE8133AF8C8008449C3 /* mpg123.framework */; };
 		321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321643761220AAC00010AE57 /* Accelerate.framework */; };
 		322D78A9112F971C006676FC /* WavPackMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78A7112F971C006676FC /* WavPackMetadata.cpp */; };
 		322D78AA112F971C006676FC /* WavPackMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78A8112F971C006676FC /* WavPackMetadata.h */; };
@@ -134,8 +136,6 @@
 		32E7378E10B9178000094C8A /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E734A210B8C9F900094C8A /* WavPackDecoder.h */; };
 		32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
 		32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
-		32E7392D10B9A85D00094C8A /* mad.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7392C10B9A85D00094C8A /* mad.framework */; };
-		32E7393010B9A86700094C8A /* mad.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E7392C10B9A85D00094C8A /* mad.framework */; };
 		32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7374310B90C9A00094C8A /* MPEGDecoder.h */; };
 		32E73AF710B9D88800094C8A /* vorbis.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E73AF610B9D88800094C8A /* vorbis.framework */; };
 		32E73AFA10B9D89100094C8A /* vorbis.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32E73AF610B9D88800094C8A /* vorbis.framework */; };
@@ -190,6 +190,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				32161CF5133AF907008449C3 /* mpg123.framework in Copy Embedded Frameworks */,
 				3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */,
 				324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */,
 				3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */,
@@ -197,7 +198,6 @@
 				322D79BA113047A2006676FC /* mp4v2.framework in Copy Embedded Frameworks */,
 				32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */,
 				32E73AFA10B9D89100094C8A /* vorbis.framework in Copy Embedded Frameworks */,
-				32E7393010B9A86700094C8A /* mad.framework in Copy Embedded Frameworks */,
 				32E7369110B9058100094C8A /* wavpack.framework in Copy Embedded Frameworks */,
 				325560DC1092B37C00580566 /* FLAC.framework in Copy Embedded Frameworks */,
 			);
@@ -234,6 +234,7 @@
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
 		320E117E1289D13100DAA041 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 		320E11821289D18000DAA041 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		32161CE8133AF8C8008449C3 /* mpg123.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpg123.framework; path = Frameworks/mpg123.framework; sourceTree = "<group>"; };
 		321643761220AAC00010AE57 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -333,7 +334,6 @@
 		32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisDecoder.h; sourceTree = "<group>"; };
 		32E7379510B9978200094C8A /* MusepackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackDecoder.cpp; sourceTree = "<group>"; };
 		32E7379610B9978200094C8A /* MusepackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackDecoder.h; sourceTree = "<group>"; };
-		32E7392C10B9A85D00094C8A /* mad.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mad.framework; path = Frameworks/mad.framework; sourceTree = "<group>"; };
 		32E73AF610B9D88800094C8A /* vorbis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vorbis.framework; path = Frameworks/vorbis.framework; sourceTree = "<group>"; };
 		32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioMetadata.h; sourceTree = "<group>"; };
 		32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioMetadata.cpp; sourceTree = "<group>"; };
@@ -363,6 +363,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32161CEC133AF8DE008449C3 /* mpg123.framework in Frameworks */,
 				322D79FB11304B3C006676FC /* taglib.framework in Frameworks */,
 				32C212F4109111E900BA2493 /* AudioToolbox.framework in Frameworks */,
 				32C381B8109117C50024EB87 /* CoreServices.framework in Frameworks */,
@@ -370,7 +371,6 @@
 				325560671092A89600580566 /* FLAC.framework in Frameworks */,
 				32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */,
 				32E7368E10B9057900094C8A /* wavpack.framework in Frameworks */,
-				32E7392D10B9A85D00094C8A /* mad.framework in Frameworks */,
 				32E73AF710B9D88800094C8A /* vorbis.framework in Frameworks */,
 				32CA90F910B9E514005A85DA /* mpcdec.framework in Frameworks */,
 				328AA51A1116151C0091D56B /* CoreFoundation.framework in Frameworks */,
@@ -459,7 +459,6 @@
 				325560661092A89600580566 /* FLAC.framework */,
 				32379E8A1093D35700DD5B34 /* CoreAudio.framework */,
 				32E7368D10B9057900094C8A /* wavpack.framework */,
-				32E7392C10B9A85D00094C8A /* mad.framework */,
 				32E73AF610B9D88800094C8A /* vorbis.framework */,
 				32CA90F810B9E514005A85DA /* mpcdec.framework */,
 				322D79B511304789006676FC /* mp4v2.framework */,
@@ -471,6 +470,7 @@
 				32676759128F497400C7FE3B /* log4cxx.framework */,
 				324DB1B612DC17480055AF3F /* mac.framework */,
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
+				32161CE8133AF8C8008449C3 /* mpg123.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
