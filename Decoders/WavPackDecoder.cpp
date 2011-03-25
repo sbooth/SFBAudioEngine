@@ -79,16 +79,16 @@ set_pos_rel_callback(void *id, int32_t delta, int mode)
 		return -1;
 	
 	// Adjust offset as required
-	SInt64 offset;
+	SInt64 offset = delta;
 	switch(mode) {
 		case SEEK_SET:
 			// offset remains unchanged
 			break;
 		case SEEK_CUR:
-			offset = inputSource->GetOffset() - delta;
+			offset += inputSource->GetOffset();
 			break;
 		case SEEK_END:
-			offset = inputSource->GetLength() - delta;
+			offset += inputSource->GetLength();
 			break;
 	}
 	

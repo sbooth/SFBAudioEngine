@@ -68,10 +68,10 @@ seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
 			// offset remains unchanged
 			break;
 		case SEEK_CUR:
-			offset = inputSource->GetOffset() - offset;
+			offset += inputSource->GetOffset();
 			break;
 		case SEEK_END:
-			offset = inputSource->GetLength() - offset;
+			offset += inputSource->GetLength();
 			break;
 	}
 	

@@ -93,16 +93,16 @@ public:
 		if(!mInputSource->SupportsSeeking())
 			return ERROR_IO_READ;
 		
-		SInt64 offset;
+		SInt64 offset = nDistance;
 		switch(nMoveMode) {
 			case SEEK_SET:
-				offset = nDistance;
+				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset = mInputSource->GetOffset() - nDistance;
+				offset += mInputSource->GetOffset();
 				break;
 			case SEEK_END:
-				offset = mInputSource->GetLength() - nDistance;
+				offset += mInputSource->GetLength();
 				break;
 		}
 		
