@@ -69,8 +69,8 @@
 #define DECODER_THREAD_IMPORTANCE				6
 #define SLEEP_TIME_USEC							1000
 
-static void InitializationLoggingSubsystem() __attribute__ ((constructor));
-static void InitializationLoggingSubsystem()
+static void InitializeLoggingSubsystem() __attribute__ ((constructor));
+static void InitializeLoggingSubsystem()
 {
 	// Turn off logging by default
 	if(!log4cxx::LogManager::getLoggerRepository()->isConfigured())
