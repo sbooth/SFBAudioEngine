@@ -41,6 +41,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(NULL != decoder);
 	assert(decoder->SupportsSeeking());
 	
+	mInputSource	= mDecoder->GetInputSource();
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
 	mSourceFormat	= mDecoder->GetSourceFormat();
@@ -57,6 +58,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(NULL != decoder);
 	assert(decoder->SupportsSeeking());
 
+	mInputSource	= mDecoder->GetInputSource();
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
 	mSourceFormat	= mDecoder->GetSourceFormat();
@@ -71,6 +73,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(NULL != decoder);
 	assert(decoder->SupportsSeeking());
 	
+	mInputSource	= mDecoder->GetInputSource();
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
 	mSourceFormat	= mDecoder->GetSourceFormat();
@@ -81,6 +84,10 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 
 LoopableRegionDecoder::~LoopableRegionDecoder()
 {
+	// Just set our references to NULL, as mDecoder actually owns the objects and will delete them
+	mInputSource	= NULL;
+	mChannelLayout	= NULL;
+
 	if(mDecoder)
 		delete mDecoder, mDecoder = NULL;
 }
