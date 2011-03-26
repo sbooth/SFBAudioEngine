@@ -344,47 +344,112 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
-	
+	assert(NULL != url);
+
+	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
+
+	if(NULL == inputSource)
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSourceRegion(inputSource, startingFrame, error);
+
+	if(NULL == decoder)
+		delete inputSource, inputSource = NULL;
+
+	return decoder;
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+{
+	assert(NULL != url);
+
+	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
+
+	if(NULL == inputSource)
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, error);
+
+	if(NULL == decoder)
+		delete inputSource, inputSource = NULL;
+
+	return decoder;
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+{
+	assert(NULL != url);
+
+	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
+
+	if(NULL == inputSource)
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, repeatCount, error);
+
+	if(NULL == decoder)
+		delete inputSource, inputSource = NULL;
+
+	return decoder;
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
+{
+	assert(NULL != inputSource);
+
+	if(!inputSource->SupportsSeeking())
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSource(inputSource, error);
+
 	if(NULL == decoder)
 		return NULL;
-	
+
 	if(!decoder->SupportsSeeking()) {
-		delete decoder;
+		delete decoder, decoder = NULL;
 		return NULL;
 	}
 
 	return new LoopableRegionDecoder(decoder, startingFrame);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
-	
+	assert(NULL != inputSource);
+
+	if(!inputSource->SupportsSeeking())
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSource(inputSource, error);
+
 	if(NULL == decoder)
 		return NULL;
-	
+
 	if(!decoder->SupportsSeeking()) {
-		delete decoder;
+		delete decoder, decoder = NULL;
 		return NULL;
 	}
-	
+
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
-	
+	assert(NULL != inputSource);
+
+	if(!inputSource->SupportsSeeking())
+		return NULL;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForInputSource(inputSource, error);
+
 	if(NULL == decoder)
 		return NULL;
-	
-	// In order to repeat a decoder must support seeking
+
 	if(!decoder->SupportsSeeking()) {
-		delete decoder;
+		delete decoder, decoder = NULL;
 		return NULL;
 	}
-	
+
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount, repeatCount);
 }
 
