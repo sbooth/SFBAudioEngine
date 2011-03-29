@@ -888,7 +888,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 
 #pragma mark Device Management
 
-CFStringRef AudioPlayer::CreateOutputDeviceUID() const
+bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDevicePropertyDeviceUID, 
@@ -896,7 +896,6 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID() const
 		kAudioObjectPropertyElementMaster 
 	};
 	
-	CFStringRef deviceUID = NULL;
 	UInt32 dataSize = sizeof(deviceUID);
 	
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
@@ -909,10 +908,10 @@ CFStringRef AudioPlayer::CreateOutputDeviceUID() const
 	if(kAudioHardwareNoError != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
-		return NULL;
+		return false;
 	}
 	
-	return deviceUID;
+	return true;
 }
 
 bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
@@ -977,6 +976,12 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 		return false;
 
 	return SetOutputDeviceID(deviceID);
+}
+
+bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
+{
+	deviceID = mOutputDeviceID;
+	return true;
 }
 
 bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)

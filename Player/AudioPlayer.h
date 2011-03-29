@@ -142,10 +142,10 @@ public:
 
 	// ========================================
 	// Device Management
-	CFStringRef CreateOutputDeviceUID() const;
+	bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
 	
-	AudioDeviceID GetOutputDeviceID() const			{ return mOutputDeviceID; }
+	bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
 	bool SetOutputDeviceID(AudioDeviceID deviceID);
 
 	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
