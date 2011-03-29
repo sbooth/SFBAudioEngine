@@ -2450,10 +2450,8 @@ bool AudioPlayer::CloseOutput()
 	OSStatus result = AudioDeviceDestroyIOProcID(mOutputDeviceID, 
 												 mOutputDeviceIOProcID);
 
-	if(noErr != result) {
+	if(noErr != result)
 		LOG4CXX_ERROR(logger, "AudioDeviceDestroyIOProcID failed: " << result);
-		return false;
-	}
 	
 	AudioObjectPropertyAddress propertyAddress = { 
 		kAudioDeviceProcessorOverload, 
@@ -2476,10 +2474,8 @@ bool AudioPlayer::CloseOutput()
 											   myAudioObjectPropertyListenerProc, 
 											   this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		LOG4CXX_ERROR(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyBufferFrameSize) failed: " << result);
-		return false;
-	}
 	
 	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
 	
@@ -2498,10 +2494,8 @@ bool AudioPlayer::CloseOutput()
 											   myAudioObjectPropertyListenerProc, 
 											   this);
 	
-	if(kAudioHardwareNoError != result) {
+	if(kAudioHardwareNoError != result)
 		LOG4CXX_ERROR(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyNominalSampleRate) failed: " << result);
-		return false;
-	}
 
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
 	
