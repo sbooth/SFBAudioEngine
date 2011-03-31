@@ -194,7 +194,7 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	}
 
 	// Force decode to floating point instead of 16-bit signed integer
-	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS, 0);
+	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
 
 	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, NULL)) {
 		if(error) {
