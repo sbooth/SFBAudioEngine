@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */ = {isa = PBXBuildFile; fileRef = 32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */; };
+		3203A6111346E09100A7A22E /* dumb.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3203A6101346E09100A7A22E /* dumb.framework */; };
+		3203A6141346E09D00A7A22E /* dumb.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3203A6101346E09100A7A22E /* dumb.framework */; };
+		3203A61B1346E0ED00A7A22E /* MODDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3203A6191346E0ED00A7A22E /* MODDecoder.h */; };
+		3203A61C1346E0ED00A7A22E /* MODDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */; };
 		3205E3BF1130787300FD9DAD /* WAVEMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */; };
 		3205E3C01130787300FD9DAD /* WAVEMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E3BE1130787300FD9DAD /* WAVEMetadata.h */; };
 		3205E3CD11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */; };
@@ -190,6 +194,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				3203A6141346E09D00A7A22E /* dumb.framework in Copy Embedded Frameworks */,
 				32161CF5133AF907008449C3 /* mpg123.framework in Copy Embedded Frameworks */,
 				3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */,
 				324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */,
@@ -212,6 +217,9 @@
 		32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFOperatorOverloads.cpp; sourceTree = "<group>"; };
 		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
+		3203A6101346E09100A7A22E /* dumb.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = dumb.framework; path = Frameworks/dumb.framework; sourceTree = "<group>"; };
+		3203A6191346E0ED00A7A22E /* MODDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODDecoder.h; sourceTree = "<group>"; };
+		3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODDecoder.cpp; sourceTree = "<group>"; };
 		3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WAVEMetadata.cpp; sourceTree = "<group>"; };
 		3205E3BE1130787300FD9DAD /* WAVEMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WAVEMetadata.h; sourceTree = "<group>"; };
 		3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddID3v2TagToDictionary.cpp; sourceTree = "<group>"; };
@@ -382,6 +390,7 @@
 				3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */,
 				324DB1B712DC17480055AF3F /* mac.framework in Frameworks */,
 				3258AE1C12DF8FA800ADA052 /* speex.framework in Frameworks */,
+				3203A6111346E09100A7A22E /* dumb.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -471,6 +480,7 @@
 				324DB1B612DC17480055AF3F /* mac.framework */,
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 				32161CE8133AF8C8008449C3 /* mpg123.framework */,
+				3203A6101346E09100A7A22E /* dumb.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -508,6 +518,8 @@
 				324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */,
 				3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */,
 				3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */,
+				3203A6191346E0ED00A7A22E /* MODDecoder.h */,
+				3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */,
 			);
 			path = Decoders;
 			sourceTree = "<group>";
@@ -711,6 +723,7 @@
 				3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */,
 				32C613A712E7E28D00F714C9 /* OggSpeexMetadata.h in Headers */,
 				3285714D12ED5C5D0001AF20 /* CreateChannelLayout.h in Headers */,
+				3203A61B1346E0ED00A7A22E /* MODDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -882,6 +895,7 @@
 				3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */,
 				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
 				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
+				3203A61C1346E0ED00A7A22E /* MODDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
