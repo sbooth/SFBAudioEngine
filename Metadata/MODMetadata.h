@@ -31,16 +31,12 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
-#include <dumb/dumb.h>
-
-#import "AudioDecoder.h"
+#import "AudioMetadata.h"
 
 // ========================================
-// An AudioDecoder subclass supporting MOD files
+// An AudioMetadata subclass supporting MOD files
 // ========================================
-class MODDecoder : public AudioDecoder
+class MODMetadata : public AudioMetadata
 {
 
 public:
@@ -55,44 +51,14 @@ public:
 
 	// ========================================
 	// Creation
-	MODDecoder(InputSource *inputSource);
+	MODMetadata(CFURLRef url);
 
 	// ========================================
 	// Destruction
-	virtual ~MODDecoder();
+	virtual ~MODMetadata();
 
 	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
-
-	virtual inline bool FileIsOpen() const					{ return (NULL != df); }
-
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
-
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
-
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
-
-private:
-
-	DUMBFILE_SYSTEM						dfs;
-	DUMBFILE							*df;
-	DUH									*duh;
-	DUH_SIGRENDERER						*dsr;
-
-	SInt64								mTotalFrames;
-	SInt64								mCurrentFrame;
+	// The core functionality
+	virtual bool ReadMetadata(CFErrorRef *error = NULL);
+	virtual bool WriteMetadata(CFErrorRef *error = NULL);
 };

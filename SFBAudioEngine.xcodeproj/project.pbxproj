@@ -90,6 +90,8 @@
 		3294BE3E1144AF3F003EB595 /* CADebugPrintf.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA4CB111614540091D56B /* CADebugPrintf.h */; };
 		32A319FD11C2072C009AE255 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */; };
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
+		32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A95E4F1347EBC6006B40EF /* MODMetadata.h */; };
+		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
 		32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32B4379A11BAF23B0027F642 /* CoreServices.framework */; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
 		32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* DecoderStateData.h */; };
@@ -301,6 +303,8 @@
 		328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddXiphCommentToDictionary.h; sourceTree = "<group>"; };
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; };
 		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; };
+		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
+		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32B4379A11BAF23B0027F642 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		32C212D51091116D00BA2493 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -658,6 +662,8 @@
 				32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */,
 				32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */,
 				32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */,
+				32A95E4F1347EBC6006B40EF /* MODMetadata.h */,
+				32A95E501347EBC6006B40EF /* MODMetadata.cpp */,
 			);
 			path = Metadata;
 			sourceTree = "<group>";
@@ -724,6 +730,7 @@
 				32C613A712E7E28D00F714C9 /* OggSpeexMetadata.h in Headers */,
 				3285714D12ED5C5D0001AF20 /* CreateChannelLayout.h in Headers */,
 				3203A61B1346E0ED00A7A22E /* MODDecoder.h in Headers */,
+				32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -896,6 +903,7 @@
 				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
 				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
 				3203A61C1346E0ED00A7A22E /* MODDecoder.cpp in Sources */,
+				32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

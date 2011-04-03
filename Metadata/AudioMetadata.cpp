@@ -46,6 +46,7 @@
 #include "OggFLACMetadata.h"
 #include "MonkeysAudioMetadata.h"
 #include "OggSpeexMetadata.h"
+#include "MODMetadata.h"
 
 
 // ========================================
@@ -141,6 +142,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
+	decoderExtensions = MODMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
 	CFRelease(supportedExtensions), supportedExtensions = NULL;
@@ -196,6 +201,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
+	decoderMIMETypes = MODMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
 	
 	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
@@ -335,6 +344,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					}
 					if(!metadata && OggSpeexMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new OggSpeexMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
+					}
+					if(!metadata && MODMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new MODMetadata(url);
 						if(!metadata->ReadMetadata(error))
 							delete metadata, metadata = NULL;
 					}
