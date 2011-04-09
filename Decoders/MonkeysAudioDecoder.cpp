@@ -314,7 +314,6 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	assert(NULL != bufferList);
-//	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 
 	int blocksRead = 0;
