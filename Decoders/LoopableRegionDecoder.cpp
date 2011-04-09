@@ -136,7 +136,6 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
 	
 	// If the repeat count is N then (N + 1) passes must be completed to read all the frames
@@ -144,7 +143,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		return 0;
 
 	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
-	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * mFormat.mChannelsPerFrame)));
+	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers)));
 	
 	if(NULL == bufferListAlias) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
@@ -153,7 +152,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	}	
 
 	UInt32 initialBufferCapacityBytes = bufferList->mBuffers[0].mDataByteSize;
-	bufferListAlias->mNumberBuffers = mFormat.mChannelsPerFrame;
+	bufferListAlias->mNumberBuffers = bufferList->mNumberBuffers;
 
 	// Initially the buffer list alias points to the beginning and contains no data
 	for(UInt32 i = 0; i < bufferListAlias->mNumberBuffers; ++i) {
