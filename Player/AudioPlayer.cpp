@@ -486,6 +486,32 @@ void AudioPlayer::Stop()
 	mFramesRendered = 0;
 }
 
+bool AudioPlayer::IsPaused() const
+{
+	if(IsPlaying())
+		return false;
+
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return false;
+
+	return (eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags);
+}
+
+bool AudioPlayer::IsStopped() const
+{
+	if(IsPlaying())
+		return false;
+
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return true;
+
+	return !(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags);
+}
+
 CFURLRef AudioPlayer::GetPlayingURL() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();

@@ -62,12 +62,24 @@ enum {
 
 // ========================================
 // An audio player class
+//
 // The player primarily uses two threads:
 //  1) A decoding thread, which reads audio via an AudioDecoder instance and stores it in the ring buffer.
 //     The audio is stored as deinterleaved, normalized [-1, 1) native floating point data in 64 bits (AKA doubles)
 //  2) A rendering thread, which reads audio from the ring buffer and performs conversion to the required output format.
 //     Sample rate conversion is done using Apple's AudioConverter API.
 //     Final conversion to the stream's format is done using PCMConverter.
+//
+// Since decoding and rendering are distinct operations performed in separate threads, there is an additional thread
+// used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
+// rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
+// method would be hazard pointers.
+//
+// The player can be in one of three states: playing, paused, or stopped.  If audio is being sent to the output device,
+// the player is playing.  If audio is not being sent to the output device, the player is either paused or stopped.
+//  - Paused means that the player has an AudioDecoder that has started rendering
+//  - Stopped means that the player does not have an AudioDecoder that has started rendering, or the AudioDecoder 
+//    queue is empty
 // ========================================
 class AudioPlayer
 {
@@ -87,6 +99,9 @@ public:
 	void Stop();
 	
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
+	bool IsPaused() const;
+	bool IsStopped() const;
+	
 	CFURLRef GetPlayingURL() const;
 
 	// ========================================
