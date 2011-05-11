@@ -499,6 +499,19 @@ bool AudioPlayer::IsPaused() const
 	return (eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags);
 }
 
+bool AudioPlayer::IsPending() const
+{
+	if(IsPlaying())
+		return false;
+
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(NULL == currentDecoderState)
+		return false;
+
+	return ((eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags) && !(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags));
+}
+
 bool AudioPlayer::IsStopped() const
 {
 	if(IsPlaying())
@@ -509,7 +522,7 @@ bool AudioPlayer::IsStopped() const
 	if(NULL == currentDecoderState)
 		return true;
 
-	return !(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags);
+	return !(eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags);
 }
 
 CFURLRef AudioPlayer::GetPlayingURL() const

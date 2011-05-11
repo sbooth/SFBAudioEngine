@@ -75,10 +75,11 @@ enum {
 // rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
 // method would be hazard pointers.
 //
-// The player can be in one of three states: playing, paused, or stopped.  If audio is being sent to the output device,
-// the player is playing.  If audio is not being sent to the output device, the player is either paused or stopped.
+// The player can be in one of four states: playing, paused, pending, or stopped.  If audio is being sent to the output device,
+// the player is playing.  If audio is not being sent to the output device, the player is either paused, pending or stopped.
 //  - Paused means that the player has an AudioDecoder that has started rendering
-//  - Stopped means that the player does not have an AudioDecoder that has started rendering, or the AudioDecoder 
+//  - Pending means that the player has an AudioDecoder that has started decoding but not yet started rendering
+//  - Stopped means that the player does not have an AudioDecoder that has started decoding, or the AudioDecoder 
 //    queue is empty
 // ========================================
 class AudioPlayer
@@ -100,6 +101,7 @@ public:
 	
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
 	bool IsPaused() const;
+	bool IsPending() const;
 	bool IsStopped() const;
 	
 	CFURLRef GetPlayingURL() const;
