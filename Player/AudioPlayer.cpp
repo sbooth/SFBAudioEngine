@@ -1475,12 +1475,16 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 			return false;
 		}
 
-		if(!CreateConvertersAndSRCBuffer())
-			LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+		bool success = CreateConvertersAndSRCBuffer();
 
 		result = pthread_mutex_unlock(&mMutex);
 		if(0 != result)
 			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
+
+		if(!success) {
+			LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+			return false;
+		}
 
 		// Allocate enough space in the ring buffer for the new format
 		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, RING_BUFFER_SIZE_FRAMES);
