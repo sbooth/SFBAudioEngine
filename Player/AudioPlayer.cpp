@@ -64,7 +64,7 @@
 // ========================================
 // Macros
 // ========================================
-#define RING_BUFFER_SIZE_FRAMES					16384
+#define RING_BUFFER_CAPACITY_FRAMES				16384
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
 #define SLEEP_TIME_USEC							1000
@@ -188,7 +188,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -892,6 +892,9 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 	if(NULL == mSampleRateConverter)
 		return false;
 
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Setting sample rate converter quality to " << srcQuality);
+
 	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
 												kAudioConverterSampleRateConverterQuality, 
 												sizeof(srcQuality), 
@@ -910,7 +913,10 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 {
 	if(NULL == mSampleRateConverter)
 		return false;
-	
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Setting sample rate converter complexity to " << srcComplexity);
+
 	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
 												kAudioConverterSampleRateConverterComplexity, 
 												sizeof(srcComplexity), 
@@ -921,7 +927,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -1487,7 +1493,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		}
 
 		// Allocate enough space in the ring buffer for the new format
-		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, RING_BUFFER_SIZE_FRAMES);
+		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
 	}
 	// Otherwise, enqueue this decoder if the format matches
 	else {
@@ -1611,6 +1617,30 @@ bool AudioPlayer::ClearQueuedDecoders()
 	return true;	
 }
 
+#pragma mark Ring Buffer Parameters
+
+bool AudioPlayer::SetRingBufferCapacity(uint32_t bufferCapacity)
+{
+	assert(0 < bufferCapacity);
+	assert(mRingBufferWriteChunkSize <= bufferCapacity);
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Setting ring buffer capacity to " << bufferCapacity);
+
+	return OSAtomicCompareAndSwap32Barrier(mRingBufferCapacity, bufferCapacity, reinterpret_cast<int32_t *>(&mRingBufferCapacity));
+}
+
+bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
+{
+	assert(0 < chunkSize);
+	assert(mRingBufferCapacity >= chunkSize);
+
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Setting ring buffer write chunk size to " << chunkSize);
+
+	return OSAtomicCompareAndSwap32Barrier(mRingBufferWriteChunkSize, chunkSize, reinterpret_cast<int32_t *>(&mRingBufferWriteChunkSize));
+}
+
 #pragma mark IOProc
 
 OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
@@ -1725,7 +1755,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 
-	if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite) {
+	if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
 		kern_return_t error = semaphore_signal(mDecoderSemaphore);
 		if(KERN_SUCCESS != error) {
 			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -2185,9 +2215,9 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
-			decoderState->AllocateBufferList(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			decoderState->AllocateBufferList(mRingBufferWriteChunkSize);
 
-			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -2198,8 +2228,8 @@ void * AudioPlayer::DecoderThreadEntry()
 					// Determine how many frames are available in the ring buffer
 					UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 					
-					// Force writes to the ring buffer to be at least RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES
-					if(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES <= framesAvailableToWrite) {
+					// Force writes to the ring buffer to be at least mRingBufferWriteChunkSize
+					if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
 						
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
@@ -2252,7 +2282,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						}
 
 						// Read the input chunk
-						UInt32 framesDecoded = decoderState->ReadAudio(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES);
+						UInt32 framesDecoded = decoderState->ReadAudio(mRingBufferWriteChunkSize);
 						
 						// Convert and store the decoded audio
 						if(0 != framesDecoded) {

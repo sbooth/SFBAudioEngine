@@ -98,7 +98,8 @@ public:
 	void Pause();
 	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
 	void Stop();
-	
+
+	// See the comment above on the meaning of these states
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
 	bool IsPaused() const;
 	bool IsPending() const;
@@ -153,6 +154,8 @@ public:
 	bool GetDigitalPreGain(double& preGain) const;
 	bool SetDigitalPreGain(double preGain);
 
+	inline bool IsPerformingSampleRateConversion() const { return (NULL != mSampleRateConverter); }
+
 	// Will return false if SRC is not being performed
 	bool SetSampleRateConverterQuality(UInt32 srcQuality);
 	bool SetSampleRateConverterComplexity(OSType srcComplexity);
@@ -193,6 +196,16 @@ public:
 
 	bool ClearQueuedDecoders();
 
+	// ========================================
+	// Ring Buffer Parameters
+	// The ring buffer's capacity, in sample frames
+	inline uint32_t GetRingBufferCapacity() const	{ return mRingBufferCapacity; }
+	bool SetRingBufferCapacity(uint32_t bufferCapacity);
+
+	// The minimum size of writes to the ring buffer, which implies the minimum read size from an AudioDecoder
+	inline uint32_t GetRingBufferWriteChunkSize() const	{ return mRingBufferWriteChunkSize; }
+	bool SetRingBufferWriteChunkSize(uint32_t chunkSize);
+
 private:
 
 	// ========================================
@@ -228,6 +241,8 @@ private:
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
 	AudioChannelLayout					*mRingBufferChannelLayout;
+	uint32_t							mRingBufferCapacity;
+	uint32_t							mRingBufferWriteChunkSize;
 
 	PCMConverter						**mOutputConverters;
 	AudioConverterRef					mSampleRateConverter;
