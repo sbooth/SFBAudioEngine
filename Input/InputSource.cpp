@@ -46,7 +46,8 @@ const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.Error
 
 InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 	
 	InputSource *inputSource = NULL;
 	

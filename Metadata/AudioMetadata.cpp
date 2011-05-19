@@ -214,7 +214,8 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 
 bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
 	if(NULL == supportedExtensions)
@@ -238,7 +239,8 @@ bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);
+	if(NULL == mimeType)
+		return false;
 	
 	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
 	if(NULL == supportedMIMETypes)
@@ -262,7 +264,8 @@ bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 
 AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 	
 	AudioMetadata *metadata = NULL;
 	

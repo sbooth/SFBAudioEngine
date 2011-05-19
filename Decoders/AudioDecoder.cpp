@@ -151,7 +151,8 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 
 bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
 	if(NULL == supportedExtensions)
@@ -175,7 +176,8 @@ bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);
+	if(NULL == mimeType)
+		return false;
 
 	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
 	if(NULL == supportedMIMETypes)
@@ -199,7 +201,8 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 
 	// Create the input source which will feed the decoder
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
@@ -219,7 +222,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 // If this returns an AudioDecoder instance, the instance takes ownership of inputSource
 AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
 {
-	assert(NULL != inputSource);
+	if(NULL == inputSource)
+		return NULL;
 
 	AudioDecoder *decoder = NULL;
 
@@ -360,7 +364,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
@@ -377,7 +382,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
@@ -394,7 +400,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return NULL;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
@@ -411,7 +418,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
 {
-	assert(NULL != inputSource);
+	if(NULL == inputSource)
+		return NULL;
 
 	if(!inputSource->SupportsSeeking())
 		return NULL;
@@ -431,7 +439,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	assert(NULL != inputSource);
+	if(NULL == inputSource)
+		return NULL;
 
 	if(!inputSource->SupportsSeeking())
 		return NULL;
@@ -451,7 +460,8 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	assert(NULL != inputSource);
+	if(NULL == inputSource)
+		return NULL;
 
 	if(!inputSource->SupportsSeeking())
 		return NULL;

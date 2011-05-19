@@ -1425,7 +1425,8 @@ bool AudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, const Au
 
 bool AudioPlayer::Enqueue(CFURLRef url)
 {
-	assert(NULL != url);
+	if(NULL == url)
+		return false;
 	
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
 	
@@ -1442,7 +1443,8 @@ bool AudioPlayer::Enqueue(CFURLRef url)
 
 bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
-	assert(NULL != decoder);
+	if(NULL == decoder)
+		return NULL;
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Enqueuing \"" << decoder->GetURL() << "\"");
