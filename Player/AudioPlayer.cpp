@@ -1444,7 +1444,7 @@ bool AudioPlayer::Enqueue(CFURLRef url)
 bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 {
 	if(NULL == decoder)
-		return NULL;
+		return false;
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Enqueuing \"" << decoder->GetURL() << "\"");
