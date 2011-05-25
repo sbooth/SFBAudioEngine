@@ -28,10 +28,10 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DeallocateABL.h"
-
 #include <stdlib.h>
 #include <assert.h>
+
+#include "DeallocateABL.h"
 
 AudioBufferList *
 DeallocateABL(AudioBufferList *bufferList)

@@ -28,11 +28,11 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AllocateABL.h"
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+
+#include "AllocateABL.h"
 
 AudioBufferList * 
 AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
