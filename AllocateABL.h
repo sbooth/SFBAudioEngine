@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include <CoreAudio/CoreAudio.h>
+#include <CoreAudio/CoreAudioTypes.h>
 
 // ========================================
 // Utility function for allocating an AudioBufferList struct

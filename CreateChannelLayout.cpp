@@ -30,6 +30,10 @@
 
 #include "CreateChannelLayout.h"
 
+#include <stdlib.h>
+#include <stddef.h>
+#include <assert.h>
+
 static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 {
 	return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));

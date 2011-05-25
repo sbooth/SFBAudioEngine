@@ -30,6 +30,10 @@
 
 #include "AllocateABL.h"
 
+#include <stdlib.h>
+#include <stddef.h>
+#include <assert.h>
+
 AudioBufferList * 
 AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
 {

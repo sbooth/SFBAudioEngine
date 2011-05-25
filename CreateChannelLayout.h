@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include <AudioToolbox/AudioToolbox.h>
+#include <CoreAudio/CoreAudioTypes.h>
 
 size_t GetChannelLayoutSize(const AudioChannelLayout *layout);
 

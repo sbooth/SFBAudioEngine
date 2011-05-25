@@ -30,6 +30,9 @@
 
 #include "DeallocateABL.h"
 
+#include <stdlib.h>
+#include <assert.h>
+
 AudioBufferList *
 DeallocateABL(AudioBufferList *bufferList)
 {
