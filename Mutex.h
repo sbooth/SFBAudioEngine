@@ -32,7 +32,9 @@
 
 #include <pthread.h>
 
+// ========================================
 // A wrapper around a pthread mutex
+// ========================================
 class Mutex
 {
 public:
@@ -54,13 +56,16 @@ private:
 	pthread_mutex_t mMutex;
 };
 
+// ========================================
 // A simple scoped locker using Mutex
+// ========================================
 class Locker
 {
 public:
 	Locker(Mutex& mutex);
 	~Locker();
 
+	// Returns true if mutex is owned and locked, false otherwise
 	inline operator bool() const { return mLocked; }
 
 private:
