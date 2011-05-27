@@ -49,7 +49,6 @@
 #include <log4cxx/ndc.h>
 
 #include "AudioPlayer.h"
-#include "AudioDecoder.h"
 #include "DecoderStateData.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
@@ -188,7 +187,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0)
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mMutex()
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -223,25 +222,6 @@ AudioPlayer::AudioPlayer()
 			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
 		
 		throw std::runtime_error("semaphore_create failed");
-	}
-	
-	int success = pthread_mutex_init(&mMutex, NULL);
-	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_FATAL(logger, "pthread_mutex_init failed: " << strerror(success));
-		
-		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
-		delete mRingBuffer, mRingBuffer = NULL;
-
-		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-
-		result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-
-		throw std::runtime_error("pthread_mutex_init failed");
 	}
 
 	// ========================================
@@ -450,13 +430,6 @@ AudioPlayer::~AudioPlayer()
 	if(KERN_SUCCESS != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
 		LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-	}
-	
-	// Destroy the decoder mutex
-	int success = pthread_mutex_destroy(&mMutex);
-	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_ERROR(logger, "pthread_mutex_destroy failed: " << strerror(success));
 	}
 }
 
@@ -901,7 +874,6 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 												&srcQuality);
 
 	if(noErr != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterQuality) failed: " << result);
 		return false;
 	}
@@ -923,7 +895,6 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 												&srcComplexity);
 	
 	if(noErr != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
 		return false;
 	}
@@ -1448,19 +1419,27 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Enqueuing \"" << decoder->GetURL() << "\"");
-	
-	int result = pthread_mutex_lock(&mMutex);
-	if(0 != result) {
-		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
+
+	// The lock is held for the entire method, because enqueuing a track is an inherently
+	// sequential operation.  Without the lock, if Enqueue() is called from multiple
+	// threads a crash can occur in mRingBuffer->Allocate() under a sitation similar to the following:
+	//  1. Thread A calls Enqueue() for decoder A
+	//  2. Thread B calls Enqueue() for decoder B
+	//  3. Both threads enter the if(NULL == GetCurrentDecoderState() && queueEmpty) block
+	//  4. Thread A is suspended
+	//  5. Thread B finishes the ring buffer setup, and signals the decoding thread
+	//  6. The decoding thread starts decoding
+	//  7. Thread A is awakened, and immediately allocates a new ring buffer
+	//  8. The decoding or rendering threads crash, because the memory they are using was freed out
+	//     from underneath them
+	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
+	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
+	Locker lock(mMutex);
+	if(!lock)
 		return false;
-	}
-	
-	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));
-		
-	result = pthread_mutex_unlock(&mMutex);
-	if(0 != result)
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
-	
+
+	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
+
 	// If there are no decoders in the queue, set up for playback
 	if(NULL == GetCurrentDecoderState() && queueEmpty) {
 		if(mRingBufferChannelLayout)
@@ -1477,19 +1456,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		if(NULL == mRingBufferChannelLayout)
 			mRingBufferChannelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
 
-		result = pthread_mutex_lock(&mMutex);
-		if(0 != result) {
-			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
-			return false;
-		}
-
-		bool success = CreateConvertersAndSRCBuffer();
-
-		result = pthread_mutex_unlock(&mMutex);
-		if(0 != result)
-			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
-
-		if(!success) {
+		if(!CreateConvertersAndSRCBuffer()) {
 			LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
 			return false;
 		}
@@ -1531,18 +1498,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	}
 	
 	// Add the decoder to the queue
-	result = pthread_mutex_lock(&mMutex);
-	if(0 != result) {
-		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
-		return false;
-	}
-	
 	CFArrayAppendValue(mDecoderQueue, decoder);
-	
-	result = pthread_mutex_unlock(&mMutex);
-	if(0 != result)
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
-	
+
 	kern_return_t error = semaphore_signal(mDecoderSemaphore);
 	if(KERN_SUCCESS != error)
 		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
@@ -1597,12 +1554,9 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	int result = pthread_mutex_lock(&mMutex);
-	if(0 != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
+	Locker lock(mMutex);
+	if(!lock)
 		return false;
-	}
 
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
 		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
@@ -1610,12 +1564,6 @@ bool AudioPlayer::ClearQueuedDecoders()
 		delete decoder;
 	}
 
-	result = pthread_mutex_unlock(&mMutex);
-	if(0 != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
-	}
-	
 	return true;	
 }
 
@@ -1914,18 +1862,14 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
 						mOutputConverters[i] = NULL;
 
-					int result = pthread_mutex_lock(&mMutex);
-					if(0 != result) {
-						LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
-						continue;
+					{
+						Locker lock(mMutex);
+						if(!lock)
+							continue;
+
+						if(!CreateConvertersAndSRCBuffer())
+							LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
 					}
-
-					if(!CreateConvertersAndSRCBuffer())
-						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-
-					result = pthread_mutex_unlock(&mMutex);
-					if(0 != result)
-						LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 
 					if(restartIO)
 						StartOutput();
@@ -2055,18 +1999,14 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
 
-					result = pthread_mutex_lock(&mMutex);
-					if(0 != result) {
-						LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(result));
-						continue;
+					{
+						Locker lock(mMutex);
+						if(!lock)
+							continue;
+
+						if(!CreateConvertersAndSRCBuffer())
+							LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
 					}
-
-					if(!CreateConvertersAndSRCBuffer())
-						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-
-					result = pthread_mutex_unlock(&mMutex);
-					if(0 != result)
-						LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(result));
 
 					if(restartIO)
 						StartOutput();
@@ -2165,49 +2105,45 @@ void * AudioPlayer::DecoderThreadEntry()
 	mach_timespec_t timeout = { 2, 0 };
 
 	while(mKeepDecoding) {
-		AudioDecoder *decoder = NULL;
-		
+
 		// ========================================
 		// Lock the queue and remove the head element, which contains the next decoder to use
-		int lockResult = pthread_mutex_lock(&mMutex);
-		if(0 != lockResult) {
-			LOG4CXX_ERROR(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
-			
-			// Stop now, to avoid risking data corruption
-			continue;
-		}
+		DecoderStateData *decoderState = NULL;
+		{
+			Locker lock(mMutex);
+			if(!lock)
+				continue;
 
-		if(0 < CFArrayGetCount(mDecoderQueue)) {
-			decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
-			CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+			if(0 < CFArrayGetCount(mDecoderQueue)) {
+				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+
+				// ========================================
+				// Create the decoder state and append to the list of active decoders
+				decoderState = new DecoderStateData(decoder);
+				decoderState->mTimeStamp = mFramesDecoded;
+				
+				for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
+					if(NULL != mActiveDecoders[bufferIndex])
+						continue;
+					
+					if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
+						break;
+					else
+						LOG4CXX_WARN(logger, "OSAtomicCompareAndSwapPtrBarrier() failed");
+				}
+
+				CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+			}
 		}
-		
-		lockResult = pthread_mutex_unlock(&mMutex);
-		if(0 != lockResult)
-			LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
 		
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
-		if(NULL != decoder) {
+		if(NULL != decoderState) {
+			AudioDecoder *decoder = decoderState->mDecoder;
 
 			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOG4CXX_DEBUG(logger, "Decoder format: " << decoder->GetFormat());
 			LOG4CXX_DEBUG(logger, "Decoder channel layout: " << decoder->GetChannelLayout());
-			
-			// ========================================
-			// Create the decoder state and append to the list of active decoders
-			DecoderStateData *decoderState = new DecoderStateData(decoder);
-			decoderState->mTimeStamp = mFramesDecoded;
-			
-			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-				if(NULL != mActiveDecoders[bufferIndex])
-					continue;
-				
-				if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
-					break;
-				else
-					LOG4CXX_WARN(logger, "OSAtomicCompareAndSwapPtrBarrier() failed");
-			}
 			
 			SInt64 startTime = decoderState->mTimeStamp;
 
@@ -2351,10 +2287,10 @@ void * AudioPlayer::DecoderThreadEntry()
 				decoderState = NULL;
 			}
 
-			if(NULL != bufferList)
+			if(bufferList)
 				bufferList = DeallocateABL(bufferList);
 			
-			if(NULL != converter)
+			if(converter)
 				delete converter, converter = NULL;
 		}
 

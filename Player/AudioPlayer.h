@@ -32,14 +32,17 @@
 
 #include <CoreAudio/CoreAudio.h>
 #include <AudioToolbox/AudioToolbox.h>
+
 #include <vector>
 #include <map>
 #include <utility>
 
+#include "AudioDecoder.h"
+#include "Mutex.h"
+
 // ========================================
 // Forward declarations
 // ========================================
-class AudioDecoder;
 class CARingBuffer;
 class DecoderStateData;
 class PCMConverter;
@@ -257,7 +260,7 @@ private:
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
-	pthread_mutex_t						mMutex;
+	Mutex								mMutex;
 	
 	pthread_t							mDecoderThread;
 	semaphore_t							mDecoderSemaphore;
