@@ -28,7 +28,9 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Carbon/Carbon.h>
+#if BUILD_FOR_MAC_OSX
+# include <ApplicationServices/ApplicationServices.h>
+#endif
 
 #include <log4cxx/logger.h>
 
@@ -38,9 +40,10 @@ CFStringRef
 CreateDisplayNameForURL(CFURLRef url)
 {
 	assert(NULL != url);
-	
+
 	CFStringRef displayName = NULL;
 
+#if BUILD_FOR_MAC_OSX
 	CFStringRef scheme = CFURLCopyScheme(url);
 	bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
 	CFRelease(scheme), scheme = NULL;
@@ -58,6 +61,10 @@ CreateDisplayNameForURL(CFURLRef url)
 		displayName = CFURLGetString(url);
 		CFRetain(displayName);
 	}
+#else
+	displayName = CFURLGetString(url);
+	CFRetain(displayName);
+#endif
 
 	return displayName;
 }

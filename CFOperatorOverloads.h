@@ -34,7 +34,7 @@
 #include <string>
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudio.h>
+#include <CoreAudio/CoreAudioTypes.h>
 
 // Useful ostream overloads
 std::ostream& operator<<(std::ostream& out, CFStringRef s);

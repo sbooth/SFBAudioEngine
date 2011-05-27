@@ -28,7 +28,10 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <CoreServices/CoreServices.h>
+#include <CoreFoundation/CoreFoundation.h>
+#if BUILD_FOR_MAC_OSX
+# include <CoreServices/CoreServices.h>
+#endif
 #include <iomanip>
 
 #include "CFOperatorOverloads.h"
@@ -132,6 +135,7 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 
 	CFStringRef s = CFURLGetString(u);
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
+#if BUILD_FOR_MAC_OSX
 		CFStringRef displayName = NULL;
 		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
 
@@ -139,6 +143,9 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 			out << displayName;
 			CFRelease(displayName), displayName = NULL;
 		}
+#else
+		out << CFURLGetString(u);
+#endif
 	}
 	else
 		out << s;
