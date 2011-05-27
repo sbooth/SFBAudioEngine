@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ Mutex::Mutex()
 	int success = pthread_mutex_init(&mMutex, NULL);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_FATAL(logger, "pthread_mutex_init failed: " << strerror(success));
 
 		throw std::runtime_error("Unable to initialize the mutex");
@@ -50,7 +50,7 @@ Mutex::~Mutex()
 	int success = pthread_mutex_destroy(&mMutex);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_ERROR(logger, "pthread_mutex_destroy failed: " << strerror(success));
 	}
 }
@@ -68,7 +68,7 @@ bool Mutex::Lock()
 	int lockResult = pthread_mutex_lock(&mMutex);
 
 	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
 		return false;
 	}
@@ -81,7 +81,7 @@ bool Mutex::Unlock()
 	int lockResult = pthread_mutex_unlock(&mMutex);
 	
 	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
 		return false;
 	}
@@ -94,7 +94,7 @@ bool Mutex::TryLock()
 	int lockResult = pthread_mutex_trylock(&mMutex);
 	
 	if(0 != lockResult) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_WARN(logger, "pthread_mutex_trylock failed: " << strerror(lockResult));
 		return false;
 	}

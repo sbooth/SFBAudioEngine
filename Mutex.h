@@ -39,6 +39,8 @@ public:
 	Mutex();
 	~Mutex();
 
+	// Lock(), Unlock() and TryLock() return true if the operation was successful, false otherwise
+
 	bool Lock();
 	bool Unlock();
 
@@ -52,12 +54,14 @@ private:
 	pthread_mutex_t mMutex;
 };
 
-// A simple stack-based locker class using Mutex
+// A simple scoped locker using Mutex
 class Locker
 {
 public:
 	Locker(Mutex& mutex);
 	~Locker();
+
+	inline operator bool() const { return mLocked; }
 
 private:
 	Mutex& mMutex;
