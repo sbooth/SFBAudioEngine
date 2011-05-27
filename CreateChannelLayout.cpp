@@ -28,11 +28,11 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CreateChannelLayout.h"
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <assert.h>
+
+#include "CreateChannelLayout.h"
 
 static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 {
