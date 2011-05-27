@@ -33,6 +33,8 @@
 		3205E52D1130F49700FD9DAD /* SetXiphCommentFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */; };
 		3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */; };
 		3205E5DA11319E6400FD9DAD /* TagLibStringFromCFString.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */; };
+		320723BE138D521A00007369 /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* CreateStringForOSType.h */; };
+		320723C8138D564700007369 /* CreateStringForOSType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320723C7138D564700007369 /* CreateStringForOSType.cpp */; };
 		320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E117E1289D13100DAA041 /* libssl.dylib */; };
 		320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 320E11821289D18000DAA041 /* libcrypto.dylib */; };
 		320FB6B2111E1AE600CE061E /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5D80108C213800CA9BDE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -93,6 +95,8 @@
 		32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A95E4F1347EBC6006B40EF /* MODMetadata.h */; };
 		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
 		32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32B4379A11BAF23B0027F642 /* CoreServices.framework */; };
+		32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
+		32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B79A63138F2EC200EBEF1B /* Mutex.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
 		32C212DD109111A300BA2493 /* DecoderStateData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201ECB810901F08000082BF /* DecoderStateData.h */; };
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
@@ -242,6 +246,8 @@
 		3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetXiphCommentFromMetadata.h; sourceTree = "<group>"; };
 		3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringFromCFString.cpp; sourceTree = "<group>"; };
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
+		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
+		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
 		320E117E1289D13100DAA041 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 		320E11821289D18000DAA041 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		32161CE8133AF8C8008449C3 /* mpg123.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpg123.framework; path = Frameworks/mpg123.framework; sourceTree = "<group>"; };
@@ -306,6 +312,8 @@
 		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32B4379A11BAF23B0027F642 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		32B79A62138F2EC200EBEF1B /* Mutex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mutex.cpp; sourceTree = "<group>"; };
+		32B79A63138F2EC200EBEF1B /* Mutex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mutex.h; sourceTree = "<group>"; };
 		32C212D51091116D00BA2493 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C213101091129F00BA2493 /* AudioEngineExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AudioEngineExample; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -444,6 +452,9 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				32B79A62138F2EC200EBEF1B /* Mutex.cpp */,
+				32B79A63138F2EC200EBEF1B /* Mutex.h */,
+				320723C7138D564700007369 /* CreateStringForOSType.cpp */,
 				3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */,
 				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
@@ -457,6 +468,7 @@
 				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
 				32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */,
 				32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */,
+				320723BC138D521A00007369 /* CreateStringForOSType.h */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -731,6 +743,8 @@
 				3285714D12ED5C5D0001AF20 /* CreateChannelLayout.h in Headers */,
 				3203A61B1346E0ED00A7A22E /* MODDecoder.h in Headers */,
 				32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */,
+				320723BE138D521A00007369 /* CreateStringForOSType.h in Headers */,
+				32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -904,6 +918,8 @@
 				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
 				3203A61C1346E0ED00A7A22E /* MODDecoder.cpp in Sources */,
 				32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */,
+				320723C8138D564700007369 /* CreateStringForOSType.cpp in Sources */,
+				32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1008,6 +1024,10 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"BUILD_FOR_MAC_OSX=1",
+					"DEBUG=1",
+				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
@@ -1031,6 +1051,7 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = "BUILD_FOR_MAC_OSX=1";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
