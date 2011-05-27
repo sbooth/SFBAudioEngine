@@ -28,6 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/tfilestream.h>
 #include <taglib/mpcfile.h>
 #include <taglib/tag.h>
 
@@ -91,7 +92,8 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::MPC::File file(reinterpret_cast<const char *>(buf));
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::MPC::File file(stream);
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -196,7 +198,8 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::MPC::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	TagLib::MPC::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {

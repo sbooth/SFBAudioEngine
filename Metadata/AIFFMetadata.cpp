@@ -28,6 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/tfilestream.h>
 #include <taglib/aifffile.h>
 #include <log4cxx/logger.h>
 
@@ -94,7 +95,8 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf));
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::RIFF::AIFF::File file(stream);
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -160,7 +162,8 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::RIFF::AIFF::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	TagLib::RIFF::AIFF::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {

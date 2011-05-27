@@ -28,6 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/tfilestream.h>
 #include <taglib/apefile.h>
 #include <taglib/tag.h>
 #include <log4cxx/logger.h>
@@ -94,7 +95,8 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::APE::File file(reinterpret_cast<const char *>(buf));
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::APE::File file(stream);
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -163,7 +165,8 @@ bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::APE::File file(reinterpret_cast<const char *>(buf), false);
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	TagLib::APE::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {
