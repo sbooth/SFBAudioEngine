@@ -2628,10 +2628,7 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 		
 		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
 			continue;
-		
-		if(decoderState->mTotalFrames == decoderState->mFramesRendered)
-			continue;
-		
+
 		if(NULL == result)
 			result = decoderState;
 		else if(decoderState->mTimeStamp < result->mTimeStamp)
