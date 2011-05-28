@@ -435,19 +435,23 @@ AudioPlayer::~AudioPlayer()
 
 #pragma mark Playback Control
 
-void AudioPlayer::Play()
+bool AudioPlayer::Play()
 {
 	if(!IsPlaying())
-		StartOutput();
+		return StartOutput();
+
+	return true;
 }
 
-void AudioPlayer::Pause()
+bool AudioPlayer::Pause()
 {
 	if(IsPlaying())
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+
+	return true;
 }
 
-void AudioPlayer::Stop()
+bool AudioPlayer::Stop()
 {
 	Pause();
 	
@@ -457,6 +461,8 @@ void AudioPlayer::Stop()
 
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
+
+	return true;
 }
 
 bool AudioPlayer::IsPaused() const

@@ -97,10 +97,10 @@ public:
 	
 	// ========================================
 	// Playback Control
-	void Play();
-	void Pause();
-	inline void PlayPause()							{ IsPlaying() ? Pause() : Play(); }
-	void Stop();
+	bool Play();
+	bool Pause();
+	inline bool PlayPause()							{ return IsPlaying() ? Pause() : Play(); }
+	bool Stop();
 
 	// See the comment above on the meaning of these states
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
