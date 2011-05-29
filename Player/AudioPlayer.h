@@ -39,6 +39,7 @@
 
 #include "AudioDecoder.h"
 #include "Mutex.h"
+#include "Semaphore.h"
 
 // ========================================
 // Forward declarations
@@ -263,11 +264,11 @@ private:
 	Mutex								mMutex;
 	
 	pthread_t							mDecoderThread;
-	semaphore_t							mDecoderSemaphore;
+	Semaphore							mDecoderSemaphore;
 	bool								mKeepDecoding;
 	
 	pthread_t							mCollectorThread;
-	semaphore_t							mCollectorSemaphore;
+	Semaphore							mCollectorSemaphore;
 	bool								mKeepCollecting;
 
 	int64_t								mFramesDecoded;

@@ -187,7 +187,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mMutex()
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mMutex(), mDecoderSemaphore(), mCollectorSemaphore()
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -195,34 +195,6 @@ AudioPlayer::AudioPlayer()
 		throw std::bad_alloc();
 
 	mRingBuffer = new CARingBuffer();
-
-	// ========================================
-	// Create the semaphore and mutex to be used by the decoding and rendering threads
-	kern_return_t result = semaphore_create(mach_task_self(), &mDecoderSemaphore, SYNC_POLICY_FIFO, 0);
-	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_FATAL(logger, "semaphore_create failed: " << mach_error_string(result));
-
-		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
-		delete mRingBuffer, mRingBuffer = NULL;
-
-		throw std::runtime_error("semaphore_create failed");
-	}
-
-	result = semaphore_create(mach_task_self(), &mCollectorSemaphore, SYNC_POLICY_FIFO, 0);
-	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_FATAL(logger, "semaphore_create failed: " << mach_error_string(result));
-		
-		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
-		delete mRingBuffer, mRingBuffer = NULL;
-
-		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-		
-		throw std::runtime_error("semaphore_create failed");
-	}
 
 	// ========================================
 	// Initialize the decoder array
@@ -240,14 +212,6 @@ AudioPlayer::AudioPlayer()
 		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
 
-		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-
-		result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-		
 		throw std::runtime_error("pthread_create failed");
 	}
 	
@@ -260,9 +224,7 @@ AudioPlayer::AudioPlayer()
 		LOG4CXX_FATAL(logger, "pthread_create failed: " << strerror(creationResult));
 		
 		mKeepDecoding = false;
-		kern_return_t error = semaphore_signal(mDecoderSemaphore);
-		if(KERN_SUCCESS != error)
-			LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+		mDecoderSemaphore.Signal();
 		
 		int joinResult = pthread_join(mDecoderThread, NULL);
 		if(0 != joinResult)
@@ -272,14 +234,6 @@ AudioPlayer::AudioPlayer()
 		
 		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
 		delete mRingBuffer, mRingBuffer = NULL;
-
-		result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-		
-		result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
-		if(KERN_SUCCESS != result)
-			LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
 
 		throw std::runtime_error("pthread_create failed");
 	}
@@ -344,11 +298,7 @@ AudioPlayer::~AudioPlayer()
 	
 	// End the decoding thread
 	mKeepDecoding = false;
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-	}
+	mDecoderSemaphore.Signal();
 
 	int joinResult = pthread_join(mDecoderThread, NULL);
 	if(0 != joinResult) {
@@ -360,11 +310,7 @@ AudioPlayer::~AudioPlayer()
 
 	// End the collector thread
 	mKeepCollecting = false;
-	error = semaphore_signal(mCollectorSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
-	}
+	mCollectorSemaphore.Signal();
 	
 	joinResult = pthread_join(mCollectorThread, NULL);
 	if(0 != joinResult) {
@@ -418,19 +364,6 @@ AudioPlayer::~AudioPlayer()
 
 	if(mOutputBuffer)
 		mOutputBuffer = DeallocateABL(mOutputBuffer);
-	
-	// Destroy the decoder and collector semaphores
-	kern_return_t result = semaphore_destroy(mach_task_self(), mDecoderSemaphore);
-	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-	}
-
-	result = semaphore_destroy(mach_task_self(), mCollectorSemaphore);
-	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_WARN(logger, "semaphore_destroy failed: " << mach_error_string(result));
-	}
 }
 
 #pragma mark Playback Control
@@ -644,12 +577,8 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 
 	if(!OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
-	
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-	}
+
+	mDecoderSemaphore.Signal();
 
 	return true;	
 }
@@ -1506,9 +1435,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	// Add the decoder to the queue
 	CFArrayAppendValue(mDecoderQueue, decoder);
 
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error)
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
+	mDecoderSemaphore.Signal();
 	
 	return true;
 }
@@ -1525,11 +1452,7 @@ bool AudioPlayer::SkipToNextTrack()
 	OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &currentDecoderState->mFlags);
 
 	// Signal the decoding thread that decoding is finished (inner loop)
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-	}
+	mDecoderSemaphore.Signal();
 
 	// Wait for decoding to finish or a SIGSEGV could occur if the collector collects an active decoder
 	while(!(eDecoderStateDataFlagDecodingFinished & currentDecoderState->mFlags)) {
@@ -1547,11 +1470,7 @@ bool AudioPlayer::SkipToNextTrack()
 	mFramesRendered = 0;
 	
 	// Signal the decoding thread to start the next decoder (outer loop)
-	error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-	}
+	mDecoderSemaphore.Signal();
 
 	OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
@@ -1716,13 +1635,8 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 
-	if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
-		kern_return_t error = semaphore_signal(mDecoderSemaphore);
-		if(KERN_SUCCESS != error) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-		}
-	}
+	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
+		mDecoderSemaphore.Signal();
 
 	// ========================================
 	// POST-RENDERING HOUSEKEEPING
@@ -1759,11 +1673,7 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 
 			// Since rendering is finished, signal the collector to clean up this decoder
-			kern_return_t error = semaphore_signal(mCollectorSemaphore);
-			if(KERN_SUCCESS != error) {
-				log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-				LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
-			}
+			mCollectorSemaphore.Signal();
 		}
 		
 		framesRemainingToDistribute -= framesFromThisDecoder;
@@ -2285,9 +2195,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				}
 				
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
-				kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
-				if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
-					LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
+				mDecoderSemaphore.TimedWait(timeout);
 			}
 			
 			// ========================================
@@ -2306,9 +2214,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		}
 
 		// Wait for another thread to wake us, or for the timeout to happen
-		kern_return_t error = semaphore_timedwait(mDecoderSemaphore, timeout);
-		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
-			LOG4CXX_WARN(logger, "Decoder semaphore couldn't wait: " << mach_error_string(error));
+		mDecoderSemaphore.TimedWait(timeout);
 	}
 	
 	LOG4CXX_DEBUG(logger, "Decoding thread terminating");
@@ -2323,8 +2229,8 @@ void * AudioPlayer::CollectorThreadEntry()
 	log4cxx::NDC::push("Collecting Thread");
 	log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
 
-	// Two seconds and zero nanoseconds
-	mach_timespec_t timeout = { 2, 0 };
+	// The collector should be signaled when there is cleanup to be done, so there is no need for a short timeout
+	mach_timespec_t timeout = { 30, 0 };
 
 	while(mKeepCollecting) {
 		
@@ -2344,9 +2250,7 @@ void * AudioPlayer::CollectorThreadEntry()
 		}
 		
 		// Wait for any thread to signal us to try and collect finished decoders
-		kern_return_t error = semaphore_timedwait(mCollectorSemaphore, timeout);
-		if(KERN_SUCCESS != error && KERN_OPERATION_TIMED_OUT != error)
-			LOG4CXX_WARN(logger, "Collector semaphore couldn't wait: " << mach_error_string(error));
+		mCollectorSemaphore.TimedWait(timeout);
 	}
 	
 	LOG4CXX_DEBUG(logger, "Collecting thread terminating");
@@ -2681,12 +2585,8 @@ void AudioPlayer::StopActiveDecoders()
 		
 		OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &decoderState->mFlags);
 	}
-	
-	kern_return_t error = semaphore_signal(mDecoderSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the decoder semaphore: " << mach_error_string(error));
-	}
+
+	mDecoderSemaphore.Signal();
 
 	// Wait for the player to stop or a SIGSEGV could occur if the collector collects a rendering decoder
 	while(OutputIsRunning()) {
@@ -2705,12 +2605,8 @@ void AudioPlayer::StopActiveDecoders()
 		
 		OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 	}
-	
-	error = semaphore_signal(mCollectorSemaphore);
-	if(KERN_SUCCESS != error) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Couldn't signal the collector semaphore: " << mach_error_string(error));
-	}
+
+	mCollectorSemaphore.Signal();
 }
 
 bool AudioPlayer::CreateConvertersAndSRCBuffer()
