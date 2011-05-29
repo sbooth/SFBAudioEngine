@@ -1,4 +1,4 @@
-/*	Copyright © 2007-2009 Apple Inc. All Rights Reserved.
+/*	Copyright ï¿½ 2007-2009 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -146,6 +146,9 @@ inline void ZeroABL(AudioBufferList *abl, int destOffset, int nbytes)
 
 CARingBufferError	CARingBuffer::Store(const AudioBufferList *abl, UInt32 framesToWrite, SampleTime startWrite)
 {
+	if(0 == framesToWrite)
+		return noErr;
+
 	if (framesToWrite > mCapacityFrames)
 		return kCARingBufferError_TooMuch;		// too big!
 
@@ -244,6 +247,9 @@ CARingBufferError	CARingBuffer::ClipTimeBounds(SampleTime& startRead, SampleTime
 
 CARingBufferError	CARingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, SampleTime startRead)
 {
+	if(0 == nFrames)
+		return noErr;
+
 	SampleTime endRead = startRead + nFrames;
 
 	SampleTime startRead0 = startRead;
