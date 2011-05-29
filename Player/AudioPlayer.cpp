@@ -1673,6 +1673,11 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
 		framesToRead = std::min(framesAvailableToRead, mOutputDeviceBufferFrameSize);
 
+		if(framesToRead != mOutputDeviceBufferFrameSize) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_WARN(logger, "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << mOutputDeviceBufferFrameSize << " requested");
+		}
+
 		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered);
 		
 		if(kCARingBufferError_OK != result) {
