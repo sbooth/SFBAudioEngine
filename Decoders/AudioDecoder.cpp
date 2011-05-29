@@ -29,7 +29,7 @@
  */
 
 #include <AudioToolbox/AudioFormat.h>
-#include <CoreServices/CoreServices.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <stdexcept>
 
 #include <log4cxx/logger.h>
@@ -37,16 +37,20 @@
 #include "AudioDecoder.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
+#include "CreateStringForOSType.h"
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
-#include "FLACDecoder.h"
-#include "WavPackDecoder.h"
-#include "MPEGDecoder.h"
-#include "OggVorbisDecoder.h"
-#include "MusepackDecoder.h"
-#include "MonkeysAudioDecoder.h"
-#include "OggSpeexDecoder.h"
-#include "MODDecoder.h"
+
+#if BUILD_FOR_MAC_OSX
+# include "FLACDecoder.h"
+# include "WavPackDecoder.h"
+# include "MPEGDecoder.h"
+# include "OggVorbisDecoder.h"
+# include "MusepackDecoder.h"
+# include "MonkeysAudioDecoder.h"
+# include "OggSpeexDecoder.h"
+# include "MODDecoder.h"
+#endif
 
 // ========================================
 // Error Codes
@@ -59,7 +63,10 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderExtensions = FLACDecoder::CreateSupportedFileExtensions();
+	CFArrayRef decoderExtensions = NULL;
+
+#if BUILD_FOR_MAC_OSX
+	decoderExtensions = FLACDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
@@ -90,6 +97,7 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	decoderExtensions = MODDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+#endif
 
 	decoderExtensions = CoreAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
@@ -106,7 +114,10 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderMIMETypes = FLACDecoder::CreateSupportedMIMETypes();
+	CFArrayRef decoderMIMETypes = NULL;
+
+#if BUILD_FOR_MAC_OSX
+	decoderMIMETypes = FLACDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
@@ -137,6 +148,7 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	decoderMIMETypes = MODDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+#endif
 
 	decoderMIMETypes = CoreAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
@@ -252,6 +264,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			// As a factory this class has knowledge of its subclasses
 			// It would be possible (and perhaps preferable) to switch to a generic
 			// plugin interface at a later date
+#if BUILD_FOR_MAC_OSX
 			if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new FLACDecoder(inputSource);
 				if(!decoder->OpenFile(error)) {
@@ -308,6 +321,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
+#endif
 			if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new CoreAudioDecoder(inputSource);
 				if(!decoder->OpenFile(error)) {
@@ -552,7 +566,7 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}
@@ -572,7 +586,7 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}
@@ -592,7 +606,7 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}

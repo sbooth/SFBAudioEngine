@@ -28,7 +28,9 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <CoreServices/CoreServices.h>
+#if BUILD_FOR_MAC_OSX
+# include <CoreServices/CoreServices.h>
+#endif
 #include <AudioToolbox/AudioFormat.h>
 #include <Accelerate/Accelerate.h>
 #include <stdexcept>
@@ -38,6 +40,7 @@
 #include "CoreAudioDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
+#include "CreateStringForOSType.h"
 
 #pragma mark Callbacks
 
@@ -61,7 +64,11 @@ myAudioFile_ReadProc(void		*inClientData,
 	*actualCount = static_cast<UInt32>(inputSource->Read(buffer, requestCount));
 	
 	if(0 == *actualCount)
+#if BUILD_FOR_MAC_OSX
 		return (inputSource->AtEOF() ? eofErr : ioErr);
+#else
+		return (inputSource->AtEOF() ? kAudioFileEndOfFileError : kAudioFilePositionError);
+#endif
 	
 	return noErr;
 }
@@ -89,7 +96,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 	
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 
@@ -111,7 +118,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 	
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 		
@@ -135,7 +142,7 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 		
@@ -172,7 +179,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
-		CFStringRef osType = UTCreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType(result);
 		LOG4CXX_WARN(logger, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 		

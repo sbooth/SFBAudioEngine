@@ -29,24 +29,31 @@
  */
 
 #include <stdexcept>
-#include <CoreServices/CoreServices.h>
+
+#include <CoreFoundation/CoreFoundation.h>
+#if BUILD_FOR_MAC_OSX
+# include <CoreServices/CoreServices.h>
+#endif
 
 #include <log4cxx/logger.h>
 
 #include "AudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "FLACMetadata.h"
-#include "WavPackMetadata.h"
-#include "MP3Metadata.h"
-#include "MP4Metadata.h"
-#include "WAVEMetadata.h"
-#include "AIFFMetadata.h"
-#include "MusepackMetadata.h"
-#include "OggVorbisMetadata.h"
-#include "OggFLACMetadata.h"
-#include "MonkeysAudioMetadata.h"
-#include "OggSpeexMetadata.h"
-#include "MODMetadata.h"
+
+#if BUILD_FOR_MAC_OSX
+# include "FLACMetadata.h"
+# include "WavPackMetadata.h"
+# include "MP3Metadata.h"
+# include "MP4Metadata.h"
+# include "WAVEMetadata.h"
+# include "AIFFMetadata.h"
+# include "MusepackMetadata.h"
+# include "OggVorbisMetadata.h"
+# include "OggFLACMetadata.h"
+# include "MonkeysAudioMetadata.h"
+# include "OggSpeexMetadata.h"
+# include "MODMetadata.h"
+#endif
 
 
 // ========================================
@@ -98,7 +105,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
+	CFArrayRef decoderExtensions = NULL;
+
+#if BUILD_FOR_MAC_OSX
+	decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
@@ -145,7 +155,8 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	decoderExtensions = MODMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
-	
+#endif
+
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
 	CFRelease(supportedExtensions), supportedExtensions = NULL;
@@ -157,7 +168,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
+	CFArrayRef decoderMIMETypes = NULL;
+
+#if BUILD_FOR_MAC_OSX
+	decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
@@ -204,7 +218,8 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	decoderMIMETypes = MODMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
-	
+#endif
+
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
 	
 	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
@@ -295,6 +310,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					// As a factory this class has knowledge of its subclasses
 					// It would be possible (and perhaps preferable) to switch to a generic
 					// plugin interface at a later date
+#if BUILD_FOR_MAC_OSX
 					if(FLACMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new FLACMetadata(url);
 						if(!metadata->ReadMetadata(error))
@@ -355,7 +371,8 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 						if(!metadata->ReadMetadata(error))
 							delete metadata, metadata = NULL;
 					}
-					
+#endif
+
 					CFRelease(pathExtension), pathExtension = NULL;
 				}				
 			}
@@ -406,6 +423,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}
+#if BUILD_FOR_MAC_OSX
 	// Determine the MIME type for the URL
 	else {
 		// Get the UTI for this URL
@@ -428,7 +446,8 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		CFRelease(uti), uti = NULL;
 	}
-	
+#endif
+
 	CFRelease(scheme), scheme = NULL;
 	
 	return metadata;
