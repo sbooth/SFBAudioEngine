@@ -39,8 +39,7 @@ extern const CFStringRef		InputSourceErrorDomain;
 
 enum {
 	InputSourceFileNotFoundError			= 0,
-	InputSourceInputOutputError				= 1,
-	InputSourceOperationNotAllowedError		= 2
+	InputSourceInputOutputError				= 1
 };
 
 // ========================================
