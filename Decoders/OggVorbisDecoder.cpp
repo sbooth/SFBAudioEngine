@@ -133,14 +133,20 @@ OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
 
 OggVorbisDecoder::~OggVorbisDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
+bool OggVorbisDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	ov_callbacks callbacks;
 	callbacks.read_func = read_func_callback;
 	callbacks.seek_func = seek_func_callback;
@@ -237,22 +243,32 @@ bool OggVorbisDecoder::OpenFile(CFErrorRef *error)
 		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);		break;
 		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
 	}
-	
+
+	mIsOpen = true;
 	return true;
 }
 
-bool OggVorbisDecoder::CloseFile(CFErrorRef */*error*/)
+bool OggVorbisDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(0 != ov_clear(&mVorbisFile)) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
 		LOG4CXX_WARN(logger, "ov_clear failed");
 	}
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
@@ -262,6 +278,7 @@ CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 
 SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
@@ -273,6 +290,7 @@ SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);

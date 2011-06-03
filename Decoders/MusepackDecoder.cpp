@@ -131,16 +131,22 @@ MusepackDecoder::MusepackDecoder(InputSource *inputSource)
 
 MusepackDecoder::~MusepackDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 
 #pragma mark Functionality
 
 
-bool MusepackDecoder::OpenFile(CFErrorRef *error)
+bool MusepackDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Musepack");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mInputSource->GetURL(), FALSE, buf, PATH_MAX))
 		return false;
@@ -245,11 +251,18 @@ bool MusepackDecoder::OpenFile(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
+	mIsOpen = true;
 	return true;
 }
 
-bool MusepackDecoder::CloseFile(CFErrorRef */*error*/)
+bool MusepackDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Musepack");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(mDemux)
 		mpc_demux_exit(mDemux), mDemux = NULL;
 	
@@ -258,11 +271,14 @@ bool MusepackDecoder::CloseFile(CFErrorRef */*error*/)
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
 
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("Musepack, %u channels, %u Hz"), 
@@ -272,9 +288,10 @@ CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 
 SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
-	
+
 	mpc_status result = mpc_demux_seek_sample(mDemux, frame);
 	if(MPC_STATUS_OK == result)
 		mCurrentFrame = frame;
@@ -284,10 +301,11 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
-	
+
 	MPC_SAMPLE_FORMAT	buffer			[MPC_DECODER_BUFFER_LENGTH];
 	UInt32				framesRead		= 0;
 	

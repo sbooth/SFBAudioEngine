@@ -193,14 +193,20 @@ FLACDecoder::FLACDecoder(InputSource *inputSource)
 
 FLACDecoder::~FLACDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool FLACDecoder::OpenFile(CFErrorRef *error)
+bool FLACDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	// Create FLAC decoder
 	mFLAC = FLAC__stream_decoder_new();
 	if(NULL == mFLAC) {
@@ -461,11 +467,18 @@ bool FLACDecoder::OpenFile(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
+	mIsOpen = true;
 	return true;
 }
 
-bool FLACDecoder::CloseFile(CFErrorRef */*error*/)
+bool FLACDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(mFLAC) {
 		if(!FLAC__stream_decoder_finish(mFLAC)) {
 			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
@@ -477,12 +490,14 @@ bool FLACDecoder::CloseFile(CFErrorRef */*error*/)
 
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("FLAC, %u channels, %u Hz"), 
@@ -492,6 +507,7 @@ CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 
 SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 
@@ -512,10 +528,11 @@ SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
-	
+
 	UInt32 framesRead = 0;
 	
 	// Reset output buffer data size
@@ -570,6 +587,7 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 
 FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[])
 {
+	assert(IsOpen());
 	assert(NULL != decoder);
 	assert(NULL != frame);
 

@@ -52,21 +52,19 @@ public:
 
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
-	
+
 	// ========================================
 	// Creation
 	OggVorbisDecoder(InputSource *inputSource);
-	
+
 	// ========================================
 	// Destruction
 	virtual ~OggVorbisDecoder();
-	
-	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen() const					{ return (NULL != mVorbisFile.datasource); }
+	// ========================================
+	// Audio access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
 
 	// ========================================
 	// The native format of the source audio
@@ -75,18 +73,18 @@ public:
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-	
+
 	// ========================================
 	// Source audio information
 	virtual inline SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
 	virtual inline SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
-	
+
 	// ========================================
 	// Seeking support
 	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
 
 private:
-	
+
 	OggVorbis_File		mVorbisFile;
 };

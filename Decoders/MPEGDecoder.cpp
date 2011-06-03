@@ -145,14 +145,20 @@ MPEGDecoder::MPEGDecoder(InputSource *inputSource)
 
 MPEGDecoder::~MPEGDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool MPEGDecoder::OpenFile(CFErrorRef *error)
+bool MPEGDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	mDecoder = mpg123_new(NULL, NULL);
 	if(NULL == mDecoder) {
 		if(error) {
@@ -413,11 +419,18 @@ bool MPEGDecoder::OpenFile(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
+	mIsOpen = true;
 	return true;
 }
 
-bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
+bool MPEGDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(mDecoder) {
 		mpg123_close(mDecoder);
 		mpg123_delete(mDecoder), mDecoder = NULL;
@@ -426,11 +439,14 @@ bool MPEGDecoder::CloseFile(CFErrorRef */*error*/)
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
 
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+
 	mpg123_frameinfo mi;
 	if(MPG123_OK != mpg123_info(mDecoder, &mi)) {
 		return CFStringCreateWithFormat(kCFAllocatorDefault, 
@@ -465,6 +481,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
@@ -477,6 +494,7 @@ SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);

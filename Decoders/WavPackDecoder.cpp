@@ -32,6 +32,8 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
+#include <log4cxx/logger.h>
+
 #include "WavPackDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
@@ -175,14 +177,20 @@ WavPackDecoder::WavPackDecoder(InputSource *inputSource)
 
 WavPackDecoder::~WavPackDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool WavPackDecoder::OpenFile(CFErrorRef *error)
+bool WavPackDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.WavPack");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	mStreamReader.read_bytes = read_bytes_callback;
 	mStreamReader.get_pos = get_pos_callback;
 	mStreamReader.set_pos_abs = set_pos_abs_callback;
@@ -291,11 +299,18 @@ bool WavPackDecoder::OpenFile(CFErrorRef *error)
 		return false;		
 	}
 
+	mIsOpen = true;
 	return true;
 }
 
-bool WavPackDecoder::CloseFile(CFErrorRef */*error*/)
+bool WavPackDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.WavPack");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 
 	if(mWPC)
@@ -303,12 +318,15 @@ bool WavPackDecoder::CloseFile(CFErrorRef */*error*/)
 	
 	if(mBuffer)
 		free(mBuffer), mBuffer = NULL;
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("WavPack, %u channels, %u Hz"), 
@@ -318,6 +336,7 @@ CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 
 SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
@@ -330,10 +349,11 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);
-	
+
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
 		bufferList->mBuffers[i].mDataByteSize = 0;

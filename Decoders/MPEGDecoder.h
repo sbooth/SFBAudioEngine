@@ -42,9 +42,9 @@
 // ========================================
 class MPEGDecoder : public AudioDecoder
 {
-	
+
 public:
-	
+
 	// ========================================
 	// The data types handled by this class
 	static CFArrayRef CreateSupportedFileExtensions();
@@ -52,21 +52,19 @@ public:
 
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
-	
+
 	// ========================================
 	// Creation
 	MPEGDecoder(InputSource *inputSource);
-	
+
 	// ========================================
 	// Destruction
 	virtual ~MPEGDecoder();
-	
-	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen() const					{ return (NULL != mDecoder); }
+	// ========================================
+	// Audio access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
 
 	// ========================================
 	// The native format of the source audio
@@ -75,12 +73,12 @@ public:
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-	
+
 	// ========================================
 	// Source audio information
 	virtual inline SInt64 GetTotalFrames() const			{ return mpg123_length(mDecoder); }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
-	
+
 	// ========================================
 	// Seeking support
 	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }

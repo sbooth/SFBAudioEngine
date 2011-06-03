@@ -89,14 +89,20 @@ OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
 
 OggSpeexDecoder::~OggSpeexDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
+bool OggSpeexDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	// Initialize Ogg data struct
 	ogg_sync_init(&mOggSyncState);
 
@@ -547,11 +553,18 @@ bool OggSpeexDecoder::OpenFile(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
+	mIsOpen = true;
 	return true;
 }
 
-bool OggSpeexDecoder::CloseFile(CFErrorRef */*error*/)
+bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
 
@@ -564,11 +577,14 @@ bool OggSpeexDecoder::CloseFile(CFErrorRef */*error*/)
 	ogg_stream_clear(&mOggStreamState);
 	ogg_sync_clear(&mOggSyncState);
 
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("Ogg Speex, %u channels, %u Hz"), 
@@ -578,6 +594,7 @@ CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 
 UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);

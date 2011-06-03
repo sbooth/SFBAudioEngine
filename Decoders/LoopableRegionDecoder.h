@@ -50,15 +50,24 @@ public:
 	virtual ~LoopableRegionDecoder();
 	
 	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
+	// Audio access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen() const					{ return mDecoder->FileIsOpen(); }
+	virtual inline bool IsOpen() const						{ return mDecoder->IsOpen(); }
 
 	// ========================================
 	// The native format of the source audio
+	inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mDecoder->GetSourceFormat(); }
 	virtual inline CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
+
+	// ========================================
+	// The type of PCM data provided by this decoder
+	inline AudioStreamBasicDescription GetFormat() const		{ return mDecoder->GetFormat(); }
+
+	// ========================================
+	// The layout of the channels this decoder provides
+	inline AudioChannelLayout * GetChannelLayout() const		{ return mDecoder->GetChannelLayout(); }
 
 	// ========================================
 	// The starting frame for this audio file region
@@ -79,7 +88,7 @@ public:
 	
 	// ========================================
 	// Reset to initial state
-	void Reset();
+	bool Reset();
 	
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
@@ -104,7 +113,10 @@ protected:
 	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
 	
 private:
-	
+
+	// Called when mDecoder is open
+	void SetupDecoder(bool forceReset = true);
+
 	AudioDecoder	*mDecoder;
 	
 	SInt64			mStartingFrame;

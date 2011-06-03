@@ -42,14 +42,10 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(decoder->SupportsSeeking());
 	
 	mInputSource	= mDecoder->GetInputSource();
-	mFormat			= mDecoder->GetFormat();
-	mChannelLayout	= mDecoder->GetChannelLayout();
-	mSourceFormat	= mDecoder->GetSourceFormat();
-	
-	mFrameCount		= static_cast<UInt32>(mDecoder->GetTotalFrames() - mStartingFrame);
-	
-	if(0 != mStartingFrame)
-		Reset();
+	mIsOpen			= mDecoder->IsOpen();
+
+	if(mDecoder->IsOpen())
+		SetupDecoder();
 }
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount)
@@ -59,12 +55,10 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(decoder->SupportsSeeking());
 
 	mInputSource	= mDecoder->GetInputSource();
-	mFormat			= mDecoder->GetFormat();
-	mChannelLayout	= mDecoder->GetChannelLayout();
-	mSourceFormat	= mDecoder->GetSourceFormat();
-	
-	if(0 != mStartingFrame)
-		Reset();
+	mIsOpen			= mDecoder->IsOpen();
+
+	if(mDecoder->IsOpen())
+		SetupDecoder();
 }
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
@@ -74,16 +68,17 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 	assert(decoder->SupportsSeeking());
 	
 	mInputSource	= mDecoder->GetInputSource();
-	mFormat			= mDecoder->GetFormat();
-	mChannelLayout	= mDecoder->GetChannelLayout();
-	mSourceFormat	= mDecoder->GetSourceFormat();
-	
-	if(0 != mStartingFrame)
-		Reset();
+	mIsOpen			= mDecoder->IsOpen();
+
+	if(mDecoder->IsOpen())
+		SetupDecoder();
 }
 
 LoopableRegionDecoder::~LoopableRegionDecoder()
 {
+	if(IsOpen())
+		Close();
+
 	// Just set our references to NULL, as mDecoder actually owns the objects and will delete them
 	mInputSource	= NULL;
 	mChannelLayout	= NULL;
@@ -92,35 +87,56 @@ LoopableRegionDecoder::~LoopableRegionDecoder()
 		delete mDecoder, mDecoder = NULL;
 }
 
-void LoopableRegionDecoder::Reset()
+bool LoopableRegionDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+	
+	if(!mDecoder->IsOpen() && !mDecoder->Open(error))
+		return false;
+
+	SetupDecoder(false);
+
+	mIsOpen = true;
+	return true;
+}
+
+bool LoopableRegionDecoder::Close(CFErrorRef *error)
+{
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+	
+	if(!mDecoder->Close(error))
+		return false;
+
+	mIsOpen = false;
+	return true;
+}
+
+bool LoopableRegionDecoder::Reset()
+{
+	assert(IsOpen());
+
 	mDecoder->SeekToFrame(mStartingFrame);
 	
 	mFramesReadInCurrentPass	= 0;
 	mTotalFramesRead			= 0;
 	mCompletedPasses			= 0;
+
+	return true;
 }
 
 #pragma mark Functionality
 
-bool LoopableRegionDecoder::OpenFile(CFErrorRef *error)
-{
-	if(!mDecoder->FileIsOpen())
-		return mDecoder->OpenFile(error);
-	
-	return true;
-}
-
-bool LoopableRegionDecoder::CloseFile(CFErrorRef *error)
-{
-	if(mDecoder->FileIsOpen())
-		return mDecoder->CloseFile(error);
-	
-	return true;
-}
-
 SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < GetTotalFrames());
 	
@@ -135,6 +151,7 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(0 < frameCount);
 	
@@ -211,4 +228,20 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	free(bufferListAlias), bufferListAlias = NULL;
 	
 	return totalFramesRead;
+}
+
+void LoopableRegionDecoder::SetupDecoder(bool forceReset)
+{
+	assert(mDecoder);
+	assert(mDecoder->IsOpen());
+
+	mFormat			= mDecoder->GetFormat();
+	mChannelLayout	= mDecoder->GetChannelLayout();
+	mSourceFormat	= mDecoder->GetSourceFormat();
+	
+	if(0 == mFrameCount)
+		mFrameCount = static_cast<UInt32>(mDecoder->GetTotalFrames() - mStartingFrame);
+	
+	if(forceReset || 0 != mStartingFrame)
+		Reset();
 }

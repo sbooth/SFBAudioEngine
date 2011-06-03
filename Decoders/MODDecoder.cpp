@@ -127,14 +127,20 @@ MODDecoder::MODDecoder(InputSource *inputSource)
 
 MODDecoder::~MODDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool MODDecoder::OpenFile(CFErrorRef *error)
+bool MODDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	dfs.open = NULL;
 	dfs.skip = skip_callback;
 	dfs.getc = getc_callback;
@@ -283,12 +289,19 @@ bool MODDecoder::OpenFile(CFErrorRef *error)
 	
 	// Setup the channel layout
 	mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
-	
+
+	mIsOpen = true;
 	return true;
 }
 
-bool MODDecoder::CloseFile(CFErrorRef */*error*/)
+bool MODDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(dsr)
 		duh_end_sigrenderer(dsr), dsr = NULL;
 	if(duh)
@@ -296,11 +309,13 @@ bool MODDecoder::CloseFile(CFErrorRef */*error*/)
 	if(df)
 		dumbfile_close(df), df = NULL;
 
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef MODDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("MOD, %u channels, %u Hz"), 
@@ -310,12 +325,13 @@ CFStringRef MODDecoder::CreateSourceFormatDescription() const
 
 SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
-	
+
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
-		if(!CloseFile(NULL) || !GetInputSource()->SeekToOffset(0) || !OpenFile(NULL)) {
+		if(!Close(NULL) || !GetInputSource()->SeekToOffset(0) || !Open(NULL)) {
 			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
 			LOG4CXX_ERROR(logger, "Error reseting DUMB decoder");
 			return -1;
@@ -333,6 +349,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(bufferList->mBuffers[0].mNumberChannels == mFormat.mChannelsPerFrame);
 	assert(0 < frameCount);

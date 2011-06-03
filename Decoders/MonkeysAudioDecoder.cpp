@@ -189,14 +189,20 @@ MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
 
 MonkeysAudioDecoder::~MonkeysAudioDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool MonkeysAudioDecoder::OpenFile(CFErrorRef *error)
+bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
 	mIOInterface = new APEIOInterface(GetInputSource());
 
 	int errorCode;
@@ -245,9 +251,9 @@ bool MonkeysAudioDecoder::OpenFile(CFErrorRef *error)
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 	
-	mFormat.mBitsPerChannel		= mDecompressor->GetInfo(APE_INFO_BITS_PER_SAMPLE);
+	mFormat.mBitsPerChannel		= static_cast<UInt32>(mDecompressor->GetInfo(APE_INFO_BITS_PER_SAMPLE));
 	mFormat.mSampleRate			= mDecompressor->GetInfo(APE_INFO_SAMPLE_RATE);
-	mFormat.mChannelsPerFrame	= mDecompressor->GetInfo(APE_INFO_CHANNELS);
+	mFormat.mChannelsPerFrame	= static_cast<UInt32>(mDecompressor->GetInfo(APE_INFO_CHANNELS));
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
@@ -266,23 +272,33 @@ bool MonkeysAudioDecoder::OpenFile(CFErrorRef *error)
 		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
 		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
-	
+
+	mIsOpen = true;
 	return true;
 }
 
-bool MonkeysAudioDecoder::CloseFile(CFErrorRef */*error*/)
+bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	if(mIOInterface)
 		delete mIOInterface, mIOInterface = NULL;
 
 	if(mDecompressor)
 		delete mDecompressor, mDecompressor = NULL;
 
+	mIsOpen = false;
 	return true;
 }
 
 CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 {
+	assert(IsOpen());
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
@@ -292,16 +308,19 @@ CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 
 SInt64 MonkeysAudioDecoder::GetTotalFrames() const
 {
+	assert(IsOpen());
 	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
 }
 
 SInt64 MonkeysAudioDecoder::GetCurrentFrame() const
 {
+	assert(IsOpen());
 	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
 }
 
 SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < this->GetTotalFrames());
 	
@@ -313,6 +332,7 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(0 < frameCount);
 

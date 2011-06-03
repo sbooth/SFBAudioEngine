@@ -62,11 +62,9 @@ public:
 	virtual ~MODDecoder();
 
 	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
-
-	virtual inline bool FileIsOpen() const					{ return (NULL != df); }
+	// Audio access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
 
 	// ========================================
 	// The native format of the source audio

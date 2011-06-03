@@ -82,18 +82,30 @@ public:
 	static bool HandlesMIMEType(CFStringRef mimeType);
 	
 	// ========================================
-	// Factory methods that return an AudioDecoder for the specified URL, or NULL on failure
+	// Factory methods that return an AudioDecoder for the specified resource, or NULL on failure
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
+
+	// If this returns NULL the caller is responsible for deleting inputSource
 	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error = NULL);
 
-	// Limit decoding to a specified file region
+	// Limit decoding to a specified region
 	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = NULL);
 	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
 	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
+	
 	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error = NULL);
 	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
 	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
-	
+
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
+
+	// ========================================
+	// Flag to specify whether AudioDecoders created with the above methods should be automatically opened (default is false)
+	static inline bool AutomaticallyOpenDecoders()				{ return sAutomaticallyOpenDecoders; }
+	static inline void SetAutomaticallyOpenDecoders(bool flag)	{ sAutomaticallyOpenDecoders = flag; }
+
 	// ========================================
 	// Destruction
 	virtual ~AudioDecoder();
@@ -105,13 +117,13 @@ public:
 	// ========================================
 	// The input source feeding the decoder
 	inline InputSource * GetInputSource() const					{ return mInputSource; }
-	
+
 	// ========================================
-	// File access (must be implemented by subclasses)
-	virtual bool OpenFile(CFErrorRef *error = NULL) = 0;
-	virtual bool CloseFile(CFErrorRef *error = NULL) = 0;
+	// Audio access (must be implemented by subclasses)
+	virtual bool Open(CFErrorRef *error = NULL) = 0;
+	virtual bool Close(CFErrorRef *error = NULL) = 0;
 	
-	virtual bool FileIsOpen() const = 0;
+	inline bool IsOpen() const									{ return mIsOpen; }
 
 	// ========================================
 	// The native format of the source audio
@@ -120,7 +132,7 @@ public:
 	
 	// ========================================
 	// The type of PCM data provided by this decoder
-	inline AudioStreamBasicDescription GetFormat()	const		{ return mFormat; }
+	inline AudioStreamBasicDescription GetFormat() const		{ return mFormat; }
 	CFStringRef CreateFormatDescription() const;
 	
 	// ========================================
@@ -158,6 +170,9 @@ protected:
 	AudioChannelLayout				*mChannelLayout;	// The channel layout for the PCM data, or NULL if unknown/unspecified
 	
 	AudioStreamBasicDescription		mSourceFormat;		// The native format of the source file
+
+	bool							mIsOpen;			// Subclasses should set this to true if Open() is successful
+														// and false if Close() is successful
 	
 	// ========================================
 	// For subclass use only
@@ -167,6 +182,8 @@ protected:
 	AudioDecoder& operator=(const AudioDecoder& rhs);
 
 private:
+
+	static bool						sAutomaticallyOpenDecoders;
 
 	// ========================================
 	// Callbacks for AudioPlayer use only

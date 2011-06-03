@@ -42,31 +42,29 @@
 // ========================================
 class FLACDecoder : public AudioDecoder
 {
-	
+
 public:
-	
+
 	// ========================================
 	// The data types handled by this class
 	static CFArrayRef CreateSupportedFileExtensions();
 	static CFArrayRef CreateSupportedMIMETypes();
-	
+
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
-	
+
 	// ========================================
 	// Creation
 	FLACDecoder(InputSource *inputSource);
-	
+
 	// ========================================
 	// Destruction
 	virtual ~FLACDecoder();
-	
-	// ========================================
-	// File access
-	virtual bool OpenFile(CFErrorRef *error = NULL);
-	virtual bool CloseFile(CFErrorRef *error = NULL);
 
-	virtual inline bool FileIsOpen() const					{ return (NULL != mFLAC); }
+	// ========================================
+	// Audio access
+	virtual bool Open(CFErrorRef *error = NULL);
+	virtual bool Close(CFErrorRef *error = NULL);
 
 	// ========================================
 	// The native format of the source audio
@@ -75,26 +73,26 @@ public:
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read
 	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-	
+
 	// ========================================
 	// Source audio information
 	virtual inline SInt64 GetTotalFrames() const			{ return mStreamInfo.total_samples; }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
-	
+
 	// ========================================
 	// Seeking support
 	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 	virtual SInt64 SeekToFrame(SInt64 frame);
-	
+
 private:
-	
+
 	FLAC__StreamDecoder					*mFLAC;
 	FLAC__StreamMetadata_StreamInfo		mStreamInfo;
 	SInt64								mCurrentFrame;
-	
+
 	// For converting push to pull
 	AudioBufferList						*mBufferList;
-	
+
 public:
 
 	// ========================================
@@ -102,5 +100,5 @@ public:
 	FLAC__StreamDecoderWriteStatus Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[]);
 	void Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata);
 	void Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status);
-	
+
 };

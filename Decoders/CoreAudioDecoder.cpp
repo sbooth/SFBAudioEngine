@@ -210,14 +210,24 @@ CoreAudioDecoder::CoreAudioDecoder(InputSource *inputSource)
 
 CoreAudioDecoder::~CoreAudioDecoder()
 {
-	if(FileIsOpen())
-		CloseFile();
+	if(IsOpen())
+		Close();
 }
 
 #pragma mark Functionality
 
-bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
+bool CoreAudioDecoder::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
+		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		return true;
+	}
+
+	// Ensure the input source is open
+	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+		return false;
+
 	// Open the input file
 	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, NULL, myAudioFile_GetSizeProc, NULL, 0, &mAudioFile);
 
@@ -511,11 +521,18 @@ bool CoreAudioDecoder::OpenFile(CFErrorRef *error)
 		mUseM4AWorkarounds = true;
 #endif
 
+	mIsOpen = true;
 	return true;
 }
 
-bool CoreAudioDecoder::CloseFile(CFErrorRef */*error*/)
+bool CoreAudioDecoder::Close(CFErrorRef */*error*/)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
+		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		return true;
+	}
+
 	// Close the output file
 	if(mExtAudioFile) {
 		OSStatus result = ExtAudioFileDispose(mExtAudioFile);
@@ -536,12 +553,15 @@ bool CoreAudioDecoder::CloseFile(CFErrorRef */*error*/)
 		
 		mAudioFile = NULL;
 	}
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 SInt64 CoreAudioDecoder::GetTotalFrames() const
 {
+	assert(IsOpen());
+
 	SInt64 totalFrames = -1;
 	UInt32 dataSize = sizeof(totalFrames);
 	
@@ -556,6 +576,8 @@ SInt64 CoreAudioDecoder::GetTotalFrames() const
 
 SInt64 CoreAudioDecoder::GetCurrentFrame() const
 {
+	assert(IsOpen());
+
 	if(mUseM4AWorkarounds)
 		return mCurrentFrame;
 	
@@ -573,9 +595,10 @@ SInt64 CoreAudioDecoder::GetCurrentFrame() const
 
 SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 {
+	assert(IsOpen());
 	assert(0 <= frame);
 	assert(frame < GetTotalFrames());
-	
+
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
@@ -591,9 +614,10 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	assert(IsOpen());
 	assert(NULL != bufferList);
 	assert(0 < frameCount);
-	
+
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
 	if(noErr != result) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.CoreAudio");
