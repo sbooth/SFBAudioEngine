@@ -118,7 +118,7 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 
 	while(currentCharacter < totalCharacters) {
 		charactersConverted = CFStringGetBytes(s, CFRangeMake(currentCharacter, totalCharacters), kCFStringEncodingUTF8, 0, false, 
-												reinterpret_cast<UInt8 *>(buf), BUFFER_LENGTH, &bytesWritten);
+											   reinterpret_cast<UInt8 *>(buf), BUFFER_LENGTH, &bytesWritten);
 		currentCharacter += charactersConverted;
 		out.write(buf, bytesWritten);
 	};
@@ -161,6 +161,22 @@ std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 	}
 
 	CFStringRef r = CFErrorCopyDescription(e);
+	if(r) {
+		out << r;
+		CFRelease(r), r = NULL;
+	}
+
+	return out;
+}
+
+std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
+{
+	if(NULL == u) {
+		out << "(null)";
+		return out;
+	}
+
+	CFStringRef r = CFUUIDCreateString(kCFAllocatorDefault, u);
 	if(r) {
 		out << r;
 		CFRelease(r), r = NULL;
