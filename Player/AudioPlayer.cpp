@@ -797,6 +797,13 @@ bool AudioPlayer::SetDigitalPreGain(double preGain)
 
 bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 {
+	if(IsPlaying())
+		return false;
+
+	Locker lock(mMutex);
+	if(!lock)
+		return false;
+
 	if(NULL == mSampleRateConverter)
 		return false;
 
@@ -818,6 +825,13 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 
 bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 {
+	if(IsPlaying())
+		return false;
+
+	Locker lock(mMutex);
+	if(!lock)
+		return false;
+
 	if(NULL == mSampleRateConverter)
 		return false;
 
