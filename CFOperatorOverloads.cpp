@@ -153,6 +153,22 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, CFErrorRef e)
+{
+	if(NULL == e) {
+		out << "(null)";
+		return out;
+	}
+
+	CFStringRef r = CFErrorCopyDescription(e);
+	if(r) {
+		out << r;
+		CFRelease(r), r = NULL;
+	}
+
+	return out;
+}
+
 // Most of this is stolen from Apple's CAStreamBasicDescription::Print()
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format)
 {
