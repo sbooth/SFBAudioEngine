@@ -51,6 +51,12 @@ FileInputSource::~FileInputSource()
 
 bool FileInputSource::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
+		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		return true;
+	}
+
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
@@ -72,7 +78,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		if(0 != fclose(mFile)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.FileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -81,11 +87,18 @@ bool FileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
+	mIsOpen = true;
 	return true;
 }
 
 bool FileInputSource::Close(CFErrorRef *error)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
+		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		return true;
+	}
+
 	memset(&mFilestats, 0, sizeof(mFilestats));
 
 	if(NULL != mFile) {
@@ -100,15 +113,18 @@ bool FileInputSource::Close(CFErrorRef *error)
 		}
 	}
 
+	mIsOpen = false;
 	return true;
 }
 
 SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
 {
+	assert(IsOpen());
 	return fread(buffer, 1, byteCount, mFile);
 }
 
 bool FileInputSource::SeekToOffset(SInt64 offset)
 {
+	assert(IsOpen());	
 	return (0 == fseeko(mFile, offset, SEEK_SET));
 }

@@ -40,11 +40,9 @@
 // ========================================
 const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
 
-
 #pragma mark Static Methods
 
-
-InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
+InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef */*error*/)
 {
 	if(NULL == url)
 		return NULL;
@@ -54,87 +52,27 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
-		// Verify the file exists
-		SInt32 errorCode = noErr;
-		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
-		
-		if(NULL != fileExists) {
-			if(CFBooleanGetValue(fileExists)) {
-				if(InputSourceFlagMemoryMapFiles & flags)
-					inputSource = new MemoryMappedFileInputSource(url);
-				else if(InputSourceFlagLoadFilesInMemory & flags)
-					inputSource = new InMemoryFileInputSource(url);
-				else
-					inputSource = new FileInputSource(url);
+		if(InputSourceFlagMemoryMapFiles & flags)
+			inputSource = new MemoryMappedFileInputSource(url);
+		else if(InputSourceFlagLoadFilesInMemory & flags)
+			inputSource = new InMemoryFileInputSource(url);
+		else
+			inputSource = new FileInputSource(url);
+	}
 
-				if(!inputSource->Open(error))
-					delete inputSource, inputSource = NULL;
-			}
-			else {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource");
-				LOG4CXX_WARN(logger, "The requested URL doesn't exist");
-				
-				if(error) {
-					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																					   32,
-																					   &kCFTypeDictionaryKeyCallBacks,
-																					   &kCFTypeDictionaryValueCallBacks);
-					
-					CFStringRef displayName = CFURLCopyLastPathComponent(url);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("File not found"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					*error = CFErrorCreate(kCFAllocatorDefault, 
-										   InputSourceErrorDomain, 
-										   InputSourceFileNotFoundError,
-										   errorDictionary);
-					
-					CFRelease(errorDictionary), errorDictionary = NULL;				
-				}				
-			}
-		}
-		else {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource");
-			LOG4CXX_WARN(logger, "CFURLCreatePropertyFromResource failed: " << errorCode);
-		}
-		
-		CFRelease(fileExists), fileExists = NULL;
-	}
-	else {
-	}
-	
 	CFRelease(scheme), scheme = NULL;
-	
+
 	return inputSource;
 }
 
-
 #pragma mark Creation and Destruction
 
-
 InputSource::InputSource()
-	: mURL(NULL)
+	: mURL(NULL), mIsOpen(false)
 {}
 
 InputSource::InputSource(CFURLRef url)
-	: mURL(NULL)
+	: mURL(NULL), mIsOpen(false)
 {
 	assert(NULL != url);
 	
@@ -142,7 +80,7 @@ InputSource::InputSource(CFURLRef url)
 }
 
 InputSource::InputSource(const InputSource& rhs)
-	: mURL(NULL)
+	: mURL(NULL), mIsOpen(false)
 {
 	*this = rhs;
 }
@@ -153,9 +91,7 @@ InputSource::~InputSource()
 		CFRelease(mURL), mURL = NULL;
 }
 
-
 #pragma mark Operator Overloads
-
 
 InputSource& InputSource::operator=(const InputSource& rhs)
 {
@@ -167,7 +103,8 @@ InputSource& InputSource::operator=(const InputSource& rhs)
 	
 	if(rhs.mURL)
 		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
-	
+
+	mIsOpen = rhs.mIsOpen;
+
 	return *this;
 }
-

@@ -51,6 +51,12 @@ InMemoryFileInputSource::~InMemoryFileInputSource()
 
 bool InMemoryFileInputSource::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
+		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		return true;
+	}
+
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
@@ -72,7 +78,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -87,7 +93,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -102,7 +108,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -112,7 +118,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 
 	if(-1 == close(fd)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
 		LOG4CXX_ERROR(logger, "Unable to close the file: " << strerror(errno));
 
 		if(error)
@@ -124,28 +130,35 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 	
 	mCurrentPosition = mMemory;
-	
+
+	mIsOpen = true;
 	return true;
 }
 
-bool InMemoryFileInputSource::Close(CFErrorRef *error)
+bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 {
-#pragma unused(error)
-
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
+		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		return true;
+	}
+	
 	memset(&mFilestats, 0, sizeof(mFilestats));
 	
 	if(NULL != mMemory)
 		free(mMemory), mMemory = NULL;
 
 	mCurrentPosition = NULL;
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
+	assert(IsOpen());
 	assert(NULL != buffer);
-	
+
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
 	
 	if(byteCount > remaining)
@@ -158,6 +171,8 @@ SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 
 bool InMemoryFileInputSource::SeekToOffset(SInt64 offset)
 {
+	assert(IsOpen());
+
 	if(offset > mFilestats.st_size)
 		return false;
 	

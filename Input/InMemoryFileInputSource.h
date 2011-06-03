@@ -44,11 +44,11 @@ public:
 	// ========================================
 	// Creation
 	InMemoryFileInputSource(CFURLRef url);
-	
+
 	// ========================================
 	// Destruction
 	virtual ~InMemoryFileInputSource();
-	
+
 	// ========================================
 	// Bytestream access
 	virtual bool Open(CFErrorRef *error = NULL);

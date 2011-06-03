@@ -39,7 +39,8 @@ extern const CFStringRef		InputSourceErrorDomain;
 
 enum {
 	InputSourceFileNotFoundError			= 0,
-	InputSourceInputOutputError				= 1
+	InputSourceInputOutputError				= 1,
+	InputSourceOperationNotAllowedError		= 2
 };
 
 // ========================================
@@ -75,7 +76,7 @@ public:
 	virtual bool Open(CFErrorRef *error = NULL) = 0;
 	virtual bool Close(CFErrorRef *error = NULL) = 0;
 	
-	virtual bool IsOpen() const = 0;
+	inline bool IsOpen() const								{ return mIsOpen; }
 
 	// ========================================
 	// Returns the number of bytes actually read
@@ -93,6 +94,7 @@ public:
 protected:
 	
 	CFURLRef						mURL;				// The location of the bytes to be read
+	bool							mIsOpen;			// Subclasses should set this to true if Open() is successful
 
 	// ========================================
 	// For subclass use only

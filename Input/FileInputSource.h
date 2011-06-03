@@ -43,7 +43,7 @@ public:
 	// ========================================
 	// Creation
 	FileInputSource(CFURLRef url);
-	
+
 	// ========================================
 	// Destruction
 	virtual ~FileInputSource();
@@ -52,9 +52,7 @@ public:
 	// Bytestream access
 	virtual bool Open(CFErrorRef *error = NULL);
 	virtual bool Close(CFErrorRef *error = NULL);
-	
-	virtual inline bool IsOpen() const						{ return (NULL != mFile);}
-	
+
 	// ========================================
 	//
 	virtual SInt64 Read(void *buffer, SInt64 byteCount);

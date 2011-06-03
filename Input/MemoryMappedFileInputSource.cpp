@@ -36,9 +36,7 @@
 
 #include "MemoryMappedFileInputSource.h"
 
-
 #pragma mark Creation and Destruction
-
 
 MemoryMappedFileInputSource::MemoryMappedFileInputSource(CFURLRef url)
 	: InputSource(url), mMemory(NULL), mCurrentPosition(NULL)
@@ -54,6 +52,12 @@ MemoryMappedFileInputSource::~MemoryMappedFileInputSource()
 
 bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.MemoryMappedFile");
+		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		return true;
+	}
+	
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
@@ -75,7 +79,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.MemoryMappedFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 
@@ -88,7 +92,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EBADF, NULL);
 		
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.MemoryMappedFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -104,7 +108,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InMemoryFileInputSource");
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.MemoryMappedFile");
 			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
 		}
 		
@@ -123,12 +127,19 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 	}
 
 	mCurrentPosition = mMemory;
-	
+
+	mIsOpen = true;
 	return true;
 }
 
 bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 {
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.MemoryMappedFile");
+		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		return true;
+	}
+
 	memset(&mFilestats, 0, sizeof(mFilestats));
 	
 	if(NULL != mMemory) {
@@ -143,12 +154,14 @@ bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 			return false; 
 		}
 	}
-	
+
+	mIsOpen = false;
 	return true;
 }
 
 SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
+	assert(IsOpen());
 	assert(NULL != buffer);
 
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
@@ -163,6 +176,8 @@ SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 
 bool MemoryMappedFileInputSource::SeekToOffset(SInt64 offset)
 {
+	assert(IsOpen());
+	
 	if(offset > mFilestats.st_size)
 		return false;
 
