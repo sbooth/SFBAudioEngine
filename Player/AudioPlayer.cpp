@@ -344,7 +344,7 @@ AudioPlayer::~AudioPlayer()
 
 	// Clean up the converters and conversion buffers
 	if(mOutputConverters) {
-		for(UInt32 i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+		for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
 			delete mOutputConverters[i], mOutputConverters[i] = NULL;
 		delete [] mOutputConverters, mOutputConverters = NULL;
 	}
@@ -1380,6 +1380,17 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		if(mRingBufferChannelLayout)
 			free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
 
+		// Open the decoder if necessary
+		CFErrorRef error = NULL;
+		if(!decoder->IsOpen() && !decoder->Open(&error)) {
+			if(error) {
+				LOG4CXX_ERROR(logger, "Error opening decoder: " << error);
+				CFRelease(error), error = NULL;
+			}
+
+			return false;
+		}
+
 		AudioStreamBasicDescription format = decoder->GetFormat();
 
 		// The ring buffer contains deinterleaved floats at the decoder's sample rate and channel layout
@@ -1400,7 +1411,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
 	}
 	// Otherwise, enqueue this decoder if the format matches
-	else {
+	else if(decoder->IsOpen()) {
 		AudioStreamBasicDescription		nextFormat			= decoder->GetFormat();
 		AudioChannelLayout				*nextChannelLayout	= decoder->GetChannelLayout();
 		
@@ -1431,6 +1442,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 			}
 		}
 	}
+	// If the decoder isn't open the format isn't yet known.  Enqueue it and hope things work out for the best
 	
 	// Add the decoder to the queue
 	CFArrayAppendValue(mDecoderQueue, decoder);
@@ -1595,6 +1607,8 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		if(framesToRead != mOutputDeviceBufferFrameSize) {
 			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 			LOG4CXX_WARN(logger, "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << mOutputDeviceBufferFrameSize << " requested");
+
+			// TODO: Perform AudioBufferRanDry() callback ??
 		}
 
 		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered);
@@ -1667,10 +1681,11 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		
 		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
 		
-		if(decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
+		if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
 			decoderState->mDecoder->PerformRenderingFinishedCallback();			
 
 			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+			decoderState = NULL;
 
 			// Since rendering is finished, signal the collector to clean up this decoder
 			mCollectorSemaphore.Signal();
@@ -2030,7 +2045,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		// ========================================
 		// Lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = NULL;
-		{
+		if(!decoderState) {
 			Locker lock(mMutex);
 			if(!lock)
 				continue;
@@ -2056,7 +2071,64 @@ void * AudioPlayer::DecoderThreadEntry()
 				CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 			}
 		}
-		
+
+		if(decoderState) {
+			// Open the decoder if necessary
+			CFErrorRef error = NULL;
+			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error)) {
+				if(error) {
+					LOG4CXX_ERROR(logger, "Error opening decoder: " << error);
+					CFRelease(error), error = NULL;
+				}
+
+				// TODO: Perform CouldNotOpenDecoder() callback ??
+
+				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+				decoderState = NULL;
+
+				break;
+			}
+
+			// Ensure the decoder's format is compatible with the ring buffer
+			AudioStreamBasicDescription		nextFormat			= decoderState->mDecoder->GetFormat();
+			AudioChannelLayout				*nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
+
+			// The two files can be joined seamlessly only if they have the same sample rates and channel counts
+			bool formatsMatch = true;
+
+			if(nextFormat.mSampleRate != mRingBufferFormat.mSampleRate) {
+				LOG4CXX_WARN(logger, "Gapless join failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+				formatsMatch = false;
+			}
+			else if(nextFormat.mChannelsPerFrame != mRingBufferFormat.mChannelsPerFrame) {
+				LOG4CXX_WARN(logger, "Gapless join failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+				formatsMatch = false;
+			}
+
+			// If the decoder has an explicit channel layout, enqueue it if it matches the ring buffer's channel layout
+			if(nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
+				LOG4CXX_WARN(logger, "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+				formatsMatch = false;
+			}
+			// If the decoder doesn't have an explicit channel layout, enqueue it if the default layout matches
+			else if(NULL == nextChannelLayout) {
+				AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
+				bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
+				free(defaultLayout), defaultLayout = NULL;
+
+				if(!layoutsMatch) {
+					LOG4CXX_WARN(logger, "Gapless join failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
+					formatsMatch = false;
+				}
+			}
+
+			// If the formats don't match, the decoder can't be used with the current ring buffer format
+			if(!formatsMatch) {
+				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+				decoderState = NULL;
+			}
+		}
+
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(NULL != decoderState) {
@@ -2081,7 +2153,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
 			while(decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
-				
+
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
 					// Determine how many frames are available in the ring buffer
@@ -2183,7 +2255,6 @@ void * AudioPlayer::DecoderThreadEntry()
 							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-
 							decoderState = NULL;
 
 							break;
@@ -2193,7 +2264,7 @@ void * AudioPlayer::DecoderThreadEntry()
 					else
 						break;
 				}
-				
+
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
 				mDecoderSemaphore.TimedWait(timeout);
 			}
