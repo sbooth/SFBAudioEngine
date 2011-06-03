@@ -147,7 +147,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	decoder->SetRenderingStartedCallback(renderingStarted, self);
 	decoder->SetRenderingFinishedCallback(renderingFinished, self);
 	
-	if(true == PLAYER->Enqueue(decoder)) {
+	if(decoder->Open() && PLAYER->Enqueue(decoder)) {
 		PLAYER->Play();
 		[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
 	}
