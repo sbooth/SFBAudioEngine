@@ -191,6 +191,10 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 		return true;
 	}
 
+	// Ensure the input source is open
+	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+		return false;
+
 	mStreamReader.read_bytes = read_bytes_callback;
 	mStreamReader.get_pos = get_pos_callback;
 	mStreamReader.set_pos_abs = set_pos_abs_callback;

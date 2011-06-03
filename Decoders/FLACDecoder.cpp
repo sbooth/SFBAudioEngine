@@ -207,6 +207,10 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		return true;
 	}
 
+	// Ensure the input source is open
+	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+		return false;
+
 	// Create FLAC decoder
 	mFLAC = FLAC__stream_decoder_new();
 	if(NULL == mFLAC) {

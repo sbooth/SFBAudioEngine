@@ -159,6 +159,10 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 		return true;
 	}
 
+	// Ensure the input source is open
+	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+		return false;
+
 	mDecoder = mpg123_new(NULL, NULL);
 	if(NULL == mDecoder) {
 		if(error) {

@@ -141,6 +141,10 @@ bool MODDecoder::Open(CFErrorRef *error)
 		return true;
 	}
 
+	// Ensure the input source is open
+	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+		return false;
+
 	dfs.open = NULL;
 	dfs.skip = skip_callback;
 	dfs.getc = getc_callback;
