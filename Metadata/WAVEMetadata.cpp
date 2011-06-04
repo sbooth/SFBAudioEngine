@@ -53,7 +53,8 @@ CFArrayRef WAVEMetadata::CreateSupportedMIMETypes()
 
 bool WAVEMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("wave"), kCFCompareCaseInsensitive))
 		return true;
@@ -65,7 +66,8 @@ bool WAVEMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wave"), kCFCompareCaseInsensitive))
 		return true;

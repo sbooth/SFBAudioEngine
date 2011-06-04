@@ -149,7 +149,8 @@ CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
 
 bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("wv"), kCFCompareCaseInsensitive))
 		return true;
@@ -159,7 +160,8 @@ bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wavpack"), kCFCompareCaseInsensitive))
 		return true;
@@ -329,7 +331,8 @@ bool WavPackDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
@@ -340,9 +343,8 @@ CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 
 SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 	
 	int result = WavpackSeekSample(mWPC, static_cast<uint32_t>(frame));
 	if(result)
@@ -353,10 +355,8 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)

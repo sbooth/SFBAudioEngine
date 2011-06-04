@@ -87,7 +87,8 @@ CFArrayRef MODDecoder::CreateSupportedMIMETypes()
 
 bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
 		return true;
@@ -103,7 +104,8 @@ bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
 		return true;
@@ -319,7 +321,9 @@ bool MODDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef MODDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("MOD, %u channels, %u Hz"), 
@@ -329,9 +333,8 @@ CFStringRef MODDecoder::CreateSourceFormatDescription() const
 
 SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
@@ -353,10 +356,8 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mBuffers[0].mNumberChannels == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	// EOF reached
 	if(duh_sigrenderer_get_position(dsr) > mTotalFrames)

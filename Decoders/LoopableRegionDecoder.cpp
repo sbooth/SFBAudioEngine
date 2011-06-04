@@ -98,7 +98,10 @@ bool LoopableRegionDecoder::Open(CFErrorRef *error)
 	if(!mDecoder->IsOpen() && !mDecoder->Open(error))
 		return false;
 
-	SetupDecoder(false);
+	if(!SetupDecoder(false)) {
+		mDecoder->Close(error);
+		return false;
+	}
 
 	mIsOpen = true;
 	return true;
@@ -121,24 +124,22 @@ bool LoopableRegionDecoder::Close(CFErrorRef *error)
 
 bool LoopableRegionDecoder::Reset()
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return false;
 
-	mDecoder->SeekToFrame(mStartingFrame);
-	
 	mFramesReadInCurrentPass	= 0;
 	mTotalFramesRead			= 0;
 	mCompletedPasses			= 0;
 
-	return true;
+	return (mStartingFrame == mDecoder->SeekToFrame(mStartingFrame));
 }
 
 #pragma mark Functionality
 
 SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 	
 	mCompletedPasses			= static_cast<UInt32>(frame / mFrameCount);
 	mFramesReadInCurrentPass	= static_cast<UInt32>(frame % mFrameCount);
@@ -151,9 +152,8 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+		return 0;
 	
 	// If the repeat count is N then (N + 1) passes must be completed to read all the frames
 	if((1 + mRepeatCount) == mCompletedPasses)
@@ -230,7 +230,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	return totalFramesRead;
 }
 
-void LoopableRegionDecoder::SetupDecoder(bool forceReset)
+bool LoopableRegionDecoder::SetupDecoder(bool forceReset)
 {
 	assert(mDecoder);
 	assert(mDecoder->IsOpen());
@@ -243,5 +243,7 @@ void LoopableRegionDecoder::SetupDecoder(bool forceReset)
 		mFrameCount = static_cast<UInt32>(mDecoder->GetTotalFrames() - mStartingFrame);
 	
 	if(forceReset || 0 != mStartingFrame)
-		Reset();
+		return Reset();
+
+	return true;
 }

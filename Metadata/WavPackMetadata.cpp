@@ -159,7 +159,8 @@ CFArrayRef WavPackMetadata::CreateSupportedMIMETypes()
 
 bool WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("wv"), kCFCompareCaseInsensitive))
 		return true;
@@ -169,7 +170,8 @@ bool WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wavpack"), kCFCompareCaseInsensitive))
 		return true;

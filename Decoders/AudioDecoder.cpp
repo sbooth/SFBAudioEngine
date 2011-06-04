@@ -615,7 +615,8 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 
 CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	CFStringRef		sourceFormatDescription		= NULL;
 	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
@@ -637,7 +638,8 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 
 CFStringRef AudioDecoder::CreateFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	CFStringRef		sourceFormatDescription		= NULL;
 	UInt32			specifierSize				= sizeof(sourceFormatDescription);
@@ -659,7 +661,8 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 
 CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	CFStringRef		channelLayoutDescription	= NULL;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);

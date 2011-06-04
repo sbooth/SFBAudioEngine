@@ -54,7 +54,8 @@ CFArrayRef MODMetadata::CreateSupportedMIMETypes()
 
 bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
 		return true;
@@ -70,7 +71,8 @@ bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
 		return true;

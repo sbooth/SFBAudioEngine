@@ -53,7 +53,8 @@ CFArrayRef MusepackMetadata::CreateSupportedMIMETypes()
 
 bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mpc"), kCFCompareCaseInsensitive))
 		return true;
@@ -63,7 +64,8 @@ bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
 		return true;

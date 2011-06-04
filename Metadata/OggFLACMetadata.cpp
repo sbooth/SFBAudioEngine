@@ -54,7 +54,8 @@ CFArrayRef OggFLACMetadata::CreateSupportedMIMETypes()
 
 bool OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ogg"), kCFCompareCaseInsensitive))
 		return true;
@@ -66,7 +67,8 @@ bool OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
 		return true;

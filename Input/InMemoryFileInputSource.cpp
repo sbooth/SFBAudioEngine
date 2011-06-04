@@ -156,8 +156,8 @@ bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 
 SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
-	assert(IsOpen());
-	assert(NULL != buffer);
+	if(!IsOpen() || NULL == buffer)
+		return -1;
 
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
 	
@@ -171,9 +171,7 @@ SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 
 bool InMemoryFileInputSource::SeekToOffset(SInt64 offset)
 {
-	assert(IsOpen());
-
-	if(offset > mFilestats.st_size)
+	if(!IsOpen() || offset > mFilestats.st_size)
 		return false;
 	
 	mCurrentPosition = mMemory + offset;

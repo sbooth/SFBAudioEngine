@@ -115,7 +115,7 @@ protected:
 private:
 
 	// Called when mDecoder is open
-	void SetupDecoder(bool forceReset = true);
+	bool SetupDecoder(bool forceReset = true);
 
 	AudioDecoder	*mDecoder;
 	

@@ -52,7 +52,8 @@ CFArrayRef MP4Metadata::CreateSupportedMIMETypes()
 
 bool MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("m4a"), kCFCompareCaseInsensitive))
 		return true;
@@ -64,7 +65,8 @@ bool MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg-4"), kCFCompareCaseInsensitive))
 		return true;

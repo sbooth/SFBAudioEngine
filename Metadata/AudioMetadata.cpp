@@ -859,8 +859,6 @@ void AudioMetadata::SetFrontCoverArt(CFDataRef frontCoverArt)
 
 CFStringRef AudioMetadata::GetStringValue(CFStringRef key) const
 {
-	assert(NULL != key);
-	
 	CFTypeRef value = GetValue(key);
 	
 	if(NULL == value)
@@ -874,8 +872,6 @@ CFStringRef AudioMetadata::GetStringValue(CFStringRef key) const
 
 CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
 {
-	assert(NULL != key);
-	
 	CFTypeRef value = GetValue(key);
 	
 	if(NULL == value)
@@ -891,7 +887,8 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
 
 CFTypeRef AudioMetadata::GetValue(CFStringRef key) const
 {
-	assert(NULL != key);
+	if(NULL == key)
+		return NULL;
 	
 	if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 		CFTypeRef value = CFDictionaryGetValue(mChangedMetadata, key);
@@ -903,9 +900,8 @@ CFTypeRef AudioMetadata::GetValue(CFStringRef key) const
 
 void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 {
-	assert(NULL != key);
-	
-	CFDictionarySetValue(mChangedMetadata, key, (NULL == value ? kCFNull : value));
+	if(NULL != key)
+		CFDictionarySetValue(mChangedMetadata, key, (NULL == value ? kCFNull : value));
 }
 
 void AudioMetadata::MergeChangedMetadataIntoMetadata()

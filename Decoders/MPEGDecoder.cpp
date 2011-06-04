@@ -119,7 +119,8 @@ CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
 
 bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp3"), kCFCompareCaseInsensitive))
 		return true;
@@ -129,7 +130,8 @@ bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
 		return true;
@@ -449,7 +451,8 @@ bool MPEGDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	mpg123_frameinfo mi;
 	if(MPG123_OK != mpg123_info(mDecoder, &mi)) {
@@ -485,9 +488,8 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 	
 	frame = mpg123_seek(mDecoder, frame, SEEK_SET);
 	if(0 <= frame)
@@ -498,10 +500,8 @@ SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	UInt32 framesRead = 0;
 

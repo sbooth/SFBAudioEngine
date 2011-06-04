@@ -130,7 +130,8 @@ CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 
 bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 
 	CFArrayRef		supportedExtensions			= NULL;
 	UInt32			size						= sizeof(supportedExtensions);
@@ -167,7 +168,8 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);
+	if(NULL == mimeType)
+		return false;
 
 	CFArrayRef		supportedMIMETypes			= NULL;
 	UInt32			size						= sizeof(supportedMIMETypes);
@@ -560,7 +562,8 @@ bool CoreAudioDecoder::Close(CFErrorRef */*error*/)
 
 SInt64 CoreAudioDecoder::GetTotalFrames() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return -1;
 
 	SInt64 totalFrames = -1;
 	UInt32 dataSize = sizeof(totalFrames);
@@ -576,7 +579,8 @@ SInt64 CoreAudioDecoder::GetTotalFrames() const
 
 SInt64 CoreAudioDecoder::GetCurrentFrame() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return -1;
 
 	if(mUseM4AWorkarounds)
 		return mCurrentFrame;
@@ -595,9 +599,8 @@ SInt64 CoreAudioDecoder::GetCurrentFrame() const
 
 SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
@@ -614,9 +617,8 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+		return 0;
 
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
 	if(noErr != result) {

@@ -54,7 +54,8 @@ CFArrayRef AIFFMetadata::CreateSupportedMIMETypes()
 
 bool AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("aiff"), kCFCompareCaseInsensitive))
 		return true;
@@ -66,7 +67,8 @@ bool AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/aiff"), kCFCompareCaseInsensitive))
 		return true;

@@ -63,7 +63,8 @@ CFArrayRef OggSpeexDecoder::CreateSupportedMIMETypes()
 
 bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
 		return true;
@@ -73,7 +74,8 @@ bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
 		return true;
@@ -587,7 +589,8 @@ bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
@@ -598,10 +601,8 @@ CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 
 UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	UInt32 framesRead = 0;
 	

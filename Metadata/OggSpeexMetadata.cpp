@@ -100,7 +100,8 @@ CFArrayRef OggSpeexMetadata::CreateSupportedMIMETypes()
 
 bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
 		return true;
@@ -110,7 +111,8 @@ bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
 		return true;

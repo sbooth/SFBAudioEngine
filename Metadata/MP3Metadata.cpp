@@ -55,7 +55,8 @@ CFArrayRef MP3Metadata::CreateSupportedMIMETypes()
 
 bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp3"), kCFCompareCaseInsensitive))
 		return true;
@@ -65,7 +66,8 @@ bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
 		return true;

@@ -163,7 +163,8 @@ CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
 
 bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
 		return true;
@@ -173,7 +174,8 @@ bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
 		return true;
@@ -301,7 +303,8 @@ bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
@@ -312,21 +315,24 @@ CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 
 SInt64 MonkeysAudioDecoder::GetTotalFrames() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return -1;
+
 	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
 }
 
 SInt64 MonkeysAudioDecoder::GetCurrentFrame() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return -1;
+
 	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
 }
 
 SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 	
 	if(ERROR_SUCCESS != mDecompressor->Seek(static_cast<int>(frame)))
 		return -1;
@@ -336,9 +342,8 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+		return 0;
 
 	int blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData(reinterpret_cast<char *>(bufferList->mBuffers[0].mData), frameCount, &blocksRead)) {

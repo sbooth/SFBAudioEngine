@@ -103,7 +103,8 @@ CFArrayRef OggVorbisDecoder::CreateSupportedMIMETypes()
 
 bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ogg"), kCFCompareCaseInsensitive))
 		return true;
@@ -115,7 +116,8 @@ bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg-vorbis"), kCFCompareCaseInsensitive))
 		return true;
@@ -271,7 +273,8 @@ bool OggVorbisDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
@@ -282,9 +285,8 @@ CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 
 SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 	
 	if(0 != ov_pcm_seek(&mVorbisFile, frame))
 		return -1;
@@ -294,10 +296,8 @@ SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	float		**buffer			= NULL;
 	UInt32		framesRemaining		= frameCount;

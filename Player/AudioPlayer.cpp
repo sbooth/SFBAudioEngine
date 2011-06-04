@@ -951,7 +951,8 @@ bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
 
 bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 {
-	assert(kAudioDeviceUnknown != deviceID);
+	if(kAudioDeviceUnknown == deviceID)
+		return false;
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Setting output device ID to 0x" << std::hex << deviceID);
@@ -1522,8 +1523,8 @@ bool AudioPlayer::ClearQueuedDecoders()
 
 bool AudioPlayer::SetRingBufferCapacity(uint32_t bufferCapacity)
 {
-	assert(0 < bufferCapacity);
-	assert(mRingBufferWriteChunkSize <= bufferCapacity);
+	if(0 == bufferCapacity || mRingBufferWriteChunkSize > bufferCapacity)
+		return false;
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Setting ring buffer capacity to " << bufferCapacity);
@@ -1533,8 +1534,8 @@ bool AudioPlayer::SetRingBufferCapacity(uint32_t bufferCapacity)
 
 bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 {
-	assert(0 < chunkSize);
-	assert(mRingBufferCapacity >= chunkSize);
+	if(0 == chunkSize || mRingBufferCapacity < chunkSize)
+		return false;
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Setting ring buffer write chunk size to " << chunkSize);

@@ -56,7 +56,8 @@ CFArrayRef MonkeysAudioMetadata::CreateSupportedMIMETypes()
 
 bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
 		return true;
@@ -66,7 +67,8 @@ bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
 		return true;

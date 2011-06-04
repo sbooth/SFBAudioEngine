@@ -156,7 +156,8 @@ CFArrayRef FLACMetadata::CreateSupportedMIMETypes()
 
 bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
 		return true;
@@ -166,7 +167,8 @@ bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
 		return true;

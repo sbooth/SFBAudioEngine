@@ -44,9 +44,8 @@
 #pragma mark Callbacks
 
 static FLAC__StreamDecoderReadStatus
-readCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+readCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__byte buffer[], size_t *bytes, void *client_data)
 {
-#pragma unused(decoder)
 	assert(NULL != client_data);
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
@@ -61,9 +60,8 @@ readCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *by
 }
 
 static FLAC__StreamDecoderSeekStatus
-seekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+seekCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
-#pragma unused(decoder)
 	assert(NULL != client_data);
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
@@ -79,9 +77,8 @@ seekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offs
 }
 
 static FLAC__StreamDecoderTellStatus
-tellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+tellCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *absolute_byte_offset, void *client_data)
 {
-#pragma unused(decoder)
 	assert(NULL != client_data);
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
@@ -95,9 +92,8 @@ tellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_off
 }
 
 static FLAC__StreamDecoderLengthStatus
-lengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
+lengthCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *stream_length, void *client_data)
 {
-#pragma unused(decoder)
 	assert(NULL != client_data);
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
@@ -111,9 +107,8 @@ lengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, 
 }
 
 static FLAC__bool
-eofCallback(const FLAC__StreamDecoder *decoder, void *client_data)
+eofCallback(const FLAC__StreamDecoder */*decoder*/, void *client_data)
 {
-#pragma unused(decoder)
 	assert(NULL != client_data);
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
@@ -163,7 +158,8 @@ CFArrayRef FLACDecoder::CreateSupportedMIMETypes()
 
 bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
+	if(NULL == extension)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
 		return true;
@@ -175,7 +171,8 @@ bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
+	if(NULL == mimeType)
+		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
 		return true;
@@ -501,7 +498,9 @@ bool FLACDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
+
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
 									CFSTR("FLAC, %u channels, %u Hz"), 
@@ -511,9 +510,8 @@ CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 
 SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 
 	FLAC__bool result = FLAC__stream_decoder_seek_absolute(mFLAC, frame);	
 	
@@ -532,10 +530,8 @@ SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	UInt32 framesRead = 0;
 	

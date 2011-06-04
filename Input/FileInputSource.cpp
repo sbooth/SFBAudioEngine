@@ -119,12 +119,16 @@ bool FileInputSource::Close(CFErrorRef *error)
 
 SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
 {
-	assert(IsOpen());
+	if(!IsOpen() || NULL == buffer)
+		return -1;
+
 	return fread(buffer, 1, byteCount, mFile);
 }
 
 bool FileInputSource::SeekToOffset(SInt64 offset)
 {
-	assert(IsOpen());	
+	if(!IsOpen())
+		return false;
+
 	return (0 == fseeko(mFile, offset, SEEK_SET));
 }

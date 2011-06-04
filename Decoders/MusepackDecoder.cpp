@@ -105,8 +105,9 @@ CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
 
 bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	assert(NULL != extension);
-	
+	if(NULL == extension)
+		return false;
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mpc"), kCFCompareCaseInsensitive))
 		return true;
 	
@@ -115,8 +116,9 @@ bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	assert(NULL != mimeType);	
-	
+	if(NULL == mimeType)
+		return false;
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
 		return true;
 	
@@ -281,7 +283,8 @@ bool MusepackDecoder::Close(CFErrorRef */*error*/)
 
 CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 {
-	assert(IsOpen());
+	if(!IsOpen())
+		return NULL;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									NULL, 
@@ -292,9 +295,8 @@ CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 
 SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 {
-	assert(IsOpen());
-	assert(0 <= frame);
-	assert(frame < this->GetTotalFrames());
+	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
+		return -1;
 
 	mpc_status result = mpc_demux_seek_sample(mDemux, frame);
 	if(MPC_STATUS_OK == result)
@@ -305,10 +307,8 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	assert(IsOpen());
-	assert(NULL != bufferList);
-	assert(bufferList->mNumberBuffers == mFormat.mChannelsPerFrame);
-	assert(0 < frameCount);
+	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+		return 0;
 
 	MPC_SAMPLE_FORMAT	buffer			[MPC_DECODER_BUFFER_LENGTH];
 	UInt32				framesRead		= 0;
