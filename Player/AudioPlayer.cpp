@@ -820,6 +820,9 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 		return false;
 	}
 
+	if(!ReallocateSampleRateConversionBuffer())
+		return false;
+
 	return true;
 }
 
@@ -847,6 +850,9 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
 		return false;
 	}
+
+	if(!ReallocateSampleRateConversionBuffer())
+		return false;
 
 	return true;
 }
@@ -1579,10 +1585,36 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
 	if(mFramesDecoded == mFramesRendered) {
+		DecoderStateData *decoderState = GetCurrentDecoderState();
+
+		// If there is a valid decoder but the ring buffer is empty, verify that the rendering finished callbacks
+		// were performed.  It is possible that decoding is actually finished, but that the last time we checked was in between
+		// the time decoderState->mFramesDecoded was updated and the time eDecoderStateDataFlagDecodingFinished was set
+		// so the callback wasn't performed
+		if(decoderState) {
+			
+			// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
+			// in the proper order multiple passes are made here
+			while(NULL != decoderState) {
+				SInt64 timeStamp = decoderState->mTimeStamp;
+
+				if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
+					decoderState->mDecoder->PerformRenderingFinishedCallback();			
+					
+					OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+					decoderState = NULL;
+					
+					// Since rendering is finished, signal the collector to clean up this decoder
+					mCollectorSemaphore.Signal();
+				}
+
+				decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
+			}
+		}
 		// If there are no decoders in the queue, stop IO
-		if(NULL == GetCurrentDecoderState())
+		else
 			StopOutput();
-		
+
 		return kAudioHardwareNoError;
 	}
 
@@ -1865,37 +1897,8 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					AudioStreamBasicDescription outputBufferFormat = mRingBufferFormat;
 					
 					// Recalculate the sample rate conversion buffer size
-					if(NULL != mSampleRateConverter) {
-						// Get the SRC's output format (input is mRingBufferFormat)
-						dataSize = sizeof(outputBufferFormat);
-						
-						result = AudioConverterGetProperty(mSampleRateConverter, 
-														   kAudioConverterCurrentOutputStreamDescription, 
-														   &dataSize, 
-														   &outputBufferFormat);
-						
-						if(noErr != result) {
-							LOG4CXX_WARN(logger, "AudioConverterGetProperty (kAudioConverterCurrentOutputStreamDescription) failed: " << result);
-							continue;
-						}
-						
-						// Calculate how large the sample rate conversion buffer must be
-						UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
-						dataSize = sizeof(bufferSizeBytes);
-						
-						result = AudioConverterGetProperty(mSampleRateConverter, 
-														   kAudioConverterPropertyCalculateInputBufferSize, 
-														   &dataSize, 
-														   &bufferSizeBytes);
-						
-						if(noErr != result) {
-							LOG4CXX_WARN(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
-							continue;
-						}
-						
-						// Allocate the sample rate conversion buffer (data is at the ring buffer's sample rate)
-						mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
-					}
+					if(mSampleRateConverter && !ReallocateSampleRateConversionBuffer())
+						continue;
 					
 					// Allocate the output buffer (data is at the device's sample rate)
 					mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
@@ -2774,20 +2777,9 @@ bool AudioPlayer::CreateConvertersAndSRCBuffer()
 		}
 		
 		LOG4CXX_DEBUG(logger, "Using sample rate converter for " << mRingBufferFormat.mSampleRate << " Hz to " << deviceSampleRate << " Hz conversion");
-		
-		// Calculate how large the sample rate conversion buffer must be
-		UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
-		dataSize = sizeof(bufferSizeBytes);
-		
-		result = AudioConverterGetProperty(mSampleRateConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &bufferSizeBytes);
-		
-		if(noErr != result) {
-			LOG4CXX_ERROR(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+
+		if(!ReallocateSampleRateConversionBuffer())
 			return false;
-		}
-		
-		// Allocate the sample rate conversion buffer (data is at the ring buffer's sample rate)
-		mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
 	}
 
 	// Allocate the output buffer (data is at the device's sample rate)
@@ -3041,5 +3033,48 @@ bool AudioPlayer::RemoveVirtualFormatPropertyListeners()
 		}
 	}
 	
+	return true;
+}
+
+bool AudioPlayer::ReallocateSampleRateConversionBuffer()
+{
+	// Preconditions: mMutex is locked and IsPlaying() is false
+
+	if(NULL == mSampleRateConverter)
+		return false;
+
+	// Get the SRC's output format
+	AudioStreamBasicDescription outputBufferFormat;
+	UInt32 dataSize = sizeof(outputBufferFormat);
+
+	OSStatus result = AudioConverterGetProperty(mSampleRateConverter, 
+												kAudioConverterCurrentOutputStreamDescription, 
+												&dataSize, 
+												&outputBufferFormat);
+
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioConverterGetProperty (kAudioConverterCurrentOutputStreamDescription) failed: " << result);
+		return false;
+	}
+
+	// Calculate how large the sample rate conversion buffer must be
+	UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
+	dataSize = sizeof(bufferSizeBytes);
+
+	result = AudioConverterGetProperty(mSampleRateConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &bufferSizeBytes);
+
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+		return false;
+	}
+
+	if(mSampleRateConversionBuffer)
+		mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
+
+	// Allocate the sample rate conversion buffer (data is at the ring buffer's sample rate)
+	mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
+
 	return true;
 }

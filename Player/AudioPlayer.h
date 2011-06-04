@@ -235,6 +235,8 @@ private:
 	bool AddVirtualFormatPropertyListeners();
 	bool RemoveVirtualFormatPropertyListeners();
 
+	bool ReallocateSampleRateConversionBuffer();
+
 	// ========================================
 	// Data Members
 	AudioDeviceID						mOutputDeviceID;
