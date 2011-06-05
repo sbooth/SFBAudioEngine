@@ -39,36 +39,60 @@ class Mutex
 {
 public:
 	Mutex();
-	~Mutex();
+	virtual ~Mutex();
 
-	// Lock(), Unlock() and TryLock() return true if the operation was successful, false otherwise
+	// Lock() and Unlock() return true if the operation was successful, false otherwise
+	// TryLock() returns true if the lock is held by the current thread, false otherwise
 
 	bool Lock();
 	bool Unlock();
 
 	bool TryLock();
+	bool TryLock(bool& acquiredLock);
+
+	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
 	Mutex(const Mutex& mutex);
 	Mutex& operator=(const Mutex& mutex);
 
-private:
 	pthread_mutex_t mMutex;
-};
+	pthread_t mOwner;
 
-// ========================================
-// A simple scoped locker using Mutex
-// ========================================
-class Locker
-{
 public:
-	Locker(Mutex& mutex);
-	~Locker();
 
-	// Returns true if mutex is owned and locked, false otherwise
-	inline operator bool() const { return mLocked; }
+	// ========================================
+	// Scope-based helpers for Mutex
+	// ========================================
 
-private:
-	Mutex& mMutex;
-	bool mLocked;
+	// Uses Mutex::Lock()
+	class Locker
+	{
+	public:
+		Locker(Mutex& mutex);
+		~Locker();
+
+		// Returns true if mutex is owned and locked, false otherwise
+		inline operator bool() const { return mLocked; }
+
+	private:
+		Mutex& mMutex;
+		bool mLocked;
+	};
+
+	// Uses Mutex::TryLock()
+	class Tryer
+	{
+	public:
+		Tryer(Mutex& mutex);
+		~Tryer();
+
+		// Returns true if mutex is owned and locked, false otherwise
+		inline operator bool() const { return mLocked; }
+
+	private:
+		Mutex& mMutex;
+		bool mLocked;
+		bool mReleaseLock;
+	};
 };

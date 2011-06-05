@@ -34,6 +34,7 @@
 #include "Mutex.h"
 
 Mutex::Mutex()
+	: mOwner(0)
 {
 	int success = pthread_mutex_init(&mMutex, NULL);
 
@@ -65,53 +66,94 @@ Mutex& Mutex::operator=(const Mutex& /*mutex*/)
 
 bool Mutex::Lock()
 {
-	int lockResult = pthread_mutex_lock(&mMutex);
+	pthread_t currentThread = pthread_self();
+	if(pthread_equal(mOwner, currentThread))
+		return false;
 
-	if(0 != lockResult) {
+	int success = pthread_mutex_lock(&mMutex);
+
+	if(0 != success) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(lockResult));
+		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(success));
 		return false;
 	}
+
+	mOwner = currentThread;
 
 	return true;
 }
 
 bool Mutex::Unlock()
 {
-	int lockResult = pthread_mutex_unlock(&mMutex);
+	pthread_t currentThread = pthread_self();
+	if(!pthread_equal(mOwner, currentThread))
+		return false;
+
+	int success = pthread_mutex_unlock(&mMutex);
 	
-	if(0 != lockResult) {
+	if(0 != success) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(lockResult));
+		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(success));
 		return false;
 	}
-	
+
+	mOwner = 0;
+
 	return true;
 }
 
 bool Mutex::TryLock()
 {
-	int lockResult = pthread_mutex_trylock(&mMutex);
+	bool acquiredLock;
+	return TryLock(acquiredLock);
+}
+
+bool Mutex::TryLock(bool& acquiredLock)
+{
+	acquiredLock = false;
+
+	pthread_t currentThread = pthread_self();
+	if(pthread_equal(mOwner, currentThread))
+		return true;
+
+	int success = pthread_mutex_trylock(&mMutex);
 	
-	if(0 != lockResult) {
+	if(0 != success) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_trylock failed: " << strerror(lockResult));
+		LOG4CXX_WARN(logger, "pthread_mutex_trylock failed: " << strerror(success));
 		return false;
 	}
-	
+
+	acquiredLock = true;
+	mOwner = currentThread;
+
 	return true;
 }
 
 #pragma mark Locker
 
-Locker::Locker(Mutex& mutex)
+Mutex::Locker::Locker(Mutex& mutex)
 	: mMutex(mutex)
 {
 	mLocked = mMutex.Lock();
 }
 
-Locker::~Locker()
+Mutex::Locker::~Locker()
 {
 	if(mLocked)
+		mMutex.Unlock();
+}
+
+#pragma mark Tryer
+
+Mutex::Tryer::Tryer(Mutex& mutex)
+	: mMutex(mutex)
+{
+	mLocked = mMutex.TryLock(mReleaseLock);
+}
+
+Mutex::Tryer::~Tryer()
+{
+	if(mReleaseLock)
 		mMutex.Unlock();
 }

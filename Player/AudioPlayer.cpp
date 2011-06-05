@@ -800,7 +800,7 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 	if(IsPlaying())
 		return false;
 
-	Locker lock(mMutex);
+	Mutex::Mutex::Locker lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -831,7 +831,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 	if(IsPlaying())
 		return false;
 
-	Locker lock(mMutex);
+	Mutex::Locker lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1390,7 +1390,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Locker lock(mMutex);
+	Mutex::Locker lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1512,7 +1512,7 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	Locker lock(mMutex);
+	Mutex::Locker lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1846,7 +1846,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 						mOutputConverters[i] = NULL;
 
 					{
-						Locker lock(mMutex);
+						Mutex::Locker lock(mMutex);
 						if(!lock)
 							continue;
 
@@ -1954,7 +1954,7 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
 
 					{
-						Locker lock(mMutex);
+						Mutex::Locker lock(mMutex);
 						if(!lock)
 							continue;
 
@@ -2064,7 +2064,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		// Lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = NULL;
 		if(!decoderState) {
-			Locker lock(mMutex);
+			Mutex::Locker lock(mMutex);
 			if(!lock)
 				continue;
 
