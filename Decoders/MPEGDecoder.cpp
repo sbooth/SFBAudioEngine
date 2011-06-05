@@ -207,6 +207,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 
 	// Force decode to floating point instead of 16-bit signed integer
 	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
+	mpg123_param(mDecoder, MPG123_RESYNC_LIMIT, 2048, 0);
 
 	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, NULL)) {
 		if(error) {
@@ -547,7 +548,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			break;
 		else if(MPG123_OK != result) {
 			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-			LOG4CXX_WARN(logger, "mpg123_info failed: " << mpg123_strerror(mDecoder));
+			LOG4CXX_WARN(logger, "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder));
 			break;
 		}
 
