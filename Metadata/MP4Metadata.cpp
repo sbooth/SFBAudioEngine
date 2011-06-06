@@ -36,6 +36,14 @@
 #include "MP4Metadata.h"
 #include "CreateDisplayNameForURL.h"
 
+#pragma mark Initialization
+
+static void DisableMP4v2Logging() __attribute__ ((constructor));
+static void DisableMP4v2Logging()
+{
+	MP4LogSetLevel(MP4_LOG_NONE);
+}
+
 #pragma mark Static Methods
 
 CFArrayRef MP4Metadata::CreateSupportedFileExtensions()
@@ -96,7 +104,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	
 	// Open the file for reading
-	MP4FileHandle file = MP4Read(reinterpret_cast<const char *>(buf), 0);
+	MP4FileHandle file = MP4Read(reinterpret_cast<const char *>(buf));
 	
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
@@ -499,7 +507,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	
 	// Open the file for modification
-	MP4FileHandle file = MP4Modify(reinterpret_cast<const char *>(buf), MP4_DETAILS_ERROR, 0);
+	MP4FileHandle file = MP4Modify(reinterpret_cast<const char *>(buf));
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
