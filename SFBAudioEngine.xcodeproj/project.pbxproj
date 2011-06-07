@@ -77,6 +77,8 @@
 		3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */; };
 		3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
+		3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268C0BE139C06AB00CC5C5C /* Guard.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326EE8F3117DF3060076D6E0 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 322B5C16108BB59600CA9BDE /* AudioToolbox.framework */; };
@@ -299,6 +301,8 @@
 		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
 		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
 		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
+		3268C0BE139C06AB00CC5C5C /* Guard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Guard.h; sourceTree = "<group>"; };
+		3268C0BF139C06AB00CC5C5C /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
 		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
@@ -475,6 +479,8 @@
 				32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */,
 				32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */,
 				320723BC138D521A00007369 /* CreateStringForOSType.h */,
+				3268C0BE139C06AB00CC5C5C /* Guard.h */,
+				3268C0BF139C06AB00CC5C5C /* Guard.cpp */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -752,6 +758,7 @@
 				320723BE138D521A00007369 /* CreateStringForOSType.h in Headers */,
 				32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
+				3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -928,6 +935,7 @@
 				320723C8138D564700007369 /* CreateStringForOSType.cpp in Sources */,
 				32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */,
 				326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */,
+				3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

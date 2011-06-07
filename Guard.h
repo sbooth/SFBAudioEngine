@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,67 +30,47 @@
 
 #pragma once
 
-#include <pthread.h>
+#include "Mutex.h"
 
 // ========================================
-// A wrapper around a pthread mutex
+// A wrapper around a pthread mutex and condition variable
 // ========================================
-class Mutex
+class Guard : public Mutex
 {
 public:
-	Mutex();
-	virtual ~Mutex();
+	Guard();
+	virtual ~Guard();
 
-	// Lock() and Unlock() return true if the operation was successful, false otherwise
-	// TryLock() returns true if the lock is held by the current thread, false otherwise
-	// All three may throw std::runtime_exception if something bad happens
+	// Wait() and WaitUntil() will throw std::runtime_error if the mutex isn't locked
+	// WaitUntil() returns true if the request timed out, false otherwise
 
-	bool Lock();
-	void Unlock();
+	void Wait();
+	bool WaitUntil(struct timespec absoluteTime);
 
-	bool TryLock();
-	bool TryLock(bool& acquiredLock);
-
-	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
+	void Signal();
+	void Broadcast();
 
 protected:
-	Mutex(const Mutex& mutex);
-	Mutex& operator=(const Mutex& mutex);
+	Guard(const Guard& guard);
+	Guard& operator=(const Guard& guard);
 
-	pthread_mutex_t mMutex;
-	pthread_t mOwner;
+	pthread_cond_t mCondition;
 
 public:
-
-	// ========================================
-	// Scope-based helpers for Mutex
-	// ========================================
-
-	// Uses Mutex::Lock()
 	class Locker
 	{
 	public:
-		Locker(Mutex& mutex);
+		Locker(Guard& guard);
 		~Locker();
 
-	private:
-		Mutex& mMutex;
-		bool mReleaseLock;
-	};
+		inline void Wait()										{ mGuard.Wait(); }
+		inline bool WaitUntil(struct timespec absoluteTime)		{ return mGuard.WaitUntil(absoluteTime); }
 
-	// Uses Mutex::TryLock()
-	class Tryer
-	{
-	public:
-		Tryer(Mutex& mutex);
-		~Tryer();
-
-		// Returns true if mutex is owned and locked, false otherwise
-		inline operator bool() const { return mLocked; }
+		inline void Signal()									{ mGuard.Signal(); }
+		inline void Broadcast()									{ mGuard.Broadcast(); }
 
 	private:
-		Mutex& mMutex;
-		bool mLocked;
-		bool mReleaseLock;
+		Guard& mGuard;
+		bool mReleaseLock;	
 	};
 };

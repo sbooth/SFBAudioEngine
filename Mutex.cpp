@@ -29,6 +29,8 @@
  */
 
 #include <stdexcept>
+#include <errno.h>
+
 #include <log4cxx/logger.h>
 
 #include "Mutex.h"
@@ -41,7 +43,6 @@ Mutex::Mutex()
 	if(0 != success) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
 		LOG4CXX_FATAL(logger, "pthread_mutex_init failed: " << strerror(success));
-
 		throw std::runtime_error("Unable to initialize the mutex");
 	}
 }
@@ -74,8 +75,8 @@ bool Mutex::Lock()
 
 	if(0 != success) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_lock failed: " << strerror(success));
-		return false;
+		LOG4CXX_FATAL(logger, "pthread_mutex_lock failed: " << strerror(success));
+		throw std::runtime_error("Unable to lock the mutex");
 	}
 
 	mOwner = currentThread;
@@ -83,23 +84,24 @@ bool Mutex::Lock()
 	return true;
 }
 
-bool Mutex::Unlock()
+void Mutex::Unlock()
 {
 	pthread_t currentThread = pthread_self();
-	if(!pthread_equal(mOwner, currentThread))
-		return false;
+	if(pthread_equal(mOwner, currentThread)) {
+		int success = pthread_mutex_unlock(&mMutex);
 
-	int success = pthread_mutex_unlock(&mMutex);
-	
-	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_unlock failed: " << strerror(success));
-		return false;
+		if(0 != success) {
+			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
+			LOG4CXX_FATAL(logger, "pthread_mutex_unlock failed: " << strerror(success));
+			throw std::runtime_error("Unable to unlock the mutex");
+		}
+
+		mOwner = 0;
 	}
-
-	mOwner = 0;
-
-	return true;
+	else {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
+		LOG4CXX_DEBUG(logger, "A thread is attempting to unlock a mutex it doesn't own");
+	}
 }
 
 bool Mutex::TryLock()
@@ -118,10 +120,14 @@ bool Mutex::TryLock(bool& acquiredLock)
 
 	int success = pthread_mutex_trylock(&mMutex);
 	
-	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_WARN(logger, "pthread_mutex_trylock failed: " << strerror(success));
+	// The mutex is already locked by another thread
+	if(EBUSY == success)
 		return false;
+	// Something bad happened
+	else if(0 != success) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
+		LOG4CXX_FATAL(logger, "pthread_mutex_trylock failed: " << strerror(success));
+		throw std::runtime_error("Unable to lock the mutex");
 	}
 
 	acquiredLock = true;
@@ -135,12 +141,12 @@ bool Mutex::TryLock(bool& acquiredLock)
 Mutex::Locker::Locker(Mutex& mutex)
 	: mMutex(mutex)
 {
-	mLocked = mMutex.Lock();
+	mReleaseLock = mMutex.Lock();
 }
 
 Mutex::Locker::~Locker()
 {
-	if(mLocked)
+	if(mReleaseLock)
 		mMutex.Unlock();
 }
 

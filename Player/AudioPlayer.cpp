@@ -187,7 +187,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mMutex(), mDecoderSemaphore(), mCollectorSemaphore()
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -287,15 +287,14 @@ AudioPlayer::AudioPlayer()
 
 AudioPlayer::~AudioPlayer()
 {
+	Stop();
+
 	// Stop the processing graph and reclaim its resources
 	if(!CloseOutput()) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
 		LOG4CXX_ERROR(logger, "CloseOutput() failed");
 	}
 
-	// Dispose of all active decoders
-	StopActiveDecoders();
-	
 	// End the decoding thread
 	mKeepDecoding = false;
 	mDecoderSemaphore.Signal();
@@ -386,8 +385,14 @@ bool AudioPlayer::Pause()
 
 bool AudioPlayer::Stop()
 {
-	Pause();
-	
+	Guard::Locker lock(mGuard);
+
+	if(OutputIsRunning()) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+		// Wait for output to stop
+		lock.Wait();
+	}
+
 	StopActiveDecoders();
 	
 	ResetOutput();
@@ -797,15 +802,17 @@ bool AudioPlayer::SetDigitalPreGain(double preGain)
 
 bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 {
-	if(IsPlaying())
-		return false;
-
-	Mutex::Mutex::Locker lock(mMutex);
-	if(!lock)
-		return false;
-
 	if(NULL == mSampleRateConverter)
 		return false;
+
+	Guard::Locker lock(mGuard);
+
+	bool restartIO = OutputIsRunning();
+	if(restartIO) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+		// Wait for output to stop
+		lock.Wait();
+	}
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Setting sample rate converter quality to " << srcQuality);
@@ -823,20 +830,25 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 	if(!ReallocateSampleRateConversionBuffer())
 		return false;
 
+	if(restartIO)
+		return StartOutput();
+
 	return true;
 }
 
 bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 {
-	if(IsPlaying())
-		return false;
-
-	Mutex::Locker lock(mMutex);
-	if(!lock)
-		return false;
-
 	if(NULL == mSampleRateConverter)
 		return false;
+
+	Guard::Locker lock(mGuard);
+
+	bool restartIO = OutputIsRunning();
+	if(restartIO) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+		// Wait for output to stop
+		lock.Wait();
+	}
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_DEBUG(logger, "Setting sample rate converter complexity to " << srcComplexity);
@@ -845,7 +857,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 												kAudioConverterSampleRateConverterComplexity, 
 												sizeof(srcComplexity), 
 												&srcComplexity);
-	
+
 	if(noErr != result) {
 		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
 		return false;
@@ -853,6 +865,9 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 
 	if(!ReallocateSampleRateConversionBuffer())
 		return false;
+
+	if(restartIO)
+		return StartOutput();
 
 	return true;
 }
@@ -1090,11 +1105,16 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		return false;
 	}
 
+	Guard::Locker lock(mGuard);
+
 	// If IO is enabled, disable it while hog mode is acquired because the HAL
 	// does not automatically restart IO after hog mode is taken
-	bool wasPlaying = IsPlaying();
-	if(wasPlaying)
-		Pause();
+	bool restartIO = OutputIsRunning();
+	if(restartIO) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+		// Wait for output to stop
+		lock.Wait();
+	}
 			
 	hogPID = getpid();
 	
@@ -1111,8 +1131,8 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	}
 
 	// If IO was enabled before, re-enable it
-	if(wasPlaying)
-		Play();
+	if(restartIO)
+		StartOutput();
 
 	return true;
 }
@@ -1148,10 +1168,15 @@ bool AudioPlayer::StopHoggingOutputDevice()
 	if(hogPID != getpid())
 		return false;
 
+	Guard::Locker lock(mGuard);
+
 	// Disable IO while hog mode is released
-	bool wasPlaying = IsPlaying();
-	if(wasPlaying)
-		Pause();
+	bool restartIO = OutputIsRunning();
+	if(restartIO) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+		// Wait for output to stop
+		lock.Wait();
+	}
 
 	// Release hog mode.
 	hogPID = static_cast<pid_t>(-1);
@@ -1168,8 +1193,8 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		return false;
 	}
 	
-	if(wasPlaying)
-		Play();
+	if(restartIO)
+		StartOutput();
 	
 	return true;
 }
@@ -1390,7 +1415,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Mutex::Locker lock(mMutex);
+	Mutex::Tryer lock(mGuard);
 	if(!lock)
 		return false;
 
@@ -1512,7 +1537,7 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	Mutex::Locker lock(mMutex);
+	Mutex::Tryer lock(mGuard);
 	if(!lock)
 		return false;
 
@@ -1572,9 +1597,15 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// Stop output if requested
 	if(eAudioPlayerFlagStopRequested & mFlags) {
+		// TODO: Is this lock necessary?
+//		Mutex::Locker lock(mGuard);
+
 		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 
 		StopOutput();
+
+		// Signal any waiting threads that output has stopped
+		mGuard.Broadcast();
 
 		return kAudioHardwareNoError;
 	}
@@ -1814,25 +1845,28 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 				case kAudioDevicePropertyStreams:
 				{
-					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					Guard::Locker lock(mGuard);
 
-					bool restartIO = false;
-					if(OutputIsRunning())
-						restartIO = StopOutput();
+					bool restartIO = OutputIsRunning();
+					if(restartIO) {
+						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+						// Wait for output to stop
+						lock.Wait();
+					}
 
 					// Stop observing properties on the defunct streams
 					if(!RemoveVirtualFormatPropertyListeners())
 						LOG4CXX_WARN(logger, "RemoveVirtualFormatPropertyListeners failed");
-					
+
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
 						if(NULL != mOutputConverters[i])
 							delete mOutputConverters[i], mOutputConverters[i] = NULL;
 					}
-					
+
 					delete [] mOutputConverters, mOutputConverters = NULL;
-					
+
 					mOutputDeviceStreamIDs.clear();
-					
+
 					// Update our list of cached streams
 					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
 						continue;
@@ -1840,25 +1874,17 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 					// Observe the new streams for changes
 					if(!AddVirtualFormatPropertyListeners())
 						LOG4CXX_WARN(logger, "AddVirtualFormatPropertyListeners failed");
-					
+
 					mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
 						mOutputConverters[i] = NULL;
 
-					{
-						Mutex::Locker lock(mMutex);
-						if(!lock)
-							continue;
-
-						if(!CreateConvertersAndSRCBuffer())
-							LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-					}
+					if(!CreateConvertersAndSRCBuffer())
+						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
 
 					if(restartIO)
 						StartOutput();
 
-					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-					
 					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyStreams [0x" << std::hex << inObjectID << "]");
 
 					break;
@@ -1866,47 +1892,48 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 				case kAudioDevicePropertyBufferFrameSize:
 				{
-					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-
-					bool restartIO = false;
-					if(OutputIsRunning())
-						restartIO = StopOutput();
+					Guard::Locker lock(mGuard);
+					
+					bool restartIO = OutputIsRunning();
+					if(restartIO) {
+						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+						// Wait for output to stop
+						lock.Wait();
+					}
 
 					// Clean up
 					if(mSampleRateConversionBuffer)
 						mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
-					
+
 					if(mOutputBuffer)
 						mOutputBuffer = DeallocateABL(mOutputBuffer);
-					
+
 					// Get the new buffer size
 					UInt32 dataSize = sizeof(mOutputDeviceBufferFrameSize);
-					
+
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
 																 NULL, 
 																 &dataSize,
 																 &mOutputDeviceBufferFrameSize);
-					
+
 					if(kAudioHardwareNoError != result) {
 						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize) failed: " << result);
 						continue;
 					}
-					
+
 					AudioStreamBasicDescription outputBufferFormat = mRingBufferFormat;
-					
+
 					// Recalculate the sample rate conversion buffer size
 					if(mSampleRateConverter && !ReallocateSampleRateConversionBuffer())
 						continue;
-					
+
 					// Allocate the output buffer (data is at the device's sample rate)
 					mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
 
 					if(restartIO)
 						StartOutput();
-
-					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyBufferFrameSize [0x" << std::hex << inObjectID << "]: " << mOutputDeviceBufferFrameSize);
 
@@ -1929,23 +1956,26 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 			switch(currentAddress.mSelector) {
 				case kAudioStreamPropertyVirtualFormat:
 				{
-					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					Guard::Locker lock(mGuard);
 
-					bool restartIO = false;
-					if(OutputIsRunning())
-						restartIO = StopOutput();
+					bool restartIO = OutputIsRunning();
+					if(restartIO) {
+						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+						// Wait for output to stop
+						lock.Wait();
+					}
 
 					// Get the new virtual format
 					AudioStreamBasicDescription virtualFormat;
 					UInt32 dataSize = sizeof(virtualFormat);
-					
+
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
 																 NULL, 
 																 &dataSize,
 																 &virtualFormat);
-					
+
 					if(kAudioHardwareNoError != result) {
 						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
 						continue;
@@ -1953,19 +1983,11 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
 
-					{
-						Mutex::Locker lock(mMutex);
-						if(!lock)
-							continue;
-
-						if(!CreateConvertersAndSRCBuffer())
-							LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-					}
+					if(!CreateConvertersAndSRCBuffer())
+						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
 
 					if(restartIO)
 						StartOutput();
-
-					OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 					break;
 				}
@@ -2063,10 +2085,8 @@ void * AudioPlayer::DecoderThreadEntry()
 		// ========================================
 		// Lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = NULL;
-		if(!decoderState) {
-			Mutex::Locker lock(mMutex);
-			if(!lock)
-				continue;
+		{
+			Mutex::Locker lock(mGuard);
 
 			if(0 < CFArrayGetCount(mDecoderQueue)) {
 				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
@@ -2090,10 +2110,11 @@ void * AudioPlayer::DecoderThreadEntry()
 			}
 		}
 
+		// ========================================
+		// Open the decoder if necessary
 		if(decoderState) {
-			// Open the decoder if necessary
 			CFErrorRef error = NULL;
-			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error)) {
+			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error))  {
 				if(error) {
 					LOG4CXX_ERROR(logger, "Error opening decoder: " << error);
 					CFRelease(error), error = NULL;
@@ -2103,11 +2124,12 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 				decoderState = NULL;
-
-				break;
 			}
+		}
 
-			// Ensure the decoder's format is compatible with the ring buffer
+		// ========================================
+		// Ensure the decoder's format is compatible with the ring buffer
+		if(decoderState) {
 			AudioStreamBasicDescription		nextFormat			= decoderState->mDecoder->GetFormat();
 			AudioChannelLayout				*nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
 
@@ -2149,7 +2171,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
-		if(NULL != decoderState) {
+		if(decoderState) {
 			AudioDecoder *decoder = decoderState->mDecoder;
 
 			LOG4CXX_DEBUG(logger, "Decoding starting for \"" << decoder->GetURL() << "\"");
@@ -2211,7 +2233,8 @@ void * AudioPlayer::DecoderThreadEntry()
 								
 								// This is safe to call at this point, because eAudioPlayerFlagMuteOutput is set so
 								// no rendering is being performed
-								ResetOutput();
+								// FALSE STATEMENT! This could be occurring in the middle of the render callback
+//								ResetOutput();
 							}
 
 							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
@@ -2547,6 +2570,11 @@ bool AudioPlayer::StartOutput()
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_TRACE(logger, "Starting device 0x" << std::hex << mOutputDeviceID);
 
+	// We don't want to start output in the middle of a buffer modification
+	Mutex::Tryer lock(mGuard);
+	if(!lock)
+		return false;
+
 	OSStatus result = AudioDeviceStart(mOutputDeviceID, 
 									   mOutputDeviceIOProcID);
 	
@@ -2601,7 +2629,6 @@ bool AudioPlayer::OutputIsRunning() const
 	return isRunning;
 }
 
-// NOT thread safe
 bool AudioPlayer::ResetOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
@@ -2665,6 +2692,9 @@ DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 tim
 
 void AudioPlayer::StopActiveDecoders()
 {
+	// The player must be stopped or a SIGSEGV could occur in this method
+	// This must be ensured by the caller!
+
 	// Request that any decoders still actively decoding stop
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
@@ -2677,15 +2707,6 @@ void AudioPlayer::StopActiveDecoders()
 
 	mDecoderSemaphore.Signal();
 
-	// Wait for the player to stop or a SIGSEGV could occur if the collector collects a rendering decoder
-	while(OutputIsRunning()) {
-		int result = usleep(SLEEP_TIME_USEC);
-		if(0 != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "Couldn't wait for player to stop: " << strerror(errno));
-		}
-	}
-	
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
@@ -2701,7 +2722,6 @@ void AudioPlayer::StopActiveDecoders()
 bool AudioPlayer::CreateConvertersAndSRCBuffer()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "CreateConvertersAndSRCBuffer");
 
 	// Clean up
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
@@ -3038,8 +3058,6 @@ bool AudioPlayer::RemoveVirtualFormatPropertyListeners()
 
 bool AudioPlayer::ReallocateSampleRateConversionBuffer()
 {
-	// Preconditions: mMutex is locked and IsPlaying() is false
-
 	if(NULL == mSampleRateConverter)
 		return false;
 
