@@ -2091,20 +2091,9 @@ void * AudioPlayer::DecoderThreadEntry()
 			if(0 < CFArrayGetCount(mDecoderQueue)) {
 				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
 
-				// ========================================
-				// Create the decoder state and append to the list of active decoders
+				// Create the decoder state
 				decoderState = new DecoderStateData(decoder);
 				decoderState->mTimeStamp = mFramesDecoded;
-				
-				for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-					if(NULL != mActiveDecoders[bufferIndex])
-						continue;
-					
-					if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
-						break;
-					else
-						LOG4CXX_WARN(logger, "OSAtomicCompareAndSwapPtrBarrier() failed");
-				}
 
 				CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 			}
@@ -2122,8 +2111,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				// TODO: Perform CouldNotOpenDecoder() callback ??
 
-				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-				decoderState = NULL;
+				delete decoderState, decoderState = NULL;
 			}
 		}
 
@@ -2163,12 +2151,24 @@ void * AudioPlayer::DecoderThreadEntry()
 			}
 
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
-			if(!formatsMatch) {
-				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-				decoderState = NULL;
-			}
+			if(!formatsMatch)
+				delete decoderState, decoderState = NULL;
 		}
 
+		// ========================================
+		// Append the decoder state to the list of active decoders
+		if(decoderState) {
+			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
+				if(NULL != mActiveDecoders[bufferIndex])
+					continue;
+				
+				if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
+					break;
+				else
+					LOG4CXX_WARN(logger, "OSAtomicCompareAndSwapPtrBarrier() failed");
+			}
+		}
+		
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
