@@ -209,10 +209,7 @@ DeinterleavingFloatConverter::ConvertFromDouble(const AudioBufferList *inputBuff
 
 UInt32
 DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
-{
-	double maxSampleValue = scale;
-	double unsignedSampleDelta = -maxSampleValue;
-	
+{	
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
@@ -220,7 +217,7 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 				double *output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				vDSP_vflt8D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -228,6 +225,8 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 		}
 	}
 	else {
+		double unsignedSampleDelta = -scale;
+
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
 				unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData);
@@ -235,7 +234,7 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 				
 				vDSP_vfltu8D(input + inputChannelIndex, inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 				vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);				
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 				
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -248,10 +247,7 @@ DeinterleavingFloatConverter::ConvertFromPacked8(const AudioBufferList *inputBuf
 
 UInt32
 DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
-{
-	double maxSampleValue = scale;
-	double unsignedSampleDelta = -maxSampleValue;
-	
+{	
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
@@ -269,7 +265,7 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				}
 
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -277,6 +273,8 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 		}
 	}
 	else {
+		double unsignedSampleDelta = -scale;
+
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
 				unsigned short *input = static_cast<unsigned short *>(inputBuffer->mBuffers[inputBufferIndex].mData);
@@ -294,7 +292,7 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 				}
 
 				vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -308,8 +306,6 @@ DeinterleavingFloatConverter::ConvertFromPacked16(const AudioBufferList *inputBu
 UInt32
 DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
 {
-	double maxSampleValue = scale;
-	double unsignedSampleDelta = -maxSampleValue;
 	double normalizingFactor = 1u << 8;
 
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
@@ -334,7 +330,7 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 				output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 
 				vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -342,6 +338,8 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 		}
 	}
 	else {
+		double unsignedSampleDelta = -scale;
+
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
 				unsigned char *input = static_cast<unsigned char *>(inputBuffer->mBuffers[inputBufferIndex].mData) + (3 * inputChannelIndex);
@@ -364,7 +362,7 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 				
 				vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
 				vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 				
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -378,9 +376,6 @@ DeinterleavingFloatConverter::ConvertFromPacked24(const AudioBufferList *inputBu
 UInt32
 DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount, double scale)
 {
-	double maxSampleValue = scale;
-	double unsignedSampleDelta = -maxSampleValue;
-	
 	if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
@@ -398,7 +393,7 @@ DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBu
 					output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 				}
 				
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 				
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -406,6 +401,8 @@ DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBu
 		}
 	}
 	else {
+		double unsignedSampleDelta = -scale;
+
 		for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
 			for(UInt32 inputChannelIndex = 0; inputChannelIndex < inputBuffer->mBuffers[inputBufferIndex].mNumberChannels; ++inputChannelIndex, ++outputBufferIndex) {
 				unsigned int *input = static_cast<unsigned int *>(inputBuffer->mBuffers[inputBufferIndex].mData);
@@ -423,7 +420,7 @@ DeinterleavingFloatConverter::ConvertFromPacked32(const AudioBufferList *inputBu
 				}
 				
 				vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-				vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+				vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 				
 				outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 				outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -456,8 +453,8 @@ DeinterleavingFloatConverter::ConvertFromHighAligned16(const AudioBufferList *in
 	switch(mSourceFormat.mBitsPerChannel) {
 		case 1 ... 8:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -472,7 +469,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned16(const AudioBufferList *in
 									input + (2 * inputChannelIndex) + 1, 
 #endif
 									2 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -493,7 +490,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned16(const AudioBufferList *in
 #endif
 									 2 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -536,8 +533,8 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 	switch(mSourceFormat.mBitsPerChannel) {
 		case 1 ... 8:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -552,7 +549,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 									input + (4 * inputChannelIndex) + 3, 
 #endif
 									4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -573,7 +570,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 #endif
 									 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -586,8 +583,8 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 			
 		case 9 ... 16:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -612,7 +609,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 							output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 						}
 						
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -643,7 +640,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 						}
 						
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -656,8 +653,8 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 	
 		case 17 ... 24:
 		{
-			double maxSampleValue = 1u << 23;
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << 23;
+			double unsignedSampleDelta = -scale;
 			double normalizingFactor = 1u << 8;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
@@ -690,7 +687,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 						
 						vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -728,7 +725,7 @@ DeinterleavingFloatConverter::ConvertFromHighAligned32(const AudioBufferList *in
 						
 						vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -771,8 +768,8 @@ DeinterleavingFloatConverter::ConvertFromLowAligned16(const AudioBufferList *inp
 	switch(mSourceFormat.mBitsPerChannel) {
 		case 1 ... 8:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -787,7 +784,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned16(const AudioBufferList *inp
 									input + (2 * inputChannelIndex), 
 #endif
 									2 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -808,7 +805,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned16(const AudioBufferList *inp
 #endif
 									 2 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -851,8 +848,8 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 	switch(mSourceFormat.mBitsPerChannel) {
 		case 1 ... 8:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -867,7 +864,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 									input + (4 * inputChannelIndex), 
 #endif
 									4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -888,7 +885,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 #endif
 									 4 * inputBuffer->mBuffers[inputBufferIndex].mNumberChannels, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -901,8 +898,8 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 
 		case 9 ... 16:
 		{
-			double maxSampleValue = 1u << (mSourceFormat.mBitsPerChannel - 1);
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << (mSourceFormat.mBitsPerChannel - 1);
+			double unsignedSampleDelta = -scale;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
 				for(UInt32 inputBufferIndex = 0, outputBufferIndex = 0; inputBufferIndex < inputBuffer->mNumberBuffers; ++inputBufferIndex) {
@@ -927,7 +924,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 							output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 						}
 
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -958,7 +955,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 						}
 
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -971,8 +968,8 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 
 		case 17 ... 24:
 		{
-			double maxSampleValue = 1u << 23;
-			double unsignedSampleDelta = -maxSampleValue;
+			double scale = 1u << 23;
+			double unsignedSampleDelta = -scale;
 			double normalizingFactor = 1u << 8;
 			
 			if(kAudioFormatFlagIsSignedInteger & mSourceFormat.mFormatFlags) {
@@ -1005,7 +1002,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 						output = static_cast<double *>(outputBuffer->mBuffers[outputBufferIndex].mData);
 						
 						vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
@@ -1043,7 +1040,7 @@ DeinterleavingFloatConverter::ConvertFromLowAligned32(const AudioBufferList *inp
 						
 						vDSP_vsdivD(output, 1, &normalizingFactor, output, 1, frameCount);
 						vDSP_vsaddD(output, 1, &unsignedSampleDelta, output, 1, frameCount);
-						vDSP_vsdivD(output, 1, &maxSampleValue, output, 1, frameCount);
+						vDSP_vsdivD(output, 1, &scale, output, 1, frameCount);
 						
 						outputBuffer->mBuffers[outputBufferIndex].mDataByteSize = static_cast<UInt32>(frameCount * sizeof(double));
 						outputBuffer->mBuffers[outputBufferIndex].mNumberChannels = 1;
