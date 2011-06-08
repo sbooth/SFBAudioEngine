@@ -356,7 +356,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || NULL == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	// EOF reached
