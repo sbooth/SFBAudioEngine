@@ -28,6 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/tfilestream.h>
 #include <taglib/mpegfile.h>
 #include <taglib/mpegproperties.h>
 #include <taglib/xingheader.h>
