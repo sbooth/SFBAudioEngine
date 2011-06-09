@@ -96,7 +96,8 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), TagLib::ID3v2::FrameFactory::instance(), true);
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::MPEG::File file(stream, TagLib::ID3v2::FrameFactory::instance());
 	
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -193,7 +194,8 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::MPEG::File file(reinterpret_cast<const char *>(buf), false, false);
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	TagLib::MPEG::File file(stream, TagLib::ID3v2::FrameFactory::instance(), false);
 	
 	if(!file.isValid()) {
 		if(error) {
