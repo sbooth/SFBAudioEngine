@@ -61,7 +61,8 @@ enum {
 	eAudioPlayerFlagMuteOutput				= 1u << 1,
 	eAudioPlayerFlagStopRequested			= 1u << 2,
 	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 3,
-	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 4
+	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 4,
+	eAudioPlayerFlagResetNeeded				= 1u << 5
 };
 
 // ========================================

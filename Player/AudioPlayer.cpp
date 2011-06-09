@@ -1610,6 +1610,12 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		return kAudioHardwareNoError;
 	}
 
+	// Reset output, if requested
+	if(eAudioPlayerFlagResetNeeded & mFlags) {
+		OSAtomicTestAndClearBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
+		ResetOutput();
+	}
+
 	// Mute functionality
 	if(eAudioPlayerFlagMuteOutput & mFlags)
 		return kAudioHardwareNoError;
@@ -2230,11 +2236,21 @@ void * AudioPlayer::DecoderThreadEntry()
 								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									LOG4CXX_ERROR(logger, "OSAtomicCompareAndSwap64Barrier() failed ");
-								
-								// This is safe to call at this point, because eAudioPlayerFlagMuteOutput is set so
-								// no rendering is being performed
-								// FALSE STATEMENT! This could be occurring in the middle of the render callback
-//								ResetOutput();
+
+								// If sample rate conversion is being performed, ResetOutput() needs to be called to flush any
+								// state the AudioConverter may have.  In the future, if ResetOutput() does anything other than
+								// reset the AudioConverter state the if(mSampleRateConverter) will need to be removed
+								if(mSampleRateConverter) {
+									// ResetOutput() is not safe to call when the device is running, because the player
+									// could be in the middle of a render callback
+									if(OutputIsRunning())
+										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
+									// Even if the device isn't running, AudioConverters are not thread-safe
+									else {
+										Mutex::Locker lock(mGuard);
+										ResetOutput();
+									}
+								}
 							}
 
 							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
@@ -2571,9 +2587,7 @@ bool AudioPlayer::StartOutput()
 	LOG4CXX_TRACE(logger, "Starting device 0x" << std::hex << mOutputDeviceID);
 
 	// We don't want to start output in the middle of a buffer modification
-	Mutex::Tryer lock(mGuard);
-	if(!lock)
-		return false;
+	Mutex::Locker lock(mGuard);
 
 	OSStatus result = AudioDeviceStart(mOutputDeviceID, 
 									   mOutputDeviceIOProcID);
@@ -2631,13 +2645,19 @@ bool AudioPlayer::OutputIsRunning() const
 
 bool AudioPlayer::ResetOutput()
 {
+	// Since this can be called from the IOProc, don't log informational messages in non-debug builds
+#if DEBUG
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_TRACE(logger, "Resetting output");
+#endif
 
 	if(NULL != mSampleRateConverter) {
 		OSStatus result = AudioConverterReset(mSampleRateConverter);
 		
 		if(noErr != result) {
+#if !DEBUG
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+#endif
 			LOG4CXX_ERROR(logger, "AudioConverterReset failed: " << result);
 			return false;
 		}
