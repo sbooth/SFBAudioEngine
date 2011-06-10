@@ -1105,17 +1105,21 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		return false;
 	}
 
-	Guard::Locker lock(mGuard);
 
-	// If IO is enabled, disable it while hog mode is acquired because the HAL
-	// does not automatically restart IO after hog mode is taken
-	bool restartIO = OutputIsRunning();
-	if(restartIO) {
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		// Wait for output to stop
-		lock.Wait();
+	bool restartIO = false;
+	{
+		Guard::Locker lock(mGuard);
+
+		// If IO is enabled, disable it while hog mode is acquired because the HAL
+		// does not automatically restart IO after hog mode is taken
+		restartIO = OutputIsRunning();
+		if(restartIO) {
+			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+			// Wait for output to stop
+			lock.Wait();
+		}
 	}
-			
+
 	hogPID = getpid();
 	
 	result = AudioObjectSetPropertyData(mOutputDeviceID, 
@@ -1131,7 +1135,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	}
 
 	// If IO was enabled before, re-enable it
-	if(restartIO)
+	if(restartIO && !OutputIsRunning())
 		StartOutput();
 
 	return true;
@@ -1168,14 +1172,17 @@ bool AudioPlayer::StopHoggingOutputDevice()
 	if(hogPID != getpid())
 		return false;
 
-	Guard::Locker lock(mGuard);
+	bool restartIO = false;
+	{
+		Guard::Locker lock(mGuard);
 
-	// Disable IO while hog mode is released
-	bool restartIO = OutputIsRunning();
-	if(restartIO) {
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		// Wait for output to stop
-		lock.Wait();
+		// Disable IO while hog mode is released
+		restartIO = OutputIsRunning();
+		if(restartIO) {
+			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+			// Wait for output to stop
+			lock.Wait();
+		}
 	}
 
 	// Release hog mode.
@@ -1193,7 +1200,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		return false;
 	}
 	
-	if(restartIO)
+	if(restartIO && !OutputIsRunning())
 		StartOutput();
 	
 	return true;
@@ -2089,12 +2096,12 @@ void * AudioPlayer::DecoderThreadEntry()
 	while(mKeepDecoding) {
 
 		// ========================================
-		// Lock the queue and remove the head element, which contains the next decoder to use
+		// Try to lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = NULL;
 		{
-			Mutex::Locker lock(mGuard);
+			Mutex::Tryer lock(mGuard);
 
-			if(0 < CFArrayGetCount(mDecoderQueue)) {
+			if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
 				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
 
 				// Create the decoder state
