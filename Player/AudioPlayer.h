@@ -79,19 +79,12 @@ enum {
 // used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
 // rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
 // method would be hazard pointers.
-//
-// The player can be in one of four states: playing, paused, pending, or stopped.  If audio is being sent to the output device,
-// the player is playing.  If audio is not being sent to the output device, the player is either paused, pending or stopped.
-//  - Paused means that the player has an AudioDecoder that has started rendering
-//  - Pending means that the player has an AudioDecoder that has started decoding but not yet started rendering
-//  - Stopped means that the player does not have an AudioDecoder that has started decoding, or the AudioDecoder 
-//    queue is empty
 // ========================================
 class AudioPlayer
 {
 	
 public:
-	
+
 	// ========================================
 	// Creation/Destruction
 	AudioPlayer();
@@ -104,12 +97,23 @@ public:
 	inline bool PlayPause()							{ return IsPlaying() ? Pause() : Play(); }
 	bool Stop();
 
-	// See the comment above on the meaning of these states
+	// ========================================
+	// Player State
+	enum PlayerState {
+		Playing,	// Audio is being sent to the output device
+		Paused,		// An AudioDecoder has started rendering, but audio is not being sent to the output device
+		Pending,	// An AudioDecoder has started decoding, but not yet started rendering
+		Stopped		// An AudioDecoder has not started decoding, or the decoder queue is empty
+	};
+
+	PlayerState GetPlayerState() const;
+
+	// Convenience methods
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
-	bool IsPaused() const;
-	bool IsPending() const;
-	bool IsStopped() const;
-	
+	inline bool IsPaused() const					{ return (Paused == GetPlayerState()); }
+	inline bool IsPending() const					{ return (Pending == GetPlayerState()); }
+	inline bool IsStopped() const					{ return (Stopped == GetPlayerState()); }
+
 	CFURLRef GetPlayingURL() const;
 
 	// ========================================

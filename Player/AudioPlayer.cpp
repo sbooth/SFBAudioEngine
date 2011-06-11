@@ -403,43 +403,23 @@ bool AudioPlayer::Stop()
 	return true;
 }
 
-bool AudioPlayer::IsPaused() const
+AudioPlayer::PlayerState AudioPlayer::GetPlayerState() const
 {
-	if(IsPlaying())
-		return false;
+	if(eAudioPlayerFlagIsPlaying & mFlags)
+		return AudioPlayer::Playing;
 
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(NULL == currentDecoderState)
-		return false;
+		return AudioPlayer::Stopped;
 
-	return (eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags);
-}
+	if(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags)
+		return AudioPlayer::Paused;
 
-bool AudioPlayer::IsPending() const
-{
-	if(IsPlaying())
-		return false;
+	if(eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags)
+		return AudioPlayer::Pending;
 
-	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
-
-	if(NULL == currentDecoderState)
-		return false;
-
-	return ((eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags) && !(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags));
-}
-
-bool AudioPlayer::IsStopped() const
-{
-	if(IsPlaying())
-		return false;
-
-	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
-
-	if(NULL == currentDecoderState)
-		return true;
-
-	return !(eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags);
+	return AudioPlayer::Stopped;
 }
 
 CFURLRef AudioPlayer::GetPlayingURL() const
@@ -1422,9 +1402,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Mutex::Tryer lock(mGuard);
-	if(!lock)
-		return false;
+	Mutex::Locker lock(mGuard);
 
 	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
 
