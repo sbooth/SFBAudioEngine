@@ -167,6 +167,10 @@
 		32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */; };
 		32EE7D7512DD40D200533884 /* SetAPETagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */; };
 		32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */; };
+		32F6274213A52A53004EC204 /* sndfile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32F6274113A52A53004EC204 /* sndfile.framework */; };
+		32F6274513A52A5F004EC204 /* sndfile.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32F6274113A52A53004EC204 /* sndfile.framework */; };
+		32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */; };
+		32F6275013A52AA7004EC204 /* LibsndfileDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -204,6 +208,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				32F6274513A52A5F004EC204 /* sndfile.framework in Copy Embedded Frameworks */,
 				3203A6141346E09D00A7A22E /* dumb.framework in Copy Embedded Frameworks */,
 				32161CF5133AF907008449C3 /* mpg123.framework in Copy Embedded Frameworks */,
 				3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */,
@@ -375,6 +380,9 @@
 		32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAPETagToDictionary.cpp; sourceTree = "<group>"; };
 		32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetAPETagFromMetadata.h; sourceTree = "<group>"; };
 		32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetAPETagFromMetadata.cpp; sourceTree = "<group>"; };
+		32F6274113A52A53004EC204 /* sndfile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = sndfile.framework; path = Frameworks/sndfile.framework; sourceTree = "<group>"; };
+		32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibsndfileDecoder.cpp; sourceTree = "<group>"; };
+		32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibsndfileDecoder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -411,6 +419,7 @@
 				324DB1B712DC17480055AF3F /* mac.framework in Frameworks */,
 				3258AE1C12DF8FA800ADA052 /* speex.framework in Frameworks */,
 				3203A6111346E09100A7A22E /* dumb.framework in Frameworks */,
+				32F6274213A52A53004EC204 /* sndfile.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -509,6 +518,7 @@
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 				32161CE8133AF8C8008449C3 /* mpg123.framework */,
 				3203A6101346E09100A7A22E /* dumb.framework */,
+				32F6274113A52A53004EC204 /* sndfile.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -526,6 +536,8 @@
 		322B5B9D108BA7E400CA9BDE /* Decoders */ = {
 			isa = PBXGroup;
 			children = (
+				32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */,
+				32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */,
 				32E7379510B9978200094C8A /* MusepackDecoder.cpp */,
 				32E7379610B9978200094C8A /* MusepackDecoder.h */,
 				32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */,
@@ -759,6 +771,7 @@
 				32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */,
+				32F6275013A52AA7004EC204 /* LibsndfileDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -936,6 +949,7 @@
 				32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */,
 				326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */,
 				3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */,
+				32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -50,6 +50,7 @@
 # include "MonkeysAudioDecoder.h"
 # include "OggSpeexDecoder.h"
 # include "MODDecoder.h"
+# include "LibsndfileDecoder.h"
 #endif
 
 // ========================================
@@ -97,6 +98,10 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
 	decoderExtensions = MODDecoder::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = LibsndfileDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 #endif
@@ -148,6 +153,10 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = MODDecoder::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = LibsndfileDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 #endif
@@ -320,6 +329,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			}
 			if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MODDecoder(inputSource);
+				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+					decoder->mInputSource = NULL;
+					delete decoder, decoder = NULL;
+				}
+			}
+			if(NULL == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
+				decoder = new LibsndfileDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
 					decoder->mInputSource = NULL;
 					delete decoder, decoder = NULL;
