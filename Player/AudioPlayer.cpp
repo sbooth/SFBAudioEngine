@@ -2183,7 +2183,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
-			while(decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
+			while(mKeepDecoding && decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
 
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
