@@ -7,8 +7,6 @@
 
 #include <libkern/OSAtomic.h>
 
-#define DSP_ENABLED 0
-
 #include <SFBAudioEngine/AudioPlayer.h>
 #include <SFBAudioEngine/AudioDecoder.h>
 
@@ -25,12 +23,18 @@ enum {
 volatile static uint32_t sPlayerFlags = 0;
 
 @interface PlayerWindowController (Callbacks)
+- (void) decodingStarted:(const AudioDecoder *)decoder;
 - (void) uiTimerFired:(NSTimer *)timer;
 @end
 
 @interface PlayerWindowController (Private)
 - (void) updateWindowUI;
 @end
+
+static void decodingStarted(void *context, const AudioDecoder *decoder)
+{
+	[(PlayerWindowController *)context decodingStarted:decoder];
+}
 
 // This is called from the realtime rendering thread and as such MUST NOT BLOCK!!
 static void renderingStarted(void *context, const AudioDecoder *decoder)
@@ -144,13 +148,12 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	PLAYER->Stop();
 
 	// Register for rendering started/finished notifications so the UI can be updated properly
+	decoder->SetDecodingStartedCallback(decodingStarted, self);
 	decoder->SetRenderingStartedCallback(renderingStarted, self);
 	decoder->SetRenderingFinishedCallback(renderingFinished, self);
 	
-	if(decoder->Open() && PLAYER->Enqueue(decoder)) {
-		PLAYER->Play();
+	if(decoder->Open() && PLAYER->Enqueue(decoder))
 		[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
-	}
 	else {
 		delete decoder;
 		return NO;
@@ -162,6 +165,12 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 @end
 
 @implementation PlayerWindowController (Callbacks)
+
+- (void) decodingStarted:(const AudioDecoder *)decoder
+{
+#pragma unused(decoder)
+	PLAYER->Play();
+}
 
 - (void) uiTimerFired:(NSTimer *)timer
 {
