@@ -100,19 +100,19 @@ public:
 	// ========================================
 	// Player State
 	enum PlayerState {
-		Playing,	// Audio is being sent to the output device
-		Paused,		// An AudioDecoder has started rendering, but audio is not being sent to the output device
-		Pending,	// An AudioDecoder has started decoding, but not yet started rendering
-		Stopped		// An AudioDecoder has not started decoding, or the decoder queue is empty
+		ePlaying,	// Audio is being sent to the output device
+		ePaused,	// An AudioDecoder has started rendering, but audio is not being sent to the output device
+		ePending,	// An AudioDecoder has started decoding, but not yet started rendering
+		eStopped	// An AudioDecoder has not started decoding, or the decoder queue is empty
 	};
 
 	PlayerState GetPlayerState() const;
 
 	// Convenience methods
 	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
-	inline bool IsPaused() const					{ return (Paused == GetPlayerState()); }
-	inline bool IsPending() const					{ return (Pending == GetPlayerState()); }
-	inline bool IsStopped() const					{ return (Stopped == GetPlayerState()); }
+	inline bool IsPaused() const					{ return (ePaused == GetPlayerState()); }
+	inline bool IsPending() const					{ return (ePending == GetPlayerState()); }
+	inline bool IsStopped() const					{ return (eStopped == GetPlayerState()); }
 
 	CFURLRef GetPlayingURL() const;
 
