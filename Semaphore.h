@@ -42,6 +42,7 @@ public:
 	~Semaphore();
 
 	bool Signal();
+	bool SignalAll();
 
 	bool Wait();
 	bool TimedWait(mach_timespec_t duration);

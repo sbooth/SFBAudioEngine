@@ -78,6 +78,19 @@ bool Semaphore::Signal()
 	return true;
 }
 
+bool Semaphore::SignalAll()
+{
+	kern_return_t result = semaphore_signal_all(mSemaphore);
+
+	if(KERN_SUCCESS != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
+		LOG4CXX_WARN(logger, "Couldn't signal the semaphore: " << mach_error_string(result));
+		return false;
+	}
+
+	return true;
+}
+
 bool Semaphore::Wait()
 {
 	kern_return_t result = semaphore_wait(mSemaphore);
