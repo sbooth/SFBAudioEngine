@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,11 +30,8 @@
 
 #pragma once
 
-#include <CoreAudio/CoreAudio.h>
-
 // ========================================
 // A simple implementation of rectangular and triangular dithers
-// This class operates on normalized Float64 input
 // ========================================
 class AudioDitherer
 {
@@ -53,12 +50,7 @@ public:
 
 	void Reset();
 
-	UInt32 Dither(AudioBuffer *buffer, UInt32 frameCount);
-
-protected:
-
-	UInt32 ApplyRectangularDither(AudioBuffer *buffer, UInt32 frameCount);
-	UInt32 ApplyTriangularDither(AudioBuffer *buffer, UInt32 frameCount);
+	void Dither(double *buffer, unsigned long frameCount);
 
 private:
 	DitherType mDitherType;

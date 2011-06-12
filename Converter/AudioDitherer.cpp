@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,14 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdlib>
 #include "AudioDitherer.h"
+
+// arc4random() returns pseudo-random integers in the range [0, 2^32 - 1]
+#define ARC4RANDOM_MAX		4294967295.0
+
+// Evaluates to a random number in the interval [0, 1]
+#define DITHER_NOISE		(arc4random() / ARC4RANDOM_MAX)
 
 AudioDitherer::AudioDitherer(DitherType type)
 	: mDitherType(type)
@@ -50,37 +57,30 @@ void AudioDitherer::Reset()
     mTriangleState = 0;
 }
 
-UInt32 AudioDitherer::Dither(AudioBuffer *buffer, UInt32 frameCount)
+void AudioDitherer::Dither(double *buffer, unsigned long frameCount)
 {
-	assert(NULL != buffer);
+	if(NULL == buffer || 0 == frameCount)
+		return;
 
 	switch(mDitherType) {
-		case eNoDither:					return frameCount;
-		case eRectangularDither:		return ApplyRectangularDither(buffer, frameCount);
-		case eTriangularDither:			return ApplyTriangularDither(buffer, frameCount);
+		case eNoDither:
+			break;
+
+		case eRectangularDither:
+			while(frameCount--)
+				*buffer++ -= DITHER_NOISE;
+			break;
+
+		case eTriangularDither:
+		{
+			double r;
+			while(frameCount--) {
+				r = DITHER_NOISE - 0.5;
+				*buffer++ -= (r - mTriangleState);
+				mTriangleState = r;	
+			}
+
+			break;
+		}
 	}
-
-	return 0;
-}
-
-UInt32 AudioDitherer::ApplyRectangularDither(AudioBuffer *buffer, UInt32 frameCount)
-{
-	double *doubleBuffer = static_cast<double *>(buffer->mData);
-	UInt32 framesToProcess = frameCount;
-	while(framesToProcess--)
-		*doubleBuffer++ -= rand() / (double)RAND_MAX - 0.5;
-	return frameCount;
-}
-
-UInt32 AudioDitherer::ApplyTriangularDither(AudioBuffer *buffer, UInt32 frameCount)
-{
-	double *doubleBuffer = static_cast<double *>(buffer->mData);
-	double r;
-	UInt32 framesToProcess = frameCount;
-	while(framesToProcess--) {
-		r = rand() / (double)RAND_MAX - 0.5;
-		*doubleBuffer++ += r - mTriangleState;
-		mTriangleState = r;	
-	}
-	return frameCount;
 }
