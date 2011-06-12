@@ -87,15 +87,13 @@ int main(int argc, char *argv [])
 	player.Play();
 
 	// Display progress every 2 seconds
-	while(player.IsPlaying()) {
+	while(!player.IsStopped()) {
 		CFRunLoopRunInMode(kCFRunLoopDefaultMode, 2, true);
 
 		CFTimeInterval currentTime, totalTime;
 		if(player.GetPlaybackTime(currentTime, totalTime))
 			printf("%.2f / %.2f [%.2f]\n", currentTime, totalTime, totalTime - currentTime);
 	}
-	
-	player.Stop();
 
 	return EXIT_SUCCESS;
 }
