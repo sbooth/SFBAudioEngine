@@ -66,7 +66,6 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 	
 	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
-	
 	if(-1 == fd) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
@@ -87,7 +86,6 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	
 	// Perform the allocation
 	mMemory = static_cast<int8_t *>(malloc(mFilestats.st_size));
-
 	if(NULL == mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
@@ -113,6 +111,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 		}
 		
 		memset(&mFilestats, 0, sizeof(mFilestats));
+		free(mMemory), mMemory = NULL;
 
 		return false;
 	}
@@ -125,6 +124,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		
 		memset(&mFilestats, 0, sizeof(mFilestats));
+		free(mMemory), mMemory = NULL;
 		
 		return false;
 	}
@@ -145,7 +145,7 @@ bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 	
 	memset(&mFilestats, 0, sizeof(mFilestats));
 	
-	if(NULL != mMemory)
+	if(mMemory)
 		free(mMemory), mMemory = NULL;
 
 	mCurrentPosition = NULL;
