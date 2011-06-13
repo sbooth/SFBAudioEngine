@@ -286,6 +286,14 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 	
 	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
+
+	// If there is no scheme the URL is invalid
+	if(NULL == scheme) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
+		return NULL;
+	}
+
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		// Verify the file exists
 		SInt32 errorCode = noErr;

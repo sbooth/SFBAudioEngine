@@ -45,18 +45,25 @@ CreateDisplayNameForURL(CFURLRef url)
 
 #if BUILD_FOR_MAC_OSX
 	CFStringRef scheme = CFURLCopyScheme(url);
-	bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
-	CFRelease(scheme), scheme = NULL;
+	if(scheme) {
+		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
+		CFRelease(scheme), scheme = NULL;
 
-	if(isFileURL) {
-		OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
+		if(isFileURL) {
+			OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
 
-		if(noErr != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
-			LOG4CXX_WARN(logger, "LSCopyDisplayNameForURL failed: " << result);
-			return NULL;
+			if(noErr != result) {
+				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
+				LOG4CXX_WARN(logger, "LSCopyDisplayNameForURL failed: " << result);
+				return NULL;
+			}
+		}
+		else {
+			displayName = CFURLGetString(url);
+			CFRetain(displayName);
 		}
 	}
+	// If scheme is NULL the URL is probably invalid, but can still be logged
 	else {
 		displayName = CFURLGetString(url);
 		CFRetain(displayName);

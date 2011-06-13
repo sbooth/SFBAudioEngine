@@ -258,6 +258,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	CFURLRef url = inputSource->GetURL();
 	CFStringRef scheme = CFURLCopyScheme(url);
 
+	// If there is no scheme the URL is invalid
+	if(NULL == scheme) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
+		return NULL;
+	}
+
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
 		CFStringRef pathExtension = NULL;

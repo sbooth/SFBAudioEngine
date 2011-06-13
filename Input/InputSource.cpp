@@ -42,7 +42,7 @@ const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.Error
 
 #pragma mark Static Methods
 
-InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef */*error*/)
+InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
 	if(NULL == url)
 		return NULL;
@@ -51,6 +51,14 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 	
 	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
+
+	// If there is no scheme the URL is invalid
+	if(NULL == scheme) {
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
+		return NULL;
+	}
+
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		if(InputSourceFlagMemoryMapFiles & flags)
 			inputSource = new MemoryMappedFileInputSource(url);
