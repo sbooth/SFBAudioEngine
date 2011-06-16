@@ -35,6 +35,7 @@
 
 #include "MP3Metadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "AddAPETagToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
@@ -179,6 +180,9 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(totalFrames), totalFrames = NULL;			
 		}
 	}
+
+	if(file.APETag())
+		AddAPETagToDictionary(mMetadata, file.APETag());
 
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
