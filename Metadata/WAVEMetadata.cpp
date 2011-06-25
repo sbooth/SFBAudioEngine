@@ -149,6 +149,13 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 			CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 			CFRelease(bitsPerChannel), bitsPerChannel = NULL;
 		}
+
+		if(0 != file.audioProperties()->sampleFrames()) {
+			unsigned int value = file.audioProperties()->sampleFrames();
+			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
+			CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+			CFRelease(totalFrames), totalFrames = NULL;
+		}
 	}
 	
 	if(file.tag())
