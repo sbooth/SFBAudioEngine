@@ -369,6 +369,8 @@ AudioPlayer::~AudioPlayer()
 
 bool AudioPlayer::Play()
 {
+	Mutex::Locker lock(mGuard);
+
 	if(!IsPlaying())
 		return StartOutput();
 
@@ -377,6 +379,8 @@ bool AudioPlayer::Play()
 
 bool AudioPlayer::Pause()
 {
+	Mutex::Locker lock(mGuard);
+
 	if(IsPlaying())
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 
@@ -387,7 +391,7 @@ bool AudioPlayer::Stop()
 {
 	Guard::Locker lock(mGuard);
 
-	if(OutputIsRunning()) {
+	if(IsPlaying()) {
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 		// Wait for output to stop
 		lock.Wait();
@@ -787,7 +791,7 @@ bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 
 	Guard::Locker lock(mGuard);
 
-	bool restartIO = OutputIsRunning();
+	bool restartIO = IsPlaying();
 	if(restartIO) {
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 		// Wait for output to stop
@@ -823,7 +827,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 
 	Guard::Locker lock(mGuard);
 
-	bool restartIO = OutputIsRunning();
+	bool restartIO = IsPlaying();
 	if(restartIO) {
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 		// Wait for output to stop
@@ -1085,14 +1089,13 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		return false;
 	}
 
-
 	bool restartIO = false;
 	{
 		Guard::Locker lock(mGuard);
 
 		// If IO is enabled, disable it while hog mode is acquired because the HAL
 		// does not automatically restart IO after hog mode is taken
-		restartIO = OutputIsRunning();
+		bool restartIO = IsPlaying();
 		if(restartIO) {
 			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 			// Wait for output to stop
@@ -1157,7 +1160,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		Guard::Locker lock(mGuard);
 
 		// Disable IO while hog mode is released
-		restartIO = OutputIsRunning();
+		restartIO = IsPlaying();
 		if(restartIO) {
 			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 			// Wait for output to stop
@@ -1582,16 +1585,8 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// Stop output if requested
 	if(eAudioPlayerFlagStopRequested & mFlags) {
-		// TODO: Is this lock necessary?
-//		Mutex::Locker lock(mGuard);
-
 		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-
 		StopOutput();
-
-		// Signal any waiting threads that output has stopped
-		mGuard.Broadcast();
-
 		return kAudioHardwareNoError;
 	}
 
@@ -1804,8 +1799,10 @@ OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
 
 					if(isRunning)
 						OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
-					else
+					else {
 						OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
+						mGuard.Signal();
+					}
 
 					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyDeviceIsRunning [0x" << std::hex << inObjectID << "]: " << (isRunning ? "True" : "False"));
 
