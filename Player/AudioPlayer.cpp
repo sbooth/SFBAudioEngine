@@ -1744,8 +1744,8 @@ OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
 		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
 		
 		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
-			decoderState->mDecoder->PerformRenderingStartedCallback();
 			OSAtomicTestAndSetBarrier(5 /* eDecoderStateDataFlagRenderingStarted */, &decoderState->mFlags);
+			decoderState->mDecoder->PerformRenderingStartedCallback();
 		}
 		
 		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
@@ -2250,8 +2250,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
-							decoder->PerformDecodingStartedCallback();
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
+							decoder->PerformDecodingStartedCallback();
 						}
 
 						// Read the input chunk
