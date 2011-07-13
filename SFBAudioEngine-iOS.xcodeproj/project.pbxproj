@@ -21,7 +21,7 @@
 		325EC2B613C9384D00E1FE70 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 325EC2B413C9384D00E1FE70 /* InfoPlist.strings */; };
 		325EC2B913C9384D00E1FE70 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 325EC2B813C9384D00E1FE70 /* main.m */; };
 		325EC2BC13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 325EC2BB13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate.mm */; };
-		325EC2C013C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.m in Sources */ = {isa = PBXBuildFile; fileRef = 325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.m */; };
+		325EC2C013C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.mm */; };
 		325EC2C313C9384D00E1FE70 /* MainWindow_iPhone.xib in Resources */ = {isa = PBXBuildFile; fileRef = 325EC2C113C9384D00E1FE70 /* MainWindow_iPhone.xib */; };
 		325EC2C713C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPad.m in Sources */ = {isa = PBXBuildFile; fileRef = 325EC2C613C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPad.m */; };
 		325EC2CA13C9384D00E1FE70 /* MainWindow_iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 325EC2C813C9384D00E1FE70 /* MainWindow_iPad.xib */; };
@@ -111,7 +111,7 @@
 		325EC2BA13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimplePlayer_iOSAppDelegate.h; sourceTree = "<group>"; };
 		325EC2BB13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SimplePlayer_iOSAppDelegate.mm; sourceTree = "<group>"; };
 		325EC2BE13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SimplePlayer_iOSAppDelegate_iPhone.h; path = iPhone/SimplePlayer_iOSAppDelegate_iPhone.h; sourceTree = "<group>"; };
-		325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SimplePlayer_iOSAppDelegate_iPhone.m; path = iPhone/SimplePlayer_iOSAppDelegate_iPhone.m; sourceTree = "<group>"; };
+		325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = SimplePlayer_iOSAppDelegate_iPhone.mm; path = iPhone/SimplePlayer_iOSAppDelegate_iPhone.mm; sourceTree = "<group>"; };
 		325EC2C213C9384D00E1FE70 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = iPhone/en.lproj/MainWindow_iPhone.xib; sourceTree = "<group>"; };
 		325EC2C513C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SimplePlayer_iOSAppDelegate_iPad.h; path = iPad/SimplePlayer_iOSAppDelegate_iPad.h; sourceTree = "<group>"; };
 		325EC2C613C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPad.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SimplePlayer_iOSAppDelegate_iPad.m; path = iPad/SimplePlayer_iOSAppDelegate_iPad.m; sourceTree = "<group>"; };
@@ -228,7 +228,7 @@
 			isa = PBXGroup;
 			children = (
 				325EC2BE13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.h */,
-				325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.m */,
+				325EC2BF13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.mm */,
 				325EC2C113C9384D00E1FE70 /* MainWindow_iPhone.xib */,
 			);
 			name = iPhone;
@@ -518,7 +518,7 @@
 			files = (
 				325EC2B913C9384D00E1FE70 /* main.m in Sources */,
 				325EC2BC13C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate.mm in Sources */,
-				325EC2C013C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.m in Sources */,
+				325EC2C013C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPhone.mm in Sources */,
 				325EC2C713C9384D00E1FE70 /* SimplePlayer_iOSAppDelegate_iPad.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
