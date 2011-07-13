@@ -68,9 +68,13 @@ enum {
 // ========================================
 class AudioDecoder
 {
-	
+
+#if TARGET_OS_IPHONE
+	friend class iOSAudioPlayer;
+#else	
 	friend class AudioPlayer;
-	
+#endif
+
 public:
 
 	// ========================================
