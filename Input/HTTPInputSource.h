@@ -41,7 +41,7 @@ public:
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return false; }
+	virtual inline bool SupportsSeeking() const				{ return true; }
 	virtual bool SeekToOffset(SInt64 offset);
 	
 private:

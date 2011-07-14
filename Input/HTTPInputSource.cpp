@@ -175,9 +175,8 @@ bool HTTPInputSource::Open(CFErrorRef *error)
     char* host = (char *)calloc(hostRange.length + 1, 1);
     strncpy(host, (const char *)&urlBuffer[hostRange.location], hostRange.length);
     
-    
-    const char* port = "9000";
-    // const SInt32 port = CFURLGetPortNumber(mURL);
+    char port[6];
+    sprintf(port, "%ld", CFURLGetPortNumber(mURL));
 
     CFRange pathRange = CFURLGetByteRangeForComponent(mURL, kCFURLComponentPath, NULL);
     char* path = (char *)calloc(pathRange.length + 1, 1);
