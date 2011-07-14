@@ -168,64 +168,10 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 		return true;
 	}
 
-    UInt8 urlBuffer[2048];
-    CFURLGetBytes(mURL, urlBuffer, 2048);
-    
-    CFRange hostRange = CFURLGetByteRangeForComponent(mURL, kCFURLComponentHost, NULL);
-    char* host = (char *)calloc(hostRange.length + 1, 1);
-    strncpy(host, (const char *)&urlBuffer[hostRange.location], hostRange.length);
-    
-    char port[6];
-    sprintf(port, "%ld", CFURLGetPortNumber(mURL));
-
-    CFRange pathRange = CFURLGetByteRangeForComponent(mURL, kCFURLComponentPath, NULL);
-    char* path = (char *)calloc(pathRange.length + 1, 1);
-    strncpy(path, (const char *)&urlBuffer[pathRange.location], pathRange.length);
-    
-    // Create HTTP request
-    string body = "GET ";
-    body += path;
-    body += " HTTP/1.1\x0D\x0A";
-    body += "Host: ";
-    body += host;
-    body += ":";
-    body += port;
-    body += "\x0D\x0A";
-    body += "Content-Length: 0\r\n\r\n";
-
-    // Open Socket
-    mSocket = socket_connect(host, port);
-
-    // Send request
-    int result = send(mSocket, body.c_str(), body.length(), 0);
-
-    // Read and parse header
     mOffset = 0;
-    mLength = 0;
-    mHeaderBuffer = (char *)malloc(kHeaderBufferLength);
-    if( result > 0 ) {
-        int recved = recv(mSocket, mHeaderBuffer, kHeaderBufferLength, 0);
-        mHeaderEnd = strnstr(mHeaderBuffer, "\r\n\r\n", recved);
-        if( mHeaderEnd ) {
-            mHeaderEnd += strlen("\r\n\r\n");
-        } else {
-            close(mSocket);
-            return false;
-        }
-        
-        char* contentLen = strnstr(mHeaderBuffer, "Content-Length: ", mHeaderEnd - mHeaderBuffer);
-        if( !contentLen ) contentLen = strnstr(mHeaderBuffer, "CONTENT-LENGTH: ", mHeaderEnd - mHeaderBuffer);
-        if( !contentLen ) contentLen = strnstr(mHeaderBuffer, "content-length: ", mHeaderEnd - mHeaderBuffer);
-        if( !contentLen ) {
-            close(mSocket);
-            return false;
-        }
-        contentLen += strlen("content-length: ");
-        sscanf(contentLen, "%ul", &mLength);
-    }
+    mIsOpen = SendHTTPRequest();
     
-	mIsOpen = true;
-	return true;
+	return mIsOpen;
 }
 
 bool HTTPInputSource::Close(CFErrorRef *error)
@@ -287,5 +233,67 @@ SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 
 bool HTTPInputSource::SeekToOffset(SInt64 offset)
 {
-    return false;
+	if( !IsOpen() )
+		return false;
+    
+    close(mSocket);
+    mOffset = offset;
+    mIsOpen = SendHTTPRequest();
+    return mIsOpen;
+}
+
+bool HTTPInputSource::SendHTTPRequest()
+{
+    UInt8 urlBuffer[2048];
+    CFURLGetBytes(mURL, urlBuffer, 2048);
+    
+    CFRange hostRange = CFURLGetByteRangeForComponent(mURL, kCFURLComponentHost, NULL);
+    char* host = (char *)calloc(hostRange.length + 1, 1);
+    strncpy(host, (const char *)&urlBuffer[hostRange.location], hostRange.length);
+    
+    char port[6];
+    sprintf(port, "%ld", CFURLGetPortNumber(mURL));
+    
+    CFRange pathRange = CFURLGetByteRangeForComponent(mURL, kCFURLComponentPath, NULL);
+    char* path = (char *)calloc(pathRange.length + 1, 1);
+    strncpy(path, (const char *)&urlBuffer[pathRange.location], pathRange.length);
+    
+    // Create HTTP request
+    ostringstream body;
+    body << "GET " << path << " HTTP/1.1\x0D\x0A";
+    body << "Host: " << host << ":" << port << "\x0D\x0A";
+    if( mOffset != 0 )
+        body << "Range: bytes=" << mOffset << "-\r\n";
+    body << "Content-Length: 0\r\n\r\n";
+    
+    // Open Socket
+    mSocket = socket_connect(host, port);
+    
+    // Send request
+    int result = send(mSocket, body.str().c_str(), body.str().length(), 0);
+    
+    // Read and parse header
+    mLength = 0;
+    mHeaderBuffer = (char *)malloc(kHeaderBufferLength);
+    if( result > 0 ) {
+        int recved = recv(mSocket, mHeaderBuffer, kHeaderBufferLength, 0);
+        mHeaderEnd = strnstr(mHeaderBuffer, "\r\n\r\n", recved);
+        if( mHeaderEnd ) {
+            mHeaderEnd += strlen("\r\n\r\n");
+        } else {
+            close(mSocket);
+            return false;
+        }
+        
+        char* contentLen = strnstr(mHeaderBuffer, "Content-Length: ", mHeaderEnd - mHeaderBuffer);
+        if( !contentLen ) contentLen = strnstr(mHeaderBuffer, "CONTENT-LENGTH: ", mHeaderEnd - mHeaderBuffer);
+        if( !contentLen ) contentLen = strnstr(mHeaderBuffer, "content-length: ", mHeaderEnd - mHeaderBuffer);
+        if( !contentLen ) {
+            close(mSocket);
+            return false;
+        }
+        contentLen += strlen("content-length: ");
+        sscanf(contentLen, "%ul", &mLength);
+    }
+    return true;
 }

@@ -45,6 +45,9 @@ public:
 	virtual bool SeekToOffset(SInt64 offset);
 	
 private:
+    bool SendHTTPRequest();
+
+private:
 	int mSocket;
     SInt64 mOffset;
     SInt64 mLength;
