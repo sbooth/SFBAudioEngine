@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3201AFEB13CE4194008764BD /* FLACDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201AFE913CE4194008764BD /* FLACDecoder.cpp */; };
+		3201AFEC13CE4194008764BD /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201AFEA13CE4194008764BD /* FLACDecoder.h */; };
+		3201AFF113CE42B3008764BD /* LibsndfileDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201AFED13CE42B3008764BD /* LibsndfileDecoder.cpp */; };
+		3201AFF213CE42B3008764BD /* LibsndfileDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201AFEE13CE42B3008764BD /* LibsndfileDecoder.h */; };
+		3201AFF313CE42B3008764BD /* OggVorbisDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201AFEF13CE42B3008764BD /* OggVorbisDecoder.cpp */; };
+		3201AFF413CE42B3008764BD /* OggVorbisDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201AFF013CE42B3008764BD /* OggVorbisDecoder.h */; };
+		3201AFF613CE499B008764BD /* test.flac in Resources */ = {isa = PBXBuildFile; fileRef = 3201AFF513CE48D1008764BD /* test.flac */; };
+		3201AFF913CE4B6F008764BD /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201AFF713CE4B6F008764BD /* MPEGDecoder.cpp */; };
+		3201AFFA13CE4B6F008764BD /* MPEGDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201AFF813CE4B6F008764BD /* MPEGDecoder.h */; };
+		3201AFFC13CE4C2D008764BD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3201AFFB13CE4C2D008764BD /* Accelerate.framework */; };
+		3201AFFE13CE4C64008764BD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3201AFFD13CE4C64008764BD /* Accelerate.framework */; };
+		3201B00113CE4D29008764BD /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201AFFF13CE4D29008764BD /* WavPackDecoder.cpp */; };
+		3201B00213CE4D29008764BD /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201B00013CE4D29008764BD /* WavPackDecoder.h */; };
+		3201B00513CE4EA4008764BD /* OggSpeexDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201B00313CE4EA4008764BD /* OggSpeexDecoder.cpp */; };
+		3201B00613CE4EA4008764BD /* OggSpeexDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3201B00413CE4EA4008764BD /* OggSpeexDecoder.h */; };
 		3207018D13A7E62900FB22D9 /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3207018713A7E62900FB22D9 /* Guard.cpp */; };
 		3207018E13A7E62900FB22D9 /* Guard.h in Headers */ = {isa = PBXBuildFile; fileRef = 3207018813A7E62900FB22D9 /* Guard.h */; };
 		3207018F13A7E62900FB22D9 /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3207018913A7E62900FB22D9 /* Mutex.cpp */; };
@@ -93,6 +108,21 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3201AFE913CE4194008764BD /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACDecoder.cpp; sourceTree = "<group>"; };
+		3201AFEA13CE4194008764BD /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
+		3201AFED13CE42B3008764BD /* LibsndfileDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibsndfileDecoder.cpp; sourceTree = "<group>"; };
+		3201AFEE13CE42B3008764BD /* LibsndfileDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibsndfileDecoder.h; sourceTree = "<group>"; };
+		3201AFEF13CE42B3008764BD /* OggVorbisDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggVorbisDecoder.cpp; sourceTree = "<group>"; };
+		3201AFF013CE42B3008764BD /* OggVorbisDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisDecoder.h; sourceTree = "<group>"; };
+		3201AFF513CE48D1008764BD /* test.flac */ = {isa = PBXFileReference; lastKnownFileType = file; path = test.flac; sourceTree = "<group>"; };
+		3201AFF713CE4B6F008764BD /* MPEGDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MPEGDecoder.cpp; sourceTree = "<group>"; };
+		3201AFF813CE4B6F008764BD /* MPEGDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPEGDecoder.h; sourceTree = "<group>"; };
+		3201AFFB13CE4C2D008764BD /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		3201AFFD13CE4C64008764BD /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		3201AFFF13CE4D29008764BD /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackDecoder.cpp; sourceTree = "<group>"; };
+		3201B00013CE4D29008764BD /* WavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavPackDecoder.h; sourceTree = "<group>"; };
+		3201B00313CE4EA4008764BD /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
+		3201B00413CE4EA4008764BD /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
 		3207018713A7E62900FB22D9 /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = SOURCE_ROOT; };
 		3207018813A7E62900FB22D9 /* Guard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Guard.h; sourceTree = SOURCE_ROOT; };
 		3207018913A7E62900FB22D9 /* Mutex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mutex.cpp; sourceTree = SOURCE_ROOT; };
@@ -178,6 +208,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3201AFFE13CE4C64008764BD /* Accelerate.framework in Frameworks */,
 				32C8E6F213C9F3EF0037E1C5 /* AudioToolbox.framework in Frameworks */,
 				32C8E6F313C9F3EF0037E1C5 /* CoreAudio.framework in Frameworks */,
 				325EC2D013C9388D00E1FE70 /* libSFBAudioEngine.a in Frameworks */,
@@ -191,6 +222,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3201AFFC13CE4C2D008764BD /* Accelerate.framework in Frameworks */,
 				32C8E6EF13C9F3B10037E1C5 /* AudioToolbox.framework in Frameworks */,
 				32D478A2138CAA3800A13129 /* CoreAudio.framework in Frameworks */,
 				3268F0D7138C780800762080 /* Foundation.framework in Frameworks */,
@@ -215,6 +247,7 @@
 		325EC2B213C9384D00E1FE70 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				3201AFF513CE48D1008764BD /* test.flac */,
 				325EC2D113C9402900E1FE70 /* test.aiff */,
 				325EC2B313C9384D00E1FE70 /* SimplePlayer-iOS-Info.plist */,
 				325EC2B413C9384D00E1FE70 /* InfoPlist.strings */,
@@ -266,6 +299,8 @@
 		3268F0D5138C780800762080 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3201AFFD13CE4C64008764BD /* Accelerate.framework */,
+				3201AFFB13CE4C2D008764BD /* Accelerate.framework */,
 				32C8E6F013C9F3EF0037E1C5 /* AudioToolbox.framework */,
 				32C8E6F113C9F3EF0037E1C5 /* CoreAudio.framework */,
 				32C8E6EE13C9F3B10037E1C5 /* AudioToolbox.framework */,
@@ -326,6 +361,18 @@
 		3268F105138C78CE00762080 /* Decoders */ = {
 			isa = PBXGroup;
 			children = (
+				3201B00313CE4EA4008764BD /* OggSpeexDecoder.cpp */,
+				3201B00413CE4EA4008764BD /* OggSpeexDecoder.h */,
+				3201AFFF13CE4D29008764BD /* WavPackDecoder.cpp */,
+				3201B00013CE4D29008764BD /* WavPackDecoder.h */,
+				3201AFF713CE4B6F008764BD /* MPEGDecoder.cpp */,
+				3201AFF813CE4B6F008764BD /* MPEGDecoder.h */,
+				3201AFED13CE42B3008764BD /* LibsndfileDecoder.cpp */,
+				3201AFEE13CE42B3008764BD /* LibsndfileDecoder.h */,
+				3201AFEF13CE42B3008764BD /* OggVorbisDecoder.cpp */,
+				3201AFF013CE42B3008764BD /* OggVorbisDecoder.h */,
+				3201AFE913CE4194008764BD /* FLACDecoder.cpp */,
+				3201AFEA13CE4194008764BD /* FLACDecoder.h */,
 				3268F108138C78CE00762080 /* AudioDecoder.cpp */,
 				3268F109138C78CE00762080 /* AudioDecoder.h */,
 				3268F10A138C78CE00762080 /* CoreAudioDecoder.cpp */,
@@ -433,6 +480,12 @@
 				3207019013A7E62900FB22D9 /* Mutex.h in Headers */,
 				3207019213A7E62900FB22D9 /* Semaphore.h in Headers */,
 				3207019713A7E7E400FB22D9 /* iOSAudioPlayer.h in Headers */,
+				3201AFEC13CE4194008764BD /* FLACDecoder.h in Headers */,
+				3201AFF213CE42B3008764BD /* LibsndfileDecoder.h in Headers */,
+				3201AFF413CE42B3008764BD /* OggVorbisDecoder.h in Headers */,
+				3201AFFA13CE4B6F008764BD /* MPEGDecoder.h in Headers */,
+				3201B00213CE4D29008764BD /* WavPackDecoder.h in Headers */,
+				3201B00613CE4EA4008764BD /* OggSpeexDecoder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,6 +559,7 @@
 				325EC2C313C9384D00E1FE70 /* MainWindow_iPhone.xib in Resources */,
 				325EC2CA13C9384D00E1FE70 /* MainWindow_iPad.xib in Resources */,
 				325EC2D213C9402900E1FE70 /* test.aiff in Resources */,
+				3201AFF613CE499B008764BD /* test.flac in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +607,12 @@
 				3207018F13A7E62900FB22D9 /* Mutex.cpp in Sources */,
 				3207019113A7E62900FB22D9 /* Semaphore.cpp in Sources */,
 				3207019613A7E7E400FB22D9 /* iOSAudioPlayer.cpp in Sources */,
+				3201AFEB13CE4194008764BD /* FLACDecoder.cpp in Sources */,
+				3201AFF113CE42B3008764BD /* LibsndfileDecoder.cpp in Sources */,
+				3201AFF313CE42B3008764BD /* OggVorbisDecoder.cpp in Sources */,
+				3201AFF913CE4B6F008764BD /* MPEGDecoder.cpp in Sources */,
+				3201B00113CE4D29008764BD /* WavPackDecoder.cpp in Sources */,
+				3201B00513CE4EA4008764BD /* OggSpeexDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -604,7 +664,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimplePlayer-iOS/SimplePlayer-iOS-Prefix.pch";
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
-				"HEADER_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/include";
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/include";
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/include";
 				INFOPLIST_FILE = "SimplePlayer-iOS/SimplePlayer-iOS-Info.plist";
 				OTHER_LDFLAGS = "-liconv";
@@ -624,7 +685,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimplePlayer-iOS/SimplePlayer-iOS-Prefix.pch";
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
-				"HEADER_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/include";
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/include";
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/include";
 				INFOPLIST_FILE = "SimplePlayer-iOS/SimplePlayer-iOS-Info.plist";
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
@@ -672,16 +734,25 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DSTROOT = /tmp/SFBAudioEngine.dst;
 				HEADER_SEARCH_PATHS = "";
-				"HEADER_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/include";
+				"HEADER_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/include";
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/include";
 				LIBRARY_SEARCH_PATHS = "";
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/lib";
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/lib";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/lib";
 				OTHER_LDFLAGS = (
 					"-lapr-1",
 					"-laprutil-1",
 					"-lexpat",
 					"-llog4cxx",
+					"-logg",
+					"-lflac",
+					"-lvorbis",
+					"-lvorbisfile",
+					"-lvorbisenc",
+					"-lsndfile",
+					"-lmpg123",
+					"-lwavpack",
+					"-lspeex",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -693,16 +764,25 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DSTROOT = /tmp/SFBAudioEngine.dst;
 				HEADER_SEARCH_PATHS = "";
-				"HEADER_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/include";
+				"HEADER_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/include";
 				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/include";
 				LIBRARY_SEARCH_PATHS = "";
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=*]" = "/opt/iphone-4.3/lib";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-4.3/lib";
+				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*]" = "/opt/iphone-4.3/lib";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=*]" = "/opt/iphone-simulator-4.3/lib";
 				OTHER_LDFLAGS = (
 					"-lapr-1",
 					"-laprutil-1",
 					"-lexpat",
 					"-llog4cxx",
+					"-logg",
+					"-lflac",
+					"-lvorbis",
+					"-lvorbisfile",
+					"-lvorbisenc",
+					"-lsndfile",
+					"-lmpg123",
+					"-lwavpack",
+					"-lspeex",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

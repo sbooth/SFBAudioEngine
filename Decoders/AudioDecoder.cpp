@@ -40,18 +40,20 @@
 #include "CreateStringForOSType.h"
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
+#include "FLACDecoder.h"
 
-#if BUILD_FOR_MAC_OSX
-# include "FLACDecoder.h"
-# include "WavPackDecoder.h"
-# include "MPEGDecoder.h"
-# include "OggVorbisDecoder.h"
+#include "WavPackDecoder.h"
+#include "MPEGDecoder.h"
+#include "OggVorbisDecoder.h"
+#if !TARGET_OS_IPHONE
 # include "MusepackDecoder.h"
 # include "MonkeysAudioDecoder.h"
-# include "OggSpeexDecoder.h"
-# include "MODDecoder.h"
-# include "LibsndfileDecoder.h"
 #endif
+#include "OggSpeexDecoder.h"
+#if !TARGET_OS_IPHONE
+# include "MODDecoder.h"
+#endif
+#include "LibsndfileDecoder.h"
 
 // ========================================
 // Error Codes
@@ -68,7 +70,6 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	
 	CFArrayRef decoderExtensions = NULL;
 
-#if BUILD_FOR_MAC_OSX
 	decoderExtensions = FLACDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
@@ -85,6 +86,7 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
+#if !TARGET_OS_IPHONE
 	decoderExtensions = MusepackDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
@@ -92,19 +94,21 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	decoderExtensions = MonkeysAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+#endif
 
 	decoderExtensions = OggSpeexDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 
+#if !TARGET_OS_IPHONE
 	decoderExtensions = MODDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+#endif
 
 	decoderExtensions = LibsndfileDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
-#endif
 
 	decoderExtensions = CoreAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
@@ -123,7 +127,6 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	
 	CFArrayRef decoderMIMETypes = NULL;
 
-#if BUILD_FOR_MAC_OSX
 	decoderMIMETypes = FLACDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
@@ -135,11 +138,12 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	decoderMIMETypes = MPEGDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
-	
+
 	decoderMIMETypes = OggVorbisDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 	
+#if !TARGET_OS_IPHONE
 	decoderMIMETypes = MusepackDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
@@ -147,19 +151,22 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	decoderMIMETypes = MonkeysAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+#endif
 
 	decoderMIMETypes = OggSpeexDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
+#if !TARGET_OS_IPHONE
 	decoderMIMETypes = MODDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
+#endif
+
 	decoderMIMETypes = LibsndfileDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
-#endif
 
 	decoderMIMETypes = CoreAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
@@ -284,7 +291,6 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			// As a factory this class has knowledge of its subclasses
 			// It would be possible (and perhaps preferable) to switch to a generic
 			// plugin interface at a later date
-#if BUILD_FOR_MAC_OSX
 			if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new FLACDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -313,6 +319,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
+#if !TARGET_OS_IPHONE
 			if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MusepackDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -327,6 +334,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
+#endif
 			if(NULL == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new OggSpeexDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -334,6 +342,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
+#if !TARGET_OS_IPHONE
 			if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new MODDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -341,6 +350,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
+#endif
 			if(NULL == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new LibsndfileDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -348,7 +358,6 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 					delete decoder, decoder = NULL;
 				}
 			}
-#endif
 			if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 				decoder = new CoreAudioDecoder(inputSource);
 				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {

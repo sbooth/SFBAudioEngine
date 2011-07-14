@@ -28,7 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <CoreServices/CoreServices.h>
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
