@@ -97,8 +97,14 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	
 	[self.window makeKeyAndVisible];
 
-	// Just play the file
-	if(![self playFile:[[NSBundle mainBundle] pathForResource:@"test" ofType:@"aiff"]])
+//	// Play a local file
+//    NSString* path = [[NSBundle mainBundle] pathForResource:@"test" ofType:@"aiff"];
+//    NSString* url = [NSString stringWithFormat:@"file:%@", path];
+//	if(![self playFile:url])
+//		NSLog(@"Couldn't play");
+
+    // Play a remote file
+	if(![self playFile:@"http://10.0.0.9:9000/disk/music/O0$1$7I6537/Be%20My%20Downfall.flac"])
 		NSLog(@"Couldn't play");
 
 	return YES;
@@ -175,9 +181,9 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 {
 	NSParameterAssert(nil != file);
 	
-	NSURL *url = [NSURL fileURLWithPath:file];
+	NSURL *url = [NSURL URLWithString:file];
 	
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url), CFSTR("audio/flac"));
 	if(NULL == decoder)
 		return NO;
 	
