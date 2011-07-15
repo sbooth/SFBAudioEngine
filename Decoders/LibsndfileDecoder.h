@@ -30,7 +30,14 @@
 
 #pragma once
 
-#include <sndfile/sndfile.h>
+#include <CoreFoundation/CoreFoundation.h>
+
+#if TARGET_OS_IPHONE
+# include <sndfile.h>
+#else
+# include <sndfile/sndfile.h>
+#endif
+
 #include "AudioDecoder.h"
 
 // ========================================

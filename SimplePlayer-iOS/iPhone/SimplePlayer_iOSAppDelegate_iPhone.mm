@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,58 +28,13 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#import "SimplePlayer_iOSAppDelegate_iPhone.h"
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <AudioToolbox/AudioToolbox.h>
+@implementation SimplePlayer_iOSAppDelegate_iPhone
 
-class AudioDecoder;
-
-// ========================================
-// Enums
-// ========================================
-enum {
-	eDecoderStateDataFlagDecodingStarted	= 1u << 0,
-	eDecoderStateDataFlagDecodingFinished	= 1u << 1,
-	eDecoderStateDataFlagRenderingStarted	= 1u << 2,
-	eDecoderStateDataFlagRenderingFinished	= 1u << 3,
-	eDecoderStateDataFlagStopDecoding		= 1u << 4
-};
-
-// ========================================
-// State data for decoders that are decoding and/or rendering
-// ========================================
-class DecoderStateData
+- (void) dealloc
 {
-	
-public:	
+	[super dealloc];
+}
 
-	DecoderStateData(AudioDecoder *decoder);
-	~DecoderStateData();
-	
-	void AllocateBufferList(UInt32 capacityFrames);
-	void DeallocateBufferList();
-
-	void ResetBufferList();
-	
-	UInt32 ReadAudio(UInt32 frameCount);
-	
-	AudioDecoder			*mDecoder;
-
-	AudioBufferList			*mBufferList;
-	
-	SInt64					mTimeStamp;
-	
-	SInt64					mTotalFrames;
-	volatile SInt64			mFramesRendered;
-
-	SInt64					mFrameToSeek;
-	
-	volatile uint32_t		mFlags;
-	UInt32					mBufferCapacityFrames;
-
-private:
-
-	DecoderStateData();
-
-};
+@end

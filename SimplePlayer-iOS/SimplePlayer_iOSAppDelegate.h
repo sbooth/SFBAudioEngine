@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,58 +28,51 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#import <UIKit/UIKit.h>
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <AudioToolbox/AudioToolbox.h>
+#ifdef __cplusplus
+# include "iOSAudioPlayer.h"
+#endif
 
-class AudioDecoder;
-
-// ========================================
-// Enums
-// ========================================
-enum {
-	eDecoderStateDataFlagDecodingStarted	= 1u << 0,
-	eDecoderStateDataFlagDecodingFinished	= 1u << 1,
-	eDecoderStateDataFlagRenderingStarted	= 1u << 2,
-	eDecoderStateDataFlagRenderingFinished	= 1u << 3,
-	eDecoderStateDataFlagStopDecoding		= 1u << 4
-};
-
-// ========================================
-// State data for decoders that are decoding and/or rendering
-// ========================================
-class DecoderStateData
+@interface SimplePlayer_iOSAppDelegate : NSObject <UIApplicationDelegate>
 {
+@private
+	UIWindow *_window;
+	UIButton *_playButton;
+	UIButton *_backwardButton;
+	UIButton *_forwardButton;
+    UISlider *_slider;
+	UITextField *_elapsed;
+	UITextField *_remaining;
+	UILabel *_title;
 	
-public:	
+#ifdef __cplusplus
+	iOSAudioPlayer *_player;
+#else
+	void *_player;
+#endif
+	NSTimer *_uiTimer;
 
-	DecoderStateData(AudioDecoder *decoder);
-	~DecoderStateData();
-	
-	void AllocateBufferList(UInt32 capacityFrames);
-	void DeallocateBufferList();
+	BOOL _resume;
+}
 
-	void ResetBufferList();
-	
-	UInt32 ReadAudio(UInt32 frameCount);
-	
-	AudioDecoder			*mDecoder;
+@property (nonatomic, retain) IBOutlet UIWindow * window;
+@property (nonatomic, retain) IBOutlet UISlider * slider;
+@property (nonatomic, retain) IBOutlet UIButton * playButton;
+@property (nonatomic, retain) IBOutlet UIButton * backwardButton;
+@property (nonatomic, retain) IBOutlet UIButton * forwardButton;
+@property (nonatomic, retain) IBOutlet UITextField * elapsed;
+@property (nonatomic, retain) IBOutlet UITextField * remaining;
+@property (nonatomic, retain) IBOutlet UILabel * title;
 
-	AudioBufferList			*mBufferList;
-	
-	SInt64					mTimeStamp;
-	
-	SInt64					mTotalFrames;
-	volatile SInt64			mFramesRendered;
+- (IBAction) playPause:(id)sender;
 
-	SInt64					mFrameToSeek;
-	
-	volatile uint32_t		mFlags;
-	UInt32					mBufferCapacityFrames;
+- (IBAction) seekForward:(id)sender;
+- (IBAction) seekBackward:(id)sender;
 
-private:
+- (IBAction) seek:(id)sender;
 
-	DecoderStateData();
+// Attempt to play the specified file- returns YES if successful
+- (BOOL) playFile:(NSString *)file;
 
-};
+@end
