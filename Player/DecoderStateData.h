@@ -67,7 +67,6 @@ public:
 	AudioDecoder			*mDecoder;
 
 	AudioBufferList			*mBufferList;
-	UInt32					mBufferCapacityFrames;
 	
 	SInt64					mTimeStamp;
 	
@@ -77,6 +76,7 @@ public:
 	SInt64					mFrameToSeek;
 	
 	volatile uint32_t		mFlags;
+	UInt32					mBufferCapacityFrames;
 
 private:
 

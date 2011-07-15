@@ -95,6 +95,8 @@
 		32D478A2138CAA3800A13129 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32D478A1138CAA3800A13129 /* CoreAudio.framework */; };
 		32D58AC9138D52B700901E21 /* CreateStringForOSType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D58AC7138D52B700901E21 /* CreateStringForOSType.cpp */; };
 		32D58ACA138D52B700901E21 /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D58AC8138D52B700901E21 /* CreateStringForOSType.h */; };
+		963190BB13CF400E005765FE /* HTTPInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 963190B913CF400E005765FE /* HTTPInputSource.cpp */; };
+		963190BC13CF400E005765FE /* HTTPInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 963190BA13CF400E005765FE /* HTTPInputSource.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -201,6 +203,8 @@
 		32D478A1138CAA3800A13129 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		32D58AC7138D52B700901E21 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = SOURCE_ROOT; };
 		32D58AC8138D52B700901E21 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = SOURCE_ROOT; };
+		963190B913CF400E005765FE /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
+		963190BA13CF400E005765FE /* HTTPInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPInputSource.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -386,6 +390,8 @@
 		3268F122138C78CE00762080 /* Input */ = {
 			isa = PBXGroup;
 			children = (
+				963190B913CF400E005765FE /* HTTPInputSource.cpp */,
+				963190BA13CF400E005765FE /* HTTPInputSource.h */,
 				3268F123138C78CE00762080 /* FileInputSource.cpp */,
 				3268F124138C78CE00762080 /* FileInputSource.h */,
 				3268F125138C78CE00762080 /* InMemoryFileInputSource.cpp */,
@@ -486,6 +492,7 @@
 				3201AFFA13CE4B6F008764BD /* MPEGDecoder.h in Headers */,
 				3201B00213CE4D29008764BD /* WavPackDecoder.h in Headers */,
 				3201B00613CE4EA4008764BD /* OggSpeexDecoder.h in Headers */,
+				963190BC13CF400E005765FE /* HTTPInputSource.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -613,6 +620,7 @@
 				3201AFF913CE4B6F008764BD /* MPEGDecoder.cpp in Sources */,
 				3201B00113CE4D29008764BD /* WavPackDecoder.cpp in Sources */,
 				3201B00513CE4EA4008764BD /* OggSpeexDecoder.cpp in Sources */,
+				963190BB13CF400E005765FE /* HTTPInputSource.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
