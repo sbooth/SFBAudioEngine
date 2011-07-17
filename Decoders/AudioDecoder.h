@@ -83,10 +83,13 @@ public:
 	
 	// ========================================
 	// Factory methods that return an AudioDecoder for the specified resource, or NULL on failure
+	// If specified, the MIME type will take precedence over file extension-based type resolution
 	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error = NULL);
 
 	// If this returns NULL the caller is responsible for deleting inputSource
 	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error = NULL);
 
 	// Limit decoding to a specified region
 	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = NULL);

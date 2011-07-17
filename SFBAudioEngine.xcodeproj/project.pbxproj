@@ -54,6 +54,8 @@
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
 		322D7A5411304C24006676FC /* MP4Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D7A5211304C24006676FC /* MP4Metadata.h */; };
 		32379E8B1093D35700DD5B34 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32379E8A1093D35700DD5B34 /* CoreAudio.framework */; };
+		32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32386EF213D2135400D25175 /* HTTPInputSource.cpp */; };
+		32386EF513D2135400D25175 /* HTTPInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32386EF313D2135400D25175 /* HTTPInputSource.h */; };
 		324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */; };
 		324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */; };
 		324DB1B712DC17480055AF3F /* mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 324DB1B612DC17480055AF3F /* mac.framework */; };
@@ -285,6 +287,8 @@
 		322D7A5111304C24006676FC /* MP4Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MP4Metadata.cpp; sourceTree = "<group>"; };
 		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Metadata.h; sourceTree = "<group>"; };
 		32379E8A1093D35700DD5B34 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
+		32386EF213D2135400D25175 /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
+		32386EF313D2135400D25175 /* HTTPInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPInputSource.h; sourceTree = "<group>"; };
 		324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioDecoder.h; sourceTree = "<group>"; };
 		324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonkeysAudioDecoder.cpp; sourceTree = "<group>"; };
 		324DB1B612DC17480055AF3F /* mac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mac.framework; path = Frameworks/mac.framework; sourceTree = "<group>"; };
@@ -618,6 +622,8 @@
 		32D65528115FC570002B275C /* Input */ = {
 			isa = PBXGroup;
 			children = (
+				32386EF213D2135400D25175 /* HTTPInputSource.cpp */,
+				32386EF313D2135400D25175 /* HTTPInputSource.h */,
 				32D65529115FC58C002B275C /* FileInputSource.cpp */,
 				32D6552A115FC58C002B275C /* FileInputSource.h */,
 				32D6552B115FC58C002B275C /* InputSource.cpp */,
@@ -772,6 +778,7 @@
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */,
 				32F6275013A52AA7004EC204 /* LibsndfileDecoder.h in Headers */,
+				32386EF513D2135400D25175 /* HTTPInputSource.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -950,6 +957,7 @@
 				326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */,
 				3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */,
 				32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */,
+				32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

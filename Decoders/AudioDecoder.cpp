@@ -34,6 +34,7 @@
 
 #include <log4cxx/logger.h>
 
+#include "HTTPInputSource.h"
 #include "AudioDecoder.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
@@ -224,6 +225,11 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
+	return CreateDecoderForURL(url, NULL, error);
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
+{
 	if(NULL == url)
 		return NULL;
 
@@ -233,7 +239,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 	if(NULL == inputSource)
 		return NULL;
 
-	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
+	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, mimeType, error);
 	
 	if(NULL == decoder)
 		delete inputSource, inputSource = NULL;
@@ -245,6 +251,11 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error
 // If this returns an AudioDecoder instance, the instance takes ownership of inputSource
 AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
 {
+	return CreateDecoderForInputSource(inputSource, NULL, error);
+}
+
+AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error)
+{
 	if(NULL == inputSource)
 		return NULL;
 
@@ -254,138 +265,136 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(AutomaticallyOpenDecoders() && !inputSource->IsOpen() && !inputSource->Open(error))
 		return NULL;
 
-	// If this is a file URL, use the extension-based resolvers
-	CFURLRef url = inputSource->GetURL();
-	CFStringRef scheme = CFURLCopyScheme(url);
+	// As a factory this class has knowledge of its subclasses
+	// It would be possible (and perhaps preferable) to switch to a generic
+	// plugin interface at a later date
 
-	// If there is no scheme the URL is invalid
-	if(NULL == scheme) {
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
-		return NULL;
+#if 0
+	// If the input is an instance of HTTPInputSource, use the MIME type from the server
+	// This code is disabled because most HTTP servers don't send the correct MIME types
+	HTTPInputSource *httpInputSource = dynamic_cast<HTTPInputSource *>(inputSource);
+	bool releaseMIMEType = false;
+	if(!mimeType && httpInputSource && httpInputSource->IsOpen()) {
+		mimeType = httpInputSource->CopyContentMIMEType();
+		if(mimeType)
+			releaseMIMEType = true;
+	}
+#endif
+
+	// The MIME type takes precedence over the file extension
+	if(mimeType) {
+#if BUILD_FOR_MAC_OSX
+		if(FLACDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new FLACDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && WavPackDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new WavPackDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && MPEGDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new MPEGDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && OggVorbisDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new OggVorbisDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && MusepackDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new MusepackDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && MonkeysAudioDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new MonkeysAudioDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && OggSpeexDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new OggSpeexDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && MODDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new MODDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+		if(NULL == decoder && LibsndfileDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new LibsndfileDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+#endif
+		if(NULL == decoder && CoreAudioDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new CoreAudioDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
+
+#if 0
+		if(releaseMIMEType)
+			CFRelease(mimeType), mimeType = NULL;
+#endif
+
+		if(decoder)
+			return decoder;
 	}
 
-	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
-		CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-		CFStringRef pathExtension = NULL;
-		
-		CFRange range;
-		if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
-			pathExtension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
-		}
-		
-		CFRelease(fileSystemPath), fileSystemPath = NULL;
-		
-		if(NULL != pathExtension) {
-			// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-			// and if openDecoder is false the wrong decoder type may be returned, since the file isn't analyzed
-			// until Open() is called
-			
-			// As a factory this class has knowledge of its subclasses
-			// It would be possible (and perhaps preferable) to switch to a generic
-			// plugin interface at a later date
-#if BUILD_FOR_MAC_OSX
-			if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new FLACDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new WavPackDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new MPEGDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new OggVorbisDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new MusepackDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new MonkeysAudioDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new OggSpeexDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new MODDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-			if(NULL == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new LibsndfileDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-#endif
-			if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
-				decoder = new CoreAudioDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = NULL;
-					delete decoder, decoder = NULL;
-				}
-			}
-
-			CFRelease(pathExtension), pathExtension = NULL;
-		}
-		else if(error) {
+	// If no MIME type was specified, use the extension-based resolvers
+	CFStringRef pathExtension = CFURLCopyPathExtension(inputSource->GetURL());
+	if(!pathExtension) {
+		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   32,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
-			
-			CFStringRef displayName = CFURLCopyLastPathComponent(url);
+
+			CFStringRef displayName = CFURLCopyLastPathComponent(inputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""), 
 															   displayName);
-			
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedDescriptionKey, 
 								 errorString);
-			
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
 								 CFCopyLocalizedString(CFSTR("Unknown file type"), ""));
-			
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
-			
+
 			CFRelease(errorString), errorString = NULL;
 			CFRelease(displayName), displayName = NULL;
-			
+
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   InputSourceErrorDomain, 
 								   InputSourceFileNotFoundError,
@@ -393,12 +402,88 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 			
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
+
+		return NULL;
 	}
-	// Determine the MIME type for the URL
-	else {
-	}
+
+	// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
+	// and if openDecoder is false the wrong decoder type may be returned, since the file isn't analyzed
+	// until Open() is called
 	
-	CFRelease(scheme), scheme = NULL;
+#if BUILD_FOR_MAC_OSX
+	if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new FLACDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new WavPackDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new MPEGDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new OggVorbisDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new MusepackDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new MonkeysAudioDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new OggSpeexDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new MODDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new LibsndfileDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+#endif
+	if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new CoreAudioDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+
+	CFRelease(pathExtension), pathExtension = NULL;
 
 	return decoder;
 }

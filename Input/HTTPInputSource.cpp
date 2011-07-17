@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioEngineDefines.h"
 #include "HTTPInputSource.h"
-
+#include <log4cxx/logger.h>
 
 // ========================================
 // CFNetwork callbacks
@@ -48,7 +47,7 @@ static void myCFReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventTy
 
 
 HTTPInputSource::HTTPInputSource(CFURLRef url)
-	: InputSource(url), mRequest(NULL), mReadStream(NULL), mResponseHeaders(NULL), mEOSReached(false), mOffset(-1)
+	: InputSource(url), mRequest(NULL), mReadStream(NULL), mResponseHeaders(NULL), mEOSReached(false), mOffset(-1), mDesiredOffset(0)
 {}
 
 HTTPInputSource::~HTTPInputSource()
@@ -59,9 +58,14 @@ HTTPInputSource::~HTTPInputSource()
 
 bool HTTPInputSource::Open(CFErrorRef *error)
 {
+	if(IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.HTTP");
+		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		return true;
+	}
+
 	// Set up the HTTP request
 	mRequest = CFHTTPMessageCreateRequest(kCFAllocatorDefault, CFSTR("GET"), mURL, kCFHTTPVersion1_1);
-	
 	if(NULL == mRequest) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
@@ -69,9 +73,15 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 	}
 
 	CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("User-Agent"), CFSTR("SFBAudioEngine"));
-	
+
+	// Seek support
+	if(0 < mDesiredOffset) {
+		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("bytes=%ld-"), mDesiredOffset);
+		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
+		CFRelease(byteRange), byteRange = NULL;
+	}
+
 	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, NULL);
-	
 	if(NULL == mReadStream) {
 		CFRelease(mRequest), mRequest = NULL;
 		if(error)
@@ -92,7 +102,7 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 	}
 
 	CFReadStreamScheduleWithRunLoop(mReadStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-	
+
 	if(!CFReadStreamOpen(mReadStream)) {
 		CFRelease(mRequest), mRequest = NULL;
 		CFRelease(mReadStream), mReadStream = NULL;
@@ -103,13 +113,20 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 
 	while(NULL == mResponseHeaders)
 		CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true);
-	
+
+	mIsOpen = true;
 	return true;
 }
 
 bool HTTPInputSource::Close(CFErrorRef *error)
 {
 #pragma unused(error)
+	if(!IsOpen()) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.HTTP");
+		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		return true;
+	}
+
 	if(mRequest)
 		CFRelease(mRequest), mRequest = NULL;
 	if(mReadStream)
@@ -118,12 +135,17 @@ bool HTTPInputSource::Close(CFErrorRef *error)
 		CFRelease(mResponseHeaders), mResponseHeaders = NULL;
 
 	mOffset = -1;
+	mDesiredOffset = 0;
+	mIsOpen = false;
 
 	return true;
 }
 
 SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 {
+	if(!IsOpen())
+		return -1;
+
 	CFStreamStatus status = CFReadStreamGetStatus(mReadStream);
 		
 	if(kCFStreamStatusAtEnd == status)
@@ -138,45 +160,61 @@ SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 	return bytesRead;
 }
 
-SInt64 HTTPInputSource::GetLength()
+SInt64 HTTPInputSource::GetLength() const
 {
-	if(!mResponseHeaders)
+	if(!IsOpen() || !mResponseHeaders)
 		return -1;
 
 	SInt64 contentLength = -1;
-	
+
+	// FIXME: 64-bit lengths aren't handled correctly
 	CFStringRef contentLengthString = reinterpret_cast<CFStringRef>(CFDictionaryGetValue(mResponseHeaders, CFSTR("Content-Length")));
 	if(contentLengthString)
 		contentLength = CFStringGetIntValue(contentLengthString);
-	
+
 	return contentLength;
+}
+
+bool HTTPInputSource::SeekToOffset(SInt64 offset)
+{
+	if(!IsOpen())
+		return false;
+
+	if(!Close())
+		return false;
+
+	mDesiredOffset = offset;
+	return Open();
+}
+
+CFStringRef HTTPInputSource::CopyContentMIMEType() const
+{
+	if(!IsOpen() || !mResponseHeaders)
+		return NULL;
+
+	return reinterpret_cast<CFStringRef>(CFDictionaryGetValue(mResponseHeaders, CFSTR("Content-Type")));
 }
 
 void HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventType type)
 {
 	switch(type) {
 		case kCFStreamEventOpenCompleted:
-			puts("kCFStreamEventOpenCompleted");
-			mOffset = 0;
+			mOffset = mDesiredOffset;
 			break;
 
 		case kCFStreamEventHasBytesAvailable:
-			puts("kCFStreamEventHasBytesAvailable");
 			if(NULL == mResponseHeaders) {
 				CFTypeRef responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
 				if(responseHeader)
 					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields(static_cast<CFHTTPMessageRef>(const_cast<void *>(responseHeader)));
-				if(mResponseHeaders)CFShow(mResponseHeaders);
 			}
 			break;
 		
 		case kCFStreamEventErrorOccurred:
-			puts("kCFStreamEventErrorOccurred");
 			CFShow(CFReadStreamCopyError(stream));
 			break;
 
 		case kCFStreamEventEndEncountered:
-			puts("kCFStreamEventEndEncountered");
 			mEOSReached = true;
 			break;
 	}

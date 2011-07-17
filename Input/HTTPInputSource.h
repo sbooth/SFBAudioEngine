@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -51,21 +51,22 @@ public:
 	virtual bool Open(CFErrorRef *error = NULL);
 	virtual bool Close(CFErrorRef *error = NULL);
 	
-	virtual inline bool IsOpen()							{ return (NULL != mReadStream);}
-	
 	// ========================================
 	//
 	virtual SInt64 Read(void *buffer, SInt64 byteCount);
-	virtual inline bool AtEOF()								{ return mEOSReached; }
+	virtual inline bool AtEOF()	const						{ return mEOSReached; }
 	
-	virtual inline SInt64 GetOffset()						{ return mOffset; }
-	virtual SInt64 GetLength();
+	virtual inline SInt64 GetOffset() const					{ return mOffset; }
+	virtual SInt64 GetLength() const;
 	
 	// ========================================
 	// Seeking support
-	virtual inline bool SupportsSeeking()					{ return false; }
-	virtual inline bool SeekToOffset(SInt64 /*offset*/)		{ return false; }
-	
+	virtual inline bool SupportsSeeking() const				{ return true; }
+	virtual bool SeekToOffset(SInt64 offset);
+
+	// ========================================
+	CFStringRef CopyContentMIMEType() const;
+
 private:
 	
 	CFHTTPMessageRef				mRequest;
@@ -73,6 +74,7 @@ private:
 	CFDictionaryRef					mResponseHeaders;
 	bool							mEOSReached;
 	SInt64							mOffset;
+	SInt64							mDesiredOffset;
 
 public:
 	
