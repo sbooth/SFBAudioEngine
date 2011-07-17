@@ -34,6 +34,7 @@
 #include "FileInputSource.h"
 #include "MemoryMappedFileInputSource.h"
 #include "InMemoryFileInputSource.h"
+#include "HTTPInputSource.h"
 
 // ========================================
 // Error Codes
@@ -49,7 +50,6 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 	
 	InputSource *inputSource = NULL;
 	
-	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
 
 	// If there is no scheme the URL is invalid
@@ -67,6 +67,8 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 		else
 			inputSource = new FileInputSource(url);
 	}
+	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive))
+		inputSource = new HTTPInputSource(url);
 
 	CFRelease(scheme), scheme = NULL;
 
