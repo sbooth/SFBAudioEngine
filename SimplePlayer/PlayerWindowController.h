@@ -36,6 +36,6 @@
 - (IBAction) seek:(id)sender;
 
 // Attempt to play the specified file- returns YES if successful
-- (BOOL) playFile:(NSString *)file;
+- (BOOL) playURL:(NSURL *)url;
 
 @end

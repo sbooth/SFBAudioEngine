@@ -135,12 +135,10 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	}
 }
 
-- (BOOL) playFile:(NSString *)file
+- (BOOL) playURL:(NSURL *)url
 {
-	NSParameterAssert(nil != file);
+	NSParameterAssert(nil != url);
 
-	NSURL *url = [NSURL fileURLWithPath:file];
-	
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
 	if(NULL == decoder)
 		return NO;

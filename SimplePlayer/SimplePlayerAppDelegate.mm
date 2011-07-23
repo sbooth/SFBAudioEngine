@@ -11,10 +11,14 @@
 @implementation SimplePlayerAppDelegate
 
 @synthesize playerWindowController = _playerWindowController;
+@synthesize openURLPanel = _openURLPanel;
+@synthesize openURLPanelTextField = _openURLPanelTextField;
 
 - (void) dealloc
 {
 	[_playerWindowController release], _playerWindowController = nil;
+	[_openURLPanel release], _openURLPanel = nil;
+	[_openURLPanelTextField release], _openURLPanelTextField = nil;
 	[super dealloc];
 }
 
@@ -40,7 +44,7 @@
 	if(NO == extensionValid)
 		return NO;
 	
-	return [_playerWindowController playFile:filename];
+	return [_playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
 - (IBAction) openFile:(id)sender
@@ -55,10 +59,28 @@
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModalForTypes:(NSArray *)supportedTypes]) {
 		NSArray *filenames = [openPanel filenames];
-		[_playerWindowController playFile:[filenames objectAtIndex:0]];	
+		[_playerWindowController playURL:[NSURL fileURLWithPath:[filenames objectAtIndex:0]]];
 	}	
 
 	CFRelease(supportedTypes), supportedTypes = NULL;
+}
+
+- (IBAction) openURL:(id)sender
+{
+	[_openURLPanel center];
+	[_openURLPanel makeKeyAndOrderFront:sender];	
+}
+
+- (IBAction) openURLPanelOpenAction:(id)sender
+{
+	[_openURLPanel orderOut:sender];
+	NSURL *url = [NSURL URLWithString:[_openURLPanelTextField stringValue]];
+	[_playerWindowController playURL:url];
+}
+
+- (IBAction) openURLPanelCancelAction:(id)sender
+{
+	[_openURLPanel orderOut:sender];
 }
 
 @end
