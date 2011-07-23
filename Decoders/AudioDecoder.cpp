@@ -366,7 +366,12 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
-	CFStringRef pathExtension = CFURLCopyPathExtension(inputSource->GetURL());
+
+	CFURLRef inputURL = inputSource->GetURL();
+	if(!inputURL)
+		return NULL;
+
+	CFStringRef pathExtension = CFURLCopyPathExtension(inputURL);
 	if(!pathExtension) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -374,7 +379,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 
-			CFStringRef displayName = CFURLCopyLastPathComponent(inputSource->GetURL());
+			CFStringRef displayName = CFURLCopyLastPathComponent(inputURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""), 
