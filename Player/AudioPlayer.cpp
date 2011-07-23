@@ -1095,7 +1095,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 		// If IO is enabled, disable it while hog mode is acquired because the HAL
 		// does not automatically restart IO after hog mode is taken
-		bool restartIO = IsPlaying();
+		restartIO = IsPlaying();
 		if(restartIO) {
 			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
 			// Wait for output to stop
