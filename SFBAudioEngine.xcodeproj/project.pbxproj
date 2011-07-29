@@ -100,7 +100,6 @@
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
 		32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A95E4F1347EBC6006B40EF /* MODMetadata.h */; };
 		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
-		32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32B4379A11BAF23B0027F642 /* CoreServices.framework */; };
 		32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
 		32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B79A63138F2EC200EBEF1B /* Mutex.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
@@ -415,7 +414,6 @@
 				32CA90F910B9E514005A85DA /* mpcdec.framework in Frameworks */,
 				328AA51A1116151C0091D56B /* CoreFoundation.framework in Frameworks */,
 				322D79B911304794006676FC /* mp4v2.framework in Frameworks */,
-				32B4379B11BAF23B0027F642 /* CoreServices.framework in Frameworks */,
 				321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */,
 				320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */,
 				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
@@ -846,6 +844,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0410;
 				ORGANIZATIONNAME = sbooth.org;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "SFBAudioEngine" */;
@@ -996,7 +995,6 @@
 					"\"$(SRCROOT)/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1010,7 +1008,6 @@
 					"-framework",
 					AppKit,
 				);
-				PREBINDING = NO;
 				PRODUCT_NAME = SimplePlayer;
 			};
 			name = Debug;
@@ -1026,7 +1023,6 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 				);
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
@@ -1039,7 +1035,6 @@
 					"-framework",
 					AppKit,
 				);
-				PREBINDING = NO;
 				PRODUCT_NAME = SimplePlayer;
 				ZERO_LINK = NO;
 			};
@@ -1094,7 +1089,6 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Frameworks";
-				PREBINDING = NO;
 				PRODUCT_NAME = SFBAudioEngine;
 			};
 			name = Release;
@@ -1110,11 +1104,9 @@
 					"\"$(SRCROOT)/Frameworks\"",
 				);
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = AudioEngineExample;
 			};
 			name = Debug;
@@ -1130,10 +1122,8 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks\"",
 				);
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
-				PREBINDING = NO;
 				PRODUCT_NAME = AudioEngineExample;
 			};
 			name = Release;
