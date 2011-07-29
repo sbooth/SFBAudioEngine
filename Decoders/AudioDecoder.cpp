@@ -42,7 +42,7 @@
 #include "LoopableRegionDecoder.h"
 #include "CoreAudioDecoder.h"
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include "FLACDecoder.h"
 # include "WavPackDecoder.h"
 # include "MPEGDecoder.h"
@@ -69,7 +69,7 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	
 	CFArrayRef decoderExtensions = NULL;
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	decoderExtensions = FLACDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
@@ -124,7 +124,7 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	
 	CFArrayRef decoderMIMETypes = NULL;
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	decoderMIMETypes = FLACDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
@@ -283,7 +283,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 	// The MIME type takes precedence over the file extension
 	if(mimeType) {
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 		if(FLACDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new FLACDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
@@ -415,7 +415,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	// and if openDecoder is false the wrong decoder type may be returned, since the file isn't analyzed
 	// until Open() is called
 	
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new FLACDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {

@@ -37,7 +37,6 @@
 #include <mach/semaphore.h>
 #include <mach/sync_policy.h>
 #include <Accelerate/Accelerate.h>
-#include <CoreServices/CoreServices.h>
 #include <stdexcept>
 #include <new>
 #include <algorithm>
@@ -67,6 +66,7 @@
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
 #define SLEEP_TIME_USEC							1000
+#define DECLARE_LOGGER							log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"))
 
 static void InitializeLoggingSubsystem() __attribute__ ((constructor));
 static void InitializeLoggingSubsystem()
@@ -112,34 +112,184 @@ setThreadPolicy(integer_t importance)
 }
 
 // ========================================
-// IOProc callbacks
+// The AUGraph input callback
 // ========================================
-static OSStatus 
-myIOProc(AudioDeviceID				inDevice,
-		 const AudioTimeStamp		*inNow,
-		 const AudioBufferList		*inInputData,
-		 const AudioTimeStamp		*inInputTime,
-		 AudioBufferList			*outOutputData,
-		 const AudioTimeStamp		*inOutputTime,
-		 void						*inClientData)
+static OSStatus
+myAURenderCallback(void *							inRefCon,
+				   AudioUnitRenderActionFlags *		ioActionFlags,
+				   const AudioTimeStamp *			inTimeStamp,
+				   UInt32							inBusNumber,
+				   UInt32							inNumberFrames,
+				   AudioBufferList *				ioData)
 {
-	assert(NULL != inClientData);
+	assert(NULL != inRefCon);
 
-	AudioPlayer *player = static_cast<AudioPlayer *>(inClientData);
-	return player->Render(inDevice, inNow, inInputData, inInputTime, outOutputData, inOutputTime);
+	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+	return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
 
 static OSStatus
-myAudioObjectPropertyListenerProc(AudioObjectID							inObjectID,
-								  UInt32								inNumberAddresses,
-								  const AudioObjectPropertyAddress		inAddresses[],
-								  void									*inClientData)
+auGraphDidRender(void *							inRefCon,
+				 AudioUnitRenderActionFlags *	ioActionFlags,
+				 const AudioTimeStamp *			inTimeStamp,
+				 UInt32							inBusNumber,
+				 UInt32							inNumberFrames,
+				 AudioBufferList *				ioData)
 {
-	assert(NULL != inClientData);
-	
-	AudioPlayer *player = static_cast<AudioPlayer *>(inClientData);
-	return player->AudioObjectPropertyChanged(inObjectID, inNumberAddresses, inAddresses);
+	assert(NULL != inRefCon);
+
+	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+	return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
+
+//#pragma mark -Audio Session Interruption Listener
+//
+//void rioInterruptionListener(void *inClientData, UInt32 inInterruption)
+//{
+//    printf("Session interrupted! --- %s ---", inInterruption == kAudioSessionBeginInterruption ? "Begin Interruption" : "End Interruption");
+//    
+//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate*)inClientData;
+//    
+//    if (inInterruption == kAudioSessionEndInterruption) {
+//        // make sure we are again the active session
+//        AudioSessionSetActive(true);
+//        AudioOutputUnitStart(THIS->rioUnit);
+//    }
+//    
+//    if (inInterruption == kAudioSessionBeginInterruption) {
+//        AudioOutputUnitStop(THIS->rioUnit);
+//    }
+//}
+//
+//#pragma mark -Audio Session Property Listener
+//
+//void propListener(  void *                  inClientData,
+//				  AudioSessionPropertyID  inID,
+//				  UInt32                  inDataSize,
+//				  const void *            inData)
+//{
+//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate*)inClientData;
+//    if (inID == kAudioSessionProperty_AudioRouteChange)
+//    {
+//        try {
+//            // if there was a route change, we need to dispose the current rio unit and create a new one
+//            XThrowIfError(AudioComponentInstanceDispose(THIS->rioUnit), "couldn't dispose remote i/o unit");        
+//			
+//            SetupRemoteIO(THIS->rioUnit, THIS->inputProc, THIS->thruFormat);
+//            
+//            UInt32 size = sizeof(THIS->hwSampleRate);
+//            XThrowIfError(AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate, &size, &THIS->hwSampleRate), "couldn't get new sample rate");
+//			
+//            XThrowIfError(AudioOutputUnitStart(THIS->rioUnit), "couldn't start unit");
+//			
+//            // we need to rescale the sonogram view's color thresholds for different input
+//            CFStringRef newRoute;
+//            size = sizeof(CFStringRef);
+//            XThrowIfError(AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &newRoute), "couldn't get new audio route");
+//            if (newRoute)
+//            {   
+//                CFShow(newRoute);
+//                if (CFStringCompare(newRoute, CFSTR("Headset"), NULL) == kCFCompareEqualTo) // headset plugged in
+//                {
+//                    colorLevels[0] = .3;                
+//                    colorLevels[5] = .5;
+//                }
+//                else if (CFStringCompare(newRoute, CFSTR("Receiver"), NULL) == kCFCompareEqualTo) // headset plugged in
+//                {
+//                    colorLevels[0] = 0;
+//                    colorLevels[5] = .333;
+//                    colorLevels[10] = .667;
+//                    colorLevels[15] = 1.0;
+//                    
+//                }           
+//                else
+//                {
+//                    colorLevels[0] = 0;
+//                    colorLevels[5] = .333;
+//                    colorLevels[10] = .667;
+//                    colorLevels[15] = 1.0;
+//                    
+//                }
+//            }
+//        } catch (CAXException e) {
+//            char buf[256];
+//            fprintf(stderr, "Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
+//        }
+//        
+//    }
+//}
+//
+//#pragma mark -RIO Render Callback
+//
+//static OSStatus PerformThru(
+//                            void                        *inRefCon, 
+//                            AudioUnitRenderActionFlags  *ioActionFlags, 
+//                            const AudioTimeStamp        *inTimeStamp, 
+//                            UInt32                      inBusNumber, 
+//                            UInt32                      inNumberFrames, 
+//                            AudioBufferList             *ioData)
+//{
+//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate *)inRefCon;
+//    OSStatus err = AudioUnitRender(THIS->rioUnit, ioActionFlags, inTimeStamp, 1, inNumberFrames, ioData);
+//    if (err) { printf("PerformThru: error %d\n", (int)err); return err; }
+//    
+//    // Remove DC component
+//    for(UInt32 i = 0; i < ioData->mNumberBuffers; ++i)
+//        THIS->dcFilter[i].InplaceFilter((SInt32*)(ioData->mBuffers[i].mData), inNumberFrames, 1);
+//    
+//    if (THIS->displayMode == aurioTouchDisplayModeOscilloscopeWaveform)
+//    {
+//        // The draw buffer is used to hold a copy of the most recent PCM data to be drawn on the oscilloscope
+//        if (drawBufferLen != drawBufferLen_alloced)
+//        {
+//            int drawBuffer_i;
+//            
+//            // Allocate our draw buffer if needed
+//            if (drawBufferLen_alloced == 0)
+//                for (drawBuffer_i=0; drawBuffer_i<kNumDrawBuffers; drawBuffer_i++)
+//                    drawBuffers[drawBuffer_i] = NULL;
+//            
+//            // Fill the first element in the draw buffer with PCM data
+//            for (drawBuffer_i=0; drawBuffer_i<kNumDrawBuffers; drawBuffer_i++)
+//            {
+//                drawBuffers[drawBuffer_i] = (SInt8 *)realloc(drawBuffers[drawBuffer_i], drawBufferLen);
+//                bzero(drawBuffers[drawBuffer_i], drawBufferLen);
+//            }
+//            
+//            drawBufferLen_alloced = drawBufferLen;
+//        }
+//        
+//        int i;
+//        
+//        SInt8 *data_ptr = (SInt8 *)(ioData->mBuffers[0].mData);
+//        for (i=0; i<inNumberFrames; i++)
+//        {
+//            if ((i+drawBufferIdx) >= drawBufferLen)
+//            {
+//                cycleOscilloscopeLines();
+//                drawBufferIdx = -i;
+//            }
+//            drawBuffers[0][i + drawBufferIdx] = data_ptr[2];
+//            data_ptr += 4;
+//        }
+//        drawBufferIdx += inNumberFrames;
+//    }
+//    
+//    else if ((THIS->displayMode == aurioTouchDisplayModeSpectrum) || (THIS->displayMode == aurioTouchDisplayModeOscilloscopeFFT))
+//    {
+//        if (THIS->fftBufferManager == NULL) return noErr;
+//        
+//        if (THIS->fftBufferManager->NeedsNewAudioData())
+//        {
+//            THIS->fftBufferManager->GrabAudioData(ioData); 
+//        }
+//        
+//    }
+//    if (THIS->mute == YES) { SilenceData(ioData); }
+//    
+//    return err;
+//}
+
 
 // ========================================
 // The decoder thread's entry point
@@ -169,25 +319,40 @@ collectorEntry(void *arg)
 // AudioConverter input callback
 // ========================================
 static OSStatus
-mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
-							   UInt32							*ioNumberDataPackets,
-							   AudioBufferList					*ioData,
-							   AudioStreamPacketDescription		**outDataPacketDescription,
-							   void								*inUserData)
-{	
+myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
+									 UInt32							*ioNumberDataPackets,
+									 AudioBufferList				*ioData,
+									 AudioStreamPacketDescription	**outDataPacketDescription,
+									 void							*inUserData)
+{
+
+#pragma unused(inAudioConverter)
+#pragma unused(outDataPacketDescription)
+
 	assert(NULL != inUserData);
 	assert(NULL != ioNumberDataPackets);
-	
-	AudioPlayer *player = static_cast<AudioPlayer *>(inUserData);	
-	return player->FillSampleRateConversionBuffer(inAudioConverter, ioNumberDataPackets, ioData, outDataPacketDescription);
-}
 
+	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
+
+	decoderStateData->ResetBufferList();
+
+	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
+
+	// Point ioData at our decoded audio
+	ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
+	for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
+		ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
+
+	*ioNumberDataPackets = framesRead;
+
+	return noErr;
+}
 
 #pragma mark Creation/Destruction
 
 
 AudioPlayer::AudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
+	: mAUGraph(NULL), mOutputNode(NULL), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -239,13 +404,13 @@ AudioPlayer::AudioPlayer()
 	}
 	
 	// ========================================
-	// The ring buffer will always contain deinterleaved 64-bit float audio
+	// The AUGraph will always receive audio in the canonical Core Audio format
 	mRingBufferFormat.mFormatID				= kAudioFormatLinearPCM;
-	mRingBufferFormat.mFormatFlags			= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
-	
+	mRingBufferFormat.mFormatFlags			= kAudioFormatFlagsAudioUnitCanonical;
+
 	mRingBufferFormat.mSampleRate			= 0;
 	mRingBufferFormat.mChannelsPerFrame		= 0;
-	mRingBufferFormat.mBitsPerChannel		= 8 * sizeof(double);
+	mRingBufferFormat.mBitsPerChannel		= 8 * sizeof(AudioUnitSampleType);
 	
 	mRingBufferFormat.mBytesPerPacket		= (mRingBufferFormat.mBitsPerChannel / 8);
 	mRingBufferFormat.mFramesPerPacket		= 1;
@@ -255,29 +420,6 @@ AudioPlayer::AudioPlayer()
 
 	// ========================================
 	// Set up output
-	
-	// Use the default output device initially
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioHardwarePropertyDefaultOutputDevice, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(mOutputDeviceID);
-
-    OSStatus hwResult = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-												   &propertyAddress,
-												   0,
-												   NULL,
-												   &dataSize,
-												   &mOutputDeviceID);
-	
-	if(kAudioHardwareNoError != hwResult) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-		LOG4CXX_FATAL(logger, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << hwResult);
-		throw std::runtime_error("AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed");
-	}
-
 	if(!OpenOutput()) {
 		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
 		LOG4CXX_FATAL(logger, "OpenOutput() failed");
@@ -340,38 +482,13 @@ AudioPlayer::~AudioPlayer()
 
 	if(mRingBufferChannelLayout)
 		free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
-
-	// Clean up the converters and conversion buffers
-	if(mOutputConverters) {
-		for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
-		delete [] mOutputConverters, mOutputConverters = NULL;
-	}
-	
-	if(mSampleRateConverter) {
-		OSStatus result = AudioConverterDispose(mSampleRateConverter);
-		mSampleRateConverter = NULL;
-
-		if(noErr != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
-			LOG4CXX_ERROR(logger, "AudioConverterDispose failed: " << result);
-		}
-	}
-
-	if(mSampleRateConversionBuffer)
-		mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
-
-	if(mOutputBuffer)
-		mOutputBuffer = DeallocateABL(mOutputBuffer);
 }
 
 #pragma mark Playback Control
 
 bool AudioPlayer::Play()
 {
-	Mutex::Locker lock(mGuard);
-
-	if(!IsPlaying())
+	if(!OutputIsRunning())
 		return StartOutput();
 
 	return true;
@@ -379,10 +496,8 @@ bool AudioPlayer::Play()
 
 bool AudioPlayer::Pause()
 {
-	Mutex::Locker lock(mGuard);
-
-	if(IsPlaying())
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+	if(OutputIsRunning())
+		StopOutput();
 
 	return true;
 }
@@ -391,11 +506,8 @@ bool AudioPlayer::Stop()
 {
 	Guard::Locker lock(mGuard);
 
-	if(IsPlaying()) {
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		// Wait for output to stop
-		lock.Wait();
-	}
+	if(OutputIsRunning())
+		StopOutput();
 
 	StopActiveDecoders();
 	
@@ -409,7 +521,7 @@ bool AudioPlayer::Stop()
 
 AudioPlayer::PlayerState AudioPlayer::GetPlayerState() const
 {
-	if(eAudioPlayerFlagIsPlaying & mFlags)
+	if(OutputIsRunning())
 		return AudioPlayer::ePlaying;
 
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
@@ -586,141 +698,57 @@ bool AudioPlayer::SupportsSeeking() const
 
 bool AudioPlayer::GetMasterVolume(Float32& volume) const
 {
-	return GetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
+	return GetVolumeForChannel(0, volume);
 }
 
 bool AudioPlayer::SetMasterVolume(Float32 volume)
 {
-	return SetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
-}
-
-bool AudioPlayer::GetChannelCount(UInt32& channelCount) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreamConfiguration,
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster
-	};
-
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
-		return false;
-	}
-
-	UInt32 dataSize;
-	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
-
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
-		return false;
-	}
-
-	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
-
-	if(NULL == bufferList) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Unable to allocate << " << dataSize << " bytes");
-		return false;
-	}
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
-		free(bufferList), bufferList = NULL;
-		return false;
-	}
-	
-	channelCount = 0;
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
-
-	free(bufferList), bufferList = NULL;
-	return true;
-}
-
-bool AudioPlayer::GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyPreferredChannelsForStereo, 
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
-		return false;
-	}
-	
-	UInt32 preferredChannels [2];
-	UInt32 dataSize = sizeof(preferredChannels);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
-		return false;
-	}
-
-	preferredStereoChannels.first = preferredChannels[0];
-	preferredStereoChannels.second = preferredChannels[1];
-
-	return true;
+	return SetVolumeForChannel(0, volume);
 }
 
 bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 {
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+		LOG4CXX_WARN(logger, "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
-	
-	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+
+	AudioUnitParameterValue auVolume;
+	result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &auVolume);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+		LOG4CXX_WARN(logger, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
 		return false;
 	}
-	
+
+	volume = static_cast<Float32>(auVolume);
+
 	return true;
 }
 
 bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 {
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device 0x" << std::hex << mOutputDeviceID << " channel " << channel << " volume to " << volume);
+	if(0 > volume || 1 < volume)
+		return false;
 
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOG4CXX_WARN(logger, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+		LOG4CXX_WARN(logger, "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+	result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, volume, 0);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer");
+		LOG4CXX_WARN(logger, "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -784,249 +812,9 @@ bool AudioPlayer::SetDigitalPreGain(double preGain)
 	return true;
 }
 
-bool AudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
-{
-	if(NULL == mSampleRateConverter)
-		return false;
+#if !TARGET_OS_IPHONE
 
-	Guard::Locker lock(mGuard);
-
-	bool restartIO = IsPlaying();
-	if(restartIO) {
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		// Wait for output to stop
-		lock.Wait();
-	}
-
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting sample rate converter quality to " << srcQuality);
-
-	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
-												kAudioConverterSampleRateConverterQuality, 
-												sizeof(srcQuality), 
-												&srcQuality);
-
-	if(noErr != result) {
-		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterQuality) failed: " << result);
-		return false;
-	}
-
-	if(!ReallocateSampleRateConversionBuffer())
-		return false;
-
-	if(restartIO)
-		return StartOutput();
-
-	return true;
-}
-
-bool AudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
-{
-	if(NULL == mSampleRateConverter)
-		return false;
-
-	Guard::Locker lock(mGuard);
-
-	bool restartIO = IsPlaying();
-	if(restartIO) {
-		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		// Wait for output to stop
-		lock.Wait();
-	}
-
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting sample rate converter complexity to " << srcComplexity);
-
-	OSStatus result = AudioConverterSetProperty(mSampleRateConverter, 
-												kAudioConverterSampleRateConverterComplexity, 
-												sizeof(srcComplexity), 
-												&srcComplexity);
-
-	if(noErr != result) {
-		LOG4CXX_WARN(logger, "AudioConverterSetProperty (kAudioConverterSampleRateConverterComplexity) failed: " << result);
-		return false;
-	}
-
-	if(!ReallocateSampleRateConversionBuffer())
-		return false;
-
-	if(restartIO)
-		return StartOutput();
-
-	return true;
-}
-
-#pragma mark Device Management
-
-bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyDeviceUID, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(deviceUID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &deviceUID);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
-		return false;
-	}
-	
-	return true;
-}
-
-bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
-{
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device UID to " << deviceUID);
-
-	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
-	UInt32				specifierSize	= 0;
-
-	// If NULL was passed as the device UID, use the default output device
-	if(NULL == deviceUID) {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDefaultOutputDevice, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
-		
-		specifierSize = sizeof(deviceID);
-		
-		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-													 &propertyAddress,
-													 0,
-													 NULL,
-													 &specifierSize,
-													 &deviceID);
-		
-		if(kAudioHardwareNoError != result) {
-			LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
-			return false;
-		}
-	}
-	else {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDeviceForUID, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
-		
-		AudioValueTranslation translation = {
-			&deviceUID, sizeof(deviceUID),
-			&deviceID, sizeof(deviceID)
-		};
-		
-		specifierSize = sizeof(translation);
-		
-		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-													 &propertyAddress,
-													 0,
-													 NULL,
-													 &specifierSize,
-													 &translation);
-		
-		if(kAudioHardwareNoError != result) {
-			LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
-			return false;
-		}
-	}
-	
-	// The device isn't connected or doesn't exist
-	if(kAudioDeviceUnknown == deviceID)
-		return false;
-
-	return SetOutputDeviceID(deviceID);
-}
-
-bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
-{
-	deviceID = mOutputDeviceID;
-	return true;
-}
-
-bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
-{
-	if(kAudioDeviceUnknown == deviceID)
-		return false;
-
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting output device ID to 0x" << std::hex << deviceID);
-	
-	if(deviceID == mOutputDeviceID)
-		return true;
-
-	if(!CloseOutput())
-		return false;
-	
-	mOutputDeviceID = deviceID;
-	
-	if(!OpenOutput())
-		return false;
-	
-	return true;
-}
-
-bool AudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(deviceSampleRate);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &deviceSampleRate);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
-		return false;
-	}
-	
-	return true;
-}
-
-bool AudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
-{
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting device 0x" << std::hex << mOutputDeviceID << " sample rate to " << deviceSampleRate << " Hz");
-
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 sizeof(deviceSampleRate),
-												 &deviceSampleRate);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
-		return false;
-	}
-
-	return true;
-}
+#pragma mark Hog Mode
 
 bool AudioPlayer::OutputDeviceIsHogged() const
 {
@@ -1036,17 +824,15 @@ bool AudioPlayer::OutputDeviceIsHogged() const
 		kAudioObjectPropertyScopeGlobal,
 		kAudioObjectPropertyElementMaster 
 	};
-	
+
 	pid_t hogPID = static_cast<pid_t>(-1);
 	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
+
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
@@ -1058,8 +844,12 @@ bool AudioPlayer::OutputDeviceIsHogged() const
 
 bool AudioPlayer::StartHoggingOutputDevice()
 {
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Taking hog mode for device 0x" << std::hex << mOutputDeviceID);
+	LOG4CXX_DEBUG(logger, "Taking hog mode for device 0x" << std::hex << deviceID);
 
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1067,51 +857,29 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		kAudioObjectPropertyScopeGlobal,
 		kAudioObjectPropertyElementMaster 
 	};
-	
+
 	pid_t hogPID = static_cast<pid_t>(-1);
 	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
+
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
-	
+
 	// The device is already hogged
 	if(hogPID != static_cast<pid_t>(-1)) {
 		LOG4CXX_DEBUG(logger, "Device is already hogged by pid: " << hogPID);
 		return false;
 	}
 
-	bool restartIO = false;
-	{
-		Guard::Locker lock(mGuard);
-
-		// If IO is enabled, disable it while hog mode is acquired because the HAL
-		// does not automatically restart IO after hog mode is taken
-		restartIO = IsPlaying();
-		if(restartIO) {
-			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-			// Wait for output to stop
-			lock.Wait();
-		}
-	}
+	bool restartIO = OutputIsRunning();
+	if(restartIO)
+		StopOutput();
 
 	hogPID = getpid();
-	
-	result = AudioObjectSetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										sizeof(hogPID), 
-										&hogPID);
-	
+
+	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
 		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
@@ -1126,8 +894,12 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 bool AudioPlayer::StopHoggingOutputDevice()
 {
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Releasing hog mode for device 0x" << std::hex << mOutputDeviceID);
+	LOG4CXX_DEBUG(logger, "Releasing hog mode for device 0x" << std::hex << deviceID);
 
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1135,233 +907,471 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		kAudioObjectPropertyScopeGlobal,
 		kAudioObjectPropertyElementMaster 
 	};
-	
+
 	pid_t hogPID = static_cast<pid_t>(-1);
 	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
+
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
 		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
-	
+
 	// If we don't own hog mode we can't release it
 	if(hogPID != getpid())
 		return false;
 
-	bool restartIO = false;
-	{
-		Guard::Locker lock(mGuard);
-
-		// Disable IO while hog mode is released
-		restartIO = IsPlaying();
-		if(restartIO) {
-			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-			// Wait for output to stop
-			lock.Wait();
-		}
-	}
+	bool restartIO = OutputIsRunning();
+	if(restartIO)
+		StopOutput();
 
 	// Release hog mode.
 	hogPID = static_cast<pid_t>(-1);
 
-	result = AudioObjectSetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										sizeof(hogPID), 
-										&hogPID);
-	
+	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
 		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
-	
+
 	if(restartIO && !OutputIsRunning())
 		StartOutput();
-	
-	return true;
-}
-
-#pragma mark Stream Management
-
-bool AudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams) const
-{
-	streams.clear();
-
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreams, 
-		kAudioDevicePropertyScopeOutput, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize;
-	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
-													 &propertyAddress, 
-													 0,
-													 NULL,
-													 &dataSize);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams) failed: " << result);
-		return false;
-	}
-	
-	UInt32 streamCount = static_cast<UInt32>(dataSize / sizeof(AudioStreamID));
-	AudioStreamID audioStreamIDs [streamCount];
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										&dataSize, 
-										audioStreamIDs);
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyStreams) failed: " << result);
-		return false;
-	}
-
-	streams.reserve(streamCount);
-	for(UInt32 i = 0; i < streamCount; ++i)
-		streams.push_back(audioStreamIDs[i]);
 
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const
-{
-	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
-		return false;
-	}
+#pragma mark DSP Effects
 
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyVirtualFormat,
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(virtualFormat);
-	
-	OSStatus result = AudioObjectGetPropertyData(streamID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &virtualFormat);	
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
-		return false;
-	}
-	
-	return true;	
-}
-
-bool AudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat)
+bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::hex << streamID << " virtual format to: " << virtualFormat);
+	LOG4CXX_DEBUG(logger, "Adding DSP effect: " << subType << " " << manufacturer);
 
-	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
+	// Get the source node for the graph's output node
+	UInt32 numInteractions = 0;
+	OSStatus result = AUGraphCountNodeInteractions(mAUGraph, mOutputNode, &numInteractions);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphCountNodeInteractions failed: " << result);
 		return false;
 	}
-	
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyVirtualFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	OSStatus result = AudioObjectSetPropertyData(streamID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 sizeof(virtualFormat),
-												 &virtualFormat);	
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
+
+	AUNodeInteraction interactions [numInteractions];
+
+	result = AUGraphGetNodeInteractions(mAUGraph, mOutputNode, &numInteractions, interactions);	
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeInteractions failed: " << result);
 		return false;
 	}
-	
+
+	AUNode sourceNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType && mOutputNode == interaction.nodeInteraction.connection.destNode) {
+			sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			break;
+		}
+	}						
+
+	// Unable to determine the preceding node, so bail
+	if(-1 == sourceNode) {
+		LOG4CXX_ERROR(logger, "Unable to determine input node");
+		return false;
+	}
+
+	// Create the effect node and set its format
+	AudioComponentDescription desc = { kAudioUnitType_Effect, subType, manufacturer, flags, mask };
+
+	AUNode effectNode = -1;
+	result = AUGraphAddNode(mAUGraph, &desc, &effectNode);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphAddNode failed: " << result);
+		return false;
+	}
+
+	AudioUnit effectUnit = NULL;
+	result = AUGraphNodeInfo(mAUGraph, effectNode, NULL, &effectUnit);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+
+//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
+//	if(noErr != result) {
+////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+//
+//		// If the property couldn't be set (the AU may not support this format), remove the new node
+//		result = AUGraphRemoveNode(mAUGraph, effectNode);
+//		if(noErr != result)
+//			;//			ERR("AUGraphRemoveNode failed: %i", result);
+//
+//		return false;
+//	}
+//
+//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
+//	if(noErr != result) {
+////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+//
+//		// If the property couldn't be set (the AU may not support this format), remove the new node
+//		result = AUGraphRemoveNode(mAUGraph, effectNode);
+//		if(noErr != result)
+//			;			//ERR("AUGraphRemoveNode failed: %i", result);
+//
+//		return false;
+//	}
+
+	// Insert the effect at the end of the graph, before the output node
+	result = AUGraphDisconnectNodeInput(mAUGraph, mOutputNode, 0);
+
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphDisconnectNodeInput failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, effectNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphConnectNodeInput(mAUGraph, effectNode, 0, mOutputNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphUpdate(mAUGraph, NULL);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphUpdate failed: " << result);
+
+		// If the update failed, restore the previous node state
+		result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, mOutputNode, 0);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
+			return false;
+		}
+	}
+
+	if(NULL != effectUnit1)
+		*effectUnit1 = effectUnit;
+
 	return true;
 }
 
-bool AudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const
+bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 {
-	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
+	if(NULL == effectUnit)
 		return false;
-	}
-	
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyPhysicalFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(physicalFormat);
-	
-	OSStatus result = AudioObjectGetPropertyData(streamID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &physicalFormat);	
-	
-	if(kAudioHardwareNoError != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
-		return false;
-	}
-	
-	return true;
-}
 
-bool AudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat)
-{
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Setting stream 0x" << std::hex << streamID << " physical format to: " << physicalFormat);
+	LOG4CXX_DEBUG(logger, "Removing DSP effect: " << effectUnit);
 
-	if(mOutputDeviceStreamIDs.end() == std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), streamID)) {
-		LOG4CXX_WARN(logger, "Unknown AudioStreamID: " << std::hex << streamID);
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeCount failed: " << result);
 		return false;
 	}
-	
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyPhysicalFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	OSStatus result = AudioObjectSetPropertyData(streamID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 sizeof(physicalFormat),
-												 &physicalFormat);	
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_WARN(logger, "AudioObjectSetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
+
+	AUNode effectNode = -1;
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = -1;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphGetIndNode failed: " << result);
+			return false;
+		}
+
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+			return false;
+		}
+
+		// This is the unit to remove
+		if(effectUnit == au) {
+			effectNode = node;
+			break;
+		}
+	}
+
+	if(-1 == effectNode) {
+		LOG4CXX_ERROR(logger, "Unable to find the AUNode for the specified AudioUnit");
 		return false;
 	}
-	
+
+	// Get the current input and output nodes for the node to delete
+	UInt32 numInteractions = 0;
+	result = AUGraphCountNodeInteractions(mAUGraph, effectNode, &numInteractions);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphCountNodeInteractions failed: " << result);
+		return false;
+	}
+
+	AUNodeInteraction *interactions = static_cast<AUNodeInteraction *>(calloc(numInteractions, sizeof(AUNodeInteraction)));
+	if(NULL == interactions) {
+		LOG4CXX_ERROR(logger, "Unable to allocate memory");
+		return false;
+	}
+
+	result = AUGraphGetNodeInteractions(mAUGraph, effectNode, &numInteractions, interactions);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeInteractions failed: " << result);
+
+		free(interactions), interactions = NULL;
+
+		return false;
+	}
+
+	AUNode sourceNode = -1, destNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType) {
+			if(effectNode == interaction.nodeInteraction.connection.destNode)
+				sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			else if(effectNode == interaction.nodeInteraction.connection.sourceNode)
+				destNode = interaction.nodeInteraction.connection.destNode;
+		}
+	}						
+
+	free(interactions), interactions = NULL;
+
+	if(-1 == sourceNode || -1 == destNode) {
+		LOG4CXX_ERROR(logger, "Unable to find the source or destination nodes");
+		return false;
+	}
+
+	result = AUGraphDisconnectNodeInput(mAUGraph, effectNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphDisconnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphDisconnectNodeInput(mAUGraph, destNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphDisconnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphRemoveNode(mAUGraph, effectNode);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphRemoveNode failed: " << result);
+		return false;
+	}
+
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, destNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphUpdate(mAUGraph, NULL);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphUpdate failed: " << result);
+		return false;
+	}
+
 	return true;
 }
+
+#pragma mark Device Management
+
+bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
+{
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyDeviceUID, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+
+	UInt32 dataSize = sizeof(deviceUID);
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &deviceUID);
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
+		return NULL;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
+{
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+
+	// If NULL was passed as the device UID, use the default output device
+	if(NULL == deviceUID) {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioHardwarePropertyDefaultOutputDevice, 
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+
+		UInt32 specifierSize = sizeof(deviceID);
+
+		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+		if(kAudioHardwareNoError != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
+			return false;
+		}
+	}
+	else {
+		AudioObjectPropertyAddress propertyAddress = { 
+			kAudioHardwarePropertyDeviceForUID, 
+			kAudioObjectPropertyScopeGlobal, 
+			kAudioObjectPropertyElementMaster 
+		};
+
+		AudioValueTranslation translation = {
+			&deviceUID, sizeof(deviceUID),
+			&deviceID, sizeof(deviceID)
+		};
+
+		UInt32 specifierSize = sizeof(translation);
+
+		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &translation);
+		if(kAudioHardwareNoError != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
+			return false;
+		}
+	}
+
+	// The device isn't connected or doesn't exist
+	if(kAudioDeviceUnknown == deviceID)
+		return false;
+
+	return SetOutputDeviceID(deviceID);
+}
+
+bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
+{
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	UInt32 dataSize = sizeof(deviceID);
+
+	result = AudioUnitGetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
+{
+	if(kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	// Update our output AU to use the specified device
+	result = AudioUnitSetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, sizeof(deviceID));
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate) const
+{
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyNominalSampleRate, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+
+	UInt32 dataSize = sizeof(sampleRate);
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &sampleRate);
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
+{
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
+	// Determine if this will actually be a change
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyNominalSampleRate, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+
+	Float64 currentSampleRate;
+	UInt32 dataSize = sizeof(currentSampleRate);
+	
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &currentSampleRate);
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		return false;
+	}
+
+	// Nothing to do
+	if(currentSampleRate == sampleRate)
+		return true;
+
+	// Set the sample rate
+	dataSize = sizeof(sampleRate);
+	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, NULL, sizeof(sampleRate), &sampleRate);
+	if(kAudioHardwareNoError != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+#endif
 
 #pragma mark Playlist Management
 
@@ -1426,20 +1436,23 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 		}
 
 		AudioStreamBasicDescription format = decoder->GetFormat();
-
-		// The ring buffer contains deinterleaved floats at the decoder's sample rate and channel layout
-		mRingBufferFormat.mSampleRate			= format.mSampleRate;
-		mRingBufferFormat.mChannelsPerFrame		= format.mChannelsPerFrame;
-		mRingBufferChannelLayout				= CopyChannelLayout(decoder->GetChannelLayout());
-
-		// Assign a default channel layout to the ring buffer if the decoder has an unknown layout
-		if(NULL == mRingBufferChannelLayout)
-			mRingBufferChannelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
-
-		if(!CreateConvertersAndSRCBuffer()) {
-			LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
+		if(!SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame))
 			return false;
-		}
+
+		AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
+
+		// Assign a default channel layout if the decoder has an unknown layout
+		bool allocatedChannelLayout = false;
+		if(NULL == channelLayout)
+			channelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
+		
+		bool success = SetAUGraphChannelLayout(channelLayout);
+		
+		if(allocatedChannelLayout)
+			free(channelLayout), channelLayout = NULL;
+
+		if(!success)
+			return false;
 
 		// Allocate enough space in the ring buffer for the new format
 		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
@@ -1562,494 +1575,133 @@ bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 	return OSAtomicCompareAndSwap32Barrier(mRingBufferWriteChunkSize, chunkSize, reinterpret_cast<int32_t *>(&mRingBufferWriteChunkSize));
 }
 
-#pragma mark IOProc
+#pragma mark Callbacks
 
-OSStatus AudioPlayer::Render(AudioDeviceID			inDevice,
-							 const AudioTimeStamp	*inNow,
-							 const AudioBufferList	*inInputData,
-							 const AudioTimeStamp	*inInputTime,
-							 AudioBufferList		*outOutputData,
-							 const AudioTimeStamp	*inOutputTime)
+OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
+								const AudioTimeStamp			*inTimeStamp,
+								UInt32							inBusNumber,
+								UInt32							inNumberFrames,
+								AudioBufferList					*ioData)
 {
 
-#pragma unused(inNow)
-#pragma unused(inInputData)
-#pragma unused(inInputTime)
-#pragma unused(inOutputTime)
+#pragma unused(inTimeStamp)
+#pragma unused(inBusNumber)
 
-	assert(inDevice == mOutputDeviceID);
-	assert(NULL != outOutputData);
-
-	// ========================================
-	// RENDERING
-
-	// Stop output if requested
-	if(eAudioPlayerFlagStopRequested & mFlags) {
-		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-		StopOutput();
-		return kAudioHardwareNoError;
-	}
-
-	// Reset output, if requested
-	if(eAudioPlayerFlagResetNeeded & mFlags) {
-		OSAtomicTestAndClearBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
-		ResetOutput();
-	}
+	assert(NULL != ioActionFlags);
+	assert(NULL != ioData);
 
 	// Mute functionality
 	if(eAudioPlayerFlagMuteOutput & mFlags)
-		return kAudioHardwareNoError;
+		return noErr;
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
-	if(mFramesDecoded == mFramesRendered) {
-		DecoderStateData *decoderState = GetCurrentDecoderState();
-
-		// If there is a valid decoder but the ring buffer is empty, verify that the rendering finished callbacks
-		// were performed.  It is possible that decoding is actually finished, but that the last time we checked was in between
-		// the time decoderState->mFramesDecoded was updated and the time eDecoderStateDataFlagDecodingFinished was set
-		// so the callback wasn't performed
-		if(decoderState) {
-			
-			// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
-			// in the proper order multiple passes are made here
-			while(NULL != decoderState) {
-				SInt64 timeStamp = decoderState->mTimeStamp;
-
-				if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
-					decoderState->mDecoder->PerformRenderingFinishedCallback();			
-					
-					OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
-					decoderState = NULL;
-					
-					// Since rendering is finished, signal the collector to clean up this decoder
-					mCollectorSemaphore.Signal();
-				}
-
-				decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
-			}
+	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
+	if(0 == framesAvailableToRead) {
+		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
+		
+		size_t byteCountToZero = inNumberFrames * sizeof(float);
+		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
+			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
 		}
-		// If there are no decoders in the queue, stop IO
-		else
-			StopOutput();
-
-		return kAudioHardwareNoError;
+		
+		return noErr;
 	}
 
-	// Reset state
-	mFramesRenderedLastPass = 0;
-
-	// The format of mOutputBuffer is the same as mRingBufferFormat except possibly mSampleRate
-	for(UInt32 i = 0; i < mOutputBuffer->mNumberBuffers; ++i)
-		mOutputBuffer->mBuffers[i].mDataByteSize = mRingBufferFormat.mBytesPerFrame * mOutputDeviceBufferFrameSize;
-
-	// The number of frames to read, at the output device's sample rate
-	UInt32 framesToRead = 0;
-	
-	// Convert to the stream's sample rate, if required
-	if(mSampleRateConverter) {
-		// The number of frames read will be limited to valid decoded frames in the converter callback
-		framesToRead = mOutputDeviceBufferFrameSize;
-
-		OSStatus result = AudioConverterFillComplexBuffer(mSampleRateConverter, 
-														  mySampleRateConverterInputProc,
-														  this,
-														  &framesToRead, 
-														  mOutputBuffer,
-														  NULL);
-		
-		if(noErr != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_ERROR(logger, "AudioConverterFillComplexBuffer failed: " << result);
-			return result;
-		}
-	}
-	// Otherwise fetch the output from the ring buffer
-	else {
-		UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
-		framesToRead = std::min(framesAvailableToRead, mOutputDeviceBufferFrameSize);
-
-		if(framesToRead != mOutputDeviceBufferFrameSize) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << mOutputDeviceBufferFrameSize << " requested");
-
-			// TODO: Perform AudioBufferRanDry() callback ??
-		}
-
-		CARingBufferError result = mRingBuffer->Fetch(mOutputBuffer, framesToRead, mFramesRendered);
-		
-		if(kCARingBufferError_OK != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_ERROR(logger, "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
-			return ioErr;
-		}
-
-		OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
-		
-		mFramesRenderedLastPass += framesToRead;
+	// Restrict reads to valid decoded audio
+	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
+	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered);
+	if(kCARingBufferError_OK != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
+		return 1;
 	}
 
-	// Apply digital volume
-	if(eAudioPlayerFlagDigitalVolumeEnabled & mFlags /*&& 1.0 != mDigitalVolume*/) {
-		for(UInt32 bufferIndex = 0; bufferIndex < mOutputBuffer->mNumberBuffers; ++bufferIndex) {
-			double *buffer = static_cast<double *>(mOutputBuffer->mBuffers[bufferIndex].mData);
-			vDSP_vsmulD(buffer, 1, &mDigitalVolume, buffer, 1, framesToRead);
-		}
-	}
+	mFramesRenderedLastPass = framesToRead;
+	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 
-	// Iterate through each stream and render output in the stream's format
-	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL == mOutputConverters[i])
-			continue;
-
-		// Convert to the output device's format
-		UInt32 framesConverted = mOutputConverters[i]->Convert(mOutputBuffer, outOutputData, framesToRead);
+	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
+	if(framesToRead != inNumberFrames) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << inNumberFrames << " requested");
 		
-		if(framesConverted != framesToRead) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "Conversion to output format failed; all frames may not be rendered");
+		UInt32 framesOfSilence = inNumberFrames - framesToRead;
+		size_t byteCountToZero = framesOfSilence * sizeof(float);
+		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
+			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
+			memset(bufferAlias + framesToRead, 0, byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize += static_cast<UInt32>(byteCountToZero);
 		}
 	}
 
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
 	UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
-
+	
 	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
 		mDecoderSemaphore.Signal();
 
-	// ========================================
-	// POST-RENDERING HOUSEKEEPING
-	
-	// There is nothing more to do if no frames were rendered
-	if(0 == mFramesRenderedLastPass)
-		return kAudioHardwareNoError;
-	
-	// mFramesRenderedLastPass contains the number of valid frames that were rendered
-	// However, these could have come from any number of decoders depending on the buffer sizes
-	// So it is necessary to split them up here
-	
-	SInt64 framesRemainingToDistribute = mFramesRenderedLastPass;
-	DecoderStateData *decoderState = GetCurrentDecoderState();
-	
-	// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
-	// in the proper order multiple passes are made here
-	while(NULL != decoderState) {
-		SInt64 timeStamp = decoderState->mTimeStamp;
-		
-		SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
-		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
-		
-		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
-			OSAtomicTestAndSetBarrier(5 /* eDecoderStateDataFlagRenderingStarted */, &decoderState->mFlags);
-			decoderState->mDecoder->PerformRenderingStartedCallback();
-		}
-		
-		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
-		
-		if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
-			decoderState->mDecoder->PerformRenderingFinishedCallback();			
-
-			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
-			decoderState = NULL;
-
-			// Since rendering is finished, signal the collector to clean up this decoder
-			mCollectorSemaphore.Signal();
-		}
-		
-		framesRemainingToDistribute -= framesFromThisDecoder;
-		
-		if(0 == framesRemainingToDistribute)
-			break;
-		
-		decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
-	}
-	
-	return kAudioHardwareNoError;
+	return noErr;
 }
 
-OSStatus AudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjectID,
-												 UInt32								inNumberAddresses,
-												 const AudioObjectPropertyAddress	inAddresses[])
+OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
+								   const AudioTimeStamp				*inTimeStamp,
+								   UInt32							inBusNumber,
+								   UInt32							inNumberFrames,
+								   AudioBufferList					*ioData)
 {
-	// The HAL automatically stops output before this is called, and restarts output afterward if necessary
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	
+#pragma unused(inTimeStamp)
+#pragma unused(inBusNumber)
+#pragma unused(inNumberFrames)
+#pragma unused(ioData)
+	
+	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
-	// ========================================
-	// AudioDevice properties
-	if(inObjectID == mOutputDeviceID) {
-		for(UInt32 addressIndex = 0; addressIndex < inNumberAddresses; ++addressIndex) {
-			AudioObjectPropertyAddress currentAddress = inAddresses[addressIndex];
+		// There is nothing more to do if no frames were rendered
+		if(0 == mFramesRenderedLastPass)
+			return noErr;
 
-			switch(currentAddress.mSelector) {
-				case kAudioDevicePropertyDeviceIsRunning:
-				{
-					UInt32 isRunning = 0;
-					UInt32 dataSize = sizeof(isRunning);
-					
-					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
-																 &currentAddress, 
-																 0,
-																 NULL, 
-																 &dataSize,
-																 &isRunning);
-					
-					if(kAudioHardwareNoError != result) {
-						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceIsRunning) failed: " << result);
-						continue;
-					}
+		// mFramesRenderedLastPass contains the number of valid frames that were rendered
+		// However, these could have come from any number of decoders depending on the buffer sizes
+		// So it is necessary to split them up here
 
-					if(isRunning)
-						OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
-					else {
-						OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagIsPlaying */, &mFlags);
-						mGuard.Signal();
-					}
+		SInt64 framesRemainingToDistribute = mFramesRenderedLastPass;
+		DecoderStateData *decoderState = GetCurrentDecoderState();
 
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyDeviceIsRunning [0x" << std::hex << inObjectID << "]: " << (isRunning ? "True" : "False"));
+		// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
+		// in the proper order multiple passes are made here
+		while(NULL != decoderState) {
+			SInt64 timeStamp = decoderState->mTimeStamp;
 
-					break;
-				}
+			SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
+			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
 
-				case kAudioDevicePropertyNominalSampleRate:
-				{
-					Float64 deviceSampleRate = 0;
-					UInt32 dataSize = sizeof(deviceSampleRate);
-					
-					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
-																 &currentAddress, 
-																 0,
-																 NULL, 
-																 &dataSize,
-																 &deviceSampleRate);
-					
-					if(kAudioHardwareNoError != result) {
-						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
-						continue;
-					}
-					
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyNominalSampleRate [0x" << std::hex << inObjectID << "]: " << deviceSampleRate << " Hz");
-					
-					break;
-				}
-
-				case kAudioDevicePropertyStreams:
-				{
-					Guard::Locker lock(mGuard);
-
-					bool restartIO = OutputIsRunning();
-					if(restartIO) {
-						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-						// Wait for output to stop
-						lock.Wait();
-					}
-
-					// Stop observing properties on the defunct streams
-					if(!RemoveVirtualFormatPropertyListeners())
-						LOG4CXX_WARN(logger, "RemoveVirtualFormatPropertyListeners failed");
-
-					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-						if(NULL != mOutputConverters[i])
-							delete mOutputConverters[i], mOutputConverters[i] = NULL;
-					}
-
-					delete [] mOutputConverters, mOutputConverters = NULL;
-
-					mOutputDeviceStreamIDs.clear();
-
-					// Update our list of cached streams
-					if(!GetOutputStreams(mOutputDeviceStreamIDs)) 
-						continue;
-
-					// Observe the new streams for changes
-					if(!AddVirtualFormatPropertyListeners())
-						LOG4CXX_WARN(logger, "AddVirtualFormatPropertyListeners failed");
-
-					mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
-					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-						mOutputConverters[i] = NULL;
-
-					if(!CreateConvertersAndSRCBuffer())
-						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-
-					if(restartIO)
-						StartOutput();
-
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyStreams [0x" << std::hex << inObjectID << "]");
-
-					break;
-				}
-
-				case kAudioDevicePropertyBufferFrameSize:
-				{
-					Guard::Locker lock(mGuard);
-					
-					bool restartIO = OutputIsRunning();
-					if(restartIO) {
-						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-						// Wait for output to stop
-						lock.Wait();
-					}
-
-					// Clean up
-					if(mSampleRateConversionBuffer)
-						mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
-
-					if(mOutputBuffer)
-						mOutputBuffer = DeallocateABL(mOutputBuffer);
-
-					// Get the new buffer size
-					UInt32 dataSize = sizeof(mOutputDeviceBufferFrameSize);
-
-					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
-																 &currentAddress, 
-																 0,
-																 NULL, 
-																 &dataSize,
-																 &mOutputDeviceBufferFrameSize);
-
-					if(kAudioHardwareNoError != result) {
-						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize) failed: " << result);
-						continue;
-					}
-
-					AudioStreamBasicDescription outputBufferFormat = mRingBufferFormat;
-
-					// Recalculate the sample rate conversion buffer size
-					if(mSampleRateConverter && !ReallocateSampleRateConversionBuffer())
-						continue;
-
-					// Allocate the output buffer (data is at the device's sample rate)
-					mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
-
-					if(restartIO)
-						StartOutput();
-
-					LOG4CXX_DEBUG(logger, "-> kAudioDevicePropertyBufferFrameSize [0x" << std::hex << inObjectID << "]: " << mOutputDeviceBufferFrameSize);
-
-					break;
-				}
-
-				case kAudioDeviceProcessorOverload:
-					LOG4CXX_WARN(logger, "-> kAudioDeviceProcessorOverload [0x" << std::hex << inObjectID << "]: Unable to meet IOProc time constraints");
-					break;
+			if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
+				decoderState->mDecoder->PerformRenderingStartedCallback();
+				OSAtomicTestAndSetBarrier(5 /* eDecoderStateDataFlagRenderingStarted */, &decoderState->mFlags);
 			}
-			
+
+			OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
+
+			if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
+				decoderState->mDecoder->PerformRenderingFinishedCallback();			
+
+				OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+				decoderState = NULL;
+
+				// Since rendering is finished, signal the collector to clean up this decoder
+				mCollectorSemaphore.Signal();
+			}
+
+			framesRemainingToDistribute -= framesFromThisDecoder;
+
+			if(0 == framesRemainingToDistribute)
+				break;
+
+			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
 	}
-	// ========================================
-	// AudioStream properties
-	else if(mOutputDeviceStreamIDs.end() != std::find(mOutputDeviceStreamIDs.begin(), mOutputDeviceStreamIDs.end(), inObjectID)) {
-		for(UInt32 addressIndex = 0; addressIndex < inNumberAddresses; ++addressIndex) {
-			AudioObjectPropertyAddress currentAddress = inAddresses[addressIndex];
-			
-			switch(currentAddress.mSelector) {
-				case kAudioStreamPropertyVirtualFormat:
-				{
-					Guard::Locker lock(mGuard);
 
-					bool restartIO = OutputIsRunning();
-					if(restartIO) {
-						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-						// Wait for output to stop
-						lock.Wait();
-					}
-
-					// Get the new virtual format
-					AudioStreamBasicDescription virtualFormat;
-					UInt32 dataSize = sizeof(virtualFormat);
-
-					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
-																 &currentAddress, 
-																 0,
-																 NULL, 
-																 &dataSize,
-																 &virtualFormat);
-
-					if(kAudioHardwareNoError != result) {
-						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
-						continue;
-					}
-
-					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyVirtualFormat [0x" << std::hex << inObjectID << "]: " << virtualFormat);
-
-					if(!CreateConvertersAndSRCBuffer())
-						LOG4CXX_WARN(logger, "CreateConvertersAndSRCBuffer failed");
-
-					if(restartIO)
-						StartOutput();
-
-					break;
-				}
-
-				case kAudioStreamPropertyPhysicalFormat:
-				{
-					// Get the new physical format
-					AudioStreamBasicDescription physicalFormat;
-					UInt32 dataSize = sizeof(physicalFormat);
-					
-					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
-																 &currentAddress, 
-																 0,
-																 NULL, 
-																 &dataSize,
-																 &physicalFormat);
-					
-					if(kAudioHardwareNoError != result) {
-						LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
-						continue;
-					}
-
-					LOG4CXX_DEBUG(logger, "-> kAudioStreamPropertyPhysicalFormat [0x" << std::hex << inObjectID << "]: " << physicalFormat);
-
-					break;
-				}
-			}
-		}
-	}
-	
-	return kAudioHardwareNoError;			
-}
-
-OSStatus AudioPlayer::FillSampleRateConversionBuffer(AudioConverterRef				inAudioConverter,
-													 UInt32							*ioNumberDataPackets,
-													 AudioBufferList				*ioData,
-													 AudioStreamPacketDescription	**outDataPacketDescription)
-{
-#pragma unused(inAudioConverter)
-#pragma unused(outDataPacketDescription)
-
-	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
-
-	// Nothing to read
-	if(0 == framesAvailableToRead) {
-		*ioNumberDataPackets = 0;
-		return noErr;
-	}
-
-	// Restrict reads to valid decoded audio
-	UInt32 framesToRead = std::min(framesAvailableToRead, *ioNumberDataPackets);
-
-	CARingBufferError result = mRingBuffer->Fetch(mSampleRateConversionBuffer, framesToRead, mFramesRendered);
-	
-	if(kCARingBufferError_OK != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_ERROR(logger, "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
-		*ioNumberDataPackets = 0;
-		return ioErr;
-	}
-	
-	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
-	
-	// This may be called multiple times from AudioConverterFillComplexBuffer, so keep an additive tally
-	// of how many frames were rendered
-	mFramesRenderedLastPass += framesToRead;
-	
-	// Point ioData at our converted audio
-	ioData->mNumberBuffers = mSampleRateConversionBuffer->mNumberBuffers;
-	for(UInt32 bufferIndex = 0; bufferIndex < mSampleRateConversionBuffer->mNumberBuffers; ++bufferIndex)
-		ioData->mBuffers[bufferIndex] = mSampleRateConversionBuffer->mBuffers[bufferIndex];
-	
-	*ioNumberDataPackets = framesToRead;
-	
 	return noErr;
 }
 
@@ -2170,14 +1822,31 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 
-			DeinterleavingFloatConverter *converter = new DeinterleavingFloatConverter(decoderFormat);
+			// ========================================
+			// Create the AudioConverter which will convert from the decoder's format to the graph's format
+			AudioConverterRef audioConverter = NULL;
+			OSStatus result = AudioConverterNew(&decoderFormat, &mRingBufferFormat, &audioConverter);
+			if(noErr != result) {
+				LOG4CXX_ERROR(logger, "AudioConverterNew failed: " << result);
+
+				// If this happens, output will be impossible
+				OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+			}
 
 			// ========================================
+			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
+			UInt32 inputBufferSize = mRingBufferWriteChunkSize * mRingBufferFormat.mBytesPerFrame;
+			UInt32 dataSize = sizeof(inputBufferSize);
+			result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
+			if(noErr != result)
+				LOG4CXX_ERROR(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+			
+			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
-			decoderState->AllocateBufferList(mRingBufferWriteChunkSize);
+			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
 			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
-			
+
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
 			while(mKeepDecoding && decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
@@ -2186,10 +1855,10 @@ void * AudioPlayer::DecoderThreadEntry()
 				for(;;) {
 					// Determine how many frames are available in the ring buffer
 					UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
-					
+
 					// Force writes to the ring buffer to be at least mRingBufferWriteChunkSize
 					if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
-						
+
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
 							LOG4CXX_TRACE(logger, "Seeking to frame " << decoderState->mFrameToSeek);
@@ -2219,25 +1888,30 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									LOG4CXX_ERROR(logger, "OSAtomicCompareAndSwap64Barrier() failed ");
 
+								// Reset the converter and output to flush any buffers
+								result = AudioConverterReset(audioConverter);
+								if(noErr != result)
+									LOG4CXX_ERROR(logger, "AudioConverterReset failed: " << result);
+
 								// If sample rate conversion is being performed, ResetOutput() needs to be called to flush any
 								// state the AudioConverter may have.  In the future, if ResetOutput() does anything other than
 								// reset the AudioConverter state the if(mSampleRateConverter) will need to be removed
-								if(mSampleRateConverter) {
-									// ResetOutput() is not safe to call when the device is running, because the player
-									// could be in the middle of a render callback
-									if(OutputIsRunning())
-										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
-									// Even if the device isn't running, AudioConverters are not thread-safe
-									else {
-										Mutex::Locker lock(mGuard);
-										ResetOutput();
-									}
-								}
+//								if(mSampleRateConverter) {
+//									// ResetOutput() is not safe to call when the device is running, because the player
+//									// could be in the middle of a render callback
+//									if(OutputIsRunning())
+//										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
+//									// Even if the device isn't running, AudioConverters are not thread-safe
+//									else {
+//										Mutex::Locker lock(mGuard);
+//										ResetOutput();
+//									}
+//								}
 							}
 
 							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 						}
-						
+
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
@@ -2247,37 +1921,34 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
-							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
 							decoder->PerformDecodingStartedCallback();
+							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
 						}
 
-						// Read the input chunk
-						UInt32 framesDecoded = decoderState->ReadAudio(mRingBufferWriteChunkSize);
+						// Read the input chunk, converting from the decoder's format to the AUGraph's format
+						UInt32 framesDecoded = mRingBufferWriteChunkSize;
 						
-						// Convert and store the decoded audio
+						result = AudioConverterFillComplexBuffer(audioConverter, myAudioConverterComplexInputDataProc, decoderState, &framesDecoded, bufferList, NULL);
+						if(noErr != result)
+							LOG4CXX_ERROR(logger, "AudioConverterFillComplexBuffer failed: " << result);
+
+						// Store the decoded audio
 						if(0 != framesDecoded) {
-							UInt32 framesConverted = converter->Convert(decoderState->mBufferList, bufferList, framesDecoded);
-							
-							if(framesConverted != framesDecoded)
-								LOG4CXX_ERROR(logger, "Incomplete conversion:  " << framesConverted <<  "/" << framesDecoded << " frames");
 
 							// Apply digital pre-gain
-							if(eAudioPlayerFlagDigitalPreGainEnabled & mFlags) {
-								double linearGain = pow(10.0, mDigitalPreGain / 20.0);
-								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-									double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
-									vDSP_vsmulD(buffer, 1, &linearGain, buffer, 1, framesConverted);
-								}
-							}
+//							if(eAudioPlayerFlagDigitalPreGainEnabled & mFlags) {
+//								double linearGain = pow(10.0, mDigitalPreGain / 20.0);
+//								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+//									double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
+//									vDSP_vsmulD(buffer, 1, &linearGain, buffer, 1, framesConverted);
+//								}
+//							}
 
-							CARingBufferError result = mRingBuffer->Store(bufferList, 
-																		  framesConverted, 
-																		  startingFrameNumber + startTime);
-							
+							CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 							if(kCARingBufferError_OK != result)
 								LOG4CXX_ERROR(logger, "CARingBuffer::Store failed: " << result);
 
-							OSAtomicAdd64Barrier(framesConverted, &mFramesDecoded);
+							OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 						}
 						
 						// If no frames were returned, this is the end of stream
@@ -2319,14 +1990,18 @@ void * AudioPlayer::DecoderThreadEntry()
 			if(bufferList)
 				bufferList = DeallocateABL(bufferList);
 			
-			if(converter)
-				delete converter, converter = NULL;
+			if(audioConverter) {
+				result = AudioConverterDispose(audioConverter);
+				if(noErr != result)
+					LOG4CXX_ERROR(logger, "AudioConverterDispose failed: " << result);
+				audioConverter = NULL;
+			}
 		}
 
 		// Wait for another thread to wake us, or for the timeout to happen
 		mDecoderSemaphore.TimedWait(timeout);
 	}
-	
+
 	LOG4CXX_DEBUG(logger, "Decoding thread terminating");
 
 	log4cxx::NDC::pop();
@@ -2375,110 +2050,158 @@ void * AudioPlayer::CollectorThreadEntry()
 bool AudioPlayer::OpenOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Opening output for device 0x" << std::hex << mOutputDeviceID);
-	
-	// Create the IOProc which will feed audio to the device
-	OSStatus result = AudioDeviceCreateIOProcID(mOutputDeviceID, 
-												myIOProc, 
-												this, 
-												&mOutputDeviceIOProcID);
-	
+	LOG4CXX_TRACE(logger, "OpenOutput");
+
+	OSStatus result = NewAUGraph(&mAUGraph);
 	if(noErr != result) {
-		LOG4CXX_ERROR(logger, "AudioDeviceCreateIOProcID failed: " << result);
+		LOG4CXX_ERROR(logger, "NewAUGraph failed: " << result);
 		return false;
 	}
 
-	// Register device property listeners
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDeviceProcessorOverload, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectAddPropertyListener (kAudioDeviceProcessorOverload) failed: " << result);
+	// The graph will look like:
+	// MultiChannelMixer -> Output
+	AudioComponentDescription desc;
 
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioObjectAddPropertyListener (kAudioDevicePropertyBufferFrameSize) failed: " << result);
+	// Set up the mixer node
+	desc.componentType			= kAudioUnitType_Mixer;
+	desc.componentSubType		= kAudioUnitSubType_MultiChannelMixer;
+	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
+	desc.componentFlags			= 0;
+	desc.componentFlagsMask		= 0;
+
+	AUNode mixerNode;
+	result = AUGraphAddNode(mAUGraph, &desc, &mixerNode);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphAddNode failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
 		return false;
 	}
+	
+	// Set up the output node
+	desc.componentType			= kAudioUnitType_Output;
+#if TARGET_OS_IPHONE
+	desc.componentSubType		= kAudioUnitSubType_RemoteIO;
+#else
+	desc.componentSubType		= kAudioUnitSubType_HALOutput;
+#endif
+	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
+	desc.componentFlags			= 0;
+	desc.componentFlagsMask		= 0;
+
+	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphAddNode failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
+		return false;
+	}
+
+	result = AUGraphConnectNodeInput(mAUGraph, mixerNode, 0, mOutputNode, 0);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
 		
-	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectAddPropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: " << result);
-
-	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
-	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioObjectAddPropertyListener (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+		
+		mAUGraph = NULL;
 		return false;
 	}
 	
-	propertyAddress.mSelector = kAudioObjectPropertyName;
+	// Install the input callback
+	AURenderCallbackStruct cbs = { myAURenderCallback, this };
+	result = AUGraphSetNodeInputCallback(mAUGraph, mixerNode, 0, &cbs);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphSetNodeInputCallback failed: " << result);
 
-	CFStringRef deviceName = NULL;
-	UInt32 dataSize = sizeof(deviceName);
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										&dataSize, 
-										&deviceName);
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
 
-	if(kAudioHardwareNoError == result) {
-		LOG4CXX_DEBUG(logger, "Opening output for device 0x" << std::hex << mOutputDeviceID << " (" << deviceName << ")");
+		mAUGraph = NULL;
+		return false;
 	}
-	else
-		LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: " << result);
-
-	if(deviceName)
-		CFRelease(deviceName), deviceName = NULL;
-
-	propertyAddress.mSelector = kAudioDevicePropertyStreams;
-	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
 	
-    result = AudioObjectAddPropertyListener(mOutputDeviceID,
-											&propertyAddress,
-											myAudioObjectPropertyListenerProc,
-											this);
+	// Open the graph
+	result = AUGraphOpen(mAUGraph);	
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphOpen failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
+		return false;
+	}
 	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectAddPropertyListener (kAudioDevicePropertyStreams) failed: " << result);
+	// Initialize the graph
+	result = AUGraphInitialize(mAUGraph);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphInitialize failed: " << result);
 
-	// Get the device's stream information
-	if(!GetOutputStreams(mOutputDeviceStreamIDs))
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
 		return false;
+	}
+	
+	// Set the mixer's volume on the input and output
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, mixerNode, NULL, &au);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
 
-	if(!AddVirtualFormatPropertyListeners())
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
 		return false;
+	}
+	
+	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, 1.f, 0);
+	if(noErr != result)
+		LOG4CXX_ERROR(logger, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
+	
+	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Output, 0, 1.f, 0);
+	if(noErr != result)
+		LOG4CXX_ERROR(logger, "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Output) failed: " << result);
+	
+	// Install the render notification
+	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphAddRenderNotify failed: " << result);
 
-	mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
-	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-		mOutputConverters[i] = NULL;
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+
+		mAUGraph = NULL;
+		return false;
+	}
+	
+//	// Get the device's stream information
+//	if(!GetOutputStreams(mOutputDeviceStreamIDs))
+//		return false;
+//
+//	if(!AddVirtualFormatPropertyListeners())
+//		return false;
+//
+//	mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
+//	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
+//		mOutputConverters[i] = NULL;
 
 	return true;
 }
@@ -2486,79 +2209,53 @@ bool AudioPlayer::OpenOutput()
 bool AudioPlayer::CloseOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Closing output for device 0x" << std::hex << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "CloseOutput");
 
-	OSStatus result = AudioDeviceDestroyIOProcID(mOutputDeviceID, 
-												 mOutputDeviceIOProcID);
-
-	if(noErr != result)
-		LOG4CXX_ERROR(logger, "AudioDeviceDestroyIOProcID failed: " << result);
-	
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDeviceProcessorOverload, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectRemovePropertyListener (kAudioDeviceProcessorOverload) failed: " << result);
-
-	propertyAddress.mSelector = kAudioDevicePropertyBufferFrameSize;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_ERROR(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyBufferFrameSize) failed: " << result);
-	
-	propertyAddress.mSelector = kAudioDevicePropertyDeviceIsRunning;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyDeviceIsRunning) failed: " << result);
-
-	propertyAddress.mSelector = kAudioDevicePropertyNominalSampleRate;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_ERROR(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyNominalSampleRate) failed: " << result);
-
-	propertyAddress.mSelector = kAudioDevicePropertyStreams;
-	
-	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
-											   &propertyAddress, 
-											   myAudioObjectPropertyListenerProc, 
-											   this);
-	
-	if(kAudioHardwareNoError != result)
-		LOG4CXX_WARN(logger, "AudioObjectRemovePropertyListener (kAudioDevicePropertyStreams) failed: " << result);
-
-	if(!RemoveVirtualFormatPropertyListeners())
-		LOG4CXX_WARN(logger, "RemoveVirtualFormatPropertyListeners failed");
-
-	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL != mOutputConverters[i])
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+	Boolean graphIsRunning = false;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphIsRunning failed: " << result);
+		return false;
 	}
-	
-	delete [] mOutputConverters, mOutputConverters = NULL;
-	
-	mOutputDeviceStreamIDs.clear();
+
+	if(graphIsRunning) {
+		result = AUGraphStop(mAUGraph);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphStop failed: " << result);
+			return false;
+		}
+	}
+
+	Boolean graphIsInitialized = false;
+	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphIsInitialized failed: " << result);
+		return false;
+	}
+
+	if(graphIsInitialized) {
+		result = AUGraphUninitialize(mAUGraph);		
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphUninitialize failed: " << result);
+			return false;
+		}
+	}
+
+	result = AUGraphClose(mAUGraph);
+
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphClose failed: " << result);
+		return false;
+	}
+
+	result = DisposeAUGraph(mAUGraph);
+
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "DisposeAUGraph failed: " << result);
+		return false;
+	}
+
+	mAUGraph = NULL;
 
 	return true;
 }
@@ -2566,16 +2263,14 @@ bool AudioPlayer::CloseOutput()
 bool AudioPlayer::StartOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Starting device 0x" << std::hex << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "StartOutput");
 
 	// We don't want to start output in the middle of a buffer modification
 	Mutex::Locker lock(mGuard);
 
-	OSStatus result = AudioDeviceStart(mOutputDeviceID, 
-									   mOutputDeviceIOProcID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioDeviceStart failed: " << result);
+	OSStatus result = AUGraphStart(mAUGraph);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphStart failed: " << result);
 		return false;
 	}
 	
@@ -2585,13 +2280,11 @@ bool AudioPlayer::StartOutput()
 bool AudioPlayer::StopOutput()
 {
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_TRACE(logger, "Stopping device 0x" << std::hex << mOutputDeviceID);
+	LOG4CXX_TRACE(logger, "StopOutput");
 
-	OSStatus result = AudioDeviceStop(mOutputDeviceID, 
-									  mOutputDeviceIOProcID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioDeviceStop failed: " << result);
+	OSStatus result = AUGraphStop(mAUGraph);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphStop failed: " << result);
 		return false;
 	}
 	
@@ -2600,49 +2293,482 @@ bool AudioPlayer::StopOutput()
 
 bool AudioPlayer::OutputIsRunning() const
 {
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyDeviceIsRunning, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-
-	UInt32 isRunning = 0;
-	UInt32 dataSize = sizeof(isRunning);
-
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, 
-												 &propertyAddress, 
-												 0,
-												 NULL, 
-												 &dataSize,
-												 &isRunning);
-	
-	if(kAudioHardwareNoError != result) {
+	Boolean isRunning = false;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
+	if(noErr != result) {
 		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceIsRunning) failed: " << result);
+		LOG4CXX_ERROR(logger, "AUGraphIsRunning failed: " << result);
 		return false;
 	}
-	
+
 	return isRunning;
 }
 
 bool AudioPlayer::ResetOutput()
 {
-	// Since this can be called from the IOProc, don't log informational messages in non-debug builds
-#if DEBUG
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
 	LOG4CXX_TRACE(logger, "Resetting output");
-#endif
 
-	if(NULL != mSampleRateConverter) {
-		OSStatus result = AudioConverterReset(mSampleRateConverter);
-		
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphIsRunning failed: " << result);
+		return false;
+	}
+
+	for(UInt32 i = 0; i < nodeCount; ++i) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, i, &node);
 		if(noErr != result) {
-#if !DEBUG
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-#endif
-			LOG4CXX_ERROR(logger, "AudioConverterReset failed: " << result);
+			LOG4CXX_ERROR(logger, "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
+
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+			return false;
+		}
+
+		result = AudioUnitReset(au, kAudioUnitScope_Global, 0);
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AudioUnitReset failed: " << result);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+#pragma mark AUGraph Utilities
+
+Float64 AudioPlayer::GetAUGraphLatency()
+{
+	Float64 graphLatency = 0;
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeCount failed: " << result);
+		return -1;
+	}
+
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphGetIndNode failed: " << result);
+			return -1;
+		}
+
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+			return -1;
+		}
+
+		Float64 latency = 0;
+		UInt32 dataSize = sizeof(latency);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &latency, &dataSize);		
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_Latency, kAudioUnitScope_Global) failed: " << result);
+			return -1;
+		}
+
+		graphLatency += latency;
+	}
+
+	return graphLatency;
+}
+
+Float64 AudioPlayer::GetAUGraphTailTime()
+{
+	Float64 graphTailTime = 0;
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeCount failed: " << result);
+		return -1;
+	}
+
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphGetIndNode failed: " << result);
+			return -1;
+		}
+
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+			return -1;
+		}
+
+		Float64 tailTime = 0;
+		UInt32 dataSize = sizeof(tailTime);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &tailTime, &dataSize);		
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_TailTime, kAudioUnitScope_Global) failed: " << result);
+			return -1;
+		}
+
+		graphTailTime += tailTime;
+	}
+
+	return graphTailTime;
+}
+
+bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
+{
+	if(NULL == propertyData || 0 >= propertyDataSize)
+		return  false;
+
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphGetNodeCount failed: " << result);
+		return false;
+	}
+
+	// Iterate through the nodes and attempt to set the property
+	for(UInt32 i = 0; i < nodeCount; ++i) {
+		AUNode node;
+		result = AUGraphGetIndNode(mAUGraph, i, &node);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphGetIndNode failed: " << result);
+			return false;
+		}
+
+		AudioUnit au = NULL;
+		result = AUGraphNodeInfo(mAUGraph, node, NULL, &au);
+
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphGetNodeCount failed: " << result);
+			return false;
+		}
+
+		if(mOutputNode == node) {
+			// For AUHAL as the output node, you can't set the device side, so just set the client side
+			result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, 0, propertyData, propertyDataSize);
+			if(noErr != result) {
+				log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+				LOG4CXX_ERROR(logger, "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+				return false;
+			}
+		}
+		else {
+			UInt32 elementCount = 0;
+			UInt32 dataSize = sizeof(elementCount);
+			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &elementCount, &dataSize);
+			if(noErr != result) {
+				log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+				LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Input) failed: " << result);
+				return false;
+			}
+
+			for(UInt32 j = 0; j < elementCount; ++j) {
+/*				Boolean writable;
+				 err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Input, j, &dataSize, &writable);
+
+				 if(noErr != err && kAudioUnitErr_InvalidProperty != err)
+				 return err;
+
+				 if(kAudioUnitErr_InvalidProperty == err || !writable)
+				 continue;*/
+
+				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, j, propertyData, propertyDataSize);				
+				if(noErr != result) {
+					log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+					LOG4CXX_ERROR(logger, "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+					return false;
+				}
+			}
+
+			elementCount = 0;
+			dataSize = sizeof(elementCount);
+			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Output, 0, &elementCount, &dataSize);			
+			if(noErr != result) {
+				log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+				LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Output) failed: " << result);
+				return false;
+			}
+
+			for(UInt32 j = 0; j < elementCount; ++j) {
+/*				Boolean writable;
+				 err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Output, j, &dataSize, &writable);
+
+				 if(noErr != err && kAudioUnitErr_InvalidProperty != err)
+				 return err;
+
+				 if(kAudioUnitErr_InvalidProperty == err || !writable)
+				 continue;*/
+
+				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, j, propertyData, propertyDataSize);				
+				if(noErr != result) {
+					log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+					LOG4CXX_ERROR(logger, "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
+{
+	// ========================================
+	// If the graph is running, stop it
+	Boolean graphIsRunning = FALSE;
+	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphIsRunning failed: " << result);
+		return false;
+	}
+	
+	if(graphIsRunning) {
+		result = AUGraphStop(mAUGraph);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphStop failed: " << result);
+			return false;
+		}
+	}
+	
+	// ========================================
+	// If the graph is initialized, uninitialize it
+	Boolean graphIsInitialized = FALSE;
+	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphIsInitialized failed: " << result);
+		return false;
+	}
+	
+	if(graphIsInitialized) {
+		result = AUGraphUninitialize(mAUGraph);		
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphUninitialize failed: " << result);
+			return false;
+		}
+	}
+
+	// ========================================
+	// Save the interaction information and then clear all the connections
+	UInt32 interactionCount = 0;
+	result = AUGraphGetNumberOfInteractions(mAUGraph, &interactionCount);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphGetNumberOfInteractions failed: " << result);
+		return false;
+	}
+
+	AUNodeInteraction interactions [interactionCount];
+
+	for(UInt32 i = 0; i < interactionCount; ++i) {
+		result = AUGraphGetInteractionInfo(mAUGraph, i, &interactions[i]);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphGetInteractionInfo failed: " << result);
+			return false;
+		}
+	}
+
+	result = AUGraphClearConnections(mAUGraph);	
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphClearConnections failed: " << result);
+		return false;
+	}
+	
+	AudioStreamBasicDescription format = mRingBufferFormat;
+	
+	format.mChannelsPerFrame	= channelsPerFrame;
+	format.mSampleRate			= sampleRate;
+
+	// ========================================
+	// Attempt to set the new stream format
+	if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &format, sizeof(format))) {
+		// If the new format could not be set, restore the old format to ensure a working graph
+		if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mRingBufferFormat, sizeof(mRingBufferFormat))) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "Unable to restore AUGraph format: " << result);
+		}
+
+		// Do not free connections here, so graph can be rebuilt
+	}
+	else
+		mRingBufferFormat = format;
+
+	// ========================================
+	// Restore the graph's connections and input callbacks
+	for(UInt32 i = 0; i < interactionCount; ++i) {
+		switch(interactions[i].nodeInteractionType) {
+
+				// Reestablish the connection
+			case kAUNodeInteraction_Connection:
+			{
+				result = AUGraphConnectNodeInput(mAUGraph, 
+												 interactions[i].nodeInteraction.connection.sourceNode, 
+												 interactions[i].nodeInteraction.connection.sourceOutputNumber,
+												 interactions[i].nodeInteraction.connection.destNode, 
+												 interactions[i].nodeInteraction.connection.destInputNumber);
+				
+				if(noErr != result) {
+					log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+					LOG4CXX_ERROR(logger, "AUGraphConnectNodeInput failed: " << result);
+					return false;
+				}
+
+				break;
+			}
+
+				// Reestablish the input callback
+			case kAUNodeInteraction_InputCallback:
+			{
+				result = AUGraphSetNodeInputCallback(mAUGraph, 
+													 interactions[i].nodeInteraction.inputCallback.destNode, 
+													 interactions[i].nodeInteraction.inputCallback.destInputNumber,
+													 &interactions[i].nodeInteraction.inputCallback.cback);
+
+				if(noErr != result) {
+					log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+					LOG4CXX_ERROR(logger, "AUGraphSetNodeInputCallback failed: " << result);
+					return false;
+				}
+
+				break;
+			}				
+		}
+	}
+	
+	// ========================================
+	// Output units perform sample rate conversion if the input sample rate is not equal to
+	// the output sample rate. For high sample rates, the sample rate conversion can require 
+	// more rendered frames than are available by default in kAudioUnitProperty_MaximumFramesPerSlice (512)
+	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 frames
+	// So if the input and output sample rates on the output device don't match, adjust 
+	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
+	AudioUnit au = NULL;
+	result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	Float64 inputSampleRate = 0;
+	UInt32 dataSize = sizeof(inputSampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Input, 0, &inputSampleRate, &dataSize);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Global) failed: " << result);
+		return false;
+	}
+
+	Float64 outputSampleRate = 0;
+	dataSize = sizeof(outputSampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Output, 0, &outputSampleRate, &dataSize);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Global) failed: " << result);
+		return false;
+	}
+
+	// Apparently all AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
+#if !TARGET_OS_IPHONE
+	if(inputSampleRate != outputSampleRate) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_DEBUG(logger, "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
+
+		UInt32 currentMaxFrames = 0;
+		dataSize = sizeof(currentMaxFrames);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &currentMaxFrames, &dataSize);		
+		if(noErr != result) {
+			LOG4CXX_ERROR(logger, "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+			return false;
+		}
+
+		Float64 ratio = inputSampleRate / outputSampleRate;
+		Float64 multiplier = std::max(1.0, ceil(ratio));
+
+		// Round up to the nearest power of 16
+		UInt32 newMaxFrames = static_cast<UInt32>(currentMaxFrames * multiplier);
+		newMaxFrames += 16;
+		newMaxFrames &= 0xFFFFFFF0;
+
+		if(newMaxFrames > currentMaxFrames) {
+			LOG4CXX_DEBUG(logger, "Adjusting kAudioUnitProperty_MaximumFramesPerSlice to " << newMaxFrames);
+
+			if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames))) {
+				LOG4CXX_ERROR(logger, "SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed");
+				return false;
+			}
+		}
+	}
+#endif
+
+	// If the graph was initialized, reinitialize it
+	if(graphIsInitialized) {
+		result = AUGraphInitialize(mAUGraph);		
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphInitialize failed: " << result);
+			return false;
+		}
+	}
+
+	// If the graph was running, restart it
+	if(graphIsRunning) {
+		result = AUGraphStart(mAUGraph);
+		if(noErr != result) {
+			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+			LOG4CXX_ERROR(logger, "AUGraphStart failed: " << result);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout *channelLayout)
+{
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+	
+	// Attempt to set the new channel layout
+	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, channelLayout, sizeof(channelLayout));
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "SetPropertyOnAUGraphNodes (kAudioUnitProperty_AudioChannelLayout) failed: " << result);
+		return false;
+	}
+	else {
+		if(mRingBufferChannelLayout)
+			free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
+		mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
 	}
 
 	return true;
@@ -2719,382 +2845,4 @@ void AudioPlayer::StopActiveDecoders()
 	}
 
 	mCollectorSemaphore.Signal();
-}
-
-bool AudioPlayer::CreateConvertersAndSRCBuffer()
-{
-	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-
-	// Clean up
-	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL != mOutputConverters[i])
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
-	}
-	
-	if(NULL != mSampleRateConverter) {
-		OSStatus result = AudioConverterDispose(mSampleRateConverter);
-		mSampleRateConverter = NULL;
-			
-		if(noErr != result)
-			LOG4CXX_WARN(logger, "AudioConverterDispose failed: " << result);
-	}
-	
-	if(NULL != mSampleRateConversionBuffer)
-		mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
-	
-	if(NULL != mOutputBuffer)
-		mOutputBuffer = DeallocateABL(mOutputBuffer);
-	
-	// If the ring buffer does not yet have a format, no buffers can be allocated
-	if(0 == mRingBufferFormat.mChannelsPerFrame || 0 == mRingBufferFormat.mSampleRate) {
-		LOG4CXX_WARN(logger, "Ring buffer has invalid format");
-		return false;
-	}
-
-	// Get the output buffer size for the device
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyBufferFrameSize,
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	UInt32 dataSize = sizeof(mOutputDeviceBufferFrameSize);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &mOutputDeviceBufferFrameSize);	
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyBufferFrameSize) failed: " << result);
-		return false;
-	}
-
-	// FIXME: Handle devices with variable output buffer sizes
-	propertyAddress.mSelector = kAudioDevicePropertyUsesVariableBufferFrameSizes;
-	if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOG4CXX_ERROR(logger, "Devices with variable buffer sizes not supported");
-		return false;
-	}
-
-	AudioStreamBasicDescription outputBufferFormat = mRingBufferFormat;
-
-	// Create a sample rate converter if required
-	Float64 deviceSampleRate;
-	if(!GetOutputDeviceSampleRate(deviceSampleRate)) {
-		LOG4CXX_ERROR(logger, "Unable to determine output device sample rate");
-		return false;
-	}
-	
-	if(deviceSampleRate != mRingBufferFormat.mSampleRate) {
-		outputBufferFormat.mSampleRate = deviceSampleRate;
-		
-		result = AudioConverterNew(&mRingBufferFormat, &outputBufferFormat, &mSampleRateConverter);
-		
-		if(noErr != result) {
-			LOG4CXX_ERROR(logger, "AudioConverterNew failed: " << result);
-			return false;
-		}
-		
-		LOG4CXX_DEBUG(logger, "Using sample rate converter for " << mRingBufferFormat.mSampleRate << " Hz to " << deviceSampleRate << " Hz conversion");
-
-		if(!ReallocateSampleRateConversionBuffer())
-			return false;
-	}
-
-	// Allocate the output buffer (data is at the device's sample rate)
-	mOutputBuffer = AllocateABL(outputBufferFormat, mOutputDeviceBufferFrameSize);
-
-	// Determine the channel map to use when mapping channels to the device for output
-	UInt32 deviceChannelCount = 0;
-	if(!GetChannelCount(deviceChannelCount)) {
-		LOG4CXX_ERROR(logger, "Unable to determine the total number of channels");
-		return false;
-	}
-
-	// The default channel map is silence
-	SInt32 deviceChannelMap [deviceChannelCount];
-	for(UInt32 i = 0; i < deviceChannelCount; ++i)
-		deviceChannelMap[i] = -1;
-	
-	// Determine the device's preferred stereo channels for output mapping
-	if(1 == outputBufferFormat.mChannelsPerFrame || 2 == outputBufferFormat.mChannelsPerFrame) {
-		propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelsForStereo;
-		propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
-		
-		UInt32 preferredStereoChannels [2] = { 1, 2 };
-		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-			dataSize = sizeof(preferredStereoChannels);
-			
-			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredStereoChannels);	
-			
-			if(kAudioHardwareNoError != result)
-				LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
-		}
-		
-		LOG4CXX_DEBUG(logger, "Device preferred stereo channels: " << preferredStereoChannels[0] << " " << preferredStereoChannels[1]);
-
-		AudioChannelLayout stereoLayout;	
-		stereoLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
-		
-		const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, &stereoLayout };
-		
-		SInt32 stereoChannelMap [2] = { 1, 2 };
-		dataSize = sizeof(stereoChannelMap);
-		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, stereoChannelMap);
-		
-		if(noErr == result) {
-			deviceChannelMap[preferredStereoChannels[0] - 1] = stereoChannelMap[0];
-			deviceChannelMap[preferredStereoChannels[1] - 1] = stereoChannelMap[1];
-		}
-		else {
-			LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
-			
-			// Just use a channel map that makes sense
-			deviceChannelMap[preferredStereoChannels[0] - 1] = 0;
-			deviceChannelMap[preferredStereoChannels[1] - 1] = 1;
-		}
-	}
-	// Determine the device's preferred multichannel layout
-	else {
-		propertyAddress.mSelector = kAudioDevicePropertyPreferredChannelLayout;
-		propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
-
-		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-			result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
-			
-			if(kAudioHardwareNoError != result)
-				LOG4CXX_WARN(logger, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
-
-			AudioChannelLayout *preferredChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
-			
-			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);	
-			
-			if(kAudioHardwareNoError != result)
-				LOG4CXX_WARN(logger, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
-
-			LOG4CXX_DEBUG(logger, "Device preferred channel layout: " << preferredChannelLayout);
-			
-			const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, preferredChannelLayout };
-
-			// Not all channel layouts can be mapped, so handle failure with a generic mapping
-			dataSize = sizeof(deviceChannelMap);
-			result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, deviceChannelMap);
-				
-			if(noErr != result) {
-				LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
-
-				// Just use a channel map that makes sense
-				for(UInt32 i = 0; i < std::min(outputBufferFormat.mChannelsPerFrame, deviceChannelCount); ++i)
-					deviceChannelMap[i] = i;
-			}
-			
-			free(preferredChannelLayout), preferredChannelLayout = NULL;		
-		}
-		else {
-			LOG4CXX_WARN(logger, "No preferred multichannel layout");
-			
-			// Just use a channel map that makes sense
-			for(UInt32 i = 0; i < deviceChannelCount; ++i)
-				deviceChannelMap[i] = i;
-		}
-	}
-
-	// For efficiency disable streams that aren't needed
-	size_t streamUsageSize = offsetof(AudioHardwareIOProcStreamUsage, mStreamIsOn) + (sizeof(UInt32) * mOutputDeviceStreamIDs.size());
-	AudioHardwareIOProcStreamUsage *streamUsage = static_cast<AudioHardwareIOProcStreamUsage *>(calloc(1, streamUsageSize));
-	
-	streamUsage->mIOProc = reinterpret_cast<void *>(mOutputDeviceIOProcID);
-	streamUsage->mNumberStreams = static_cast<UInt32>(mOutputDeviceStreamIDs.size());
-
-	// Create the output converter for each stream as required
-	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		AudioStreamID streamID = mOutputDeviceStreamIDs[i];
-
-		LOG4CXX_DEBUG(logger, "Stream 0x" << std::hex << streamID << " information: ");
-
-		AudioStreamBasicDescription virtualFormat;
-		if(!GetOutputStreamVirtualFormat(streamID, virtualFormat)) {
-			LOG4CXX_ERROR(logger, "Unknown virtual format for AudioStreamID 0x" << std::hex << streamID);
-			return false;
-		}
-
-		// In some cases when this function is called from Enqueue() immediately after a device sample rate change, the device's
-		// nominal sample rate has changed but the virtual formats have not
-		if(deviceSampleRate != virtualFormat.mSampleRate) {
-			LOG4CXX_ERROR(logger, "Internal inconsistency: device sample rate (" << deviceSampleRate << " Hz) and virtual format sample rate (" << virtualFormat.mSampleRate << " Hz) don't match");
-			return false;			
-		}
-
-		LOG4CXX_DEBUG(logger, "  Virtual format: " << virtualFormat);
-
-		// Set up the channel mapping to determine if this stream is needed
-		propertyAddress.mSelector = kAudioStreamPropertyStartingChannel;
-		propertyAddress.mScope = kAudioObjectPropertyScopeGlobal;
-		
-		UInt32 startingChannel;
-		dataSize = sizeof(startingChannel);
-		
-		result = AudioObjectGetPropertyData(streamID, &propertyAddress, 0, NULL, &dataSize, &startingChannel);	
-
-		if(kAudioHardwareNoError != result) {
-			LOG4CXX_ERROR(logger, "AudioObjectGetPropertyData (kAudioStreamPropertyStartingChannel) failed: " << result);
-			return false;
-		}
-		
-		LOG4CXX_DEBUG(logger, "  Starting channel: " << startingChannel);
-		
-		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
-
-		std::map<int, int> channelMap;
-		for(UInt32 channel = startingChannel; channel < endingChannel; ++channel) {
-			if(-1 != deviceChannelMap[channel - 1])
-				channelMap[channel - 1] = deviceChannelMap[channel - 1];
-		}
-
-		// If the channel map isn't empty, the stream is used and an output converter is necessary
-		if(!channelMap.empty()) {
-			mOutputConverters[i] = new PCMConverter(outputBufferFormat, virtualFormat);			
-			mOutputConverters[i]->SetChannelMap(channelMap);
-
-			LOG4CXX_DEBUG(logger, "  Channel map: ");
-			for(std::map<int, int>::const_iterator mapIterator = channelMap.begin(); mapIterator != channelMap.end(); ++mapIterator)
-				LOG4CXX_DEBUG(logger, "    " << mapIterator->first << " -> " << mapIterator->second);
-
-			streamUsage->mStreamIsOn[i] = true;
-		}
-	}
-
-	// Disable the unneeded streams
-	propertyAddress.mSelector = kAudioDevicePropertyIOProcStreamUsage;
-	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
-
-	result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, static_cast<UInt32>(streamUsageSize), streamUsage);
-	
-	if(kAudioHardwareNoError != result) {
-		LOG4CXX_ERROR(logger, "AudioObjectSetPropertyData (kAudioDevicePropertyIOProcStreamUsage) failed: " << result);
-		return false;
-	}
-
-	free(streamUsage), streamUsage = NULL;
-
-	return true;
-}
-
-bool AudioPlayer::AddVirtualFormatPropertyListeners()
-{
-	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat,
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
-		
-		// Observe virtual format changes for the streams
-		OSStatus result = AudioObjectAddPropertyListener(*iter,
-														 &propertyAddress,
-														 myAudioObjectPropertyListenerProc,
-														 this);
-		
-		if(kAudioHardwareNoError != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_ERROR(logger, "AudioObjectAddPropertyListener (kAudioStreamPropertyVirtualFormat) failed: " << result);
-			return false;
-		}
-		
-		propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
-		
-		result = AudioObjectAddPropertyListener(*iter,
-												&propertyAddress,
-												myAudioObjectPropertyListenerProc,
-												this);
-		
-		if(kAudioHardwareNoError != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_ERROR(logger, "AudioObjectAddPropertyListener (kAudioStreamPropertyPhysicalFormat) failed: " << result);
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool AudioPlayer::RemoveVirtualFormatPropertyListeners()
-{
-	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
-		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat,
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
-		};
-		
-		OSStatus result = AudioObjectRemovePropertyListener(*iter,
-															&propertyAddress,
-															myAudioObjectPropertyListenerProc,
-															this);
-		
-		if(kAudioHardwareNoError != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "AudioObjectRemovePropertyListener (kAudioStreamPropertyVirtualFormat) failed: " << result);
-			continue;
-		}
-		
-		propertyAddress.mSelector = kAudioStreamPropertyPhysicalFormat;
-		
-		result = AudioObjectRemovePropertyListener(*iter,
-												   &propertyAddress,
-												   myAudioObjectPropertyListenerProc,
-												   this);
-		
-		if(kAudioHardwareNoError != result) {
-			log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-			LOG4CXX_WARN(logger, "AudioObjectRemovePropertyListener (kAudioStreamPropertyPhysicalFormat) failed: " << result);
-			continue;
-		}
-	}
-	
-	return true;
-}
-
-bool AudioPlayer::ReallocateSampleRateConversionBuffer()
-{
-	if(NULL == mSampleRateConverter)
-		return false;
-
-	// Get the SRC's output format
-	AudioStreamBasicDescription outputBufferFormat;
-	UInt32 dataSize = sizeof(outputBufferFormat);
-
-	OSStatus result = AudioConverterGetProperty(mSampleRateConverter, 
-												kAudioConverterCurrentOutputStreamDescription, 
-												&dataSize, 
-												&outputBufferFormat);
-
-	if(noErr != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_WARN(logger, "AudioConverterGetProperty (kAudioConverterCurrentOutputStreamDescription) failed: " << result);
-		return false;
-	}
-
-	// Calculate how large the sample rate conversion buffer must be
-	UInt32 bufferSizeBytes = mOutputDeviceBufferFrameSize * outputBufferFormat.mBytesPerFrame;
-	dataSize = sizeof(bufferSizeBytes);
-
-	result = AudioConverterGetProperty(mSampleRateConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &bufferSizeBytes);
-
-	if(noErr != result) {
-		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-		LOG4CXX_ERROR(logger, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
-		return false;
-	}
-
-	if(mSampleRateConversionBuffer)
-		mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
-
-	// Allocate the sample rate conversion buffer (data is at the ring buffer's sample rate)
-	mSampleRateConversionBuffer = AllocateABL(mRingBufferFormat, bufferSizeBytes / mRingBufferFormat.mBytesPerFrame);
-
-	return true;
 }

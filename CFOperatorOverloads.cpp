@@ -29,7 +29,7 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
 #endif
 #include <iomanip>
@@ -135,7 +135,7 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 
 	CFStringRef s = CFURLGetString(u);
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 		CFStringRef displayName = NULL;
 		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
 

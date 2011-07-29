@@ -31,7 +31,7 @@
 #include <stdexcept>
 
 #include <CoreFoundation/CoreFoundation.h>
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
 #endif
 
@@ -40,7 +40,7 @@
 #include "AudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include "FLACMetadata.h"
 # include "WavPackMetadata.h"
 # include "MP3Metadata.h"
@@ -107,7 +107,7 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	
 	CFArrayRef decoderExtensions = NULL;
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
@@ -170,7 +170,7 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	
 	CFArrayRef decoderMIMETypes = NULL;
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
@@ -318,7 +318,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					// As a factory this class has knowledge of its subclasses
 					// It would be possible (and perhaps preferable) to switch to a generic
 					// plugin interface at a later date
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 					if(FLACMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new FLACMetadata(url);
 						if(!metadata->ReadMetadata(error))
@@ -431,7 +431,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	// Determine the MIME type for the URL
 	else {
 		// Get the UTI for this URL

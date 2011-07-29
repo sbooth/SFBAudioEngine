@@ -30,7 +30,7 @@
 
 #pragma once
 
-#include <CoreAudio/CoreAudio.h>
+#include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
 
 #include <vector>
@@ -57,12 +57,9 @@ class PCMConverter;
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagIsPlaying				= 1u << 0,
-	eAudioPlayerFlagMuteOutput				= 1u << 1,
-	eAudioPlayerFlagStopRequested			= 1u << 2,
-	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 3,
-	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 4,
-	eAudioPlayerFlagResetNeeded				= 1u << 5
+	eAudioPlayerFlagMuteOutput				= 1u << 0,
+	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 1,
+	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 2
 };
 
 // ========================================
@@ -109,7 +106,7 @@ public:
 	PlayerState GetPlayerState() const;
 
 	// Convenience methods
-	inline bool IsPlaying() const					{ return (eAudioPlayerFlagIsPlaying & mFlags); }
+	inline bool IsPlaying() const					{ return (ePlaying == GetPlayerState()); }
 	inline bool IsPaused() const					{ return (ePaused == GetPlayerState()); }
 	inline bool IsPending() const					{ return (ePending == GetPlayerState()); }
 	inline bool IsStopped() const					{ return (eStopped == GetPlayerState()); }
@@ -143,9 +140,6 @@ public:
 	bool GetMasterVolume(Float32& volume) const;
 	bool SetMasterVolume(Float32 volume);
 
-	bool GetChannelCount(UInt32& channelCount) const;
-	bool GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
-
 	bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
 	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
 
@@ -163,37 +157,29 @@ public:
 	bool GetDigitalPreGain(double& preGain) const;
 	bool SetDigitalPreGain(double preGain);
 
-	inline bool IsPerformingSampleRateConversion() const { return (NULL != mSampleRateConverter); }
+#if !TARGET_OS_IPHONE
+	// ========================================
+	// Hog Mode
+	bool OutputDeviceIsHogged() const;
+	bool StartHoggingOutputDevice();
+	bool StopHoggingOutputDevice();
 
-	// Will return false if SRC is not being performed
-	bool SetSampleRateConverterQuality(UInt32 srcQuality);
-	bool SetSampleRateConverterComplexity(OSType srcComplexity);
+	// ========================================
+	// DSP Effects
+	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = NULL);
+	bool RemoveEffect(AudioUnit effectUnit);
 
 	// ========================================
 	// Device Management
 	bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
-	
-	bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
+
+	bool GetOutputDeviceID(AudioDeviceID& devieID) const;
 	bool SetOutputDeviceID(AudioDeviceID deviceID);
 
 	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
-
-	bool OutputDeviceIsHogged() const;
-
-	bool StartHoggingOutputDevice();
-	bool StopHoggingOutputDevice();
-
-	// ========================================
-	// Stream Management
-	bool GetOutputStreams(std::vector<AudioStreamID>& streams) const;
-	
-	bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const;
-	bool SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat);
-
-	bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const;
-	bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
+#endif
 
 	// ========================================
 	// Playlist Management
@@ -227,7 +213,17 @@ private:
 
 	bool OutputIsRunning() const;
 	bool ResetOutput();
-	
+
+	// ========================================
+	// AUGraph Utilities
+	Float64 GetAUGraphLatency();
+	Float64 GetAUGraphTailTime();
+
+	bool SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
+
+	bool SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
+	bool SetAUGraphChannelLayout(AudioChannelLayout *channelLayout);
+
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
@@ -235,30 +231,16 @@ private:
 	DecoderStateData * GetCurrentDecoderState() const;
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
-	bool CreateConvertersAndSRCBuffer();
-	
-	bool AddVirtualFormatPropertyListeners();
-	bool RemoveVirtualFormatPropertyListeners();
-
-	bool ReallocateSampleRateConversionBuffer();
-
 	// ========================================
 	// Data Members
-	AudioDeviceID						mOutputDeviceID;
-	AudioDeviceIOProcID					mOutputDeviceIOProcID;
-	UInt32								mOutputDeviceBufferFrameSize;
-	std::vector<AudioStreamID>			mOutputDeviceStreamIDs;
-	
+	AUGraph								mAUGraph;
+	AUNode								mOutputNode;
+
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
 	AudioChannelLayout					*mRingBufferChannelLayout;
 	uint32_t							mRingBufferCapacity;
 	uint32_t							mRingBufferWriteChunkSize;
-
-	PCMConverter						**mOutputConverters;
-	AudioConverterRef					mSampleRateConverter;
-	AudioBufferList						*mSampleRateConversionBuffer;
-	AudioBufferList						*mOutputBuffer;
 
 	volatile uint32_t					mFlags;
 
@@ -269,11 +251,11 @@ private:
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	Guard								mGuard;
-	
+
 	pthread_t							mDecoderThread;
 	Semaphore							mDecoderSemaphore;
 	bool								mKeepDecoding;
-	
+
 	pthread_t							mCollectorThread;
 	Semaphore							mCollectorSemaphore;
 	bool								mKeepCollecting;
@@ -286,21 +268,17 @@ public:
 
 	// ========================================
 	// Callbacks- for internal use only
-	OSStatus Render(AudioDeviceID			inDevice,
-					const AudioTimeStamp	*inNow,
-					const AudioBufferList	*inInputData,
-					const AudioTimeStamp	*inInputTime,
-					AudioBufferList			*outOutputData,
-					const AudioTimeStamp	*inOutputTime);
-	
-	OSStatus AudioObjectPropertyChanged(AudioObjectID						inObjectID,
-										UInt32								inNumberAddresses,
-										const AudioObjectPropertyAddress	inAddresses[]);
+	OSStatus Render(AudioUnitRenderActionFlags		*ioActionFlags,
+					const AudioTimeStamp			*inTimeStamp,
+					UInt32							inBusNumber,
+					UInt32							inNumberFrames,
+					AudioBufferList					*ioData);
 
-	OSStatus FillSampleRateConversionBuffer(AudioConverterRef				inAudioConverter,
-											UInt32							*ioNumberDataPackets,
-											AudioBufferList					*ioData,
-											AudioStreamPacketDescription	**outDataPacketDescription);
+	OSStatus DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
+					   const AudioTimeStamp				*inTimeStamp,
+					   UInt32							inBusNumber,
+					   UInt32							inNumberFrames,
+					   AudioBufferList					*ioData);
 	
 	// ========================================
 	// Thread entry points

@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
 #endif
 #include <AudioToolbox/AudioFormat.h>
@@ -64,7 +64,7 @@ myAudioFile_ReadProc(void		*inClientData,
 	*actualCount = static_cast<UInt32>(inputSource->Read(buffer, requestCount));
 	
 	if(0 == *actualCount)
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 		return (inputSource->AtEOF() ? eofErr : ioErr);
 #else
 		return (inputSource->AtEOF() ? kAudioFileEndOfFileError : kAudioFilePositionError);

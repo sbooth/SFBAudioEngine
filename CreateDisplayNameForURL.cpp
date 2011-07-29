@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 # include <ApplicationServices/ApplicationServices.h>
 #endif
 
@@ -43,7 +43,7 @@ CreateDisplayNameForURL(CFURLRef url)
 
 	CFStringRef displayName = NULL;
 
-#if BUILD_FOR_MAC_OSX
+#if !TARGET_OS_IPHONE
 	CFStringRef scheme = CFURLCopyScheme(url);
 	if(scheme) {
 		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
