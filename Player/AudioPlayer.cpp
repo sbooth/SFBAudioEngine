@@ -793,6 +793,70 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 	return true;
 }
 
+bool AudioPlayer::IsPerformingSampleRateConversion() const
+{
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	Float64 sampleRate;
+	UInt32 dataSize = sizeof(sampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Global, 0, &sampleRate, &dataSize);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioUnitGetProperty (kAudioUnitProperty_SampleRate) failed: " << result);
+		return false;
+	}
+
+	return (sampleRate == mRingBufferFormat.mSampleRate);
+}
+
+bool AudioPlayer::GetSampleRateConverterComplexity(UInt32& complexity) const
+{
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	UInt32 dataSize = sizeof(complexity);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, &dataSize);
+	if(noErr != result) {
+		log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+		LOG4CXX_WARN(logger, "AudioUnitGetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
+{
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Setting sample rate converter quality to " << complexity);
+
+	AudioUnit au = NULL;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, NULL, &au);
+	if(noErr != result) {
+		LOG4CXX_ERROR(logger, "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	result = AudioUnitSetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, sizeof(complexity));
+	if(noErr != result) {
+		LOG4CXX_WARN(logger, "AudioUnitSetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
 #if !TARGET_OS_IPHONE
 
 #pragma mark Hog Mode

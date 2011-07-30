@@ -146,6 +146,10 @@ public:
 	bool GetPreGain(Float32& preGain) const;
 	bool SetPreGain(Float32 preGain);
 
+	bool IsPerformingSampleRateConversion() const;
+	bool GetSampleRateConverterComplexity(UInt32& complexity) const;
+	bool SetSampleRateConverterComplexity(UInt32 complexity);
+
 #if !TARGET_OS_IPHONE
 	// ========================================
 	// Hog Mode
