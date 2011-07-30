@@ -57,9 +57,7 @@ class PCMConverter;
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagMuteOutput				= 1u << 0,
-	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 1,
-	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 2
+	eAudioPlayerFlagMuteOutput				= 1u << 0
 };
 
 // ========================================
@@ -137,25 +135,16 @@ public:
 
 	// ========================================
 	// Player Parameters
-	bool GetMasterVolume(Float32& volume) const;
-	bool SetMasterVolume(Float32 volume);
+	// volume should be in the range [0, 1] (linear)
+	bool GetVolume(Float32& volume) const;
+	bool SetVolume(Float32 volume);
 
 	bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
 	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
-
-	inline bool DigitalVolumeIsEnabled() const		{ return (eAudioPlayerFlagDigitalVolumeEnabled & mFlags); }
-	void EnableDigitalVolume(bool enableDigitalVolume);
-
-	// volume should be in the range [0, 1] (linear)
-	bool GetDigitalVolume(double& volume) const;
-	bool SetDigitalVolume(double volume);
 	
-	inline bool DigitalPreGainIsEnabled() const		{ return (eAudioPlayerFlagDigitalPreGainEnabled & mFlags); }
-	void EnableDigitalPreGain(bool enableDigitalPreGain);
-
-	// preGain should be in the range [-15, 15] (dB)
-	bool GetDigitalPreGain(double& preGain) const;
-	bool SetDigitalPreGain(double preGain);
+	// preGain should be in the range [0, 1] (linear)
+	bool GetPreGain(Float32& preGain) const;
+	bool SetPreGain(Float32 preGain);
 
 #if !TARGET_OS_IPHONE
 	// ========================================
@@ -163,6 +152,16 @@ public:
 	bool OutputDeviceIsHogged() const;
 	bool StartHoggingOutputDevice();
 	bool StopHoggingOutputDevice();
+
+	// ========================================
+	// Device parameters
+	bool GetDeviceMasterVolume(Float32& volume) const;
+	bool SetDeviceMasterVolume(Float32 volume);
+
+	bool GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const;
+	bool SetDeviceVolumeForChannel(UInt32 channel, Float32 volume);
+
+	bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
 
 	// ========================================
 	// DSP Effects
@@ -216,8 +215,8 @@ private:
 
 	// ========================================
 	// AUGraph Utilities
-	Float64 GetAUGraphLatency();
-	Float64 GetAUGraphTailTime();
+	bool GetAUGraphLatency(Float64& latency) const;
+	bool GetAUGraphTailTime(Float64& tailTime) const;
 
 	bool SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
 
@@ -234,6 +233,7 @@ private:
 	// ========================================
 	// Data Members
 	AUGraph								mAUGraph;
+	AUNode								mMixerNode;
 	AUNode								mOutputNode;
 
 	CARingBuffer						*mRingBuffer;
