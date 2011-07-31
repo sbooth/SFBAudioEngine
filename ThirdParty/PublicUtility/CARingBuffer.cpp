@@ -261,7 +261,7 @@ CARingBufferError	CARingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, Samp
 	size = endRead - startRead;
 	
 	// Don't perform out-of-bounds writes
-	if((startRead - startRead0) > nFrames || (endRead0 - endRead) > nFrames) {
+	if((startRead - startRead0) > nFrames || (endRead0 - endRead) > nFrames || startRead == endRead) {
 		ZeroABL(abl, 0, nFrames * mBytesPerFrame);
 		return noErr;
 	}
