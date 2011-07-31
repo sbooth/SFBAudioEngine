@@ -483,5 +483,8 @@ UInt32 LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCou
 		case eDouble:	framesRead = sf_readf_double(mFile, static_cast<double *>(bufferList->mBuffers[0].mData), frameCount);	break;
 	}
 
+	bufferList->mBuffers[0].mDataByteSize = static_cast<UInt32>(framesRead * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
+
 	return static_cast<UInt32>(framesRead);
 }
