@@ -129,18 +129,12 @@
 		32D65530115FC58C002B275C /* InputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552C115FC58C002B275C /* InputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D6556C115FE7EA002B275C /* MemoryMappedFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */; };
 		32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
-		32D7374B112A61E40058B41F /* AudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D73749112A61E40058B41F /* AudioConverter.h */; };
-		32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D7374A112A61E40058B41F /* AudioConverter.cpp */; };
-		32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D73759112A66E80058B41F /* PCMConverter.cpp */; };
-		32D7375C112A66E80058B41F /* PCMConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7375A112A66E80058B41F /* PCMConverter.h */; };
 		32DEDA08122C07AF00C25252 /* AllocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA06122C07AF00C25252 /* AllocateABL.h */; };
 		32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
 		32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA12122C095600C25252 /* DeallocateABL.h */; };
 		32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
 		32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */; };
 		32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
-		32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */; };
-		32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */; };
 		32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */; };
 		32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */; };
 		32E6AB3B1096745400DA998D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB391096744C00DA998D /* main.cpp */; };
@@ -344,18 +338,12 @@
 		32D6552C115FC58C002B275C /* InputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputSource.h; sourceTree = "<group>"; };
 		32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryMappedFileInputSource.h; sourceTree = "<group>"; };
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
-		32D73749112A61E40058B41F /* AudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverter.h; sourceTree = "<group>"; };
-		32D7374A112A61E40058B41F /* AudioConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverter.cpp; sourceTree = "<group>"; };
-		32D73759112A66E80058B41F /* PCMConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PCMConverter.cpp; sourceTree = "<group>"; };
-		32D7375A112A66E80058B41F /* PCMConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PCMConverter.h; sourceTree = "<group>"; };
 		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AllocateABL.h; sourceTree = "<group>"; };
 		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AllocateABL.cpp; sourceTree = "<group>"; };
 		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
 		32DEDA13122C095600C25252 /* DeallocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeallocateABL.cpp; sourceTree = "<group>"; };
 		32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChannelLayoutsAreEqual.h; sourceTree = "<group>"; };
 		32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChannelLayoutsAreEqual.cpp; sourceTree = "<group>"; };
-		32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeinterleavingFloatConverter.h; sourceTree = "<group>"; };
-		32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeinterleavingFloatConverter.cpp; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
 		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
 		32E6AB391096744C00DA998D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -454,7 +442,6 @@
 			children = (
 				322B5D76108C210400CA9BDE /* Player */,
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
-				32D73747112A61860058B41F /* Converter */,
 				32D65528115FC570002B275C /* Input */,
 				32EA67F5112BC4AE006C26F1 /* Metadata */,
 				29B97315FDCFA39411CA2CEA /* Other */,
@@ -634,19 +621,6 @@
 			path = Input;
 			sourceTree = "<group>";
 		};
-		32D73747112A61860058B41F /* Converter */ = {
-			isa = PBXGroup;
-			children = (
-				32D73759112A66E80058B41F /* PCMConverter.cpp */,
-				32D7375A112A66E80058B41F /* PCMConverter.h */,
-				32D73749112A61E40058B41F /* AudioConverter.h */,
-				32D7374A112A61E40058B41F /* AudioConverter.cpp */,
-				32DEDA36122C0D9700C25252 /* DeinterleavingFloatConverter.h */,
-				32DEDA37122C0D9700C25252 /* DeinterleavingFloatConverter.cpp */,
-			);
-			path = Converter;
-			sourceTree = "<group>";
-		};
 		32E6AB381096742A00DA998D /* Example */ = {
 			isa = PBXGroup;
 			children = (
@@ -729,8 +703,6 @@
 				32E7396110B9AA8600094C8A /* MPEGDecoder.h in Headers */,
 				32E73B0110B9D8AB00094C8A /* OggVorbisDecoder.h in Headers */,
 				32CA910510B9E526005A85DA /* MusepackDecoder.h in Headers */,
-				32D7374B112A61E40058B41F /* AudioConverter.h in Headers */,
-				32D7375C112A66E80058B41F /* PCMConverter.h in Headers */,
 				32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */,
 				32EA6826112CD84B006C26F1 /* FLACMetadata.h in Headers */,
 				322D78AA112F971C006676FC /* WavPackMetadata.h in Headers */,
@@ -757,7 +729,6 @@
 				32DEDA08122C07AF00C25252 /* AllocateABL.h in Headers */,
 				32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */,
 				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
-				32DEDA38122C0D9700C25252 /* DeinterleavingFloatConverter.h in Headers */,
 				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
 				32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */,
 				324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */,
@@ -909,8 +880,6 @@
 				32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */,
 				32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */,
 				32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */,
-				32D7374C112A61E40058B41F /* AudioConverter.cpp in Sources */,
-				32D7375B112A66E80058B41F /* PCMConverter.cpp in Sources */,
 				32EA67F9112BC4D9006C26F1 /* AudioMetadata.cpp in Sources */,
 				32EA6825112CD84B006C26F1 /* FLACMetadata.cpp in Sources */,
 				322D78A9112F971C006676FC /* WavPackMetadata.cpp in Sources */,
@@ -936,7 +905,6 @@
 				32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */,
 				32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */,
 				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
-				32DEDA39122C0D9700C25252 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
 				32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */,
 				324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */,
