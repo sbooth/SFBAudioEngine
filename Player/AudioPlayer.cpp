@@ -1777,9 +1777,9 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		LOG4CXX_WARN(logger, "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << inNumberFrames << " requested");
 		
 		UInt32 framesOfSilence = inNumberFrames - framesToRead;
-		size_t byteCountToZero = framesOfSilence * sizeof(float);
+		size_t byteCountToZero = framesOfSilence * sizeof(AudioUnitSampleType);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
-			float *bufferAlias = static_cast<float *>(ioData->mBuffers[bufferIndex].mData);
+			AudioUnitSampleType *bufferAlias = static_cast<AudioUnitSampleType *>(ioData->mBuffers[bufferIndex].mData);
 			memset(bufferAlias + framesToRead, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize += static_cast<UInt32>(byteCountToZero);
 		}
@@ -1851,6 +1851,9 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
+
+		if(mFramesDecoded == mFramesRendered && NULL == GetCurrentDecoderState())
+			StopOutput();
 	}
 
 	return noErr;
