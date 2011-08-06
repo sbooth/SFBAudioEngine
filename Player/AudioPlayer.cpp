@@ -44,7 +44,6 @@
 
 #include <log4cxx/logger.h>
 #include <log4cxx/logmanager.h>
-#include <log4cxx/basicconfigurator.h>
 #include <log4cxx/ndc.h>
 
 #include "AudioPlayer.h"
