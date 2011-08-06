@@ -371,7 +371,18 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(!inputURL)
 		return NULL;
 
-	CFStringRef pathExtension = CFURLCopyPathExtension(inputURL);
+	// Determining the extension isn't as simple as using CFURLCopyPathExtension (wouldn't that be nice?),
+	// because although the behavior on Lion works like one would expect, on Snow Leopard it returns
+	// a number that I believe is part of the inode number, but is definitely NOT the extension
+	CFStringRef pathExtension = NULL;
+	CFURLRef filePathURL = CFURLCreateFilePathURL(kCFAllocatorDefault, inputURL, NULL);
+	if(filePathURL) {
+		pathExtension = CFURLCopyPathExtension(filePathURL);
+		CFRelease(filePathURL), filePathURL = NULL;
+	}
+	else
+		pathExtension = CFURLCopyPathExtension(inputURL);
+
 	if(!pathExtension) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
