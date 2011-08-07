@@ -743,6 +743,9 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 		return false;
 	}
 
+	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
+	LOG4CXX_DEBUG(logger, "Volume for channel " << channel << " set to " << volume);
+
 	return true;
 }
 
@@ -787,7 +790,7 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 	}
 
 	log4cxx::LoggerPtr logger(log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioPlayer"));
-	LOG4CXX_DEBUG(logger, "Digital pregain set to " << preGain);
+	LOG4CXX_DEBUG(logger, "Pregain set to " << preGain);
 
 	return true;
 }
