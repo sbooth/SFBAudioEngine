@@ -814,7 +814,7 @@ bool AudioPlayer::IsPerformingSampleRateConversion() const
 		return false;
 	}
 
-	return (sampleRate == mRingBufferFormat.mSampleRate);
+	return (sampleRate != mRingBufferFormat.mSampleRate);
 }
 
 bool AudioPlayer::GetSampleRateConverterComplexity(UInt32& complexity) const
