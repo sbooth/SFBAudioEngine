@@ -28,38 +28,36 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <log4cxx/logger.h>
 #include "TagLibStringFromCFString.h"
+#include "logger.h"
 
 TagLib::String 
 TagLib::StringFromCFString(CFStringRef s)
 {
 	if(NULL == s)
 		return String::null;
-	
+
 	CFRange range = CFRangeMake(0, CFStringGetLength(s));
 	CFIndex count;
 
 	// Determine the length of the string in UTF-8
 	CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
-	
+
 	char *buf = new char [count + 1];
 
 	// Convert it
 	CFIndex used;
 	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
-	
-	if(CFStringGetLength(s) != converted) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
-		LOG4CXX_WARN(logger, "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
-	}
-	
+
+	if(CFStringGetLength(s) != converted)
+		LOGGER_WARNING("org.sbooth.AudioEngine", "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
+
 	// Add terminator
 	buf[used] = '\0';
-	
+
 	String result(buf, String::UTF8);
-	
+
 	delete [] buf;
-	
+
 	return result;
 }

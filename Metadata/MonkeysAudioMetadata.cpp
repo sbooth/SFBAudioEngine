@@ -31,7 +31,6 @@
 #include <taglib/tfilestream.h>
 #include <taglib/apefile.h>
 #include <taglib/tag.h>
-#include <log4cxx/logger.h>
 
 #include "MonkeysAudioMetadata.h"
 #include "CreateDisplayNameForURL.h"

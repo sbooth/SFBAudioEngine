@@ -28,11 +28,10 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <log4cxx/logger.h>
-
 #include "AudioMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "TagLibStringFromCFString.h"
+#include "logger.h"
 
 // ========================================
 // Xiph comment utilities
@@ -99,8 +98,7 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 	if(NULL != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
-			LOG4CXX_ERROR(logger, "CFNumberGetValue failed");
+			LOGGER_ERR("org.sbooth.AudioEngine", "CFNumberGetValue failed");
 			return false;
 		}
 		
@@ -152,8 +150,7 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 			char key [keySize + 1];
 			
 			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
-				LOG4CXX_ERROR(logger, "CFStringGetCString failed");
+				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
 				continue;
 			}
 			

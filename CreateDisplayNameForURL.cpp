@@ -32,9 +32,8 @@
 # include <ApplicationServices/ApplicationServices.h>
 #endif
 
-#include <log4cxx/logger.h>
-
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 CFStringRef
 CreateDisplayNameForURL(CFURLRef url)
@@ -53,8 +52,7 @@ CreateDisplayNameForURL(CFURLRef url)
 			OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
 
 			if(noErr != result) {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine");
-				LOG4CXX_WARN(logger, "LSCopyDisplayNameForURL failed: " << result);
+				LOGGER_WARNING("org.sbooth.AudioEngine", "LSCopyDisplayNameForURL failed: " << result);
 				return NULL;
 			}
 		}

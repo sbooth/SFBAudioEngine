@@ -31,10 +31,10 @@
 #include <mp4v2/mp4v2.h>
 #include <mp4v2/itmf_tags.h>
 #include <mp4v2/itmf_generic.h>
-#include <log4cxx/logger.h>
 
 #include "MP4Metadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 #pragma mark Initialization
 
@@ -569,8 +569,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -587,8 +586,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -605,8 +603,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -623,8 +620,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -641,8 +637,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -659,8 +654,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -677,8 +671,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -695,8 +688,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -745,8 +737,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		char cString [cStringSize + 1];
 		
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
 			return false;			
 		}
 		
@@ -776,8 +767,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(GetReplayGainReferenceLoudness()) {
 		float f;
 		if(!CFNumberGetValue(GetReplayGainReferenceLoudness(), kCFNumberFloatType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
 			return false;
 		}
 
@@ -807,8 +797,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(GetReplayGainTrackGain()) {
 		float f;
 		if(!CFNumberGetValue(GetReplayGainTrackGain(), kCFNumberFloatType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
 			return false;
 		}
 		
@@ -838,8 +827,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(GetReplayGainTrackPeak()) {
 		float f;
 		if(!CFNumberGetValue(GetReplayGainTrackPeak(), kCFNumberFloatType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
 			return false;
 		}
 		
@@ -869,8 +857,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(GetReplayGainAlbumGain()) {
 		float f;
 		if(!CFNumberGetValue(GetReplayGainAlbumGain(), kCFNumberFloatType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
 			return false;
 		}
 		
@@ -900,8 +887,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(GetReplayGainAlbumPeak()) {
 		float f;
 		if(!CFNumberGetValue(GetReplayGainAlbumPeak(), kCFNumberFloatType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MP4");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
 			return false;
 		}
 		

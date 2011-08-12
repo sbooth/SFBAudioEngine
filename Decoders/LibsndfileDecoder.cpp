@@ -28,11 +28,10 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <log4cxx/logger.h>
-
 #include "LibsndfileDecoder.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 #pragma mark Callbacks
 
@@ -111,10 +110,8 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 			CFArrayAppendValue(supportedExtensions, extension);
 			CFRelease(extension), extension = NULL;
 		}
-		else {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-			LOG4CXX_WARN(logger, "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
-		}
+		else
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
 	}
 
 	return supportedExtensions;
@@ -175,8 +172,7 @@ LibsndfileDecoder::~LibsndfileDecoder()
 bool LibsndfileDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -196,8 +192,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 	mFile = sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this);
 
 	if(NULL == mFile) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-		LOG4CXX_ERROR(logger, "sf_open_virtual failed: " << sf_error(NULL));
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_open_virtual failed: " << sf_error(NULL));
 
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -401,17 +396,14 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
 	if(mFile) {
 		int result = sf_close(mFile);
-		if(0 != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-			LOG4CXX_WARN(logger, "sf_close failed: " << result);
-		}
+		if(0 != result)
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_close failed: " << result);
 
 		mFile = NULL;
 	}
@@ -432,8 +424,7 @@ CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
 	formatInfo.format = mFileInfo.format;
 
 	if(0 != sf_command(NULL, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Libsndfile");
-		LOG4CXX_WARN(logger, "sf_command (SFC_GET_FORMAT_INFO) failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
 		return NULL;
 	}
 	

@@ -32,10 +32,9 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
-
 #include "HTTPInputSource.h"
 #include "AudioDecoder.h"
+#include "logger.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateStringForOSType.h"
@@ -751,9 +750,8 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
 		CFStringRef osType = CreateStringForOSType(result);
-		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}
 	
@@ -774,9 +772,8 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
 		CFStringRef osType = CreateStringForOSType(result);
-		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}
 	
@@ -797,9 +794,8 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder");
 		CFStringRef osType = CreateStringForOSType(result);
-		LOG4CXX_WARN(logger, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
 		CFRelease(osType), osType = NULL;
 	}
 	

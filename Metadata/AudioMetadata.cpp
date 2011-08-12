@@ -35,10 +35,9 @@
 # include <CoreServices/CoreServices.h>
 #endif
 
-#include <log4cxx/logger.h>
-
 #include "AudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 #if !TARGET_OS_IPHONE
 # include "FLACMetadata.h"
@@ -385,8 +384,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				}				
 			}
 			else {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
-				LOG4CXX_WARN(logger, "The requested URL doesn't exist");
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "The requested URL doesn't exist");
 				
 				if(error) {
 					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -424,10 +422,8 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				}				
 			}
 		}
-		else {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
-			LOG4CXX_WARN(logger, "CFURLCreatePropertyFromResource failed: " << errorCode);
-		}
+		else
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
 		
 		CFRelease(fileExists), fileExists = NULL;
 	}
@@ -438,8 +434,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		FSRef ref;
 		Boolean success = CFURLGetFSRef(url, &ref);
 		if(!success) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
-			LOG4CXX_WARN(logger, "Unable to get FSRef for URL");			
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "Unable to get FSRef for URL");
 			return NULL;
 		}
 		
@@ -447,8 +442,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemContentType, (CFTypeRef *)&uti);
 		
 		if(noErr != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata");
-			LOG4CXX_WARN(logger, "LSCopyItemAttribute (kLSItemContentType) failed: " << result);			
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "LSCopyItemAttribute (kLSItemContentType) failed: " << result);
 			return NULL;
 		}
 		

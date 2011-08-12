@@ -30,7 +30,6 @@
 
 #include <taglib/tfilestream.h>
 #include <taglib/aifffile.h>
-#include <log4cxx/logger.h>
 
 #include "AIFFMetadata.h"
 #include "CreateDisplayNameForURL.h"

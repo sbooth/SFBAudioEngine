@@ -32,11 +32,10 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
-
 #include "WavPackDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -188,8 +187,7 @@ WavPackDecoder::~WavPackDecoder()
 bool WavPackDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.WavPack");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.WavPack", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -312,8 +310,7 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 bool WavPackDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.WavPack");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.WavPack", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 

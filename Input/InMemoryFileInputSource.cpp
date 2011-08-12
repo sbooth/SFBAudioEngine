@@ -31,9 +31,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <log4cxx/logger.h>
-
 #include "InMemoryFileInputSource.h"
+#include "logger.h"
 
 #pragma mark Creation and Destruction
 
@@ -52,8 +51,7 @@ InMemoryFileInputSource::~InMemoryFileInputSource()
 bool InMemoryFileInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Open() called on an InputSource that is already open");
 		return true;
 	}
 
@@ -64,37 +62,33 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
 	}
-	
+
 	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
 	if(-1 == fd) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		return false;
 	}
-	
+
 	if(-1 == fstat(fd, &mFilestats)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-		
-		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
-		}
-		
+
+		if(-1 == close(fd))
+			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
+
 		return false;
 	}
-	
+
 	// Perform the allocation
 	mMemory = static_cast<int8_t *>(malloc(mFilestats.st_size));
 	if(NULL == mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-		
-		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
-		}
-		
+
+		if(-1 == close(fd))
+			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
+
 		memset(&mFilestats, 0, sizeof(mFilestats));
 
 		return false;
@@ -104,12 +98,10 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	if(-1 == read(fd, mMemory, mFilestats.st_size)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-		
-		if(-1 == close(fd)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
-		}
-		
+
+		if(-1 == close(fd))
+			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
+
 		memset(&mFilestats, 0, sizeof(mFilestats));
 		free(mMemory), mMemory = NULL;
 
@@ -117,18 +109,17 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 
 	if(-1 == close(fd)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-		LOG4CXX_ERROR(logger, "Unable to close the file: " << strerror(errno));
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-		
+
 		memset(&mFilestats, 0, sizeof(mFilestats));
 		free(mMemory), mMemory = NULL;
-		
+
 		return false;
 	}
-	
+
 	mCurrentPosition = mMemory;
 
 	mIsOpen = true;
@@ -138,13 +129,12 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.InMemoryFile");
-		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Close() called on an InputSource that hasn't been opened");
 		return true;
 	}
-	
+
 	memset(&mFilestats, 0, sizeof(mFilestats));
-	
+
 	if(mMemory)
 		free(mMemory), mMemory = NULL;
 
@@ -160,10 +150,10 @@ SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 		return -1;
 
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
-	
+
 	if(byteCount > remaining)
 		byteCount = remaining;
-	
+
 	memcpy(buffer, mCurrentPosition, byteCount);
 	mCurrentPosition += byteCount;
 	return byteCount;

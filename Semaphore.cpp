@@ -31,18 +31,15 @@
 #include <mach/mach.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
-
 #include "Semaphore.h"
+#include "logger.h"
 
 Semaphore::Semaphore()
 {
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
 
 	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_FATAL(logger, "semaphore_create failed: " << mach_error_string(result));
-
+		LOGGER_CRIT("org.sbooth.AudioEngine.Semaphore", "semaphore_create failed: " << mach_error_string(result));
 		throw std::runtime_error("Unable to create the semaphore");
 	}
 }
@@ -51,10 +48,8 @@ Semaphore::~Semaphore()
 {
 	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
 
-	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_ERROR(logger, "semaphore_destroy failed: " << mach_error_string(result));
-	}
+	if(KERN_SUCCESS != result)
+		LOGGER_ERR("org.sbooth.AudioEngine.Semaphore", "semaphore_destroy failed: " << mach_error_string(result));
 }
 
 Semaphore::Semaphore(const Semaphore& /*semaphore*/)
@@ -70,8 +65,7 @@ bool Semaphore::Signal()
 	kern_return_t result = semaphore_signal(mSemaphore);
 
 	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_WARN(logger, "Couldn't signal the semaphore: " << mach_error_string(result));
+		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Couldn't signal the semaphore: " << mach_error_string(result));
 		return false;
 	}
 
@@ -83,8 +77,7 @@ bool Semaphore::SignalAll()
 	kern_return_t result = semaphore_signal_all(mSemaphore);
 
 	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_WARN(logger, "Couldn't signal the semaphore: " << mach_error_string(result));
+		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Couldn't signal the semaphore: " << mach_error_string(result));
 		return false;
 	}
 
@@ -96,8 +89,7 @@ bool Semaphore::Wait()
 	kern_return_t result = semaphore_wait(mSemaphore);
 
 	if(KERN_SUCCESS != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_WARN(logger, "Semaphore couldn't wait: " << mach_error_string(result));
+		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Semaphore couldn't wait: " << mach_error_string(result));
 		return false;
 	}
 
@@ -109,8 +101,7 @@ bool Semaphore::TimedWait(mach_timespec_t duration)
 	kern_return_t result = semaphore_timedwait(mSemaphore, duration);
 
 	if(KERN_SUCCESS != result && KERN_OPERATION_TIMED_OUT != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Semaphore");
-		LOG4CXX_WARN(logger, "Semaphore couldn't timedwait: " << mach_error_string(result));
+		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Semaphore couldn't timedwait: " << mach_error_string(result));
 		return false;
 	}
 

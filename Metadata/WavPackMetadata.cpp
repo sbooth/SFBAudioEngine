@@ -29,10 +29,10 @@
  */
 
 #include <wavpack/wavpack.h>
-#include <log4cxx/logger.h>
 
 #include "WavPackMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 // ========================================
 // WavPack comment utilities
@@ -56,14 +56,12 @@ SetWavPackTag(WavpackContext	*wpc,
 	char valueCString [valueCStringSize];
 	
 	if(!CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
-		LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.WavPack", "CFStringGetCString() failed");
 		return false;
 	}
 	
 	if(!WavpackAppendTagItem(wpc, key, valueCString, static_cast<int>(strlen(valueCString)))) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
-		LOG4CXX_WARN(logger, "WavpackAppendTagItem() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.WavPack", "WavpackAppendTagItem() failed");
 		return false;
 	}
 	
@@ -124,8 +122,7 @@ SetWavPackTagDouble(WavpackContext		*wpc,
 	if(NULL != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.WavPack", "CFNumberGetValue() failed");
 			return false;
 		}
 		
@@ -563,8 +560,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 			char key [keySize + 1];
 			
 			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.WavPack");
-				LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.WavPack", "CFStringGetCString() failed");
 				continue;
 			}
 			

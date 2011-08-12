@@ -31,17 +31,15 @@
 #include <stdexcept>
 #include <errno.h>
 
-#include <log4cxx/logger.h>
-
 #include "Guard.h"
+#include "logger.h"
 
 Guard::Guard()
 {
 	int success = pthread_cond_init(&mCondition, NULL);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Guard");
-		LOG4CXX_FATAL(logger, "pthread_cond_init failed: " << strerror(success));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_init failed: " << strerror(success));
 		throw std::runtime_error("Unable to initialize the condition variable");
 	}
 }
@@ -50,10 +48,8 @@ Guard::~Guard()
 {
 	int success = pthread_cond_destroy(&mCondition);
 
-	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Guard");
-		LOG4CXX_ERROR(logger, "pthread_cond_destroy failed: " << strerror(success));
-	}
+	if(0 != success)
+		LOGGER_ERR("org.sbooth.AudioEngine.Guard", "pthread_cond_destroy failed: " << strerror(success));
 }
 
 Guard::Guard(const Guard& /*guard*/)
@@ -75,8 +71,7 @@ void Guard::Wait()
 	int success = pthread_cond_wait(&mCondition, &mMutex);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_FATAL(logger, "pthread_cond_wait failed: " << strerror(success));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_wait failed: " << strerror(success));
 		throw std::runtime_error("Unable to wait for the condition variable");
 	}
 
@@ -94,8 +89,7 @@ bool Guard::WaitUntil(struct timespec absoluteTime)
 	int success = pthread_cond_timedwait(&mCondition, &mMutex, &absoluteTime);
 
 	if(ETIMEDOUT != success && 0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_FATAL(logger, "pthread_cond_timedwait failed: " << strerror(success));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_timedwait failed: " << strerror(success));
 		throw std::runtime_error("Unable to wait for the condition variable");
 	}
 
@@ -109,8 +103,7 @@ void Guard::Signal()
 	int success = pthread_cond_signal(&mCondition);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
-		LOG4CXX_FATAL(logger, "pthread_cond_signal failed: " << strerror(success));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_signal failed: " << strerror(success));
 		throw std::runtime_error("Unable to signal the condition variable");
 	}
 }
@@ -120,7 +113,7 @@ void Guard::Broadcast()
 	int success = pthread_cond_broadcast(&mCondition);
 
 	if(0 != success) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.Mutex");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_broadcast failed: " << strerror(success));
 		throw std::runtime_error("Unable to broadcast the condition variable");
 	}
 }

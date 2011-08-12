@@ -29,10 +29,10 @@
  */
 
 #include <dumb/dumb.h>
-#include <log4cxx/logger.h>
 
 #include "MODMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 #define DUMB_SAMPLE_RATE	44100
 #define DUMB_CHANNELS		2
@@ -200,8 +200,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 
 bool MODMetadata::WriteMetadata(CFErrorRef */*error*/)
 {
-	log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.MOD");
-	LOG4CXX_WARN(logger, "Writing of MOD metadata is not supported");
+	LOGGER_NOTICE("org.sbooth.AudioEngine.AudioMetadata.MOD", "Writing of MOD metadata is not supported");
 
 	return false;
 }

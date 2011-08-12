@@ -34,13 +34,12 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
-
 #include "MusepackDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #pragma mark Callbacks
 
@@ -144,8 +143,7 @@ MusepackDecoder::~MusepackDecoder()
 bool MusepackDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Musepack");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -264,8 +262,7 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 bool MusepackDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.Musepack");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
@@ -350,8 +347,7 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 
 		mpc_status result = mpc_demux_decode(mDemux, &frame);
 		if(MPC_STATUS_OK != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MusePack");
-			LOG4CXX_WARN(logger, "Musepack decoding error");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Musepack decoding error");
 			break;
 		}
 

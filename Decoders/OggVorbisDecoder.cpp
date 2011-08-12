@@ -32,11 +32,10 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
-
 #include "OggVorbisDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -144,8 +143,7 @@ OggVorbisDecoder::~OggVorbisDecoder()
 bool OggVorbisDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -199,22 +197,20 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	}
 	
 	if(0 != ov_test_open(&mVorbisFile)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-		LOG4CXX_FATAL(logger, "ov_test_open failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_test_open failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOG4CXX_WARN(logger, "ov_clear failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
 		
 		return false;
 	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
 	if(NULL == ovInfo) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-		LOG4CXX_FATAL(logger, "ov_info failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_info failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOG4CXX_WARN(logger, "ov_clear failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
 		
 		return false;
 	}
@@ -257,15 +253,12 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 bool OggVorbisDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
-	if(0 != ov_clear(&mVorbisFile)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-		LOG4CXX_WARN(logger, "ov_clear failed");
-	}
+	if(0 != ov_clear(&mVorbisFile))
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
 
 	mIsOpen = false;
 	return true;
@@ -318,8 +311,7 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 										&currentSection);
 			
 		if(0 > framesRead) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggVorbis");
-			LOG4CXX_WARN(logger, "Ogg Vorbis decoding error");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Ogg Vorbis decoding error");
 			return 0;
 		}
 		

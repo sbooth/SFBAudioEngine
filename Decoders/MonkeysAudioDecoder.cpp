@@ -32,7 +32,6 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
 #include <mac/All.h>
 #include <mac/MACLib.h>
 #include <mac/IO.h>
@@ -40,6 +39,7 @@
 #include "MonkeysAudioDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #pragma mark IO Interface
 
@@ -200,8 +200,7 @@ MonkeysAudioDecoder::~MonkeysAudioDecoder()
 bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -286,8 +285,7 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
@@ -347,8 +345,7 @@ UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameC
 
 	int blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData(reinterpret_cast<char *>(bufferList->mBuffers[0].mData), frameCount, &blocksRead)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio");
-		LOG4CXX_WARN(logger, "Monkey's Audio invalid checksum");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Monkey's Audio invalid checksum");
 		return 0;
 	}
 

@@ -30,11 +30,10 @@
 
 #include <CoreServices/CoreServices.h>
 
-#include <log4cxx/logger.h>
-
 #include "MODDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #define DUMB_SAMPLE_RATE	44100
 #define DUMB_CHANNELS		2
@@ -138,8 +137,7 @@ MODDecoder::~MODDecoder()
 bool MODDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MOD", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -303,8 +301,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 bool MODDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MOD", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
@@ -339,8 +336,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
 		if(!Close(NULL) || !GetInputSource()->SeekToOffset(0) || !Open(NULL)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MOD");
-			LOG4CXX_ERROR(logger, "Error reseting DUMB decoder");
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.MOD", "Error reseting DUMB decoder");
 			return -1;
 		}
 

@@ -33,13 +33,13 @@
 #include <stdexcept>
 
 #include <FLAC/metadata.h>
-#include <log4cxx/logger.h>
 
 #include "FLACDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #pragma mark Callbacks
 
@@ -199,8 +199,7 @@ FLACDecoder::~FLACDecoder()
 bool FLACDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -303,8 +302,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	
 	// Process metadata
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-		LOG4CXX_ERROR(logger, "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -342,7 +340,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		}
 
 		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOG4CXX_WARN(logger, "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 		
@@ -382,8 +380,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 
 		default:
 		{
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-			LOG4CXX_ERROR(logger, "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
 				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -421,7 +418,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 			}
 			
 			if(!FLAC__stream_decoder_finish(mFLAC))
-				LOG4CXX_WARN(logger, "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 			
 			FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 			
@@ -451,14 +448,13 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	mBufferList = AllocateABL(mFormat, mStreamInfo.max_blocksize);
 	
 	if(NULL == mBufferList) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-		LOG4CXX_ERROR(logger, "Unable to allocate memory")
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unable to allocate memory")
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
 
 		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOG4CXX_WARN(logger, "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 		
@@ -475,16 +471,13 @@ bool FLACDecoder::Open(CFErrorRef *error)
 bool FLACDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
 	if(mFLAC) {
-		if(!FLAC__stream_decoder_finish(mFLAC)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-			LOG4CXX_WARN(logger, "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-		}
+		if(!FLAC__stream_decoder_finish(mFLAC))
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = NULL;
 	}
@@ -572,10 +565,8 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		
 		// Grab the next frame
 		FLAC__bool result = FLAC__stream_decoder_process_single(mFLAC);
-		if(!result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-			LOG4CXX_WARN(logger, "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-		}
+		if(!result)
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 	}
 	
 	mCurrentFrame += framesRead;
@@ -696,6 +687,5 @@ void FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderE
 {
 	assert(NULL != decoder);
 	
-	log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.FLAC");
-	LOG4CXX_WARN(logger, "FLAC error: " << FLAC__StreamDecoderErrorStatusString[status]);
+	LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC error: " << FLAC__StreamDecoderErrorStatusString[status]);
 }

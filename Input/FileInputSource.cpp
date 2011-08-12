@@ -31,9 +31,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <log4cxx/logger.h>
-
 #include "FileInputSource.h"
+#include "logger.h"
 
 #pragma mark Creation and Destruction
 
@@ -52,8 +51,7 @@ FileInputSource::~FileInputSource()
 bool FileInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
-		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Open() called on an InputSource that is already open");
 		return true;
 	}
 
@@ -64,26 +62,24 @@ bool FileInputSource::Open(CFErrorRef *error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
 		return false;
 	}
-	
+
 	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
-	
+
 	if(NULL == mFile) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
 		return false;
 	}
-	
+
 	if(-1 == stat(reinterpret_cast<const char *>(buf), &mFilestats)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
-		
-		if(0 != fclose(mFile)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
-			LOG4CXX_WARN(logger, "Unable to close the file: " << strerror(errno));
-		}
-		
+
+		if(0 != fclose(mFile))
+			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Unable to close the file: " << strerror(errno));
+
 		mFile = NULL;
-		
+
 		return false;
 	}
 
@@ -94,8 +90,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 bool FileInputSource::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.File");
-		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Close() called on an InputSource that hasn't been opened");
 		return true;
 	}
 
@@ -103,9 +98,9 @@ bool FileInputSource::Close(CFErrorRef *error)
 
 	if(NULL != mFile) {
 		int result = fclose(mFile);
-		
+
 		mFile = NULL;
-		
+
 		if(-1 == result) {
 			if(error)
 				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);

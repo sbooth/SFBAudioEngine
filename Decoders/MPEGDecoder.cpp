@@ -35,13 +35,12 @@
 #include <stdexcept>
 #include <Accelerate/Accelerate.h>
 
-#include <log4cxx/logger.h>
-
 #include "MPEGDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #pragma mark Initialization
 
@@ -50,10 +49,8 @@ static void Setupmpg123()
 {
 	// What happens if this fails?
 	int result = mpg123_init();
-	if(MPG123_OK != result) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-		LOG4CXX_WARN(logger, "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
-	}
+	if(MPG123_OK != result)
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
 }
 
 static void Teardownmpg123() __attribute__ ((destructor));
@@ -156,8 +153,7 @@ MPEGDecoder::~MPEGDecoder()
 bool MPEGDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -433,8 +429,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 bool MPEGDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
@@ -547,8 +542,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		if(MPG123_DONE == result)
 			break;
 		else if(MPG123_OK != result) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.MPEG");
-			LOG4CXX_WARN(logger, "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder));
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder));
 			break;
 		}
 

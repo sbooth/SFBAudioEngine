@@ -29,7 +29,7 @@
  */
 
 #include "HTTPInputSource.h"
-#include <log4cxx/logger.h>
+#include "logger.h"
 
 // ========================================
 // CFNetwork callbacks
@@ -59,8 +59,7 @@ HTTPInputSource::~HTTPInputSource()
 bool HTTPInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.HTTP");
-		LOG4CXX_WARN(logger, "Open() called on an InputSource that is already open");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.HTTP", "Open() called on an InputSource that is already open");
 		return true;
 	}
 
@@ -122,8 +121,7 @@ bool HTTPInputSource::Close(CFErrorRef *error)
 {
 #pragma unused(error)
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.InputSource.HTTP");
-		LOG4CXX_WARN(logger, "Close() called on an InputSource that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.HTTP", "Close() called on an InputSource that hasn't been opened");
 		return true;
 	}
 

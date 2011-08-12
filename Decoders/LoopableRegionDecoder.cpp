@@ -30,10 +30,9 @@
 
 #include <algorithm>
 
-#include <log4cxx/logger.h>
-
 #include "LoopableRegionDecoder.h"
 #include "AudioDecoder.h"
+#include "logger.h"
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
@@ -90,8 +89,7 @@ LoopableRegionDecoder::~LoopableRegionDecoder()
 bool LoopableRegionDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 	
@@ -110,8 +108,7 @@ bool LoopableRegionDecoder::Open(CFErrorRef *error)
 bool LoopableRegionDecoder::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 	
@@ -163,8 +160,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers)));
 	
 	if(NULL == bufferListAlias) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion");
-		LOG4CXX_ERROR(logger, "Unable to allocate memory")
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Unable to allocate memory");
 		return 0;
 	}	
 

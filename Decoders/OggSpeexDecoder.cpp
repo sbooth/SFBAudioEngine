@@ -33,7 +33,6 @@
 #include <Accelerate/Accelerate.h>
 #include <stdexcept>
 
-#include <log4cxx/logger.h>
 #include <speex/speex.h>
 #include <speex/speex_header.h>
 #include <speex/speex_callbacks.h>
@@ -43,6 +42,7 @@
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "logger.h"
 
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
@@ -100,8 +100,7 @@ OggSpeexDecoder::~OggSpeexDecoder()
 bool OggSpeexDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-		LOG4CXX_WARN(logger, "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Open() called on an AudioDecoder that is already open");		
 		return true;
 	}
 
@@ -566,8 +565,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-		LOG4CXX_WARN(logger, "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Close() called on an AudioDecoder that hasn't been opened");
 		return true;
 	}
 
@@ -653,8 +651,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				ogg_packet oggPacket;
 				int result = ogg_stream_packetout(&mOggStreamState, &oggPacket);
 				if(-1 == result) {
-					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-					LOG4CXX_ERROR(logger, "Ogg Speex decoding error: Ogg loss of streaming");
+					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding error: Ogg loss of streaming");
 					break;
 				}
 				
@@ -695,14 +692,12 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 							if(-1 == result)
 								break;
 							else if(-2 == result) {
-								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-								LOG4CXX_ERROR(logger, "Ogg Speex decoding error: possible corrupted stream");
+								LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding error: possible corrupted stream");
 								break;
 							}
 							
 							if(0 > speex_bits_remaining(&mSpeexBits)) {
-								log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-								LOG4CXX_ERROR(logger, "Ogg Speex decoding overflow: possible corrupted stream");
+								LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding overflow: possible corrupted stream");
 								break;
 							}
 							
@@ -742,8 +737,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 					// Read bitstream from input file
 					ssize_t bytesRead = GetInputSource()->Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
-						log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-						LOG4CXX_ERROR(logger, "Unable to read from the input file");
+						LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Unable to read from the input file");
 						break;
 					}
 					
@@ -761,8 +755,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				// Get the resultant Ogg page
 				int result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 				if(0 != result) {
-					log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioDecoder.OggSpeex");
-					LOG4CXX_ERROR(logger, "Error reading Ogg page");
+					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Error reading Ogg page");
 					break;
 				}
 			}

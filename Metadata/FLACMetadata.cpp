@@ -29,10 +29,10 @@
  */
 
 #include <FLAC/metadata.h>
-#include <log4cxx/logger.h>
 
 #include "FLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
+#include "logger.h"
 
 // ========================================
 // Vorbis comment utilities
@@ -45,8 +45,7 @@ SetVorbisComment(FLAC__StreamMetadata *block, const char *key, CFStringRef value
 
 	// Remove the existing comment with this name
 	if(-1 == FLAC__metadata_object_vorbiscomment_remove_entry_matching(block, key)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
 		return false;
 	}
 	
@@ -58,22 +57,19 @@ SetVorbisComment(FLAC__StreamMetadata *block, const char *key, CFStringRef value
 	char valueCString [valueCStringSize];
 	
 	if(!CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-		LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFStringGetCString() failed");
 		return false;
 	}
 	
 	FLAC__StreamMetadata_VorbisComment_Entry entry;
 	
 	if(!FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, key, valueCString)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair() failed");
 		return false;
 	}
 	
 	if(!FLAC__metadata_object_vorbiscomment_replace_comment(block, entry, false, false)) {
-		log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-		LOG4CXX_WARN(logger, "FLAC__metadata_object_vorbiscomment_replace_comment() failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_replace_comment() failed");
 		return false;
 	}
 	
@@ -124,8 +120,7 @@ SetVorbisCommentDouble(FLAC__StreamMetadata *block, const char *key, CFNumberRef
 	if(NULL != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-			LOG4CXX_WARN(logger, "CFNumberGetValue() failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFNumberGetValue() failed");
 			return false;
 		}
 
@@ -735,8 +730,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			char key [keySize + 1];
 			       
 			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("org.sbooth.AudioEngine.AudioMetadata.FLAC");
-				LOG4CXX_WARN(logger, "CFStringGetCString() failed");
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFStringGetCString() failed");
 				continue;
 			}
 			

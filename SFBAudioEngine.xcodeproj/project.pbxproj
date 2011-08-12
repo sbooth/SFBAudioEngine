@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */ = {isa = PBXBuildFile; fileRef = 32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */; };
 		3203A6111346E09100A7A22E /* dumb.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3203A6101346E09100A7A22E /* dumb.framework */; };
 		3203A6141346E09D00A7A22E /* dumb.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3203A6101346E09100A7A22E /* dumb.framework */; };
 		3203A61B1346E0ED00A7A22E /* MODDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3203A6191346E0ED00A7A22E /* MODDecoder.h */; };
@@ -75,8 +73,6 @@
 		3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3258AE1B12DF8FA800ADA052 /* speex.framework */; };
 		3258AE3312DF8FDF00ADA052 /* OggSpeexDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */; };
 		3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */; };
-		3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
-		3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32676759128F497400C7FE3B /* log4cxx.framework */; };
 		3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268C0BE139C06AB00CC5C5C /* Guard.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
@@ -96,6 +92,8 @@
 		3294BE3E1144AF3F003EB595 /* CADebugPrintf.h in Headers */ = {isa = PBXBuildFile; fileRef = 328AA4CB111614540091D56B /* CADebugPrintf.h */; };
 		32A319FD11C2072C009AE255 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */; };
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
+		32A809F013F5715800B52D4A /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A809EE13F5715800B52D4A /* logger.cpp */; };
+		32A809F113F5715800B52D4A /* logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A809EF13F5715800B52D4A /* logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32A95E511347EBC6006B40EF /* MODMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A95E4F1347EBC6006B40EF /* MODMetadata.h */; };
 		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
 		32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
@@ -208,7 +206,6 @@
 				32161CF5133AF907008449C3 /* mpg123.framework in Copy Embedded Frameworks */,
 				3258AE1F12DF8FB000ADA052 /* speex.framework in Copy Embedded Frameworks */,
 				324DB1BA12DC17550055AF3F /* mac.framework in Copy Embedded Frameworks */,
-				3267675D128F498100C7FE3B /* log4cxx.framework in Copy Embedded Frameworks */,
 				322D7A4C11304B4F006676FC /* taglib.framework in Copy Embedded Frameworks */,
 				322D79BA113047A2006676FC /* mp4v2.framework in Copy Embedded Frameworks */,
 				32CA90FC10B9E51A005A85DA /* mpcdec.framework in Copy Embedded Frameworks */,
@@ -223,8 +220,6 @@
 
 /* Begin PBXFileReference section */
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFOperatorOverloads.h; sourceTree = "<group>"; };
-		32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = CFOperatorOverloads.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
 		3203A6101346E09100A7A22E /* dumb.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = dumb.framework; path = Frameworks/dumb.framework; sourceTree = "<group>"; };
@@ -300,7 +295,6 @@
 		3258AE1B12DF8FA800ADA052 /* speex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = speex.framework; path = Frameworks/speex.framework; sourceTree = "<group>"; };
 		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
 		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
-		32676759128F497400C7FE3B /* log4cxx.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = log4cxx.framework; path = Frameworks/log4cxx.framework; sourceTree = "<group>"; };
 		3268C0BE139C06AB00CC5C5C /* Guard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Guard.h; sourceTree = "<group>"; };
 		3268C0BF139C06AB00CC5C5C /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
@@ -317,6 +311,8 @@
 		328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddXiphCommentToDictionary.h; sourceTree = "<group>"; };
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; };
 		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; };
+		32A809EE13F5715800B52D4A /* logger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = logger.cpp; sourceTree = "<group>"; };
+		32A809EF13F5715800B52D4A /* logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = logger.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32B4379A11BAF23B0027F642 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -330,7 +326,7 @@
 		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexMetadata.h; sourceTree = "<group>"; };
 		32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexMetadata.cpp; sourceTree = "<group>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
-		32D429E413E308DB00FA07DE /* AudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioPlayer.cpp; sourceTree = "<group>"; };
+		32D429E413E308DB00FA07DE /* AudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioPlayer.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32D429E513E308DB00FA07DE /* AudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
 		32D65529115FC58C002B275C /* FileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileInputSource.cpp; sourceTree = "<group>"; };
 		32D6552A115FC58C002B275C /* FileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileInputSource.h; sourceTree = "<group>"; };
@@ -405,7 +401,6 @@
 				321643771220AAC00010AE57 /* Accelerate.framework in Frameworks */,
 				320E117F1289D13100DAA041 /* libssl.dylib in Frameworks */,
 				320E11831289D18000DAA041 /* libcrypto.dylib in Frameworks */,
-				3267675A128F497400C7FE3B /* log4cxx.framework in Frameworks */,
 				324DB1B712DC17480055AF3F /* mac.framework in Frameworks */,
 				3258AE1C12DF8FA800ADA052 /* speex.framework in Frameworks */,
 				3203A6111346E09100A7A22E /* dumb.framework in Frameworks */,
@@ -458,6 +453,8 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				32A809EE13F5715800B52D4A /* logger.cpp */,
+				32A809EF13F5715800B52D4A /* logger.h */,
 				326A98F51392F38A0061A65F /* Semaphore.cpp */,
 				326A98F61392F38A0061A65F /* Semaphore.h */,
 				32B79A62138F2EC200EBEF1B /* Mutex.cpp */,
@@ -474,8 +471,6 @@
 				32DEDA13122C095600C25252 /* DeallocateABL.cpp */,
 				32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */,
 				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
-				32007BB4129C3A0800D0873F /* CFOperatorOverloads.h */,
-				32007BB5129C3A0800D0873F /* CFOperatorOverloads.cpp */,
 				320723BC138D521A00007369 /* CreateStringForOSType.h */,
 				3268C0BE139C06AB00CC5C5C /* Guard.h */,
 				3268C0BF139C06AB00CC5C5C /* Guard.cpp */,
@@ -502,7 +497,6 @@
 				321643761220AAC00010AE57 /* Accelerate.framework */,
 				320E117E1289D13100DAA041 /* libssl.dylib */,
 				320E11821289D18000DAA041 /* libcrypto.dylib */,
-				32676759128F497400C7FE3B /* log4cxx.framework */,
 				324DB1B612DC17480055AF3F /* mac.framework */,
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 				32161CE8133AF8C8008449C3 /* mpg123.framework */,
@@ -697,6 +691,7 @@
 				32C212E4109111B300BA2493 /* CAAutoDisposer.h in Headers */,
 				32C212E5109111B400BA2493 /* CABitOperations.h in Headers */,
 				32C212E7109111B500BA2493 /* CARingBuffer.h in Headers */,
+				32A809F113F5715800B52D4A /* logger.h in Headers */,
 				3255602C1092A38F00580566 /* FLACDecoder.h in Headers */,
 				32E6AB9C1096C81200DA998D /* LoopableRegionDecoder.h in Headers */,
 				32E7378E10B9178000094C8A /* WavPackDecoder.h in Headers */,
@@ -730,7 +725,6 @@
 				32DEDA14122C095600C25252 /* DeallocateABL.h in Headers */,
 				32DEDA26122C0B0700C25252 /* ChannelLayoutsAreEqual.h in Headers */,
 				32DF320A123E6C940002CA5A /* InMemoryFileInputSource.h in Headers */,
-				32007BB6129C3A0800D0873F /* CFOperatorOverloads.h in Headers */,
 				324DB05B12DBFA1E0055AF3F /* MonkeysAudioDecoder.h in Headers */,
 				324DB31312DC27FE0055AF3F /* MonkeysAudioMetadata.h in Headers */,
 				32EE7D4912DD3D1500533884 /* AddID3v1TagToDictionary.h in Headers */,
@@ -906,7 +900,6 @@
 				32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */,
 				32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
-				32007BB7129C3A0800D0873F /* CFOperatorOverloads.cpp in Sources */,
 				324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */,
 				324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */,
 				32EE7D4A12DD3D1500533884 /* AddID3v1TagToDictionary.cpp in Sources */,
@@ -925,6 +918,7 @@
 				32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */,
 				32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */,
 				32D429E613E308DB00FA07DE /* AudioPlayer.cpp in Sources */,
+				32A809F013F5715800B52D4A /* logger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1094,12 +1088,14 @@
 		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 322B5B2C108BA69F00CA9BDE /* Base.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 322B5B2C108BA69F00CA9BDE /* Base.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
