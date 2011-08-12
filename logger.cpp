@@ -105,7 +105,7 @@ static const char * GetChannelLayoutTagName(AudioChannelLayoutTag layoutTag)
 }
 void logger::Log(levels level, const char *facility, const char *message, const char *function, const char *file, int line)
 {
-	if(currentLogLevel > level)
+	if(currentLogLevel < level)
 		return;
 
 	aslmsg msg = asl_new(ASL_TYPE_MSG);

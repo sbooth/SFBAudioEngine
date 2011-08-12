@@ -37,56 +37,56 @@
 
 // 9 times out of 10 these macros should be used for logging because they are the most efficient
 #define LOGGER_EMERG(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::emerg) { \
+	if(::logger::currentLogLevel >= ::logger::emerg) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::emerg, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_ALERT(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::alert) { \
+	if(::logger::currentLogLevel >= ::logger::alert) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::alert, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_CRIT(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::crit) { \
+	if(::logger::currentLogLevel >= ::logger::crit) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::crit, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_ERR(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::err) { \
+	if(::logger::currentLogLevel >= ::logger::err) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::err, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_WARNING(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::warning) { \
+	if(::logger::currentLogLevel >= ::logger::warning) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::warning, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_NOTICE(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::notice) { \
+	if(::logger::currentLogLevel >= ::logger::notice) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::notice, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_INFO(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::info) { \
+	if(::logger::currentLogLevel >= ::logger::info) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::info, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
 }
 
 #define LOGGER_DEBUG(facility, message) { \
-	if(::logger::currentLogLevel <= ::logger::debug) { \
+	if(::logger::currentLogLevel >= ::logger::debug) { \
 		::std::stringstream ss_; ss_ << message; \
 		::logger::Log(::logger::debug, facility, ss_.str().c_str(), __PRETTY_FUNCTION__, __FILE__, __LINE__); \
 	} \
