@@ -103,6 +103,7 @@ static const char * GetChannelLayoutTagName(AudioChannelLayoutTag layoutTag)
 		default:											return NULL;
 	}	
 }
+
 void logger::Log(levels level, const char *facility, const char *message, const char *function, const char *file, int line)
 {
 	if(currentLogLevel < level)
@@ -145,8 +146,7 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 	CFIndex bytesWritten;
 
 	while(currentCharacter < totalCharacters) {
-		charactersConverted = CFStringGetBytes(s, CFRangeMake(currentCharacter, totalCharacters), kCFStringEncodingUTF8, 0, false, 
-											   reinterpret_cast<UInt8 *>(buf), BUFFER_LENGTH, &bytesWritten);
+		charactersConverted = CFStringGetBytes(s, CFRangeMake(currentCharacter, totalCharacters), kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), BUFFER_LENGTH, &bytesWritten);
 		currentCharacter += charactersConverted;
 		out.write(buf, bytesWritten);
 	};
@@ -162,8 +162,8 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 	}
 
 	CFStringRef s = CFURLGetString(u);
-	if(CFStringHasPrefix(s, CFSTR("file:"))) {
 #if !TARGET_OS_IPHONE
+	if(CFStringHasPrefix(s, CFSTR("file:"))) {
 		CFStringRef displayName = NULL;
 		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
 
@@ -171,11 +171,9 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 			out << displayName;
 			CFRelease(displayName), displayName = NULL;
 		}
-#else
-		out << CFURLGetString(u);
-#endif
 	}
 	else
+#endif
 		out << s;
 	
 	return out;
