@@ -248,9 +248,6 @@ private:
 
 	volatile uint32_t					mFlags;
 
-	double								mDigitalVolume;
-	double								mDigitalPreGain;
-
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
