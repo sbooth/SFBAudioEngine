@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "logger.h"
+#include "Logger.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE

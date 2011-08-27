@@ -33,7 +33,7 @@
 #include <sys/mman.h>
 
 #include "MemoryMappedFileInputSource.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Creation and Destruction
 

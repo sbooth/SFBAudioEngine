@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #include "InMemoryFileInputSource.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Creation and Destruction
 

@@ -35,7 +35,7 @@
 #include "OggVorbisDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 

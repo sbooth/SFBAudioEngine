@@ -33,7 +33,7 @@
 #include "MODDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #define DUMB_SAMPLE_RATE	44100
 #define DUMB_CHANNELS		2

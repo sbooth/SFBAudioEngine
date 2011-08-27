@@ -32,7 +32,7 @@
 #include <errno.h>
 
 #include "Guard.h"
-#include "logger.h"
+#include "Logger.h"
 
 Guard::Guard()
 {

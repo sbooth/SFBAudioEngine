@@ -34,7 +34,7 @@
 
 #include "HTTPInputSource.h"
 #include "AudioDecoder.h"
-#include "logger.h"
+#include "Logger.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateStringForOSType.h"

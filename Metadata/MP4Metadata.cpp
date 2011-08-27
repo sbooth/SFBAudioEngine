@@ -34,7 +34,7 @@
 
 #include "MP4Metadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Initialization
 

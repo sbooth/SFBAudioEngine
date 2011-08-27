@@ -29,7 +29,7 @@
  */
 
 #include "TagLibStringFromCFString.h"
-#include "logger.h"
+#include "Logger.h"
 
 TagLib::String 
 TagLib::StringFromCFString(CFStringRef s)

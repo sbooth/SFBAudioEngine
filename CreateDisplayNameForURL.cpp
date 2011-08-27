@@ -33,7 +33,7 @@
 #endif
 
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 CFStringRef
 CreateDisplayNameForURL(CFURLRef url)

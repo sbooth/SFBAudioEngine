@@ -48,7 +48,7 @@
 #include "DeallocateABL.h"
 #include "ChannelLayoutsAreEqual.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #include "CARingBuffer.h"
 

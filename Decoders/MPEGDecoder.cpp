@@ -40,7 +40,7 @@
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Initialization
 

@@ -32,7 +32,7 @@
 
 #include "LoopableRegionDecoder.h"
 #include "AudioDecoder.h"
-#include "logger.h"
+#include "Logger.h"
 
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)

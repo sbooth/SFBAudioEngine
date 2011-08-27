@@ -39,7 +39,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
 #include "CreateStringForOSType.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Callbacks
 

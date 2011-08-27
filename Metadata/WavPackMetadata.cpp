@@ -32,7 +32,7 @@
 
 #include "WavPackMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 // ========================================
 // WavPack comment utilities

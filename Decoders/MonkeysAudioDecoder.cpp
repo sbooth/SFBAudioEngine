@@ -39,7 +39,7 @@
 #include "MonkeysAudioDecoder.h"
 #include "CreateDisplayNameForURL.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark IO Interface
 

@@ -31,7 +31,7 @@
 #include "AudioMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "TagLibStringFromCFString.h"
-#include "logger.h"
+#include "Logger.h"
 
 // ========================================
 // Xiph comment utilities

@@ -42,7 +42,7 @@
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
-#include "logger.h"
+#include "Logger.h"
 
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096

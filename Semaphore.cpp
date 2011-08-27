@@ -32,7 +32,7 @@
 #include <stdexcept>
 
 #include "Semaphore.h"
-#include "logger.h"
+#include "Logger.h"
 
 Semaphore::Semaphore()
 {

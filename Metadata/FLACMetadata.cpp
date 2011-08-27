@@ -32,7 +32,7 @@
 
 #include "FLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 // ========================================
 // Vorbis comment utilities

@@ -31,7 +31,7 @@
 #include "AudioMetadata.h"
 #include "SetAPETagFromMetadata.h"
 #include "TagLibStringFromCFString.h"
-#include "logger.h"
+#include "Logger.h"
 
 // ========================================
 // APE tag utilities

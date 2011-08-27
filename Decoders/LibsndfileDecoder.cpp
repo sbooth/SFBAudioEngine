@@ -31,7 +31,7 @@
 #include "LibsndfileDecoder.h"
 #include "CreateChannelLayout.h"
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 #pragma mark Callbacks
 

@@ -32,7 +32,7 @@
 #include <errno.h>
 
 #include "Mutex.h"
-#include "logger.h"
+#include "Logger.h"
 
 Mutex::Mutex()
 	: mOwner(0)

@@ -37,7 +37,7 @@
 
 #include "AudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "logger.h"
+#include "Logger.h"
 
 #if !TARGET_OS_IPHONE
 # include "FLACMetadata.h"
