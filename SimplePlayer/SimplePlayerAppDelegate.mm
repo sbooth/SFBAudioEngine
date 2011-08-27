@@ -7,6 +7,7 @@
 #import "PlayerWindowController.h"
 
 #include <SFBAudioEngine/AudioDecoder.h>
+#include <SFBAudioEngine/Logger.h>
 
 @implementation SimplePlayerAppDelegate
 
@@ -25,6 +26,8 @@
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 #pragma unused(aNotification)
+	asl_add_log_file(NULL, STDERR_FILENO);
+	::logger::SetCurrentLevel(::logger::debug);
 	[_playerWindowController showWindow:self];
 }
 
@@ -56,10 +59,11 @@
 
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
+	[openPanel setAllowedFileTypes:(NSArray *)supportedTypes];
 
-	if(NSFileHandlingPanelOKButton == [openPanel runModalForTypes:(NSArray *)supportedTypes]) {
-		NSArray *filenames = [openPanel filenames];
-		[_playerWindowController playURL:[NSURL fileURLWithPath:[filenames objectAtIndex:0]]];
+	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
+		NSArray *URLs = [openPanel URLs];
+		[_playerWindowController playURL:[URLs objectAtIndex:0]];
 	}	
 
 	CFRelease(supportedTypes), supportedTypes = NULL;
