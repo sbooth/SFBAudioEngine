@@ -28,6 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
 #endif

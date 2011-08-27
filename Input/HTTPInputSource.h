@@ -30,7 +30,13 @@
 
 #pragma once
 
+#include <CoreFoundation/CoreFoundation.h>
+
+#if TARGET_OS_IPHONE
+# include <CFNetwork/CFNetwork.h>
+#else
 #include <CoreServices/CoreServices.h>
+#endif
 #include "InputSource.h"
 
 class HTTPInputSource : public InputSource

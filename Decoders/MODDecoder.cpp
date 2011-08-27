@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <CoreServices/CoreServices.h>
+//#include <CoreServices/CoreServices.h>
 
 #include "MODDecoder.h"
 #include "CreateDisplayNameForURL.h"
