@@ -1021,6 +1021,54 @@ bool AudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 	return true;
 }
 
+bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
+{
+	AudioDeviceID deviceID;
+	if(!GetOutputDeviceID(deviceID))
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyStreamConfiguration,
+		kAudioDevicePropertyScopeOutput,
+		kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
+		return false;
+	}
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, NULL, &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		return false;
+	}
+
+	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
+
+	if(NULL == bufferList) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate << " << dataSize << " bytes");
+		return false;
+	}
+
+	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		free(bufferList), bufferList = NULL;
+		return false;
+	}
+
+	channelCount = 0;
+	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
+
+	free(bufferList), bufferList = NULL;
+	return true;
+}
+
 bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
 {
 	AudioDeviceID deviceID;

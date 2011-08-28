@@ -165,6 +165,7 @@ public:
 	bool GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const;
 	bool SetDeviceVolumeForChannel(UInt32 channel, Float32 volume);
 
+	bool GetDeviceChannelCount(UInt32& channelCount) const;
 	bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
 
 	// ========================================
