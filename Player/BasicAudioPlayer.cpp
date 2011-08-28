@@ -557,159 +557,14 @@ bool BasicAudioPlayer::SupportsSeeking() const
 
 #pragma mark Player Parameters
 
-bool BasicAudioPlayer::GetMasterVolume(Float32& volume) const
+bool BasicAudioPlayer::GetVolume(double& volume) const
 {
-	return GetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
-}
-
-bool BasicAudioPlayer::SetMasterVolume(Float32 volume)
-{
-	return SetVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
-}
-
-bool BasicAudioPlayer::GetChannelCount(UInt32& channelCount) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreamConfiguration,
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster
-	};
-
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
-		return false;
-	}
-
-	UInt32 dataSize;
-	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
-
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
-		return false;
-	}
-
-	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
-
-	if(NULL == bufferList) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Unable to allocate << " << dataSize << " bytes");
-		return false;
-	}
-	
-	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
-		free(bufferList), bufferList = NULL;
-		return false;
-	}
-	
-	channelCount = 0;
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
-
-	free(bufferList), bufferList = NULL;
-	return true;
-}
-
-bool BasicAudioPlayer::GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyPreferredChannelsForStereo, 
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
-		return false;
-	}
-	
-	UInt32 preferredChannels [2];
-	UInt32 dataSize = sizeof(preferredChannels);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
-		return false;
-	}
-
-	preferredStereoChannels.first = preferredChannels[0];
-	preferredStereoChannels.second = preferredChannels[1];
-
-	return true;
-}
-
-bool BasicAudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
-{
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
-		return false;
-	}
-	
-	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
-		return false;
-	}
-	
-	return true;
-}
-
-bool BasicAudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
-{
-	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Setting output device 0x" << std::hex << mOutputDeviceID << " channel " << channel << " volume to " << volume);
-
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
-	};
-	
-	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
-		return false;
-	}
-
-	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
-		return false;
-	}
-	
-	return true;
-}
-
-void BasicAudioPlayer::EnableDigitalVolume(bool enableDigitalVolume)
-{
-	if(enableDigitalVolume)
-		OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
-	else
-		OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagDigitalVolumeEnabled */, &mFlags);
-}
-
-bool BasicAudioPlayer::GetDigitalVolume(double& volume) const
-{
-	if(!DigitalVolumeIsEnabled())
-		return false;
-
 	volume = mDigitalVolume;
 	return true;
 }
 
-bool BasicAudioPlayer::SetDigitalVolume(double volume)
+bool BasicAudioPlayer::SetVolume(double volume)
 {
-	if(!DigitalVolumeIsEnabled())
-		return false;
-
 	mDigitalVolume = std::min(1.0, std::max(0.0, volume));
 
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Digital volume set to " << mDigitalVolume);
@@ -717,31 +572,17 @@ bool BasicAudioPlayer::SetDigitalVolume(double volume)
 	return true;
 }
 
-void BasicAudioPlayer::EnableDigitalPreGain(bool enableDigitalPreGain)
+bool BasicAudioPlayer::GetPreGain(double& preGain) const
 {
-	if(enableDigitalPreGain)
-		OSAtomicTestAndSetBarrier(3 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
-	else
-		OSAtomicTestAndClearBarrier(3 /* eAudioPlayerFlagDigitalPreGainEnabled */, &mFlags);
-}
-
-bool BasicAudioPlayer::GetDigitalPreGain(double& preGain) const
-{
-	if(!DigitalPreGainIsEnabled())
-		return false;
-
 	preGain = mDigitalPreGain;
 	return true;
 }
 
-bool BasicAudioPlayer::SetDigitalPreGain(double preGain)
+bool BasicAudioPlayer::SetPreGain(double preGain)
 {
-	if(!DigitalPreGainIsEnabled())
-		return false;
+	mDigitalPreGain = std::min(1.0, std::max(0.0, preGain));
 
-	mDigitalPreGain = std::min(15.0, std::max(-15.0, preGain));
-
-	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Digital pregain set to " << mDigitalPreGain << " dB");
+	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Digital pregain set to " << mDigitalPreGain);
 
 	return true;
 }
@@ -812,6 +653,299 @@ bool BasicAudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 
 	if(restartIO)
 		return StartOutput();
+
+	return true;
+}
+
+#pragma mark Hog Mode
+
+bool BasicAudioPlayer::OutputDeviceIsHogged() const
+{
+	// Is it hogged by us?
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyHogMode, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	pid_t hogPID = static_cast<pid_t>(-1);
+	UInt32 dataSize = sizeof(hogPID);
+	
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		return false;
+	}
+
+	return (hogPID == getpid() ? true : false);
+}
+
+bool BasicAudioPlayer::StartHoggingOutputDevice()
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Taking hog mode for device 0x" << std::hex << mOutputDeviceID);
+
+	// Is it hogged already?
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyHogMode, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	pid_t hogPID = static_cast<pid_t>(-1);
+	UInt32 dataSize = sizeof(hogPID);
+	
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		return false;
+	}
+	
+	// The device is already hogged
+	if(hogPID != static_cast<pid_t>(-1)) {
+		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Device is already hogged by pid: " << hogPID);
+		return false;
+	}
+
+	bool restartIO = false;
+	{
+		Guard::Locker lock(mGuard);
+
+		// If IO is enabled, disable it while hog mode is acquired because the HAL
+		// does not automatically restart IO after hog mode is taken
+		restartIO = IsPlaying();
+		if(restartIO) {
+			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+			// Wait for output to stop
+			lock.Wait();
+		}
+	}
+
+	hogPID = getpid();
+	
+	result = AudioObjectSetPropertyData(mOutputDeviceID, 
+										&propertyAddress, 
+										0, 
+										NULL, 
+										sizeof(hogPID), 
+										&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		return false;
+	}
+
+	// If IO was enabled before, re-enable it
+	if(restartIO && !OutputIsRunning())
+		StartOutput();
+
+	return true;
+}
+
+bool BasicAudioPlayer::StopHoggingOutputDevice()
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Releasing hog mode for device 0x" << std::hex << mOutputDeviceID);
+
+	// Is it hogged by us?
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyHogMode, 
+		kAudioObjectPropertyScopeGlobal,
+		kAudioObjectPropertyElementMaster 
+	};
+	
+	pid_t hogPID = static_cast<pid_t>(-1);
+	UInt32 dataSize = sizeof(hogPID);
+	
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
+												 &propertyAddress,
+												 0,
+												 NULL,
+												 &dataSize,
+												 &hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		return false;
+	}
+	
+	// If we don't own hog mode we can't release it
+	if(hogPID != getpid())
+		return false;
+
+	bool restartIO = false;
+	{
+		Guard::Locker lock(mGuard);
+
+		// Disable IO while hog mode is released
+		restartIO = IsPlaying();
+		if(restartIO) {
+			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
+			// Wait for output to stop
+			lock.Wait();
+		}
+	}
+
+	// Release hog mode.
+	hogPID = static_cast<pid_t>(-1);
+
+	result = AudioObjectSetPropertyData(mOutputDeviceID, 
+										&propertyAddress, 
+										0, 
+										NULL, 
+										sizeof(hogPID), 
+										&hogPID);
+	
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		return false;
+	}
+	
+	if(restartIO && !OutputIsRunning())
+		StartOutput();
+	
+	return true;
+}
+
+#pragma mark Device Parameters
+
+bool BasicAudioPlayer::GetDeviceMasterVolume(Float32& volume) const
+{
+	return GetDeviceVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
+}
+
+bool BasicAudioPlayer::SetDeviceMasterVolume(Float32 volume)
+{
+	return SetDeviceVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
+}
+
+bool BasicAudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyVolumeScalar, 
+		kAudioDevicePropertyScopeOutput,
+		channel 
+	};
+
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		return false;
+	}
+
+	UInt32 dataSize = sizeof(volume);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool BasicAudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Setting output device 0x" << std::hex << mOutputDeviceID << " channel " << channel << " volume to " << volume);
+
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyVolumeScalar, 
+		kAudioDevicePropertyScopeOutput,
+		channel 
+	};
+
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		return false;
+	}
+
+	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyStreamConfiguration,
+		kAudioDevicePropertyScopeOutput,
+		kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
+		return false;
+	}
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		return false;
+	}
+
+	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
+
+	if(NULL == bufferList) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Unable to allocate << " << dataSize << " bytes");
+		return false;
+	}
+
+	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		free(bufferList), bufferList = NULL;
+		return false;
+	}
+
+	channelCount = 0;
+	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
+
+	free(bufferList), bufferList = NULL;
+	return true;
+}
+
+bool BasicAudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
+{
+	AudioObjectPropertyAddress propertyAddress = { 
+		kAudioDevicePropertyPreferredChannelsForStereo, 
+		kAudioDevicePropertyScopeOutput,
+		kAudioObjectPropertyElementMaster 
+	};
+
+	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
+		return false;
+	}
+
+	UInt32 preferredChannels [2];
+	UInt32 dataSize = sizeof(preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
+		return false;
+	}
+
+	preferredStereoChannels.first = preferredChannels[0];
+	preferredStereoChannels.second = preferredChannels[1];
 
 	return true;
 }
@@ -980,164 +1114,6 @@ bool BasicAudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 		return false;
 	}
 
-	return true;
-}
-
-bool BasicAudioPlayer::OutputDeviceIsHogged() const
-{
-	// Is it hogged by us?
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	pid_t hogPID = static_cast<pid_t>(-1);
-	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
-		return false;
-	}
-
-	return (hogPID == getpid() ? true : false);
-}
-
-bool BasicAudioPlayer::StartHoggingOutputDevice()
-{
-	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Taking hog mode for device 0x" << std::hex << mOutputDeviceID);
-
-	// Is it hogged already?
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	pid_t hogPID = static_cast<pid_t>(-1);
-	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
-		return false;
-	}
-	
-	// The device is already hogged
-	if(hogPID != static_cast<pid_t>(-1)) {
-		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Device is already hogged by pid: " << hogPID);
-		return false;
-	}
-
-	bool restartIO = false;
-	{
-		Guard::Locker lock(mGuard);
-
-		// If IO is enabled, disable it while hog mode is acquired because the HAL
-		// does not automatically restart IO after hog mode is taken
-		restartIO = IsPlaying();
-		if(restartIO) {
-			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-			// Wait for output to stop
-			lock.Wait();
-		}
-	}
-
-	hogPID = getpid();
-	
-	result = AudioObjectSetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										sizeof(hogPID), 
-										&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
-		return false;
-	}
-
-	// If IO was enabled before, re-enable it
-	if(restartIO && !OutputIsRunning())
-		StartOutput();
-
-	return true;
-}
-
-bool BasicAudioPlayer::StopHoggingOutputDevice()
-{
-	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Releasing hog mode for device 0x" << std::hex << mOutputDeviceID);
-
-	// Is it hogged by us?
-	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
-	};
-	
-	pid_t hogPID = static_cast<pid_t>(-1);
-	UInt32 dataSize = sizeof(hogPID);
-	
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
-												 &propertyAddress,
-												 0,
-												 NULL,
-												 &dataSize,
-												 &hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
-		return false;
-	}
-	
-	// If we don't own hog mode we can't release it
-	if(hogPID != getpid())
-		return false;
-
-	bool restartIO = false;
-	{
-		Guard::Locker lock(mGuard);
-
-		// Disable IO while hog mode is released
-		restartIO = IsPlaying();
-		if(restartIO) {
-			OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagStopRequested */, &mFlags);
-			// Wait for output to stop
-			lock.Wait();
-		}
-	}
-
-	// Release hog mode.
-	hogPID = static_cast<pid_t>(-1);
-
-	result = AudioObjectSetPropertyData(mOutputDeviceID, 
-										&propertyAddress, 
-										0, 
-										NULL, 
-										sizeof(hogPID), 
-										&hogPID);
-	
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
-		return false;
-	}
-	
-	if(restartIO && !OutputIsRunning())
-		StartOutput();
-	
 	return true;
 }
 
@@ -1626,7 +1602,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 	}
 
 	// Apply digital volume
-	if(eAudioPlayerFlagDigitalVolumeEnabled & mFlags /*&& 1.0 != mDigitalVolume*/) {
+	if(1 != mDigitalVolume) {
 		for(UInt32 bufferIndex = 0; bufferIndex < mOutputBuffer->mNumberBuffers; ++bufferIndex) {
 			double *buffer = static_cast<double *>(mOutputBuffer->mBuffers[bufferIndex].mData);
 			vDSP_vsmulD(buffer, 1, &mDigitalVolume, buffer, 1, framesToRead);
@@ -2193,7 +2169,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 								LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Incomplete conversion:  " << framesConverted <<  "/" << framesDecoded << " frames");
 
 							// Apply digital pre-gain
-							if(eAudioPlayerFlagDigitalPreGainEnabled & mFlags) {
+							if(1 != mDigitalPreGain) {
 								double linearGain = pow(10.0, mDigitalPreGain / 20.0);
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
@@ -2722,7 +2698,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 	// Determine the channel map to use when mapping channels to the device for output
 	UInt32 deviceChannelCount = 0;
-	if(!GetChannelCount(deviceChannelCount)) {
+	if(!GetDeviceChannelCount(deviceChannelCount)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Unable to determine the total number of channels");
 		return false;
 	}

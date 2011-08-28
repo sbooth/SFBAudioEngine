@@ -60,9 +60,7 @@ enum {
 	eAudioPlayerFlagIsPlaying				= 1u << 0,
 	eAudioPlayerFlagMuteOutput				= 1u << 1,
 	eAudioPlayerFlagStopRequested			= 1u << 2,
-	eAudioPlayerFlagDigitalVolumeEnabled	= 1u << 3,
-	eAudioPlayerFlagDigitalPreGainEnabled	= 1u << 4,
-	eAudioPlayerFlagResetNeeded				= 1u << 5
+	eAudioPlayerFlagResetNeeded				= 1u << 3
 };
 
 // ========================================
@@ -140,34 +138,36 @@ public:
 
 	// ========================================
 	// Player Parameters
-	bool GetMasterVolume(Float32& volume) const;
-	bool SetMasterVolume(Float32 volume);
-
-	bool GetChannelCount(UInt32& channelCount) const;
-	bool GetPreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
-
-	bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
-	bool SetVolumeForChannel(UInt32 channel, Float32 volume);
-
-	inline bool DigitalVolumeIsEnabled() const		{ return (eAudioPlayerFlagDigitalVolumeEnabled & mFlags); }
-	void EnableDigitalVolume(bool enableDigitalVolume);
-
 	// volume should be in the range [0, 1] (linear)
-	bool GetDigitalVolume(double& volume) const;
-	bool SetDigitalVolume(double volume);
+	bool GetVolume(double& volume) const;
+	bool SetVolume(double volume);
 	
-	inline bool DigitalPreGainIsEnabled() const		{ return (eAudioPlayerFlagDigitalPreGainEnabled & mFlags); }
-	void EnableDigitalPreGain(bool enableDigitalPreGain);
-
-	// preGain should be in the range [-15, 15] (dB)
-	bool GetDigitalPreGain(double& preGain) const;
-	bool SetDigitalPreGain(double preGain);
+	// preGain should be in the range [0, 1] (linear)
+	bool GetPreGain(double& preGain) const;
+	bool SetPreGain(double preGain);
 
 	inline bool IsPerformingSampleRateConversion() const { return (NULL != mSampleRateConverter); }
 
 	// Will return false if SRC is not being performed
 	bool SetSampleRateConverterQuality(UInt32 srcQuality);
 	bool SetSampleRateConverterComplexity(OSType srcComplexity);
+
+	// ========================================
+	// Hog Mode
+	bool OutputDeviceIsHogged() const;
+	bool StartHoggingOutputDevice();
+	bool StopHoggingOutputDevice();
+
+	// ========================================
+	// Device parameters
+	bool GetDeviceMasterVolume(Float32& volume) const;
+	bool SetDeviceMasterVolume(Float32 volume);
+
+	bool GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const;
+	bool SetDeviceVolumeForChannel(UInt32 channel, Float32 volume);
+
+	bool GetDeviceChannelCount(UInt32& channelCount) const;
+	bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
 
 	// ========================================
 	// Device Management
@@ -179,11 +179,6 @@ public:
 
 	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
-
-	bool OutputDeviceIsHogged() const;
-
-	bool StartHoggingOutputDevice();
-	bool StopHoggingOutputDevice();
 
 	// ========================================
 	// Stream Management
