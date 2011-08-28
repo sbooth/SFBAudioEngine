@@ -172,7 +172,7 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 BasicAudioPlayer::BasicAudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(0.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(1.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
 	
@@ -565,6 +565,9 @@ bool BasicAudioPlayer::GetVolume(double& volume) const
 
 bool BasicAudioPlayer::SetVolume(double volume)
 {
+	if(0 > volume || 1 < volume)
+		return false;
+
 	mDigitalVolume = std::min(1.0, std::max(0.0, volume));
 
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Digital volume set to " << mDigitalVolume);
@@ -580,6 +583,9 @@ bool BasicAudioPlayer::GetPreGain(double& preGain) const
 
 bool BasicAudioPlayer::SetPreGain(double preGain)
 {
+	if(0 > preGain || 1 < preGain)
+		return false;
+
 	mDigitalPreGain = std::min(1.0, std::max(0.0, preGain));
 
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Digital pregain set to " << mDigitalPreGain);
@@ -2170,10 +2176,9 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 
 							// Apply digital pre-gain
 							if(1 != mDigitalPreGain) {
-								double linearGain = pow(10.0, mDigitalPreGain / 20.0);
 								for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 									double *buffer = static_cast<double *>(bufferList->mBuffers[bufferIndex].mData);
-									vDSP_vsmulD(buffer, 1, &linearGain, buffer, 1, framesConverted);
+									vDSP_vsmulD(buffer, 1, &mDigitalPreGain, buffer, 1, framesConverted);
 								}
 							}
 
