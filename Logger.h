@@ -115,17 +115,17 @@ namespace logger {
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
 	// The meat & potatoes
-	void Log(levels level, const char *message, const char *facility = NULL, const char *function = NULL, const char *file = NULL, int line = -1);
+	void Log(levels level, const char *facility, const char *message, const char *function = NULL, const char *file = NULL, int line = -1);
 
 	// Convenience functions
-	inline void Emerg(const char *message)			{ Log(emerg, message); }
-	inline void Alert(const char *message)			{ Log(alert, message); }
-	inline void Crit(const char *message)			{ Log(crit, message); }
-	inline void Err(const char *message)			{ Log(err, message); }
-	inline void Warn(const char *message)			{ Log(warning, message); }
-	inline void Notice(const char *message)			{ Log(notice, message); }
-	inline void Info(const char *message)			{ Log(info, message); }
-	inline void Debug(const char *message)			{ Log(debug, message); }
+	inline void Emerg(const char *message)			{ Log(emerg, NULL, message); }
+	inline void Alert(const char *message)			{ Log(alert, NULL, message); }
+	inline void Crit(const char *message)			{ Log(crit, NULL, message); }
+	inline void Err(const char *message)			{ Log(err, NULL, message); }
+	inline void Warn(const char *message)			{ Log(warning, NULL, message); }
+	inline void Notice(const char *message)			{ Log(notice, NULL, message); }
+	inline void Info(const char *message)			{ Log(info, NULL, message); }
+	inline void Debug(const char *message)			{ Log(debug, NULL, message); }
 };
 
 #include <CoreFoundation/CoreFoundation.h>
