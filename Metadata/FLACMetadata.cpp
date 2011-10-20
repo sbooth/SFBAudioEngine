@@ -489,7 +489,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	} while(FLAC__metadata_iterator_next(iterator));
 
 	if(CFDictionaryGetCount(additionalMetadata))
-		SetAdditionalMetadata(additionalMetadata);
+		CFDictionarySetValue(mMetadata, kMetadataAdditionalMetadataKey, additionalMetadata);
 	
 	CFRelease(additionalMetadata), additionalMetadata = NULL;
 	

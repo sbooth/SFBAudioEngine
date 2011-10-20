@@ -437,7 +437,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	}
 
 	if(CFDictionaryGetCount(additionalMetadata))
-		SetAdditionalMetadata(additionalMetadata);
+		CFDictionarySetValue(mMetadata, kMetadataAdditionalMetadataKey, additionalMetadata);
 	
 	CFRelease(additionalMetadata), additionalMetadata = NULL;
 	
