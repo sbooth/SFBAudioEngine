@@ -902,8 +902,26 @@ CFTypeRef AudioMetadata::GetValue(CFStringRef key) const
 
 void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 {
-	if(NULL != key)
-		CFDictionarySetValue(mChangedMetadata, key, (NULL == value ? kCFNull : value));
+	if(NULL == key)
+		return;
+
+	if(NULL == value) {
+		if(CFDictionaryContainsKey(mMetadata, key))
+			CFDictionarySetValue(mChangedMetadata, key, kCFNull);
+		else
+			CFDictionaryRemoveValue(mChangedMetadata, key);
+	}
+	else {
+		if(CFDictionaryContainsKey(mChangedMetadata, key)) {
+			CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
+			if(NULL != savedValue && CFEqual(savedValue, value))
+				CFDictionaryRemoveValue(mChangedMetadata, key);
+			else
+				CFDictionarySetValue(mChangedMetadata, key, value);
+		}
+		else
+			CFDictionarySetValue(mChangedMetadata, key, value);
+	}
 }
 
 void AudioMetadata::MergeChangedMetadataIntoMetadata()
