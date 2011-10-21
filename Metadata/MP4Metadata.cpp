@@ -109,7 +109,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -156,7 +156,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			
 			if(error) {
 				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   32,
+																				   0,
 																				   &kCFTypeDictionaryKeyCallBacks,
 																				   &kCFTypeDictionaryValueCallBacks);
 				
@@ -266,7 +266,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -511,7 +511,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

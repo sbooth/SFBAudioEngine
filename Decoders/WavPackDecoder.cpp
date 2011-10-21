@@ -209,7 +209,7 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	if(NULL == mWPC) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

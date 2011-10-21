@@ -102,7 +102,7 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	if(!file.isValid()) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -172,7 +172,7 @@ bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 	if(!file.isValid()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -215,7 +215,7 @@ bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 	if(!file.save()) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

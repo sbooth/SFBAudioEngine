@@ -185,7 +185,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 	if(NULL == duh) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -230,7 +230,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 	if(NULL == dsr) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

@@ -43,7 +43,7 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag 
 	const TagLib::APE::ItemListMap& itemListMap = tag->itemListMap();
 
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																		  32,
+																		  0,
 																		  &kCFTypeDictionaryKeyCallBacks,
 																		  &kCFTypeDictionaryValueCallBacks);
 	

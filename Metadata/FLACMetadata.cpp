@@ -203,7 +203,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 		// Attempt to provide a descriptive error message
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -315,7 +315,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	FLAC__StreamMetadata *block = NULL;
 	
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																		  32,
+																		  0,
 																		  &kCFTypeDictionaryKeyCallBacks,
 																		  &kCFTypeDictionaryValueCallBacks);
 	
@@ -516,7 +516,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		// Attempt to provide a descriptive error message
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -654,7 +654,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		if(!FLAC__metadata_iterator_insert_block_after(iterator, block)) {
 			if(NULL != error) {
 				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   32,
+																				   0,
 																				   &kCFTypeDictionaryKeyCallBacks,
 																				   &kCFTypeDictionaryValueCallBacks);
 
@@ -749,7 +749,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	if(!FLAC__metadata_chain_write(chain, true, false)) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 

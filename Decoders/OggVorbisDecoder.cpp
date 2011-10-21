@@ -159,7 +159,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	if(0 != ov_test_callbacks(this, &mVorbisFile, NULL, 0, callbacks)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

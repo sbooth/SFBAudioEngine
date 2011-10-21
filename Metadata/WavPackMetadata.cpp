@@ -207,7 +207,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	if(NULL == wpc) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -290,7 +290,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	}
 
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																		  32,
+																		  0,
 																		  &kCFTypeDictionaryKeyCallBacks,
 																		  &kCFTypeDictionaryValueCallBacks);
 	for(int i = 0; i < WavpackGetNumTagItems(wpc); ++i) {
@@ -462,7 +462,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	if(NULL == wpc) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -578,7 +578,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	if(!WavpackWriteTag(wpc)) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -617,7 +617,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	if(NULL != WavpackCloseFile(wpc)) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

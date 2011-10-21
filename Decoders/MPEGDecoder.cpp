@@ -165,7 +165,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(NULL == mDecoder) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -208,7 +208,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, NULL)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -250,7 +250,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(MPG123_OK != mpg123_open_handle(mDecoder, this)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -294,7 +294,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(MPG123_OK != mpg123_getformat(mDecoder, &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -367,7 +367,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(MPG123_OK != mpg123_scan(mDecoder)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

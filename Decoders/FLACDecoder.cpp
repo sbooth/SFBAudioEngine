@@ -261,7 +261,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -305,7 +305,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			
@@ -383,7 +383,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 
 			if(error) {
 				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   32,
+																				   0,
 																				   &kCFTypeDictionaryKeyCallBacks,
 																				   &kCFTypeDictionaryValueCallBacks);
 				

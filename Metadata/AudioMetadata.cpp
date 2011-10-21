@@ -102,7 +102,7 @@ const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("Album Art (Front Cover)");
 
 CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 {
-	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
 	CFArrayRef decoderExtensions = NULL;
 
@@ -165,7 +165,7 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 
 CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 {
-	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
 	CFArrayRef decoderMIMETypes = NULL;
 
@@ -388,7 +388,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 				
 				if(error) {
 					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																					   32,
+																					   0,
 																					   &kCFTypeDictionaryKeyCallBacks,
 																					   &kCFTypeDictionaryValueCallBacks);
 					
@@ -461,12 +461,12 @@ AudioMetadata::AudioMetadata()
 	: mURL(NULL)
 {
 	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-										  32,
+										  0,
 										  &kCFTypeDictionaryKeyCallBacks,
 										  &kCFTypeDictionaryValueCallBacks);
 
 	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-												 32,
+												 0,
 												 &kCFTypeDictionaryKeyCallBacks,
 												 &kCFTypeDictionaryValueCallBacks);
 }
@@ -479,12 +479,12 @@ AudioMetadata::AudioMetadata(CFURLRef url)
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 
 	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-										  32,
+										  0,
 										  &kCFTypeDictionaryKeyCallBacks,
 										  &kCFTypeDictionaryValueCallBacks);
 
 	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-												 32,
+												 0,
 												 &kCFTypeDictionaryKeyCallBacks,
 												 &kCFTypeDictionaryValueCallBacks);
 }
@@ -507,9 +507,7 @@ AudioMetadata::~AudioMetadata()
 		CFRelease(mChangedMetadata), mChangedMetadata = NULL;
 }
 
-
 #pragma mark Operator Overloads
-
 
 AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 {
@@ -527,12 +525,12 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 
 	if(rhs.mMetadata)
 		mMetadata = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 
-												  32, 
+												  0, 
 												  rhs.mMetadata);
 
 	if(rhs.mChangedMetadata)
 		mChangedMetadata = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 
-														 32, 
+														 0, 
 														 rhs.mMetadata);
 	
 	return *this;

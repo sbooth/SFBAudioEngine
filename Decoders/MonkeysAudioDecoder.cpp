@@ -215,7 +215,7 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 	if(NULL == mDecompressor) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

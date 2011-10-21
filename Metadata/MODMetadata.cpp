@@ -122,7 +122,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 	if(NULL == duh) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 			

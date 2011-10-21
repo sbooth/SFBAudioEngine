@@ -66,7 +66,7 @@ bool AudioDecoder::sAutomaticallyOpenDecoders = false;
 
 CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 {
-	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
 	CFArrayRef decoderExtensions = NULL;
 
@@ -123,7 +123,7 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 {
-	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 32, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
 	CFArrayRef decoderMIMETypes = NULL;
 
@@ -395,7 +395,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(!pathExtension) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   32,
+																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
 																			   &kCFTypeDictionaryValueCallBacks);
 
