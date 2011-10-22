@@ -54,7 +54,7 @@ CreateDisplayNameForURL(CFURLRef url)
 
 			if(noErr != result) {
 				LOGGER_WARNING("org.sbooth.AudioEngine", "LSCopyDisplayNameForURL failed: " << result);
-				return NULL;
+				displayName = CFURLCopyLastPathComponent(url);
 			}
 		}
 		else {
