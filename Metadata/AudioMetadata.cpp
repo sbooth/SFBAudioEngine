@@ -474,8 +474,6 @@ AudioMetadata::AudioMetadata()
 AudioMetadata::AudioMetadata(CFURLRef url)
 	: mURL(NULL)
 {
-	assert(NULL != url);
-	
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 
 	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
@@ -534,6 +532,15 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 														 rhs.mMetadata);
 	
 	return *this;
+}
+
+void AudioMetadata::SetURL(CFURLRef URL)
+{
+	if(mURL)
+		CFRelease(mURL), mURL = NULL;
+
+	if(URL)
+		mURL = static_cast<CFURLRef>(CFRetain(URL));
 }
 
 #pragma mark Properties Access

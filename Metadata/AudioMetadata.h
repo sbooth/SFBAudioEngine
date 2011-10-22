@@ -102,6 +102,7 @@ public:
 	// ========================================
 	// The URL containing this metadata
 	inline CFURLRef GetURL() const							{ return mURL; }
+	void SetURL(CFURLRef URL);
 	
 	// ========================================
 	// File access
