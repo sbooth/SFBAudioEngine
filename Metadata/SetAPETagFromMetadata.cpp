@@ -132,6 +132,7 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
 	SetAPETagBoolean(tag, "COMPILATION", metadata.GetCompilation());
 	SetAPETagNumber(tag, "DISCNUMBER", metadata.GetDiscNumber());
 	SetAPETagNumber(tag, "DISCTOTAL", metadata.GetDiscTotal());
+	SetAPETagNumber(tag, "BPM", metadata.GetBPM());
 	SetAPETag(tag, "ISRC", metadata.GetISRC());
 	SetAPETag(tag, "MCN", metadata.GetMCN());
 	

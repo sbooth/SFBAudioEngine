@@ -111,6 +111,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::
 	// BPM
 	frameList = tag->frameListMap()["TBPM"];
 	if(!frameList.isEmpty()) {
+		bool ok = false;
+		int BPM = frameList.front()->toString().toInt(&ok);
+		if(ok) {
+			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &BPM);
+			CFDictionarySetValue(dictionary, kMetadataBPMKey, num);
+			CFRelease(num), num = NULL;
+		}
 	}
 	
 	// Extract total tracks if present

@@ -408,7 +408,9 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	
 	// BPM
 	if(tags->tempo) {
-		
+		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->tempo);
+		CFDictionarySetValue(mMetadata, kMetadataBPMKey, num);
+		CFRelease(num), num = NULL;
 	}
 	
 	// Lyrics
@@ -728,6 +730,15 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	}
 	else
 		MP4TagsSetCompilation(tags, NULL);
+
+	// BPM
+	if(GetBPM()) {
+		uint16_t BPM;
+		CFNumberGetValue(GetBPM(), kCFNumberSInt16Type, &BPM);
+		MP4TagsSetTempo(tags, &BPM);
+	}
+	else
+		MP4TagsSetTempo(tags, NULL);
 
 	// Lyrics
 	str = GetLyrics();

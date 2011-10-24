@@ -117,12 +117,16 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 	tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));
 	
 	// BPM
-//	tag->removeFrames("TBPM");
-//	if(metadata.GetBPM()) {
-//		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
-//		frame->setText(TagLib::StringFromCFString(metadata.GetBPM()));
-//		tag->addFrame(frame);
-//	}
+	tag->removeFrames("TBPM");
+	if(metadata.GetBPM()) {
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), metadata.GetBPM());
+
+		TagLib::ID3v2::TextIdentificationFrame *frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
+		frame->setText(TagLib::StringFromCFString(str));
+		tag->addFrame(frame);
+
+		CFRelease(str), str = NULL;
+	}
 	
 	// Track number and total tracks
 	tag->removeFrames("TRCK");

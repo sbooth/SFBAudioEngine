@@ -394,6 +394,14 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 			CFDictionarySetValue(mMetadata, kMetadataDiscTotalKey, number);
 			CFRelease(number), number = NULL;
 		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("LYRICS"), kCFCompareCaseInsensitive))
+			CFDictionarySetValue(mMetadata, kMetadataLyricsKey, value);
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive)) {
+			int num = CFStringGetIntValue(value);
+			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
+			CFDictionarySetValue(mMetadata, kMetadataBPMKey, number);
+			CFRelease(number), number = NULL;
+		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(mMetadata, kMetadataISRCKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
@@ -498,49 +506,23 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 	
-	// Album title
+	// Standard tags
 	SetWavPackTag(wpc, "ALBUM", GetAlbumTitle());
-	
-	// Artist
 	SetWavPackTag(wpc, "ARTIST", GetArtist());
-	
-	// Album Artist
 	SetWavPackTag(wpc, "ALBUMARTIST", GetAlbumArtist());
-	
-	// Composer
 	SetWavPackTag(wpc, "COMPOSER", GetComposer());
-	
-	// Genre
 	SetWavPackTag(wpc, "GENRE", GetGenre());
-	
-	// Date
 	SetWavPackTag(wpc, "DATE", GetReleaseDate());
-	
-	// Comment
 	SetWavPackTag(wpc, "DESCRIPTION", GetComment());
-	
-	// Track title
 	SetWavPackTag(wpc, "TITLE", GetTitle());
-	
-	// Track number
 	SetWavPackTagNumber(wpc, "TRACKNUMBER", GetTrackNumber());
-	
-	// Total tracks
 	SetWavPackTagNumber(wpc, "TRACKTOTAL", GetTrackTotal());
-	
-	// Compilation
 	SetWavPackTagBoolean(wpc, "COMPILATION", GetCompilation());
-	
-	// Disc number
 	SetWavPackTagNumber(wpc, "DISCNUMBER", GetDiscNumber());
-	
-	// Disc total
 	SetWavPackTagNumber(wpc, "DISCTOTAL", GetDiscTotal());
-	
-	// ISRC
+	SetWavPackTag(wpc, "LYRICS", GetLyrics());
+	SetWavPackTagNumber(wpc, "BPM", GetBPM());
 	SetWavPackTag(wpc, "ISRC", GetISRC());
-	
-	// MCN
 	SetWavPackTag(wpc, "MCN", GetMCN());
 	
 	// Additional metadata

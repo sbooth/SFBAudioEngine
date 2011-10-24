@@ -132,6 +132,8 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	SetXiphCommentBoolean(tag, "COMPILATION", metadata.GetCompilation());
 	SetXiphCommentNumber(tag, "DISCNUMBER", metadata.GetDiscNumber());
 	SetXiphCommentNumber(tag, "DISCTOTAL", metadata.GetDiscTotal());
+	SetXiphComment(tag, "LYRICS", metadata.GetLyrics());
+	SetXiphCommentNumber(tag, "BPM", metadata.GetBPM());
 	SetXiphComment(tag, "ISRC", metadata.GetISRC());
 	SetXiphComment(tag, "MCN", metadata.GetMCN());
 	

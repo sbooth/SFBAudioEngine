@@ -394,6 +394,14 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 						CFDictionarySetValue(mMetadata, kMetadataDiscTotalKey, number);
 						CFRelease(number), number = NULL;
 					}
+					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("LYRICS"), kCFCompareCaseInsensitive))
+						CFDictionarySetValue(mMetadata, kMetadataLyricsKey, value);
+					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive)) {
+						int num = CFStringGetIntValue(value);
+						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
+						CFDictionarySetValue(mMetadata, kMetadataBPMKey, number);
+						CFRelease(number), number = NULL;
+					}
 					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
 						CFDictionarySetValue(mMetadata, kMetadataISRCKey, value);
 					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
@@ -710,6 +718,8 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	SetVorbisCommentBoolean(block, "COMPILATION", GetCompilation());
 	SetVorbisCommentNumber(block, "DISCNUMBER", GetDiscNumber());
 	SetVorbisCommentNumber(block, "DISCTOTAL", GetDiscTotal());
+	SetVorbisComment(block, "LYRICS", GetLyrics());
+	SetVorbisCommentNumber(block, "BPM", GetBPM());
 	SetVorbisComment(block, "ISRC", GetISRC());
 	SetVorbisComment(block, "MCN", GetMCN());
 
