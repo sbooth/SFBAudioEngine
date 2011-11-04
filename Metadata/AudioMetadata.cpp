@@ -84,6 +84,7 @@ const CFStringRef	kMetadataDiscNumberKey					= CFSTR("Disc Number");
 const CFStringRef	kMetadataDiscTotalKey					= CFSTR("Disc Total");
 const CFStringRef	kMetadataLyricsKey						= CFSTR("Lyrics");
 const CFStringRef	kMetadataBPMKey							= CFSTR("BPM");
+const CFStringRef	kMetadataRatingKey						= CFSTR("Rating");
 const CFStringRef	kMetadataCommentKey						= CFSTR("Comment");
 const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
 const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
@@ -729,6 +730,16 @@ CFNumberRef AudioMetadata::GetBPM() const
 void AudioMetadata::SetBPM(CFNumberRef BPM)
 {
 	SetValue(kMetadataBPMKey, BPM);
+}
+
+CFNumberRef AudioMetadata::GetRating() const
+{
+	return GetNumberValue(kMetadataRatingKey);
+}
+
+void AudioMetadata::SetRating(CFNumberRef rating)
+{
+	SetValue(kMetadataRatingKey, rating);
 }
 
 CFStringRef AudioMetadata::GetComment() const

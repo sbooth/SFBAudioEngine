@@ -31,6 +31,7 @@
 #include <taglib/id3v2frame.h>
 #include <taglib/attachedpictureframe.h>
 #include <taglib/relativevolumeframe.h>
+#include <taglib/popularimeterframe.h>
 #include <taglib/textidentificationframe.h>
 
 #include "AddID3v2TagToDictionary.h"
@@ -119,7 +120,17 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::
 			CFRelease(num), num = NULL;
 		}
 	}
-	
+
+	// Rating
+	TagLib::ID3v2::PopularimeterFrame *popularimeter = NULL;
+	frameList = tag->frameListMap()["POPM"];
+	if(!frameList.isEmpty() && NULL != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front()))) {
+		int rating = popularimeter->rating();
+		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &rating);
+		CFDictionarySetValue(dictionary, kMetadataRatingKey, num);
+		CFRelease(num), num = NULL;
+	}
+
 	// Extract total tracks if present
 	frameList = tag->frameListMap()["TRCK"];
 	if(!frameList.isEmpty()) {

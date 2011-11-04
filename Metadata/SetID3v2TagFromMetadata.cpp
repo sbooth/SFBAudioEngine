@@ -31,6 +31,7 @@
 #include <taglib/id3v2frame.h>
 #include <taglib/attachedpictureframe.h>
 #include <taglib/relativevolumeframe.h>
+#include <taglib/popularimeterframe.h>
 #include <taglib/textidentificationframe.h>
 #include <taglib/unsynchronizedlyricsframe.h>
 
@@ -127,7 +128,20 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 
 		CFRelease(str), str = NULL;
 	}
-	
+
+	// Rating
+	tag->removeFrames("POPM");
+	CFNumberRef rating = metadata.GetRating();
+	if(rating) {
+		TagLib::ID3v2::PopularimeterFrame *frame = new TagLib::ID3v2::PopularimeterFrame();
+
+		int i;
+		if(CFNumberGetValue(rating, kCFNumberIntType, &i)) {
+			frame->setRating(i);
+			tag->addFrame(frame);
+		}
+	}
+
 	// Track number and total tracks
 	tag->removeFrames("TRCK");
 	CFNumberRef trackNumber	= metadata.GetTrackNumber();

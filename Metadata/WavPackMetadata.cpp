@@ -402,6 +402,12 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 			CFDictionarySetValue(mMetadata, kMetadataBPMKey, number);
 			CFRelease(number), number = NULL;
 		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive)) {
+			int num = CFStringGetIntValue(value);
+			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
+			CFDictionarySetValue(mMetadata, kMetadataRatingKey, number);
+			CFRelease(number), number = NULL;
+		}
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(mMetadata, kMetadataISRCKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
@@ -522,6 +528,7 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 	SetWavPackTagNumber(wpc, "DISCTOTAL", GetDiscTotal());
 	SetWavPackTag(wpc, "LYRICS", GetLyrics());
 	SetWavPackTagNumber(wpc, "BPM", GetBPM());
+	SetWavPackTagNumber(wpc, "RATING", GetRating());
 	SetWavPackTag(wpc, "ISRC", GetISRC());
 	SetWavPackTag(wpc, "MCN", GetMCN());
 	

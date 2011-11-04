@@ -67,6 +67,7 @@ extern const CFStringRef		kMetadataDiscNumberKey;
 extern const CFStringRef		kMetadataDiscTotalKey;
 extern const CFStringRef		kMetadataLyricsKey;
 extern const CFStringRef		kMetadataBPMKey;
+extern const CFStringRef		kMetadataRatingKey;
 extern const CFStringRef		kMetadataCommentKey;
 extern const CFStringRef		kMetadataISRCKey;
 extern const CFStringRef		kMetadataMCNKey;
@@ -168,6 +169,9 @@ public:
 	
 	CFNumberRef GetBPM() const;
 	void SetBPM(CFNumberRef BPM);
+
+	CFNumberRef GetRating() const;
+	void SetRating(CFNumberRef rating);
 
 	CFStringRef GetComment() const;
 	void SetComment(CFStringRef comment);

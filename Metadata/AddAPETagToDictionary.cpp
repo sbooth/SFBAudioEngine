@@ -108,6 +108,12 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag 
 				CFDictionarySetValue(dictionary, kMetadataBPMKey, number);
 				CFRelease(number), number = NULL;
 			}
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive)) {
+				int num = CFStringGetIntValue(value);
+				CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
+				CFDictionarySetValue(dictionary, kMetadataRatingKey, number);
+				CFRelease(number), number = NULL;
+			}
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
 				CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
