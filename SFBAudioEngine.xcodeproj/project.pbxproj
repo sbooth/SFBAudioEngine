@@ -39,6 +39,8 @@
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
+		328E230F1476EE9E00C34178 /* AddTagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */; };
+		328E23101476EE9E00C34178 /* AddTagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 328E230E1476EE9E00C34178 /* AddTagToDictionary.h */; };
 		328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */; };
 		3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4C8111614540091D56B /* CADebugMacros.cpp */; };
 		3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
@@ -140,6 +142,8 @@
 		32D6552F115FC58C002B275C /* InputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6552B115FC58C002B275C /* InputSource.cpp */; };
 		32D65530115FC58C002B275C /* InputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552C115FC58C002B275C /* InputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
+		32D9017114793DD100DBE73B /* SetTagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */; };
+		32D9017214793DD100DBE73B /* SetTagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D9017014793DD100DBE73B /* SetTagFromMetadata.h */; };
 		32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
 		32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
 		32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
@@ -148,6 +152,8 @@
 		32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
 		32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
 		32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */; };
+		32E9E9A61457960000825EBA /* AllocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA06122C07AF00C25252 /* AllocateABL.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32E9E9A71457960000825EBA /* DeallocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA12122C095600C25252 /* DeallocateABL.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32EA67F9112BC4D9006C26F1 /* AudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */; };
 		32EA6825112CD84B006C26F1 /* FLACMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */; };
@@ -298,6 +304,8 @@
 		328AA4CA111614540091D56B /* CADebugPrintf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugPrintf.cpp; sourceTree = "<group>"; };
 		328AA4CB111614540091D56B /* CADebugPrintf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugPrintf.h; sourceTree = "<group>"; };
 		328AA4CC111614540091D56B /* CAMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAMath.h; sourceTree = "<group>"; };
+		328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddTagToDictionary.cpp; sourceTree = "<group>"; };
+		328E230E1476EE9E00C34178 /* AddTagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddTagToDictionary.h; sourceTree = "<group>"; };
 		328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddXiphCommentToDictionary.cpp; sourceTree = "<group>"; };
 		328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddXiphCommentToDictionary.h; sourceTree = "<group>"; };
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; };
@@ -354,6 +362,8 @@
 		32D6552C115FC58C002B275C /* InputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputSource.h; sourceTree = "<group>"; };
 		32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryMappedFileInputSource.h; sourceTree = "<group>"; };
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
+		32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetTagFromMetadata.cpp; sourceTree = "<group>"; };
+		32D9017014793DD100DBE73B /* SetTagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetTagFromMetadata.h; sourceTree = "<group>"; };
 		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AllocateABL.h; sourceTree = "<group>"; };
 		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AllocateABL.cpp; sourceTree = "<group>"; };
 		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
@@ -634,22 +644,26 @@
 			children = (
 				3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */,
 				3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */,
-				32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */,
-				32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */,
 				32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */,
 				32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */,
+				328E230E1476EE9E00C34178 /* AddTagToDictionary.h */,
+				328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */,
+				32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */,
+				32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */,
 				32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */,
 				32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */,
 				3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */,
 				3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */,
 				328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */,
 				328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */,
+				32D9017014793DD100DBE73B /* SetTagFromMetadata.h */,
+				32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */,
 				32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */,
 				32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */,
 				32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */,
 				32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */,
-				3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp */,
 				3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */,
+				3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp */,
 				3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */,
 				3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */,
 			);
@@ -835,9 +849,13 @@
 				3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				32AEB2F61409BB23001F9A60 /* Logger.h in Headers */,
+				32E9E9A61457960000825EBA /* AllocateABL.h in Headers */,
+				32E9E9A71457960000825EBA /* DeallocateABL.h in Headers */,
 				32F83B111409CC1D005790F1 /* AudioConverter.h in Headers */,
 				32F83B131409CC1D005790F1 /* DeinterleavingFloatConverter.h in Headers */,
 				32F83B151409CC1D005790F1 /* PCMConverter.h in Headers */,
+				328E23101476EE9E00C34178 /* AddTagToDictionary.h in Headers */,
+				32D9017214793DD100DBE73B /* SetTagFromMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1096,6 +1114,8 @@
 				32F83B101409CC1D005790F1 /* AudioConverter.cpp in Sources */,
 				32F83B121409CC1D005790F1 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32F83B141409CC1D005790F1 /* PCMConverter.cpp in Sources */,
+				328E230F1476EE9E00C34178 /* AddTagToDictionary.cpp in Sources */,
+				32D9017114793DD100DBE73B /* SetTagFromMetadata.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
