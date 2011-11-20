@@ -30,12 +30,12 @@
 
 #include <taglib/tfilestream.h>
 #include <taglib/mpcfile.h>
-#include <taglib/tag.h>
 
 #include "MusepackMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "TagLibStringFromCFString.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddTagToDictionary.h"
+#include "SetTagFromMetadata.h"
 
 #pragma mark Static Methods
 
@@ -141,55 +141,8 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 
-	// Album title
-	if(!file.tag()->album().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->album().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Artist
-	if(!file.tag()->artist().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->artist().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Genre
-	if(!file.tag()->genre().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->genre().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Year
-	if(file.tag()->year()) {
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), file.tag()->year());
-		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Comment
-	if(!file.tag()->comment().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->comment().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Track title
-	if(!file.tag()->title().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->title().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-	
-	// Track number
-	if(file.tag()->track()) {
-		int trackNum = file.tag()->track();
-		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
-		CFRelease(num), num = NULL;
-	}
+	if(file.tag())
+		AddTagToDictionary(mMetadata, file.tag());
 
 	return true;
 }
@@ -242,30 +195,7 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	// Album title
-	file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
-	
-	// Artist
-	file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
-	
-	// Genre
-	file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
-	
-	// Year
-	file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
-	
-	// Comment
-	file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
-	
-	// Track title
-	file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
-	
-	// Track number
-	int trackNum = 0;
-	if(GetTrackNumber())
-		CFNumberGetValue(GetTrackNumber(), kCFNumberIntType, &trackNum);
-
-	file.tag()->setTrack(trackNum);
+	SetTagFromMetadata(*this, file.tag());
 
 	if(!file.save()) {
 		if(error) {
