@@ -520,6 +520,9 @@ AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
 	if(mMetadata)
 		CFRelease(mMetadata), mMetadata = NULL;
 
+	if(mChangedMetadata)
+		CFRelease(mChangedMetadata), mChangedMetadata = NULL;
+
 	if(rhs.mURL)
 		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
 
