@@ -196,13 +196,26 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::
 	}
 	
 	// Extract album art if present
-	TagLib::ID3v2::AttachedPictureFrame *picture = NULL;
 	frameList = tag->frameListMap()["APIC"];
-	if(!frameList.isEmpty() && NULL != (picture = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(frameList.front()))) {
-		TagLib::ByteVector pictureBytes = picture->picture();
-		CFDataRef pictureData = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(pictureBytes.data()), pictureBytes.size());
-		CFDictionarySetValue(dictionary, kAlbumArtFrontCoverKey, pictureData);
-		CFRelease(pictureData), pictureData = NULL;
+	for(TagLib::ID3v2::FrameList::ConstIterator it = frameList.begin(); it != frameList.end(); ++it) {
+		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(*it);
+		if(frame) {
+			switch(frame->type()) {
+					// Front cover art
+				case TagLib::ID3v2::AttachedPictureFrame::FrontCover:
+				{
+					TagLib::ByteVector pictureBytes = frame->picture();
+					CFDataRef pictureData = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(pictureBytes.data()), pictureBytes.size());
+					CFDictionarySetValue(dictionary, kAlbumArtFrontCoverKey, pictureData);
+					CFRelease(pictureData), pictureData = NULL;
+					break;
+				}
+
+					// TODO: Other artwork types will be handled in the future
+				default:
+					break;
+			}
+		}
 	}
 
 	// Extract compilation if present (iTunes TCMP tag)

@@ -225,11 +225,24 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 	}
 	
 	// Album art
-	tag->removeFrames("APIC");
+	// Only remove the front cover art frame, not all artwork
+	TagLib::ID3v2::FrameList frameList = tag->frameListMap()["APIC"];
+	TagLib::ID3v2::AttachedPictureFrame *frontCoverArtFrame = NULL;
+	for(TagLib::ID3v2::FrameList::Iterator it = frameList.begin(); it != frameList.end(); ++it) {
+		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(*it);
+		if(frame && TagLib::ID3v2::AttachedPictureFrame::FrontCover == frame->type()) {
+			frontCoverArtFrame = frame;
+			break;
+		}
+	}
+	if(frontCoverArtFrame)
+		tag->removeFrame(frontCoverArtFrame);
+
 	CFDataRef pictureData = metadata.GetFrontCoverArt();
 	if(pictureData) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame();
 		frame->setPicture(TagLib::ByteVector(reinterpret_cast<const char *>(CFDataGetBytePtr(pictureData)), static_cast<TagLib::uint>(CFDataGetLength(pictureData))));
+		frame->setType(TagLib::ID3v2::AttachedPictureFrame::FrontCover);
 		tag->addFrame(frame);
 	}
 

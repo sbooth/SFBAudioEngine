@@ -28,8 +28,59 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+
+#include <taglib/flacpicture.h>
+
 #include "AddXiphCommentToDictionary.h"
 #include "AudioMetadata.h"
+
+#pragma mark Base64 Utilities
+
+#if 0
+// Currently unused
+static TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
+{
+	TagLib::ByteVector result;
+	
+	BIO *b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+	
+	BIO *bio = BIO_new(BIO_s_mem());
+	bio = BIO_push(b64, bio);
+	BIO_write(bio, input.data(), input.size());
+	
+	void *mem = NULL;
+	long size = BIO_get_mem_data(bio, &mem);
+	if(0 < size)
+		result.setData(static_cast<const char *>(mem), static_cast<TagLib::uint>(size));
+	
+	BIO_free_all(bio);
+	
+	return result;
+}
+#endif
+
+static TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
+{
+	TagLib::ByteVector result;
+
+	BIO *b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+
+	BIO *bio = BIO_new_mem_buf(reinterpret_cast<void *>(const_cast<char *>(input.data())), input.size());
+	bio = BIO_push(b64, bio);
+
+	char inbuf [512];
+	int inlen;
+	while(0 < (inlen = BIO_read(bio, inbuf, 512)))
+		result.append(TagLib::ByteVector(inbuf, inlen));
+
+	BIO_free_all(bio);
+
+	return result;
+}
 
 bool
 AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag)
@@ -144,6 +195,34 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg:
 			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
 			CFDictionarySetValue(dictionary, kReplayGainAlbumPeakKey, number);
 			CFRelease(number), number = NULL;
+		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("METADATA_BLOCK_PICTURE"), kCFCompareCaseInsensitive)) {
+			// Handle embedded pictures
+			TagLib::StringList encodedBlocks = it->second;
+			for(TagLib::StringList::ConstIterator blockIterator = encodedBlocks.begin(); blockIterator != encodedBlocks.end(); ++blockIterator) {
+				const TagLib::ByteVector encodedBlock = blockIterator->data(TagLib::String::UTF8);
+
+				// Decode the Base-64 encoded data
+				TagLib::ByteVector decodedBlock = DecodeBase64(encodedBlock);
+
+				// Create the picture
+				TagLib::FLAC::Picture picture;
+				picture.parse(decodedBlock);
+
+				switch (picture.type()) {
+					case TagLib::FLAC::Picture::FrontCover:
+					{
+						CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
+						CFDictionarySetValue(dictionary, kAlbumArtFrontCoverKey, data);
+						CFRelease(data), data = NULL;
+						break;
+					}
+
+						// TODO: Other artwork types will be handled in the future
+					default:
+						break;
+				}
+			}
 		}
 		// Put all unknown tags into the additional metadata
 		else
