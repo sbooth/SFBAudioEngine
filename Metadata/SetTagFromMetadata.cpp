@@ -38,36 +38,18 @@ SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag)
 	if(NULL == tag)
 		return false;
 
-	if(metadata.HasUnsavedChangesForKey(kMetadataTitleKey))
-		tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));
+	tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));
+	tag->setArtist(TagLib::StringFromCFString(metadata.GetArtist()));
+	tag->setAlbum(TagLib::StringFromCFString(metadata.GetAlbumTitle()));
+	tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
+	tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
+	tag->setYear(metadata.GetReleaseDate() ? CFStringGetIntValue(metadata.GetReleaseDate()) : 0);
 
-	if(metadata.HasUnsavedChangesForKey(kMetadataAlbumTitleKey))
-		tag->setAlbum(TagLib::StringFromCFString(metadata.GetAlbumTitle()));
-
-	if(metadata.HasUnsavedChangesForKey(kMetadataArtistKey))
-		tag->setArtist(TagLib::StringFromCFString(metadata.GetArtist()));
-
-	if(metadata.HasUnsavedChangesForKey(kMetadataGenreKey))
-		tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
-
-	if(metadata.HasUnsavedChangesForKey(kMetadataReleaseDateKey)) {
-		CFStringRef releaseDate = metadata.GetReleaseDate();
-		tag->setYear(releaseDate ? CFStringGetIntValue(releaseDate) : 0);
-	}
-
-	if(metadata.HasUnsavedChangesForKey(kMetadataTrackNumberKey)) {
-		CFNumberRef trackNumber = metadata.GetTrackNumber();
-		if(trackNumber) {
-			int track = 0;
-			if(CFNumberGetValue(metadata.GetTrackNumber(), kCFNumberIntType, &track))
-				tag->setTrack(track);
-		}
-		else
-			tag->setTrack(0);
-	}
-
-	if(metadata.HasUnsavedChangesForKey(kMetadataCommentKey))
-		tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
+	int track = 0;
+	if(metadata.GetTrackNumber())
+		// Ignore return value
+		CFNumberGetValue(metadata.GetTrackNumber(), kCFNumberIntType, &track);
+	tag->setTrack(track);
 
 	return true;
 }

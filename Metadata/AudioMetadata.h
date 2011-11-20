@@ -103,7 +103,7 @@ public:
 	
 	// ========================================
 	// The URL containing this metadata
-	inline CFURLRef GetURL() const								{ return mURL; }
+	inline CFURLRef GetURL() const							{ return mURL; }
 	void SetURL(CFURLRef URL);
 	
 	// ========================================
@@ -113,9 +113,8 @@ public:
 	
 	// ========================================
 	// Change management
-	inline bool HasUnsavedChanges() const						{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
-	inline bool HasUnsavedChangesForKey(CFStringRef key) const	{ return CFDictionaryContainsKey(mChangedMetadata, key); }
-	inline void RevertUnsavedChanges()							{ CFDictionaryRemoveAllValues(mChangedMetadata); }
+	inline bool HasUnsavedChanges() const					{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
+	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
 
 	// ========================================
 	// Properties access (if available)
