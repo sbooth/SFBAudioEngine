@@ -43,6 +43,8 @@
 
 #pragma mark Base64 Utilities
 
+#if 0
+// Currently unused
 static TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 {
 	TagLib::ByteVector result;
@@ -63,6 +65,7 @@ static TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 	
 	return result;
 }
+#endif
 
 static TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
 {
