@@ -75,7 +75,8 @@ CreateStringFromNumberWithFormat(CFNumberRef	value,
 bool
 SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 {
-	assert(NULL != tag);
+	if(NULL == tag)
+		return false;
 	
 	// Use UTF-8 as the default encoding
 	(TagLib::ID3v2::FrameFactory::instance())->setDefaultTextEncoding(TagLib::String::UTF8);
@@ -227,8 +228,8 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag)
 	tag->removeFrames("APIC");
 	CFDataRef pictureData = metadata.GetFrontCoverArt();
 	if(pictureData) {
-		TagLib::ByteVector pictureBytes(reinterpret_cast<const char *>(CFDataGetBytePtr(pictureData)), static_cast<TagLib::uint>(CFDataGetLength(pictureData)));
-		TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame(pictureBytes);
+		TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame();
+		frame->setPicture(TagLib::ByteVector(reinterpret_cast<const char *>(CFDataGetBytePtr(pictureData)), static_cast<TagLib::uint>(CFDataGetLength(pictureData))));
 		tag->addFrame(frame);
 	}
 
