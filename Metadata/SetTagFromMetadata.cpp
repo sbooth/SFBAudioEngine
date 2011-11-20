@@ -29,12 +29,45 @@
  */
 
 #include "AudioMetadata.h"
-#include "SetID3v1TagFromMetadata.h"
 #include "SetTagFromMetadata.h"
+#include "TagLibStringFromCFString.h"
 
 bool
-SetID3v1TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v1::Tag *tag)
+SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag)
 {
-	// TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
-	return SetTagFromMetadata(metadata, tag);
+	if(NULL == tag)
+		return false;
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataTitleKey))
+		tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataAlbumTitleKey))
+		tag->setAlbum(TagLib::StringFromCFString(metadata.GetAlbumTitle()));
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataArtistKey))
+		tag->setArtist(TagLib::StringFromCFString(metadata.GetArtist()));
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataGenreKey))
+		tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataReleaseDateKey)) {
+		CFStringRef releaseDate = metadata.GetReleaseDate();
+		tag->setYear(releaseDate ? CFStringGetIntValue(releaseDate) : 0);
+	}
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataTrackNumberKey)) {
+		CFNumberRef trackNumber = metadata.GetTrackNumber();
+		if(trackNumber) {
+			int track = 0;
+			if(CFNumberGetValue(metadata.GetTrackNumber(), kCFNumberIntType, &track))
+				tag->setTrack(track);
+		}
+		else
+			tag->setTrack(0);
+	}
+
+	if(metadata.HasUnsavedChangesForKey(kMetadataCommentKey))
+		tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
+
+	return true;
 }

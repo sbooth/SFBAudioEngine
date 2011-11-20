@@ -28,13 +28,14 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioMetadata.h"
-#include "SetID3v1TagFromMetadata.h"
-#include "SetTagFromMetadata.h"
+#pragma once
 
-bool
-SetID3v1TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v1::Tag *tag)
-{
-	// TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
-	return SetTagFromMetadata(metadata, tag);
-}
+#include <CoreFoundation/CoreFoundation.h>
+#include <taglib/tag.h>
+
+class AudioMetadata;
+
+// ========================================
+// Fill in a Tag from the specified AudioMetadata
+// ========================================
+bool SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag);
