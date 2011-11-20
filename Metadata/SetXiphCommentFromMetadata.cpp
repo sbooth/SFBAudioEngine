@@ -116,7 +116,8 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 bool
 SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag)
 {
-	assert(NULL != tag);
+	if(NULL == tag)
+		return false;
 
 	// Standard tags
 	SetXiphComment(tag, "ALBUM", metadata.GetAlbumTitle());

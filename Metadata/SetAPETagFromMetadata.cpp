@@ -116,7 +116,8 @@ SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStr
 bool
 SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
 {
-	assert(NULL != tag);
+	if(NULL == tag)
+		return false;
 
 	// Standard tags
 	SetAPETag(tag, "ALBUM", metadata.GetAlbumTitle());
