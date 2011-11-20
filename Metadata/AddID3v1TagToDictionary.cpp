@@ -29,65 +29,13 @@
  */
 
 #include "AddID3v1TagToDictionary.h"
-#include "AudioMetadata.h"
+#include "AddTagToDictionary.h"
 
 bool
 AddID3v1TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v1::Tag *tag)
 {
-	assert(NULL != dictionary);
-	assert(NULL != tag);
-
 	// ID3v1 tags are only supposed to contain characters in ISO 8859-1 format, but that isn't always the case
-
-	// Track title
-	if(!tag->title().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->title().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Artist
-	if(!tag->artist().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->artist().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataArtistKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Album title
-	if(!tag->album().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->album().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Comment
-	if(!tag->comment().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->comment().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataCommentKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Genre
-	if(!tag->genre().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->genre().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataGenreKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Year
-	if(tag->year()) {
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), tag->year());
-		CFDictionarySetValue(dictionary, kMetadataReleaseDateKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Track number
-	if(tag->track()) {
-		int trackNum = tag->track();
-		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, num);
-		CFRelease(num), num = NULL;
-	}
-
-	return true;
+	// AddTagToDictionary assumes UTF-8, so everything should work properly
+	// Currently TagLib::ID3v1::Tag doesn't implement any more functionality than TagLib::Tag
+	return AddTagToDictionary(dictionary, tag);
 }

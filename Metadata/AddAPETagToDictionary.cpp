@@ -34,8 +34,8 @@
 bool
 AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag *tag)
 {
-	assert(NULL != dictionary);
-	assert(NULL != tag);
+	if(NULL == dictionary || NULL == tag)
+		return false;
 
 	if(tag->isEmpty())
 		return true;

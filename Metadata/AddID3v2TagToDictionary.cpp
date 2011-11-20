@@ -40,8 +40,8 @@
 bool
 AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::Tag *tag)
 {
-	assert(NULL != dictionary);
-	assert(NULL != tag);
+	if(NULL == dictionary || NULL == tag)
+		return false;
 	
 	// Album title
 	if(!tag->album().isNull()) {

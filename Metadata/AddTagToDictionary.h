@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,42 +28,12 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AddAudioPropertiesToDictionary.h"
-#include "AudioMetadata.h"
+#pragma once
 
-bool
-AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties)
-{
-	if(NULL == dictionary || NULL == properties)
-		return false;
-	
-	if(0 != properties->length()) {
-		int value = properties->length();
-		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesDurationKey, duration);
-		CFRelease(duration), duration = NULL;
-	}
+#include <CoreFoundation/CoreFoundation.h>
+#include <taglib/tag.h>
 
-	if(0 != properties->channels()) {
-		int value = properties->channels();
-		CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
-	}
-
-	if(0 != properties->sampleRate()) {
-		int value = properties->sampleRate();
-		CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesSampleRateKey, sampleRate);
-		CFRelease(sampleRate), sampleRate = NULL;
-	}
-
-	if(0 != properties->bitrate()) {
-		int value = properties->bitrate();
-		CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesBitrateKey, bitrate);
-		CFRelease(bitrate), bitrate = NULL;
-	}
-	
-	return true;
-}
+// ========================================
+// Add the metadata specified in the TagLib::Tag instance to dictionary
+// ========================================
+bool AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag);

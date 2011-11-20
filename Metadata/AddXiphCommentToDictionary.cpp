@@ -34,8 +34,8 @@
 bool
 AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag)
 {
-	assert(NULL != dictionary);
-	assert(NULL != tag);
+	if(NULL == dictionary || NULL == tag)
+		return false;
 	
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																		  0,
