@@ -38,30 +38,6 @@
 
 #pragma mark Base64 Utilities
 
-#if 0
-// Currently unused
-static TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
-{
-	TagLib::ByteVector result;
-	
-	BIO *b64 = BIO_new(BIO_f_base64());
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-	
-	BIO *bio = BIO_new(BIO_s_mem());
-	bio = BIO_push(b64, bio);
-	BIO_write(bio, input.data(), input.size());
-	
-	void *mem = NULL;
-	long size = BIO_get_mem_data(bio, &mem);
-	if(0 < size)
-		result.setData(static_cast<const char *>(mem), static_cast<TagLib::uint>(size));
-	
-	BIO_free_all(bio);
-	
-	return result;
-}
-#endif
-
 static TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
 {
 	TagLib::ByteVector result;
@@ -209,7 +185,7 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg:
 				TagLib::FLAC::Picture picture;
 				picture.parse(decodedBlock);
 
-				switch (picture.type()) {
+				switch(picture.type()) {
 					case TagLib::FLAC::Picture::FrontCover:
 					{
 						CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
