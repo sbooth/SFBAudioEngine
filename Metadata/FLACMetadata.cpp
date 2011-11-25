@@ -455,11 +455,19 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 				break;
 				
 			case FLAC__METADATA_TYPE_PICTURE:
-			{
-				CFDataRef data = CFDataCreate(kCFAllocatorDefault, block->data.picture.data, block->data.picture.data_length);
-				CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
-				CFRelease(data), data = NULL;
-			}
+				switch(block->data.picture.type) {
+					case FLAC__STREAM_METADATA_PICTURE_TYPE_FRONT_COVER:
+					{
+						CFDataRef data = CFDataCreate(kCFAllocatorDefault, block->data.picture.data, block->data.picture.data_length);
+						CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
+						CFRelease(data), data = NULL;
+
+						break;
+					}
+						
+						// TODO: Other artwork types will be handled in the future
+					default:												break;
+				}
 			break;
 				
 			case FLAC__METADATA_TYPE_STREAMINFO:
@@ -489,8 +497,9 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 				CFRelease(bitrate), bitrate = NULL;
+
+				break;
 			}
-			break;
 
 			case FLAC__METADATA_TYPE_PADDING:						break;
 			case FLAC__METADATA_TYPE_APPLICATION:					break;
