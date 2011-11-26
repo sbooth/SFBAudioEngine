@@ -29,6 +29,7 @@
  */
 
 #include <FLAC/metadata.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 #include "FLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
@@ -327,7 +328,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 		
 		switch(block->type) {					
 			case FLAC__METADATA_TYPE_VORBIS_COMMENT:				
-				for(unsigned i = 0; i < block->data.vorbis_comment.num_comments; ++i) {
+				for(FLAC__uint32 i = 0; i < block->data.vorbis_comment.num_comments; ++i) {
 					
 					char *fieldName = NULL;
 					char *fieldValue = NULL;
@@ -649,20 +650,14 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	
 	FLAC__metadata_iterator_init(iterator, chain);
 	
-	// Seek to the vorbis comment block if it exists
-	while(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator)) {
-		if(!FLAC__metadata_iterator_next(iterator))
-			break; // Already at end
-	}
+	// Locate the vorbis comment block if it exists
+	while(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator) && FLAC__metadata_iterator_next(iterator))
+		;
 	
 	FLAC__StreamMetadata *block = NULL;
 	
 	// If there isn't a vorbis comment block add one
 	if(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator)) {
-		
-		// The padding block will be the last block if it exists; add the comment block before it
-		if(FLAC__METADATA_TYPE_PADDING == FLAC__metadata_iterator_get_block_type(iterator))
-			FLAC__metadata_iterator_prev(iterator);
 		
 		block = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
 		
@@ -770,7 +765,143 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	SetVorbisCommentDouble(block, "REPLAYGAIN_TRACK_PEAK", GetReplayGainTrackGain(), CFSTR("%1.8f"));
 	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
 	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+
+	// Album art
 	
+	// Reset the iterator
+	FLAC__metadata_iterator_init(iterator, chain);
+
+	// Locate the front cover art block if it exists
+	block = NULL;
+	do {
+		if(FLAC__METADATA_TYPE_PICTURE != FLAC__metadata_iterator_get_block_type(iterator))
+			continue;
+
+		// The fact that a FLAC stream can contain multiple pictures of all except two types is
+		// conveniently ignored for now, and only the first front cover art block is used
+		FLAC__StreamMetadata *localBlock = FLAC__metadata_iterator_get_block(iterator);
+		if(FLAC__STREAM_METADATA_PICTURE_TYPE_FRONT_COVER == localBlock->data.picture.type) {
+			block = localBlock;
+			break;
+		}
+	} while(FLAC__metadata_iterator_next(iterator));
+
+	// Create or delete the front cover art
+	if(GetFrontCoverArt()) {
+		// Create the block
+		if(NULL == block) {
+			block = FLAC__metadata_object_new(FLAC__METADATA_TYPE_PICTURE);
+
+			if(NULL == block) {
+				FLAC__metadata_chain_delete(chain), chain = NULL;
+				FLAC__metadata_iterator_delete(iterator), iterator = NULL;
+
+				return false;
+			}
+
+			// Add the block
+			if(!FLAC__metadata_iterator_insert_block_after(iterator, block)) {
+				if(NULL != error) {
+					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																					   0,
+																					   &kCFTypeDictionaryKeyCallBacks,
+																					   &kCFTypeDictionaryValueCallBacks);
+
+					CFStringRef displayName = CreateDisplayNameForURL(mURL);
+					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+																	   NULL, 
+																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+																	   displayName);
+
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedDescriptionKey, 
+										 errorString);
+
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedFailureReasonKey, 
+										 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
+
+					CFDictionarySetValue(errorDictionary, 
+										 kCFErrorLocalizedRecoverySuggestionKey, 
+										 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+
+					CFRelease(errorString), errorString = NULL;
+					CFRelease(displayName), displayName = NULL;
+
+					*error = CFErrorCreate(kCFAllocatorDefault, 
+										   AudioMetadataErrorDomain, 
+										   AudioMetadataInputOutputError, 
+										   errorDictionary);
+
+					CFRelease(errorDictionary), errorDictionary = NULL;				
+				}
+
+				FLAC__metadata_chain_delete(chain), chain = NULL;
+				FLAC__metadata_iterator_delete(iterator), iterator = NULL;
+
+				return false;
+			}
+		}
+
+		// Add the image data to the metadata block
+		block->data.picture.type = FLAC__STREAM_METADATA_PICTURE_TYPE_FRONT_COVER;
+
+		CGImageSourceRef imageSource = CGImageSourceCreateWithData(GetFrontCoverArt(), NULL);
+		if(NULL == imageSource) {
+			FLAC__metadata_chain_delete(chain), chain = NULL;
+			FLAC__metadata_iterator_delete(iterator), iterator = NULL;
+
+			return false;
+		}
+
+		// Convert the image's UTI into a MIME type
+		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+		if(mimeType) {
+			CFIndex mimeTypeCStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(mimeType), kCFStringEncodingASCII);
+			char mimeTypeCString [mimeTypeCStringSize + 1];
+
+			if(CFStringGetCString(mimeType, mimeTypeCString, mimeTypeCStringSize + 1, kCFStringEncodingASCII)) {
+				if(!FLAC__metadata_object_picture_set_mime_type(block, mimeTypeCString, true))
+					LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_picture_set_mime_type() failed");				
+			}
+			else
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFStringGetCString() failed");
+
+			CFRelease(mimeType), mimeType = NULL;
+		}
+
+		// Flesh out the height, width, and depth
+		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL);
+		if(imagePropertiesDictionary) {
+			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
+			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
+			CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+
+			// Ignore numeric conversion errors
+			CFNumberGetValue(imageWidth, kCFNumberIntType, &block->data.picture.width);
+			CFNumberGetValue(imageHeight, kCFNumberIntType, &block->data.picture.height);
+			CFNumberGetValue(imageDepth, kCFNumberIntType, &block->data.picture.depth);
+
+			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = NULL;
+		}
+
+		CFDataRef frontCoverData = GetFrontCoverArt();
+		if(!FLAC__metadata_object_picture_set_data(block, (FLAC__byte *)CFDataGetBytePtr(frontCoverData), (FLAC__uint32)CFDataGetLength(frontCoverData), true))
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_picture_set_data() failed");
+
+		// Validate the picture- if any of the above code failed validation will likely fail too
+		const char *errorDescription = NULL;
+		if(!FLAC__metadata_object_picture_is_legal(block, &errorDescription)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_picture_is_legal() failed: " << errorDescription);
+			FLAC__metadata_iterator_delete_block(iterator, true);
+		}
+	}
+	else if(block)
+		FLAC__metadata_iterator_delete_block(iterator, true);
+
+	// Coalesce the padding before saving
+	FLAC__metadata_chain_sort_padding(chain);
+
 	// Write the new metadata to the file
 	if(!FLAC__metadata_chain_write(chain, true, false)) {
 		if(NULL != error) {
