@@ -28,35 +28,11 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openssl/bio.h>
-#include <openssl/evp.h>
-
 #include <taglib/flacpicture.h>
 
 #include "AddXiphCommentToDictionary.h"
 #include "AudioMetadata.h"
-
-#pragma mark Base64 Utilities
-
-static TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
-{
-	TagLib::ByteVector result;
-
-	BIO *b64 = BIO_new(BIO_f_base64());
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-
-	BIO *bio = BIO_new_mem_buf(reinterpret_cast<void *>(const_cast<char *>(input.data())), input.size());
-	bio = BIO_push(b64, bio);
-
-	char inbuf [512];
-	int inlen;
-	while(0 < (inlen = BIO_read(bio, inbuf, 512)))
-		result.append(TagLib::ByteVector(inbuf, inlen));
-
-	BIO_free_all(bio);
-
-	return result;
-}
+#include "Base64Utilities.h"
 
 bool
 AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag)
