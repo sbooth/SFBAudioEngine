@@ -28,13 +28,63 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <openssl/bio.h>
-#include <openssl/evp.h>
+#define USE_SECURITY_FRAMEWORK 0
+
+#if USE_SECURITY_FRAMEWORK
+# include <Security/Security.h>
+#else
+# include <openssl/bio.h>
+# include <openssl/evp.h>
+#endif
 
 #include "Base64Utilities.h"
 
 TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 {
+#if USE_SECURITY_FRAMEWORK
+	ByteVector result;
+
+	CFErrorRef error;
+	SecTransformRef decoder = SecDecodeTransformCreate(kSecBase64Encoding, &error);
+    if(NULL == decoder) {
+		CFShow(error); 
+		return TagLib::ByteVector::null;
+	}
+
+	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
+	if(NULL == sourceData) {
+		CFRelease(decoder), decoder = NULL;
+
+		return TagLib::ByteVector::null;
+	}
+
+    if(!SecTransformSetAttribute(decoder, kSecTransformInputAttributeName, sourceData, &error)) {
+		CFShow(error); 
+
+		CFRelease(sourceData), sourceData = NULL;
+		CFRelease(decoder), decoder = NULL;
+
+		return TagLib::ByteVector::null;
+	}
+
+	CFTypeRef decodedData = SecTransformExecute(decoder, &error);
+	if(NULL == decodedData) {
+		CFShow(error); 
+
+		CFRelease(sourceData), sourceData = NULL;
+		CFRelease(decoder), decoder = NULL;
+
+		return TagLib::ByteVector::null;
+	}
+
+	result.setData((const char *)CFDataGetBytePtr((CFDataRef)decodedData), (TagLib::uint)CFDataGetLength((CFDataRef)decodedData));
+
+	CFRelease(decodedData), decodedData = NULL;
+	CFRelease(sourceData), sourceData = NULL;
+	CFRelease(decoder), decoder = NULL;
+	
+	return result;
+#else
 	ByteVector result;
 
 	BIO *b64 = BIO_new(BIO_f_base64());
@@ -49,12 +99,57 @@ TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 		result.append(ByteVector(inbuf, inlen));
 
 	BIO_free_all(bio);
-
+	
 	return result;
+#endif
 }
 
 TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 {
+#if USE_SECURITY_FRAMEWORK
+	ByteVector result;
+
+	CFErrorRef error;
+	SecTransformRef encoder = SecEncodeTransformCreate(kSecBase64Encoding, &error);
+    if(NULL == encoder) {
+		CFShow(error); 
+		return TagLib::ByteVector::null;
+	}
+
+	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
+	if(NULL == sourceData) {
+		CFRelease(encoder), encoder = NULL;
+		
+		return TagLib::ByteVector::null;
+	}
+
+    if(!SecTransformSetAttribute(encoder, kSecTransformInputAttributeName, sourceData, &error)) {
+		CFShow(error); 
+		
+		CFRelease(sourceData), sourceData = NULL;
+		CFRelease(encoder), encoder = NULL;
+		
+		return TagLib::ByteVector::null;
+	}
+
+	CFTypeRef encodedData = SecTransformExecute(encoder, &error);
+	if(NULL == encodedData) {
+		CFShow(error); 
+		
+		CFRelease(sourceData), sourceData = NULL;
+		CFRelease(encoder), encoder = NULL;
+		
+		return TagLib::ByteVector::null;
+	}
+
+	result.setData((const char *)CFDataGetBytePtr((CFDataRef)encodedData), (TagLib::uint)CFDataGetLength((CFDataRef)encodedData));
+
+	CFRelease(encodedData), encodedData = NULL;
+	CFRelease(sourceData), sourceData = NULL;
+	CFRelease(encoder), encoder = NULL;
+
+	return result;
+#else
 	ByteVector result;
 
 	BIO *b64 = BIO_new(BIO_f_base64());
@@ -63,6 +158,7 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 	BIO *bio = BIO_new(BIO_s_mem());
 	bio = BIO_push(b64, bio);
 	BIO_write(bio, input.data(), input.size());
+	(void)BIO_flush(bio);
 
 	void *mem = NULL;
 	long size = BIO_get_mem_data(bio, &mem);
@@ -72,4 +168,5 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 	BIO_free_all(bio);
 
 	return result;
+#endif
 }
