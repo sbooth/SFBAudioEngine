@@ -28,9 +28,13 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/flacpicture.h>
+#include <ApplicationServices/ApplicationServices.h>
+
 #include "AudioMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "TagLibStringFromCFString.h"
+#include "Base64Utilities.h"
 #include "Logger.h"
 
 // ========================================
@@ -168,6 +172,71 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata.GetReplayGainTrackGain(), CFSTR("%1.8f"));
 	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata.GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
 	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+
+	// Album art
+	TagLib::StringList encodedBlocks = tag->fieldListMap()["METADATA_BLOCK_PICTURE"];
+
+	for(TagLib::StringList::ConstIterator blockIterator = encodedBlocks.begin(); blockIterator != encodedBlocks.end(); ++blockIterator) {
+		const TagLib::ByteVector encodedBlock = blockIterator->data(TagLib::String::UTF8);
+		
+		// Decode the Base-64 encoded data
+		TagLib::ByteVector decodedBlock = DecodeBase64(encodedBlock);
+		
+		TagLib::FLAC::Picture picture;
+		picture.parse(decodedBlock);
+
+		// The fact that there can be more than one FrontCover image is conveniently ignored
+		switch(picture.type()) {
+			case TagLib::FLAC::Picture::FrontCover:
+				tag->removeField("METADATA_BLOCK_PICTURE", *blockIterator);
+				break;
+				
+				// TODO: Other artwork types will be handled in the future
+			default:
+				break;
+		}
+	}
+
+	if(metadata.GetFrontCoverArt()) {
+		TagLib::FLAC::Picture picture;
+
+		picture.setType(TagLib::FLAC::Picture::FrontCover);
+
+		CGImageSourceRef imageSource = CGImageSourceCreateWithData(metadata.GetFrontCoverArt(), NULL);
+		if(NULL == imageSource)
+			return false;
+
+		// Convert the image's UTI into a MIME type
+		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+		picture.setMimeType(TagLib::StringFromCFString(mimeType));
+		CFRelease(mimeType), mimeType = NULL;
+
+		// Flesh out the height, width, and depth
+		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL);
+		if(imagePropertiesDictionary) {
+			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
+			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
+			CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+
+			// Ignore numeric conversion errors
+			int width, height, depth;
+			CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
+			CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
+			CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
+
+			picture.setWidth(width);
+			picture.setHeight(height);
+			picture.setColorDepth(depth);
+
+			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = NULL;
+		}
+
+		CFDataRef frontCoverData = metadata.GetFrontCoverArt();
+		picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(frontCoverData), (TagLib::uint)CFDataGetLength(frontCoverData)));
+
+		TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
+		tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
+	}
 
 	return true;
 }
