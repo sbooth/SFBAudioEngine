@@ -155,7 +155,7 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg:
 				const TagLib::ByteVector encodedBlock = blockIterator->data(TagLib::String::UTF8);
 
 				// Decode the Base-64 encoded data
-				TagLib::ByteVector decodedBlock = DecodeBase64(encodedBlock);
+				TagLib::ByteVector decodedBlock = TagLib::DecodeBase64(encodedBlock);
 
 				// Create the picture
 				TagLib::FLAC::Picture picture;
