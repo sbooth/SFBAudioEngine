@@ -484,6 +484,8 @@ bool FLACDecoder::Close(CFErrorRef */*error*/)
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
 
+	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
+
 	mIsOpen = false;
 	return true;
 }
