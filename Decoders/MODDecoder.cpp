@@ -363,5 +363,8 @@ UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 
 	mCurrentFrame += framesRendered;
 
+	bufferList->mBuffers[0].mDataByteSize = static_cast<UInt32>(framesRendered * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
+
 	return static_cast<UInt32>(framesRendered);
 }
