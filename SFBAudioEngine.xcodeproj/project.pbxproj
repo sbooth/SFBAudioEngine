@@ -19,6 +19,8 @@
 		3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */; };
 		3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */; };
 		320723C8138D564700007369 /* CreateStringForOSType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320723C7138D564700007369 /* CreateStringForOSType.cpp */; };
+		3208539E14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */; };
+		3208539F14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */; };
 		322D78A9112F971C006676FC /* WavPackMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78A7112F971C006676FC /* WavPackMetadata.cpp */; };
 		322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */; };
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
@@ -244,6 +246,7 @@
 		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
+		3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Logger+NSOverloads.mm"; sourceTree = "<group>"; };
 		32161CE8133AF8C8008449C3 /* mpg123.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpg123.framework; path = Frameworks/mpg123.framework; sourceTree = "<group>"; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -488,6 +491,7 @@
 			children = (
 				32AEB2901409AF2B001F9A60 /* Logger.h */,
 				32AEB28F1409AF2B001F9A60 /* Logger.cpp */,
+				3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */,
 				32B79A63138F2EC200EBEF1B /* Mutex.h */,
 				32B79A62138F2EC200EBEF1B /* Mutex.cpp */,
 				3268C0BE139C06AB00CC5C5C /* Guard.h */,
@@ -1019,6 +1023,7 @@
 				32AEB2C61409B2BA001F9A60 /* CADebugMacros.cpp in Sources */,
 				32AEB2C71409B2BA001F9A60 /* CADebugPrintf.cpp in Sources */,
 				32AEB2C81409B2BA001F9A60 /* CARingBuffer.cpp in Sources */,
+				3208539F14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1096,6 +1101,7 @@
 				32F83B101409CC1D005790F1 /* AudioConverter.cpp in Sources */,
 				32F83B121409CC1D005790F1 /* DeinterleavingFloatConverter.cpp in Sources */,
 				32F83B141409CC1D005790F1 /* PCMConverter.cpp in Sources */,
+				3208539E14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
