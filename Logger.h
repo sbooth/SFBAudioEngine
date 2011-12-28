@@ -133,8 +133,21 @@ namespace logger {
 
 // Useful ostream overloads
 std::ostream& operator<<(std::ostream& out, CFStringRef s);
+std::ostream& operator<<(std::ostream& out, CFNumberRef n);
 std::ostream& operator<<(std::ostream& out, CFURLRef u);
 std::ostream& operator<<(std::ostream& out, CFErrorRef e);
 std::ostream& operator<<(std::ostream& out, CFUUIDRef u);
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);
 std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout);
+
+// Helpers for common toll-free bridged classes
+#ifdef __OBJC__
+
+#include <Foundation/Foundation.h>
+
+std::ostream& operator<<(std::ostream& out, NSString *s);
+std::ostream& operator<<(std::ostream& out, NSNumber *n);
+std::ostream& operator<<(std::ostream& out, NSURL *u);
+std::ostream& operator<<(std::ostream& out, NSError *e);
+
+#endif

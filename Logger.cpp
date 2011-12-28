@@ -154,6 +154,30 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, CFNumberRef n)
+{
+	if(NULL == n)
+		out << "(null)";
+	else if(n == kCFNumberPositiveInfinity)
+		out << "+Inf";
+	else if(n == kCFNumberNegativeInfinity)
+		out << "-Inf";
+	else if(n == kCFNumberNaN)
+		out << "NaN";
+	else if(CFNumberIsFloatType(n)) {
+		double val;
+		if(CFNumberGetValue(n, kCFNumberDoubleType, &val))
+			out << val;
+	}
+	else {
+		long long val;
+		if(CFNumberGetValue(n, kCFNumberLongLongType, &val))
+			out << val;
+	}
+
+	return out;
+}
+
 std::ostream& operator<<(std::ostream& out, CFURLRef u)
 {
 	if(NULL == u) {
