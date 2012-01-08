@@ -186,8 +186,10 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 	const char *tag = duh_get_tag(duh, "TITLE");
 	if(tag) {
 		CFStringRef title = CFStringCreateWithCString(kCFAllocatorDefault, tag, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataTitleKey, title);
-		CFRelease(title), title = NULL;
+		if(title) {
+			CFDictionarySetValue(mMetadata, kMetadataTitleKey, title);
+			CFRelease(title), title = NULL;
+		}
 	}
 
 	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD"));

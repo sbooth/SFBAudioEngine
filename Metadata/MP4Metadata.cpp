@@ -319,57 +319,73 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Album title
 	if(tags->album) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->album, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Artist
 	if(tags->artist) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->artist, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Album Artist
 	if(tags->albumArtist) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->albumArtist, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataAlbumArtistKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataAlbumArtistKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Genre
 	if(tags->genre) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->genre, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Release date
 	if(tags->releaseDate) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->releaseDate, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Composer
 	if(tags->composer) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->composer, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataComposerKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataComposerKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Comment
 	if(tags->comments) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->comments, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Track title
 	if(tags->name) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->name, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Track number
@@ -416,8 +432,10 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Lyrics
 	if(tags->lyrics) {
 		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->lyrics, kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataLyricsKey, str);
-		CFRelease(str), str = NULL;
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataLyricsKey, str);
+			CFRelease(str), str = NULL;
+		}
 	}
 	
 	// Album art
