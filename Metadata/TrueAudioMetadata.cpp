@@ -148,6 +148,13 @@ bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 			CFRelease(bitsPerChannel), bitsPerChannel = NULL;			
 		}
+
+		if(properties->sampleFrames()) {
+			TagLib::uint sampleFrames = properties->sampleFrames();
+			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleFrames);
+			CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+			CFRelease(totalFrames), totalFrames = NULL;			
+		}
 	}
 
 	// Album title
