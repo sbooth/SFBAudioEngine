@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,112 +28,20 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <FLAC/metadata.h>
+#include <taglib/tfilestream.h>
+#include <taglib/flacfile.h>
+#include <taglib/flacproperties.h>
+#include <taglib/id3v2framefactory.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 #include "FLACMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "Logger.h"
-
-// ========================================
-// Vorbis comment utilities
-// ========================================
-static bool
-SetVorbisComment(FLAC__StreamMetadata *block, const char *key, CFStringRef value)
-{
-	assert(NULL != block);
-	assert(NULL != key);
-
-	// Remove the existing comment with this name
-	if(-1 == FLAC__metadata_object_vorbiscomment_remove_entry_matching(block, key)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_remove_entry_matching() failed");
-		return false;
-	}
-	
-	// Nothing left to do if value is NULL
-	if(NULL == value)
-		return true;
-	
-	CFIndex valueCStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(value), kCFStringEncodingUTF8)  + 1;
-	char valueCString [valueCStringSize];
-	
-	if(!CFStringGetCString(value, valueCString, valueCStringSize, kCFStringEncodingUTF8)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFStringGetCString() failed");
-		return false;
-	}
-	
-	FLAC__StreamMetadata_VorbisComment_Entry entry;
-	
-	if(!FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair(&entry, key, valueCString)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_entry_from_name_value_pair() failed");
-		return false;
-	}
-	
-	if(!FLAC__metadata_object_vorbiscomment_replace_comment(block, entry, false, false)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "FLAC__metadata_object_vorbiscomment_replace_comment() failed");
-		return false;
-	}
-	
-	return true;
-}
-
-static bool
-SetVorbisCommentNumber(FLAC__StreamMetadata *block, const char *key, CFNumberRef value)
-{
-	assert(NULL != block);
-	assert(NULL != key);
-	
-	CFStringRef numberString = NULL;
-	
-	if(NULL != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), value);
-	
-	bool result = SetVorbisComment(block, key, numberString);
-	
-	if(numberString)
-		CFRelease(numberString), numberString = NULL;
-	
-	return result;
-}
-
-static bool
-SetVorbisCommentBoolean(FLAC__StreamMetadata *block, const char *key, CFBooleanRef value)
-{
-	assert(NULL != block);
-	assert(NULL != key);
-	
-	if(NULL == value)
-		return SetVorbisComment(block, key, NULL);
-	else if(CFBooleanGetValue(value))
-		return SetVorbisComment(block, key, CFSTR("1"));
-	else
-		return SetVorbisComment(block, key, CFSTR("0"));
-}
-
-static bool
-SetVorbisCommentDouble(FLAC__StreamMetadata *block, const char *key, CFNumberRef value, CFStringRef format = NULL)
-{
-	assert(NULL != block);
-	assert(NULL != key);
-	
-	CFStringRef numberString = NULL;
-	
-	if(NULL != value) {
-		double f;
-		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFNumberGetValue() failed");
-			return false;
-		}
-
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, NULL == format ? CFSTR("%f") : format, f);
-	}
-	
-	bool result = SetVorbisComment(block, key, numberString);
-	
-	if(numberString)
-		CFRelease(numberString), numberString = NULL;
-	
-	return result;
-}
+#include "AddID3v1TagToDictionary.h"
+#include "AddID3v2TagToDictionary.h"
+#include "AddXiphCommentToDictionary.h"
+#include "SetXiphCommentFromMetadata.h"
+#include "AddAudioPropertiesToDictionary.h"
+#include "TagLibStringFromCFString.h"
 
 #pragma mark Static Methods
 
@@ -187,583 +95,15 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
 	CFDictionaryRemoveAllValues(mChangedMetadata);
-	
+
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
-	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
 
-	// ENOMEM sux
-	if(NULL == chain)
-		return false;
-	
-	if(!FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::FLAC::File file(stream, TagLib::ID3v2::FrameFactory::instance());
 
-		// Attempt to provide a descriptive error message
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-			
-			switch(FLAC__metadata_chain_status(chain)) {
-				case FLAC__METADATA_CHAIN_STATUS_NOT_A_FLAC_FILE:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-					
-					
-				case FLAC__METADATA_CHAIN_STATUS_BAD_METADATA:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file contains bad metadata."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-					
-				default:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-			}
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataFileFormatNotRecognizedError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;
-		}
-
-		FLAC__metadata_chain_delete(chain), chain = NULL;
-		
-		return false;
-	}
-	
-	FLAC__Metadata_Iterator *iterator = FLAC__metadata_iterator_new();
-
-	if(NULL == iterator) {
-		FLAC__metadata_chain_delete(chain), chain = NULL;		
-		return false;
-	}
-	
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("FLAC"));
-
-	FLAC__metadata_iterator_init(iterator, chain);
-	
-	FLAC__StreamMetadata *block = NULL;
-	
-	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																		  0,
-																		  &kCFTypeDictionaryKeyCallBacks,
-																		  &kCFTypeDictionaryValueCallBacks);
-	
-	do {
-		block = FLAC__metadata_iterator_get_block(iterator);
-		
-		if(NULL == block)
-			break;
-		
-		switch(block->type) {					
-			case FLAC__METADATA_TYPE_VORBIS_COMMENT:				
-				for(unsigned i = 0; i < block->data.vorbis_comment.num_comments; ++i) {
-					
-					char *fieldName = NULL;
-					char *fieldValue = NULL;
-					
-					// Let FLAC parse the comment for us
-					if(!FLAC__metadata_object_vorbiscomment_entry_to_name_value_pair(block->data.vorbis_comment.comments[i], &fieldName, &fieldValue)) {
-						// Ignore malformed comments
-						continue;
-					}
-					
-					CFStringRef key = CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
-																	reinterpret_cast<const UInt8 *>(fieldName),
-																	strlen(fieldName), 
-																	kCFStringEncodingASCII,
-																	false,
-																	kCFAllocatorMalloc);
-
-					CFStringRef value = CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
-																	  reinterpret_cast<const UInt8 *>(fieldValue),
-																	  strlen(fieldValue), 
-																	  kCFStringEncodingUTF8,
-																	  false,
-																	  kCFAllocatorMalloc);
-					
-					if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTIST"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataArtistKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTIST"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataAlbumArtistKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSER"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataComposerKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GENRE"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataGenreKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DATE"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DESCRIPTION"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataCommentKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLE"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataTitleKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataTrackTotalKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPILATION"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataCompilationKey, CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataDiscNumberKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataDiscTotalKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("LYRICS"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataLyricsKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataBPMKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive)) {
-						int num = CFStringGetIntValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-						CFDictionarySetValue(mMetadata, kMetadataRatingKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataISRCKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
-						CFDictionarySetValue(mMetadata, kMetadataMCNKey, value);
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive)) {
-						double num = CFStringGetDoubleValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-						CFDictionarySetValue(mMetadata, kReplayGainReferenceLoudnessKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive)) {
-						double num = CFStringGetDoubleValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-						CFDictionarySetValue(mMetadata, kReplayGainTrackGainKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive)) {
-						double num = CFStringGetDoubleValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-						CFDictionarySetValue(mMetadata, kReplayGainTrackPeakKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive)) {
-						double num = CFStringGetDoubleValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-						CFDictionarySetValue(mMetadata, kReplayGainAlbumGainKey, number);
-						CFRelease(number), number = NULL;
-					}
-					else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive)) {
-						double num = CFStringGetDoubleValue(value);
-						CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-						CFDictionarySetValue(mMetadata, kReplayGainAlbumPeakKey, number);
-						CFRelease(number), number = NULL;
-					}
-					// Put all unknown tags into the additional metadata
-					else
-						CFDictionarySetValue(additionalMetadata, key, value);
-					
-					CFRelease(key), key = NULL;
-					CFRelease(value), value = NULL;
-					
-					fieldName = NULL;
-					fieldValue = NULL;
-				}
-				break;
-				
-			case FLAC__METADATA_TYPE_PICTURE:
-			{
-				CFDataRef data = CFDataCreate(kCFAllocatorDefault, block->data.picture.data, block->data.picture.data_length);
-				CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
-				CFRelease(data), data = NULL;
-			}
-			break;
-				
-			case FLAC__METADATA_TYPE_STREAMINFO:
-			{
-				CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.sample_rate);
-				CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
-				CFRelease(sampleRate), sampleRate = NULL;
-
-				CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.channels);
-				CFDictionarySetValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-				CFRelease(channelsPerFrame), channelsPerFrame = NULL;
-
-				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &block->data.stream_info.bits_per_sample);
-				CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-				CFRelease(bitsPerChannel), bitsPerChannel = NULL;
-				
-				CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &block->data.stream_info.total_samples);
-				CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-				CFRelease(totalFrames), totalFrames = NULL;
-
-				double length = static_cast<double>(block->data.stream_info.total_samples / block->data.stream_info.sample_rate);
-				CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
-				CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
-				CFRelease(duration), duration = NULL;
-
-				double losslessBitrate = static_cast<double>(block->data.stream_info.sample_rate * block->data.stream_info.channels * block->data.stream_info.bits_per_sample) / 1000;
-				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
-				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
-				CFRelease(bitrate), bitrate = NULL;
-			}
-			break;
-
-			case FLAC__METADATA_TYPE_PADDING:						break;
-			case FLAC__METADATA_TYPE_APPLICATION:					break;
-			case FLAC__METADATA_TYPE_SEEKTABLE:						break;
-			case FLAC__METADATA_TYPE_CUESHEET:						break;
-			case FLAC__METADATA_TYPE_UNDEFINED:						break;
-
-			default:												break;
-		}
-	} while(FLAC__metadata_iterator_next(iterator));
-
-	if(CFDictionaryGetCount(additionalMetadata))
-		CFDictionarySetValue(mMetadata, kMetadataAdditionalMetadataKey, additionalMetadata);
-	
-	CFRelease(additionalMetadata), additionalMetadata = NULL;
-	
-	FLAC__metadata_iterator_delete(iterator), iterator = NULL;
-	FLAC__metadata_chain_delete(chain), chain = NULL;
-	
-	return true;
-}
-
-bool FLACMetadata::WriteMetadata(CFErrorRef *error)
-{
-	UInt8 buf [PATH_MAX];
-	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
-		return false;
-	
-	FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
-	
-	// ENOMEM sux
-	if(NULL == chain)
-		return false;
-	
-	if(!FLAC__metadata_chain_read(chain, reinterpret_cast<const char *>(buf))) {
-		
-		// Attempt to provide a descriptive error message
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-			
-			switch(FLAC__metadata_chain_status(chain)) {
-				case FLAC__METADATA_CHAIN_STATUS_NOT_A_FLAC_FILE:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-					
-					
-				case FLAC__METADATA_CHAIN_STATUS_BAD_METADATA:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file contains bad metadata."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-					
-				default:
-				{
-					CFStringRef displayName = CreateDisplayNameForURL(mURL);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																	   displayName);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					break;
-				}
-			}
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataFileFormatNotRecognizedError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;
-		}
-		
-		FLAC__metadata_chain_delete(chain), chain = NULL;
-		
-		return false;
-	}
-	
-	FLAC__metadata_chain_sort_padding(chain);
-	
-	FLAC__Metadata_Iterator *iterator = FLAC__metadata_iterator_new();
-	
-	if(NULL == iterator) {
-		FLAC__metadata_chain_delete(chain), chain = NULL;
-
-		return false;
-	}
-	
-	FLAC__metadata_iterator_init(iterator, chain);
-	
-	// Seek to the vorbis comment block if it exists
-	while(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator)) {
-		if(!FLAC__metadata_iterator_next(iterator))
-			break; // Already at end
-	}
-	
-	FLAC__StreamMetadata *block = NULL;
-	
-	// If there isn't a vorbis comment block add one
-	if(FLAC__METADATA_TYPE_VORBIS_COMMENT != FLAC__metadata_iterator_get_block_type(iterator)) {
-		
-		// The padding block will be the last block if it exists; add the comment block before it
-		if(FLAC__METADATA_TYPE_PADDING == FLAC__metadata_iterator_get_block_type(iterator))
-			FLAC__metadata_iterator_prev(iterator);
-		
-		block = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
-		
-		if(NULL == block) {
-			FLAC__metadata_chain_delete(chain), chain = NULL;
-			FLAC__metadata_iterator_delete(iterator), iterator = NULL;
-
-			return false;
-		}
-		
-		// Add our metadata
-		if(!FLAC__metadata_iterator_insert_block_after(iterator, block)) {
-			if(NULL != error) {
-				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   0,
-																				   &kCFTypeDictionaryKeyCallBacks,
-																				   &kCFTypeDictionaryValueCallBacks);
-
-				CFStringRef displayName = CreateDisplayNameForURL(mURL);
-				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																   NULL, 
-																   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-																   displayName);
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedDescriptionKey, 
-									 errorString);
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedFailureReasonKey, 
-									 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedRecoverySuggestionKey, 
-									 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-				
-				CFRelease(errorString), errorString = NULL;
-				CFRelease(displayName), displayName = NULL;
-
-				*error = CFErrorCreate(kCFAllocatorDefault, 
-									   AudioMetadataErrorDomain, 
-									   AudioMetadataInputOutputError, 
-									   errorDictionary);
-				
-				CFRelease(errorDictionary), errorDictionary = NULL;				
-			}
-			
-			FLAC__metadata_chain_delete(chain), chain = NULL;
-			FLAC__metadata_iterator_delete(iterator), iterator = NULL;
-			
-			return false;
-		}
-	}
-	else
-		block = FLAC__metadata_iterator_get_block(iterator);
-	
-	// Standard tags
-	SetVorbisComment(block, "ALBUM", GetAlbumTitle());
-	SetVorbisComment(block, "ARTIST", GetArtist());
-	SetVorbisComment(block, "ALBUMARTIST", GetAlbumArtist());
-	SetVorbisComment(block, "COMPOSER", GetComposer());
-	SetVorbisComment(block, "GENRE", GetGenre());
-	SetVorbisComment(block, "DATE", GetReleaseDate());
-	SetVorbisComment(block, "DESCRIPTION", GetComment());
-	SetVorbisComment(block, "TITLE", GetTitle());
-	SetVorbisCommentNumber(block, "TRACKNUMBER", GetTrackNumber());
-	SetVorbisCommentNumber(block, "TRACKTOTAL", GetTrackTotal());
-	SetVorbisCommentBoolean(block, "COMPILATION", GetCompilation());
-	SetVorbisCommentNumber(block, "DISCNUMBER", GetDiscNumber());
-	SetVorbisCommentNumber(block, "DISCTOTAL", GetDiscTotal());
-	SetVorbisComment(block, "LYRICS", GetLyrics());
-	SetVorbisCommentNumber(block, "BPM", GetBPM());
-	SetVorbisCommentNumber(block, "RATING", GetRating());
-	SetVorbisComment(block, "ISRC", GetISRC());
-	SetVorbisComment(block, "MCN", GetMCN());
-
-	// Additional metadata
-	CFDictionaryRef additionalMetadata = GetAdditionalMetadata();
-	if(NULL != additionalMetadata) {
-		CFIndex count = CFDictionaryGetCount(additionalMetadata);
-		
-		const void * keys [count];
-		const void * values [count];
-		
-		CFDictionaryGetKeysAndValues(additionalMetadata, 
-									 reinterpret_cast<const void **>(keys), 
-									 reinterpret_cast<const void **>(values));
-		
-		for(CFIndex i = 0; i < count; ++i) {
-			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
-			char key [keySize + 1];
-			       
-			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.FLAC", "CFStringGetCString() failed");
-				continue;
-			}
-			
-			SetVorbisComment(block, key, reinterpret_cast<CFStringRef>(values[i]));
-		}
-	}
-	
-	// ReplayGain info
-	SetVorbisCommentDouble(block, "REPLAYGAIN_REFERENCE_LOUDNESS", GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	SetVorbisCommentDouble(block, "REPLAYGAIN_TRACK_GAIN", GetReplayGainReferenceLoudness(), CFSTR("%+2.2f dB"));
-	SetVorbisCommentDouble(block, "REPLAYGAIN_TRACK_PEAK", GetReplayGainTrackGain(), CFSTR("%1.8f"));
-	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_GAIN", GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
-	SetVorbisCommentDouble(block, "REPLAYGAIN_ALBUM_PEAK", GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
-	
-	// Write the new metadata to the file
-	if(!FLAC__metadata_chain_write(chain, true, false)) {
+	if(!file.isValid()) {
 		if(NULL != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -775,40 +115,213 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 															   NULL, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
 															   displayName);
-			
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedDescriptionKey, 
 								 errorString);
-			
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-			
+								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			CFRelease(errorString), errorString = NULL;
 			CFRelease(displayName), displayName = NULL;
-			
+
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioMetadataErrorDomain, 
 								   AudioMetadataInputOutputError, 
 								   errorDictionary);
-			
+
 			CFRelease(errorDictionary), errorDictionary = NULL;				
 		}
-		
-		FLAC__metadata_chain_delete(chain), chain = NULL;
-		FLAC__metadata_iterator_delete(iterator), iterator = NULL;
-		
+
 		return false;
 	}
-	
-	FLAC__metadata_chain_delete(chain), chain = NULL;
-	FLAC__metadata_iterator_delete(iterator), iterator = NULL;
-	
+
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("FLAC"));
+
+	if(file.audioProperties()) {
+		TagLib::FLAC::Properties *properties = file.audioProperties();
+		AddAudioPropertiesToDictionary(mMetadata, properties);
+
+		int sampleWidth = properties->sampleWidth();
+		CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleWidth);
+		CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+		CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+
+		unsigned long long sampleFrames = properties->sampleFrames();
+		CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleFrames);
+		CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+		CFRelease(totalFrames), totalFrames = NULL;
+	}
+
+	// Add all tags that are present
+	if(file.ID3v1Tag())
+		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
+
+	if(file.ID3v2Tag())
+		AddID3v2TagToDictionary(mMetadata, file.ID3v2Tag());
+
+	if(file.xiphComment())
+		AddXiphCommentToDictionary(mMetadata, file.xiphComment());
+
+	// Add album art
+	TagLib::List<TagLib::FLAC::Picture *> pictures = file.pictureList();
+	for(TagLib::List<TagLib::FLAC::Picture *>::ConstIterator iter = pictures.begin(); iter != pictures.end(); ++iter) {
+		TagLib::FLAC::Picture *picture = *iter;
+		CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture->data().data()), picture->data().size());
+		CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
+		CFRelease(data), data = NULL;
+	}
+
+	return true;
+}
+
+bool FLACMetadata::WriteMetadata(CFErrorRef *error)
+{
+	UInt8 buf [PATH_MAX];
+	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+		return false;
+
+	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	TagLib::FLAC::File file(stream, TagLib::ID3v2::FrameFactory::instance(), false);
+
+	if(!file.isValid()) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   0,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   displayName);
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioMetadataErrorDomain, 
+								   AudioMetadataInputOutputError, 
+								   errorDictionary);
+
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		return false;
+	}
+
+	SetXiphCommentFromMetadata(*this, file.xiphComment());
+
+	if(GetFrontCoverArt()) {
+
+#if 0
+		// Remove existing front cover art
+		TagLib::List<TagLib::FLAC::Picture *> pictures = file.pictureList();
+		for(TagLib::List<TagLib::FLAC::Picture *>::ConstIterator iter = pictures.begin(); iter != pictures.end(); ++iter) {
+			TagLib::FLAC::Picture *picture = *iter;
+			if(TagLib::FLAC::Picture::Other == picture->type())
+				file.removePicture(picture);
+		}
+#endif
+		CFDataRef frontCoverData = GetFrontCoverArt();
+
+		CGImageSourceRef imageSource = CGImageSourceCreateWithData(frontCoverData, NULL);
+		if(NULL == imageSource)
+			return false;
+
+		TagLib::FLAC::Picture *picture = new TagLib::FLAC::Picture;
+		picture->setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(frontCoverData), (TagLib::uint)CFDataGetLength(frontCoverData)));
+
+		// Convert the image's UTI into a MIME type
+		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+		if(mimeType) {
+			picture->setMimeType(TagLib::StringFromCFString(mimeType));
+			CFRelease(mimeType), mimeType = NULL;
+		}
+
+		// Flesh out the height, width, and depth
+		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL);
+		if(imagePropertiesDictionary) {
+			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
+			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
+			CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+
+			int height, width, depth;
+
+			// Ignore numeric conversion errors
+			CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
+			CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
+			CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
+
+			picture->setHeight(height);
+			picture->setWidth(width);
+			picture->setColorDepth(depth);
+
+			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = NULL;
+		}
+
+		file.addPicture(picture);
+	}
+
+	if(!file.save()) {
+		if(error) {
+			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
+																			   0,
+																			   &kCFTypeDictionaryKeyCallBacks,
+																			   &kCFTypeDictionaryValueCallBacks);
+
+			CFStringRef displayName = CreateDisplayNameForURL(mURL);
+			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
+															   NULL, 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   displayName);
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedDescriptionKey, 
+								 errorString);
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedFailureReasonKey, 
+								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
+
+			CFDictionarySetValue(errorDictionary, 
+								 kCFErrorLocalizedRecoverySuggestionKey, 
+								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+
+			CFRelease(errorString), errorString = NULL;
+			CFRelease(displayName), displayName = NULL;
+
+			*error = CFErrorCreate(kCFAllocatorDefault, 
+								   AudioMetadataErrorDomain, 
+								   AudioMetadataInputOutputError, 
+								   errorDictionary);
+
+			CFRelease(errorDictionary), errorDictionary = NULL;				
+		}
+
+		return false;
+	}
+
 	MergeChangedMetadataIntoMetadata();
-	
+
 	return true;
 }
