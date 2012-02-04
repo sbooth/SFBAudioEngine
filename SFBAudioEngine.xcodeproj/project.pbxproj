@@ -27,6 +27,7 @@
 		322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */; };
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
 		32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32386EF213D2135400D25175 /* HTTPInputSource.cpp */; };
+		3241BE4614DDC37500F657E4 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3241BE4514DDC37500F657E4 /* ApplicationServices.framework */; };
 		324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */; };
 		324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */; };
 		3252E84310CC9E5000F1AA23 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C212D51091116D00BA2493 /* SFBAudioEngine.framework */; };
@@ -281,6 +282,7 @@
 		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Metadata.h; sourceTree = "<group>"; };
 		32386EF213D2135400D25175 /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
 		32386EF313D2135400D25175 /* HTTPInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPInputSource.h; sourceTree = "<group>"; };
+		3241BE4514DDC37500F657E4 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioDecoder.h; sourceTree = "<group>"; };
 		324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonkeysAudioDecoder.cpp; sourceTree = "<group>"; };
 		324DB1B612DC17480055AF3F /* mac.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mac.framework; path = Frameworks/mac.framework; sourceTree = "<group>"; };
@@ -454,6 +456,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32AEB2D91409BA27001F9A60 /* Accelerate.framework in Frameworks */,
+				3241BE4614DDC37500F657E4 /* ApplicationServices.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				32AEB2DC1409BA27001F9A60 /* CoreAudio.framework in Frameworks */,
@@ -468,9 +471,9 @@
 				32AEB2E41409BA59001F9A60 /* sndfile.framework in Frameworks */,
 				32AEB2E51409BA59001F9A60 /* speex.framework in Frameworks */,
 				32AEB2E61409BA59001F9A60 /* taglib.framework in Frameworks */,
+				32C3F95B14DCD44B007F84A6 /* tta++.framework in Frameworks */,
 				32AEB2E71409BA59001F9A60 /* vorbis.framework in Frameworks */,
 				32AEB2E81409BA59001F9A60 /* wavpack.framework in Frameworks */,
-				32C3F95B14DCD44B007F84A6 /* tta++.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,6 +698,7 @@
 			isa = PBXGroup;
 			children = (
 				32AEB2D41409BA25001F9A60 /* Accelerate.framework */,
+				3241BE4514DDC37500F657E4 /* ApplicationServices.framework */,
 				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
 				32AEB2D61409BA26001F9A60 /* AudioUnit.framework */,
 				32AEB2D71409BA26001F9A60 /* CoreAudio.framework */,
