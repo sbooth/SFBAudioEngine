@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -1973,6 +1973,8 @@ OSStatus BasicAudioPlayer::FillSampleRateConversionBuffer(AudioConverterRef				i
 
 void * BasicAudioPlayer::DecoderThreadEntry()
 {
+	pthread_setname_np("org.sbooth.AudioEngine.Decoder");
+
 	// ========================================
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
@@ -2246,6 +2248,8 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 
 void * BasicAudioPlayer::CollectorThreadEntry()
 {
+	pthread_setname_np("org.sbooth.AudioEngine.Collector");
+
 	// The collector should be signaled when there is cleanup to be done, so there is no need for a short timeout
 	mach_timespec_t timeout = { 30, 0 };
 
