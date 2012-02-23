@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,7 @@
 # include "MonkeysAudioMetadata.h"
 # include "OggSpeexMetadata.h"
 # include "MODMetadata.h"
+# include "TrueAudioMetadata.h"
 #endif
 
 
@@ -156,6 +157,10 @@ CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 	decoderExtensions = MODMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = TrueAudioMetadata::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
 #endif
 
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
@@ -217,6 +222,10 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 
 	decoderMIMETypes = MODMetadata::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = TrueAudioMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 #endif
@@ -377,6 +386,11 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					}
 					if(!metadata && MODMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MODMetadata(url);
+						if(!metadata->ReadMetadata(error))
+							delete metadata, metadata = NULL;
+					}
+					if(!metadata && TrueAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
+						metadata = new TrueAudioMetadata(url);
 						if(!metadata->ReadMetadata(error))
 							delete metadata, metadata = NULL;
 					}

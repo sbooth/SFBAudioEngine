@@ -107,8 +107,10 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 		formatInfo.format = i;
 		if(0 == sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
 			CFStringRef extension = CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8);
-			CFArrayAppendValue(supportedExtensions, extension);
-			CFRelease(extension), extension = NULL;
+			if(extension) {
+				CFArrayAppendValue(supportedExtensions, extension);
+				CFRelease(extension), extension = NULL;
+			}
 		}
 		else
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");

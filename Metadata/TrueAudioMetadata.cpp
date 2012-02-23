@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,52 +29,45 @@
  */
 
 #include <taglib/tfilestream.h>
-#include <taglib/flacfile.h>
-#include <taglib/flacproperties.h>
-#include <taglib/id3v2framefactory.h>
+#include <taglib/trueaudiofile.h>
+#include <taglib/tag.h>
 
-#include <ApplicationServices/ApplicationServices.h>
-
-#include "FLACMetadata.h"
+#include "TrueAudioMetadata.h"
 #include "CreateDisplayNameForURL.h"
-#include "AddID3v1TagToDictionary.h"
-#include "AddID3v2TagToDictionary.h"
-#include "AddXiphCommentToDictionary.h"
-#include "SetXiphCommentFromMetadata.h"
-#include "AddAudioPropertiesToDictionary.h"
 #include "TagLibStringFromCFString.h"
+#include "AddAudioPropertiesToDictionary.h"
 
 #pragma mark Static Methods
 
-CFArrayRef FLACMetadata::CreateSupportedFileExtensions()
+CFArrayRef TrueAudioMetadata::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("flac") };
+	CFStringRef supportedExtensions [] = { CFSTR("tta") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef FLACMetadata::CreateSupportedMIMETypes()
+CFArrayRef TrueAudioMetadata::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac") };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/x-tta") };
 	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
 }
 
-bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(NULL == extension)
 		return false;
 	
-	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("tta"), kCFCompareCaseInsensitive))
 		return true;
 
 	return false;
 }
 
-bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(NULL == mimeType)
 		return false;
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-tta"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
@@ -82,27 +75,27 @@ bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 
 #pragma mark Creation and Destruction
 
-FLACMetadata::FLACMetadata(CFURLRef url)
+TrueAudioMetadata::TrueAudioMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-FLACMetadata::~FLACMetadata()
+TrueAudioMetadata::~TrueAudioMetadata()
 {}
 
 #pragma mark Functionality
 
-bool FLACMetadata::ReadMetadata(CFErrorRef *error)
+bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 {
 	// Start from scratch
 	CFDictionaryRemoveAllValues(mMetadata);
 	CFDictionaryRemoveAllValues(mChangedMetadata);
-
+	
 	UInt8 buf [PATH_MAX];
-	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
+	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
-
+	
 	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-	TagLib::FLAC::File file(stream, TagLib::ID3v2::FrameFactory::instance());
+	TagLib::TrueAudio::File file(stream);
 
 	if(!file.isValid()) {
 		if(NULL != error) {
@@ -114,7 +107,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
 															   displayName);
 
 			CFDictionarySetValue(errorDictionary, 
@@ -123,7 +116,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
 
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -142,54 +135,89 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 
 		return false;
 	}
-
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("FLAC"));
+	
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("True Audio"));
 
 	if(file.audioProperties()) {
-		TagLib::FLAC::Properties *properties = file.audioProperties();
+		TagLib::TrueAudio::Properties *properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 
-		int sampleWidth = properties->sampleWidth();
-		CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleWidth);
-		CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-		CFRelease(bitsPerChannel), bitsPerChannel = NULL;
+		if(properties->bitsPerSample()) {
+			TagLib::uint bitDepth = properties->bitsPerSample();
+			CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &bitDepth);
+			CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
+			CFRelease(bitsPerChannel), bitsPerChannel = NULL;			
+		}
 
-		unsigned long long sampleFrames = properties->sampleFrames();
-		CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleFrames);
-		CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-		CFRelease(totalFrames), totalFrames = NULL;
+		if(properties->sampleFrames()) {
+			TagLib::uint sampleFrames = properties->sampleFrames();
+			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleFrames);
+			CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
+			CFRelease(totalFrames), totalFrames = NULL;			
+		}
 	}
 
-	// Add all tags that are present
-	if(file.ID3v1Tag())
-		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
+	// Album title
+	if(!file.tag()->album().isNull()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->album().toCString(true), kCFStringEncodingUTF8);
+		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
+		CFRelease(str), str = NULL;
+	}
 
-	if(file.ID3v2Tag())
-		AddID3v2TagToDictionary(mMetadata, file.ID3v2Tag());
+	// Artist
+	if(!file.tag()->artist().isNull()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->artist().toCString(true), kCFStringEncodingUTF8);
+		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
+		CFRelease(str), str = NULL;
+	}
 
-	if(file.xiphComment())
-		AddXiphCommentToDictionary(mMetadata, file.xiphComment());
+	// Genre
+	if(!file.tag()->genre().isNull()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->genre().toCString(true), kCFStringEncodingUTF8);
+		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
+		CFRelease(str), str = NULL;
+	}
 
-	// Add album art
-	TagLib::List<TagLib::FLAC::Picture *> pictures = file.pictureList();
-	for(TagLib::List<TagLib::FLAC::Picture *>::ConstIterator iter = pictures.begin(); iter != pictures.end(); ++iter) {
-		TagLib::FLAC::Picture *picture = *iter;
-		CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture->data().data()), picture->data().size());
-		CFDictionarySetValue(mMetadata, kAlbumArtFrontCoverKey, data);
-		CFRelease(data), data = NULL;
+	// Year
+	if(file.tag()->year()) {
+		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), file.tag()->year());
+		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
+		CFRelease(str), str = NULL;
+	}
+
+	// Comment
+	if(!file.tag()->comment().isNull()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->comment().toCString(true), kCFStringEncodingUTF8);
+		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
+		CFRelease(str), str = NULL;
+	}
+
+	// Track title
+	if(!file.tag()->title().isNull()) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->title().toCString(true), kCFStringEncodingUTF8);
+		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
+		CFRelease(str), str = NULL;
+	}
+
+	// Track number
+	if(file.tag()->track()) {
+		int trackNum = file.tag()->track();
+		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
+		CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
+		CFRelease(num), num = NULL;
 	}
 
 	return true;
 }
 
-bool FLACMetadata::WriteMetadata(CFErrorRef *error)
+bool TrueAudioMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
 	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
-	TagLib::FLAC::File file(stream, TagLib::ID3v2::FrameFactory::instance(), false);
+	TagLib::TrueAudio::File file(stream, false);
 
 	if(!file.isValid()) {
 		if(error) {
@@ -201,7 +229,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
 															   displayName);
 
 			CFDictionarySetValue(errorDictionary, 
@@ -210,7 +238,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+								 CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
 
 			CFDictionarySetValue(errorDictionary, 
 								 kCFErrorLocalizedRecoverySuggestionKey, 
@@ -230,58 +258,30 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetXiphCommentFromMetadata(*this, file.xiphComment());
+	// Album title
+	file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
 
-	if(GetFrontCoverArt()) {
+	// Artist
+	file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
 
-#if 0
-		// Remove existing front cover art
-		TagLib::List<TagLib::FLAC::Picture *> pictures = file.pictureList();
-		for(TagLib::List<TagLib::FLAC::Picture *>::ConstIterator iter = pictures.begin(); iter != pictures.end(); ++iter) {
-			TagLib::FLAC::Picture *picture = *iter;
-			if(TagLib::FLAC::Picture::Other == picture->type())
-				file.removePicture(picture);
-		}
-#endif
-		CFDataRef frontCoverData = GetFrontCoverArt();
+	// Genre
+	file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
 
-		CGImageSourceRef imageSource = CGImageSourceCreateWithData(frontCoverData, NULL);
-		if(NULL == imageSource)
-			return false;
+	// Year
+	file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
 
-		TagLib::FLAC::Picture *picture = new TagLib::FLAC::Picture;
-		picture->setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(frontCoverData), (TagLib::uint)CFDataGetLength(frontCoverData)));
+	// Comment
+	file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
 
-		// Convert the image's UTI into a MIME type
-		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-		if(mimeType) {
-			picture->setMimeType(TagLib::StringFromCFString(mimeType));
-			CFRelease(mimeType), mimeType = NULL;
-		}
+	// Track title
+	file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
 
-		// Flesh out the height, width, and depth
-		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL);
-		if(imagePropertiesDictionary) {
-			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
-			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
-			CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+	// Track number
+	int trackNum = 0;
+	if(GetTrackNumber())
+		CFNumberGetValue(GetTrackNumber(), kCFNumberIntType, &trackNum);
 
-			int height, width, depth;
-
-			// Ignore numeric conversion errors
-			CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
-			CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
-			CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
-
-			picture->setHeight(height);
-			picture->setWidth(width);
-			picture->setColorDepth(depth);
-
-			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = NULL;
-		}
-
-		file.addPicture(picture);
-	}
+	file.tag()->setTrack(trackNum);
 
 	if(!file.save()) {
 		if(error) {
@@ -293,7 +293,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			CFStringRef displayName = CreateDisplayNameForURL(mURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
 															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
+															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
 															   displayName);
 
 			CFDictionarySetValue(errorDictionary, 

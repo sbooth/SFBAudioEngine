@@ -116,6 +116,8 @@ public:
 	inline bool HasUnsavedChanges() const					{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
 	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
 
+	inline bool HasUnsavedChangesForKey(CFStringRef key) const { return CFDictionaryContainsKey(mChangedMetadata, key); }
+
 	// ========================================
 	// Properties access (if available)
 	CFStringRef GetFormatName() const;

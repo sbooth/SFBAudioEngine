@@ -52,6 +52,7 @@
 #include "OggSpeexDecoder.h"
 #if !TARGET_OS_IPHONE
 # include "MODDecoder.h"
+# include "TrueAudioDecoder.h"
 #endif
 #include "LibsndfileDecoder.h"
 
@@ -102,6 +103,10 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 
 #if !TARGET_OS_IPHONE
 	decoderExtensions = MODDecoder::CreateSupportedFileExtensions();
+	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
+	CFRelease(decoderExtensions), decoderExtensions = NULL;
+
+	decoderExtensions = TrueAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = NULL;
 #endif
@@ -159,6 +164,10 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 
 #if !TARGET_OS_IPHONE
 	decoderMIMETypes = MODDecoder::CreateSupportedMIMETypes();
+	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+
+	decoderMIMETypes = TrueAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
 #endif
@@ -347,6 +356,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 				delete decoder, decoder = NULL;
 			}
 		}
+		if(NULL == decoder && TrueAudioDecoder::HandlesMIMEType(mimeType)) {
+			decoder = new TrueAudioDecoder(inputSource);
+			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+				decoder->mInputSource = NULL;
+				delete decoder, decoder = NULL;
+			}
+		}
 #endif
 		if(NULL == decoder && LibsndfileDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new LibsndfileDecoder(inputSource);
@@ -489,6 +505,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 #if !TARGET_OS_IPHONE
 	if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new MODDecoder(inputSource);
+		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
+			decoder->mInputSource = NULL;
+			delete decoder, decoder = NULL;
+		}
+	}
+	if(NULL == decoder && TrueAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+		decoder = new TrueAudioDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
 			decoder->mInputSource = NULL;
 			delete decoder, decoder = NULL;
