@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 // ========================================
 static void myCFReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, void *clientCallBackInfo)
 {
-	assert(NULL != clientCallBackInfo);
+	assert(nullptr != clientCallBackInfo);
 	
 	HTTPInputSource *inputSource = static_cast<HTTPInputSource *>(clientCallBackInfo);
 	inputSource->HandleNetworkEvent(stream, type);
@@ -47,7 +47,7 @@ static void myCFReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventTy
 
 
 HTTPInputSource::HTTPInputSource(CFURLRef url)
-	: InputSource(url), mRequest(NULL), mReadStream(NULL), mResponseHeaders(NULL), mEOSReached(false), mOffset(-1), mDesiredOffset(0)
+	: InputSource(url), mRequest(nullptr), mReadStream(nullptr), mResponseHeaders(nullptr), mEOSReached(false), mOffset(-1), mDesiredOffset(0)
 {}
 
 HTTPInputSource::~HTTPInputSource()
@@ -65,9 +65,9 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 
 	// Set up the HTTP request
 	mRequest = CFHTTPMessageCreateRequest(kCFAllocatorDefault, CFSTR("GET"), mURL, kCFHTTPVersion1_1);
-	if(NULL == mRequest) {
+	if(nullptr == mRequest) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
 	}
 
@@ -75,42 +75,42 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 
 	// Seek support
 	if(0 < mDesiredOffset) {
-		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("bytes=%ld-"), mDesiredOffset);
+		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%ld-"), mDesiredOffset);
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
-		CFRelease(byteRange), byteRange = NULL;
+		CFRelease(byteRange), byteRange = nullptr;
 	}
 
-	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, NULL);
-	if(NULL == mReadStream) {
-		CFRelease(mRequest), mRequest = NULL;
+	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, nullptr);
+	if(nullptr == mReadStream) {
+		CFRelease(mRequest), mRequest = nullptr;
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
 	}
 
 	// Start the HTTP connection
-	CFStreamClientContext myContext = { 0, this, NULL, NULL, NULL };
+	CFStreamClientContext myContext = { 0, this, nullptr, nullptr, nullptr };
 
 	CFOptionFlags clientFlags = kCFStreamEventOpenCompleted | kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered;
     if(!CFReadStreamSetClient(mReadStream, clientFlags, myCFReadStreamClientCallBack, &myContext)) {
-		CFRelease(mRequest), mRequest = NULL;
-		CFRelease(mReadStream), mReadStream = NULL;
+		CFRelease(mRequest), mRequest = nullptr;
+		CFRelease(mReadStream), mReadStream = nullptr;
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
 	}
 
 	CFReadStreamScheduleWithRunLoop(mReadStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
 	if(!CFReadStreamOpen(mReadStream)) {
-		CFRelease(mRequest), mRequest = NULL;
-		CFRelease(mReadStream), mReadStream = NULL;
+		CFRelease(mRequest), mRequest = nullptr;
+		CFRelease(mReadStream), mReadStream = nullptr;
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
 	}
 
-	while(NULL == mResponseHeaders)
+	while(nullptr == mResponseHeaders)
 		CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true);
 
 	mIsOpen = true;
@@ -126,11 +126,11 @@ bool HTTPInputSource::Close(CFErrorRef *error)
 	}
 
 	if(mRequest)
-		CFRelease(mRequest), mRequest = NULL;
+		CFRelease(mRequest), mRequest = nullptr;
 	if(mReadStream)
-		CFRelease(mReadStream), mReadStream = NULL;
+		CFRelease(mReadStream), mReadStream = nullptr;
 	if(mResponseHeaders)
-		CFRelease(mResponseHeaders), mResponseHeaders = NULL;
+		CFRelease(mResponseHeaders), mResponseHeaders = nullptr;
 
 	mOffset = -1;
 	mDesiredOffset = 0;
@@ -188,7 +188,7 @@ bool HTTPInputSource::SeekToOffset(SInt64 offset)
 CFStringRef HTTPInputSource::CopyContentMIMEType() const
 {
 	if(!IsOpen() || !mResponseHeaders)
-		return NULL;
+		return nullptr;
 
 	return reinterpret_cast<CFStringRef>(CFDictionaryGetValue(mResponseHeaders, CFSTR("Content-Type")));
 }
@@ -201,7 +201,7 @@ void HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventTy
 			break;
 
 		case kCFStreamEventHasBytesAvailable:
-			if(NULL == mResponseHeaders) {
+			if(nullptr == mResponseHeaders) {
 				CFTypeRef responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
 				if(responseHeader)
 					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields(static_cast<CFHTTPMessageRef>(const_cast<void *>(responseHeader)));

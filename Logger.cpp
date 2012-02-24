@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -100,7 +100,7 @@ static const char * GetChannelLayoutTagName(AudioChannelLayoutTag layoutTag)
 		case kAudioChannelLayoutTag_DiscreteInOrder:		return "kAudioChannelLayoutTag_DiscreteInOrder";
 		case kAudioChannelLayoutTag_Unknown:				return "kAudioChannelLayoutTag_Unknown";
 
-		default:											return NULL;
+		default:											return nullptr;
 	}	
 }
 
@@ -126,14 +126,14 @@ void logger::Log(levels level, const char *facility, const char *message, const 
 			asl_set(msg, "Line", buf);
 	}
 
-	asl_log(NULL, msg, level, "%s", message);
+	asl_log(nullptr, msg, level, "%s", message);
 
 	asl_free(msg);
 }
 
 std::ostream& operator<<(std::ostream& out, CFStringRef s)
 {
-	if(NULL == s) {
+	if(nullptr == s) {
 		out << "(null)";
 		return out;
 	}
@@ -156,7 +156,7 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 
 std::ostream& operator<<(std::ostream& out, CFNumberRef n)
 {
-	if(NULL == n)
+	if(nullptr == n)
 		out << "(null)";
 	else if(n == kCFNumberPositiveInfinity)
 		out << "+Inf";
@@ -180,7 +180,7 @@ std::ostream& operator<<(std::ostream& out, CFNumberRef n)
 
 std::ostream& operator<<(std::ostream& out, CFURLRef u)
 {
-	if(NULL == u) {
+	if(nullptr == u) {
 		out << "(null)";
 		return out;
 	}
@@ -188,12 +188,12 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 	CFStringRef s = CFURLGetString(u);
 #if !TARGET_OS_IPHONE
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
-		CFStringRef displayName = NULL;
+		CFStringRef displayName = nullptr;
 		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
 
-		if(noErr == result && NULL != displayName) {
+		if(noErr == result && nullptr != displayName) {
 			out << displayName;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(displayName), displayName = nullptr;
 		}
 	}
 	else
@@ -205,7 +205,7 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 
 std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 {
-	if(NULL == e) {
+	if(nullptr == e) {
 		out << "(null)";
 		return out;
 	}
@@ -213,7 +213,7 @@ std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 	CFStringRef r = CFErrorCopyDescription(e);
 	if(r) {
 		out << r;
-		CFRelease(r), r = NULL;
+		CFRelease(r), r = nullptr;
 	}
 
 	return out;
@@ -221,7 +221,7 @@ std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 
 std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 {
-	if(NULL == u) {
+	if(nullptr == u) {
 		out << "(null)";
 		return out;
 	}
@@ -229,7 +229,7 @@ std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 	CFStringRef r = CFUUIDCreateString(kCFAllocatorDefault, u);
 	if(r) {
 		out << r;
-		CFRelease(r), r = NULL;
+		CFRelease(r), r = nullptr;
 	}
 
 	return out;
@@ -305,7 +305,7 @@ std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& f
 
 std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout)
 {
-	if(NULL == layout) {
+	if(nullptr == layout) {
 		out << "(null)";
 		return out;
 	}

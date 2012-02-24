@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 
 size_t GetChannelLayoutSize(const AudioChannelLayout *layout)
 {
-	assert(NULL != layout);
+	assert(nullptr != layout);
 	return GetChannelLayoutSize(layout->mNumberChannelDescriptions);
 }
 
@@ -70,8 +70,8 @@ AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap)
 
 AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs)
 {
-	if(NULL == rhs)
-		return NULL;
+	if(nullptr == rhs)
+		return nullptr;
 
 	size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
 	AudioChannelLayout *channelLayout = static_cast<AudioChannelLayout *>(malloc(layoutSize));
@@ -84,7 +84,7 @@ AudioChannelLayout * CreateDefaultAudioChannelLayout(UInt32 channelsPerFrame)
 {
 	assert(0 < channelsPerFrame);
 
-	AudioChannelLayout *channelLayout = NULL;
+	AudioChannelLayout *channelLayout = nullptr;
 
 	switch(channelsPerFrame) {
 		case 1:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;

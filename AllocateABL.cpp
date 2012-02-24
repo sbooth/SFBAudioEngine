@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@ AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
 AudioBufferList *
 AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames)
 {
-	AudioBufferList *bufferList = NULL;
+	AudioBufferList *bufferList = nullptr;
 	
 	UInt32 numBuffers = interleaved ? 1 : channelsPerFrame;
 	UInt32 channelsPerBuffer = interleaved ? channelsPerFrame : 1;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,12 @@
 AudioBufferList *
 DeallocateABL(AudioBufferList *bufferList)
 {
-	assert(NULL != bufferList);
+	assert(nullptr != bufferList);
 	
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = NULL;
+		free(bufferList->mBuffers[bufferIndex].mData), bufferList->mBuffers[bufferIndex].mData = nullptr;
 	
-	free(bufferList), bufferList = NULL;
+	free(bufferList), bufferList = nullptr;
 	
-	return NULL;
+	return nullptr;
 }

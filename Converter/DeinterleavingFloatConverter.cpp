@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -70,8 +70,8 @@ DeinterleavingFloatConverter::~DeinterleavingFloatConverter()
 UInt32
 DeinterleavingFloatConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
 {
-	assert(NULL != inputBuffer);
-	assert(NULL != outputBuffer);
+	assert(nullptr != inputBuffer);
+	assert(nullptr != outputBuffer);
 	
 	// Nothing to do
 	if(0 == frameCount) {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,18 +43,18 @@ const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.Error
 
 InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 	
-	InputSource *inputSource = NULL;
+	InputSource *inputSource = nullptr;
 	
 	CFStringRef scheme = CFURLCopyScheme(url);
 
 	// If there is no scheme the URL is invalid
-	if(NULL == scheme) {
+	if(nullptr == scheme) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
-		return NULL;
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, nullptr);
+		return nullptr;
 	}
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
@@ -68,7 +68,7 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive))
 		inputSource = new HTTPInputSource(url);
 
-	CFRelease(scheme), scheme = NULL;
+	CFRelease(scheme), scheme = nullptr;
 
 	return inputSource;
 }
@@ -76,19 +76,19 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 #pragma mark Creation and Destruction
 
 InputSource::InputSource()
-	: mURL(NULL), mIsOpen(false)
+	: mURL(nullptr), mIsOpen(false)
 {}
 
 InputSource::InputSource(CFURLRef url)
-	: mURL(NULL), mIsOpen(false)
+	: mURL(nullptr), mIsOpen(false)
 {
-	assert(NULL != url);
+	assert(nullptr != url);
 	
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 }
 
 InputSource::InputSource(const InputSource& rhs)
-	: mURL(NULL), mIsOpen(false)
+	: mURL(nullptr), mIsOpen(false)
 {
 	*this = rhs;
 }
@@ -96,7 +96,7 @@ InputSource::InputSource(const InputSource& rhs)
 InputSource::~InputSource()
 {
 	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+		CFRelease(mURL), mURL = nullptr;
 }
 
 #pragma mark Operator Overloads
@@ -107,7 +107,7 @@ InputSource& InputSource::operator=(const InputSource& rhs)
 		return *this;
 
 	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+		CFRelease(mURL), mURL = nullptr;
 	
 	if(rhs.mURL)
 		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,7 @@ PCMConverter::~PCMConverter()
 
 UInt32 PCMConverter::Convert(const AudioBufferList *inputBuffer, AudioBufferList *outputBuffer, UInt32 frameCount)
 {
-	if(NULL == inputBuffer || NULL == outputBuffer)
+	if(nullptr == inputBuffer || nullptr == outputBuffer)
 		return 0;
 	
 	// Nothing to do

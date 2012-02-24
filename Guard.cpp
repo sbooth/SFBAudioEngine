@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 Guard::Guard()
 {
-	int success = pthread_cond_init(&mCondition, NULL);
+	int success = pthread_cond_init(&mCondition, nullptr);
 
 	if(0 != success) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Guard", "pthread_cond_init failed: " << strerror(success));

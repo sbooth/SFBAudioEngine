@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ static void Teardownmpg123()
 static ssize_t
 read_callback(void *dataSource, void *ptr, size_t size)
 {
-	assert(NULL != dataSource);
+	assert(nullptr != dataSource);
 	
 	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
 	return decoder->GetInputSource()->Read(ptr, size);
@@ -73,7 +73,7 @@ read_callback(void *dataSource, void *ptr, size_t size)
 static off_t
 lseek_callback(void *datasource, off_t offset, int whence)
 {
-	assert(NULL != datasource);
+	assert(nullptr != datasource);
 	
 	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(datasource);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -116,7 +116,7 @@ CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
 
 bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp3"), kCFCompareCaseInsensitive))
@@ -127,7 +127,7 @@ bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
@@ -139,7 +139,7 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 MPEGDecoder::MPEGDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDecoder(NULL), mBufferList(NULL), mCurrentFrame(0)
+	: AudioDecoder(inputSource), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
 {}
 
 MPEGDecoder::~MPEGDecoder()
@@ -161,8 +161,8 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	mDecoder = mpg123_new(NULL, NULL);
-	if(NULL == mDecoder) {
+	mDecoder = mpg123_new(nullptr, nullptr);
+	if(nullptr == mDecoder) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -171,7 +171,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
@@ -187,15 +187,15 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		return false;
@@ -205,7 +205,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
 	mpg123_param(mDecoder, MPG123_RESYNC_LIMIT, 2048, 0);
 
-	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, NULL)) {
+	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, nullptr)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -214,7 +214,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
@@ -230,19 +230,19 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
@@ -256,7 +256,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
@@ -272,19 +272,19 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
  	}
@@ -300,7 +300,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
@@ -316,19 +316,19 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
@@ -373,7 +373,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""), 
 															   displayName);
 			
@@ -389,19 +389,19 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
@@ -409,12 +409,12 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	// Allocate the buffer list
 	mBufferList = AllocateABL(mFormat, framesPerMPEGFrame);
 	
-	if(NULL == mBufferList) {
+	if(nullptr == mBufferList) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 		
 		return false;
 	}
@@ -435,7 +435,7 @@ bool MPEGDecoder::Close(CFErrorRef */*error*/)
 
 	if(mDecoder) {
 		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = NULL;
+		mpg123_delete(mDecoder), mDecoder = nullptr;
 	}
 
 	if(mBufferList)
@@ -448,25 +448,25 @@ bool MPEGDecoder::Close(CFErrorRef */*error*/)
 CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	mpg123_frameinfo mi;
 	if(MPG123_OK != mpg123_info(mDecoder, &mi)) {
 		return CFStringCreateWithFormat(kCFAllocatorDefault, 
-										NULL, 
+										nullptr, 
 										CFSTR("MPEG-1 Audio, %u channels, %u Hz"), 
 										mSourceFormat.mChannelsPerFrame, 
 										static_cast<unsigned int>(mSourceFormat.mSampleRate));
 	}
 
-	CFStringRef layerDescription = NULL;
+	CFStringRef layerDescription = nullptr;
 	switch(mi.layer) {
 		case 1:							layerDescription = CFSTR("Layer I");			break;
 		case 2:							layerDescription = CFSTR("Layer II");			break;
 		case 3:							layerDescription = CFSTR("Layer III");			break;
 	}
 	
-	CFStringRef channelDescription = NULL;
+	CFStringRef channelDescription = nullptr;
 	switch(mi.mode) {  
 		case MPG123_M_MONO:				channelDescription = CFSTR("Single Channel");	break;
 		case MPG123_M_DUAL:				channelDescription = CFSTR("Dual Channel");		break;
@@ -475,7 +475,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 	}
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("MPEG-1 Audio (%@), %@, %u Hz"), 
 									layerDescription,
 									channelDescription,
@@ -496,7 +496,7 @@ SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	UInt32 framesRead = 0;
@@ -535,7 +535,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 
 		// Read and decode an MPEG frame
 		off_t frameNumber;
-		unsigned char *audioData = NULL;
+		unsigned char *audioData = nullptr;
 		size_t bytesDecoded;
 		int result = mpg123_decode_frame(mDecoder, &frameNumber, &audioData, &bytesDecoded);
 

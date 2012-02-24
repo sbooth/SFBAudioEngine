@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -59,8 +59,8 @@ public:
 
 	// ========================================
 	// Audio access
-	virtual bool Open(CFErrorRef *error = NULL);
-	virtual bool Close(CFErrorRef *error = NULL);
+	virtual bool Open(CFErrorRef *error = nullptr);
+	virtual bool Close(CFErrorRef *error = nullptr);
 
 	// ========================================
 	// Attempt to read frameCount frames of audio, returning the actual number of frames read

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ myAudioFile_ReadProc(void		*inClientData,
 					 void		*buffer, 
 					 UInt32		*actualCount)
 {
-	assert(NULL != inClientData);
+	assert(nullptr != inClientData);
 
 	CoreAudioDecoder *decoder = static_cast<CoreAudioDecoder *>(inClientData);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -76,7 +76,7 @@ myAudioFile_ReadProc(void		*inClientData,
 static SInt64
 myAudioFile_GetSizeProc(void *inClientData)
 {
-	assert(NULL != inClientData);
+	assert(nullptr != inClientData);
 
 	CoreAudioDecoder *decoder = static_cast<CoreAudioDecoder *>(inClientData);
 	return decoder->GetInputSource()->GetLength();
@@ -86,20 +86,20 @@ myAudioFile_GetSizeProc(void *inClientData)
 
 CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 {
-	CFArrayRef		supportedExtensions			= NULL;
+	CFArrayRef		supportedExtensions			= nullptr;
 	UInt32			size						= sizeof(supportedExtensions);
 	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 
 																		 0, 
-																		 NULL, 
+																		 nullptr, 
 																		 &size, 
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 
-		return NULL;
+		return nullptr;
 	}
 	
 	return supportedExtensions;
@@ -107,20 +107,20 @@ CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 {
-	CFArrayRef		supportedMIMETypes			= NULL;
+	CFArrayRef		supportedMIMETypes			= nullptr;
 	UInt32			size						= sizeof(supportedMIMETypes);
 	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 
 																		 0, 
-																		 NULL, 
+																		 nullptr, 
 																		 &size, 
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 		
-		return NULL;
+		return nullptr;
 	}
 	
 	return CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
@@ -128,21 +128,21 @@ CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 
 bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 
-	CFArrayRef		supportedExtensions			= NULL;
+	CFArrayRef		supportedExtensions			= nullptr;
 	UInt32			size						= sizeof(supportedExtensions);
 	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 
 																		 0, 
-																		 NULL, 
+																		 nullptr, 
 																		 &size, 
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 		
 		return false;
 	}
@@ -158,28 +158,28 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 		}
 	}
 		
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 	
 	return extensionIsSupported;
 }
 
 bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 
-	CFArrayRef		supportedMIMETypes			= NULL;
+	CFArrayRef		supportedMIMETypes			= nullptr;
 	UInt32			size						= sizeof(supportedMIMETypes);
 	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 
 																		 0, 
-																		 NULL, 
+																		 nullptr, 
 																		 &size, 
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 		
 		return false;
 	}
@@ -195,7 +195,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 		}
 	}
 	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return mimeTypeIsSupported;
 }
@@ -203,7 +203,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 CoreAudioDecoder::CoreAudioDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mAudioFile(NULL), mExtAudioFile(NULL), mUseM4AWorkarounds(false), mCurrentFrame(0)
+	: AudioDecoder(inputSource), mAudioFile(nullptr), mExtAudioFile(nullptr), mUseM4AWorkarounds(false), mCurrentFrame(0)
 {}
 
 CoreAudioDecoder::~CoreAudioDecoder()
@@ -226,12 +226,12 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		return false;
 
 	// Open the input file
-	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, NULL, myAudioFile_GetSizeProc, NULL, 0, &mAudioFile);
+	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, nullptr, myAudioFile_GetSizeProc, nullptr, 0, &mAudioFile);
 
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
 		
-		if(NULL != error) {
+		if(nullptr != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
@@ -239,7 +239,7 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
 															   displayName);
 			
@@ -255,15 +255,15 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		return false;
@@ -274,7 +274,7 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
 		
-		if(NULL != error) {
+		if(nullptr != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
@@ -282,7 +282,7 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
 															   displayName);
 			
@@ -298,22 +298,22 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;
+		mAudioFile = nullptr;
 		
 		return false;
 	}
@@ -333,8 +333,8 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
+		mAudioFile = nullptr;		
+		mExtAudioFile = nullptr;
 		
 		return false;
 	}
@@ -397,16 +397,16 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
+		mAudioFile = nullptr;		
+		mExtAudioFile = nullptr;
 		
 		return false;
 	}
 	
 	// Setup the channel layout
 	// There is a bug in EAF where if the underlying AF doesn't return a channel layout it returns an empty struct
-//	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, NULL);
-	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, NULL);
+//	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
+	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, nullptr);
 	if(noErr == result) {
 		mChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
 //		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
@@ -424,8 +424,8 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 			if(noErr != result)
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 			
-			mAudioFile = NULL;		
-			mExtAudioFile = NULL;
+			mAudioFile = nullptr;		
+			mExtAudioFile = nullptr;
 			
 			return false;
 		}
@@ -451,8 +451,8 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
+		mAudioFile = nullptr;		
+		mExtAudioFile = nullptr;
 		
 		return false;
 	}
@@ -472,8 +472,8 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
+		mAudioFile = nullptr;		
+		mExtAudioFile = nullptr;
 		
 		return false;
 	}
@@ -498,8 +498,8 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;		
-		mExtAudioFile = NULL;
+		mAudioFile = nullptr;		
+		mExtAudioFile = nullptr;
 		
 		return false;
 	}
@@ -525,7 +525,7 @@ bool CoreAudioDecoder::Close(CFErrorRef */*error*/)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
-		mExtAudioFile = NULL;
+		mExtAudioFile = nullptr;
 	}
 
 	if(mAudioFile) {
@@ -533,7 +533,7 @@ bool CoreAudioDecoder::Close(CFErrorRef */*error*/)
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileClose failed: " << result);
 		
-		mAudioFile = NULL;
+		mAudioFile = nullptr;
 	}
 
 	mIsOpen = false;
@@ -593,7 +593,7 @@ SInt64 CoreAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);

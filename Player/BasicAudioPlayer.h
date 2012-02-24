@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,7 @@ public:
 	bool GetPreGain(double& preGain) const;
 	bool SetPreGain(double preGain);
 
-	inline bool IsPerformingSampleRateConversion() const { return (NULL != mSampleRateConverter); }
+	inline bool IsPerformingSampleRateConversion() const { return (nullptr != mSampleRateConverter); }
 
 	// Will return false if SRC is not being performed
 	bool SetSampleRateConverterQuality(UInt32 srcQuality);

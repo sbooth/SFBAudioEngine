@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 
 static int skip_callback(void *f, long n)
 {
-	assert(NULL != f);
+	assert(nullptr != f);
 	
 	MODDecoder *decoder = static_cast<MODDecoder *>(f);
 	return (decoder->GetInputSource()->SeekToOffset(decoder->GetInputSource()->GetOffset() + n) ? 0 : 1);
@@ -51,7 +51,7 @@ static int skip_callback(void *f, long n)
 
 static int getc_callback(void *f)
 {
-	assert(NULL != f);
+	assert(nullptr != f);
 	
 	MODDecoder *decoder = static_cast<MODDecoder *>(f);
 	
@@ -61,7 +61,7 @@ static int getc_callback(void *f)
 
 static long getnc_callback(char *ptr, long n, void *f)
 {
-	assert(NULL != f);
+	assert(nullptr != f);
 	
 	MODDecoder *decoder = static_cast<MODDecoder *>(f);
 	return static_cast<long>(decoder->GetInputSource()->Read(ptr, n));
@@ -86,7 +86,7 @@ CFArrayRef MODDecoder::CreateSupportedMIMETypes()
 
 bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
@@ -103,7 +103,7 @@ bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
@@ -123,7 +123,7 @@ bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 MODDecoder::MODDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), df(NULL), duh(NULL), dsr(NULL), mCurrentFrame(0), mTotalFrames(0)
+	: AudioDecoder(inputSource), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
 {}
 
 MODDecoder::~MODDecoder()
@@ -145,28 +145,28 @@ bool MODDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	dfs.open = NULL;
+	dfs.open = nullptr;
 	dfs.skip = skip_callback;
 	dfs.getc = getc_callback;
 	dfs.getnc = getnc_callback;
 	dfs.close = close_callback;
 
 	df = dumbfile_open_ex(this, &dfs);
-	if(NULL == df) {
+	if(nullptr == df) {
 		return false;
 	}
 
 	CFStringRef fileSystemPath = CFURLCopyFileSystemPath(GetURL(), kCFURLPOSIXPathStyle);
-	CFStringRef extension = NULL;
+	CFStringRef extension = nullptr;
 
 	CFRange range;
 	if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
 		extension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
 	}
 
-	CFRelease(fileSystemPath), fileSystemPath = NULL;
+	CFRelease(fileSystemPath), fileSystemPath = nullptr;
 
-	if(NULL == extension) {
+	if(nullptr == extension) {
 		return false;
 	}
 	
@@ -180,9 +180,9 @@ bool MODDecoder::Open(CFErrorRef *error)
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mod"), kCFCompareCaseInsensitive))
 		duh = dumb_read_mod(df);
 	
-	CFRelease(extension), extension = NULL;
+	CFRelease(extension), extension = nullptr;
 
-	if(NULL == duh) {
+	if(nullptr == duh) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -191,7 +191,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""), 
 															   displayName);
 			
@@ -207,19 +207,19 @@ bool MODDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;
+			CFRelease(errorDictionary), errorDictionary = nullptr;
 		}
 		
 		if(df)
-			dumbfile_close(df), df = NULL;
+			dumbfile_close(df), df = nullptr;
 
 		return false;
 	}
@@ -227,7 +227,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 	mTotalFrames = duh_get_length(duh);
 
 	dsr = duh_start_sigrenderer(duh, 0, 2, 0);
-	if(NULL == dsr) {
+	if(nullptr == dsr) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -236,7 +236,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""), 
 															   displayName);
 			
@@ -252,21 +252,21 @@ bool MODDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;
+			CFRelease(errorDictionary), errorDictionary = nullptr;
 		}
 
 		if(df)
-			dumbfile_close(df), df = NULL;
+			dumbfile_close(df), df = nullptr;
 		if(duh)
-			unload_duh(duh), duh = NULL;
+			unload_duh(duh), duh = nullptr;
 
 		return false;
 	}
@@ -306,11 +306,11 @@ bool MODDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	if(dsr)
-		duh_end_sigrenderer(dsr), dsr = NULL;
+		duh_end_sigrenderer(dsr), dsr = nullptr;
 	if(duh)
-		unload_duh(duh), duh = NULL;
+		unload_duh(duh), duh = nullptr;
 	if(df)
-		dumbfile_close(df), df = NULL;
+		dumbfile_close(df), df = nullptr;
 
 	mIsOpen = false;
 	return true;
@@ -319,10 +319,10 @@ bool MODDecoder::Close(CFErrorRef */*error*/)
 CFStringRef MODDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("MOD, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -335,7 +335,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
-		if(!Close(NULL) || !GetInputSource()->SeekToOffset(0) || !Open(NULL)) {
+		if(!Close(nullptr) || !GetInputSource()->SeekToOffset(0) || !Open(nullptr)) {
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.MOD", "Error reseting DUMB decoder");
 			return -1;
 		}
@@ -344,7 +344,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 	}
 
 	long framesToSkip = frame - mCurrentFrame;
-	duh_sigrenderer_generate_samples(dsr, 1, static_cast<float>(65536 / DUMB_SAMPLE_RATE), framesToSkip, NULL);
+	duh_sigrenderer_generate_samples(dsr, 1, static_cast<float>(65536 / DUMB_SAMPLE_RATE), framesToSkip, nullptr);
 	mCurrentFrame += framesToSkip;
 	
 	return mCurrentFrame;
@@ -352,7 +352,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	// EOF reached

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -35,5 +35,5 @@ CFStringRef CreateStringForOSType(OSType osType)
 	unsigned char formatID [4];
 	*(UInt32 *)formatID = OSSwapHostToBigInt32(osType);
 
-    return CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%.4s"), formatID);
+    return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%.4s"), formatID);
 }

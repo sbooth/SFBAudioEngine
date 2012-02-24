@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -69,59 +69,59 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderExtensions = NULL;
+	CFArrayRef decoderExtensions = nullptr;
 
 	decoderExtensions = FLACDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = WavPackDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MPEGDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = OggVorbisDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 #if !TARGET_OS_IPHONE
 	decoderExtensions = MusepackDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MonkeysAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 #endif
 
 	decoderExtensions = OggSpeexDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 #if !TARGET_OS_IPHONE
 	decoderExtensions = MODDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = TrueAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 #endif
 
 	decoderExtensions = LibsndfileDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = CoreAudioDecoder::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 	
 	return result;
 }
@@ -130,70 +130,70 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderMIMETypes = NULL;
+	CFArrayRef decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = FLACDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = WavPackDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = MPEGDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = OggVorbisDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 #if !TARGET_OS_IPHONE
 	decoderMIMETypes = MusepackDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = MonkeysAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 #endif
 
 	decoderMIMETypes = OggSpeexDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 #if !TARGET_OS_IPHONE
 	decoderMIMETypes = MODDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = TrueAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 #endif
 
 	decoderMIMETypes = LibsndfileDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = CoreAudioDecoder::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
 	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return result;
 }
 
 bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
-	if(NULL == supportedExtensions)
+	if(nullptr == supportedExtensions)
 		return false;
 	
 	bool extensionIsSupported = false;
@@ -207,18 +207,18 @@ bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 		}
 	}
 	
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 
 	return extensionIsSupported;
 }
 
 bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 
 	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
-	if(NULL == supportedMIMETypes)
+	if(nullptr == supportedMIMETypes)
 		return false;
 	
 	bool mimeTypeIsSupported = false;
@@ -232,52 +232,52 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 		}
 	}
 
-	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return mimeTypeIsSupported;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
-	return CreateDecoderForURL(url, NULL, error);
+	return CreateDecoderForURL(url, nullptr, error);
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 
 	// Create the input source which will feed the decoder
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 	
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, mimeType, error);
 	
-	if(NULL == decoder)
-		delete inputSource, inputSource = NULL;
+	if(nullptr == decoder)
+		delete inputSource, inputSource = nullptr;
 	
 	return decoder;
 }
 
-// If this returns NULL, the caller is responsible for deleting inputSource
+// If this returns nullptr, the caller is responsible for deleting inputSource
 // If this returns an AudioDecoder instance, the instance takes ownership of inputSource
 AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
 {
-	return CreateDecoderForInputSource(inputSource, NULL, error);
+	return CreateDecoderForInputSource(inputSource, nullptr, error);
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error)
 {
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
-	AudioDecoder *decoder = NULL;
+	AudioDecoder *decoder = nullptr;
 
 	// Open the input source if it isn't already
 	if(AutomaticallyOpenDecoders() && !inputSource->IsOpen() && !inputSource->Open(error))
-		return NULL;
+		return nullptr;
 
 	// As a factory this class has knowledge of its subclasses
 	// It would be possible (and perhaps preferable) to switch to a generic
@@ -300,88 +300,88 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 		if(FLACDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new FLACDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && WavPackDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && WavPackDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new WavPackDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && MPEGDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && MPEGDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new MPEGDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && OggVorbisDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && OggVorbisDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new OggVorbisDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
 #if !TARGET_OS_IPHONE
-		if(NULL == decoder && MusepackDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && MusepackDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new MusepackDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && MonkeysAudioDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && MonkeysAudioDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new MonkeysAudioDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
 #endif
-		if(NULL == decoder && OggSpeexDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && OggSpeexDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new OggSpeexDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
 #if !TARGET_OS_IPHONE
-		if(NULL == decoder && MODDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && MODDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new MODDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && TrueAudioDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && TrueAudioDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new TrueAudioDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
 #endif
-		if(NULL == decoder && LibsndfileDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && LibsndfileDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new LibsndfileDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
-		if(NULL == decoder && CoreAudioDecoder::HandlesMIMEType(mimeType)) {
+		if(nullptr == decoder && CoreAudioDecoder::HandlesMIMEType(mimeType)) {
 			decoder = new CoreAudioDecoder(inputSource);
 			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = NULL;
-				delete decoder, decoder = NULL;
+				decoder->mInputSource = nullptr;
+				delete decoder, decoder = nullptr;
 			}
 		}
 
 #if 0
 		if(releaseMIMEType)
-			CFRelease(mimeType), mimeType = NULL;
+			CFRelease(mimeType), mimeType = nullptr;
 #endif
 
 		if(decoder)
@@ -392,17 +392,17 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 	CFURLRef inputURL = inputSource->GetURL();
 	if(!inputURL)
-		return NULL;
+		return nullptr;
 
 	// Determining the extension isn't as simple as using CFURLCopyPathExtension (wouldn't that be nice?),
 	// because although the behavior on Lion works like one would expect, on Snow Leopard it returns
 	// a number that I believe is part of the inode number, but is definitely NOT the extension
-	CFStringRef pathExtension = NULL;
+	CFStringRef pathExtension = nullptr;
 #if !TARGET_OS_IPHONE
-	CFURLRef filePathURL = CFURLCreateFilePathURL(kCFAllocatorDefault, inputURL, NULL);
+	CFURLRef filePathURL = CFURLCreateFilePathURL(kCFAllocatorDefault, inputURL, nullptr);
 	if(filePathURL) {
 		pathExtension = CFURLCopyPathExtension(filePathURL);
-		CFRelease(filePathURL), filePathURL = NULL;
+		CFRelease(filePathURL), filePathURL = nullptr;
 	}
 	else
 #endif
@@ -417,7 +417,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 			CFStringRef displayName = CFURLCopyLastPathComponent(inputURL);
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""), 
 															   displayName);
 
@@ -433,18 +433,18 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
 
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   InputSourceErrorDomain, 
 								   InputSourceFileNotFoundError,
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	// TODO: Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
@@ -454,167 +454,167 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(FLACDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new FLACDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && WavPackDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new WavPackDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && MPEGDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new MPEGDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && OggVorbisDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new OggVorbisDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
 #if !TARGET_OS_IPHONE
-	if(NULL == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && MusepackDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new MusepackDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && MonkeysAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new MonkeysAudioDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
 #endif
-	if(NULL == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && OggSpeexDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new OggSpeexDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
 #if !TARGET_OS_IPHONE
-	if(NULL == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && MODDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new MODDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && TrueAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && TrueAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new TrueAudioDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
 #endif
-	if(NULL == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && LibsndfileDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new LibsndfileDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
-	if(NULL == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
+	if(nullptr == decoder && CoreAudioDecoder::HandlesFilesWithExtension(pathExtension)) {
 		decoder = new CoreAudioDecoder(inputSource);
 		if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-			decoder->mInputSource = NULL;
-			delete decoder, decoder = NULL;
+			decoder->mInputSource = nullptr;
+			delete decoder, decoder = nullptr;
 		}
 	}
 
-	CFRelease(pathExtension), pathExtension = NULL;
+	CFRelease(pathExtension), pathExtension = nullptr;
 
 	return decoder;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, error);
 
-	if(NULL == decoder)
-		delete inputSource, inputSource = NULL;
+	if(nullptr == decoder)
+		delete inputSource, inputSource = nullptr;
 
 	return decoder;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, error);
 
-	if(NULL == decoder)
-		delete inputSource, inputSource = NULL;
+	if(nullptr == decoder)
+		delete inputSource, inputSource = nullptr;
 
 	return decoder;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 
 	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
 
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, repeatCount, error);
 
-	if(NULL == decoder)
-		delete inputSource, inputSource = NULL;
+	if(nullptr == decoder)
+		delete inputSource, inputSource = nullptr;
 
 	return decoder;
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
 {
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	if(!inputSource->SupportsSeeking())
-		return NULL;
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 
 	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = NULL;
-		return NULL;
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, error);
 
-	if(NULL == regionDecoder) {
-		delete decoder, decoder = NULL;
-		return NULL;
+	if(nullptr == regionDecoder) {
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	return regionDecoder;
@@ -622,27 +622,27 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	if(!inputSource->SupportsSeeking())
-		return NULL;
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 
 	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = NULL;
-		return NULL;
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, error);
 
-	if(NULL == regionDecoder) {
-		delete decoder, decoder = NULL;
-		return NULL;
+	if(nullptr == regionDecoder) {
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	return regionDecoder;
@@ -650,27 +650,27 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 
 AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	if(NULL == inputSource)
-		return NULL;
+	if(nullptr == inputSource)
+		return nullptr;
 
 	if(!inputSource->SupportsSeeking())
-		return NULL;
+		return nullptr;
 
 	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 
 	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = NULL;
-		return NULL;
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, repeatCount, error);
 
-	if(NULL == regionDecoder) {
-		delete decoder, decoder = NULL;
-		return NULL;
+	if(nullptr == regionDecoder) {
+		delete decoder, decoder = nullptr;
+		return nullptr;
 	}
 
 	return regionDecoder;
@@ -678,33 +678,33 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 
 AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, CFErrorRef */*error*/)
 {
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 	
 	if(!decoder->SupportsSeeking())
-		return NULL;
+		return nullptr;
 	
 	return new LoopableRegionDecoder(decoder, startingFrame);
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
 {
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 	
 	if(!decoder->SupportsSeeking())
-		return NULL;
+		return nullptr;
 	
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
 }
 
 AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
 {
-	if(NULL == decoder)
-		return NULL;
+	if(nullptr == decoder)
+		return nullptr;
 	
 	if(!decoder->SupportsSeeking())
-		return NULL;
+		return nullptr;
 	
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount, repeatCount);
 }
@@ -712,16 +712,16 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 #pragma mark Creation and Destruction
 
 AudioDecoder::AudioDecoder()
-	: mInputSource(NULL), mChannelLayout(NULL), mIsOpen(false)
+	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false)
 {
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 AudioDecoder::AudioDecoder(InputSource *inputSource)
-	: mInputSource(inputSource), mChannelLayout(NULL), mIsOpen(false)
+	: mInputSource(inputSource), mChannelLayout(nullptr), mIsOpen(false)
 {
-	assert(NULL != inputSource);
+	assert(nullptr != inputSource);
 
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mFormat, 0, sizeof(mSourceFormat));
@@ -729,7 +729,7 @@ AudioDecoder::AudioDecoder(InputSource *inputSource)
 }
 
 AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
-	: mInputSource(NULL), mChannelLayout(NULL), mIsOpen(false)
+	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false)
 {
 	*this = rhs;
 }
@@ -737,10 +737,10 @@ AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
 AudioDecoder::~AudioDecoder()
 {
 	if(mInputSource)
-		delete mInputSource, mInputSource = NULL;
+		delete mInputSource, mInputSource = nullptr;
 
 	if(mChannelLayout)
-		free(mChannelLayout),mChannelLayout = NULL;
+		free(mChannelLayout),mChannelLayout = nullptr;
 }
 
 #pragma mark Operator Overloads
@@ -751,10 +751,10 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 		return *this;
 
 	if(mInputSource)
-		delete mInputSource, mInputSource = NULL;
+		delete mInputSource, mInputSource = nullptr;
 	
 	if(mChannelLayout)
-		free(mChannelLayout), mChannelLayout = NULL;
+		free(mChannelLayout), mChannelLayout = nullptr;
 
 	if(rhs.mInputSource)
 		mInputSource = rhs.mInputSource;
@@ -774,9 +774,9 @@ AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
 CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
-	CFStringRef		sourceFormatDescription		= NULL;
+	CFStringRef		sourceFormatDescription		= nullptr;
 	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
 	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
 																		 sizeof(mSourceFormat), 
@@ -787,7 +787,7 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 	}
 	
 	return sourceFormatDescription;
@@ -796,9 +796,9 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 CFStringRef AudioDecoder::CreateFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
-	CFStringRef		sourceFormatDescription		= NULL;
+	CFStringRef		sourceFormatDescription		= nullptr;
 	UInt32			specifierSize				= sizeof(sourceFormatDescription);
 	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
 																		 sizeof(mFormat), 
@@ -809,7 +809,7 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 	}
 	
 	return sourceFormatDescription;
@@ -818,9 +818,9 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
-	CFStringRef		channelLayoutDescription	= NULL;
+	CFStringRef		channelLayoutDescription	= nullptr;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);
 	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
 																		 sizeof(mChannelLayout), 
@@ -831,7 +831,7 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 	if(noErr != result) {
 		CFStringRef osType = CreateStringForOSType(result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
-		CFRelease(osType), osType = NULL;
+		CFRelease(osType), osType = nullptr;
 	}
 	
 	return channelLayoutDescription;
@@ -865,24 +865,24 @@ void AudioDecoder::SetRenderingFinishedCallback(AudioDecoderCallback callback, v
 
 void AudioDecoder::PerformDecodingStartedCallback()
 {
-	if(NULL != mCallbacks[0].mCallback)
+	if(nullptr != mCallbacks[0].mCallback)
 		mCallbacks[0].mCallback(mCallbacks[0].mContext, this);
 }
 
 void AudioDecoder::PerformDecodingFinishedCallback()
 {
-	if(NULL != mCallbacks[1].mCallback)
+	if(nullptr != mCallbacks[1].mCallback)
 		mCallbacks[1].mCallback(mCallbacks[1].mContext, this);
 }
 
 void AudioDecoder::PerformRenderingStartedCallback()
 {
-	if(NULL != mCallbacks[2].mCallback)
+	if(nullptr != mCallbacks[2].mCallback)
 		mCallbacks[2].mCallback(mCallbacks[2].mContext, this);
 }
 
 void AudioDecoder::PerformRenderingFinishedCallback()
 {
-	if(NULL != mCallbacks[3].mCallback)
+	if(nullptr != mCallbacks[3].mCallback)
 		mCallbacks[3].mCallback(mCallbacks[3].mContext, this);
 }

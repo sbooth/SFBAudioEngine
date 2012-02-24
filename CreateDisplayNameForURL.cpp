@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -39,15 +39,15 @@
 CFStringRef
 CreateDisplayNameForURL(CFURLRef url)
 {
-	assert(NULL != url);
+	assert(nullptr != url);
 
-	CFStringRef displayName = NULL;
+	CFStringRef displayName = nullptr;
 
 #if !TARGET_OS_IPHONE
 	CFStringRef scheme = CFURLCopyScheme(url);
 	if(scheme) {
 		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
-		CFRelease(scheme), scheme = NULL;
+		CFRelease(scheme), scheme = nullptr;
 
 		if(isFileURL) {
 			OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
@@ -62,7 +62,7 @@ CreateDisplayNameForURL(CFURLRef url)
 			CFRetain(displayName);
 		}
 	}
-	// If scheme is NULL the URL is probably invalid, but can still be logged
+	// If scheme is nullptr the URL is probably invalid, but can still be logged
 	else {
 		displayName = CFURLGetString(url);
 		CFRetain(displayName);

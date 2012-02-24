@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,13 +34,13 @@
 #include "DeallocateABL.h"
 
 DecoderStateData::DecoderStateData()
-	: mDecoder(NULL), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
+	: mDecoder(nullptr), mBufferList(nullptr), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mBufferList(NULL), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
+	: mDecoder(decoder), mBufferList(nullptr), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 {
-	assert(NULL != decoder);
+	assert(nullptr != decoder);
 	
 	// NB: The decoder may return an estimate of the total frames
 	mTotalFrames = mDecoder->GetTotalFrames();
@@ -49,8 +49,8 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 DecoderStateData::~DecoderStateData()
 {
 	// Delete the decoder
-	if(NULL != mDecoder)
-		delete mDecoder, mDecoder = NULL;
+	if(nullptr != mDecoder)
+		delete mDecoder, mDecoder = nullptr;
 
 	DeallocateBufferList();
 }
@@ -65,7 +65,7 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 
 void DecoderStateData::DeallocateBufferList()
 {
-	if(NULL != mBufferList) {
+	if(nullptr != mBufferList) {
 		mBufferCapacityFrames = 0;
 		mBufferList = DeallocateABL(mBufferList);
 	}
@@ -81,7 +81,7 @@ void DecoderStateData::ResetBufferList()
 
 UInt32 DecoderStateData::ReadAudio(UInt32 frameCount)
 {
-	if(NULL == mDecoder)
+	if(nullptr == mDecoder)
 		return 0;
 
 	ResetBufferList();

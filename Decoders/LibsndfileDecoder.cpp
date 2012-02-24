@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 static sf_count_t
 my_sf_vio_get_filelen(void *user_data)
 {
-	assert(NULL != user_data);
+	assert(nullptr != user_data);
 
 	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
 	return decoder->GetInputSource()->GetLength();
@@ -47,7 +47,7 @@ my_sf_vio_get_filelen(void *user_data)
 static sf_count_t
 my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
 {
-	assert(NULL != user_data);
+	assert(nullptr != user_data);
 	
 	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -77,7 +77,7 @@ my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
 static sf_count_t
 my_sf_vio_read(void *ptr, sf_count_t count, void *user_data)
 {
-	assert(NULL != user_data);
+	assert(nullptr != user_data);
 
 	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
 	return decoder->GetInputSource()->Read(ptr, count);
@@ -86,7 +86,7 @@ my_sf_vio_read(void *ptr, sf_count_t count, void *user_data)
 static sf_count_t
 my_sf_vio_tell(void *user_data)
 {
-	assert(NULL != user_data);
+	assert(nullptr != user_data);
 
 	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
 	return decoder->GetInputSource()->GetOffset();
@@ -97,7 +97,7 @@ my_sf_vio_tell(void *user_data)
 CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 {
 	int majorCount = 0;
-	sf_command(NULL, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
+	sf_command(nullptr, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
 
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, majorCount, &kCFTypeArrayCallBacks);
 
@@ -105,11 +105,11 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 	for(int i = 0; i < majorCount; ++i) {	
 		SF_FORMAT_INFO formatInfo;
 		formatInfo.format = i;
-		if(0 == sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
+		if(0 == sf_command(nullptr, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
 			CFStringRef extension = CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8);
 			if(extension) {
 				CFArrayAppendValue(supportedExtensions, extension);
-				CFRelease(extension), extension = NULL;
+				CFRelease(extension), extension = nullptr;
 			}
 		}
 		else
@@ -121,17 +121,17 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef LibsndfileDecoder::CreateSupportedMIMETypes()
 {
-	return CFArrayCreate(kCFAllocatorDefault, NULL, 0, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, nullptr, 0, &kCFTypeArrayCallBacks);
 }
 
 bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
 
-	if(NULL == supportedExtensions)
+	if(nullptr == supportedExtensions)
 		return false;
 	
 	bool extensionIsSupported = false;
@@ -145,7 +145,7 @@ bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 		}
 	}
 		
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 	
 	return extensionIsSupported;
 }
@@ -158,7 +158,7 @@ bool LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
 #pragma mark Creation and Destruction
 
 LibsndfileDecoder::LibsndfileDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mFile(NULL), mReadMethod(eUnknown)
+	: AudioDecoder(inputSource), mFile(nullptr), mReadMethod(eUnknown)
 {
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 }
@@ -187,16 +187,16 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 	virtualIO.get_filelen	= my_sf_vio_get_filelen;
 	virtualIO.seek			= my_sf_vio_seek;
 	virtualIO.read			= my_sf_vio_read;
-	virtualIO.write			= NULL;
+	virtualIO.write			= nullptr;
 	virtualIO.tell			= my_sf_vio_tell;
 
 	// Open the input file
 	mFile = sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this);
 
-	if(NULL == mFile) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_open_virtual failed: " << sf_error(NULL));
+	if(nullptr == mFile) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
 
-		if(NULL != error) {
+		if(nullptr != error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
 																			   &kCFTypeDictionaryKeyCallBacks,
@@ -204,7 +204,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
 															   displayName);
 
@@ -220,15 +220,15 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		return false;
@@ -407,7 +407,7 @@ bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
 		if(0 != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_close failed: " << result);
 
-		mFile = NULL;
+		mFile = nullptr;
 	}
 
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
@@ -420,18 +420,18 @@ bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
 CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	SF_FORMAT_INFO formatInfo;
 	formatInfo.format = mFileInfo.format;
 
-	if(0 != sf_command(NULL, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
+	if(0 != sf_command(nullptr, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
-		return NULL;
+		return nullptr;
 	}
 	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("%s, %u channels, %u Hz"), 
 									formatInfo.name,
 									mSourceFormat.mChannelsPerFrame, 
@@ -464,7 +464,7 @@ SInt64 LibsndfileDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	sf_count_t framesRead = 0;

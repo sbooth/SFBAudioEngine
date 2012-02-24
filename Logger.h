@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -115,17 +115,17 @@ namespace logger {
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
 	// The meat & potatoes
-	void Log(levels level, const char *facility, const char *message, const char *function = NULL, const char *file = NULL, int line = -1);
+	void Log(levels level, const char *facility, const char *message, const char *function = nullptr, const char *file = nullptr, int line = -1);
 
 	// Convenience functions
-	inline void Emerg(const char *message)			{ Log(emerg, NULL, message); }
-	inline void Alert(const char *message)			{ Log(alert, NULL, message); }
-	inline void Crit(const char *message)			{ Log(crit, NULL, message); }
-	inline void Err(const char *message)			{ Log(err, NULL, message); }
-	inline void Warn(const char *message)			{ Log(warning, NULL, message); }
-	inline void Notice(const char *message)			{ Log(notice, NULL, message); }
-	inline void Info(const char *message)			{ Log(info, NULL, message); }
-	inline void Debug(const char *message)			{ Log(debug, NULL, message); }
+	inline void Emerg(const char *message)			{ Log(emerg, nullptr, message); }
+	inline void Alert(const char *message)			{ Log(alert, nullptr, message); }
+	inline void Crit(const char *message)			{ Log(crit, nullptr, message); }
+	inline void Err(const char *message)			{ Log(err, nullptr, message); }
+	inline void Warn(const char *message)			{ Log(warning, nullptr, message); }
+	inline void Notice(const char *message)			{ Log(notice, nullptr, message); }
+	inline void Info(const char *message)			{ Log(info, nullptr, message); }
+	inline void Debug(const char *message)			{ Log(debug, nullptr, message); }
 };
 
 #include <CoreFoundation/CoreFoundation.h>

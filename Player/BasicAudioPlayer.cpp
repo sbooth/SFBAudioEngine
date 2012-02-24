@@ -108,7 +108,7 @@ myIOProc(AudioDeviceID				inDevice,
 		 const AudioTimeStamp		*inOutputTime,
 		 void						*inClientData)
 {
-	assert(NULL != inClientData);
+	assert(nullptr != inClientData);
 
 	BasicAudioPlayer *player = static_cast<BasicAudioPlayer *>(inClientData);
 	return player->Render(inDevice, inNow, inInputData, inInputTime, outOutputData, inOutputTime);
@@ -120,7 +120,7 @@ myAudioObjectPropertyListenerProc(AudioObjectID							inObjectID,
 								  const AudioObjectPropertyAddress		inAddresses[],
 								  void									*inClientData)
 {
-	assert(NULL != inClientData);
+	assert(nullptr != inClientData);
 	
 	BasicAudioPlayer *player = static_cast<BasicAudioPlayer *>(inClientData);
 	return player->AudioObjectPropertyChanged(inObjectID, inNumberAddresses, inAddresses);
@@ -132,7 +132,7 @@ myAudioObjectPropertyListenerProc(AudioObjectID							inObjectID,
 static void *
 decoderEntry(void *arg)
 {
-	assert(NULL != arg);
+	assert(nullptr != arg);
 	
 	BasicAudioPlayer *player = static_cast<BasicAudioPlayer *>(arg);
 	return player->DecoderThreadEntry();
@@ -144,7 +144,7 @@ decoderEntry(void *arg)
 static void *
 collectorEntry(void *arg)
 {
-	assert(NULL != arg);
+	assert(nullptr != arg);
 	
 	BasicAudioPlayer *player = static_cast<BasicAudioPlayer *>(arg);
 	return player->CollectorThreadEntry();
@@ -160,8 +160,8 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 							   AudioStreamPacketDescription		**outDataPacketDescription,
 							   void								*inUserData)
 {	
-	assert(NULL != inUserData);
-	assert(NULL != ioNumberDataPackets);
+	assert(nullptr != inUserData);
+	assert(nullptr != ioNumberDataPackets);
 	
 	BasicAudioPlayer *player = static_cast<BasicAudioPlayer *>(inUserData);	
 	return player->FillSampleRateConversionBuffer(inAudioConverter, ioNumberDataPackets, ioData, outDataPacketDescription);
@@ -172,11 +172,11 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 
 
 BasicAudioPlayer::BasicAudioPlayer()
-	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(NULL), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(NULL), mRingBuffer(NULL), mRingBufferChannelLayout(NULL), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(NULL), mSampleRateConverter(NULL), mSampleRateConversionBuffer(NULL), mOutputBuffer(NULL), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(1.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
+	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(nullptr), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(nullptr), mSampleRateConverter(nullptr), mSampleRateConversionBuffer(nullptr), mOutputBuffer(nullptr), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(1.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
 {
-	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);
+	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
 	
-	if(NULL == mDecoderQueue)
+	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
 	mRingBuffer = new CARingBuffer();
@@ -184,17 +184,17 @@ BasicAudioPlayer::BasicAudioPlayer()
 	// ========================================
 	// Initialize the decoder array
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex)
-		mActiveDecoders[bufferIndex] = NULL;
+		mActiveDecoders[bufferIndex] = nullptr;
 
 	// ========================================
 	// Launch the decoding thread
 	mKeepDecoding = true;
-	int creationResult = pthread_create(&mDecoderThread, NULL, decoderEntry, this);
+	int creationResult = pthread_create(&mDecoderThread, nullptr, decoderEntry, this);
 	if(0 != creationResult) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.BasicAudioPlayer", "pthread_create failed: " << strerror(creationResult));
 		
-		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
-		delete mRingBuffer, mRingBuffer = NULL;
+		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
+		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw std::runtime_error("pthread_create failed");
 	}
@@ -202,21 +202,21 @@ BasicAudioPlayer::BasicAudioPlayer()
 	// ========================================
 	// Launch the collector thread
 	mKeepCollecting = true;
-	creationResult = pthread_create(&mCollectorThread, NULL, collectorEntry, this);
+	creationResult = pthread_create(&mCollectorThread, nullptr, collectorEntry, this);
 	if(0 != creationResult) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.BasicAudioPlayer", "pthread_create failed: " << strerror(creationResult));
 		
 		mKeepDecoding = false;
 		mDecoderSemaphore.Signal();
 		
-		int joinResult = pthread_join(mDecoderThread, NULL);
+		int joinResult = pthread_join(mDecoderThread, nullptr);
 		if(0 != joinResult)
 			LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "pthread_join failed: " << strerror(joinResult));
 		
 		mDecoderThread = static_cast<pthread_t>(0);
 		
-		CFRelease(mDecoderQueue), mDecoderQueue = NULL;
-		delete mRingBuffer, mRingBuffer = NULL;
+		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
+		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw std::runtime_error("pthread_create failed");
 	}
@@ -251,7 +251,7 @@ BasicAudioPlayer::BasicAudioPlayer()
     OSStatus hwResult = AudioObjectGetPropertyData(kAudioObjectSystemObject,
 												   &propertyAddress,
 												   0,
-												   NULL,
+												   nullptr,
 												   &dataSize,
 												   &mOutputDeviceID);
 	
@@ -278,7 +278,7 @@ BasicAudioPlayer::~BasicAudioPlayer()
 	mKeepDecoding = false;
 	mDecoderSemaphore.Signal();
 
-	int joinResult = pthread_join(mDecoderThread, NULL);
+	int joinResult = pthread_join(mDecoderThread, nullptr);
 	if(0 != joinResult)
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "pthread_join failed: " << strerror(joinResult));
 	
@@ -288,7 +288,7 @@ BasicAudioPlayer::~BasicAudioPlayer()
 	mKeepCollecting = false;
 	mCollectorSemaphore.Signal();
 	
-	joinResult = pthread_join(mCollectorThread, NULL);
+	joinResult = pthread_join(mCollectorThread, nullptr);
 	if(0 != joinResult)
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "pthread_join failed: " << strerror(joinResult));
 	
@@ -296,8 +296,8 @@ BasicAudioPlayer::~BasicAudioPlayer()
 
 	// Force any decoders left hanging by the collector to end
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-		if(NULL != mActiveDecoders[bufferIndex])
-			delete mActiveDecoders[bufferIndex], mActiveDecoders[bufferIndex] = NULL;
+		if(nullptr != mActiveDecoders[bufferIndex])
+			delete mActiveDecoders[bufferIndex], mActiveDecoders[bufferIndex] = nullptr;
 	}
 	
 	// Clean up any queued decoders
@@ -307,25 +307,25 @@ BasicAudioPlayer::~BasicAudioPlayer()
 		delete decoder;
 	}
 	
-	CFRelease(mDecoderQueue), mDecoderQueue = NULL;
+	CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 
 	// Clean up the ring buffer and associated resources
 	if(mRingBuffer)
-		delete mRingBuffer, mRingBuffer = NULL;
+		delete mRingBuffer, mRingBuffer = nullptr;
 
 	if(mRingBufferChannelLayout)
-		free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
+		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
 	// Clean up the converters and conversion buffers
 	if(mOutputConverters) {
 		for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
-		delete [] mOutputConverters, mOutputConverters = NULL;
+			delete mOutputConverters[i], mOutputConverters[i] = nullptr;
+		delete [] mOutputConverters, mOutputConverters = nullptr;
 	}
 	
 	if(mSampleRateConverter) {
 		OSStatus result = AudioConverterDispose(mSampleRateConverter);
-		mSampleRateConverter = NULL;
+		mSampleRateConverter = nullptr;
 
 		if(noErr != result)
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioConverterDispose failed: " << result);
@@ -387,7 +387,7 @@ BasicAudioPlayer::PlayerState BasicAudioPlayer::GetPlayerState() const
 
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return BasicAudioPlayer::eStopped;
 
 	if(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags)
@@ -403,8 +403,8 @@ CFURLRef BasicAudioPlayer::GetPlayingURL() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
-		return NULL;
+	if(nullptr == currentDecoderState)
+		return nullptr;
 	
 	return currentDecoderState->mDecoder->GetURL();
 }
@@ -427,7 +427,7 @@ bool BasicAudioPlayer::GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFr
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	currentFrame	= (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
@@ -452,7 +452,7 @@ bool BasicAudioPlayer::GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterv
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	SInt64 currentFrame		= (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
@@ -468,7 +468,7 @@ bool BasicAudioPlayer::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& 
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	currentFrame		= (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
@@ -486,7 +486,7 @@ bool BasicAudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);
@@ -501,7 +501,7 @@ bool BasicAudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
@@ -515,7 +515,7 @@ bool BasicAudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 	
 	SInt64 desiredFrame		= static_cast<SInt64>(timeInSeconds * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
@@ -528,7 +528,7 @@ bool BasicAudioPlayer::SeekToFrame(SInt64 frame)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 	
 	if(!currentDecoderState->mDecoder->SupportsSeeking())
@@ -549,7 +549,7 @@ bool BasicAudioPlayer::SupportsSeeking() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 	
 	return currentDecoderState->mDecoder->SupportsSeeking();
@@ -595,7 +595,7 @@ bool BasicAudioPlayer::SetPreGain(double preGain)
 
 bool BasicAudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 {
-	if(NULL == mSampleRateConverter)
+	if(nullptr == mSampleRateConverter)
 		return false;
 
 	Guard::Locker lock(mGuard);
@@ -630,7 +630,7 @@ bool BasicAudioPlayer::SetSampleRateConverterQuality(UInt32 srcQuality)
 
 bool BasicAudioPlayer::SetSampleRateConverterComplexity(OSType srcComplexity)
 {
-	if(NULL == mSampleRateConverter)
+	if(nullptr == mSampleRateConverter)
 		return false;
 
 	Guard::Locker lock(mGuard);
@@ -680,7 +680,7 @@ bool BasicAudioPlayer::OutputDeviceIsHogged() const
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &hogPID);
 	
@@ -709,7 +709,7 @@ bool BasicAudioPlayer::StartHoggingOutputDevice()
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &hogPID);
 	
@@ -743,7 +743,7 @@ bool BasicAudioPlayer::StartHoggingOutputDevice()
 	result = AudioObjectSetPropertyData(mOutputDeviceID, 
 										&propertyAddress, 
 										0, 
-										NULL, 
+										nullptr, 
 										sizeof(hogPID), 
 										&hogPID);
 	
@@ -776,7 +776,7 @@ bool BasicAudioPlayer::StopHoggingOutputDevice()
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &hogPID);
 	
@@ -808,7 +808,7 @@ bool BasicAudioPlayer::StopHoggingOutputDevice()
 	result = AudioObjectSetPropertyData(mOutputDeviceID, 
 										&propertyAddress, 
 										0, 
-										NULL, 
+										nullptr, 
 										sizeof(hogPID), 
 										&hogPID);
 	
@@ -849,7 +849,7 @@ bool BasicAudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume
 	}
 
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize, &volume);
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
@@ -874,7 +874,7 @@ bool BasicAudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 		return false;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, sizeof(volume), &volume);
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
@@ -898,7 +898,7 @@ bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 	}
 
 	UInt32 dataSize;
-	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
+	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize);
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
@@ -907,16 +907,16 @@ bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 
 	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
 
-	if(NULL == bufferList) {
+	if(nullptr == bufferList) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Unable to allocate << " << dataSize << " bytes");
 		return false;
 	}
 
-	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
+	result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize, bufferList);
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
-		free(bufferList), bufferList = NULL;
+		free(bufferList), bufferList = nullptr;
 		return false;
 	}
 
@@ -924,7 +924,7 @@ bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
 
-	free(bufferList), bufferList = NULL;
+	free(bufferList), bufferList = nullptr;
 	return true;
 }
 
@@ -943,7 +943,7 @@ bool BasicAudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32
 
 	UInt32 preferredChannels [2];
 	UInt32 dataSize = sizeof(preferredChannels);
-	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize, &preferredChannels);
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
@@ -971,7 +971,7 @@ bool BasicAudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &deviceUID);
 	
@@ -990,8 +990,8 @@ bool BasicAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	AudioDeviceID		deviceID		= kAudioDeviceUnknown;
 	UInt32				specifierSize	= 0;
 
-	// If NULL was passed as the device UID, use the default output device
-	if(NULL == deviceUID) {
+	// If nullptr was passed as the device UID, use the default output device
+	if(nullptr == deviceUID) {
 		AudioObjectPropertyAddress propertyAddress = { 
 			kAudioHardwarePropertyDefaultOutputDevice, 
 			kAudioObjectPropertyScopeGlobal, 
@@ -1003,7 +1003,7 @@ bool BasicAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
 													 &propertyAddress,
 													 0,
-													 NULL,
+													 nullptr,
 													 &specifierSize,
 													 &deviceID);
 		
@@ -1029,7 +1029,7 @@ bool BasicAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject,
 													 &propertyAddress,
 													 0,
-													 NULL,
+													 nullptr,
 													 &specifierSize,
 													 &translation);
 		
@@ -1086,7 +1086,7 @@ bool BasicAudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate) cons
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &deviceSampleRate);
 	
@@ -1111,7 +1111,7 @@ bool BasicAudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 sizeof(deviceSampleRate),
 												 &deviceSampleRate);
 	
@@ -1139,7 +1139,7 @@ bool BasicAudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams) con
 	OSStatus result = AudioObjectGetPropertyDataSize(mOutputDeviceID, 
 													 &propertyAddress, 
 													 0,
-													 NULL,
+													 nullptr,
 													 &dataSize);
 	
 	if(kAudioHardwareNoError != result) {
@@ -1153,7 +1153,7 @@ bool BasicAudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams) con
 	result = AudioObjectGetPropertyData(mOutputDeviceID, 
 										&propertyAddress, 
 										0, 
-										NULL, 
+										nullptr, 
 										&dataSize, 
 										audioStreamIDs);
 	
@@ -1187,7 +1187,7 @@ bool BasicAudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, Audi
 	OSStatus result = AudioObjectGetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &virtualFormat);	
 	
@@ -1217,7 +1217,7 @@ bool BasicAudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, cons
 	OSStatus result = AudioObjectSetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 sizeof(virtualFormat),
 												 &virtualFormat);	
 	
@@ -1247,7 +1247,7 @@ bool BasicAudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, Aud
 	OSStatus result = AudioObjectGetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &physicalFormat);	
 	
@@ -1277,7 +1277,7 @@ bool BasicAudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, con
 	OSStatus result = AudioObjectSetPropertyData(streamID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 sizeof(physicalFormat),
 												 &physicalFormat);	
 	
@@ -1293,12 +1293,12 @@ bool BasicAudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, con
 
 bool BasicAudioPlayer::Enqueue(CFURLRef url)
 {
-	if(NULL == url)
+	if(nullptr == url)
 		return false;
 	
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
 	
-	if(NULL == decoder)
+	if(nullptr == decoder)
 		return false;
 	
 	bool success = Enqueue(decoder);
@@ -1311,7 +1311,7 @@ bool BasicAudioPlayer::Enqueue(CFURLRef url)
 
 bool BasicAudioPlayer::Enqueue(AudioDecoder *decoder)
 {
-	if(NULL == decoder)
+	if(nullptr == decoder)
 		return false;
 
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Enqueuing \"" << decoder->GetURL() << "\"");
@@ -1321,7 +1321,7 @@ bool BasicAudioPlayer::Enqueue(AudioDecoder *decoder)
 	// threads a crash can occur in mRingBuffer->Allocate() under a sitation similar to the following:
 	//  1. Thread A calls Enqueue() for decoder A
 	//  2. Thread B calls Enqueue() for decoder B
-	//  3. Both threads enter the if(NULL == GetCurrentDecoderState() && queueEmpty) block
+	//  3. Both threads enter the if(nullptr == GetCurrentDecoderState() && queueEmpty) block
 	//  4. Thread A is suspended
 	//  5. Thread B finishes the ring buffer setup, and signals the decoding thread
 	//  6. The decoding thread starts decoding
@@ -1335,16 +1335,16 @@ bool BasicAudioPlayer::Enqueue(AudioDecoder *decoder)
 	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
 
 	// If there are no decoders in the queue, set up for playback
-	if(NULL == GetCurrentDecoderState() && queueEmpty) {
+	if(nullptr == GetCurrentDecoderState() && queueEmpty) {
 		if(mRingBufferChannelLayout)
-			free(mRingBufferChannelLayout), mRingBufferChannelLayout = NULL;
+			free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
 		// Open the decoder if necessary
-		CFErrorRef error = NULL;
+		CFErrorRef error = nullptr;
 		if(!decoder->IsOpen() && !decoder->Open(&error)) {
 			if(error) {
 				LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error opening decoder: " << error);
-				CFRelease(error), error = NULL;
+				CFRelease(error), error = nullptr;
 			}
 
 			return false;
@@ -1358,7 +1358,7 @@ bool BasicAudioPlayer::Enqueue(AudioDecoder *decoder)
 		mRingBufferChannelLayout				= CopyChannelLayout(decoder->GetChannelLayout());
 
 		// Assign a default channel layout to the ring buffer if the decoder has an unknown layout
-		if(NULL == mRingBufferChannelLayout)
+		if(nullptr == mRingBufferChannelLayout)
 			mRingBufferChannelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
 
 		if(!CreateConvertersAndSRCBuffer()) {
@@ -1385,15 +1385,15 @@ bool BasicAudioPlayer::Enqueue(AudioDecoder *decoder)
 		}
 
 		// If the decoder has an explicit channel layout, enqueue it if it matches the ring buffer's channel layout
-		if(NULL != nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
+		if(nullptr != nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Enqueue failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 			return false;
 		}
 		// If the decoder doesn't have an explicit channel layout, enqueue it if the default layout matches
-		else if(NULL == nextChannelLayout) {
+		else if(nullptr == nextChannelLayout) {
 			AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
 			bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
-			free(defaultLayout), defaultLayout = NULL;
+			free(defaultLayout), defaultLayout = nullptr;
 
 			if(!layoutsMatch) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Enqueue failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
@@ -1415,7 +1415,7 @@ bool BasicAudioPlayer::SkipToNextTrack()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
-	if(NULL == currentDecoderState)
+	if(nullptr == currentDecoderState)
 		return false;
 
 	OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
@@ -1500,7 +1500,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 #pragma unused(inOutputTime)
 
 	assert(inDevice == mOutputDeviceID);
-	assert(NULL != outOutputData);
+	assert(nullptr != outOutputData);
 
 	// ========================================
 	// RENDERING
@@ -1534,14 +1534,14 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 			
 			// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
 			// in the proper order multiple passes are made here
-			while(NULL != decoderState) {
+			while(nullptr != decoderState) {
 				SInt64 timeStamp = decoderState->mTimeStamp;
 
 				if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
 					decoderState->mDecoder->PerformRenderingFinishedCallback();			
 					
 					OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
-					decoderState = NULL;
+					decoderState = nullptr;
 					
 					// Since rendering is finished, signal the collector to clean up this decoder
 					mCollectorSemaphore.Signal();
@@ -1577,7 +1577,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 														  this,
 														  &framesToRead, 
 														  mOutputBuffer,
-														  NULL);
+														  nullptr);
 		
 		if(noErr != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioConverterFillComplexBuffer failed: " << result);
@@ -1617,7 +1617,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 
 	// Iterate through each stream and render output in the stream's format
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL == mOutputConverters[i])
+		if(nullptr == mOutputConverters[i])
 			continue;
 
 		// Convert to the output device's format
@@ -1650,7 +1650,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 	
 	// mActiveDecoders is not an ordered array, so to ensure that callbacks are performed
 	// in the proper order multiple passes are made here
-	while(NULL != decoderState) {
+	while(nullptr != decoderState) {
 		SInt64 timeStamp = decoderState->mTimeStamp;
 		
 		SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
@@ -1667,7 +1667,7 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 			decoderState->mDecoder->PerformRenderingFinishedCallback();			
 
 			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
-			decoderState = NULL;
+			decoderState = nullptr;
 
 			// Since rendering is finished, signal the collector to clean up this decoder
 			mCollectorSemaphore.Signal();
@@ -1705,7 +1705,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
-																 NULL, 
+																 nullptr, 
 																 &dataSize,
 																 &isRunning);
 					
@@ -1734,7 +1734,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
-																 NULL, 
+																 nullptr, 
 																 &dataSize,
 																 &deviceSampleRate);
 					
@@ -1764,11 +1764,11 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 						LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "RemoveVirtualFormatPropertyListeners failed");
 
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-						if(NULL != mOutputConverters[i])
-							delete mOutputConverters[i], mOutputConverters[i] = NULL;
+						if(nullptr != mOutputConverters[i])
+							delete mOutputConverters[i], mOutputConverters[i] = nullptr;
 					}
 
-					delete [] mOutputConverters, mOutputConverters = NULL;
+					delete [] mOutputConverters, mOutputConverters = nullptr;
 
 					mOutputDeviceStreamIDs.clear();
 
@@ -1782,7 +1782,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 
 					mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
 					for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-						mOutputConverters[i] = NULL;
+						mOutputConverters[i] = nullptr;
 
 					if(!CreateConvertersAndSRCBuffer())
 						LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "CreateConvertersAndSRCBuffer failed");
@@ -1819,7 +1819,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
-																 NULL, 
+																 nullptr, 
 																 &dataSize,
 																 &mOutputDeviceBufferFrameSize);
 
@@ -1877,7 +1877,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
-																 NULL, 
+																 nullptr, 
 																 &dataSize,
 																 &virtualFormat);
 
@@ -1906,7 +1906,7 @@ OSStatus BasicAudioPlayer::AudioObjectPropertyChanged(AudioObjectID						inObjec
 					OSStatus result = AudioObjectGetPropertyData(inObjectID, 
 																 &currentAddress, 
 																 0,
-																 NULL, 
+																 nullptr, 
 																 &dataSize,
 																 &physicalFormat);
 					
@@ -1987,7 +1987,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 
 		// ========================================
 		// Try to lock the queue and remove the head element, which contains the next decoder to use
-		DecoderStateData *decoderState = NULL;
+		DecoderStateData *decoderState = nullptr;
 		{
 			Mutex::Tryer lock(mGuard);
 
@@ -2005,16 +2005,16 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 		// ========================================
 		// Open the decoder if necessary
 		if(decoderState) {
-			CFErrorRef error = NULL;
+			CFErrorRef error = nullptr;
 			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error))  {
 				if(error) {
 					LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error opening decoder: " << error);
-					CFRelease(error), error = NULL;
+					CFRelease(error), error = nullptr;
 				}
 
 				// TODO: Perform CouldNotOpenDecoder() callback ??
 
-				delete decoderState, decoderState = NULL;
+				delete decoderState, decoderState = nullptr;
 			}
 		}
 
@@ -2042,10 +2042,10 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 				formatsMatch = false;
 			}
 			// If the decoder doesn't have an explicit channel layout, enqueue it if the default layout matches
-			else if(NULL == nextChannelLayout) {
+			else if(nullptr == nextChannelLayout) {
 				AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
 				bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
-				free(defaultLayout), defaultLayout = NULL;
+				free(defaultLayout), defaultLayout = nullptr;
 
 				if(!layoutsMatch) {
 					LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "Gapless join failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
@@ -2055,17 +2055,17 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
 			if(!formatsMatch)
-				delete decoderState, decoderState = NULL;
+				delete decoderState, decoderState = nullptr;
 		}
 
 		// ========================================
 		// Append the decoder state to the list of active decoders
 		if(decoderState) {
 			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-				if(NULL != mActiveDecoders[bufferIndex])
+				if(nullptr != mActiveDecoders[bufferIndex])
 					continue;
 				
-				if(OSAtomicCompareAndSwapPtrBarrier(NULL, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
+				if(OSAtomicCompareAndSwapPtrBarrier(nullptr, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
 					break;
 				else
 					LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "OSAtomicCompareAndSwapPtrBarrier() failed");
@@ -2208,7 +2208,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-							decoderState = NULL;
+							decoderState = nullptr;
 
 							break;
 						}
@@ -2227,14 +2227,14 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 			// Set the appropriate flags for collection if decoding was stopped early
 			if(decoderState) {
 				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
-				decoderState = NULL;
+				decoderState = nullptr;
 			}
 
 			if(bufferList)
 				bufferList = DeallocateABL(bufferList);
 			
 			if(converter)
-				delete converter, converter = NULL;
+				delete converter, converter = nullptr;
 		}
 
 		// Wait for another thread to wake us, or for the timeout to happen
@@ -2243,7 +2243,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 	
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Decoding thread terminating");
 
-	return NULL;
+	return nullptr;
 }
 
 void * BasicAudioPlayer::CollectorThreadEntry()
@@ -2258,16 +2258,16 @@ void * BasicAudioPlayer::CollectorThreadEntry()
 		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 			DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 			
-			if(NULL == decoderState)
+			if(nullptr == decoderState)
 				continue;
 
 			if(!(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) || !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags))
 				continue;
 
-			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, NULL, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex]));
+			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex]));
 
 			if(swapSucceeded)
-				delete decoderState, decoderState = NULL;
+				delete decoderState, decoderState = nullptr;
 		}
 		
 		// Wait for any thread to signal us to try and collect finished decoders
@@ -2276,7 +2276,7 @@ void * BasicAudioPlayer::CollectorThreadEntry()
 	
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Collecting thread terminating");
 	
-	return NULL;
+	return nullptr;
 }
 
 #pragma mark AudioHardware Utilities
@@ -2347,13 +2347,13 @@ bool BasicAudioPlayer::OpenOutput()
 	
 	propertyAddress.mSelector = kAudioObjectPropertyName;
 
-	CFStringRef deviceName = NULL;
+	CFStringRef deviceName = nullptr;
 	UInt32 dataSize = sizeof(deviceName);
 	
 	result = AudioObjectGetPropertyData(mOutputDeviceID, 
 										&propertyAddress, 
 										0, 
-										NULL, 
+										nullptr, 
 										&dataSize, 
 										&deviceName);
 
@@ -2364,7 +2364,7 @@ bool BasicAudioPlayer::OpenOutput()
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: " << result);
 
 	if(deviceName)
-		CFRelease(deviceName), deviceName = NULL;
+		CFRelease(deviceName), deviceName = nullptr;
 
 	propertyAddress.mSelector = kAudioDevicePropertyStreams;
 	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
@@ -2386,7 +2386,7 @@ bool BasicAudioPlayer::OpenOutput()
 
 	mOutputConverters = new PCMConverter * [mOutputDeviceStreamIDs.size()];
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i)
-		mOutputConverters[i] = NULL;
+		mOutputConverters[i] = nullptr;
 
 	return true;
 }
@@ -2459,11 +2459,11 @@ bool BasicAudioPlayer::CloseOutput()
 		LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "RemoveVirtualFormatPropertyListeners failed");
 
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL != mOutputConverters[i])
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+		if(nullptr != mOutputConverters[i])
+			delete mOutputConverters[i], mOutputConverters[i] = nullptr;
 	}
 	
-	delete [] mOutputConverters, mOutputConverters = NULL;
+	delete [] mOutputConverters, mOutputConverters = nullptr;
 	
 	mOutputDeviceStreamIDs.clear();
 
@@ -2517,7 +2517,7 @@ bool BasicAudioPlayer::OutputIsRunning() const
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID, 
 												 &propertyAddress, 
 												 0,
-												 NULL, 
+												 nullptr, 
 												 &dataSize,
 												 &isRunning);
 	
@@ -2536,7 +2536,7 @@ bool BasicAudioPlayer::ResetOutput()
 	LOGGER_DEBUG("org.sbooth.AudioEngine.BasicAudioPlayer", "Resetting output");
 #endif
 
-	if(NULL != mSampleRateConverter) {
+	if(nullptr != mSampleRateConverter) {
 		OSStatus result = AudioConverterReset(mSampleRateConverter);
 		
 		if(noErr != result) {
@@ -2552,17 +2552,17 @@ bool BasicAudioPlayer::ResetOutput()
 
 DecoderStateData * BasicAudioPlayer::GetCurrentDecoderState() const
 {
-	DecoderStateData *result = NULL;
+	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
-		if(NULL == decoderState)
+		if(nullptr == decoderState)
 			continue;
 		
 		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
 			continue;
 
-		if(NULL == result)
+		if(nullptr == result)
 			result = decoderState;
 		else if(decoderState->mTimeStamp < result->mTimeStamp)
 			result = decoderState;
@@ -2573,17 +2573,17 @@ DecoderStateData * BasicAudioPlayer::GetCurrentDecoderState() const
 
 DecoderStateData * BasicAudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
 {
-	DecoderStateData *result = NULL;
+	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
-		if(NULL == decoderState)
+		if(nullptr == decoderState)
 			continue;
 		
 		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
 			continue;
 
-		if(NULL == result && decoderState->mTimeStamp > timeStamp)
+		if(nullptr == result && decoderState->mTimeStamp > timeStamp)
 			result = decoderState;
 		else if(decoderState->mTimeStamp > timeStamp && decoderState->mTimeStamp < result->mTimeStamp)
 			result = decoderState;
@@ -2601,7 +2601,7 @@ void BasicAudioPlayer::StopActiveDecoders()
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
-		if(NULL == decoderState)
+		if(nullptr == decoderState)
 			continue;
 		
 		OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &decoderState->mFlags);
@@ -2612,7 +2612,7 @@ void BasicAudioPlayer::StopActiveDecoders()
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
 		
-		if(NULL == decoderState)
+		if(nullptr == decoderState)
 			continue;
 		
 		OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
@@ -2625,22 +2625,22 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 {
 	// Clean up
 	for(std::vector<AudioStreamID>::size_type i = 0; i < mOutputDeviceStreamIDs.size(); ++i) {
-		if(NULL != mOutputConverters[i])
-			delete mOutputConverters[i], mOutputConverters[i] = NULL;
+		if(nullptr != mOutputConverters[i])
+			delete mOutputConverters[i], mOutputConverters[i] = nullptr;
 	}
 	
-	if(NULL != mSampleRateConverter) {
+	if(nullptr != mSampleRateConverter) {
 		OSStatus result = AudioConverterDispose(mSampleRateConverter);
-		mSampleRateConverter = NULL;
+		mSampleRateConverter = nullptr;
 			
 		if(noErr != result)
 			LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioConverterDispose failed: " << result);
 	}
 	
-	if(NULL != mSampleRateConversionBuffer)
+	if(nullptr != mSampleRateConversionBuffer)
 		mSampleRateConversionBuffer = DeallocateABL(mSampleRateConversionBuffer);
 	
-	if(NULL != mOutputBuffer)
+	if(nullptr != mOutputBuffer)
 		mOutputBuffer = DeallocateABL(mOutputBuffer);
 	
 	// If the ring buffer does not yet have a format, no buffers can be allocated
@@ -2661,7 +2661,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 	OSStatus result = AudioObjectGetPropertyData(mOutputDeviceID,
 												 &propertyAddress,
 												 0,
-												 NULL,
+												 nullptr,
 												 &dataSize,
 												 &mOutputDeviceBufferFrameSize);	
 	
@@ -2726,7 +2726,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
 			dataSize = sizeof(preferredStereoChannels);
 			
-			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, &preferredStereoChannels);	
+			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize, &preferredStereoChannels);	
 			
 			if(kAudioHardwareNoError != result)
 				LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
@@ -2761,14 +2761,14 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
 
 		if(AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
-			result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize);
+			result = AudioObjectGetPropertyDataSize(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize);
 			
 			if(kAudioHardwareNoError != result)
 				LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
 
 			AudioChannelLayout *preferredChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
 			
-			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);	
+			result = AudioObjectGetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, &dataSize, preferredChannelLayout);	
 			
 			if(kAudioHardwareNoError != result)
 				LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout) failed: " << result);
@@ -2789,7 +2789,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 					deviceChannelMap[i] = i;
 			}
 			
-			free(preferredChannelLayout), preferredChannelLayout = NULL;		
+			free(preferredChannelLayout), preferredChannelLayout = nullptr;		
 		}
 		else {
 			LOGGER_WARNING("org.sbooth.AudioEngine.BasicAudioPlayer", "No preferred multichannel layout");
@@ -2835,7 +2835,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		UInt32 startingChannel;
 		dataSize = sizeof(startingChannel);
 		
-		result = AudioObjectGetPropertyData(streamID, &propertyAddress, 0, NULL, &dataSize, &startingChannel);	
+		result = AudioObjectGetPropertyData(streamID, &propertyAddress, 0, nullptr, &dataSize, &startingChannel);	
 
 		if(kAudioHardwareNoError != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioStreamPropertyStartingChannel) failed: " << result);
@@ -2869,14 +2869,14 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 	propertyAddress.mSelector = kAudioDevicePropertyIOProcStreamUsage;
 	propertyAddress.mScope = kAudioDevicePropertyScopeOutput;
 
-	result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, NULL, static_cast<UInt32>(streamUsageSize), streamUsage);
+	result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, static_cast<UInt32>(streamUsageSize), streamUsage);
 	
 	if(kAudioHardwareNoError != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyIOProcStreamUsage) failed: " << result);
 		return false;
 	}
 
-	free(streamUsage), streamUsage = NULL;
+	free(streamUsage), streamUsage = nullptr;
 
 	return true;
 }
@@ -2954,7 +2954,7 @@ bool BasicAudioPlayer::RemoveVirtualFormatPropertyListeners()
 
 bool BasicAudioPlayer::ReallocateSampleRateConversionBuffer()
 {
-	if(NULL == mSampleRateConverter)
+	if(nullptr == mSampleRateConverter)
 		return false;
 
 	// Get the SRC's output format

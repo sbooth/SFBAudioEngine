@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ public:
 
     virtual ~APEIOInterface()
 	{
-		mInputSource = NULL;
+		mInputSource = nullptr;
 	};
 	
     virtual int Open(const wchar_t * pName)
@@ -162,7 +162,7 @@ CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
 
 bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
@@ -173,7 +173,7 @@ bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
@@ -185,7 +185,7 @@ bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDecompressor(NULL)
+	: AudioDecoder(inputSource), mDecompressor(nullptr)
 {}
 
 MonkeysAudioDecoder::~MonkeysAudioDecoder()
@@ -212,7 +212,7 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 	int errorCode;
 	mDecompressor = CreateIAPEDecompressEx(mIOInterface, &errorCode);
 	
-	if(NULL == mDecompressor) {
+	if(nullptr == mDecompressor) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -221,7 +221,7 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), ""), 
 															   displayName);
 			
@@ -237,15 +237,15 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		return false;
@@ -289,10 +289,10 @@ bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	if(mIOInterface)
-		delete mIOInterface, mIOInterface = NULL;
+		delete mIOInterface, mIOInterface = nullptr;
 
 	if(mDecompressor)
-		delete mDecompressor, mDecompressor = NULL;
+		delete mDecompressor, mDecompressor = nullptr;
 
 	mIsOpen = false;
 	return true;
@@ -301,10 +301,10 @@ bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -339,7 +339,7 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	int blocksRead = 0;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -83,27 +83,27 @@ public:
 	static bool HandlesMIMEType(CFStringRef mimeType);
 	
 	// ========================================
-	// Factory methods that return an AudioDecoder for the specified resource, or NULL on failure
+	// Factory methods that return an AudioDecoder for the specified resource, or nullptr on failure
 	// If specified, the MIME type will take precedence over file extension-based type resolution
-	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error = nullptr);
 
-	// If this returns NULL the caller is responsible for deleting inputSource
-	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error = NULL);
+	// If this returns nullptr the caller is responsible for deleting inputSource
+	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error = nullptr);
 
 	// Limit decoding to a specified region
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
 	
-	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
 
-	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = NULL);
-	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = NULL);
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+	static AudioDecoder * CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
 
 	// ========================================
 	// Flag to specify whether AudioDecoders created with the above methods should be automatically opened (default is false)
@@ -124,8 +124,8 @@ public:
 
 	// ========================================
 	// Audio access (must be implemented by subclasses)
-	virtual bool Open(CFErrorRef *error = NULL) = 0;
-	virtual bool Close(CFErrorRef *error = NULL) = 0;
+	virtual bool Open(CFErrorRef *error = nullptr) = 0;
+	virtual bool Close(CFErrorRef *error = nullptr) = 0;
 	
 	inline bool IsOpen() const									{ return mIsOpen; }
 
@@ -171,7 +171,7 @@ protected:
 	InputSource						*mInputSource;		// The input source feeding the decoder
 	
 	AudioStreamBasicDescription		mFormat;			// The type of PCM data provided by this decoder
-	AudioChannelLayout				*mChannelLayout;	// The channel layout for the PCM data, or NULL if unknown/unspecified
+	AudioChannelLayout				*mChannelLayout;	// The channel layout for the PCM data, or nullptr if unknown/unspecified
 	
 	AudioStreamBasicDescription		mSourceFormat;		// The native format of the source file
 

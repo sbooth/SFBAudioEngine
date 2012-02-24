@@ -51,8 +51,8 @@ public:
 	
 	// ========================================
 	// Audio access
-	virtual bool Open(CFErrorRef *error = NULL);
-	virtual bool Close(CFErrorRef *error = NULL);
+	virtual bool Open(CFErrorRef *error = nullptr);
+	virtual bool Close(CFErrorRef *error = nullptr);
 
 	virtual inline bool IsOpen() const						{ return mDecoder->IsOpen(); }
 

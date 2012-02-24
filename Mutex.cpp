@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 Mutex::Mutex()
 	: mOwner(0)
 {
-	int success = pthread_mutex_init(&mMutex, NULL);
+	int success = pthread_mutex_init(&mMutex, nullptr);
 
 	if(0 != success) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Mutex", "pthread_mutex_init failed: " << strerror(success));

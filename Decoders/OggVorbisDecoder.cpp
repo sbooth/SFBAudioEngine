@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 static size_t
 read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-	assert(NULL != datasource);
+	assert(nullptr != datasource);
 	
 	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
 	return decoder->GetInputSource()->Read(ptr, size * nmemb);
@@ -52,7 +52,7 @@ read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 static int
 seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
 {
-	assert(NULL != datasource);
+	assert(nullptr != datasource);
 	
 	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -79,7 +79,7 @@ seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
 static long
 tell_func_callback(void *datasource)
 {
-	assert(NULL != datasource);
+	assert(nullptr != datasource);
 	
 	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
 	return static_cast<long>(decoder->GetInputSource()->GetOffset());
@@ -101,7 +101,7 @@ CFArrayRef OggVorbisDecoder::CreateSupportedMIMETypes()
 
 bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ogg"), kCFCompareCaseInsensitive))
@@ -114,7 +114,7 @@ bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg-vorbis"), kCFCompareCaseInsensitive))
@@ -154,9 +154,9 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	callbacks.read_func = read_func_callback;
 	callbacks.seek_func = seek_func_callback;
 	callbacks.tell_func = tell_func_callback;
-	callbacks.close_func = NULL;
+	callbacks.close_func = nullptr;
 	
-	if(0 != ov_test_callbacks(this, &mVorbisFile, NULL, 0, callbacks)) {
+	if(0 != ov_test_callbacks(this, &mVorbisFile, nullptr, 0, callbacks)) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -165,7 +165,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""), 
 															   displayName);
 			
@@ -181,15 +181,15 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		return false;
@@ -205,7 +205,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
-	if(NULL == ovInfo) {
+	if(nullptr == ovInfo) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_info failed");
 
 		if(0 != ov_clear(&mVorbisFile))
@@ -266,10 +266,10 @@ bool OggVorbisDecoder::Close(CFErrorRef */*error*/)
 CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -288,10 +288,10 @@ SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
-	float		**buffer			= NULL;
+	float		**buffer			= nullptr;
 	UInt32		framesRemaining		= frameCount;
 	UInt32		totalFramesRead		= 0;
 	int			currentSection		= 0;

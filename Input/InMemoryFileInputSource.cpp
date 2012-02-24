@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #pragma mark Creation and Destruction
 
 InMemoryFileInputSource::InMemoryFileInputSource(CFURLRef url)
-	: InputSource(url), mMemory(NULL), mCurrentPosition(NULL)
+	: InputSource(url), mMemory(nullptr), mCurrentPosition(nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
@@ -59,20 +59,20 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
 	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
 	if(-1 == fd) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
 	}
 
 	if(-1 == fstat(fd, &mFilestats)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
@@ -82,9 +82,9 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 
 	// Perform the allocation
 	mMemory = static_cast<int8_t *>(malloc(mFilestats.st_size));
-	if(NULL == mMemory) {
+	if(nullptr == mMemory) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
@@ -97,13 +97,13 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	// Read the file
 	if(-1 == read(fd, mMemory, mFilestats.st_size)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
 
 		memset(&mFilestats, 0, sizeof(mFilestats));
-		free(mMemory), mMemory = NULL;
+		free(mMemory), mMemory = nullptr;
 
 		return false;
 	}
@@ -112,10 +112,10 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
 
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		memset(&mFilestats, 0, sizeof(mFilestats));
-		free(mMemory), mMemory = NULL;
+		free(mMemory), mMemory = nullptr;
 
 		return false;
 	}
@@ -136,9 +136,9 @@ bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 	memset(&mFilestats, 0, sizeof(mFilestats));
 
 	if(mMemory)
-		free(mMemory), mMemory = NULL;
+		free(mMemory), mMemory = nullptr;
 
-	mCurrentPosition = NULL;
+	mCurrentPosition = nullptr;
 
 	mIsOpen = false;
 	return true;
@@ -146,7 +146,7 @@ bool InMemoryFileInputSource::Close(CFErrorRef */*error*/)
 
 SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen() || NULL == buffer)
+	if(!IsOpen() || nullptr == buffer)
 		return -1;
 
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;

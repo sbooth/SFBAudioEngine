@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(NULL != decoder);
+	assert(nullptr != decoder);
 	assert(decoder->SupportsSeeking());
 	
 	mInputSource	= mDecoder->GetInputSource();
@@ -50,7 +50,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(NULL != decoder);
+	assert(nullptr != decoder);
 	assert(decoder->SupportsSeeking());
 
 	mInputSource	= mDecoder->GetInputSource();
@@ -63,7 +63,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(NULL != decoder);
+	assert(nullptr != decoder);
 	assert(decoder->SupportsSeeking());
 	
 	mInputSource	= mDecoder->GetInputSource();
@@ -78,12 +78,12 @@ LoopableRegionDecoder::~LoopableRegionDecoder()
 	if(IsOpen())
 		Close();
 
-	// Just set our references to NULL, as mDecoder actually owns the objects and will delete them
-	mInputSource	= NULL;
-	mChannelLayout	= NULL;
+	// Just set our references to nullptr, as mDecoder actually owns the objects and will delete them
+	mInputSource	= nullptr;
+	mChannelLayout	= nullptr;
 
 	if(mDecoder)
-		delete mDecoder, mDecoder = NULL;
+		delete mDecoder, mDecoder = nullptr;
 }
 
 bool LoopableRegionDecoder::Open(CFErrorRef *error)
@@ -149,7 +149,7 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 	
 	// If the repeat count is N then (N + 1) passes must be completed to read all the frames
@@ -159,7 +159,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
 	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers)));
 	
-	if(NULL == bufferListAlias) {
+	if(nullptr == bufferListAlias) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Unable to allocate memory");
 		return 0;
 	}	
@@ -221,7 +221,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		}
 	}
 	
-	free(bufferListAlias), bufferListAlias = NULL;
+	free(bufferListAlias), bufferListAlias = nullptr;
 	
 	return totalFramesRead;
 }

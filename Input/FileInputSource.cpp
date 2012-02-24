@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #pragma mark Creation and Destruction
 
 FileInputSource::FileInputSource(CFURLRef url)
-	: InputSource(url), mFile(NULL)
+	: InputSource(url), mFile(nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
@@ -59,26 +59,26 @@ bool FileInputSource::Open(CFErrorRef *error)
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
 	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
 
-	if(NULL == mFile) {
+	if(nullptr == mFile) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
 	}
 
 	if(-1 == stat(reinterpret_cast<const char *>(buf), &mFilestats)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(0 != fclose(mFile))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Unable to close the file: " << strerror(errno));
 
-		mFile = NULL;
+		mFile = nullptr;
 
 		return false;
 	}
@@ -96,14 +96,14 @@ bool FileInputSource::Close(CFErrorRef *error)
 
 	memset(&mFilestats, 0, sizeof(mFilestats));
 
-	if(NULL != mFile) {
+	if(nullptr != mFile) {
 		int result = fclose(mFile);
 
-		mFile = NULL;
+		mFile = nullptr;
 
 		if(-1 == result) {
 			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 			return false;
 		}
 	}
@@ -114,7 +114,7 @@ bool FileInputSource::Close(CFErrorRef *error)
 
 SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen() || NULL == buffer)
+	if(!IsOpen() || nullptr == buffer)
 		return -1;
 
 	return fread(buffer, 1, byteCount, mFile);

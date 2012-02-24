@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #pragma mark Creation and Destruction
 
 MemoryMappedFileInputSource::MemoryMappedFileInputSource(CFURLRef url)
-	: InputSource(url), mMemory(NULL), mCurrentPosition(NULL)
+	: InputSource(url), mMemory(nullptr), mCurrentPosition(nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
@@ -60,7 +60,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
@@ -68,13 +68,13 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 
 	if(-1 == fd) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
 	}
 
 	if(-1 == fstat(fd, &mFilestats)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
@@ -85,7 +85,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 	// Only regular files can be mapped
 	if(!S_ISREG(mFilestats.st_mode)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EBADF, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EBADF, nullptr);
 		
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
@@ -99,7 +99,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 
 	if(MAP_FAILED == mMemory) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		if(-1 == close(fd))
 			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
@@ -111,7 +111,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 
 	if(-1 == close(fd)) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
 		memset(&mFilestats, 0, sizeof(mFilestats));
 
@@ -133,15 +133,15 @@ bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 
 	memset(&mFilestats, 0, sizeof(mFilestats));
 
-	if(NULL != mMemory) {
+	if(nullptr != mMemory) {
 		int result = munmap(mMemory, mFilestats.st_size);
 
-		mMemory = NULL;
-		mCurrentPosition = NULL;
+		mMemory = nullptr;
+		mCurrentPosition = nullptr;
 
 		if(-1 == result) {
 			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, NULL);
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 			return false; 
 		}
 	}
@@ -152,7 +152,7 @@ bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 
 SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen() || NULL == buffer)
+	if(!IsOpen() || nullptr == buffer)
 		return -1;
 
 	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;

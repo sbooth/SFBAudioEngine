@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 static int32_t
 read_bytes_callback(void *id, void *data, int32_t bcount)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	return static_cast<int32_t>(decoder->GetInputSource()->Read(data, bcount));
@@ -52,7 +52,7 @@ read_bytes_callback(void *id, void *data, int32_t bcount)
 static uint32_t
 get_pos_callback(void *id)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	return static_cast<uint32_t>(decoder->GetInputSource()->GetOffset());
@@ -61,7 +61,7 @@ get_pos_callback(void *id)
 static int
 set_pos_abs_callback(void *id, uint32_t pos)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	return !decoder->GetInputSource()->SeekToOffset(pos);
@@ -70,7 +70,7 @@ set_pos_abs_callback(void *id, uint32_t pos)
 static int
 set_pos_rel_callback(void *id, int32_t delta, int mode)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -99,7 +99,7 @@ set_pos_rel_callback(void *id, int32_t delta, int mode)
 static int
 push_back_byte_callback(void *id, int c)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	InputSource *inputSource = decoder->GetInputSource();
@@ -116,7 +116,7 @@ push_back_byte_callback(void *id, int c)
 static uint32_t
 get_length_callback(void *id)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	return static_cast<uint32_t>(decoder->GetInputSource()->GetLength());
@@ -125,7 +125,7 @@ get_length_callback(void *id)
 static int
 can_seek_callback(void *id)
 {
-	assert(NULL != id);
+	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
 	return static_cast<uint32_t>(decoder->GetInputSource()->SupportsSeeking());
@@ -147,7 +147,7 @@ CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
 
 bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("wv"), kCFCompareCaseInsensitive))
@@ -158,7 +158,7 @@ bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wavpack"), kCFCompareCaseInsensitive))
@@ -170,7 +170,7 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 WavPackDecoder::WavPackDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mWPC(NULL), mTotalFrames(0), mCurrentFrame(0)
+	: AudioDecoder(inputSource), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 }
@@ -205,8 +205,8 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	char errorBuf [80];
 	
 	// Setup converter
-	mWPC = WavpackOpenFileInputEx(&mStreamReader, this, NULL, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
-	if(NULL == mWPC) {
+	mWPC = WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
+	if(nullptr == mWPC) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -215,7 +215,7 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""), 
 															   displayName);
 			
@@ -231,15 +231,15 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 		
 		return false;
@@ -295,9 +295,9 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	
 	mBuffer = static_cast<int32_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t)));
 
-	if(NULL == mBuffer) {
+	if(nullptr == mBuffer) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		
 		return false;		
 	}
@@ -316,10 +316,10 @@ bool WavPackDecoder::Close(CFErrorRef */*error*/)
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 
 	if(mWPC)
-		WavpackCloseFile(mWPC), mWPC = NULL;
+		WavpackCloseFile(mWPC), mWPC = nullptr;
 	
 	if(mBuffer)
-		free(mBuffer), mBuffer = NULL;
+		free(mBuffer), mBuffer = nullptr;
 
 	mIsOpen = false;
 	return true;
@@ -328,10 +328,10 @@ bool WavPackDecoder::Close(CFErrorRef */*error*/)
 CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("WavPack, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -351,7 +351,7 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	// Reset output buffer data size

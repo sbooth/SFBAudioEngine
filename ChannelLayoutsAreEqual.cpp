@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ ChannelLayoutsAreEqual(const AudioChannelLayout *lhs, const AudioChannelLayout *
 	if(lhs == rhs)
 		return true;
 
-	if((NULL == lhs && NULL != rhs) || (NULL != lhs && NULL == rhs))
+	if((nullptr == lhs && nullptr != rhs) || (nullptr != lhs && nullptr == rhs))
 		return false;
 
 	// First check if the tags are equal

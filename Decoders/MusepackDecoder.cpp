@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 static mpc_int32_t
 read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 {
-	assert(NULL != p_reader);
+	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
 	return static_cast<mpc_int32_t>(decoder->GetInputSource()->Read(ptr, size));
@@ -54,7 +54,7 @@ read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 static mpc_bool_t
 seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
 {
-	assert(NULL != p_reader);
+	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
 	return decoder->GetInputSource()->SeekToOffset(offset);
@@ -63,7 +63,7 @@ seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
 static mpc_int32_t
 tell_callback(mpc_reader *p_reader)
 {
-	assert(NULL != p_reader);
+	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
 	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetOffset());
@@ -72,7 +72,7 @@ tell_callback(mpc_reader *p_reader)
 static mpc_int32_t
 get_size_callback(mpc_reader *p_reader)
 {
-	assert(NULL != p_reader);
+	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
 	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetLength());
@@ -81,7 +81,7 @@ get_size_callback(mpc_reader *p_reader)
 static mpc_bool_t
 canseek_callback(mpc_reader *p_reader)
 {
-	assert(NULL != p_reader);
+	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
 	return decoder->GetInputSource()->SupportsSeeking();
@@ -103,7 +103,7 @@ CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
 
 bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mpc"), kCFCompareCaseInsensitive))
@@ -114,7 +114,7 @@ bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
@@ -126,7 +126,7 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 MusepackDecoder::MusepackDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDemux(NULL), mTotalFrames(0), mCurrentFrame(0)
+	: AudioDecoder(inputSource), mDemux(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {}
 
 MusepackDecoder::~MusepackDecoder()
@@ -162,7 +162,7 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	mReader.data = this;
 	
 	mDemux = mpc_demux_init(&mReader);
-	if(NULL == mDemux) {
+	if(nullptr == mDemux) {
 		if(error) {
 			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
 																			   0,
@@ -171,7 +171,7 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 			
 			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
 			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
+															   nullptr, 
 															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
 															   displayName);
 			
@@ -187,15 +187,15 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 								 kCFErrorLocalizedRecoverySuggestionKey, 
 								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
+			CFRelease(errorString), errorString = nullptr;
+			CFRelease(displayName), displayName = nullptr;
 			
 			*error = CFErrorCreate(kCFAllocatorDefault, 
 								   AudioDecoderErrorDomain, 
 								   AudioDecoderInputOutputError, 
 								   errorDictionary);
 			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(errorDictionary), errorDictionary = nullptr;				
 		}
 
 		mpc_reader_exit_stdio(&mReader);
@@ -241,11 +241,11 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	// Allocate the buffer list
 	mBufferList = AllocateABL(mFormat, MPC_FRAME_LENGTH);
 
-	if(NULL == mBufferList) {
+	if(nullptr == mBufferList) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		mpc_demux_exit(mDemux), mDemux = NULL;
+		mpc_demux_exit(mDemux), mDemux = nullptr;
 		mpc_reader_exit_stdio(&mReader);
 		
 		return false;
@@ -266,7 +266,7 @@ bool MusepackDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	if(mDemux)
-		mpc_demux_exit(mDemux), mDemux = NULL;
+		mpc_demux_exit(mDemux), mDemux = nullptr;
 	
     mpc_reader_exit_stdio(&mReader);
 	
@@ -280,10 +280,10 @@ bool MusepackDecoder::Close(CFErrorRef */*error*/)
 CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("Musepack, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -303,7 +303,7 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 
 UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	MPC_SAMPLE_FORMAT	buffer			[MPC_DECODER_BUFFER_LENGTH];
