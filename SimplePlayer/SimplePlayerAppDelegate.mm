@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -26,7 +26,7 @@
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 #pragma unused(aNotification)
-	asl_add_log_file(NULL, STDERR_FILENO);
+	asl_add_log_file(nullptr, STDERR_FILENO);
 	::logger::SetCurrentLevel(::logger::debug);
 	[_playerWindowController showWindow:self];
 }
@@ -42,7 +42,7 @@
 #pragma unused(theApplication)
 	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();	
 	BOOL extensionValid = [(NSArray *)supportedTypes containsObject:[filename pathExtension]];
-	CFRelease(supportedTypes), supportedTypes = NULL;
+	CFRelease(supportedTypes), supportedTypes = nullptr;
 	
 	if(NO == extensionValid)
 		return NO;
@@ -66,7 +66,7 @@
 		[_playerWindowController playURL:[URLs objectAtIndex:0]];
 	}	
 
-	CFRelease(supportedTypes), supportedTypes = NULL;
+	CFRelease(supportedTypes), supportedTypes = nullptr;
 }
 
 - (IBAction) openURL:(id)sender

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -83,7 +83,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 {
 	[_uiTimer invalidate], _uiTimer = nil;
 	
-	delete PLAYER, _player = NULL;
+	delete PLAYER, _player = nullptr;
 
 	[_slider release], _slider = nil;
 	[_elapsed release], _elapsed = nil;
@@ -140,7 +140,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSParameterAssert(nil != url);
 
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
-	if(NULL == decoder)
+	if(nullptr == decoder)
 		return NO;
 
 	PLAYER->Stop();
@@ -215,7 +215,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSURL *url = (NSURL *)PLAYER->GetPlayingURL();
 	
 	// Nothing happening, reset the window
-	if(NULL == url) {
+	if(nullptr == url) {
 		[[self window] setRepresentedURL:nil];
 		[[self window] setTitle:@""];
 		

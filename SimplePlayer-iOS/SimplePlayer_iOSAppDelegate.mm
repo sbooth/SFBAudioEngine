@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -87,7 +87,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-	asl_add_log_file(NULL, STDERR_FILENO);
+	asl_add_log_file(nullptr, STDERR_FILENO);
 	::logger::SetCurrentLevel(::logger::debug);
 
 	_player = new AudioPlayer();
@@ -131,7 +131,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 - (void)dealloc
 {
-	delete _player, _player = NULL;
+	delete _player, _player = nullptr;
 	
 	[_window release], _window = nil;
 	[_slider release], _slider = nil;
@@ -179,7 +179,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSURL *url = [NSURL fileURLWithPath:file];
 	
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
-	if(NULL == decoder)
+	if(nullptr == decoder)
 		return NO;
 	
 	_player->Stop();
@@ -252,7 +252,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSURL *url = (NSURL *)_player->GetPlayingURL();
 	
 	// Nothing happening, reset the window
-	if(NULL == url) {
+	if(nullptr == url) {
 		[_slider setEnabled:NO];
 //		[_playButton setState:NSOffState];
 		[_playButton setEnabled:NO];
