@@ -34,7 +34,7 @@
 #include <FLAC/metadata.h>
 
 #include "FLACDecoder.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
@@ -260,38 +260,15 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
@@ -304,38 +281,15 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		if(!FLAC__stream_decoder_finish(mFLAC))
@@ -382,38 +336,15 @@ bool FLACDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
-				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   0,
-																				   &kCFTypeDictionaryKeyCallBacks,
-																				   &kCFTypeDictionaryValueCallBacks);
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
 				
-				CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																   nullptr, 
-																   CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), ""), 
-																   displayName);
+				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedDescriptionKey, 
-									 errorString);
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedFailureReasonKey, 
-									 CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
-				
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedRecoverySuggestionKey, 
-									 CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
-				
-				CFRelease(errorString), errorString = nullptr;
-				CFRelease(displayName), displayName = nullptr;
-				
-				*error = CFErrorCreate(kCFAllocatorDefault, 
-									   AudioDecoderErrorDomain, 
-									   AudioDecoderInputOutputError, 
-									   errorDictionary);
-				
-				CFRelease(errorDictionary), errorDictionary = nullptr;				
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 			}
 			
 			if(!FLAC__stream_decoder_finish(mFLAC))

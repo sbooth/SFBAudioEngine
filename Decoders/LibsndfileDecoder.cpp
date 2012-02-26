@@ -30,7 +30,7 @@
 
 #include "LibsndfileDecoder.h"
 #include "CreateChannelLayout.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #pragma mark Callbacks
@@ -197,38 +197,15 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
 
 		if(nullptr != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
-															   displayName);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;

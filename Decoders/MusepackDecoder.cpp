@@ -34,7 +34,7 @@
 #include <stdexcept>
 
 #include "MusepackDecoder.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
@@ -164,38 +164,15 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	mDemux = mpc_demux_init(&mReader);
 	if(nullptr == mDemux) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		mpc_reader_exit_stdio(&mReader);

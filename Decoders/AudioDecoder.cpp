@@ -36,7 +36,7 @@
 #include "AudioDecoder.h"
 #include "Logger.h"
 #include "CreateChannelLayout.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "CreateStringForOSType.h"
 #include "LoopableRegionDecoder.h"
 
@@ -410,38 +410,15 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 
 	if(!pathExtension) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-
-			CFStringRef displayName = CFURLCopyLastPathComponent(inputURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""), 
-															   displayName);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unknown file type"), ""));
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
-
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   InputSourceErrorDomain, 
-								   InputSourceFileNotFoundError,
-								   errorDictionary);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unknown file type"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), "");
 			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			*error = CreateErrorForURL(InputSourceErrorDomain, InputSourceFileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return nullptr;

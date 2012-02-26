@@ -37,7 +37,7 @@
 #include <stdexcept>
 
 #include "CoreAudioDecoder.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
 #include "CreateStringForOSType.h"
 #include "Logger.h"
@@ -231,39 +231,16 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
 		
-		if(nullptr != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -274,39 +251,16 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
 		
-		if(nullptr != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   nullptr, 
-															   CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = nullptr;
-			CFRelease(displayName), displayName = nullptr;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioDecoderErrorDomain, 
-								   AudioDecoderInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = nullptr;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		result = AudioFileClose(mAudioFile);
