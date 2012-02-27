@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 #include <taglib/speexfile.h>
 
 #include "OggSpeexMetadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
@@ -53,7 +53,7 @@ CFArrayRef OggSpeexMetadata::CreateSupportedMIMETypes()
 
 bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
@@ -64,7 +64,7 @@ bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
@@ -94,43 +94,20 @@ bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::Ogg::Speex::File file(stream);
 	
 	if(!file.isValid()) {
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(nullptr != error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -153,43 +130,20 @@ bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
 	TagLib::Ogg::Speex::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -199,38 +153,15 @@ bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
 	
 	if(!file.save()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

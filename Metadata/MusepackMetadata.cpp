@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 #include <taglib/mpcfile.h>
 
 #include "MusepackMetadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddTagToDictionary.h"
 #include "SetTagFromMetadata.h"
@@ -53,7 +53,7 @@ CFArrayRef MusepackMetadata::CreateSupportedMIMETypes()
 
 bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mpc"), kCFCompareCaseInsensitive))
@@ -64,7 +64,7 @@ bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
@@ -94,43 +94,20 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::MPC::File file(stream);
 	
 	if(!file.isValid()) {
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(nullptr != error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -153,43 +130,20 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
 	TagLib::MPC::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -199,38 +153,15 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 
 	if(!file.save()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

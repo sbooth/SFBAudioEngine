@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,12 +34,13 @@
 #include <taglib/xingheader.h>
 
 #include "MP3Metadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AddAPETagToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "CFDictionaryUtilities.h"
 
 #pragma mark Static Methods
 
@@ -57,7 +58,7 @@ CFArrayRef MP3Metadata::CreateSupportedMIMETypes()
 
 bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp3"), kCFCompareCaseInsensitive))
@@ -68,7 +69,7 @@ bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
@@ -98,43 +99,20 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::MPEG::File file(stream, TagLib::ID3v2::FrameFactory::instance());
 	
 	if(!file.isValid()) {
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(nullptr != error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a MPEG file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -143,7 +121,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MP3"));
 
 	if(file.audioProperties()) {
-		TagLib::MPEG::Properties *properties = file.audioProperties();
+		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 
 		// TODO: Is this too much information?
@@ -173,12 +151,8 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 		}
 #endif
 
-		if(properties->xingHeader() && properties->xingHeader()->totalFrames()) {
-			TagLib::uint frames = properties->xingHeader()->totalFrames();
-			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &frames);
-			CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-			CFRelease(totalFrames), totalFrames = NULL;			
-		}
+		if(properties->xingHeader() && properties->xingHeader()->totalFrames())
+			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->xingHeader()->totalFrames());
 	}
 
 	if(file.APETag())
@@ -199,43 +173,20 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
 	TagLib::MPEG::File file(stream, TagLib::ID3v2::FrameFactory::instance(), false);
 	
 	if(!file.isValid()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a MPEG file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -245,38 +196,15 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(!file.save()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,15 +28,17 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <dumb/dumb.h>
+#include <taglib/tfilestream.h>
+#include <taglib/itfile.h>
+#include <taglib/xmfile.h>
+#include <taglib/s3mfile.h>
+#include <taglib/modfile.h>
 
 #include "MODMetadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
-
-#define DUMB_SAMPLE_RATE	44100
-#define DUMB_CHANNELS		2
-#define DUMB_BIT_DEPTH		16
+#include "AddAudioPropertiesToDictionary.h"
+#include "AddTagToDictionary.h"
 
 #pragma mark Static Methods
 
@@ -54,7 +56,7 @@ CFArrayRef MODMetadata::CreateSupportedMIMETypes()
 
 bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
@@ -71,7 +73,7 @@ bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
@@ -109,94 +111,90 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	dumb_register_stdfiles();
+	CFStringRef pathExtension = CFURLCopyPathExtension(mURL);
+	if(nullptr == pathExtension)
+		return false;
 
-	DUH *duh = dumb_load_it(reinterpret_cast<const char *>(buf));
-	if(NULL == duh)
-		duh = dumb_load_xm(reinterpret_cast<const char *>(buf));
-	if(NULL == duh)
-		duh = dumb_load_s3m(reinterpret_cast<const char *>(buf));
-	if(NULL == duh)
-		duh = dumb_load_mod(reinterpret_cast<const char *>(buf));
+	bool fileIsValid = false;
+	if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("it"), kCFCompareCaseInsensitive)) {
+		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+		TagLib::IT::File file(stream);
 
-	if(NULL == duh) {
+		if(file.isValid()) {
+			fileIsValid = true;
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Impulse Tracker)"));
+
+			if(file.audioProperties())
+				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+
+			if(file.tag())
+				AddTagToDictionary(mMetadata, file.tag());
+		}
+	}
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("xm"), kCFCompareCaseInsensitive)) {
+		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+		TagLib::XM::File file(stream);
+
+		if(file.isValid()) {
+			fileIsValid = true;
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Extended Module)"));
+
+			if(file.audioProperties())
+				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+
+			if(file.tag())
+				AddTagToDictionary(mMetadata, file.tag());
+		}
+	}
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("s3m"), kCFCompareCaseInsensitive)) {
+		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+		TagLib::S3M::File file(stream);
+
+		if(file.isValid()) {
+			fileIsValid = true;
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (ScreamTracker III)"));
+
+			if(file.audioProperties())
+				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+
+			if(file.tag())
+				AddTagToDictionary(mMetadata, file.tag());
+		}
+	}
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive)) {
+		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+		TagLib::Mod::File file(stream);
+
+		if(file.isValid()) {
+			fileIsValid = true;
+			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Protracker)"));
+
+			if(file.audioProperties())
+				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+
+			if(file.tag())
+				AddTagToDictionary(mMetadata, file.tag());
+		}
+	}
+
+	CFRelease(pathExtension), pathExtension = nullptr;
+
+	if(!fileIsValid) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
 	}
 
-	long totalFramesValue = duh_get_length(duh);
-	CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongType, &totalFramesValue);
-	CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-	CFRelease(totalFrames), totalFrames = NULL;
-	
-	double sampleRateValue = DUMB_SAMPLE_RATE;
-	CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &sampleRateValue);
-	CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
-	CFRelease(sampleRate), sampleRate = NULL;
-
-	int channelsValue = DUMB_CHANNELS;
-	CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channelsValue);
-	CFDictionarySetValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-	CFRelease(channelsPerFrame), channelsPerFrame = NULL;
-
-	int bitDepthValue = DUMB_BIT_DEPTH;
-	CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &bitDepthValue);
-	CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-	CFRelease(bitsPerChannel), bitsPerChannel = NULL;
-
-	double durationValue = static_cast<double>(totalFramesValue / sampleRateValue);
-	CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &durationValue);
-	CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
-	CFRelease(duration), duration = NULL;
-
-	const char *tag = duh_get_tag(duh, "TITLE");
-	if(tag) {
-		CFStringRef title = CFStringCreateWithCString(kCFAllocatorDefault, tag, kCFStringEncodingUTF8);
-		if(title) {
-			CFDictionarySetValue(mMetadata, kMetadataTitleKey, title);
-			CFRelease(title), title = NULL;
-		}
-	}
-
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD"));
-
-	if(duh)
-		unload_duh(duh), duh = NULL;
-	
 	return true;
 }
 

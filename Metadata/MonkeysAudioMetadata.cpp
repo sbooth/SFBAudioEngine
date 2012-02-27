@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,12 @@
 #include <taglib/tag.h>
 
 #include "MonkeysAudioMetadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddAPETagToDictionary.h"
 #include "SetAPETagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "CFDictionaryUtilities.h"
 
 #pragma mark Static Methods
 
@@ -55,7 +56,7 @@ CFArrayRef MonkeysAudioMetadata::CreateSupportedMIMETypes()
 
 bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
@@ -66,7 +67,7 @@ bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
@@ -96,43 +97,20 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::APE::File file(stream);
 	
 	if(!file.isValid()) {
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -141,14 +119,11 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Monkey's Audio"));
 	
 	if(file.audioProperties()) {
-		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+		auto properties = file.audioProperties();
+		AddAudioPropertiesToDictionary(mMetadata, properties);
 		
-		if(0 != file.audioProperties()->bitsPerSample()) {
-			int value = file.audioProperties()->bitsPerSample();
-			CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-			CFDictionarySetValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-			CFRelease(bitsPerChannel), bitsPerChannel = NULL;
-		}
+		if(properties->bitsPerSample())
+			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->bitsPerSample());
 	}
 
 	if(file.ID3v1Tag())
@@ -166,43 +141,20 @@ bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
 	TagLib::APE::File file(stream, false);
 	
 	if(!file.isValid()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Mpnkey's Audio file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a Mpnkey's Audio file"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -214,38 +166,15 @@ bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 
 	if(!file.save()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Mpnkey's Audio file."), ""), 
-															   displayName);
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
 			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-			
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-			
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-			
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

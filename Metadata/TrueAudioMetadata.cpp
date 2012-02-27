@@ -33,9 +33,12 @@
 #include <taglib/tag.h>
 
 #include "TrueAudioMetadata.h"
-#include "CreateDisplayNameForURL.h"
-#include "TagLibStringFromCFString.h"
+#include "CFErrorUtilities.h"
+#include "TagLibStringUtilities.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddTagToDictionary.h"
+#include "SetTagFromMetadata.h"
+#include "CFDictionaryUtilities.h"
 
 #pragma mark Static Methods
 
@@ -53,7 +56,7 @@ CFArrayRef TrueAudioMetadata::CreateSupportedMIMETypes()
 
 bool TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("tta"), kCFCompareCaseInsensitive))
@@ -64,7 +67,7 @@ bool TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 
 bool TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-tta"), kCFCompareCaseInsensitive))
@@ -94,43 +97,20 @@ bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
 	
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::TrueAudio::File file(stream);
 
 	if(!file.isValid()) {
-		if(NULL != error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
-															   displayName);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+		if(nullptr != error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -139,73 +119,16 @@ bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("True Audio"));
 
 	if(file.audioProperties()) {
-		TagLib::TrueAudio::Properties *properties = file.audioProperties();
+		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 
-		if(properties->bitsPerSample()) {
-			TagLib::uint bitDepth = properties->bitsPerSample();
-			CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &bitDepth);
-			CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-			CFRelease(bitsPerChannel), bitsPerChannel = NULL;			
-		}
-
-		if(properties->sampleFrames()) {
-			TagLib::uint sampleFrames = properties->sampleFrames();
-			CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &sampleFrames);
-			CFDictionaryAddValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-			CFRelease(totalFrames), totalFrames = NULL;			
-		}
+		if(properties->bitsPerSample())
+			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->bitsPerSample());
+		if(properties->sampleFrames())
+			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
 
-	// Album title
-	if(!file.tag()->album().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->album().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataAlbumTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Artist
-	if(!file.tag()->artist().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->artist().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataArtistKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Genre
-	if(!file.tag()->genre().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->genre().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataGenreKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Year
-	if(file.tag()->year()) {
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), file.tag()->year());
-		CFDictionarySetValue(mMetadata, kMetadataReleaseDateKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Comment
-	if(!file.tag()->comment().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->comment().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataCommentKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Track title
-	if(!file.tag()->title().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, file.tag()->title().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(mMetadata, kMetadataTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	// Track number
-	if(file.tag()->track()) {
-		int trackNum = file.tag()->track();
-		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
-		CFRelease(num), num = NULL;
-	}
+	AddTagToDictionary(mMetadata, file.tag());
 
 	return true;
 }
@@ -216,107 +139,38 @@ bool TrueAudioMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	TagLib::IOStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
+	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
 	TagLib::TrueAudio::File file(stream, false);
 
 	if(!file.isValid()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
-															   displayName);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
 	}
 
-	// Album title
-	file.tag()->setAlbum(TagLib::StringFromCFString(GetAlbumTitle()));
-
-	// Artist
-	file.tag()->setArtist(TagLib::StringFromCFString(GetArtist()));
-
-	// Genre
-	file.tag()->setGenre(TagLib::StringFromCFString(GetGenre()));
-
-	// Year
-	file.tag()->setYear(CFStringGetIntValue(GetReleaseDate()));
-
-	// Comment
-	file.tag()->setComment(TagLib::StringFromCFString(GetComment()));
-
-	// Track title
-	file.tag()->setTitle(TagLib::StringFromCFString(GetTitle()));
-
-	// Track number
-	int trackNum = 0;
-	if(GetTrackNumber())
-		CFNumberGetValue(GetTrackNumber(), kCFNumberIntType, &trackNum);
-
-	file.tag()->setTrack(trackNum);
+	SetTagFromMetadata(*this, file.tag());
 
 	if(!file.save()) {
 		if(error) {
-			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																			   0,
-																			   &kCFTypeDictionaryKeyCallBacks,
-																			   &kCFTypeDictionaryValueCallBacks);
-
-			CFStringRef displayName = CreateDisplayNameForURL(mURL);
-			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-															   NULL, 
-															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
-															   displayName);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedDescriptionKey, 
-								 errorString);
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedFailureReasonKey, 
-								 CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
-
-			CFDictionarySetValue(errorDictionary, 
-								 kCFErrorLocalizedRecoverySuggestionKey, 
-								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-
-			CFRelease(errorString), errorString = NULL;
-			CFRelease(displayName), displayName = NULL;
-
-			*error = CFErrorCreate(kCFAllocatorDefault, 
-								   AudioMetadataErrorDomain, 
-								   AudioMetadataInputOutputError, 
-								   errorDictionary);
-
-			CFRelease(errorDictionary), errorDictionary = NULL;				
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;

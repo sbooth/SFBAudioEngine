@@ -59,6 +59,6 @@ public:
 	
 	// ========================================
 	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = NULL);
-	virtual bool WriteMetadata(CFErrorRef *error = NULL);
+	virtual bool ReadMetadata(CFErrorRef *error = nullptr);
+	virtual bool WriteMetadata(CFErrorRef *error = nullptr);
 };
