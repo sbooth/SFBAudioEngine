@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -46,14 +46,14 @@ TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 
 	CFErrorRef error;
 	SecTransformRef decoder = SecDecodeTransformCreate(kSecBase64Encoding, &error);
-    if(NULL == decoder) {
+    if(nullptr == decoder) {
 		CFShow(error); 
 		return TagLib::ByteVector::null;
 	}
 
 	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
-	if(NULL == sourceData) {
-		CFRelease(decoder), decoder = NULL;
+	if(nullptr == sourceData) {
+		CFRelease(decoder), decoder = nullptr;
 
 		return TagLib::ByteVector::null;
 	}
@@ -61,27 +61,27 @@ TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
     if(!SecTransformSetAttribute(decoder, kSecTransformInputAttributeName, sourceData, &error)) {
 		CFShow(error); 
 
-		CFRelease(sourceData), sourceData = NULL;
-		CFRelease(decoder), decoder = NULL;
+		CFRelease(sourceData), sourceData = nullptr;
+		CFRelease(decoder), decoder = nullptr;
 
 		return TagLib::ByteVector::null;
 	}
 
 	CFTypeRef decodedData = SecTransformExecute(decoder, &error);
-	if(NULL == decodedData) {
+	if(nullptr == decodedData) {
 		CFShow(error); 
 
-		CFRelease(sourceData), sourceData = NULL;
-		CFRelease(decoder), decoder = NULL;
+		CFRelease(sourceData), sourceData = nullptr;
+		CFRelease(decoder), decoder = nullptr;
 
 		return TagLib::ByteVector::null;
 	}
 
 	result.setData((const char *)CFDataGetBytePtr((CFDataRef)decodedData), (TagLib::uint)CFDataGetLength((CFDataRef)decodedData));
 
-	CFRelease(decodedData), decodedData = NULL;
-	CFRelease(sourceData), sourceData = NULL;
-	CFRelease(decoder), decoder = NULL;
+	CFRelease(decodedData), decodedData = nullptr;
+	CFRelease(sourceData), sourceData = nullptr;
+	CFRelease(decoder), decoder = nullptr;
 	
 	return result;
 #else
@@ -111,14 +111,14 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 
 	CFErrorRef error;
 	SecTransformRef encoder = SecEncodeTransformCreate(kSecBase64Encoding, &error);
-    if(NULL == encoder) {
+    if(nullptr == encoder) {
 		CFShow(error); 
 		return TagLib::ByteVector::null;
 	}
 
 	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
-	if(NULL == sourceData) {
-		CFRelease(encoder), encoder = NULL;
+	if(nullptr == sourceData) {
+		CFRelease(encoder), encoder = nullptr;
 		
 		return TagLib::ByteVector::null;
 	}
@@ -126,27 +126,27 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
     if(!SecTransformSetAttribute(encoder, kSecTransformInputAttributeName, sourceData, &error)) {
 		CFShow(error); 
 		
-		CFRelease(sourceData), sourceData = NULL;
-		CFRelease(encoder), encoder = NULL;
+		CFRelease(sourceData), sourceData = nullptr;
+		CFRelease(encoder), encoder = nullptr;
 		
 		return TagLib::ByteVector::null;
 	}
 
 	CFTypeRef encodedData = SecTransformExecute(encoder, &error);
-	if(NULL == encodedData) {
+	if(nullptr == encodedData) {
 		CFShow(error); 
 		
-		CFRelease(sourceData), sourceData = NULL;
-		CFRelease(encoder), encoder = NULL;
+		CFRelease(sourceData), sourceData = nullptr;
+		CFRelease(encoder), encoder = nullptr;
 		
 		return TagLib::ByteVector::null;
 	}
 
 	result.setData((const char *)CFDataGetBytePtr((CFDataRef)encodedData), (TagLib::uint)CFDataGetLength((CFDataRef)encodedData));
 
-	CFRelease(encodedData), encodedData = NULL;
-	CFRelease(sourceData), sourceData = NULL;
-	CFRelease(encoder), encoder = NULL;
+	CFRelease(encodedData), encodedData = nullptr;
+	CFRelease(sourceData), sourceData = nullptr;
+	CFRelease(encoder), encoder = nullptr;
 
 	return result;
 #else
@@ -160,7 +160,7 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 	BIO_write(bio, input.data(), input.size());
 	(void)BIO_flush(bio);
 
-	void *mem = NULL;
+	void *mem = nullptr;
 	long size = BIO_get_mem_data(bio, &mem);
 	if(0 < size)
 		result.setData(static_cast<const char *>(mem), static_cast<uint>(size));
