@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,55 +30,27 @@
 
 #include "AddTagToDictionary.h"
 #include "AudioMetadata.h"
+#include "TagLibStringUtilities.h"
+#include "CFDictionaryUtilities.h"
 
 bool
 AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag)
 {
-	if(NULL == dictionary || NULL == tag)
+	if(nullptr == dictionary || nullptr == tag)
 		return false;
 
-	if(!tag->title().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->title().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
+	TagLib::AddStringToCFDictionary(dictionary, kMetadataTitleKey, tag->title());
+	TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumTitleKey, tag->album());
+	TagLib::AddStringToCFDictionary(dictionary, kMetadataArtistKey, tag->artist());
+	TagLib::AddStringToCFDictionary(dictionary, kMetadataGenreKey, tag->genre());
 
-	if(!tag->album().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->album().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, str);
-		CFRelease(str), str = NULL;
-	}
+	if(tag->year())
+		AddIntToDictionaryAsString(dictionary, kMetadataReleaseDateKey, tag->year());
 
-	if(!tag->artist().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->artist().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataArtistKey, str);
-		CFRelease(str), str = NULL;
-	}
+	if(tag->track())
+		AddIntToDictionary(dictionary, kMetadataTrackNumberKey, tag->track());
 
-	if(!tag->genre().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->genre().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataGenreKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	if(tag->year()) {
-		CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), tag->year());
-		CFDictionarySetValue(dictionary, kMetadataReleaseDateKey, str);
-		CFRelease(str), str = NULL;
-	}
-
-	if(tag->track()) {
-		int trackNum = tag->track();
-		CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackNum);
-		CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, num);
-		CFRelease(num), num = NULL;
-	}
-
-	if(!tag->comment().isNull()) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tag->comment().toCString(true), kCFStringEncodingUTF8);
-		CFDictionarySetValue(dictionary, kMetadataCommentKey, str);
-		CFRelease(str), str = NULL;
-	}
+	TagLib::AddStringToCFDictionary(dictionary, kMetadataCommentKey, tag->comment());
 
 	return true;
 }

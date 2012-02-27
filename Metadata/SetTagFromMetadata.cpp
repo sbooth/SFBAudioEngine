@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,12 +30,12 @@
 
 #include "AudioMetadata.h"
 #include "SetTagFromMetadata.h"
-#include "TagLibStringFromCFString.h"
+#include "TagLibStringUtilities.h"
 
 bool
 SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag)
 {
-	if(NULL == tag)
+	if(nullptr == tag)
 		return false;
 
 	tag->setTitle(TagLib::StringFromCFString(metadata.GetTitle()));

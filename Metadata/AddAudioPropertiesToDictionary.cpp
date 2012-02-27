@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,40 +30,25 @@
 
 #include "AddAudioPropertiesToDictionary.h"
 #include "AudioMetadata.h"
+#include "CFDictionaryUtilities.h"
 
 bool
 AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties)
 {
-	if(NULL == dictionary || NULL == properties)
+	if(nullptr == dictionary || nullptr == properties)
 		return false;
 	
-	if(0 != properties->length()) {
-		int value = properties->length();
-		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesDurationKey, duration);
-		CFRelease(duration), duration = NULL;
-	}
+	if(properties->length())
+		AddIntToDictionary(dictionary, kPropertiesDurationKey, properties->length());
 
-	if(0 != properties->channels()) {
-		int value = properties->channels();
-		CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-		CFRelease(channelsPerFrame), channelsPerFrame = NULL;
-	}
+	if(properties->channels())
+		AddIntToDictionary(dictionary, kPropertiesChannelsPerFrameKey, properties->channels());
 
-	if(0 != properties->sampleRate()) {
-		int value = properties->sampleRate();
-		CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesSampleRateKey, sampleRate);
-		CFRelease(sampleRate), sampleRate = NULL;
-	}
+	if(properties->sampleRate())
+		AddIntToDictionary(dictionary, kPropertiesSampleRateKey, properties->sampleRate());
 
-	if(0 != properties->bitrate()) {
-		int value = properties->bitrate();
-		CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-		CFDictionarySetValue(dictionary, kPropertiesBitrateKey, bitrate);
-		CFRelease(bitrate), bitrate = NULL;
-	}
+	if(properties->bitrate())
+		AddIntToDictionary(dictionary, kPropertiesBitrateKey, properties->bitrate());
 	
 	return true;
 }

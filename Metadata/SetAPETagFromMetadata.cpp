@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 
 #include "AudioMetadata.h"
 #include "SetAPETagFromMetadata.h"
-#include "TagLibStringFromCFString.h"
+#include "TagLibStringUtilities.h"
 #include "Logger.h"
 
 // ========================================
@@ -39,14 +39,14 @@
 static bool
 SetAPETag(TagLib::APE::Tag *tag, const char *key, CFStringRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
 	// Remove the existing comment with this name
 	tag->removeItem(key);
 	
-	// Nothing left to do if value is NULL
-	if(NULL == value)
+	// Nothing left to do if value is nullptr
+	if(nullptr == value)
 		return true;
 	
 	tag->addValue(key, TagLib::StringFromCFString(value));
@@ -57,18 +57,18 @@ SetAPETag(TagLib::APE::Tag *tag, const char *key, CFStringRef value)
 static bool
 SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, CFNumberRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
-	CFStringRef numberString = NULL;
+	CFStringRef numberString = nullptr;
 	
-	if(NULL != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), value);
+	if(nullptr != value)
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
 	
 	bool result = SetAPETag(tag, key, numberString);
 	
 	if(numberString)
-		CFRelease(numberString), numberString = NULL;
+		CFRelease(numberString), numberString = nullptr;
 	
 	return result;
 }
@@ -76,11 +76,11 @@ SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, CFNumberRef value)
 static bool
 SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, CFBooleanRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
-	if(NULL == value)
-		return SetAPETag(tag, key, NULL);
+	if(nullptr == value)
+		return SetAPETag(tag, key, nullptr);
 	else if(CFBooleanGetValue(value))
 		return SetAPETag(tag, key, CFSTR("1"));
 	else
@@ -88,27 +88,27 @@ SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, CFBooleanRef value)
 }
 
 static bool
-SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStringRef format = NULL)
+SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
-	CFStringRef numberString = NULL;
+	CFStringRef numberString = nullptr;
 	
-	if(NULL != value) {
+	if(nullptr != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
 			LOGGER_ERR("org.sbooth.AudioEngine", "CFNumberGetValue failed");
 			return false;
 		}
 		
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, NULL == format ? CFSTR("%f") : format, f);
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
 	}
 	
 	bool result = SetAPETag(tag, key, numberString);
 	
 	if(numberString)
-		CFRelease(numberString), numberString = NULL;
+		CFRelease(numberString), numberString = nullptr;
 	
 	return result;
 }
@@ -116,7 +116,7 @@ SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStr
 bool
 SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
 {
-	if(NULL == tag)
+	if(nullptr == tag)
 		return false;
 
 	// Standard tags
@@ -140,7 +140,7 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
 	
 	// Additional metadata
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
-	if(NULL != additionalMetadata) {
+	if(nullptr != additionalMetadata) {
 		CFIndex count = CFDictionaryGetCount(additionalMetadata);
 		
 		const void * keys [count];
