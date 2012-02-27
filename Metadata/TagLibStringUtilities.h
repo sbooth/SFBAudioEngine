@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -35,4 +35,7 @@
 
 namespace TagLib {
 	String StringFromCFString(CFStringRef s);
+
+	// Does nothing if value is TagLib::String::null
+	void AddStringToCFDictionary(CFMutableDictionaryRef d, CFStringRef key, String value);
 }

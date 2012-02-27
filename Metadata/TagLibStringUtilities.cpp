@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,20 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "TagLibStringFromCFString.h"
+#include "TagLibStringUtilities.h"
 #include "Logger.h"
 
 TagLib::String 
 TagLib::StringFromCFString(CFStringRef s)
 {
-	if(NULL == s)
+	if(nullptr == s)
 		return String::null;
 
 	CFRange range = CFRangeMake(0, CFStringGetLength(s));
 	CFIndex count;
 
 	// Determine the length of the string in UTF-8
-	CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, NULL, 0, &count);
+	CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, nullptr, 0, &count);
 
 	char *buf = new char [count + 1];
 
@@ -60,4 +60,14 @@ TagLib::StringFromCFString(CFStringRef s)
 	delete [] buf;
 
 	return result;
+}
+
+void TagLib::AddStringToCFDictionary(CFMutableDictionaryRef d, CFStringRef key, String value)
+{
+	if(nullptr == d || nullptr == key || value.isNull())
+		return;
+	
+	CFStringRef string = CFStringCreateWithCString(kCFAllocatorDefault, value.toCString(true), kCFStringEncodingUTF8);
+	CFDictionarySetValue(d, key, string);
+	CFRelease(string), string = nullptr;
 }
