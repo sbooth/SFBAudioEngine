@@ -41,15 +41,14 @@ public:
 	Semaphore();
 	~Semaphore();
 
+	Semaphore(const Semaphore& rhs) = delete;
+	Semaphore& operator=(const Semaphore& rhs) = delete;
+
 	bool Signal();
 	bool SignalAll();
 
 	bool Wait();
 	bool TimedWait(mach_timespec_t duration);
-
-protected:
-	Semaphore(const Semaphore& semaphore);
-	Semaphore& operator=(const Semaphore& semaphore);
 
 private:
 	semaphore_t mSemaphore;

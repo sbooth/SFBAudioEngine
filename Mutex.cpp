@@ -53,14 +53,6 @@ Mutex::~Mutex()
 		LOGGER_ERR("org.sbooth.AudioEngine.Mutex", "pthread_mutex_destroy failed: " << strerror(success));
 }
 
-Mutex::Mutex(const Mutex& /*mutex*/)
-{}
-
-Mutex& Mutex::operator=(const Mutex& /*mutex*/)
-{
-	return *this;
-}
-
 bool Mutex::Lock()
 {
 	pthread_t currentThread = pthread_self();

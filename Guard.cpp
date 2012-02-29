@@ -52,14 +52,6 @@ Guard::~Guard()
 		LOGGER_ERR("org.sbooth.AudioEngine.Guard", "pthread_cond_destroy failed: " << strerror(success));
 }
 
-Guard::Guard(const Guard& /*guard*/)
-{}
-
-Guard& Guard::operator=(const Guard& /*guard*/)
-{
-	return *this;
-}
-
 void Guard::Wait()
 {
 	pthread_t currentThread = pthread_self();

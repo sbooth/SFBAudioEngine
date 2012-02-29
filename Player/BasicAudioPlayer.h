@@ -88,6 +88,10 @@ public:
 	BasicAudioPlayer();
 	~BasicAudioPlayer();
 	
+	// This class is non-copyable
+	BasicAudioPlayer(const BasicAudioPlayer& rhs) = delete;
+	BasicAudioPlayer& operator=(const BasicAudioPlayer& rhs) = delete;
+
 	// ========================================
 	// Playback Control
 	bool Play();

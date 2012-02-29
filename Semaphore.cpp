@@ -52,14 +52,6 @@ Semaphore::~Semaphore()
 		LOGGER_ERR("org.sbooth.AudioEngine.Semaphore", "semaphore_destroy failed: " << mach_error_string(result));
 }
 
-Semaphore::Semaphore(const Semaphore& /*semaphore*/)
-{}
-
-Semaphore& Semaphore::operator=(const Semaphore& /*semaphore*/)
-{
-	return *this;
-}
-
 bool Semaphore::Signal()
 {
 	kern_return_t result = semaphore_signal(mSemaphore);

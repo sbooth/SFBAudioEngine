@@ -38,9 +38,10 @@ DecoderStateData::DecoderStateData()
 {}
 
 DecoderStateData::DecoderStateData(AudioDecoder *decoder)
-	: mDecoder(decoder), mBufferList(nullptr), mBufferCapacityFrames(0), mTimeStamp(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
+	: DecoderStateData()
 {
 	assert(nullptr != decoder);
+	mDecoder = decoder;
 	
 	// NB: The decoder may return an estimate of the total frames
 	mTotalFrames = mDecoder->GetTotalFrames();
@@ -49,7 +50,7 @@ DecoderStateData::DecoderStateData(AudioDecoder *decoder)
 DecoderStateData::~DecoderStateData()
 {
 	// Delete the decoder
-	if(nullptr != mDecoder)
+	if(mDecoder)
 		delete mDecoder, mDecoder = nullptr;
 
 	DeallocateBufferList();
@@ -65,7 +66,7 @@ void DecoderStateData::AllocateBufferList(UInt32 capacityFrames)
 
 void DecoderStateData::DeallocateBufferList()
 {
-	if(nullptr != mBufferList) {
+	if(mBufferList) {
 		mBufferCapacityFrames = 0;
 		mBufferList = DeallocateABL(mBufferList);
 	}

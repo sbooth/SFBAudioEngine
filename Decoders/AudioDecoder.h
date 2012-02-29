@@ -113,7 +113,11 @@ public:
 	// ========================================
 	// Destruction
 	virtual ~AudioDecoder();
-	
+
+	// This class is non-copyable
+	AudioDecoder(const AudioDecoder& rhs) = delete;
+	AudioDecoder& operator=(const AudioDecoder& rhs) = delete;
+
 	// ========================================
 	// The URL this decoder will process
 	inline CFURLRef GetURL() const								{ return mInputSource->GetURL(); }
@@ -182,8 +186,6 @@ protected:
 	// For subclass use only
 	AudioDecoder();
 	AudioDecoder(InputSource *inputSource);
-	AudioDecoder(const AudioDecoder& rhs);
-	AudioDecoder& operator=(const AudioDecoder& rhs);
 
 private:
 

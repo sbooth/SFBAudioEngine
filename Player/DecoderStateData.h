@@ -57,6 +57,9 @@ public:
 	DecoderStateData(AudioDecoder *decoder);
 	~DecoderStateData();
 	
+	DecoderStateData(const DecoderStateData& rhs) = delete;
+	DecoderStateData& operator=(const DecoderStateData& rhs) = delete;
+
 	void AllocateBufferList(UInt32 capacityFrames);
 	void DeallocateBufferList();
 

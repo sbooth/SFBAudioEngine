@@ -41,6 +41,9 @@ public:
 	Mutex();
 	virtual ~Mutex();
 
+	Mutex(const Mutex& rhs) = delete;
+	Mutex& operator=(const Mutex& rhs) = delete;
+
 	// Lock() and Unlock() return true if the operation was successful, false otherwise
 	// TryLock() returns true if the lock is held by the current thread, false otherwise
 	// All three may throw std::runtime_exception if something bad happens
@@ -54,9 +57,6 @@ public:
 	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
-	Mutex(const Mutex& mutex);
-	Mutex& operator=(const Mutex& mutex);
-
 	pthread_mutex_t mMutex;
 	pthread_t mOwner;
 

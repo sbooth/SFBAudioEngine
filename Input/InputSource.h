@@ -65,7 +65,11 @@ public:
 	// ========================================
 	// Destruction
 	virtual ~InputSource();
-	
+
+	// This class is non-copyable
+	InputSource(const InputSource& rhs) = delete;
+	InputSource& operator=(const InputSource& rhs) = delete;
+
 	// ========================================
 	// The URL this source will process
 	inline CFURLRef GetURL() const							{ return mURL; }
@@ -99,7 +103,5 @@ protected:
 	// For subclass use only
 	InputSource();
 	InputSource(CFURLRef url);
-	InputSource(const InputSource& rhs);
-	InputSource& operator=(const InputSource& rhs);
 
 };

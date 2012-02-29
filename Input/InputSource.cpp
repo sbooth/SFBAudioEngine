@@ -87,32 +87,8 @@ InputSource::InputSource(CFURLRef url)
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 }
 
-InputSource::InputSource(const InputSource& rhs)
-	: mURL(nullptr), mIsOpen(false)
-{
-	*this = rhs;
-}
-
 InputSource::~InputSource()
 {
 	if(mURL)
 		CFRelease(mURL), mURL = nullptr;
-}
-
-#pragma mark Operator Overloads
-
-InputSource& InputSource::operator=(const InputSource& rhs)
-{
-	if(this == &rhs)
-		return *this;
-
-	if(mURL)
-		CFRelease(mURL), mURL = nullptr;
-	
-	if(rhs.mURL)
-		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
-
-	mIsOpen = rhs.mIsOpen;
-
-	return *this;
 }

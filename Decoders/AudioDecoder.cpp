@@ -705,12 +705,6 @@ AudioDecoder::AudioDecoder(InputSource *inputSource)
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
-AudioDecoder::AudioDecoder(const AudioDecoder& rhs)
-	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false)
-{
-	*this = rhs;
-}
-
 AudioDecoder::~AudioDecoder()
 {
 	if(mInputSource)
@@ -718,32 +712,6 @@ AudioDecoder::~AudioDecoder()
 
 	if(mChannelLayout)
 		free(mChannelLayout),mChannelLayout = nullptr;
-}
-
-#pragma mark Operator Overloads
-
-AudioDecoder& AudioDecoder::operator=(const AudioDecoder& rhs)
-{
-	if(this == &rhs)
-		return *this;
-
-	if(mInputSource)
-		delete mInputSource, mInputSource = nullptr;
-	
-	if(mChannelLayout)
-		free(mChannelLayout), mChannelLayout = nullptr;
-
-	if(rhs.mInputSource)
-		mInputSource = rhs.mInputSource;
-
-	mFormat				= rhs.mFormat;
-	mSourceFormat		= rhs.mSourceFormat;
-	mChannelLayout		= CopyChannelLayout(rhs.mChannelLayout);
-	mIsOpen				= rhs.mIsOpen;
-
-	memcpy(&mCallbacks, &rhs.mCallbacks, sizeof(rhs.mCallbacks));
-
-	return *this;
 }
 
 #pragma mark Base Functionality
