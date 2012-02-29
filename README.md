@@ -11,9 +11,12 @@ SFBAudioEngine is a set of C++ classes enabling applications to easily play audi
 * Ogg Vorbis
 * Monkey's Audio
 * Ogg Speex
+* True Audio
 * All other formats supported natively by Core Audio
 
 In addition to playback, SFBAudioEngine supports reading and writing of metadata for most supported formats.
+
+SFBAudioEngine uses C++11 language features (such as delegated constructors and range-based for), but not C++11 STL features (such as std::shared_ptr).  This means that clang must be used to compile SFBAudioEngine and any application using it, but either GNU's libstdc++ or clang's libc++ may be used provided that SFBAudioEngine's dependencies are compiled using the same library.
 
 A command line audio player using SFBAudioEngine is as simple as:
 
