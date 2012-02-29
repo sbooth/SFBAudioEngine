@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,12 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <vector>
 #include <taglib/id3v2tag.h>
+
+class AttachedPicture;
 
 // ========================================
 // Add the metadata specified in the ID3v2::Tag instance to dictionary
 // ========================================
-bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v2::Tag *tag);
+bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::ID3v2::Tag *tag);

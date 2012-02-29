@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,9 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <vector>
+
+#include "AttachedPicture.h"
 
 // ========================================
 // Error Codes
@@ -44,7 +47,7 @@ enum {
 };
 
 // ========================================
-// Key names for the metadata dictionary (for subclass use)
+// Key names for the metadata dictionary (for use with HasUnsavedChangesForKey())
 // ========================================
 extern const CFStringRef		kPropertiesFormatNameKey;
 extern const CFStringRef		kPropertiesTotalFramesKey;
@@ -53,6 +56,7 @@ extern const CFStringRef		kPropertiesBitsPerChannelKey;
 extern const CFStringRef		kPropertiesSampleRateKey;
 extern const CFStringRef		kPropertiesDurationKey;
 extern const CFStringRef		kPropertiesBitrateKey;
+
 extern const CFStringRef		kMetadataTitleKey;
 extern const CFStringRef		kMetadataAlbumTitleKey;
 extern const CFStringRef		kMetadataArtistKey;
@@ -71,15 +75,15 @@ extern const CFStringRef		kMetadataRatingKey;
 extern const CFStringRef		kMetadataCommentKey;
 extern const CFStringRef		kMetadataISRCKey;
 extern const CFStringRef		kMetadataMCNKey;
-extern const CFStringRef		kMetadataMusicBrainzAlbumIDKey;
-extern const CFStringRef		kMetadataMusicBrainzTrackIDKey;
+extern const CFStringRef		kMetadataMusicBrainzReleaseIDKey;
+extern const CFStringRef		kMetadataMusicBrainzRecordingIDKey;
 extern const CFStringRef		kMetadataAdditionalMetadataKey;
+
 extern const CFStringRef		kReplayGainReferenceLoudnessKey;
 extern const CFStringRef		kReplayGainTrackGainKey;
 extern const CFStringRef		kReplayGainTrackPeakKey;
 extern const CFStringRef		kReplayGainAlbumGainKey;
 extern const CFStringRef		kReplayGainAlbumPeakKey;
-extern const CFStringRef		kAlbumArtFrontCoverKey;
 
 // ========================================
 // Base class for all audio metadata reader/writer classes
@@ -97,10 +101,17 @@ public:
 	static bool HandlesMIMEType(CFStringRef mimeType);
 	
 	// ========================================
-	// Factory methods that return an AudioMetadata for the specified URL, or NULL on failure
-	static AudioMetadata * CreateMetadataForURL(CFURLRef url, CFErrorRef *error = NULL);
+	// Factory method that returns an AudioMetadata object for the specified URL, or nullptr on failure
+	static AudioMetadata * CreateMetadataForURL(CFURLRef url, CFErrorRef *error = nullptr);
+
+	// ========================================
+	// Destruction
 	virtual ~AudioMetadata();
 	
+	// This class is non-copyable
+	AudioMetadata(const AudioMetadata& rhs) = delete;
+	AudioMetadata& operator=(const AudioMetadata& rhs) = delete;
+
 	// ========================================
 	// The URL containing this metadata
 	inline CFURLRef GetURL() const							{ return mURL; }
@@ -108,13 +119,13 @@ public:
 	
 	// ========================================
 	// File access
-	virtual bool ReadMetadata(CFErrorRef *error = NULL) = 0;
-	virtual bool WriteMetadata(CFErrorRef *error = NULL) = 0;
+	virtual bool ReadMetadata(CFErrorRef *error = nullptr) = 0;
+	virtual bool WriteMetadata(CFErrorRef *error = nullptr) = 0;
 	
 	// ========================================
 	// Change management
-	inline bool HasUnsavedChanges() const					{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
-	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
+	bool HasUnsavedChanges() const;
+	void RevertUnsavedChanges();
 
 	inline bool HasUnsavedChangesForKey(CFStringRef key) const { return CFDictionaryContainsKey(mChangedMetadata, key); }
 
@@ -214,23 +225,31 @@ public:
 
 	// ========================================
 	// Album artwork
-	CFDataRef GetFrontCoverArt() const;
-	void SetFrontCoverArt(CFDataRef frontCoverArt);
+	const std::vector<AttachedPicture *> GetAttachedPictures() const;
+	const std::vector<AttachedPicture *> GetAttachedPicturesOfType(AttachedPicture::Type type) const;
 
+	void AttachPicture(AttachedPicture *picture); // AudioMetadata takes over ownership of picture
+
+	void RemoveAttachedPicture(AttachedPicture *picture);
+	void RemoveAttachedPicturesOfType(AttachedPicture::Type type);
+	void RemoveAllAttachedPictures();
+	
 protected:
 
 	// ========================================
 	// Data members
 	CFURLRef						mURL;				// The location of the stream to be read/written
+
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
 	CFMutableDictionaryRef			mChangedMetadata;	// The metadata information that has been changed but not saved
-	
+
 	// ========================================
 	// For subclass use only
 	AudioMetadata();
 	AudioMetadata(CFURLRef url);
-	AudioMetadata(const AudioMetadata& rhs);
-	AudioMetadata& operator=(const AudioMetadata& rhs);
+
+	// mPictures is private to prevent direct subclass manipulation, so the following methods are provided
+	void AddSavedPicture(AttachedPicture *picture);
 
 	// Subclasses should call this after a successful save operation
 	void MergeChangedMetadataIntoMetadata();
@@ -242,4 +261,11 @@ protected:
 	// Generic access
 	CFTypeRef GetValue(CFStringRef key) const;
 	void SetValue(CFStringRef key, CFTypeRef value);
+
+private:
+	// It is bad form to use a std::vector of raw pointers (exceptions can cause memory leaks), however I don't
+	// want to use boost solely for this single data member.
+	// Sadly, clang's libc++ doesn't work on Snow Leopard otherwise I would use std::vector<std::shared_ptr<AttachedPicture>>
+//	std::vector<std::shared_ptr<AttachedPicture>> mPictures;
+	std::vector<AttachedPicture *>	mPictures;			// The attached picture information
 };

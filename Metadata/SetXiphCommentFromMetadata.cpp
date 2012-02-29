@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 
 #include "AudioMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
-#include "TagLibStringFromCFString.h"
+#include "TagLibStringUtilities.h"
 #include "Base64Utilities.h"
 #include "Logger.h"
 
@@ -43,14 +43,14 @@
 static bool
 SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, CFStringRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
 	// Remove the existing comment with this name
 	tag->removeField(key);
 	
-	// Nothing left to do if value is NULL
-	if(NULL == value)
+	// Nothing left to do if value is nullptr
+	if(nullptr == value)
 		return true;
 	
 	tag->addField(key, TagLib::StringFromCFString(value));
@@ -61,18 +61,18 @@ SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, CFStringRef value
 static bool
 SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
-	CFStringRef numberString = NULL;
+	CFStringRef numberString = nullptr;
 	
-	if(NULL != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@"), value);
+	if(nullptr != value)
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
 	
 	bool result = SetXiphComment(tag, key, numberString);
 	
 	if(numberString)
-		CFRelease(numberString), numberString = NULL;
+		CFRelease(numberString), numberString = nullptr;
 	
 	return result;
 }
@@ -80,11 +80,11 @@ SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 static bool
 SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, CFBooleanRef value)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 
-	if(NULL == value)
-		return SetXiphComment(tag, key, NULL);
+	if(nullptr == value)
+		return SetXiphComment(tag, key, nullptr);
 	else if(CFBooleanGetValue(value))
 		return SetXiphComment(tag, key, CFSTR("1"));
 	else
@@ -92,35 +92,35 @@ SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, CFBooleanR
 }
 
 static bool
-SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value, CFStringRef format = NULL)
+SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
 {
-	assert(NULL != tag);
-	assert(NULL != key);
+	assert(nullptr != tag);
+	assert(nullptr != key);
 	
-	CFStringRef numberString = NULL;
+	CFStringRef numberString = nullptr;
 	
-	if(NULL != value) {
+	if(nullptr != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
 			LOGGER_ERR("org.sbooth.AudioEngine", "CFNumberGetValue failed");
 			return false;
 		}
 		
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, NULL == format ? CFSTR("%f") : format, f);
+		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
 	}
 	
 	bool result = SetXiphComment(tag, key, numberString);
 	
 	if(numberString)
-		CFRelease(numberString), numberString = NULL;
+		CFRelease(numberString), numberString = nullptr;
 	
 	return result;
 }
 
 bool
-SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag)
+SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
 {
-	if(NULL == tag)
+	if(nullptr == tag)
 		return false;
 
 	// Standard tags
@@ -145,7 +145,7 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	
 	// Additional metadata
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
-	if(NULL != additionalMetadata) {
+	if(nullptr != additionalMetadata) {
 		CFIndex count = CFDictionaryGetCount(additionalMetadata);
 		
 		const void * keys [count];
@@ -174,68 +174,52 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
 
 	// Album art
-	TagLib::StringList encodedBlocks = tag->fieldListMap()["METADATA_BLOCK_PICTURE"];
-
-	for(TagLib::StringList::ConstIterator blockIterator = encodedBlocks.begin(); blockIterator != encodedBlocks.end(); ++blockIterator) {
-		const TagLib::ByteVector encodedBlock = blockIterator->data(TagLib::String::UTF8);
+	if(setAlbumArt) {
+		for(auto field : tag->fieldListMap()["METADATA_BLOCK_PICTURE"])
+			tag->removeField(field);
 		
-		// Decode the Base-64 encoded data
-		TagLib::ByteVector decodedBlock = DecodeBase64(encodedBlock);
-		
-		TagLib::FLAC::Picture picture;
-		picture.parse(decodedBlock);
-
-		// The fact that there can be more than one FrontCover image is conveniently ignored
-		switch(picture.type()) {
-			case TagLib::FLAC::Picture::FrontCover:
-				tag->removeField("METADATA_BLOCK_PICTURE", *blockIterator);
-				break;
+		for(auto attachedPicture : metadata.GetAttachedPictures()) {
+			CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+			if(nullptr == imageSource)
+				return false;
+			
+			TagLib::FLAC::Picture picture;
+			picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+			picture.setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture->GetType()));
+			if(attachedPicture->GetDescription())
+				picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
+			
+			// Convert the image's UTI into a MIME type
+			CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+			if(mimeType) {
+				picture.setMimeType(TagLib::StringFromCFString(mimeType));
+				CFRelease(mimeType), mimeType = nullptr;
+			}
+			
+			// Flesh out the height, width, and depth
+			CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+			if(imagePropertiesDictionary) {
+				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
+				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
+				CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
 				
-				// TODO: Other artwork types will be handled in the future
-			default:
-				break;
+				int height, width, depth;
+				
+				// Ignore numeric conversion errors
+				CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
+				CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
+				CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
+				
+				picture.setHeight(height);
+				picture.setWidth(width);
+				picture.setColorDepth(depth);
+				
+				CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = nullptr;
+			}
+			
+			TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
+			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
 		}
-	}
-
-	if(metadata.GetFrontCoverArt()) {
-		TagLib::FLAC::Picture picture;
-
-		picture.setType(TagLib::FLAC::Picture::FrontCover);
-
-		CGImageSourceRef imageSource = CGImageSourceCreateWithData(metadata.GetFrontCoverArt(), NULL);
-		if(NULL == imageSource)
-			return false;
-
-		// Convert the image's UTI into a MIME type
-		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-		picture.setMimeType(TagLib::StringFromCFString(mimeType));
-		CFRelease(mimeType), mimeType = NULL;
-
-		// Flesh out the height, width, and depth
-		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, NULL);
-		if(imagePropertiesDictionary) {
-			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
-			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
-			CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
-
-			// Ignore numeric conversion errors
-			int width, height, depth;
-			CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
-			CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
-			CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
-
-			picture.setWidth(width);
-			picture.setHeight(height);
-			picture.setColorDepth(depth);
-
-			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = NULL;
-		}
-
-		CFDataRef frontCoverData = metadata.GetFrontCoverArt();
-		picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(frontCoverData), (TagLib::uint)CFDataGetLength(frontCoverData)));
-
-		TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
-		tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
 	}
 
 	return true;

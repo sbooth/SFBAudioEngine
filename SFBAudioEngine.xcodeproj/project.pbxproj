@@ -17,7 +17,6 @@
 		3205E4C311309CA300FD9DAD /* OggFLACMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E4BF11309CA300FD9DAD /* OggFLACMetadata.cpp */; };
 		3205E4C511309CA300FD9DAD /* OggVorbisMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E4C111309CA300FD9DAD /* OggVorbisMetadata.cpp */; };
 		3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */; };
-		3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */; };
 		320723C8138D564700007369 /* CreateStringForOSType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320723C7138D564700007369 /* CreateStringForOSType.cpp */; };
 		3208539F14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */; };
 		320A32E314DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320A32E114DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp */; };
@@ -41,11 +40,19 @@
 		3268C0C1139C06AB00CC5C5C /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */; };
+		327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */; };
+		327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */; };
+		327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */; };
 		3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
 		328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */; };
 		3291CC1514F5CB7D00B34DA4 /* Base64Utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 329AB8A1148B185300180506 /* Base64Utilities.cpp */; };
 		3291CC1614F5CB8100B34DA4 /* SetTagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */; };
 		3291CC1714F5CB9400B34DA4 /* AddTagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */; };
+		3291CC2814F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */; };
+		3291CC2914F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */; };
+		3291CC2A14F5D03C00B34DA4 /* AttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3291CC2B14F5D03C00B34DA4 /* AttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */; };
 		3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4C8111614540091D56B /* CADebugMacros.cpp */; };
 		3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
 		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
@@ -157,6 +164,9 @@
 		32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
 		32DEDA27122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
 		32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */; };
+		32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */; };
+		32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */; };
+		32DFA2F514FA7FD400D1FB58 /* Logger+NSOverloads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */; };
 		32E6AB9B1096C81200DA998D /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
 		32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
@@ -240,12 +250,12 @@
 		3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODDecoder.cpp; sourceTree = "<group>"; };
 		3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WAVEMetadata.cpp; sourceTree = "<group>"; };
 		3205E3BE1130787300FD9DAD /* WAVEMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WAVEMetadata.h; sourceTree = "<group>"; };
-		3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddID3v2TagToDictionary.cpp; sourceTree = "<group>"; };
-		3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddID3v2TagToDictionary.h; sourceTree = "<group>"; };
+		3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddID3v2TagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddID3v2TagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetID3v2TagFromMetadata.cpp; sourceTree = "<group>"; };
 		3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v2TagFromMetadata.h; sourceTree = "<group>"; };
 		3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AIFFMetadata.cpp; sourceTree = "<group>"; };
-		3205E4291130847C00FD9DAD /* AIFFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AIFFMetadata.h; sourceTree = "<group>"; };
+		3205E4291130847C00FD9DAD /* AIFFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AIFFMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E43C113085AE00FD9DAD /* MP3Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MP3Metadata.cpp; sourceTree = "<group>"; };
 		3205E43D113085AE00FD9DAD /* MP3Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP3Metadata.h; sourceTree = "<group>"; };
 		3205E45A11308F8C00FD9DAD /* MusepackMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackMetadata.cpp; sourceTree = "<group>"; };
@@ -256,12 +266,10 @@
 		3205E4C211309CA300FD9DAD /* OggVorbisMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisMetadata.h; sourceTree = "<group>"; };
 		3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetXiphCommentFromMetadata.cpp; sourceTree = "<group>"; };
 		3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetXiphCommentFromMetadata.h; sourceTree = "<group>"; };
-		3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringFromCFString.cpp; sourceTree = "<group>"; };
-		3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringFromCFString.h; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
 		3208539D14ABD8BA006EB1CA /* Logger+NSOverloads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Logger+NSOverloads.mm"; sourceTree = "<group>"; };
-		320A32E114DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrueAudioMetadata.cpp; sourceTree = "<group>"; };
+		320A32E114DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TrueAudioMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		320A32E214DD5E8F00A5BAA4 /* TrueAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrueAudioMetadata.h; sourceTree = "<group>"; };
 		32161CE8133AF8C8008449C3 /* mpg123.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpg123.framework; path = Frameworks/mpg123.framework; sourceTree = "<group>"; };
 		322B5B2C108BA69F00CA9BDE /* Base.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -310,6 +318,10 @@
 		3268C0BF139C06AB00CC5C5C /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
+		327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringUtilities.cpp; sourceTree = "<group>"; };
+		327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
+		327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFDictionaryUtilities.cpp; sourceTree = "<group>"; };
+		327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFDictionaryUtilities.h; sourceTree = "<group>"; };
 		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
 		3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateChannelLayout.h; sourceTree = "<group>"; };
 		328AA4C8111614540091D56B /* CADebugMacros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugMacros.cpp; sourceTree = "<group>"; };
@@ -317,15 +329,17 @@
 		328AA4CA111614540091D56B /* CADebugPrintf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugPrintf.cpp; sourceTree = "<group>"; };
 		328AA4CB111614540091D56B /* CADebugPrintf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugPrintf.h; sourceTree = "<group>"; };
 		328AA4CC111614540091D56B /* CAMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAMath.h; sourceTree = "<group>"; };
-		328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddTagToDictionary.cpp; sourceTree = "<group>"; };
-		328E230E1476EE9E00C34178 /* AddTagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddTagToDictionary.h; sourceTree = "<group>"; };
+		328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddTagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		328E230E1476EE9E00C34178 /* AddTagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddTagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddXiphCommentToDictionary.cpp; sourceTree = "<group>"; };
-		328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddXiphCommentToDictionary.h; sourceTree = "<group>"; };
+		328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddXiphCommentToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttachedPicture.cpp; sourceTree = "<group>"; };
+		3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AttachedPicture.h; sourceTree = "<group>"; };
 		329AB89F148B17AA00180506 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		329AB8A1148B185300180506 /* Base64Utilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Base64Utilities.cpp; sourceTree = "<group>"; };
 		329AB8A2148B185300180506 /* Base64Utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64Utilities.h; sourceTree = "<group>"; };
-		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; };
-		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; };
+		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32AEB2701409AC30001F9A60 /* libSFBAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSFBAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -383,14 +397,17 @@
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
 		32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetTagFromMetadata.cpp; sourceTree = "<group>"; };
 		32D9017014793DD100DBE73B /* SetTagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetTagFromMetadata.h; sourceTree = "<group>"; };
-		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AllocateABL.h; sourceTree = "<group>"; };
-		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AllocateABL.cpp; sourceTree = "<group>"; };
+		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AllocateABL.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AllocateABL.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
 		32DEDA13122C095600C25252 /* DeallocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeallocateABL.cpp; sourceTree = "<group>"; };
 		32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChannelLayoutsAreEqual.h; sourceTree = "<group>"; };
 		32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChannelLayoutsAreEqual.cpp; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
 		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
+		32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFErrorUtilities.cpp; sourceTree = "<group>"; };
+		32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFErrorUtilities.h; sourceTree = "<group>"; };
+		32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Logger+NSOverloads.mm"; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
 		32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackDecoder.cpp; sourceTree = "<group>"; };
@@ -407,11 +424,11 @@
 		32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FLACMetadata.cpp; sourceTree = "<group>"; };
 		32EA6824112CD84B006C26F1 /* FLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACMetadata.h; sourceTree = "<group>"; };
-		32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddID3v1TagToDictionary.h; sourceTree = "<group>"; };
-		32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddID3v1TagToDictionary.cpp; sourceTree = "<group>"; };
+		32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddID3v1TagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddID3v1TagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v1TagFromMetadata.h; sourceTree = "<group>"; };
 		32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetID3v1TagFromMetadata.cpp; sourceTree = "<group>"; };
-		32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AddAPETagToDictionary.h; sourceTree = "<group>"; };
+		32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddAPETagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAPETagToDictionary.cpp; sourceTree = "<group>"; };
 		32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetAPETagFromMetadata.h; sourceTree = "<group>"; };
 		32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetAPETagFromMetadata.cpp; sourceTree = "<group>"; };
@@ -519,6 +536,7 @@
 			children = (
 				32AEB2901409AF2B001F9A60 /* Logger.h */,
 				32AEB28F1409AF2B001F9A60 /* Logger.cpp */,
+				32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */,
 				32B79A63138F2EC200EBEF1B /* Mutex.h */,
 				32B79A62138F2EC200EBEF1B /* Mutex.cpp */,
 				3268C0BE139C06AB00CC5C5C /* Guard.h */,
@@ -537,6 +555,8 @@
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				320723BC138D521A00007369 /* CreateStringForOSType.h */,
 				320723C7138D564700007369 /* CreateStringForOSType.cpp */,
+				32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */,
+				32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */,
 				32C212D61091116D00BA2493 /* Info.plist */,
 			);
 			name = Other;
@@ -667,8 +687,10 @@
 			children = (
 				329AB8A2148B185300180506 /* Base64Utilities.h */,
 				329AB8A1148B185300180506 /* Base64Utilities.cpp */,
-				3205E5D811319E6400FD9DAD /* TagLibStringFromCFString.h */,
-				3205E5D711319E6400FD9DAD /* TagLibStringFromCFString.cpp */,
+				327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */,
+				327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */,
+				327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */,
+				327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */,
 				32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */,
 				32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */,
 				328E230E1476EE9E00C34178 /* AddTagToDictionary.h */,
@@ -824,6 +846,8 @@
 			children = (
 				32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */,
 				32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */,
+				3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */,
+				3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */,
 				3205E4291130847C00FD9DAD /* AIFFMetadata.h */,
 				3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */,
 				32EA6824112CD84B006C26F1 /* FLACMetadata.h */,
@@ -863,6 +887,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32AF1A6314C8FE3C00750053 /* TrueAudioDecoder.h in Headers */,
+				3291CC2B14F5D03C00B34DA4 /* AttachedPicture.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -875,6 +900,7 @@
 				32D429E713E308DB00FA07DE /* AudioPlayer.h in Headers */,
 				32AEB3611409CAE0001F9A60 /* BasicAudioPlayer.h in Headers */,
 				32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */,
+				3291CC2A14F5D03C00B34DA4 /* AttachedPicture.h in Headers */,
 				32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */,
 				3268C0C0139C06AB00CC5C5C /* Guard.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
@@ -886,6 +912,9 @@
 				32F83B151409CC1D005790F1 /* PCMConverter.h in Headers */,
 				32AF1A6214C8FE3C00750053 /* TrueAudioDecoder.h in Headers */,
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
+				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
+				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
+				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1069,6 +1098,7 @@
 				32AEB2C81409B2BA001F9A60 /* CARingBuffer.cpp in Sources */,
 				3208539F14ABD8BA006EB1CA /* Logger+NSOverloads.mm in Sources */,
 				32AF1A6114C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */,
+				3291CC2914F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1111,7 +1141,6 @@
 				3205E4C311309CA300FD9DAD /* OggFLACMetadata.cpp in Sources */,
 				3205E4C511309CA300FD9DAD /* OggVorbisMetadata.cpp in Sources */,
 				3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */,
-				3205E5D911319E6400FD9DAD /* TagLibStringFromCFString.cpp in Sources */,
 				3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */,
 				3291CC1714F5CB9400B34DA4 /* AddTagToDictionary.cpp in Sources */,
 				3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */,
@@ -1151,6 +1180,11 @@
 				32F83B141409CC1D005790F1 /* PCMConverter.cpp in Sources */,
 				32AF1A6014C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */,
 				320A32E314DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp in Sources */,
+				3291CC2814F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */,
+				327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */,
+				327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */,
+				32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */,
+				32DFA2F514FA7FD400D1FB58 /* Logger+NSOverloads.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

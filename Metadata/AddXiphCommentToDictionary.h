@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,9 +31,12 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <vector>
 #include <taglib/xiphcomment.h>
+
+class AttachedPicture;
 
 // ========================================
 // Add the metadata specified in the Ogg::XiphComment instance to dictionary
 // ========================================
-bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag);
+bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::Ogg::XiphComment *tag);

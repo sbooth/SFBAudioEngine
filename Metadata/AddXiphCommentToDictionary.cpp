@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,30 +33,24 @@
 #include "AddXiphCommentToDictionary.h"
 #include "AudioMetadata.h"
 #include "Base64Utilities.h"
+#include "CFDictionaryUtilities.h"
 
 bool
-AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg::XiphComment *tag)
+AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::Ogg::XiphComment *tag)
 {
-	if(NULL == dictionary || NULL == tag)
+	if(nullptr == dictionary || nullptr == tag)
 		return false;
+
+	attachedPictures.clear();
 	
-	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																		  0,
-																		  &kCFTypeDictionaryKeyCallBacks,
-																		  &kCFTypeDictionaryValueCallBacks);
+	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	
-	// A map <String, StringList>
-	TagLib::Ogg::FieldListMap fieldList = tag->fieldListMap();
-	
-	for(TagLib::Ogg::FieldListMap::ConstIterator it = fieldList.begin(); it != fieldList.end(); ++it) {
-		CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault,
-													it->first.toCString(true),
-													kCFStringEncodingUTF8);
+	for(auto it : tag->fieldListMap()) {
+		// According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is a safer choice
+		CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault, it.first.toCString(true), kCFStringEncodingUTF8);
 		
 		// Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
-		CFStringRef value = CFStringCreateWithCString(kCFAllocatorDefault,
-													  it->second.front().toCString(true),
-													  kCFStringEncodingUTF8);
+		CFStringRef value = CFStringCreateWithCString(kCFAllocatorDefault, it.second.front().toCString(true), kCFStringEncodingUTF8);
 		
 		if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, value);
@@ -74,120 +68,76 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Ogg:
 			CFDictionarySetValue(dictionary, kMetadataCommentKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLE"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataTitleKey, value);
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataTrackNumberKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataTrackTotalKey, number);
-			CFRelease(number), number = NULL;
-		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataTrackNumberKey, CFStringGetIntValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataTrackTotalKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPILATION"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataCompilationKey, CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataDiscNumberKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataDiscTotalKey, number);
-			CFRelease(number), number = NULL;
-		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataDiscNumberKey, CFStringGetIntValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataDiscTotalKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("LYRICS"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataLyricsKey, value);
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataBPMKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive)) {
-			int num = CFStringGetIntValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &num);
-			CFDictionarySetValue(dictionary, kMetadataRatingKey, number);
-			CFRelease(number), number = NULL;
-		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataBPMKey, CFStringGetIntValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive))
+			AddIntToDictionary(dictionary, kMetadataRatingKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataMCNKey, value);
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive)) {
-			double num = CFStringGetDoubleValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			CFDictionarySetValue(dictionary, kReplayGainReferenceLoudnessKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive)) {
-			double num = CFStringGetDoubleValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			CFDictionarySetValue(dictionary, kReplayGainTrackGainKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive)) {
-			double num = CFStringGetDoubleValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			CFDictionarySetValue(dictionary, kReplayGainTrackPeakKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive)) {
-			double num = CFStringGetDoubleValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			CFDictionarySetValue(dictionary, kReplayGainAlbumGainKey, number);
-			CFRelease(number), number = NULL;
-		}
-		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive)) {
-			double num = CFStringGetDoubleValue(value);
-			CFNumberRef number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &num);
-			CFDictionarySetValue(dictionary, kReplayGainAlbumPeakKey, number);
-			CFRelease(number), number = NULL;
-		}
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive))
+			AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, CFStringGetDoubleValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive))
+			AddDoubleToDictionary(dictionary, kReplayGainTrackGainKey, CFStringGetDoubleValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive))
+			AddDoubleToDictionary(dictionary, kReplayGainTrackPeakKey, CFStringGetDoubleValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive))
+			AddDoubleToDictionary(dictionary, kReplayGainAlbumGainKey, CFStringGetDoubleValue(value));
+		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive))
+			AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("METADATA_BLOCK_PICTURE"), kCFCompareCaseInsensitive)) {
 			// Handle embedded pictures
-			TagLib::StringList encodedBlocks = it->second;
-			for(TagLib::StringList::ConstIterator blockIterator = encodedBlocks.begin(); blockIterator != encodedBlocks.end(); ++blockIterator) {
-				const TagLib::ByteVector encodedBlock = blockIterator->data(TagLib::String::UTF8);
+			for(auto blockIterator: it.second) {
+				auto encodedBlock = blockIterator.data(TagLib::String::UTF8);
 
 				// Decode the Base-64 encoded data
-				TagLib::ByteVector decodedBlock = TagLib::DecodeBase64(encodedBlock);
+				auto decodedBlock = TagLib::DecodeBase64(encodedBlock);
 
 				// Create the picture
 				TagLib::FLAC::Picture picture;
 				picture.parse(decodedBlock);
+				
+				CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
 
-				switch(picture.type()) {
-					case TagLib::FLAC::Picture::FrontCover:
-					{
-						CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
-						CFDictionarySetValue(dictionary, kAlbumArtFrontCoverKey, data);
-						CFRelease(data), data = NULL;
-						break;
-					}
+				CFStringRef description = nullptr;
+				if(!picture.description().isNull())
+					description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
-						// TODO: Other artwork types will be handled in the future
-					default:
-						break;
-				}
+				AttachedPicture *p = new AttachedPicture(data, static_cast<AttachedPicture::Type>(picture.type()), description);
+				attachedPictures.push_back(p);
+				
+				if(data)
+					CFRelease(data), data = nullptr;
+				
+				if(description)
+					CFRelease(description), description = nullptr;
 			}
 		}
 		// Put all unknown tags into the additional metadata
 		else
 			CFDictionarySetValue(additionalMetadata, key, value);
 		
-		CFRelease(key), key = NULL;
-		CFRelease(value), value = NULL;
+		CFRelease(key), key = nullptr;
+		CFRelease(value), value = nullptr;
 	}
 	
 	if(CFDictionaryGetCount(additionalMetadata))
 		CFDictionarySetValue(dictionary, kMetadataAdditionalMetadataKey, additionalMetadata);
 	
-	CFRelease(additionalMetadata), additionalMetadata = NULL;
+	CFRelease(additionalMetadata), additionalMetadata = nullptr;
 	
 	return true;
 }

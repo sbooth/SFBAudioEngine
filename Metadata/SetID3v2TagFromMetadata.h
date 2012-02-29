@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,4 +38,4 @@ class AudioMetadata;
 // ========================================
 // Fill in an ID3v2 tag from the specified AudioMetadata
 // ========================================
-bool SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag);
+bool SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, bool setAlbumArt = true);

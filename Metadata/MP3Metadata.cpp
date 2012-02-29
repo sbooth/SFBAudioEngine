@@ -161,8 +161,12 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
 
-	if(file.ID3v2Tag())
-		AddID3v2TagToDictionary(mMetadata, file.ID3v2Tag());
+	if(file.ID3v2Tag()) {
+		std::vector<AttachedPicture *> pictures;
+		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
+		for(auto picture : pictures)
+			AddSavedPicture(picture);
+	}
 
 	return true;
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2010, 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -38,4 +38,4 @@ class AudioMetadata;
 // ========================================
 // Fill in a Xiph comment from the specified AudioMetadata
 // ========================================
-bool SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag);
+bool SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);

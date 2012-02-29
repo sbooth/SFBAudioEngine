@@ -36,7 +36,7 @@
 #endif
 
 #include "AudioMetadata.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #if !TARGET_OS_IPHONE
@@ -55,7 +55,6 @@
 # include "TrueAudioMetadata.h"
 #endif
 
-
 // ========================================
 // Error Codes
 // ========================================
@@ -71,6 +70,7 @@ const CFStringRef	kPropertiesBitsPerChannelKey			= CFSTR("Bits per Channel");
 const CFStringRef	kPropertiesSampleRateKey				= CFSTR("Sample Rate");
 const CFStringRef	kPropertiesDurationKey					= CFSTR("Duration");
 const CFStringRef	kPropertiesBitrateKey					= CFSTR("Bitrate");
+
 const CFStringRef	kMetadataTitleKey						= CFSTR("Title");
 const CFStringRef	kMetadataAlbumTitleKey					= CFSTR("Album Title");
 const CFStringRef	kMetadataArtistKey						= CFSTR("Artist");
@@ -89,83 +89,120 @@ const CFStringRef	kMetadataRatingKey						= CFSTR("Rating");
 const CFStringRef	kMetadataCommentKey						= CFSTR("Comment");
 const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
 const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
-const CFStringRef	kMetadataMusicBrainzAlbumIDKey			= CFSTR("MusicBrainz Album ID");
-const CFStringRef	kMetadataMusicBrainzTrackIDKey			= CFSTR("MusicBrainz Track ID");
+const CFStringRef	kMetadataMusicBrainzReleaseIDKey		= CFSTR("MusicBrainz Release ID");
+const CFStringRef	kMetadataMusicBrainzRecordingIDKey		= CFSTR("MusicBrainz Recording ID");
 const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("Additional Metadata");
+
 const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("Replay Gain Reference Loudness");
 const CFStringRef	kReplayGainTrackGainKey					= CFSTR("Replay Gain Track Gain");
 const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("Replay Gain Track Peak");
 const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("Replay Gain Album Gain");
 const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
-const CFStringRef	kAlbumArtFrontCoverKey					= CFSTR("Album Art (Front Cover)");
 
+#pragma mark Helper Classes
+
+// ============================================================
+// Class PointerIdentityComparator
+template <class T>
+class PointerIdentityComparator : public std::unary_function<T *, bool>
+{
+public:
+	inline explicit PointerIdentityComparator(T *value)
+		: mValue(value) 
+	{}
+	
+	inline bool operator() (const T *value) const
+	{
+		return mValue == value;
+	}
+	
+private:
+	T *mValue;
+};
+
+// ============================================================
+// Class AttachedPictureTypeComparator
+class AttachedPictureTypeComparator : public std::unary_function<AttachedPicture *, bool>
+{
+public:
+	inline explicit AttachedPictureTypeComparator(AttachedPicture::Type type)
+		: mType(type) 
+	{}
+	
+	inline bool operator() (const AttachedPicture *picture) const
+	{
+		return mType == picture->GetType();
+	}
+	
+private:
+	AttachedPicture::Type mType;
+};
 
 #pragma mark Static Methods
-
 
 CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderExtensions = NULL;
+	CFArrayRef decoderExtensions = nullptr;
 
 #if !TARGET_OS_IPHONE
 	decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = WavPackMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MP3Metadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MP4Metadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 	
 	decoderExtensions = WAVEMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = AIFFMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MusepackMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = OggVorbisMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = OggFLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MonkeysAudioMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 	
 	decoderExtensions = OggSpeexMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = MODMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 
 	decoderExtensions = TrueAudioMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = NULL;
+	CFRelease(decoderExtensions), decoderExtensions = nullptr;
 #endif
 
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
 	
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 	
 	return result;
 }
@@ -174,76 +211,76 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
-	CFArrayRef decoderMIMETypes = NULL;
+	CFArrayRef decoderMIMETypes = nullptr;
 
 #if !TARGET_OS_IPHONE
 	decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = WavPackMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = MP3Metadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = MP4Metadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = WAVEMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = AIFFMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = MusepackMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = OggVorbisMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = OggFLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 	
 	decoderMIMETypes = MonkeysAudioMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = OggSpeexMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = MODMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 
 	decoderMIMETypes = TrueAudioMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = NULL;
+	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
 #endif
 
 	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
 	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return result;
 }
 
 bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 	
 	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
-	if(NULL == supportedExtensions)
+	if(nullptr == supportedExtensions)
 		return false;
 	
 	bool extensionIsSupported = false;
@@ -257,18 +294,18 @@ bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 		}
 	}
 	
-	CFRelease(supportedExtensions), supportedExtensions = NULL;
+	CFRelease(supportedExtensions), supportedExtensions = nullptr;
 	
 	return extensionIsSupported;
 }
 
 bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 	
 	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
-	if(NULL == supportedMIMETypes)
+	if(nullptr == supportedMIMETypes)
 		return false;
 	
 	bool mimeTypeIsSupported = false;
@@ -282,26 +319,26 @@ bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 		}
 	}
 	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = NULL;
+	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return mimeTypeIsSupported;
 }
 
 AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
 {
-	if(NULL == url)
-		return NULL;
+	if(nullptr == url)
+		return nullptr;
 	
-	AudioMetadata *metadata = NULL;
+	AudioMetadata *metadata = nullptr;
 	
 	// If this is a file URL, use the extension-based resolvers
 	CFStringRef scheme = CFURLCopyScheme(url);
 
 	// If there is no scheme the URL is invalid
-	if(NULL == scheme) {
+	if(nullptr == scheme) {
 		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, NULL);
-		return NULL;
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, nullptr);
+		return nullptr;
 	}
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
@@ -309,19 +346,19 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		SInt32 errorCode = noErr;
 		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
 		
-		if(NULL != fileExists) {
+		if(nullptr != fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
 				CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-				CFStringRef pathExtension = NULL;
+				CFStringRef pathExtension = nullptr;
 
 				CFRange range;
 				if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
 					pathExtension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
 				}
 
-				CFRelease(fileSystemPath), fileSystemPath = NULL;
+				CFRelease(fileSystemPath), fileSystemPath = nullptr;
 
-				if(NULL != pathExtension) {
+				if(nullptr != pathExtension) {
 					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
 
@@ -332,116 +369,93 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					if(FLACMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new FLACMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && WavPackMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new WavPackMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && MP3Metadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MP3Metadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && MP4Metadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MP4Metadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && WAVEMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new WAVEMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && AIFFMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new AIFFMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && MusepackMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MusepackMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && OggVorbisMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new OggVorbisMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && OggFLACMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new OggFLACMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && MonkeysAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MonkeysAudioMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && OggSpeexMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new OggSpeexMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && MODMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new MODMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 					if(!metadata && TrueAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
 						metadata = new TrueAudioMetadata(url);
 						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = NULL;
+							delete metadata, metadata = nullptr;
 					}
 #endif
 
-					CFRelease(pathExtension), pathExtension = NULL;
+					CFRelease(pathExtension), pathExtension = nullptr;
 				}				
 			}
 			else {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "The requested URL doesn't exist");
 				
 				if(error) {
-					CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																					   0,
-																					   &kCFTypeDictionaryKeyCallBacks,
-																					   &kCFTypeDictionaryValueCallBacks);
+					CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), "");
+					CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File not found"), "");
+					CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), "");
 					
-					CFStringRef displayName = CreateDisplayNameForURL(url);
-					CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																	   NULL, 
-																	   CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""), 
-																	   displayName);
+					*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, url, failureReason, recoverySuggestion);
 					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedDescriptionKey, 
-										 errorString);
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedFailureReasonKey, 
-										 CFCopyLocalizedString(CFSTR("File not found"), ""));
-					
-					CFDictionarySetValue(errorDictionary, 
-										 kCFErrorLocalizedRecoverySuggestionKey, 
-										 CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
-					
-					CFRelease(errorString), errorString = NULL;
-					CFRelease(displayName), displayName = NULL;
-					
-					*error = CFErrorCreate(kCFAllocatorDefault, 
-										   AudioMetadataErrorDomain, 
-										   AudioMetadataInputOutputError, 
-										   errorDictionary);
-					
-					CFRelease(errorDictionary), errorDictionary = NULL;				
+					CFRelease(description), description = nullptr;
+					CFRelease(failureReason), failureReason = nullptr;
+					CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 				}				
 			}
 		}
 		else
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
 		
-		CFRelease(fileExists), fileExists = NULL;
+		CFRelease(fileExists), fileExists = nullptr;
 	}
 #if !TARGET_OS_IPHONE
 	// Determine the MIME type for the URL
@@ -451,22 +465,22 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		Boolean success = CFURLGetFSRef(url, &ref);
 		if(!success) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "Unable to get FSRef for URL");
-			return NULL;
+			return nullptr;
 		}
 		
-		CFStringRef uti = NULL;
+		CFStringRef uti = nullptr;
 		OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemContentType, (CFTypeRef *)&uti);
 		
 		if(noErr != result) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "LSCopyItemAttribute (kLSItemContentType) failed: " << result);
-			return NULL;
+			return nullptr;
 		}
 		
-		CFRelease(uti), uti = NULL;
+		CFRelease(uti), uti = nullptr;
 	}
 #endif
 
-	CFRelease(scheme), scheme = NULL;
+	CFRelease(scheme), scheme = nullptr;
 	
 	return metadata;
 }
@@ -474,92 +488,87 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 #pragma mark Creation and Destruction
 
 AudioMetadata::AudioMetadata()
-	: mURL(NULL)
-{
-	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-										  0,
-										  &kCFTypeDictionaryKeyCallBacks,
-										  &kCFTypeDictionaryValueCallBacks);
-
-	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-												 0,
-												 &kCFTypeDictionaryKeyCallBacks,
-												 &kCFTypeDictionaryValueCallBacks);
+	: mURL(nullptr)
+{	
+	mMetadata			= CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	mChangedMetadata	= CFDictionaryCreateMutable(kCFAllocatorDefault,  0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 }
 
 AudioMetadata::AudioMetadata(CFURLRef url)
-	: mURL(NULL)
+	: mURL(nullptr)
 {
 	mURL = static_cast<CFURLRef>(CFRetain(url));
 
-	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-										  0,
-										  &kCFTypeDictionaryKeyCallBacks,
-										  &kCFTypeDictionaryValueCallBacks);
-
-	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-												 0,
-												 &kCFTypeDictionaryKeyCallBacks,
-												 &kCFTypeDictionaryValueCallBacks);
-}
-
-AudioMetadata::AudioMetadata(const AudioMetadata& rhs)
-	: mURL(NULL)
-{
-	*this = rhs;
+	mMetadata			= CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	mChangedMetadata	= CFDictionaryCreateMutable(kCFAllocatorDefault,  0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 }
 
 AudioMetadata::~AudioMetadata()
 {
 	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+		CFRelease(mURL), mURL = nullptr;
 
 	if(mMetadata)
-		CFRelease(mMetadata), mMetadata = NULL;
+		CFRelease(mMetadata), mMetadata = nullptr;
 
 	if(mChangedMetadata)
-		CFRelease(mChangedMetadata), mChangedMetadata = NULL;
-}
+		CFRelease(mChangedMetadata), mChangedMetadata = nullptr;
 
-#pragma mark Operator Overloads
-
-AudioMetadata& AudioMetadata::operator=(const AudioMetadata& rhs)
-{
-	if(this == &rhs)
-		return *this;
-
-	if(mURL)
-		CFRelease(mURL), mURL = NULL;
-
-	if(mMetadata)
-		CFRelease(mMetadata), mMetadata = NULL;
-
-	if(mChangedMetadata)
-		CFRelease(mChangedMetadata), mChangedMetadata = NULL;
-
-	if(rhs.mURL)
-		mURL = static_cast<CFURLRef>(CFRetain(rhs.mURL));
-
-	if(rhs.mMetadata)
-		mMetadata = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 
-												  0, 
-												  rhs.mMetadata);
-
-	if(rhs.mChangedMetadata)
-		mChangedMetadata = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 
-														 0, 
-														 rhs.mMetadata);
-	
-	return *this;
+	auto iter = mPictures.begin();
+	while(iter != mPictures.end()) {
+		AttachedPicture *picture = *iter;
+		iter = mPictures.erase(iter);
+		delete picture;
+	}
+//	for(auto picture : mPictures)
+//		delete picture;
+	mPictures.clear();
 }
 
 void AudioMetadata::SetURL(CFURLRef URL)
 {
 	if(mURL)
-		CFRelease(mURL), mURL = NULL;
+		CFRelease(mURL), mURL = nullptr;
 
 	if(URL)
 		mURL = static_cast<CFURLRef>(CFRetain(URL));
+}
+
+#pragma mark Change management
+
+bool AudioMetadata::HasUnsavedChanges() const
+{
+	if(CFDictionaryGetCount(mChangedMetadata))
+		return true;
+
+	for(auto picture : mPictures) {
+		if(AttachedPicture::ChangeState::Added & picture->mState || AttachedPicture::ChangeState::Removed & picture->mState || picture->HasUnsavedChanges())
+			return true;
+	}
+
+	return false;
+}
+
+void AudioMetadata::RevertUnsavedChanges()
+{
+	CFDictionaryRemoveAllValues(mChangedMetadata);
+
+	auto iter = mPictures.begin();
+	while(iter != mPictures.end()) {
+		AttachedPicture *picture = *iter;
+		if(AttachedPicture::ChangeState::Removed & picture->mState) {
+			if(AttachedPicture::ChangeState::Added & picture->mState) {
+				iter = mPictures.erase(iter);
+				delete picture;
+			}
+			else {
+				picture->mState &= ~AttachedPicture::ChangeState::Removed;
+				picture->RevertUnsavedChanges();
+			}
+		}
+		else
+			picture->RevertUnsavedChanges();
+	}
 }
 
 #pragma mark Properties Access
@@ -675,11 +684,11 @@ CFBooleanRef AudioMetadata::GetCompilation() const
 {
 	CFTypeRef value = GetValue(kMetadataCompilationKey);
 	
-	if(NULL == value)
-		return NULL;
+	if(nullptr == value)
+		return nullptr;
 
 	if(CFBooleanGetTypeID() != CFGetTypeID(value))
-		return NULL;
+		return nullptr;
 	else
 		return reinterpret_cast<CFBooleanRef>(value);
 }
@@ -791,22 +800,22 @@ void AudioMetadata::SetISRC(CFStringRef isrc)
 
 CFStringRef AudioMetadata::GetMusicBrainzAlbumID() const
 {
-	return GetStringValue(kMetadataMusicBrainzAlbumIDKey);
+	return GetStringValue(kMetadataMusicBrainzReleaseIDKey);
 }
 
 void AudioMetadata::SetMusicBrainzAlbumID(CFStringRef albumID)
 {
-	SetValue(kMetadataMusicBrainzAlbumIDKey, albumID);
+	SetValue(kMetadataMusicBrainzReleaseIDKey, albumID);
 }
 
 CFStringRef AudioMetadata::GetMusicBrainzTrackID() const
 {
-	return GetStringValue(kMetadataMusicBrainzTrackIDKey);
+	return GetStringValue(kMetadataMusicBrainzRecordingIDKey);
 }
 
 void AudioMetadata::SetMusicBrainzTrackID(CFStringRef trackID)
 {
-	SetValue(kMetadataMusicBrainzTrackIDKey, trackID);
+	SetValue(kMetadataMusicBrainzRecordingIDKey, trackID);
 }
 
 #pragma mark Additional Metadata
@@ -815,11 +824,11 @@ CFDictionaryRef AudioMetadata::GetAdditionalMetadata() const
 {
 	CFTypeRef value = GetValue(kMetadataAdditionalMetadataKey);
 	
-	if(NULL == value)
-		return NULL;
+	if(nullptr == value)
+		return nullptr;
 
 	if(CFDictionaryGetTypeID() != CFGetTypeID(value))
-		return NULL;
+		return nullptr;
 	else
 		return reinterpret_cast<CFDictionaryRef>(value);
 }
@@ -883,22 +892,65 @@ void AudioMetadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 
 #pragma mark Album Artwork
 
-CFDataRef AudioMetadata::GetFrontCoverArt() const
+const std::vector<AttachedPicture *> AudioMetadata::GetAttachedPictures() const
 {
-	CFTypeRef value = GetValue(kAlbumArtFrontCoverKey);
-	
-	if(NULL == value)
-		return NULL;
+	std::vector<AttachedPicture *> result;
 
-	if(CFDataGetTypeID() != CFGetTypeID(value))
-		return NULL;
-	else
-		return reinterpret_cast<CFDataRef>(value);
+	for(auto picture : mPictures) {
+		if(!(AttachedPicture::ChangeState::Removed & picture->mState))
+			result.push_back(picture);
+	}
+
+	return result;
 }
 
-void AudioMetadata::SetFrontCoverArt(CFDataRef frontCoverArt)
+const std::vector<AttachedPicture *> AudioMetadata::GetAttachedPicturesOfType(AttachedPicture::Type type) const
 {
-	SetValue(kAlbumArtFrontCoverKey, frontCoverArt);
+	std::vector<AttachedPicture *> result;
+
+	for(auto picture : mPictures) {
+		if(!(AttachedPicture::ChangeState::Removed & picture->mState) && type == picture->GetType())
+			result.push_back(picture);
+	}
+
+	return result;
+}
+
+void AudioMetadata::AttachPicture(AttachedPicture *picture)
+{
+	if(picture) {
+		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
+		if(match == mPictures.end()) {
+			picture->mState = AttachedPicture::Added;
+			mPictures.push_back(picture);
+		}
+	}
+}
+
+void AudioMetadata::RemoveAttachedPicture(AttachedPicture *picture)
+{
+	if(picture) {
+		// lambda support isn't in the Xcode 4.3 version of clang
+//		auto match = std::find_if(mPictures.begin(), mPictures.end(), [] (AttachedPicture *p) -> bool { p == picture; });
+		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
+		if(match != mPictures.end())
+			(*match)->mState |= AttachedPicture::ChangeState::Removed;
+	}
+}
+
+void AudioMetadata::RemoveAttachedPicturesOfType(AttachedPicture::Type type)
+{
+	for(auto picture : mPictures) {
+		if(type == picture->GetType())
+			picture->mState |= AttachedPicture::ChangeState::Removed;
+	}
+}
+
+void AudioMetadata::RemoveAllAttachedPictures()
+{
+//	std::for_each(mPictures.begin(), mPictures.end(), [] (AttachedPicture *picture){ picture->mState |= AttachedPicture::ChangeState::Removed; });
+	for(auto picture : mPictures)
+		picture->mState |= AttachedPicture::ChangeState::Removed;
 }
 
 #pragma mark Type-Specific Access
@@ -907,11 +959,11 @@ CFStringRef AudioMetadata::GetStringValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
 	
-	if(NULL == value)
-		return NULL;
+	if(nullptr == value)
+		return nullptr;
 	
 	if(CFStringGetTypeID() != CFGetTypeID(value))
-		return NULL;
+		return nullptr;
 	else
 		return reinterpret_cast<CFStringRef>(value);
 }
@@ -920,11 +972,11 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
 	
-	if(NULL == value)
-		return NULL;
+	if(nullptr == value)
+		return nullptr;
 
 	if(CFNumberGetTypeID() != CFGetTypeID(value))
-		return NULL;
+		return nullptr;
 	else
 		return reinterpret_cast<CFNumberRef>(value);
 }
@@ -933,12 +985,12 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
 
 CFTypeRef AudioMetadata::GetValue(CFStringRef key) const
 {
-	if(NULL == key)
-		return NULL;
+	if(nullptr == key)
+		return nullptr;
 	
 	if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 		CFTypeRef value = CFDictionaryGetValue(mChangedMetadata, key);
-		return (kCFNull == value ? NULL : value);
+		return (kCFNull == value ? nullptr : value);
 	}
 
 	return CFDictionaryGetValue(mMetadata, key);
@@ -946,10 +998,10 @@ CFTypeRef AudioMetadata::GetValue(CFStringRef key) const
 
 void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 {
-	if(NULL == key)
+	if(nullptr == key)
 		return;
 
-	if(NULL == value) {
+	if(nullptr == value) {
 		if(CFDictionaryContainsKey(mMetadata, key))
 			CFDictionarySetValue(mChangedMetadata, key, kCFNull);
 		else
@@ -958,13 +1010,24 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 	else {
 		if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 			CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
-			if(NULL != savedValue && CFEqual(savedValue, value))
+			if(nullptr != savedValue && CFEqual(savedValue, value))
 				CFDictionaryRemoveValue(mChangedMetadata, key);
 			else
 				CFDictionarySetValue(mChangedMetadata, key, value);
 		}
 		else
 			CFDictionarySetValue(mChangedMetadata, key, value);
+	}
+}
+
+void AudioMetadata::AddSavedPicture(AttachedPicture *picture)
+{
+	if(picture) {
+		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
+		if(match == mPictures.end()) {
+			picture->mState = AttachedPicture::Saved;
+			mPictures.push_back(picture);
+		}
 	}
 }
 
@@ -984,8 +1047,21 @@ void AudioMetadata::MergeChangedMetadataIntoMetadata()
 			CFDictionarySetValue(mMetadata, keys[i], values[i]);
 	}
 	
-	free(keys), keys = NULL;
-	free(values), values = NULL;
+	free(keys), keys = nullptr;
+	free(values), values = nullptr;
 	
 	CFDictionaryRemoveAllValues(mChangedMetadata);
+
+	auto iter = mPictures.begin();
+	while(iter != mPictures.end()) {
+		AttachedPicture *picture = *iter;
+		if(AttachedPicture::ChangeState::Removed & picture->mState) {
+			iter = mPictures.erase(iter);
+			delete picture;
+		}
+		else {
+			picture->MergeChangedMetadataIntoMetadata();
+			picture->mState = AttachedPicture::ChangeState::Saved;
+		}
+	}
 }
