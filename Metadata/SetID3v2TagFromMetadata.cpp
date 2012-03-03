@@ -314,7 +314,9 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 
 	// Album art
 	if(setAlbumArt) {
-		for(auto frame : tag->frameListMap()["APIC"])
+		// For some reason for(auto frame : tag->frameList("APIC")) crashes (clang C++11 bug?)
+		auto frames = tag->frameList("APIC");
+		for(auto frame : frames)
 			tag->removeFrame(frame);
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {

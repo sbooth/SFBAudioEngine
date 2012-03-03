@@ -175,8 +175,7 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 
 	// Album art
 	if(setAlbumArt) {
-		for(auto field : tag->fieldListMap()["METADATA_BLOCK_PICTURE"])
-			tag->removeField(field);
+		tag->removeField("METADATA_BLOCK_PICTURE");
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
 			CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
