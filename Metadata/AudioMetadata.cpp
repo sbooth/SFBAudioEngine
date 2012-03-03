@@ -1077,6 +1077,7 @@ void AudioMetadata::MergeChangedMetadataIntoMetadata()
 		else {
 			picture->MergeChangedMetadataIntoMetadata();
 			picture->mState = AttachedPicture::ChangeState::Saved;
+			++iter;
 		}
 	}
 }
