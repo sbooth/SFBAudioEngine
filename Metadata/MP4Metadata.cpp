@@ -183,7 +183,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 				CFRelease(bitsPerChannel), bitsPerChannel = nullptr;
 
-				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * sampleSize) / 1000;
+				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * decoderConfig[9]) / 1000;
 				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 				CFRelease(bitrate), bitrate = nullptr;
