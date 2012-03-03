@@ -495,12 +495,9 @@ AudioMetadata::AudioMetadata()
 }
 
 AudioMetadata::AudioMetadata(CFURLRef url)
-	: mURL(nullptr)
+	: AudioMetadata()
 {
 	mURL = static_cast<CFURLRef>(CFRetain(url));
-
-	mMetadata			= CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	mChangedMetadata	= CFDictionaryCreateMutable(kCFAllocatorDefault,  0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 }
 
 AudioMetadata::~AudioMetadata()
@@ -920,7 +917,11 @@ void AudioMetadata::AttachPicture(AttachedPicture *picture)
 {
 	if(picture) {
 		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
-		if(match == mPictures.end()) {
+		if(match != mPictures.end()) {
+			if(AttachedPicture::ChangeState::Removed & picture->mState)
+				picture->mState &= ~AttachedPicture::ChangeState::Removed;
+		}
+		else {
 			picture->mState = AttachedPicture::Added;
 			mPictures.push_back(picture);
 		}
