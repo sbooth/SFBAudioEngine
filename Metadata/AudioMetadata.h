@@ -195,11 +195,11 @@ public:
 	CFStringRef GetISRC() const;
 	void SetISRC(CFStringRef isrc);
 
-	CFStringRef GetMusicBrainzAlbumID() const;
-	void SetMusicBrainzAlbumID(CFStringRef albumID);
+	CFStringRef GetMusicBrainzReleaseID() const;
+	void SetMusicBrainzReleaseID(CFStringRef releaseID);
 
-	CFStringRef GetMusicBrainzTrackID() const;
-	void SetMusicBrainzTrackID(CFStringRef trackID);
+	CFStringRef GetMusicBrainzRecordingID() const;
+	void SetMusicBrainzRecordingID(CFStringRef recordingID);
 
 	// ========================================
 	// Additional metadata

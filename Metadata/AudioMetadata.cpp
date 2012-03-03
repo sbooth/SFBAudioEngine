@@ -795,24 +795,24 @@ void AudioMetadata::SetISRC(CFStringRef isrc)
 	SetValue(kMetadataISRCKey, isrc);
 }
 
-CFStringRef AudioMetadata::GetMusicBrainzAlbumID() const
+CFStringRef AudioMetadata::GetMusicBrainzReleaseID() const
 {
 	return GetStringValue(kMetadataMusicBrainzReleaseIDKey);
 }
 
-void AudioMetadata::SetMusicBrainzAlbumID(CFStringRef albumID)
+void AudioMetadata::SetMusicBrainzReleaseID(CFStringRef releaseID)
 {
-	SetValue(kMetadataMusicBrainzReleaseIDKey, albumID);
+	SetValue(kMetadataMusicBrainzReleaseIDKey, releaseID);
 }
 
-CFStringRef AudioMetadata::GetMusicBrainzTrackID() const
+CFStringRef AudioMetadata::GetMusicBrainzRecordingID() const
 {
 	return GetStringValue(kMetadataMusicBrainzRecordingIDKey);
 }
 
-void AudioMetadata::SetMusicBrainzTrackID(CFStringRef trackID)
+void AudioMetadata::SetMusicBrainzRecordingID(CFStringRef recordingID)
 {
-	SetValue(kMetadataMusicBrainzRecordingIDKey, trackID);
+	SetValue(kMetadataMusicBrainzRecordingIDKey, recordingID);
 }
 
 #pragma mark Additional Metadata
