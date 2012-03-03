@@ -539,6 +539,10 @@ bool AudioMetadata::HasUnsavedChanges() const
 		return true;
 
 	for(auto picture : mPictures) {
+		// TODO: Remove this check once std::shared_ptr is used (because no pictures with this state should be present in mPictures)
+		if(AttachedPicture::ChangeState::Added & picture->mState && AttachedPicture::ChangeState::Removed & picture->mState)
+			continue;
+
 		if(AttachedPicture::ChangeState::Added & picture->mState || AttachedPicture::ChangeState::Removed & picture->mState || picture->HasUnsavedChanges())
 			return true;
 	}
@@ -931,11 +935,21 @@ void AudioMetadata::AttachPicture(AttachedPicture *picture)
 void AudioMetadata::RemoveAttachedPicture(AttachedPicture *picture)
 {
 	if(picture) {
-		// lambda support isn't in the Xcode 4.3 version of clang
 //		auto match = std::find_if(mPictures.begin(), mPictures.end(), [] (AttachedPicture *p) -> bool { p == picture; });
 		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
 		if(match != mPictures.end())
 			(*match)->mState |= AttachedPicture::ChangeState::Removed;
+
+#if 0
+		// TODO: It would be more correct to remove picture from mPictures if the state is Added 
+		// but that necessitates std::shared_ptr since picture can't be immediately deleted (in use by the caller)
+		if(match != mPictures.end()) {
+			if((*match)->mState & AttachedPicture::ChangeState::Added)
+				mPictures.erase(match);
+			else
+				(*match)->mState |= AttachedPicture::ChangeState::Removed;
+		}
+#endif
 	}
 }
 
