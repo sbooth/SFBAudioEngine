@@ -31,14 +31,14 @@
 #include <AudioToolbox/AudioFormat.h>
 #include <stdexcept>
 
-#include <mac/All.h>
-#include <mac/MACLib.h>
-#include <mac/IO.h>
-
 #include "MonkeysAudioDecoder.h"
 #include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
+
+#include <mac/All.h>
+#include <mac/MACLib.h>
+#include <mac/IO.h>
 
 #pragma mark IO Interface
 
