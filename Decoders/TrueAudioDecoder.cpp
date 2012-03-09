@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,17 +30,12 @@
 
 #include "TrueAudioDecoder.h"
 #include "CreateChannelLayout.h"
-#include "CreateDisplayNameForURL.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
 #pragma mark Callbacks
-
-typedef struct {
-	TTA_io_callback iocb;
-	TrueAudioDecoder *decoder;
-} TTA_io_callback_wrapper;
 
 static TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 {
@@ -70,7 +65,7 @@ CFArrayRef TrueAudioDecoder::CreateSupportedMIMETypes()
 
 bool TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
-	if(NULL == extension)
+	if(nullptr == extension)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("tta"), kCFCompareCaseInsensitive))
@@ -81,7 +76,7 @@ bool TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 
 bool TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	if(NULL == mimeType)
+	if(nullptr == mimeType)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-tta"), kCFCompareCaseInsensitive))
@@ -93,7 +88,7 @@ bool TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 #pragma mark Creation and Destruction
 
 TrueAudioDecoder::TrueAudioDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), /*mDecoder(NULL), */mCurrentFrame(0), seek_skip(0)
+	: AudioDecoder(inputSource), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
 {}
 
 TrueAudioDecoder::~TrueAudioDecoder()
@@ -115,76 +110,49 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	TTA_io_callback_wrapper callbacks = {
-		.iocb.read	= read_callback,
-		.iocb.write	= NULL,
-		.iocb.seek	= seek_callback,
-		.decoder	= this
-	};
+	mCallbacks				= new TTA_io_callback_wrapper;
+	mCallbacks->iocb.read	= read_callback;
+	mCallbacks->iocb.write	= nullptr;
+	mCallbacks->iocb.seek	= seek_callback;
+	mCallbacks->decoder		= this;
 
-//	try {
-//		mDecoder = new tta::tta_decoder((TTA_io_callback *)&callbacks);
-//		mDecoder->init_get_info(&mStreamInfo, 0);
-//	}
-//	catch(tta::tta_exception e) {
-//		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
-//		if(mDecoder)
-//			delete mDecoder, mDecoder = NULL;
-//	}
-//
-//	if(NULL == mDecoder) {
-//		if(error) {
-//			CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-//																			   0,
-//																			   &kCFTypeDictionaryKeyCallBacks,
-//																			   &kCFTypeDictionaryValueCallBacks);
-//
-//			CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-//			CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-//															   NULL, 
-//															   CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""), 
-//															   displayName);
-//
-//			CFDictionarySetValue(errorDictionary, 
-//								 kCFErrorLocalizedDescriptionKey, 
-//								 errorString);
-//
-//			CFDictionarySetValue(errorDictionary, 
-//								 kCFErrorLocalizedFailureReasonKey, 
-//								 CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
-//
-//			CFDictionarySetValue(errorDictionary, 
-//								 kCFErrorLocalizedRecoverySuggestionKey, 
-//								 CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-//
-//			CFRelease(errorString), errorString = NULL;
-//			CFRelease(displayName), displayName = NULL;
-//
-//			*error = CFErrorCreate(kCFAllocatorDefault, 
-//								   AudioDecoderErrorDomain, 
-//								   AudioDecoderInputOutputError, 
-//								   errorDictionary);
-//
-//			CFRelease(errorDictionary), errorDictionary = NULL;
-//		}
-//
-//		return false;
-//	}
+	TTA_info streamInfo;
 
-	tta_decoder_new((TTA_io_callback *)&callbacks);
-	if(0 != tta_decoder_init_get_info(&mStreamInfo)) {
-		tta_decoder_done();
+	try {
+		mDecoder = new tta::tta_decoder((TTA_io_callback *)mCallbacks);
+		mDecoder->init_get_info(&streamInfo, 0);
+	}
+	catch(tta::tta_exception e) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
+		if(mDecoder)
+			delete mDecoder, mDecoder = nullptr;
+	}
+
+	if(nullptr == mDecoder) {
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			
+			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+		}
+
 		return false;
 	}
+
 	
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 	
-	mFormat.mSampleRate			= mStreamInfo.sps;
-	mFormat.mChannelsPerFrame	= mStreamInfo.nch;
-	mFormat.mBitsPerChannel		= mStreamInfo.bps;
+	mFormat.mSampleRate			= streamInfo.sps;
+	mFormat.mChannelsPerFrame	= streamInfo.nch;
+	mFormat.mBitsPerChannel		= streamInfo.bps;
 	
-	mFormat.mBytesPerPacket		= ((mStreamInfo.bps + 7) / 8) * mFormat.mChannelsPerFrame;
+	mFormat.mBytesPerPacket		= ((streamInfo.bps + 7) / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 	
@@ -212,41 +180,19 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
-				CFMutableDictionaryRef errorDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 
-																				   0,
-																				   &kCFTypeDictionaryKeyCallBacks,
-																				   &kCFTypeDictionaryValueCallBacks);
-
-				CFStringRef displayName = CreateDisplayNameForURL(mInputSource->GetURL());
-				CFStringRef errorString = CFStringCreateWithFormat(kCFAllocatorDefault, 
-																   NULL, 
-																   CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), ""), 
-																   displayName);
-
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedDescriptionKey, 
-									 errorString);
-
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedFailureReasonKey, 
-									 CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
-
-				CFDictionarySetValue(errorDictionary, 
-									 kCFErrorLocalizedRecoverySuggestionKey, 
-									 CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
-
-				CFRelease(errorString), errorString = NULL;
-				CFRelease(displayName), displayName = NULL;
-
-				*error = CFErrorCreate(kCFAllocatorDefault, 
-									   AudioDecoderErrorDomain, 
-									   AudioDecoderInputOutputError, 
-									   errorDictionary);
-
-				CFRelease(errorDictionary), errorDictionary = NULL;				
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
+				
+				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+				
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 			}
 
-//			delete mDecoder, mDecoder = NULL;
+			delete mDecoder, mDecoder = nullptr;
+			delete mCallbacks, mCallbacks = nullptr;
 
 			return false;
 		}
@@ -255,21 +201,14 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'TTA ';
 
-	mSourceFormat.mSampleRate			= mStreamInfo.sps;
-	mSourceFormat.mChannelsPerFrame		= mStreamInfo.nch;
-	mSourceFormat.mBitsPerChannel		= mStreamInfo.bps;
+	mSourceFormat.mSampleRate			= streamInfo.sps;
+	mSourceFormat.mChannelsPerFrame		= streamInfo.nch;
+	mSourceFormat.mBitsPerChannel		= streamInfo.bps;
 
 	// Setup the channel layout
-	mChannelLayout = CreateChannelLayoutWithTag(mStreamInfo.nch);
+	mChannelLayout = CreateChannelLayoutWithTag(streamInfo.nch);
 
-//	mBuffer = static_cast<TTAuint8 *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame * mFormat.mBytesPerFrame, sizeof(TTAuint8)));
-//
-//	if(NULL == mBuffer) {
-//		if(error)
-//			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, NULL);
-//
-//		return false;		
-//	}
+	mTotalFrames = streamInfo.samples;
 
 	mIsOpen = true;
 	return true;
@@ -282,15 +221,13 @@ bool TrueAudioDecoder::Close(CFErrorRef */*error*/)
 		return true;
 	}
 	
-//	if(mDecoder)
-//		delete mDecoder, mDecoder = NULL;
-//
-//	if(mBuffer)
-//		free(mBuffer), mBuffer = NULL;
+	if(mDecoder)
+		delete mDecoder, mDecoder = nullptr;
 
-	tta_decoder_done();
+	if(mCallbacks)
+		delete mCallbacks, mCallbacks = nullptr;
 
-	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
+	mTotalFrames = mCurrentFrame = 0;
 
 	mIsOpen = false;
 	return true;
@@ -299,10 +236,10 @@ bool TrueAudioDecoder::Close(CFErrorRef */*error*/)
 CFStringRef TrueAudioDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
-		return NULL;
+		return nullptr;
 	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									NULL, 
+									nullptr, 
 									CFSTR("True Audio, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
 									static_cast<unsigned int>(mSourceFormat.mSampleRate));
@@ -313,28 +250,28 @@ SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 
-	TTAuint32 seconds = static_cast<TTAuint32>(frame * mStreamInfo.sps);
+	TTAuint32 seconds = static_cast<TTAuint32>(frame / mSourceFormat.mSampleRate);
 	TTAuint32 frame_start = 0;
 
-	if(!tta_decoder_set_position(seconds, &frame_start))
+	try {
+		mDecoder->set_position(seconds, &frame_start);
+	}
+	catch(tta::tta_exception e) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio seek error: " << e.code());
 		return -1;
-//	try {
-//		mDecoder->set_position(seconds, &frame_start);
-//	}
-//	catch(tta::tta_exception e) {
-//		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio seek error: " << e.code());
-//		return -1;
-//	}
+	}
+
+	mCurrentFrame = frame;
 
 	// We need to skip some samples from start of the frame if required
-	seek_skip = UInt32((seconds - frame_start) * mStreamInfo.sps + 0.5);
+	mFramesToSkip = UInt32((seconds - frame_start) * mSourceFormat.mSampleRate + 0.5);
 
 	return mCurrentFrame;
 }
 
 UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || NULL == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
 	// Reset output buffer data size
@@ -344,17 +281,15 @@ UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	UInt32 framesRead = 0;
 	bool eos = false;
 	
-//	try {
-		while(seek_skip && !eos) {
-			if(seek_skip >= frameCount) {
-//				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
-				framesRead = tta_decoder_process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount, NULL);
-				seek_skip -= framesRead;
+	try {
+		while(mFramesToSkip && !eos) {
+			if(mFramesToSkip >= frameCount) {
+				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
+				mFramesToSkip -= framesRead;
 			}
 			else {
-//				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, seek_skip);
-				framesRead = tta_decoder_process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, seek_skip, NULL);
-				seek_skip = 0;
+				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, mFramesToSkip);
+				mFramesToSkip = 0;
 			}
 
 			if(0 == framesRead)
@@ -362,16 +297,15 @@ UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		}
 		
 		if(!eos) {
-//			framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
-			framesRead = tta_decoder_process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount, NULL);
+			framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
 			if(0 == framesRead)
 				eos = true;
 		}
-//	}
-//	catch(tta::tta_exception e) {
-//		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio decoding error: " << e.code());
-//		return -1;
-//	}
+	}
+	catch(tta::tta_exception e) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio decoding error: " << e.code());
+		return -1;
+	}
 
 	if(eos)
 		return 0;

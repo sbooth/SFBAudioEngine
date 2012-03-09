@@ -57,6 +57,8 @@
 		3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
 		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
+		32A5F871150A9D2900B6E061 /* tta++.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A5F870150A9D2900B6E061 /* tta++.framework */; };
+		32A5F872150A9D3D00B6E061 /* tta++.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32A5F870150A9D2900B6E061 /* tta++.framework */; };
 		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
 		32AEB2911409AF2B001F9A60 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32AEB28F1409AF2B001F9A60 /* Logger.cpp */; };
 		32AEB29C1409B219001F9A60 /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D429E413E308DB00FA07DE /* AudioPlayer.cpp */; };
@@ -141,8 +143,6 @@
 		32AEB3611409CAE0001F9A60 /* BasicAudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AEB35F1409CAE0001F9A60 /* BasicAudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32AF1A6014C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */; };
 		32AF1A6114C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */; };
-		32AF1A6214C8FE3C00750053 /* TrueAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */; };
-		32AF1A6314C8FE3C00750053 /* TrueAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */; };
 		32B79A64138F2EC200EBEF1B /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
 		32B79A65138F2EC200EBEF1B /* Mutex.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B79A63138F2EC200EBEF1B /* Mutex.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212DC109111A200BA2493 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
@@ -150,8 +150,6 @@
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
 		32C212E6109111B500BA2493 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D93108C221100CA9BDE /* CARingBuffer.cpp */; };
-		32C3F95B14DCD44B007F84A6 /* tta++.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C3F95A14DCD44B007F84A6 /* tta++.framework */; };
-		32C3F95C14DCD46C007F84A6 /* tta++.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32C3F95A14DCD44B007F84A6 /* tta++.framework */; };
 		32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */; };
 		32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7379510B9978200094C8A /* MusepackDecoder.cpp */; };
 		32D429E613E308DB00FA07DE /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D429E413E308DB00FA07DE /* AudioPlayer.cpp */; };
@@ -233,7 +231,7 @@
 				32AEB2EF1409BA6F001F9A60 /* sndfile.framework in Copy Embedded Frameworks */,
 				32AEB2F01409BA6F001F9A60 /* speex.framework in Copy Embedded Frameworks */,
 				32AEB2F11409BA6F001F9A60 /* taglib.framework in Copy Embedded Frameworks */,
-				32C3F95C14DCD46C007F84A6 /* tta++.framework in Copy Embedded Frameworks */,
+				32A5F872150A9D3D00B6E061 /* tta++.framework in Copy Embedded Frameworks */,
 				32AEB2F21409BA6F001F9A60 /* vorbis.framework in Copy Embedded Frameworks */,
 				32AEB2F31409BA6F001F9A60 /* wavpack.framework in Copy Embedded Frameworks */,
 			);
@@ -340,6 +338,7 @@
 		329AB8A2148B185300180506 /* Base64Utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64Utilities.h; sourceTree = "<group>"; };
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		32A5F870150A9D2900B6E061 /* tta++.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "tta++.framework"; path = "Frameworks/tta++.framework"; sourceTree = "<group>"; };
 		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32AEB2701409AC30001F9A60 /* libSFBAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSFBAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -377,13 +376,12 @@
 		32AEB33D1409C153001F9A60 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.3.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		32AEB35E1409CAE0001F9A60 /* BasicAudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BasicAudioPlayer.cpp; sourceTree = "<group>"; };
 		32AEB35F1409CAE0001F9A60 /* BasicAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BasicAudioPlayer.h; sourceTree = "<group>"; };
-		32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrueAudioDecoder.cpp; path = "../../SFBAudioEngine-fnord/Decoders/TrueAudioDecoder.cpp"; sourceTree = "<group>"; };
-		32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrueAudioDecoder.h; path = "../../SFBAudioEngine-fnord/Decoders/TrueAudioDecoder.h"; sourceTree = "<group>"; };
+		32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrueAudioDecoder.cpp; sourceTree = "<group>"; };
+		32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrueAudioDecoder.h; sourceTree = "<group>"; };
 		32B79A62138F2EC200EBEF1B /* Mutex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mutex.cpp; sourceTree = "<group>"; };
 		32B79A63138F2EC200EBEF1B /* Mutex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mutex.h; sourceTree = "<group>"; };
 		32C212D51091116D00BA2493 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32C3F95A14DCD44B007F84A6 /* tta++.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "tta++.framework"; path = "Frameworks/tta++.framework"; sourceTree = "<group>"; };
 		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexMetadata.h; sourceTree = "<group>"; };
 		32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexMetadata.cpp; sourceTree = "<group>"; };
 		32CA90F810B9E514005A85DA /* mpcdec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = mpcdec.framework; path = Frameworks/mpcdec.framework; sourceTree = "<group>"; };
@@ -498,7 +496,7 @@
 				32AEB2E41409BA59001F9A60 /* sndfile.framework in Frameworks */,
 				32AEB2E51409BA59001F9A60 /* speex.framework in Frameworks */,
 				32AEB2E61409BA59001F9A60 /* taglib.framework in Frameworks */,
-				32C3F95B14DCD44B007F84A6 /* tta++.framework in Frameworks */,
+				32A5F871150A9D2900B6E061 /* tta++.framework in Frameworks */,
 				32AEB2E71409BA59001F9A60 /* vorbis.framework in Frameworks */,
 				32AEB2E81409BA59001F9A60 /* wavpack.framework in Frameworks */,
 			);
@@ -750,7 +748,7 @@
 				32F6274113A52A53004EC204 /* sndfile.framework */,
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 				322D79FA11304B3C006676FC /* taglib.framework */,
-				32C3F95A14DCD44B007F84A6 /* tta++.framework */,
+				32A5F870150A9D2900B6E061 /* tta++.framework */,
 				32E73AF610B9D88800094C8A /* vorbis.framework */,
 				32E7368D10B9057900094C8A /* wavpack.framework */,
 			);
@@ -886,7 +884,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32AF1A6314C8FE3C00750053 /* TrueAudioDecoder.h in Headers */,
 				3291CC2B14F5D03C00B34DA4 /* AttachedPicture.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -910,7 +907,6 @@
 				32F83B111409CC1D005790F1 /* AudioConverter.h in Headers */,
 				32F83B131409CC1D005790F1 /* DeinterleavingFloatConverter.h in Headers */,
 				32F83B151409CC1D005790F1 /* PCMConverter.h in Headers */,
-				32AF1A6214C8FE3C00750053 /* TrueAudioDecoder.h in Headers */,
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,

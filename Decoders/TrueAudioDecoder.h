@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,13 @@
 #include <CoreAudio/CoreAudioTypes.h>
 
 #import "AudioDecoder.h"
+
 #include <tta++/libtta.h>
+
+typedef struct {
+	TTA_io_callback iocb;
+	AudioDecoder *decoder;
+} TTA_io_callback_wrapper;
 
 // ========================================
 // An AudioDecoder subclass supporting TrueAudio files
@@ -62,8 +68,8 @@ public:
 
 	// ========================================
 	// File access
-	virtual bool Open(CFErrorRef *error = NULL);
-	virtual bool Close(CFErrorRef *error = NULL);
+	virtual bool Open(CFErrorRef *error = nullptr);
+	virtual bool Close(CFErrorRef *error = nullptr);
 
 	// ========================================
 	// The native format of the source audio
@@ -75,7 +81,7 @@ public:
 
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mStreamInfo.samples; }
+	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
 	// ========================================
@@ -85,7 +91,8 @@ public:
 
 private:
 	tta::tta_decoder					*mDecoder;
-	TTA_info							mStreamInfo;
+	TTA_io_callback_wrapper				*mCallbacks;
 	SInt64								mCurrentFrame;
-	UInt32								seek_skip;
+	SInt64								mTotalFrames;
+	UInt32								mFramesToSkip;
 };
