@@ -241,9 +241,9 @@ BasicAudioPlayer::BasicAudioPlayer()
 	
 	// Use the default output device initially
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioHardwarePropertyDefaultOutputDevice, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioHardwarePropertyDefaultOutputDevice, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(mOutputDeviceID);
@@ -669,9 +669,9 @@ bool BasicAudioPlayer::OutputDeviceIsHogged() const
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -698,9 +698,9 @@ bool BasicAudioPlayer::StartHoggingOutputDevice()
 
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -765,9 +765,9 @@ bool BasicAudioPlayer::StopHoggingOutputDevice()
 
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -838,9 +838,9 @@ bool BasicAudioPlayer::SetDeviceMasterVolume(Float32 volume)
 bool BasicAudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
+		.mSelector	= kAudioDevicePropertyVolumeScalar, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= channel 
 	};
 
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
@@ -864,9 +864,9 @@ bool BasicAudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Setting output device 0x" << std::hex << mOutputDeviceID << " channel " << channel << " volume to " << volume);
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
+		.mSelector	= kAudioDevicePropertyVolumeScalar, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= channel 
 	};
 
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
@@ -887,9 +887,9 @@ bool BasicAudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreamConfiguration,
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster
+		.mSelector	= kAudioDevicePropertyStreamConfiguration, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
@@ -931,9 +931,9 @@ bool BasicAudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 bool BasicAudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyPreferredChannelsForStereo, 
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	if(!AudioObjectHasProperty(mOutputDeviceID, &propertyAddress)) {
@@ -961,9 +961,9 @@ bool BasicAudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32
 bool BasicAudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyDeviceUID, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyDeviceUID, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(deviceUID);
@@ -993,9 +993,9 @@ bool BasicAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	// If nullptr was passed as the device UID, use the default output device
 	if(nullptr == deviceUID) {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDefaultOutputDevice, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioHardwarePropertyDefaultOutputDevice, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 		
 		specifierSize = sizeof(deviceID);
@@ -1014,9 +1014,9 @@ bool BasicAudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	}
 	else {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDeviceForUID, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioHardwarePropertyDeviceForUID, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 		
 		AudioValueTranslation translation = {
@@ -1076,9 +1076,9 @@ bool BasicAudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 bool BasicAudioPlayer::GetOutputDeviceSampleRate(Float64& deviceSampleRate) const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyNominalSampleRate, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(deviceSampleRate);
@@ -1103,9 +1103,9 @@ bool BasicAudioPlayer::SetOutputDeviceSampleRate(Float64 deviceSampleRate)
 	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Setting device 0x" << std::hex << mOutputDeviceID << " sample rate to " << deviceSampleRate << " Hz");
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyNominalSampleRate, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	OSStatus result = AudioObjectSetPropertyData(mOutputDeviceID,
@@ -1130,9 +1130,9 @@ bool BasicAudioPlayer::GetOutputStreams(std::vector<AudioStreamID>& streams) con
 	streams.clear();
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreams, 
-		kAudioDevicePropertyScopeOutput, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyStreams, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize;
@@ -1177,9 +1177,9 @@ bool BasicAudioPlayer::GetOutputStreamVirtualFormat(AudioStreamID streamID, Audi
 	}
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyVirtualFormat,
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioStreamPropertyVirtualFormat, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(virtualFormat);
@@ -1209,9 +1209,9 @@ bool BasicAudioPlayer::SetOutputStreamVirtualFormat(AudioStreamID streamID, cons
 	}
 	
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyVirtualFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioStreamPropertyVirtualFormat, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	OSStatus result = AudioObjectSetPropertyData(streamID,
@@ -1237,9 +1237,9 @@ bool BasicAudioPlayer::GetOutputStreamPhysicalFormat(AudioStreamID streamID, Aud
 	}
 	
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyPhysicalFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioStreamPropertyPhysicalFormat, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(physicalFormat);
@@ -1269,9 +1269,9 @@ bool BasicAudioPlayer::SetOutputStreamPhysicalFormat(AudioStreamID streamID, con
 	}
 	
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioStreamPropertyPhysicalFormat, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioStreamPropertyPhysicalFormat, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	OSStatus result = AudioObjectSetPropertyData(streamID,
@@ -2306,9 +2306,9 @@ bool BasicAudioPlayer::OpenOutput()
 
 	// Register device property listeners
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDeviceProcessorOverload, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDeviceProcessorOverload, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
     result = AudioObjectAddPropertyListener(mOutputDeviceID,
@@ -2410,9 +2410,9 @@ bool BasicAudioPlayer::CloseOutput()
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioDeviceDestroyIOProcID failed: " << result);
 	
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDeviceProcessorOverload, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDeviceProcessorOverload, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	result = AudioObjectRemovePropertyListener(mOutputDeviceID, 
@@ -2514,9 +2514,9 @@ bool BasicAudioPlayer::StopOutput()
 bool BasicAudioPlayer::OutputIsRunning() const
 {
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyDeviceIsRunning, 
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyDeviceIsRunning, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	UInt32 isRunning = 0;
@@ -2659,9 +2659,9 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 	// Get the output buffer size for the device
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyBufferFrameSize,
-		kAudioObjectPropertyScopeGlobal, 
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyBufferFrameSize, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 	
 	UInt32 dataSize = sizeof(mOutputDeviceBufferFrameSize);
@@ -2893,9 +2893,9 @@ bool BasicAudioPlayer::AddVirtualFormatPropertyListeners()
 {
 	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat,
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioStreamPropertyVirtualFormat, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 		
 		// Observe virtual format changes for the streams
@@ -2929,9 +2929,9 @@ bool BasicAudioPlayer::RemoveVirtualFormatPropertyListeners()
 {
 	for(std::vector<AudioStreamID>::const_iterator iter = mOutputDeviceStreamIDs.begin(); iter != mOutputDeviceStreamIDs.end(); ++iter) {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioStreamPropertyVirtualFormat,
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioStreamPropertyVirtualFormat, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 		
 		OSStatus result = AudioObjectRemovePropertyListener(*iter,

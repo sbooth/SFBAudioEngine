@@ -835,9 +835,9 @@ bool AudioPlayer::OutputDeviceIsHogged() const
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -866,9 +866,9 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -915,9 +915,9 @@ bool AudioPlayer::StopHoggingOutputDevice()
 
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyHogMode, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyHogMode, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	pid_t hogPID = static_cast<pid_t>(-1);
@@ -971,9 +971,9 @@ bool AudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) con
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
+		.mSelector	= kAudioDevicePropertyVolumeScalar, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= channel 
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
@@ -1001,9 +1001,9 @@ bool AudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting output device 0x" << std::hex << deviceID << " channel " << channel << " volume to " << volume);
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyVolumeScalar, 
-		kAudioDevicePropertyScopeOutput,
-		channel 
+		.mSelector	= kAudioDevicePropertyVolumeScalar, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= channel 
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
@@ -1028,9 +1028,9 @@ bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyStreamConfiguration,
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster
+		.mSelector	= kAudioDevicePropertyStreamConfiguration, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
@@ -1076,9 +1076,9 @@ bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& pr
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyPreferredChannelsForStereo, 
-		kAudioDevicePropertyScopeOutput,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo, 
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
@@ -1356,9 +1356,9 @@ bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyDeviceUID, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyDeviceUID, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	UInt32 dataSize = sizeof(deviceUID);
@@ -1378,9 +1378,9 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	// If nullptr was passed as the device UID, use the default output device
 	if(nullptr == deviceUID) {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDefaultOutputDevice, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioHardwarePropertyDefaultOutputDevice, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 
 		UInt32 specifierSize = sizeof(deviceID);
@@ -1393,9 +1393,9 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	}
 	else {
 		AudioObjectPropertyAddress propertyAddress = { 
-			kAudioHardwarePropertyDeviceForUID, 
-			kAudioObjectPropertyScopeGlobal, 
-			kAudioObjectPropertyElementMaster 
+			.mSelector	= kAudioHardwarePropertyDeviceForUID, 
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster 
 		};
 
 		AudioValueTranslation translation = {
@@ -1468,9 +1468,9 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate) const
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyNominalSampleRate, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	UInt32 dataSize = sizeof(sampleRate);
@@ -1491,9 +1491,9 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 
 	// Determine if this will actually be a change
 	AudioObjectPropertyAddress propertyAddress = { 
-		kAudioDevicePropertyNominalSampleRate, 
-		kAudioObjectPropertyScopeGlobal,
-		kAudioObjectPropertyElementMaster 
+		.mSelector	= kAudioDevicePropertyNominalSampleRate, 
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
 	Float64 currentSampleRate;
