@@ -38,14 +38,27 @@ DeinterleavingFloatConverter::DeinterleavingFloatConverter(const AudioStreamBasi
 	if(kAudioFormatLinearPCM != sourceFormat.mFormatID)
 		throw std::runtime_error("Only PCM input formats are supported by DeinterleavingFloatConverter");
 
-	if(kAudioFormatFlagIsPacked & sourceFormat.mFormatFlags && !(8 == sourceFormat.mBitsPerChannel || 16 == sourceFormat.mBitsPerChannel || 24 == sourceFormat.mBitsPerChannel || 32 == sourceFormat.mBitsPerChannel))
-		throw std::runtime_error("Only 8, 16, 24, and 32 bit packed sample sizes are supported by DeinterleavingFloatConverter");
+	// Validate the input format is supported (a crash is better than no audio data)
 
-	UInt32 interleavedChannelCount = kAudioFormatFlagIsNonInterleaved & sourceFormat.mFormatFlags ? 1 : sourceFormat.mChannelsPerFrame;
-	UInt32 sampleWidth = sourceFormat.mBytesPerFrame / interleavedChannelCount;
-
-	if(!(kAudioFormatFlagIsPacked & sourceFormat.mFormatFlags) && !(1 == sampleWidth || 2 == sampleWidth || 3 == sampleWidth || 4 == sampleWidth))
-		throw std::runtime_error("Only 1, 2, 3, or 4 byte unpacked frame sizes are supported by DeinterleavingFloatConverter");
+	// Floating point input
+	if(kAudioFormatFlagIsFloat & sourceFormat.mFormatFlags) {
+		// Supported floating point sample sizes are 32 (float) and 64 (double)
+		if(!(32 == sourceFormat.mBitsPerChannel || 64 == sourceFormat.mBitsPerChannel))
+			throw std::runtime_error("Only 32 and 64 bit floating point sample sizes are supported by DeinterleavingFloatConverter");
+	}
+	// Integer input
+	else {
+		// Supported packed integer sample sizes are 8, 16, 24, and 32
+		if((kAudioFormatFlagIsPacked & sourceFormat.mFormatFlags) && !(8 == sourceFormat.mBitsPerChannel || 16 == sourceFormat.mBitsPerChannel || 24 == sourceFormat.mBitsPerChannel || 32 == sourceFormat.mBitsPerChannel))
+			throw std::runtime_error("Only 8, 16, 24, and 32 bit packed integer sample sizes are supported by DeinterleavingFloatConverter");
+		
+		UInt32 interleavedChannelCount = kAudioFormatFlagIsNonInterleaved & sourceFormat.mFormatFlags ? 1 : sourceFormat.mChannelsPerFrame;
+		UInt32 sampleWidth = sourceFormat.mBytesPerFrame / interleavedChannelCount;
+		
+		// High- and low- alignment is supported for 1, 2, 3, and 4 byte sample sizes
+		if(!(kAudioFormatFlagIsPacked & sourceFormat.mFormatFlags) && !(1 == sampleWidth || 2 == sampleWidth || 3 == sampleWidth || 4 == sampleWidth))
+			throw std::runtime_error("Only 1, 2, 3, or 4 byte unpacked frame sizes are supported by DeinterleavingFloatConverter");
+	}
 
 	mSourceFormat = sourceFormat;
 
