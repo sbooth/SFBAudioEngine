@@ -2083,9 +2083,17 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 			
 			SInt64 startTime = decoderState->mTimeStamp;
 
-			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
-
-			DeinterleavingFloatConverter *converter = new DeinterleavingFloatConverter(decoderFormat);
+			// ========================================
+			// Create the deinterleaver that will convert from the decoder's format to deinterleaved, normalized 64-bit floats
+			DeinterleavingFloatConverter *converter = nullptr;
+			try {
+				converter = new DeinterleavingFloatConverter(decoder->GetFormat());
+			}
+			
+			catch(const std::exception& e) {
+				LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error creating DeinterleavingFloatConverter: " << e.what());
+				OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &decoderState->mFlags);
+			}
 
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
