@@ -227,6 +227,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 
 		// Flesh out the height, width, and depth
 		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+        CFRelease(imageSource), imageSource = nullptr;
 		if(imagePropertiesDictionary) {
 			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);

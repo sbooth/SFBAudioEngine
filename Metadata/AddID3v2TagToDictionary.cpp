@@ -212,7 +212,6 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				if(volumeAdjustment) {
 					AddFloatToDictionary(dictionary, kReplayGainTrackGainKey, volumeAdjustment);
-					foundReplayGain = true;
 				}
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
@@ -228,7 +227,6 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				if(volumeAdjustment) {
 					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
-					foundReplayGain = true;
 				}
 			}
 			// Fall back to track gain if identification is not specified
@@ -245,7 +243,6 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				if(volumeAdjustment) {
 					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
-					foundReplayGain = true;
 				}
 			}
 		}			

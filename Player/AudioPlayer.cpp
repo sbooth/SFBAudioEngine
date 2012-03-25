@@ -2123,7 +2123,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			}
 
 			if(bufferList)
-				bufferList = DeallocateABL(bufferList);
+				DeallocateABL(bufferList);
 			
 			if(audioConverter) {
 				result = AudioConverterDispose(audioConverter);

@@ -451,11 +451,12 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 				}				
 			}
+            CFRelease(fileExists), fileExists = nullptr;
 		}
 		else
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
 		
-		CFRelease(fileExists), fileExists = nullptr;
+		
 	}
 #if !TARGET_OS_IPHONE
 	// Determine the MIME type for the URL
@@ -465,6 +466,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		Boolean success = CFURLGetFSRef(url, &ref);
 		if(!success) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "Unable to get FSRef for URL");
+            CFRelease(scheme), scheme = nullptr;
 			return nullptr;
 		}
 		
@@ -473,6 +475,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		if(noErr != result) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "LSCopyItemAttribute (kLSItemContentType) failed: " << result);
+            CFRelease(scheme), scheme = nullptr;
 			return nullptr;
 		}
 		
