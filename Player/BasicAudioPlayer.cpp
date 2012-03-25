@@ -2239,7 +2239,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 			}
 
 			if(bufferList)
-				bufferList = DeallocateABL(bufferList);
+				DeallocateABL(bufferList);
 			
 			if(converter)
 				delete converter, converter = nullptr;

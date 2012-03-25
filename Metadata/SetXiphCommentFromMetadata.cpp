@@ -197,6 +197,7 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 			
 			// Flesh out the height, width, and depth
 			CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+            CFRelease(imageSource), imageSource = NULL;
 			if(imagePropertiesDictionary) {
 				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
