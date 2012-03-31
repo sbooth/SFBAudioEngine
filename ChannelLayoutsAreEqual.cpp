@@ -36,7 +36,7 @@ ChannelLayoutsAreEqual(const AudioChannelLayout *lhs, const AudioChannelLayout *
 	if(lhs == rhs)
 		return true;
 
-	if((nullptr == lhs && nullptr != rhs) || (nullptr != lhs && nullptr == rhs))
+	if(nullptr == lhs || nullptr == rhs)
 		return false;
 
 	// First check if the tags are equal

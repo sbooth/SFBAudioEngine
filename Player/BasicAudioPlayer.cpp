@@ -2239,7 +2239,7 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 			}
 
 			if(bufferList)
-				bufferList = DeallocateABL(bufferList);
+				DeallocateABL(bufferList), bufferList = nullptr;
 			
 			if(converter)
 				delete converter, converter = nullptr;
@@ -2593,7 +2593,7 @@ DecoderStateData * BasicAudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt6
 
 		if(nullptr == result && decoderState->mTimeStamp > timeStamp)
 			result = decoderState;
-		else if(decoderState->mTimeStamp > timeStamp && decoderState->mTimeStamp < result->mTimeStamp)
+		else if(result && decoderState->mTimeStamp > timeStamp && decoderState->mTimeStamp < result->mTimeStamp)
 			result = decoderState;
 	}
 	

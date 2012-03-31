@@ -247,6 +247,8 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		}
 
 		file.addPicture(picture);
+
+		CFRelease(imageSource), imageSource = nullptr;
 	}
 
 	if(!file.save()) {

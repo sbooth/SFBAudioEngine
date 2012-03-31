@@ -222,7 +222,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 
 	long rate;
 	int channels, encoding;
-	if(MPG123_OK != mpg123_getformat(mDecoder, &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding) {
+	if(MPG123_OK != mpg123_getformat(mDecoder, &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding || 0 >= channels) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
 			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
@@ -431,6 +431,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			break;
 		}
 
+		// The analyzer error about division by zero may be safely ignored, because mChannelsPerFrame is verified > 0 in Open()
 		UInt32 framesDecoded = static_cast<UInt32>(bytesDecoded / (sizeof(float) * mFormat.mChannelsPerFrame));
 
 		// Deinterleave the samples

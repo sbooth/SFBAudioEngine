@@ -203,14 +203,22 @@ void HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventTy
 		case kCFStreamEventHasBytesAvailable:
 			if(nullptr == mResponseHeaders) {
 				CFTypeRef responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
-				if(responseHeader)
+				if(responseHeader) {
 					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields(static_cast<CFHTTPMessageRef>(const_cast<void *>(responseHeader)));
+					CFRelease(responseHeader), responseHeader = nullptr;
+				}				
 			}
 			break;
 		
 		case kCFStreamEventErrorOccurred:
-			CFShow(CFReadStreamCopyError(stream));
+		{
+			CFErrorRef error = CFReadStreamCopyError(stream);
+			if(error) {
+				LOGGER_ERR("org.sbooth.AudioEngine.InputSource.HTTP", "Error: " << error);
+				CFRelease(error), error = nullptr;
+			}
 			break;
+		}
 
 		case kCFStreamEventEndEncountered:
 			mEOSReached = true;

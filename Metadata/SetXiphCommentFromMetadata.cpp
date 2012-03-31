@@ -218,6 +218,8 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 			
 			TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
 			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
+
+			CFRelease(imageSource), imageSource = nullptr;
 		}
 	}
 

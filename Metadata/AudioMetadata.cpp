@@ -346,7 +346,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		SInt32 errorCode = noErr;
 		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
 		
-		if(nullptr != fileExists) {
+		if(fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
 				CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
 				CFStringRef pathExtension = nullptr;
@@ -358,7 +358,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 
 				CFRelease(fileSystemPath), fileSystemPath = nullptr;
 
-				if(nullptr != pathExtension) {
+				if(pathExtension) {
 					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
 
@@ -451,34 +451,12 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 					CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 				}				
 			}
+
+			CFRelease(fileExists), fileExists = nullptr;
 		}
 		else
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
-		
-		CFRelease(fileExists), fileExists = nullptr;
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "CFURLCreatePropertyFromResource failed: " << errorCode);		
 	}
-#if !TARGET_OS_IPHONE
-	// Determine the MIME type for the URL
-	else {
-		// Get the UTI for this URL
-		FSRef ref;
-		Boolean success = CFURLGetFSRef(url, &ref);
-		if(!success) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "Unable to get FSRef for URL");
-			return nullptr;
-		}
-		
-		CFStringRef uti = nullptr;
-		OSStatus result = LSCopyItemAttribute(&ref, kLSRolesAll, kLSItemContentType, (CFTypeRef *)&uti);
-		
-		if(noErr != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata", "LSCopyItemAttribute (kLSItemContentType) failed: " << result);
-			return nullptr;
-		}
-		
-		CFRelease(uti), uti = nullptr;
-	}
-#endif
 
 	CFRelease(scheme), scheme = nullptr;
 	
@@ -1025,7 +1003,7 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 	else {
 		if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 			CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
-			if(nullptr != savedValue && CFEqual(savedValue, value))
+			if(savedValue && CFEqual(savedValue, value))
 				CFDictionaryRemoveValue(mChangedMetadata, key);
 			else
 				CFDictionarySetValue(mChangedMetadata, key, value);
