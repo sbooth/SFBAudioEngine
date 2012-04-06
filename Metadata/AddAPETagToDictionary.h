@@ -31,9 +31,12 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <vector>
 #include <taglib/apetag.h>
+
+class AttachedPicture;
 
 // ========================================
 // Add the metadata specified in the APE::Tag instance to dictionary
 // ========================================
-bool AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag *tag);
+bool AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::APE::Tag *tag);

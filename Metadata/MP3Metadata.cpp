@@ -155,8 +155,12 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->xingHeader()->totalFrames());
 	}
 
-	if(file.APETag())
-		AddAPETagToDictionary(mMetadata, file.APETag());
+	if(file.APETag()) {
+		std::vector<AttachedPicture *> pictures;
+		AddAPETagToDictionary(mMetadata, pictures, file.APETag());
+		for(auto picture : pictures)
+			AddSavedPicture(picture);
+	}
 
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());

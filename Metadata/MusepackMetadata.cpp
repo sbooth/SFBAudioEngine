@@ -122,8 +122,12 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
 
-	if(file.APETag())
-		AddAPETagToDictionary(mMetadata, file.APETag());
+	if(file.APETag()) {
+		std::vector<AttachedPicture *> pictures;
+		AddAPETagToDictionary(mMetadata, pictures, file.APETag());
+		for(auto picture : pictures)
+			AddSavedPicture(picture);
+	}
 
 	return true;
 }

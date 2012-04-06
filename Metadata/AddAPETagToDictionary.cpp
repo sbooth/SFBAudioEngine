@@ -33,7 +33,7 @@
 #include "CFDictionaryUtilities.h"
 
 bool
-AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag *tag)
+AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::APE::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
@@ -105,6 +105,38 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::APE::Tag 
 
 			CFRelease(key), key = nullptr;
 			CFRelease(value), value = nullptr;
+		}
+		else if(TagLib::APE::Item::Binary == item.type()) {
+			CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault, item.key().toCString(true), kCFStringEncodingUTF8);
+
+			// From http://www.hydrogenaudio.org/forums/index.php?showtopic=40603&view=findpost&p=504669
+			/*
+			 <length> 32 bit
+			 <flags with binary bit set> 32 bit
+			 <field name> "Cover Art (Front)"|"Cover Art (Back)"
+			 0x00
+			 <description> UTF-8 string (needs to be a file name to be recognized by AudioShell - meh)
+			 0x00
+			 <cover data> binary
+			 */
+			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) || kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Back)"), kCFCompareCaseInsensitive)) {
+				int pos = item.value().find('\0');
+				if(-1 != pos && 3 < item.value().size()) {
+					CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(item.value().mid(pos + 1).data()), item.value().size() - pos - 1);
+					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(item.value().mid(0, pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
+
+					AttachedPicture *p = new AttachedPicture(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description);
+					attachedPictures.push_back(p);
+
+					if(data)
+						CFRelease(data), data = nullptr;
+
+					if(description)
+						CFRelease(description), description = nullptr;
+				}
+			}
+
+			CFRelease(key), key = nullptr;
 		}
 	}
 
