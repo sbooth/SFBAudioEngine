@@ -34,8 +34,9 @@
 #include "MusepackMetadata.h"
 #include "CFErrorUtilities.h"
 #include "AddAudioPropertiesToDictionary.h"
-#include "AddTagToDictionary.h"
-#include "SetTagFromMetadata.h"
+#include "AddID3v1TagToDictionary.h"
+#include "AddAPETagToDictionary.h"
+#include "SetAPETagFromMetadata.h"
 
 #pragma mark Static Methods
 
@@ -118,8 +119,11 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 
-	if(file.tag())
-		AddTagToDictionary(mMetadata, file.tag());
+	if(file.ID3v1Tag())
+		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
+
+	if(file.APETag())
+		AddAPETagToDictionary(mMetadata, file.APETag());
 
 	return true;
 }
@@ -149,7 +153,9 @@ bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetTagFromMetadata(*this, file.tag());
+	// Although both ID3v1 and APE tags are read, only APE tags are written
+	if(file.APETag())
+		SetAPETagFromMetadata(*this, file.APETag());
 
 	if(!file.save()) {
 		if(error) {
