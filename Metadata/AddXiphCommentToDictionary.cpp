@@ -100,7 +100,7 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<Attach
 			AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("METADATA_BLOCK_PICTURE"), kCFCompareCaseInsensitive)) {
 			// Handle embedded pictures
-			for(auto blockIterator: it.second) {
+			for(auto blockIterator : it.second) {
 				auto encodedBlock = blockIterator.data(TagLib::String::UTF8);
 
 				// Decode the Base-64 encoded data
