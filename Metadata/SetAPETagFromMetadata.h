@@ -38,4 +38,4 @@ class AudioMetadata;
 // ========================================
 // Fill in an APE tag from the specified AudioMetadata
 // ========================================
-bool SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag);
+bool SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool setAlbumArt = true);

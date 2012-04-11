@@ -28,9 +28,13 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/flacpicture.h>
+#include <ApplicationServices/ApplicationServices.h>
+
 #include "AudioMetadata.h"
 #include "SetAPETagFromMetadata.h"
 #include "TagLibStringUtilities.h"
+#include "Base64Utilities.h"
 #include "Logger.h"
 
 // ========================================
@@ -114,7 +118,7 @@ SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStr
 }
 
 bool
-SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
+SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
 {
 	if(nullptr == tag)
 		return false;
@@ -167,6 +171,78 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag)
 	SetAPETagDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata.GetReplayGainTrackGain(), CFSTR("%1.8f"));
 	SetAPETagDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata.GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
 	SetAPETagDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+
+	// Album art
+	if(setAlbumArt) {
+		tag->removeItem("Cover Art (Front)");
+		tag->removeItem("Cover Art (Back)");
+#if 0
+		tag->removeItem("METADATA_BLOCK_PICTURE");
+#endif
+
+		for(auto attachedPicture : metadata.GetAttachedPictures()) {
+			// APE can handle front and back covers natively
+			if(AttachedPicture::Type::FrontCover == attachedPicture->GetType() || AttachedPicture::Type::FrontCover == attachedPicture->GetType()) {
+				TagLib::ByteVector data;
+				
+				if(attachedPicture->GetDescription())
+					data.append(TagLib::StringFromCFString(attachedPicture->GetDescription()).data(TagLib::String::UTF8));
+				data.append('\0');
+				data.append(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+
+				if(AttachedPicture::Type::FrontCover == attachedPicture->GetType())
+					tag->setData("Cover Art (Front)", data);
+				else if(AttachedPicture::Type::BackCover == attachedPicture->GetType())
+					tag->setData("Cover Art (Back)", data);
+			}
+#if 0
+			else {
+				CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+				if(nullptr == imageSource)
+					return false;
+
+				TagLib::FLAC::Picture picture;
+				picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+				picture.setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture->GetType()));
+				if(attachedPicture->GetDescription())
+					picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
+
+				// Convert the image's UTI into a MIME type
+				CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+				if(mimeType) {
+					picture.setMimeType(TagLib::StringFromCFString(mimeType));
+					CFRelease(mimeType), mimeType = nullptr;
+				}
+
+				// Flesh out the height, width, and depth
+				CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+				if(imagePropertiesDictionary) {
+					CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
+					CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
+					CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+					
+					int height, width, depth;
+					
+					// Ignore numeric conversion errors
+					CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
+					CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
+					CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
+					
+					picture.setHeight(height);
+					picture.setWidth(width);
+					picture.setColorDepth(depth);
+					
+					CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = nullptr;
+				}
+
+				TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
+				tag->addValue("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
+
+				CFRelease(imageSource), imageSource = nullptr;
+			}
+#endif
+		}
+	}
 
 	return true;
 }

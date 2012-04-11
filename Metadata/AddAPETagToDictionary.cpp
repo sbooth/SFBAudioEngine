@@ -28,8 +28,11 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <taglib/flacpicture.h>
+
 #include "AddAPETagToDictionary.h"
 #include "AudioMetadata.h"
+#include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
 
 bool
@@ -99,6 +102,36 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 				AddDoubleToDictionary(dictionary, kReplayGainAlbumGainKey, CFStringGetDoubleValue(value));
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive))
 				AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, CFStringGetDoubleValue(value));
+#if 0
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("METADATA_BLOCK_PICTURE"), kCFCompareCaseInsensitive)) {
+				// Handle embedded pictures
+				for(auto blockIterator : item.values()) {
+					auto encodedBlock = blockIterator.data(TagLib::String::UTF8);
+
+					// Decode the Base-64 encoded data
+					auto decodedBlock = TagLib::DecodeBase64(encodedBlock);
+
+					// Create the picture
+					TagLib::FLAC::Picture picture;
+					picture.parse(decodedBlock);
+
+					CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
+
+					CFStringRef description = nullptr;
+					if(!picture.description().isNull())
+						description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
+
+					AttachedPicture *p = new AttachedPicture(data, static_cast<AttachedPicture::Type>(picture.type()), description);
+					attachedPictures.push_back(p);
+
+					if(data)
+						CFRelease(data), data = nullptr;
+
+					if(description)
+						CFRelease(description), description = nullptr;
+				}
+			}
+#endif
 			// Put all unknown tags into the additional metadata
 			else
 				CFDictionarySetValue(additionalMetadata, key, value);
@@ -120,7 +153,7 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 			 <cover data> binary
 			 */
 			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) || kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Back)"), kCFCompareCaseInsensitive)) {
-				int pos = item.value().find('\0');
+				int pos = item.binaryData().find('\0');
 				if(-1 != pos && 3 < item.value().size()) {
 					CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(item.value().mid(pos + 1).data()), item.value().size() - pos - 1);
 					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(item.value().mid(0, pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
