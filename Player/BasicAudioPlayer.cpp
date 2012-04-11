@@ -2179,7 +2179,14 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 						
 						// Convert and store the decoded audio
 						if(0 != framesDecoded) {
-							UInt32 framesConverted = converter->Convert(decoderState->mBufferList, bufferList, framesDecoded);
+							UInt32 framesConverted = 0;
+							try {
+								framesConverted = converter->Convert(decoderState->mBufferList, bufferList, framesDecoded);
+							}
+
+							catch(const std::exception& e) {
+								LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error converting input to float: " << e.what());
+							}
 							
 							if(framesConverted != framesDecoded)
 								LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Incomplete conversion:  " << framesConverted <<  "/" << framesDecoded << " frames");
