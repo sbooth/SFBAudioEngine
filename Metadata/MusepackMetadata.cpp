@@ -37,6 +37,7 @@
 #include "AddID3v1TagToDictionary.h"
 #include "AddAPETagToDictionary.h"
 #include "SetAPETagFromMetadata.h"
+#include "CFDictionaryUtilities.h"
 
 #pragma mark Static Methods
 
@@ -116,8 +117,13 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 
 	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Musepack"));
 
-	if(file.audioProperties())
-		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
+	if(file.audioProperties()) {
+		auto properties = file.audioProperties();
+		AddAudioPropertiesToDictionary(mMetadata, properties);
+
+		if(properties->sampleFrames())
+			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
+	}
 
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());

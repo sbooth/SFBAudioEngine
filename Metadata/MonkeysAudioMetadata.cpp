@@ -124,6 +124,8 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 		
 		if(properties->bitsPerSample())
 			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->bitsPerSample());
+		if(properties->sampleFrames())
+			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
 
 	if(file.ID3v1Tag())
