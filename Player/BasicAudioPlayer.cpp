@@ -2869,7 +2869,15 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 		// If the channel map isn't empty, the stream is used and an output converter is necessary
 		if(!channelMap.empty()) {
-			mOutputConverters[i] = new PCMConverter(outputBufferFormat, virtualFormat);			
+			try {
+				mOutputConverters[i] = new PCMConverter(outputBufferFormat, virtualFormat);			
+			}
+
+			catch(const std::exception& e) {
+				LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error creating PCMConverter: " << e.what());
+				return false;
+			}
+
 			mOutputConverters[i]->SetChannelMap(channelMap);
 
 			LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  Channel map: ");
