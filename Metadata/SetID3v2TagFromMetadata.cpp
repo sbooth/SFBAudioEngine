@@ -34,6 +34,7 @@
 #include <taglib/popularimeterframe.h>
 #include <taglib/textidentificationframe.h>
 #include <taglib/unsynchronizedlyricsframe.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 #include "AudioMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
@@ -320,12 +321,26 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 			tag->removeFrame(frame);
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
+			CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+			if(nullptr == imageSource)
+				continue;
+
 			TagLib::ID3v2::AttachedPictureFrame *frame = new TagLib::ID3v2::AttachedPictureFrame;
+
+			// Convert the image's UTI into a MIME type
+			CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+			if(mimeType) {
+				frame->setMimeType(TagLib::StringFromCFString(mimeType));
+				CFRelease(mimeType), mimeType = nullptr;
+			}
+
 			frame->setPicture(TagLib::ByteVector(reinterpret_cast<const char *>(CFDataGetBytePtr(attachedPicture->GetData())), static_cast<TagLib::uint>(CFDataGetLength(attachedPicture->GetData()))));
 			frame->setType(static_cast<TagLib::ID3v2::AttachedPictureFrame::Type>(attachedPicture->GetType()));
 			if(attachedPicture->GetDescription())
 				frame->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 			tag->addFrame(frame);
+
+			CFRelease(imageSource), imageSource = nullptr;
 		}
 	}
 
