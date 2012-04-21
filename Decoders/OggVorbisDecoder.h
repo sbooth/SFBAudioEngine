@@ -33,7 +33,12 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+
 #include <vorbis/vorbisfile.h>
+
+#pragma clang diagnostic pop
 
 #import "AudioDecoder.h"
 

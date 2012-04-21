@@ -2079,7 +2079,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						// Store the decoded audio
 						if(0 != framesDecoded) {
 
-							CARingBufferError result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
+							result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 							if(kCARingBufferError_OK != result)
 								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Store failed: " << result);
 

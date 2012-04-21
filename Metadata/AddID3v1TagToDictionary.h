@@ -31,7 +31,15 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+
+// Ignore warnings about TagLib::ID3v1::StringHandler virtual functions but non-virtual dtor
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnon-virtual-dtor"
+
 #include <taglib/id3v1tag.h>
+
+#pragma clang diagnostic pop
 
 // ========================================
 // Add the metadata specified in the ID3v1::Tag instance to dictionary
