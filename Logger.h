@@ -137,6 +137,7 @@ std::ostream& operator<<(std::ostream& out, CFNumberRef n);
 std::ostream& operator<<(std::ostream& out, CFURLRef u);
 std::ostream& operator<<(std::ostream& out, CFErrorRef e);
 std::ostream& operator<<(std::ostream& out, CFUUIDRef u);
+std::ostream& operator<<(std::ostream& out, CFUUIDBytes b);
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);
 std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout);
 

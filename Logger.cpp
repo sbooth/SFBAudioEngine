@@ -235,6 +235,17 @@ std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, CFUUIDBytes b)
+{
+	CFUUIDRef u = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, b);
+	if(u) {
+		out << u;
+		CFRelease(u), u = nullptr;
+	}
+
+	return out;
+}
+
 // Most of this is stolen from Apple's CAStreamBasicDescription::Print()
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format)
 {
