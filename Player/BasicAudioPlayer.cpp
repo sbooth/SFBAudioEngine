@@ -174,6 +174,8 @@ mySampleRateConverterInputProc(AudioConverterRef				inAudioConverter,
 BasicAudioPlayer::BasicAudioPlayer()
 	: mOutputDeviceID(kAudioDeviceUnknown), mOutputDeviceIOProcID(nullptr), mOutputDeviceBufferFrameSize(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mOutputConverters(nullptr), mSampleRateConverter(nullptr), mSampleRateConversionBuffer(nullptr), mOutputBuffer(nullptr), mFramesDecoded(0), mFramesRendered(0), mDigitalVolume(1.0), mDigitalPreGain(1.0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore()
 {
+	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
+
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
 	
 	if(nullptr == mDecoderQueue)
@@ -336,6 +338,16 @@ BasicAudioPlayer::~BasicAudioPlayer()
 
 	if(mOutputBuffer)
 		mOutputBuffer = DeallocateABL(mOutputBuffer);
+
+	// Free the block callbacks
+	if(mDecoderEventBlocks[0])
+		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
+	if(mDecoderEventBlocks[1])
+		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
+	if(mDecoderEventBlocks[2])
+		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
+	if(mDecoderEventBlocks[3])
+		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
 }
 
 #pragma mark Playback Control
@@ -407,6 +419,40 @@ CFURLRef BasicAudioPlayer::GetPlayingURL() const
 		return nullptr;
 	
 	return currentDecoderState->mDecoder->GetURL();
+}
+
+#pragma mark Block-based callback support
+
+void BasicAudioPlayer::SetDecodingStartedBlock(BasicAudioPlayer::AudioPlayerDecoderEventBlock block)
+{
+	if(mDecoderEventBlocks[0])
+		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
+	if(block)
+		mDecoderEventBlocks[0] = Block_copy(block);
+}
+
+void BasicAudioPlayer::SetDecodingFinishedBlock(BasicAudioPlayer::AudioPlayerDecoderEventBlock block)
+{
+	if(mDecoderEventBlocks[1])
+		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
+	if(block)
+		mDecoderEventBlocks[1] = Block_copy(block);
+}
+
+void BasicAudioPlayer::SetRenderingStartedBlock(BasicAudioPlayer::AudioPlayerDecoderEventBlock block)
+{
+	if(mDecoderEventBlocks[2])
+		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
+	if(block)
+		mDecoderEventBlocks[2] = Block_copy(block);
+}
+
+void BasicAudioPlayer::SetRenderingFinishedBlock(BasicAudioPlayer::AudioPlayerDecoderEventBlock block)
+{
+	if(mDecoderEventBlocks[3])
+		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
+	if(block)
+		mDecoderEventBlocks[3] = Block_copy(block);
 }
 
 #pragma mark Playback Properties
@@ -1538,7 +1584,9 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 				SInt64 timeStamp = decoderState->mTimeStamp;
 
 				if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
-					decoderState->mDecoder->PerformRenderingFinishedCallback();			
+					// Call the rendering finished block
+					if(mDecoderEventBlocks[3])
+						mDecoderEventBlocks[3](decoderState->mDecoder);
 					
 					OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 					decoderState = nullptr;
@@ -1658,13 +1706,17 @@ OSStatus BasicAudioPlayer::Render(AudioDeviceID			inDevice,
 		
 		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
 			OSAtomicTestAndSetBarrier(5 /* eDecoderStateDataFlagRenderingStarted */, &decoderState->mFlags);
-			decoderState->mDecoder->PerformRenderingStartedCallback();
+			// Call the rendering started block
+			if(mDecoderEventBlocks[2])
+				mDecoderEventBlocks[2](decoderState->mDecoder);
 		}
 		
 		OSAtomicAdd64Barrier(framesFromThisDecoder, &decoderState->mFramesRendered);
 		
 		if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
-			decoderState->mDecoder->PerformRenderingFinishedCallback();			
+			// Call the rendering finished block
+			if(mDecoderEventBlocks[3])
+				mDecoderEventBlocks[3](decoderState->mDecoder);
 
 			OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
 			decoderState = nullptr;
@@ -2171,7 +2223,9 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
-							decoder->PerformDecodingStartedCallback();
+							// Call the decoding started block
+							if(mDecoderEventBlocks[0])
+								mDecoderEventBlocks[0](decoderState->mDecoder);
 						}
 
 						// Read the input chunk
@@ -2219,7 +2273,9 @@ void * BasicAudioPlayer::DecoderThreadEntry()
 							// it here so EOS is correctly detected in DidRender()
 							decoderState->mTotalFrames = startingFrameNumber;
 
-							decoder->PerformDecodingFinishedCallback();
+							// Call the decoding finished block
+							if(mDecoderEventBlocks[1])
+								mDecoderEventBlocks[1](decoderState->mDecoder);
 							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);

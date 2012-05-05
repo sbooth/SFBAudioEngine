@@ -36,21 +36,6 @@
 #include "InputSource.h"
 
 // ========================================
-// Typedefs
-// ========================================
-class AudioDecoder;
-typedef void
-(*AudioDecoderCallback)(void					*context,
-						const AudioDecoder		*decoder);
-
-
-struct AudioDecoderCallbackAndContext
-{
-	AudioDecoderCallback	mCallback;
-	void					*mContext;
-};
-
-// ========================================
 // Error Codes
 // ========================================
 extern const CFStringRef		AudioDecoderErrorDomain;
@@ -68,10 +53,7 @@ enum {
 // ========================================
 class AudioDecoder
 {
-	
-	friend class AudioPlayer;
-	friend class BasicAudioPlayer;
-	
+
 public:
 
 	// ========================================
@@ -163,13 +145,6 @@ public:
 	virtual bool SupportsSeeking() const						{ return false; }
 	virtual SInt64 SeekToFrame(SInt64 /*frame*/)				{ return -1; }
 
-	// ========================================
-	// AudioPlayer callback support
-	void SetDecodingStartedCallback(AudioDecoderCallback callback, void *context);
-	void SetDecodingFinishedCallback(AudioDecoderCallback callback, void *context);
-	void SetRenderingStartedCallback(AudioDecoderCallback callback, void *context);
-	void SetRenderingFinishedCallback(AudioDecoderCallback callback, void *context);
-
 protected:
 
 	InputSource						*mInputSource;		// The input source feeding the decoder
@@ -189,15 +164,8 @@ protected:
 
 private:
 
+	// ========================================
+	// Controls whether Open() is called for decoders created in the factory methods
 	static bool						sAutomaticallyOpenDecoders;
 
-	// ========================================
-	// Callbacks for AudioPlayer use only
-	AudioDecoderCallbackAndContext	mCallbacks [4];
-	
-	void PerformDecodingStartedCallback();
-	void PerformDecodingFinishedCallback();
-	void PerformRenderingStartedCallback();
-	void PerformRenderingFinishedCallback();
-	
 };
