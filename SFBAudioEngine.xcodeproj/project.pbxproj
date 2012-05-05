@@ -52,7 +52,6 @@
 		3291CC2814F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */; };
 		3291CC2914F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */; };
 		3291CC2A14F5D03C00B34DA4 /* AttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3291CC2B14F5D03C00B34DA4 /* AttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* AttachedPicture.h */; };
 		3294BE3B1144AF3D003EB595 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4C8111614540091D56B /* CADebugMacros.cpp */; };
 		3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
 		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
@@ -884,7 +883,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3291CC2B14F5D03C00B34DA4 /* AttachedPicture.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1436,7 +1434,6 @@
 				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
@@ -1461,7 +1458,6 @@
 					"\"$(SRCROOT)/Frameworks/vorbis.framework/Versions/A/Frameworks\"",
 				);
 				FRAMEWORK_VERSION = A;
-				GCC_MODEL_TUNING = G5;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/ThirdParty";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
