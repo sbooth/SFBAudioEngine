@@ -734,6 +734,108 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	else
 		MP4TagsSetLyrics(tags, nullptr);
 
+	// Title sort order
+	str = GetTitleSortOrder();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetSortName(tags, cString);
+	}
+	else
+		MP4TagsSetSortName(tags, nullptr);
+
+	// Album title sort order
+	str = GetAlbumTitleSortOrder();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetSortAlbum(tags, cString);
+	}
+	else
+		MP4TagsSetSortAlbum(tags, nullptr);
+
+	// Artist sort order
+	str = GetArtistSortOrder();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetSortArtist(tags, cString);
+	}
+	else
+		MP4TagsSetSortArtist(tags, nullptr);
+
+	// Album artist sort order
+	str = GetAlbumArtistSortOrder();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetSortAlbumArtist(tags, cString);
+	}
+	else
+		MP4TagsSetSortAlbumArtist(tags, nullptr);
+
+	// Composer sort order
+	str = GetComposerSortOrder();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetSortComposer(tags, cString);
+	}
+	else
+		MP4TagsSetSortComposer(tags, nullptr);
+
+	// Grouping
+	str = GetGrouping();
+
+	if(str) {
+		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
+		char cString [cStringSize + 1];
+
+		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;			
+		}
+
+		MP4TagsSetGrouping(tags, cString);
+	}
+	else
+		MP4TagsSetGrouping(tags, nullptr);
+
 	// Remove existing front cover art
 	for(uint32_t i = 0; i < tags->artworkCount; ++i)
 		MP4TagsRemoveArtwork(tags, i);
