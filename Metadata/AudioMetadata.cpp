@@ -91,6 +91,15 @@ const CFStringRef	kMetadataISRCKey						= CFSTR("ISRC");
 const CFStringRef	kMetadataMCNKey							= CFSTR("MCN");
 const CFStringRef	kMetadataMusicBrainzReleaseIDKey		= CFSTR("MusicBrainz Release ID");
 const CFStringRef	kMetadataMusicBrainzRecordingIDKey		= CFSTR("MusicBrainz Recording ID");
+
+const CFStringRef	kMetadataTitleSortOrderKey				= CFSTR("Title Sort Order");
+const CFStringRef	kMetadataAlbumTitleSortOrderKey			= CFSTR("Album Title Sort Order");
+const CFStringRef	kMetadataArtistSortOrderKey				= CFSTR("Artist Sort Order");
+const CFStringRef	kMetadataAlbumArtistSortOrderKey		= CFSTR("Album Artist Sort Order");
+const CFStringRef	kMetadataComposerSortOrderKey			= CFSTR("Composer Sort Order");
+
+const CFStringRef	kMetadataGroupingKey					= CFSTR("Grouping");
+
 const CFStringRef	kMetadataAdditionalMetadataKey			= CFSTR("Additional Metadata");
 
 const CFStringRef	kReplayGainReferenceLoudnessKey			= CFSTR("Replay Gain Reference Loudness");
@@ -795,6 +804,66 @@ CFStringRef AudioMetadata::GetMusicBrainzRecordingID() const
 void AudioMetadata::SetMusicBrainzRecordingID(CFStringRef recordingID)
 {
 	SetValue(kMetadataMusicBrainzRecordingIDKey, recordingID);
+}
+
+CFStringRef AudioMetadata::GetTitleSortOrder() const
+{
+	return GetStringValue(kMetadataTitleSortOrderKey);
+}
+
+void AudioMetadata::SetTitleSortOrder(CFStringRef titleSortOrder)
+{
+	SetValue(kMetadataTitleSortOrderKey, titleSortOrder);
+}
+
+CFStringRef AudioMetadata::GetAlbumTitleSortOrder() const
+{
+	return GetStringValue(kMetadataAlbumTitleSortOrderKey);
+}
+
+void AudioMetadata::SetAlbumTitleSortOrder(CFStringRef albumTitleSortOrder)
+{
+	SetValue(kMetadataAlbumTitleSortOrderKey, albumTitleSortOrder);
+}
+
+CFStringRef AudioMetadata::GetArtistSortOrder() const
+{
+	return GetStringValue(kMetadataArtistSortOrderKey);
+}
+
+void AudioMetadata::SetArtistSortOrder(CFStringRef artistSortOrder)
+{
+	SetValue(kMetadataArtistSortOrderKey, artistSortOrder);
+}
+
+CFStringRef AudioMetadata::GetAlbumArtistSortOrder() const
+{
+	return GetStringValue(kMetadataAlbumArtistSortOrderKey);
+}
+
+void AudioMetadata::SetAlbumArtistSortOrder(CFStringRef albumArtistSortOrder)
+{
+	SetValue(kMetadataAlbumArtistSortOrderKey, albumArtistSortOrder);
+}
+
+CFStringRef AudioMetadata::GetComposerSortOrder() const
+{
+	return GetStringValue(kMetadataComposerSortOrderKey);
+}
+
+void AudioMetadata::SetComposerSortOrder(CFStringRef composerSortOrder)
+{
+	SetValue(kMetadataComposerSortOrderKey, composerSortOrder);
+}
+
+CFStringRef AudioMetadata::GetGrouping() const
+{
+	return GetStringValue(kMetadataGroupingKey);
+}
+
+void AudioMetadata::SetGrouping(CFStringRef grouping)
+{
+	SetValue(kMetadataGroupingKey, grouping);
 }
 
 #pragma mark Additional Metadata

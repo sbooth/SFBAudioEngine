@@ -77,6 +77,15 @@ extern const CFStringRef		kMetadataISRCKey;
 extern const CFStringRef		kMetadataMCNKey;
 extern const CFStringRef		kMetadataMusicBrainzReleaseIDKey;
 extern const CFStringRef		kMetadataMusicBrainzRecordingIDKey;
+
+extern const CFStringRef		kMetadataTitleSortOrderKey;
+extern const CFStringRef		kMetadataAlbumTitleSortOrderKey;
+extern const CFStringRef		kMetadataArtistSortOrderKey;
+extern const CFStringRef		kMetadataAlbumArtistSortOrderKey;
+extern const CFStringRef		kMetadataComposerSortOrderKey;
+
+extern const CFStringRef		kMetadataGroupingKey;
+
 extern const CFStringRef		kMetadataAdditionalMetadataKey;
 
 extern const CFStringRef		kReplayGainReferenceLoudnessKey;
@@ -200,6 +209,24 @@ public:
 
 	CFStringRef GetMusicBrainzRecordingID() const;
 	void SetMusicBrainzRecordingID(CFStringRef recordingID);
+
+	CFStringRef GetTitleSortOrder() const;
+	void SetTitleSortOrder(CFStringRef titleSortOrder);
+
+	CFStringRef GetAlbumTitleSortOrder() const;
+	void SetAlbumTitleSortOrder(CFStringRef albumTitleSortOrder);
+
+	CFStringRef GetArtistSortOrder() const;
+	void SetArtistSortOrder(CFStringRef artistSortOrder);
+
+	CFStringRef GetAlbumArtistSortOrder() const;
+	void SetAlbumArtistSortOrder(CFStringRef albumArtistSortOrder);
+
+	CFStringRef GetComposerSortOrder() const;
+	void SetComposerSortOrder(CFStringRef composerSortOrder);
+
+	CFStringRef GetGrouping() const;
+	void SetGrouping(CFStringRef grouping);
 
 	// ========================================
 	// Additional metadata

@@ -218,7 +218,57 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 		frame->setText(TagLib::StringFromCFString(metadata.GetLyrics()));
 		tag->addFrame(frame);
 	}
+
+	tag->removeFrames("TSRC");
+	if(metadata.GetISRC()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSRC", TagLib::String::Latin1);
+		frame->setText(TagLib::StringFromCFString(metadata.GetISRC()));
+		tag->addFrame(frame);
+	}
+
+	// Sorting and grouping
+	tag->removeFrames("TSOT");
+	if(metadata.GetTitleSortOrder()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOT", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetTitleSortOrder()));
+		tag->addFrame(frame);
+	}
 	
+	tag->removeFrames("TSOA");
+	if(metadata.GetAlbumTitleSortOrder()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOA", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetAlbumTitleSortOrder()));
+		tag->addFrame(frame);
+	}
+
+	tag->removeFrames("TSOP");
+	if(metadata.GetArtistSortOrder()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOP", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetArtistSortOrder()));
+		tag->addFrame(frame);
+	}
+
+	tag->removeFrames("TSO2");
+	if(metadata.GetAlbumArtistSortOrder()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSO2", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetAlbumArtistSortOrder()));
+		tag->addFrame(frame);
+	}
+
+	tag->removeFrames("TSOC");
+	if(metadata.GetComposerSortOrder()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TSOC", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetComposerSortOrder()));
+		tag->addFrame(frame);
+	}
+
+	tag->removeFrames("TIT1");
+	if(metadata.GetGrouping()) {
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TIT1", TagLib::String::UTF8);
+		frame->setText(TagLib::StringFromCFString(metadata.GetGrouping()));
+		tag->addFrame(frame);
+	}
+
 	// ReplayGain
 	CFNumberRef trackGain = metadata.GetReplayGainTrackGain();
 	CFNumberRef trackPeak = metadata.GetReplayGainTrackPeak();

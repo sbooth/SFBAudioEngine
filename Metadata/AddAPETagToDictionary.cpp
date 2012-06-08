@@ -92,6 +92,18 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 				CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
 				CFDictionarySetValue(dictionary, kMetadataMCNKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLESORT"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataTitleSortOrderKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMTITLESORT"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataAlbumTitleSortOrderKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTISTSORT"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataArtistSortOrderKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTISTSORT"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataAlbumArtistSortOrderKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSERSORT"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataComposerSortOrderKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GROUPING"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataGroupingKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive))
 				AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, CFStringGetDoubleValue(value));
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive))

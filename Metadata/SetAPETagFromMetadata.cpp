@@ -141,7 +141,13 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool
 	SetAPETagNumber(tag, "RATING", metadata.GetRating());
 	SetAPETag(tag, "ISRC", metadata.GetISRC());
 	SetAPETag(tag, "MCN", metadata.GetMCN());
-	
+	SetAPETag(tag, "TITLESORT", metadata.GetTitleSortOrder());
+	SetAPETag(tag, "ALBUMTITLESORT", metadata.GetAlbumTitleSortOrder());
+	SetAPETag(tag, "ARTISTSORT", metadata.GetArtistSortOrder());
+	SetAPETag(tag, "ALBUMARTISTSORT", metadata.GetAlbumArtistSortOrder());
+	SetAPETag(tag, "COMPOSERSORT", metadata.GetComposerSortOrder());
+	SetAPETag(tag, "GROUPING", metadata.GetGrouping());
+
 	// Additional metadata
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
 	if(nullptr != additionalMetadata) {

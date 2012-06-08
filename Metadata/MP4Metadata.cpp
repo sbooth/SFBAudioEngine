@@ -368,7 +368,55 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(str), str = nullptr;
 		}
 	}
-	
+
+	if(tags->sortName) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortName, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataTitleSortOrderKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
+	if(tags->sortAlbum) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbum, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataAlbumTitleSortOrderKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
+	if(tags->sortArtist) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortArtist, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataArtistSortOrderKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
+	if(tags->sortAlbumArtist) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbumArtist, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataAlbumArtistSortOrderKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
+	if(tags->sortComposer) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortComposer, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataComposerSortOrderKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
+	if(tags->grouping) {
+		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, tags->grouping, kCFStringEncodingUTF8);
+		if(str) {
+			CFDictionarySetValue(mMetadata, kMetadataGroupingKey, str);
+			CFRelease(str), str = nullptr;
+		}
+	}
+
 	// Album art
 	if(tags->artworkCount) {
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {

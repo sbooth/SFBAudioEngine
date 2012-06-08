@@ -134,7 +134,36 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 	if(!frameList.isEmpty())
 		// It seems that the presence of this frame indicates a compilation
 		CFDictionarySetValue(dictionary, kMetadataCompilationKey, kCFBooleanTrue);
-	
+
+	frameList = tag->frameListMap()["TSRC"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataISRCKey, frameList.front()->toString());
+
+	// Sorting and grouping
+	frameList = tag->frameListMap()["TSOT"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataTitleSortOrderKey, frameList.front()->toString());
+
+	frameList = tag->frameListMap()["TSOA"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumTitleSortOrderKey, frameList.front()->toString());
+
+	frameList = tag->frameListMap()["TSOP"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataArtistSortOrderKey, frameList.front()->toString());
+
+	frameList = tag->frameListMap()["TSO2"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumArtistSortOrderKey, frameList.front()->toString());
+
+	frameList = tag->frameListMap()["TSOC"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataComposerSortOrderKey, frameList.front()->toString());
+
+	frameList = tag->frameListMap()["TIT1"];
+	if(!frameList.isEmpty())
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataGroupingKey, frameList.front()->toString());
+
 	// ReplayGain
 	bool foundReplayGain = false;
 	

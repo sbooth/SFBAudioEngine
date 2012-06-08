@@ -142,7 +142,13 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	SetXiphCommentNumber(tag, "RATING", metadata.GetRating());
 	SetXiphComment(tag, "ISRC", metadata.GetISRC());
 	SetXiphComment(tag, "MCN", metadata.GetMCN());
-	
+	SetXiphComment(tag, "TITLESORT", metadata.GetTitleSortOrder());
+	SetXiphComment(tag, "ALBUMTITLESORT", metadata.GetAlbumTitleSortOrder());
+	SetXiphComment(tag, "ARTISTSORT", metadata.GetArtistSortOrder());
+	SetXiphComment(tag, "ALBUMARTISTSORT", metadata.GetAlbumArtistSortOrder());
+	SetXiphComment(tag, "COMPOSERSORT", metadata.GetComposerSortOrder());
+	SetXiphComment(tag, "GROUPING", metadata.GetGrouping());
+
 	// Additional metadata
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
 	if(nullptr != additionalMetadata) {
