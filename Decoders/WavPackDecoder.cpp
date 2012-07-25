@@ -241,8 +241,11 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	}
 	else {
 		mFormat.mFormatID			= kAudioFormatLinearPCM;
-		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh | kAudioFormatFlagIsNonInterleaved;
-		
+		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
+
+		// Don't set kAudioFormatFlagIsAlignedHigh for 32-bit integer files
+		mFormat.mFormatFlags		|= (32 == WavpackGetBitsPerSample(mWPC) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh);
+
 		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
 		mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);
 		mFormat.mBitsPerChannel		= WavpackGetBitsPerSample(mWPC);
