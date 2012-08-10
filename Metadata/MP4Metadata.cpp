@@ -868,10 +868,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(GetReplayGainReferenceLoudness()) {
 		float f;
-		if(!CFNumberGetValue(GetReplayGainReferenceLoudness(), kCFNumberFloatType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
-			return false;
-		}
+		if(!CFNumberGetValue(GetReplayGainReferenceLoudness(), kCFNumberFloatType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
 
 		char value [8];
 		snprintf(value, sizeof(value), "%2.1f dB", f);
@@ -902,10 +900,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(GetReplayGainTrackGain()) {
 		float f;
-		if(!CFNumberGetValue(GetReplayGainTrackGain(), kCFNumberFloatType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
-			return false;
-		}
+		if(!CFNumberGetValue(GetReplayGainTrackGain(), kCFNumberFloatType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
 		
 		char value [10];
 		snprintf(value, sizeof(value), "%+2.2f dB", f);
@@ -936,10 +932,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(GetReplayGainTrackPeak()) {
 		float f;
-		if(!CFNumberGetValue(GetReplayGainTrackPeak(), kCFNumberFloatType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
-			return false;
-		}
+		if(!CFNumberGetValue(GetReplayGainTrackPeak(), kCFNumberFloatType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
 		
 		char value [12];
 		snprintf(value, sizeof(value), "%1.8f", f);
@@ -970,10 +964,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(GetReplayGainAlbumGain()) {
 		float f;
-		if(!CFNumberGetValue(GetReplayGainAlbumGain(), kCFNumberFloatType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
-			return false;
-		}
+		if(!CFNumberGetValue(GetReplayGainAlbumGain(), kCFNumberFloatType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
 		
 		char value [10];
 		snprintf(value, sizeof(value), "%+2.2f dB", f);
@@ -1004,10 +996,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 
 	if(GetReplayGainAlbumPeak()) {
 		float f;
-		if(!CFNumberGetValue(GetReplayGainAlbumPeak(), kCFNumberFloatType, &f)) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue() failed");
-			return false;
-		}
+		if(!CFNumberGetValue(GetReplayGainAlbumPeak(), kCFNumberFloatType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
 		
 		char value [12];
 		snprintf(value, sizeof(value), "%1.8f", f);

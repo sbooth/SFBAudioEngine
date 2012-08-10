@@ -101,11 +101,9 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 	
 	if(nullptr != value) {
 		double f;
-		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f)) {
-			LOGGER_ERR("org.sbooth.AudioEngine", "CFNumberGetValue failed");
-			return false;
-		}
-		
+		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
+			LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+
 		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
 	}
 	
