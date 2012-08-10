@@ -2793,7 +2793,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 			const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, preferredChannelLayout };
 
 			// Not all channel layouts can be mapped, so handle failure with a generic mapping
-			dataSize = sizeof(deviceChannelMap);
+			dataSize = (UInt32)sizeof(deviceChannelMap);
 			result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, deviceChannelMap);
 				
 			if(noErr != result) {
@@ -2831,6 +2831,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		AudioStreamBasicDescription virtualFormat;
 		if(!GetOutputStreamVirtualFormat(streamID, virtualFormat)) {
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Unknown virtual format for AudioStreamID 0x" << std::hex << streamID);
+			free(streamUsage), streamUsage = nullptr;
 			return false;
 		}
 
@@ -2838,7 +2839,8 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		// nominal sample rate has changed but the virtual formats have not
 		if(deviceSampleRate != virtualFormat.mSampleRate) {
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Internal inconsistency: device sample rate (" << deviceSampleRate << " Hz) and virtual format sample rate (" << virtualFormat.mSampleRate << " Hz) don't match");
-			return false;			
+			free(streamUsage), streamUsage = nullptr;
+			return false;
 		}
 
 		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  Virtual format: " << virtualFormat);
@@ -2854,6 +2856,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 		if(kAudioHardwareNoError != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectGetPropertyData (kAudioStreamPropertyStartingChannel) failed: " << result);
+			free(streamUsage), streamUsage = nullptr;
 			return false;
 		}
 		
@@ -2875,6 +2878,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 			catch(const std::exception& e) {
 				LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "Error creating PCMConverter: " << e.what());
+				free(streamUsage), streamUsage = nullptr;
 				return false;
 			}
 
@@ -2894,12 +2898,12 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 	result = AudioObjectSetPropertyData(mOutputDeviceID, &propertyAddress, 0, nullptr, static_cast<UInt32>(streamUsageSize), streamUsage);
 	
+	free(streamUsage), streamUsage = nullptr;
+
 	if(kAudioHardwareNoError != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.BasicAudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyIOProcStreamUsage) failed: " << result);
 		return false;
 	}
-
-	free(streamUsage), streamUsage = nullptr;
 
 	return true;
 }
