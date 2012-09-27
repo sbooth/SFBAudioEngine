@@ -2749,15 +2749,18 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		
 		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Device preferred stereo channels: " << preferredStereoChannels[0] << " " << preferredStereoChannels[1]);
 
-		AudioChannelLayout stereoLayout;	
-		stereoLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
+		AudioChannelLayout stereoLayout = {
+			.mChannelLayoutTag				= kAudioChannelLayoutTag_Stereo,
+			.mChannelBitmap					= 0,
+			.mNumberChannelDescriptions		= 0
+		};
 		
 		const AudioChannelLayout *specifier [2] = { mRingBufferChannelLayout, &stereoLayout };
 		
 		SInt32 stereoChannelMap [2] = { 1, 2 };
 		dataSize = sizeof(stereoChannelMap);
 		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(specifier), specifier, &dataSize, stereoChannelMap);
-		
+
 		if(noErr == result) {
 			deviceChannelMap[preferredStereoChannels[0] - 1] = stereoChannelMap[0];
 			deviceChannelMap[preferredStereoChannels[1] - 1] = stereoChannelMap[1];
@@ -2866,8 +2869,8 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 		std::map<int, int> channelMap;
 		for(UInt32 channel = startingChannel; channel < endingChannel; ++channel) {
-			if(-1 != deviceChannelMap[channel - 1])
-				channelMap[channel - 1] = deviceChannelMap[channel - 1];
+			if(-1 != deviceChannelMap[channel - startingChannel])
+				channelMap[channel - startingChannel] = deviceChannelMap[channel - startingChannel];
 		}
 
 		// If the channel map isn't empty, the stream is used and an output converter is necessary
