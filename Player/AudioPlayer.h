@@ -46,7 +46,6 @@
 // ========================================
 class CARingBuffer;
 class DecoderStateData;
-class PCMConverter;
 
 // ========================================
 // Constants
@@ -65,10 +64,9 @@ enum {
 //
 // The player primarily uses two threads:
 //  1) A decoding thread, which reads audio via an AudioDecoder instance and stores it in the ring buffer.
-//     The audio is stored as deinterleaved, normalized [-1, 1) native floating point data in 64 bits (AKA doubles)
-//  2) A rendering thread, which reads audio from the ring buffer and performs conversion to the required output format.
-//     Sample rate conversion is done using Apple's AudioConverter API.
-//     Final conversion to the stream's format is done using PCMConverter.
+//     The audio is stored in the canonical Core Audio format (kAudioFormatFlagsAudioUnitCanonical)-
+//     deinterleaved, normalized [-1, 1) native floating point data in 32 bits (AKA floats) on Mac OS X and 8.24 fixed point on iOS
+//  2) A rendering thread, which reads audio from the ring buffer and hands it off to the output AU.
 //
 // Since decoding and rendering are distinct operations performed in separate threads, there is an additional thread
 // used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
