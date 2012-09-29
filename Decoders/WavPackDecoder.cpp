@@ -141,8 +141,8 @@ CFArrayRef WavPackDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack"), CFSTR("audio/x-wavpack") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
 }
 
 bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -160,10 +160,13 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wavpack"), kCFCompareCaseInsensitive))
 		return true;
-	
+
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-wavpack"), kCFCompareCaseInsensitive))
+		return true;
+
 	return false;
 }
 

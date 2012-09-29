@@ -56,18 +56,18 @@ CFArrayRef OggSpeexDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef OggSpeexDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex"), CFSTR("audio/ogg") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
 }
 
 bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -75,10 +75,13 @@ bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
 		return true;
-	
+
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
+		return true;
+
 	return false;
 }
 

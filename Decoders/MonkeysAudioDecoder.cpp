@@ -156,8 +156,8 @@ CFArrayRef MonkeysAudioDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio"), CFSTR("audio/x-monkeys-audio") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
 }
 
 bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -175,10 +175,13 @@ bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/monkeys-audio"), kCFCompareCaseInsensitive))
 		return true;
-	
+
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-monkeys-audio"), kCFCompareCaseInsensitive))
+		return true;
+
 	return false;
 }
 

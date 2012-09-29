@@ -97,8 +97,8 @@ CFArrayRef MusepackDecoder::CreateSupportedFileExtensions()
 
 CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack"), CFSTR("audio/x-musepack") };
+	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
 }
 
 bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -119,7 +119,10 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/musepack"), kCFCompareCaseInsensitive))
 		return true;
-	
+
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-musepack"), kCFCompareCaseInsensitive))
+		return true;
+
 	return false;
 }
 
