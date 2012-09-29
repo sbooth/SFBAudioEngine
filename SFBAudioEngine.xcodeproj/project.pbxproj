@@ -66,7 +66,6 @@
 		32AEB29F1409B227001F9A60 /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		32AEB2A01409B22A001F9A60 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
 		32AEB2A11409B22D001F9A60 /* FLACDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 325560291092A38F00580566 /* FLACDecoder.cpp */; };
-		32AEB2A21409B232001F9A60 /* LibsndfileDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */; };
 		32AEB2A51409B25C001F9A60 /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
 		32AEB2A71409B25C001F9A60 /* OggSpeexDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */; };
 		32AEB2A81409B25C001F9A60 /* OggVorbisDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */; };
@@ -994,7 +993,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0450;
 				ORGANIZATIONNAME = sbooth.org;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "SFBAudioEngine" */;
@@ -1066,7 +1065,6 @@
 				32AEB29F1409B227001F9A60 /* LoopableRegionDecoder.cpp in Sources */,
 				32AEB2A01409B22A001F9A60 /* CoreAudioDecoder.cpp in Sources */,
 				32AEB2A11409B22D001F9A60 /* FLACDecoder.cpp in Sources */,
-				32AEB2A21409B232001F9A60 /* LibsndfileDecoder.cpp in Sources */,
 				32AEB2A51409B25C001F9A60 /* MPEGDecoder.cpp in Sources */,
 				32AEB2A71409B25C001F9A60 /* OggSpeexDecoder.cpp in Sources */,
 				32AEB2A81409B25C001F9A60 /* OggVorbisDecoder.cpp in Sources */,
@@ -1230,6 +1228,7 @@
 			baseConfigurationReference = 322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1257,6 +1256,7 @@
 			baseConfigurationReference = 322B5B2E108BA69F00CA9BDE /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1424,6 +1424,7 @@
 			baseConfigurationReference = 322B5B2D108BA69F00CA9BDE /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1449,6 +1450,7 @@
 			baseConfigurationReference = 322B5B2E108BA69F00CA9BDE /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
