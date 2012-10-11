@@ -33,7 +33,9 @@
 
 #include "WAVEMetadata.h"
 #include "CFErrorUtilities.h"
+#include "AddTagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
+#include "SetTagFromMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
@@ -127,10 +129,13 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		if(properties->sampleFrames())
 			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
-	
-	if(file.tag()) {
+
+	if(file.InfoTag())
+		AddTagToDictionary(mMetadata, file.InfoTag());
+
+	if(file.ID3v2Tag()) {
 		std::vector<AttachedPicture *> pictures;
-		AddID3v2TagToDictionary(mMetadata, pictures, file.tag());
+		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
 		for(auto picture : pictures)
 			AddSavedPicture(picture);
 	}
@@ -163,7 +168,13 @@ bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetID3v2TagFromMetadata(*this, file.tag());
+	// An Info tag is only written if present, but ID3v2 tags are always written
+
+	// TODO: Should other field names from the Info tag be handled?
+	if(file.InfoTag())
+		SetTagFromMetadata(*this, file.InfoTag());
+
+	SetID3v2TagFromMetadata(*this, file.ID3v2Tag());
 
 	if(!file.save()) {
 		if(error) {
