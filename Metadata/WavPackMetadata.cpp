@@ -37,6 +37,7 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddAPETagToDictionary.h"
+#include "SetID3v1TagFromMetadata.h"
 #include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
@@ -166,10 +167,13 @@ bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 	
-	// Although both ID3v1 and APE tags are read, only APE tags are written
-	if(file.APETag())
-		SetAPETagFromMetadata(*this, file.APETag());
+	// ID3v1 tags are only written if present, but an APE tag is always written
 	
+	if(file.ID3v1Tag())
+		SetID3v1TagFromMetadata(*this, file.ID3v1Tag());
+
+	SetAPETagFromMetadata(*this, file.APETag(true));
+
 	if(!file.save()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), "");

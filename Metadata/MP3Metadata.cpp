@@ -38,7 +38,9 @@
 #include "AddAPETagToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
+#include "SetID3v1TagFromMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
+#include "SetAPETagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
@@ -199,6 +201,16 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
+
+	// APE and ID3v1 tags are only written if present, but ID3v2 tags are always written
+
+	auto APETag = file.APETag();
+	if(APETag && !APETag->isEmpty())
+		SetAPETagFromMetadata(*this, APETag);
+
+	auto ID3v1Tag = file.ID3v1Tag();
+	if(ID3v1Tag && !ID3v1Tag->isEmpty())
+		SetID3v1TagFromMetadata(*this, ID3v1Tag);
 
 	SetID3v2TagFromMetadata(*this, file.ID3v2Tag(true));
 

@@ -36,8 +36,10 @@
 #include "CFErrorUtilities.h"
 #include "TagLibStringUtilities.h"
 #include "AddAudioPropertiesToDictionary.h"
-#include "AddTagToDictionary.h"
-#include "SetTagFromMetadata.h"
+#include "AddID3v1TagToDictionary.h"
+#include "AddID3v2TagToDictionary.h"
+#include "SetID3v1TagFromMetadata.h"
+#include "SetID3v2TagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
 #pragma mark Static Methods
@@ -128,7 +130,16 @@ bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
 
-	AddTagToDictionary(mMetadata, file.tag());
+	// Add all tags that are present
+	if(file.ID3v1Tag())
+		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
+
+	if(file.ID3v2Tag()) {
+		std::vector<AttachedPicture *> pictures;
+		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
+		for(auto picture : pictures)
+			AddSavedPicture(picture);
+	}
 
 	return true;
 }
@@ -158,7 +169,12 @@ bool TrueAudioMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetTagFromMetadata(*this, file.tag());
+	// ID3v1 tags are only written if present, but ID3v2 tags are always written
+
+	if(file.ID3v1Tag())
+		SetID3v1TagFromMetadata(*this, file.ID3v1Tag());
+
+	SetID3v2TagFromMetadata(*this, file.ID3v2Tag(true));
 
 	if(!file.save()) {
 		if(error) {

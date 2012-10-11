@@ -41,6 +41,8 @@
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
 #include "AddXiphCommentToDictionary.h"
+#include "SetID3v1TagFromMetadata.h"
+#include "SetID3v2TagFromMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 #include "TagLibStringUtilities.h"
@@ -198,7 +200,15 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	SetXiphCommentFromMetadata(*this, file.xiphComment(), false);
+	// ID3v1 and ID3v2 tags are only written if present, but a Xiph comment is always written
+
+	if(file.ID3v1Tag())
+		SetID3v1TagFromMetadata(*this, file.ID3v1Tag());
+
+	if(file.ID3v2Tag())
+		SetID3v2TagFromMetadata(*this, file.ID3v2Tag());
+
+	SetXiphCommentFromMetadata(*this, file.xiphComment(true), false);
 
 	// Remove existing cover art
 	file.removePictures();
