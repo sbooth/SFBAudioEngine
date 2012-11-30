@@ -1161,6 +1161,22 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 		return false;
 	}
 
+#if TARGET_OS_IPHONE
+	// All AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
+	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
+	UInt32 framesPerSlice = 4096;
+	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, sizeof(framesPerSlice));
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+#endif
+
 //	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
 //	if(noErr != result) {
 ////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
