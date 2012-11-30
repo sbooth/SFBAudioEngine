@@ -341,7 +341,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
 	
@@ -2320,6 +2320,61 @@ bool AudioPlayer::OpenOutput()
 		return false;
 	}
 
+#if TARGET_OS_IPHONE
+	// All AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
+	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
+	result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+
+	UInt32 framesPerSlice = 4096;
+	result = AudioUnitSetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, sizeof(framesPerSlice));
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+#else
+	// Save the default value of kAudioUnitProperty_MaximumFramesPerSlice for use when performing sample rate conversion
+	result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+
+	UInt32 dataSize = sizeof(mDefaultMaximumFramesPerSlice);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &mDefaultMaximumFramesPerSlice, &dataSize);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+#endif
+
 	return true;
 }
 
@@ -2746,7 +2801,8 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 			}				
 		}
 	}
-	
+
+#if !TARGET_OS_IPHONE
 	// ========================================
 	// Output units perform sample rate conversion if the input sample rate is not equal to
 	// the output sample rate. For high sample rates, the sample rate conversion can require 
@@ -2754,6 +2810,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	// For example, 192 KHz audio converted to 44.1 HHz requires approximately (192 / 44.1) * 512 = 2229 frames
 	// So if the input and output sample rates on the output device don't match, adjust 
 	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
+	// See http://lists.apple.com/archives/coreaudio-api/2009/Oct/msg00150.html
 	AudioUnit au = nullptr;
 	result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
@@ -2777,35 +2834,26 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 		return false;
 	}
 
-	// Apparently all AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
-#if !TARGET_OS_IPHONE
+	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
+
+	UInt32 newMaxFrames = mDefaultMaximumFramesPerSlice;
+
+	// If the output unit's input and output sample rates don't match, calculate a working maximum number of frames per slice
 	if(inputSampleRate != outputSampleRate) {
-		LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
-
-		UInt32 currentMaxFrames = 0;
-		dataSize = sizeof(currentMaxFrames);
-		result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &currentMaxFrames, &dataSize);		
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
-			return false;
-		}
-
 		Float64 ratio = inputSampleRate / outputSampleRate;
-		Float64 multiplier = std::max(1.0, ceil(ratio));
+		Float64 multiplier = std::max(1.0, ratio);
 
-		// Round up to the nearest power of 16
-		UInt32 newMaxFrames = static_cast<UInt32>(currentMaxFrames * multiplier);
+		// Round up to the nearest 16 frames
+		newMaxFrames = static_cast<UInt32>(ceil(mDefaultMaximumFramesPerSlice * multiplier));
 		newMaxFrames += 16;
 		newMaxFrames &= 0xFFFFFFF0;
+	}
 
-		if(newMaxFrames > currentMaxFrames) {
-			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adjusting kAudioUnitProperty_MaximumFramesPerSlice to " << newMaxFrames);
+	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adjusting kAudioUnitProperty_MaximumFramesPerSlice to " << newMaxFrames);
 
-			if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames))) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed");
-				return false;
-			}
-		}
+	if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames))) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed");
+		return false;
 	}
 #endif
 

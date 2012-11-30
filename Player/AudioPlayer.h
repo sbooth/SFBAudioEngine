@@ -242,6 +242,7 @@ private:
 	AUGraph								mAUGraph;
 	AUNode								mMixerNode;
 	AUNode								mOutputNode;
+	UInt32								mDefaultMaximumFramesPerSlice;
 
 	CARingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
