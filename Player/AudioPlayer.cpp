@@ -1591,9 +1591,12 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 
 		// Assign a default channel layout if the decoder has an unknown layout
 		bool allocatedChannelLayout = false;
-		if(nullptr == channelLayout)
+		if(nullptr == channelLayout) {
 			channelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
-		
+			if(channelLayout)
+				allocatedChannelLayout = true;
+		}
+
 		bool success = SetAUGraphChannelLayout(channelLayout);
 		
 		if(allocatedChannelLayout)
