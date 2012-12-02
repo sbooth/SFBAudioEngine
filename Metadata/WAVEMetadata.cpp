@@ -130,7 +130,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
 
-	if(file.InfoTag())
+	/*if(file.InfoTag())
 		AddTagToDictionary(mMetadata, file.InfoTag());
 
 	if(file.ID3v2Tag()) {
@@ -138,7 +138,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
 		for(auto picture : pictures)
 			AddSavedPicture(picture);
-	}
+	}*/
 	
 	return true;
 }
@@ -171,10 +171,10 @@ bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
 	// An Info tag is only written if present, but ID3v2 tags are always written
 
 	// TODO: Should other field names from the Info tag be handled?
-	if(file.InfoTag())
+	/*if(file.InfoTag())
 		SetTagFromMetadata(*this, file.InfoTag());
 
-	SetID3v2TagFromMetadata(*this, file.ID3v2Tag());
+	SetID3v2TagFromMetadata(*this, file.ID3v2Tag());*/
 
 	if(!file.save()) {
 		if(error) {
