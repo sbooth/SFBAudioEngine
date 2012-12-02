@@ -32,7 +32,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
-# include <CoreServices/CoreServices.h>
+//# include <CoreServices/CoreServices.h>
 #endif
 
 #include "AudioMetadata.h"
