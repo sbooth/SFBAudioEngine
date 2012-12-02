@@ -56,8 +56,6 @@
 		3294BE3D1144AF3F003EB595 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
 		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
 		32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */; };
-		32A5F871150A9D2900B6E061 /* tta++.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A5F870150A9D2900B6E061 /* tta++.framework */; };
-		32A5F872150A9D3D00B6E061 /* tta++.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 32A5F870150A9D2900B6E061 /* tta++.framework */; };
 		32A95E521347EBC6006B40EF /* MODMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32A95E501347EBC6006B40EF /* MODMetadata.cpp */; };
 		32AEB2911409AF2B001F9A60 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32AEB28F1409AF2B001F9A60 /* Logger.cpp */; };
 		32AEB29C1409B219001F9A60 /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D429E413E308DB00FA07DE /* AudioPlayer.cpp */; };
@@ -97,7 +95,6 @@
 		32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */; };
 		32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D61409BA26001F9A60 /* AudioUnit.framework */; };
 		32AEB2DC1409BA27001F9A60 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D71409BA26001F9A60 /* CoreAudio.framework */; };
-		32AEB2DD1409BA27001F9A60 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D81409BA27001F9A60 /* CoreServices.framework */; };
 		32AEB2DE1409BA59001F9A60 /* dumb.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3203A6101346E09100A7A22E /* dumb.framework */; };
 		32AEB2DF1409BA59001F9A60 /* FLAC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325560661092A89600580566 /* FLAC.framework */; };
 		32AEB2E01409BA59001F9A60 /* mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 324DB1B612DC17480055AF3F /* mac.framework */; };
@@ -183,6 +180,8 @@
 		32F83B131409CC1D005790F1 /* DeinterleavingFloatConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F83B0D1409CC1D005790F1 /* DeinterleavingFloatConverter.h */; };
 		32F83B141409CC1D005790F1 /* PCMConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32F83B0E1409CC1D005790F1 /* PCMConverter.cpp */; };
 		32F83B151409CC1D005790F1 /* PCMConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F83B0F1409CC1D005790F1 /* PCMConverter.h */; };
+		CA5A3C99166B2BAC00820808 /* tta++.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA5A3C98166B2BAC00820808 /* tta++.framework */; };
+		CA5A3C9A166B2BB800820808 /* tta++.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = CA5A3C98166B2BAC00820808 /* tta++.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -229,9 +228,9 @@
 				32AEB2EF1409BA6F001F9A60 /* sndfile.framework in Copy Embedded Frameworks */,
 				32AEB2F01409BA6F001F9A60 /* speex.framework in Copy Embedded Frameworks */,
 				32AEB2F11409BA6F001F9A60 /* taglib.framework in Copy Embedded Frameworks */,
-				32A5F872150A9D3D00B6E061 /* tta++.framework in Copy Embedded Frameworks */,
 				32AEB2F21409BA6F001F9A60 /* vorbis.framework in Copy Embedded Frameworks */,
 				32AEB2F31409BA6F001F9A60 /* wavpack.framework in Copy Embedded Frameworks */,
+				CA5A3C9A166B2BB800820808 /* tta++.framework in Copy Embedded Frameworks */,
 			);
 			name = "Copy Embedded Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -336,7 +335,6 @@
 		329AB8A2148B185300180506 /* Base64Utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64Utilities.h; sourceTree = "<group>"; };
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		32A5F870150A9D2900B6E061 /* tta++.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "tta++.framework"; path = "Frameworks/tta++.framework"; sourceTree = "<group>"; };
 		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MODMetadata.cpp; sourceTree = "<group>"; };
 		32AEB2701409AC30001F9A60 /* libSFBAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSFBAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -350,7 +348,6 @@
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32AEB2D71409BA26001F9A60 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
-		32AEB2D81409BA27001F9A60 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32AEB2F41409BAD7001F9A60 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = /usr/lib/libcrypto.dylib; sourceTree = "<absolute>"; };
 		32AEB3041409BE48001F9A60 /* SimplePlayer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SimplePlayer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		32AEB30E1409BE48001F9A60 /* SimplePlayer-iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SimplePlayer-iOS-Info.plist"; sourceTree = "<group>"; };
@@ -437,6 +434,7 @@
 		32F83B0D1409CC1D005790F1 /* DeinterleavingFloatConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DeinterleavingFloatConverter.h; path = Converter/DeinterleavingFloatConverter.h; sourceTree = "<group>"; };
 		32F83B0E1409CC1D005790F1 /* PCMConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PCMConverter.cpp; path = Converter/PCMConverter.cpp; sourceTree = "<group>"; };
 		32F83B0F1409CC1D005790F1 /* PCMConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PCMConverter.h; path = Converter/PCMConverter.h; sourceTree = "<group>"; };
+		CA5A3C98166B2BAC00820808 /* tta++.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "tta++.framework"; path = "Frameworks/tta++.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -483,7 +481,6 @@
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				32AEB2DC1409BA27001F9A60 /* CoreAudio.framework in Frameworks */,
-				32AEB2DD1409BA27001F9A60 /* CoreServices.framework in Frameworks */,
 				32AEB2F51409BAD8001F9A60 /* libcrypto.dylib in Frameworks */,
 				32AEB2DE1409BA59001F9A60 /* dumb.framework in Frameworks */,
 				32AEB2DF1409BA59001F9A60 /* FLAC.framework in Frameworks */,
@@ -494,9 +491,9 @@
 				32AEB2E41409BA59001F9A60 /* sndfile.framework in Frameworks */,
 				32AEB2E51409BA59001F9A60 /* speex.framework in Frameworks */,
 				32AEB2E61409BA59001F9A60 /* taglib.framework in Frameworks */,
-				32A5F871150A9D2900B6E061 /* tta++.framework in Frameworks */,
 				32AEB2E71409BA59001F9A60 /* vorbis.framework in Frameworks */,
 				32AEB2E81409BA59001F9A60 /* wavpack.framework in Frameworks */,
+				CA5A3C99166B2BAC00820808 /* tta++.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -735,7 +732,6 @@
 				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
 				32AEB2D61409BA26001F9A60 /* AudioUnit.framework */,
 				32AEB2D71409BA26001F9A60 /* CoreAudio.framework */,
-				32AEB2D81409BA27001F9A60 /* CoreServices.framework */,
 				32AEB2F41409BAD7001F9A60 /* libcrypto.dylib */,
 				3203A6101346E09100A7A22E /* dumb.framework */,
 				325560661092A89600580566 /* FLAC.framework */,
@@ -746,7 +742,7 @@
 				32F6274113A52A53004EC204 /* sndfile.framework */,
 				3258AE1B12DF8FA800ADA052 /* speex.framework */,
 				322D79FA11304B3C006676FC /* taglib.framework */,
-				32A5F870150A9D2900B6E061 /* tta++.framework */,
+				CA5A3C98166B2BAC00820808 /* tta++.framework */,
 				32E73AF610B9D88800094C8A /* vorbis.framework */,
 				32E7368D10B9057900094C8A /* wavpack.framework */,
 			);
