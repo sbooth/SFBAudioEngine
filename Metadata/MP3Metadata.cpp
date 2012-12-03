@@ -101,7 +101,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
+	TagLib::FileStream *stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
 	TagLib::MPEG::File file(stream, TagLib::ID3v2::FrameFactory::instance());
 	
 	if(!file.isValid()) {
@@ -173,6 +173,8 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 		for(auto picture : pictures)
 			AddSavedPicture(picture);
 	}
+    
+    delete stream;
 
 	return true;
 }
