@@ -70,8 +70,9 @@ struct AudioRenderCallbackAndContext
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagMuteOutput				= 1u << 0,
-    eAudioPlayerFlagRingBufferNeedsReset    = 1u << 2
+	eAudioPlayerFlagMuteOutput				= 1u << 0, // shouldn't this be 1 if its tested against 6?
+    eAudioPlayerFlagRingBufferNeedsReset    = 1u << 2,
+    eAudioPlayerFlagStopAfterRendering      = 1u << 3
 };
 
 // ========================================
@@ -259,6 +260,8 @@ private:
     
     bool GetRingBufferNeedsReset();
     void SetRingBufferNeedsReset(bool value);
+    bool GetShouldStopAfterRendering();
+    void SetShouldStopAfterRendering(bool value);
 
 
 	// ========================================

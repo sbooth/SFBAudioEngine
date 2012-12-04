@@ -1859,8 +1859,12 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
 
-		if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState())
+		//if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState())
+        if (GetShouldStopAfterRendering())
+        {
 			StopOutput();
+            SetShouldStopAfterRendering(false);
+        }
 	}
 
 	return noErr;
@@ -1968,6 +1972,13 @@ void * AudioPlayer::DecoderThreadEntry()
             }
             // need to signal here to playback doesn't stop in the render thread.
 		}
+        
+        // if we don't have a decoder to render, then we need to tell the renderer to stop.
+        if (!decoderState)
+        {
+            if (!GetShouldStopAfterRendering())
+                SetShouldStopAfterRendering(true);
+        }
         
 		// ========================================
 		// Append the decoder state to the list of active decoders
@@ -2469,6 +2480,8 @@ bool AudioPlayer::StartOutput()
 	// We don't want to start output in the middle of a buffer modification
 	Mutex::Locker lock(mGuard);
 
+    SetShouldStopAfterRendering(false);
+    
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStart failed: " << result);
@@ -2989,6 +3002,21 @@ void AudioPlayer::SetRingBufferNeedsReset(bool value)
     else
         OSAtomicTestAndClear(5 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 }
+
+bool AudioPlayer::GetShouldStopAfterRendering()
+{
+    bool result = (mFlags & eAudioPlayerFlagStopAfterRendering);
+    return result;    
+}
+
+void AudioPlayer::SetShouldStopAfterRendering(bool value)
+{
+    if (value)
+        OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagStopAfterRendering */, &mFlags);
+    else
+        OSAtomicTestAndClear(4 /* eAudioPlayerFlagStopAfterRendering */, &mFlags);
+}
+
 
 DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 {
