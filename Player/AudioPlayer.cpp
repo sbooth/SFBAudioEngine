@@ -1778,6 +1778,10 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
 		return 1;
 	}
+    
+    // Call our pre-render callback if we have one.
+    if (mCallbacks[0].mCallback)
+        mCallbacks[0].mCallback(mCallbacks[0].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
 
 	mFramesRenderedLastPass = framesToRead;
 	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
@@ -1818,6 +1822,10 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 	
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
+        // Call our post-render callback if we have one.
+        if (mCallbacks[1].mCallback)
+            mCallbacks[1].mCallback(mCallbacks[1].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
+        
 		// There is nothing more to do if no frames were rendered
 		if(0 == mFramesRenderedLastPass)
 			return noErr;

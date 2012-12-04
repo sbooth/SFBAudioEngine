@@ -53,6 +53,20 @@ class DecoderStateData;
 #define kActiveDecoderArraySize 8
 
 // ========================================
+// Typedefs
+// ========================================
+// ========================================
+// Typedefs
+// ========================================
+typedef void (*AudioRenderCallback)(void *context, float *bufferLeft, float *bufferRight, UInt32 numberOfFrames);
+
+struct AudioRenderCallbackAndContext
+{
+	AudioRenderCallback     mCallback;
+	void					*mContext;
+};
+
+// ========================================
 // Enums
 // ========================================
 enum {
@@ -207,6 +221,9 @@ public:
 	inline uint32_t GetRingBufferWriteChunkSize() const	{ return mRingBufferWriteChunkSize; }
 	bool SetRingBufferWriteChunkSize(uint32_t chunkSize);
 
+    inline void SetAudioPreRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[0].mCallback = callbackPtr; mCallbacks[0].mContext = context; }
+    inline void SetAudioPostRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[1].mCallback = callbackPtr; mCallbacks[1].mContext = context; }
+
 private:
 
 	// ========================================
@@ -268,6 +285,8 @@ private:
 	int64_t								mFramesDecoded;
 	int64_t								mFramesRendered;
 	int64_t								mFramesRenderedLastPass;
+
+    AudioRenderCallbackAndContext       mCallbacks [2];
 
 public:
 
