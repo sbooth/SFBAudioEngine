@@ -345,6 +345,10 @@ AudioPlayer::AudioPlayer()
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
 	
+    
+    // initialize the callbacks to nil.
+	memset(&mCallbacks, 0, sizeof(mCallbacks));
+    
 	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
