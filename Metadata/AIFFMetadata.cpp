@@ -28,6 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <memory>
+
 #include <taglib/tfilestream.h>
 #include <taglib/aifffile.h>
 
@@ -97,9 +99,25 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-	TagLib::RIFF::AIFF::File file(stream);
-	
+	// TODO: Use unique_ptr once the switch to C++11 STL is made
+	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+	if(!stream->isOpen()) {
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+		}
+
+		return false;
+	}
+
+	TagLib::RIFF::AIFF::File file(stream.get());
 	if(!file.isValid()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), "");
@@ -144,9 +162,25 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf));
-	TagLib::RIFF::AIFF::File file(stream, false);
-	
+	// TODO: Use unique_ptr once the switch to C++11 STL is made
+	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf)));
+	if(!stream->isOpen()) {
+		if(error) {
+			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
+			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+
+			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+			CFRelease(description), description = nullptr;
+			CFRelease(failureReason), failureReason = nullptr;
+			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+		}
+
+		return false;
+	}
+
+	TagLib::RIFF::AIFF::File file(stream.get(), false);
 	if(!file.isValid()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), "");
@@ -159,7 +193,7 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 			CFRelease(failureReason), failureReason = nullptr;
 			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
-		
+
 		return false;
 	}
 
@@ -182,6 +216,6 @@ bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
 	}
 
 	MergeChangedMetadataIntoMetadata();
-	
+
 	return true;
 }
