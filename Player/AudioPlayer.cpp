@@ -341,10 +341,9 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mNeedsRingBufferReset(false), mRingBufferNeedsResetSemaphore(), mRingBufferGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mRingBufferNeedsResetSemaphore(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
-	
     
     // initialize the callbacks to nil.
 	memset(&mCallbacks, 0, sizeof(mCallbacks));
@@ -1718,20 +1717,19 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 {
 #pragma unused(inTimeStamp)
 #pragma unused(inBusNumber)
-    
-    if (GetRingBufferNeedsReset())
+
+    // This is here to test the sequence of events when the ring buffer needs to be reset
+    /*if (GetRingBufferNeedsReset())
     {
         bLastRBResetValue = true;
-        printf("*** Render Thread, Render(): ring buffer needs to be reset.\n");
+        //printf("*** Render Thread, Render(): ring buffer needs to be reset.\n");
     }
-    
-    Mutex::Locker lock(mRingBufferGuard);
     
     if (GetRingBufferNeedsReset() != bLastRBResetValue)
     {
         bLastRBResetValue = GetRingBufferNeedsReset();
-        printf("*** Render Thread, Render(): ring buffer successfully reset.\n");
-    }
+        //printf("*** Render Thread, Render(): ring buffer successfully reset.\n");
+    }*/
 
 	assert(nullptr != ioActionFlags);
 	assert(nullptr != ioData);
@@ -1847,7 +1845,8 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
                 if (GetRingBufferNeedsReset())
                 {
                     // signal that we're done to allow for the ring buffer to recreated.
-                    printf("*** Render Thread, DidRender(): we need to reset the ring buffer.\n");
+                    
+                    //printf("*** Render Thread, DidRender(): we need to reset the ring buffer.\n");
                     mRingBufferNeedsResetSemaphore.Signal();
                 }
 			}
@@ -1952,16 +1951,16 @@ void * AudioPlayer::DecoderThreadEntry()
                 // reset the ring buffer we should be good to carry on.  i think it also fixes indragie's issue of
                 // the weirdness he was seeing unless decoders were set to auto-open.
                 SetRingBufferNeedsReset(true);
-                printf("*** Decoder Thread: waiting for renderer to come around\n");
+                //printf("*** Decoder Thread: waiting for renderer to come around\n");
                 mRingBufferNeedsResetSemaphore.Wait();
-                printf("*** Decoder Thread: ring buffer reset start\n");
+                //printf("*** Decoder Thread: ring buffer reset start\n");
                 ResetRingBufferForDecoder(aDecoder);
                 SetRingBufferNeedsReset(false);
                 // signal that we're done.
                 decoderState = new DecoderStateData(aDecoder);
                 decoderState->mTimeStamp = mFramesDecoded;
                 CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
-                printf("*** Decoder Thread: ring buffer reset end\n");
+                //printf("*** Decoder Thread: ring buffer reset end\n");
             } else {
                 decoderState = new DecoderStateData(aDecoder);
 				decoderState->mTimeStamp = mFramesDecoded;
@@ -2979,15 +2978,16 @@ bool AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout *channelLayout)
 
 bool AudioPlayer::GetRingBufferNeedsReset()
 {
-    Mutex::Locker lock(mRingBufferGuard);
-    bool result = mNeedsRingBufferReset;
+    bool result = (mFlags & eAudioPlayerFlagRingBufferNeedsReset);
     return result;
 }
 
 void AudioPlayer::SetRingBufferNeedsReset(bool value)
 {
-    Mutex::Locker lock(mRingBufferGuard);
-    mNeedsRingBufferReset = value;
+    if (value)
+        OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+    else
+        OSAtomicTestAndClear(5 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 }
 
 DecoderStateData * AudioPlayer::GetCurrentDecoderState() const

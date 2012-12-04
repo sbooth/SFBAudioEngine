@@ -70,7 +70,8 @@ struct AudioRenderCallbackAndContext
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagMuteOutput				= 1u << 0
+	eAudioPlayerFlagMuteOutput				= 1u << 0,
+    eAudioPlayerFlagRingBufferNeedsReset    = 1u << 2
 };
 
 // ========================================
@@ -280,9 +281,7 @@ private:
 
 	Guard								mGuard;
     
-    bool                                mNeedsRingBufferReset;
     Semaphore                           mRingBufferNeedsResetSemaphore;
-    Guard                               mRingBufferGuard;
 
 	pthread_t							mDecoderThread;
 	Semaphore							mDecoderSemaphore;
