@@ -28,6 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <memory>
+
 #include <taglib/tfilestream.h>
 #include <taglib/itfile.h>
 #include <taglib/xmfile.h>
@@ -117,9 +119,27 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 
 	bool fileIsValid = false;
 	if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("it"), kCFCompareCaseInsensitive)) {
-		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-		TagLib::IT::File file(stream);
+		// TODO: Use unique_ptr once the switch to C++11 STL is made
+		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		if(!stream->isOpen()) {
+			if(error) {
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
+				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+			}
+
+			CFRelease(pathExtension), pathExtension = nullptr;
+
+			return false;
+		}
+
+		TagLib::IT::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Impulse Tracker)"));
@@ -132,9 +152,27 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("xm"), kCFCompareCaseInsensitive)) {
-		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-		TagLib::XM::File file(stream);
+		// TODO: Use unique_ptr once the switch to C++11 STL is made
+		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		if(!stream->isOpen()) {
+			if(error) {
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
+				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+			}
+
+			CFRelease(pathExtension), pathExtension = nullptr;
+
+			return false;
+		}
+
+		TagLib::XM::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Extended Module)"));
@@ -147,9 +185,27 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("s3m"), kCFCompareCaseInsensitive)) {
-		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-		TagLib::S3M::File file(stream);
+		// TODO: Use unique_ptr once the switch to C++11 STL is made
+		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		if(!stream->isOpen()) {
+			if(error) {
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
+				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+			}
+
+			CFRelease(pathExtension), pathExtension = nullptr;
+
+			return false;
+		}
+
+		TagLib::S3M::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (ScreamTracker III)"));
@@ -162,9 +218,27 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive)) {
-		auto stream = new TagLib::FileStream(reinterpret_cast<const char *>(buf), true);
-		TagLib::Mod::File file(stream);
+		// TODO: Use unique_ptr once the switch to C++11 STL is made
+		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		if(!stream->isOpen()) {
+			if(error) {
+				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
+				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+
+				CFRelease(description), description = nullptr;
+				CFRelease(failureReason), failureReason = nullptr;
+				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
+			}
+
+			CFRelease(pathExtension), pathExtension = nullptr;
+
+			return false;
+		}
+
+		TagLib::Mod::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
 			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Protracker)"));
