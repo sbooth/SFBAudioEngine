@@ -236,6 +236,8 @@ private:
 
 	bool OutputIsRunning() const;
 	bool ResetOutput();
+    
+    bool ResetRingBufferForDecoder(AudioDecoder *decoder);
 
 	// ========================================
 	// AUGraph Utilities
@@ -253,6 +255,10 @@ private:
 	
 	DecoderStateData * GetCurrentDecoderState() const;
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
+    
+    bool GetRingBufferNeedsReset();
+    void SetRingBufferNeedsReset(bool value);
+
 
 	// ========================================
 	// Data Members
@@ -273,6 +279,10 @@ private:
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	Guard								mGuard;
+    
+    bool                                mNeedsRingBufferReset;
+    Semaphore                           mRingBufferNeedsResetSemaphore;
+    Guard                               mRingBufferGuard;
 
 	pthread_t							mDecoderThread;
 	Semaphore							mDecoderSemaphore;
