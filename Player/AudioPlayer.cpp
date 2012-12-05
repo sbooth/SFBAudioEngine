@@ -1762,7 +1762,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
     
     // Call our pre-render callback if we have one.
     if (mCallbacks[0].mCallback)
-        mCallbacks[0].mCallback(mCallbacks[0].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
+        ((AudioRenderCallback)mCallbacks[0].mCallback)(mCallbacks[0].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
 
 	mFramesRenderedLastPass = framesToRead;
 	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
@@ -1805,7 +1805,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
         // Call our post-render callback if we have one.
         if (mCallbacks[1].mCallback)
-            mCallbacks[1].mCallback(mCallbacks[1].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
+            ((AudioRenderCallback)mCallbacks[1].mCallback)(mCallbacks[1].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
         
 		// There is nothing more to do if no frames were rendered
 		if(0 == mFramesRenderedLastPass)
@@ -1864,6 +1864,10 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
         {
 			StopOutput();
             SetShouldStopAfterRendering(false);
+            
+            // send the AudioQueueEmpty callback
+            if (mCallbacks[3].mCallback)
+                ((AudioCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext);
         }
 	}
 
@@ -1958,6 +1962,11 @@ void * AudioPlayer::DecoderThreadEntry()
                 //printf("*** Decoder Thread: waiting for renderer to come around\n");
                 mRingBufferNeedsResetSemaphore.Wait();
                 //printf("*** Decoder Thread: ring buffer reset start\n");
+                
+                // allow for the caller to be able to set sample rate to match decoder.
+                if (mCallbacks[3].mCallback)
+                    ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, nextFormat.mSampleRate);
+                
                 ResetRingBufferForDecoder(aDecoder);
                 SetRingBufferNeedsReset(false);
                 // signal that we're done.
@@ -2481,6 +2490,13 @@ bool AudioPlayer::StartOutput()
 	Mutex::Locker lock(mGuard);
 
     SetShouldStopAfterRendering(false);
+    
+    DecoderStateData *decoderState = GetCurrentDecoderState();
+    AudioDecoder *decoder = decoderState->mDecoder;
+    Float64 outputSampleRate = 0;
+    GetOutputDeviceSampleRate(outputSampleRate);
+    if (mCallbacks[3].mCallback && decoder->mSourceFormat.mSampleRate != outputSampleRate)
+        ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, decoderState->mDecoder->mSourceFormat.mSampleRate);
     
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {

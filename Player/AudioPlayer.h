@@ -59,12 +59,15 @@ class DecoderStateData;
 // Typedefs
 // ========================================
 typedef void (*AudioRenderCallback)(void *context, float *bufferLeft, float *bufferRight, UInt32 numberOfFrames);
+typedef void (*AudioCallback)(void *context);
+typedef void (*AudioSampleRateChangeCallback)(void *context, Float64 proposedSampleRate);
 
-struct AudioRenderCallbackAndContext
+struct AudioCallbackAndContext
 {
-	AudioRenderCallback     mCallback;
+	void                    *mCallback;
 	void					*mContext;
 };
+
 
 // ========================================
 // Enums
@@ -223,8 +226,10 @@ public:
 	inline uint32_t GetRingBufferWriteChunkSize() const	{ return mRingBufferWriteChunkSize; }
 	bool SetRingBufferWriteChunkSize(uint32_t chunkSize);
 
-    inline void SetAudioPreRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[0].mCallback = callbackPtr; mCallbacks[0].mContext = context; }
-    inline void SetAudioPostRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[1].mCallback = callbackPtr; mCallbacks[1].mContext = context; }
+    inline void SetAudioPreRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[0].mCallback = (void *)callbackPtr; mCallbacks[0].mContext = context; }
+    inline void SetAudioPostRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[1].mCallback = (void *)callbackPtr; mCallbacks[1].mContext = context; }
+    inline void SetAudioQueueEmptyCallback(AudioCallback callbackPtr, void *context) { mCallbacks[2].mCallback = (void *)callbackPtr; mCallbacks[2].mContext = context; }
+    inline void SetAudioSampleRateChangeCallback(AudioSampleRateChangeCallback callbackPtr, void *context) { mCallbacks[3].mCallback = (void *)callbackPtr; mCallbacks[3].mContext = context; }
 
 private:
 
@@ -298,7 +303,7 @@ private:
 	int64_t								mFramesRendered;
 	int64_t								mFramesRenderedLastPass;
 
-    AudioRenderCallbackAndContext       mCallbacks [2];
+    AudioCallbackAndContext       mCallbacks[4];
 
 public:
 
