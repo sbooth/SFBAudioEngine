@@ -2492,11 +2492,17 @@ bool AudioPlayer::StartOutput()
     SetShouldStopAfterRendering(false);
     
     DecoderStateData *decoderState = GetCurrentDecoderState();
-    AudioDecoder *decoder = decoderState->mDecoder;
-    Float64 outputSampleRate = 0;
-    GetOutputDeviceSampleRate(outputSampleRate);
-    if (mCallbacks[3].mCallback && decoder->mSourceFormat.mSampleRate != outputSampleRate)
-        ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, decoderState->mDecoder->mSourceFormat.mSampleRate);
+    if (!decoderState)
+    {
+        AudioDecoder *decoder = decoderState->mDecoder;
+        if (decoder)
+        {
+            Float64 outputSampleRate = 0;
+            GetOutputDeviceSampleRate(outputSampleRate);
+            if (mCallbacks[3].mCallback && decoder->mSourceFormat.mSampleRate != outputSampleRate)
+                ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, decoderState->mDecoder->mSourceFormat.mSampleRate);
+        }
+    }
     
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {
