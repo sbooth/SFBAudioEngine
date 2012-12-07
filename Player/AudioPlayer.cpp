@@ -341,10 +341,13 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 
 AudioPlayer::AudioPlayer()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mRingBufferNeedsResetSemaphore(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
 {
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
-	
+    
+    // initialize the callbacks to nil.
+	memset(&mCallbacks, 0, sizeof(mCallbacks));
+    
 	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
@@ -1585,44 +1588,8 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 
 	// If there are no decoders in the queue, set up for playback
 	if(nullptr == GetCurrentDecoderState() && queueEmpty) {
-		if(mRingBufferChannelLayout)
-			free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
-
-		// Open the decoder if necessary
-		CFErrorRef error = nullptr;
-		if(!decoder->IsOpen() && !decoder->Open(&error)) {
-			if(error) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
-				CFRelease(error), error = nullptr;
-			}
-
-			return false;
-		}
-
-		AudioStreamBasicDescription format = decoder->GetFormat();
-		if(!SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame))
-			return false;
-
-		AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
-
-		// Assign a default channel layout if the decoder has an unknown layout
-		bool allocatedChannelLayout = false;
-		if(nullptr == channelLayout) {
-			channelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
-			if(channelLayout)
-				allocatedChannelLayout = true;
-		}
-
-		bool success = SetAUGraphChannelLayout(channelLayout);
-		
-		if(allocatedChannelLayout)
-			free(channelLayout), channelLayout = nullptr;
-
-		if(!success)
-			return false;
-
-		// Allocate enough space in the ring buffer for the new format
-		mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
+		if(!ResetRingBufferForDecoder(decoder))
+            return false;
 	}
 	// Otherwise, enqueue this decoder if the format matches
 	else if(decoder->IsOpen()) {
@@ -1740,15 +1707,29 @@ bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 
 #pragma mark Callbacks
 
+static bool bLastRBResetValue = false;
+
 OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 								const AudioTimeStamp			*inTimeStamp,
 								UInt32							inBusNumber,
 								UInt32							inNumberFrames,
 								AudioBufferList					*ioData)
 {
-
 #pragma unused(inTimeStamp)
 #pragma unused(inBusNumber)
+
+    // This is here to test the sequence of events when the ring buffer needs to be reset
+    /*if (GetRingBufferNeedsReset())
+    {
+        bLastRBResetValue = true;
+        //printf("*** Render Thread, Render(): ring buffer needs to be reset.\n");
+    }
+    
+    if (GetRingBufferNeedsReset() != bLastRBResetValue)
+    {
+        bLastRBResetValue = GetRingBufferNeedsReset();
+        //printf("*** Render Thread, Render(): ring buffer successfully reset.\n");
+    }*/
 
 	assert(nullptr != ioActionFlags);
 	assert(nullptr != ioData);
@@ -1759,7 +1740,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
 	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
-	if(0 == framesAvailableToRead) {
+	if(0 == framesAvailableToRead || GetRingBufferNeedsReset()) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
 		size_t byteCountToZero = inNumberFrames * sizeof(float);
@@ -1778,6 +1759,10 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
 		return 1;
 	}
+    
+    // Call our pre-render callback if we have one.
+    if (mCallbacks[0].mCallback)
+        ((AudioRenderCallback)mCallbacks[0].mCallback)(mCallbacks[0].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
 
 	mFramesRenderedLastPass = framesToRead;
 	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
@@ -1818,6 +1803,10 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 	
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
+        // Call our post-render callback if we have one.
+        if (mCallbacks[1].mCallback)
+            ((AudioRenderCallback)mCallbacks[1].mCallback)(mCallbacks[1].mContext, (float *)ioData->mBuffers[0].mData, (float *)ioData->mBuffers[1].mData, inNumberFrames);
+        
 		// There is nothing more to do if no frames were rendered
 		if(0 == mFramesRenderedLastPass)
 			return noErr;
@@ -1852,6 +1841,14 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 				// Since rendering is finished, signal the collector to clean up this decoder
 				mCollectorSemaphore.Signal();
+                
+                if (GetRingBufferNeedsReset())
+                {
+                    // signal that we're done to allow for the ring buffer to recreated.
+                    
+                    //printf("*** Render Thread, DidRender(): we need to reset the ring buffer.\n");
+                    mRingBufferNeedsResetSemaphore.Signal();
+                }
 			}
 
 			framesRemainingToDistribute -= framesFromThisDecoder;
@@ -1862,8 +1859,16 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			decoderState = GetDecoderStateStartingAfterTimeStamp(timeStamp);
 		}
 
-		if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState())
+		//if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState())
+        if (GetShouldStopAfterRendering())
+        {
 			StopOutput();
+            SetShouldStopAfterRendering(false);
+            
+            // send the AudioQueueEmpty callback
+            if (mCallbacks[3].mCallback)
+                ((AudioCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext);
+        }
 	}
 
 	return noErr;
@@ -1874,7 +1879,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 void * AudioPlayer::DecoderThreadEntry()
 {
 	pthread_setname_np("org.sbooth.AudioEngine.Decoder");
-
+    
 	// ========================================
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
@@ -1882,51 +1887,45 @@ void * AudioPlayer::DecoderThreadEntry()
 	
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = { 2, 0 };
-
+    
 	while(mKeepDecoding) {
-
+        
 		// ========================================
 		// Try to lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = nullptr;
+        AudioDecoder *aDecoder = nullptr;
 		{
 			Mutex::Tryer lock(mGuard);
-
-			if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
-				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
-
-				// Create the decoder state
-				decoderState = new DecoderStateData(decoder);
-				decoderState->mTimeStamp = mFramesDecoded;
-
-				CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
-			}
+            
+			if(lock && 0 < CFArrayGetCount(mDecoderQueue))
+				aDecoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
 		}
-
+        
 		// ========================================
 		// Open the decoder if necessary
-		if(decoderState) {
+		if(aDecoder) {
 			CFErrorRef error = nullptr;
-			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error))  {
+			if(!aDecoder->IsOpen() && !aDecoder->Open(&error))  {
 				if(error) {
 					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
 					CFRelease(error), error = nullptr;
 				}
-
+                
 				// TODO: Perform CouldNotOpenDecoder() callback ??
-
-				delete decoderState, decoderState = nullptr;
+                
+				//delete decoderState, decoderState = nullptr;
 			}
 		}
-
+        
 		// ========================================
 		// Ensure the decoder's format is compatible with the ring buffer
-		if(decoderState) {
-			AudioStreamBasicDescription		nextFormat			= decoderState->mDecoder->GetFormat();
-			AudioChannelLayout				*nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
-
+		if(aDecoder) {
+			AudioStreamBasicDescription		nextFormat			= aDecoder->GetFormat();
+			AudioChannelLayout				*nextChannelLayout	= aDecoder->GetChannelLayout();
+            
 			// The two files can be joined seamlessly only if they have the same sample rates and channel counts
 			bool formatsMatch = true;
-
+            
 			if(nextFormat.mSampleRate != mRingBufferFormat.mSampleRate) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 				formatsMatch = false;
@@ -1935,7 +1934,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 				formatsMatch = false;
 			}
-
+            
 			// If the decoder has an explicit channel layout, enqueue it if it matches the ring buffer's channel layout
 			if(nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
@@ -1946,18 +1945,50 @@ void * AudioPlayer::DecoderThreadEntry()
 				AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
 				bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
 				free(defaultLayout), defaultLayout = nullptr;
-
+                
 				if(!layoutsMatch) {
 					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
 					formatsMatch = false;
 				}
 			}
-
+            
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
-			if(!formatsMatch)
-				delete decoderState, decoderState = nullptr;
+            if(!formatsMatch) {
+                // so lets wait until rendering is completed.  i think if we've gotten here, we're at the end
+                // of a track and the next request should be for the following track.  if we wait and then
+                // reset the ring buffer we should be good to carry on.  i think it also fixes indragie's issue of
+                // the weirdness he was seeing unless decoders were set to auto-open.
+                SetRingBufferNeedsReset(true);
+                //printf("*** Decoder Thread: waiting for renderer to come around\n");
+                mRingBufferNeedsResetSemaphore.Wait();
+                //printf("*** Decoder Thread: ring buffer reset start\n");
+                
+                // allow for the caller to be able to set sample rate to match decoder.
+                if (mCallbacks[3].mCallback)
+                    ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, nextFormat.mSampleRate);
+                
+                ResetRingBufferForDecoder(aDecoder);
+                SetRingBufferNeedsReset(false);
+                // signal that we're done.
+                decoderState = new DecoderStateData(aDecoder);
+                decoderState->mTimeStamp = mFramesDecoded;
+                CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+                //printf("*** Decoder Thread: ring buffer reset end\n");
+            } else {
+                decoderState = new DecoderStateData(aDecoder);
+				decoderState->mTimeStamp = mFramesDecoded;
+                CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+            }
+            // need to signal here to playback doesn't stop in the render thread.
 		}
-
+        
+        // if we don't have a decoder to render, then we need to tell the renderer to stop.
+        if (!decoderState)
+        {
+            if (!GetShouldStopAfterRendering())
+                SetShouldStopAfterRendering(true);
+        }
+        
 		// ========================================
 		// Append the decoder state to the list of active decoders
 		if(decoderState) {
@@ -1976,26 +2007,26 @@ void * AudioPlayer::DecoderThreadEntry()
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
 			AudioDecoder *decoder = decoderState->mDecoder;
-
+            
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder format: " << decoder->GetFormat());
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder channel layout: " << decoder->GetChannelLayout());
 			
 			SInt64 startTime = decoderState->mTimeStamp;
-
+            
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
-
+            
 			// ========================================
 			// Create the AudioConverter which will convert from the decoder's format to the graph's format
 			AudioConverterRef audioConverter = nullptr;
 			OSStatus result = AudioConverterNew(&decoderFormat, &mRingBufferFormat, &audioConverter);
 			if(noErr != result) {
 				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterNew failed: " << result);
-
+                
 				// If this happens, output will be impossible
 				OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 			}
-
+            
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
 			UInt32 inputBufferSize = mRingBufferWriteChunkSize * mRingBufferFormat.mBytesPerFrame;
@@ -2005,27 +2036,27 @@ void * AudioPlayer::DecoderThreadEntry()
 				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
 			
 			// ========================================
-			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
+			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
 			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
-
+            
 			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
-
+            
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
 			while(mKeepDecoding && decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
-
+                
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
 					// Determine how many frames are available in the ring buffer
 					UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
-
+                    
 					// Force writes to the ring buffer to be at least mRingBufferWriteChunkSize
 					if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
-
+                        
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
 							LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Seeking to frame " << decoderState->mFrameToSeek);
-
+                            
 							OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 							
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
@@ -2050,77 +2081,77 @@ void * AudioPlayer::DecoderThreadEntry()
 								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
-
+                                
 								// Reset the converter and output to flush any buffers
 								result = AudioConverterReset(audioConverter);
 								if(noErr != result)
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
-
+                                
 								// If sample rate conversion is being performed, ResetOutput() needs to be called to flush any
 								// state the AudioConverter may have.  In the future, if ResetOutput() does anything other than
 								// reset the AudioConverter state the if(mSampleRateConverter) will need to be removed
-//								if(mSampleRateConverter) {
-//									// ResetOutput() is not safe to call when the device is running, because the player
-//									// could be in the middle of a render callback
-//									if(OutputIsRunning())
-//										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
-//									// Even if the device isn't running, AudioConverters are not thread-safe
-//									else {
-//										Mutex::Locker lock(mGuard);
-//										ResetOutput();
-//									}
-//								}
+                                //								if(mSampleRateConverter) {
+                                //									// ResetOutput() is not safe to call when the device is running, because the player
+                                //									// could be in the middle of a render callback
+                                //									if(OutputIsRunning())
+                                //										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
+                                //									// Even if the device isn't running, AudioConverters are not thread-safe
+                                //									else {
+                                //										Mutex::Locker lock(mGuard);
+                                //										ResetOutput();
+                                //									}
+                                //								}
 							}
-
+                            
 							OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 						}
-
+                        
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
-
+                        
 						if(-1 == startingFrameNumber) {
 							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to determine starting frame number ");
 							break;
 						}
-
+                        
 						// If this is the first frame, decoding is just starting
 						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
 							decoder->PerformDecodingStartedCallback();
 							OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingStarted */, &decoderState->mFlags);
 						}
-
+                        
 						// Read the input chunk, converting from the decoder's format to the AUGraph's format
 						UInt32 framesDecoded = mRingBufferWriteChunkSize;
 						
 						result = AudioConverterFillComplexBuffer(audioConverter, myAudioConverterComplexInputDataProc, decoderState, &framesDecoded, bufferList, nullptr);
 						if(noErr != result)
 							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterFillComplexBuffer failed: " << result);
-
+                        
 						// Store the decoded audio
 						if(0 != framesDecoded) {
-
+                            
 							result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
 							if(kCARingBufferError_OK != result)
 								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Store failed: " << result);
-
+                            
 							OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 						}
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)*/) {
 							LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding finished for \"" << decoder->GetURL() << "\"");
-
+                            
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
-							// Rather than require preprocessing to ensure an accurate frame count, update 
+							// Rather than require preprocessing to ensure an accurate frame count, update
 							// it here so EOS is correctly detected in DidRender()
 							decoderState->mTotalFrames = startingFrameNumber;
-
+                            
 							decoder->PerformDecodingFinishedCallback();
 							
 							// Decoding is complete
 							OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 							decoderState = nullptr;
-
+                            
 							break;
 						}
 					}
@@ -2128,7 +2159,7 @@ void * AudioPlayer::DecoderThreadEntry()
 					else
 						break;
 				}
-
+                
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
 				mDecoderSemaphore.TimedWait(timeout);
 			}
@@ -2140,7 +2171,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 				decoderState = nullptr;
 			}
-
+            
 			if(bufferList)
 				DeallocateABL(bufferList), bufferList = nullptr;
 			
@@ -2151,13 +2182,13 @@ void * AudioPlayer::DecoderThreadEntry()
 				audioConverter = nullptr;
 			}
 		}
-
+        
 		// Wait for another thread to wake us, or for the timeout to happen
 		mDecoderSemaphore.TimedWait(timeout);
 	}
-
+    
 	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding thread terminating");
-
+    
 	return nullptr;
 }
 
@@ -2392,6 +2423,7 @@ bool AudioPlayer::OpenOutput()
 		mAUGraph = nullptr;
 		return false;
 	}
+    //mDefaultMaximumFramesPerSlice = 512;
 #endif
 
 	return true;
@@ -2457,6 +2489,21 @@ bool AudioPlayer::StartOutput()
 	// We don't want to start output in the middle of a buffer modification
 	Mutex::Locker lock(mGuard);
 
+    SetShouldStopAfterRendering(false);
+    
+    DecoderStateData *decoderState = GetCurrentDecoderState();
+    if (decoderState)
+    {
+        AudioDecoder *decoder = decoderState->mDecoder;
+        if (decoder)
+        {
+            Float64 outputSampleRate = 0;
+            GetOutputDeviceSampleRate(outputSampleRate);
+            if (mCallbacks[3].mCallback && decoder->mSourceFormat.mSampleRate != outputSampleRate)
+                ((AudioSampleRateChangeCallback)mCallbacks[3].mCallback)(mCallbacks[3].mContext, decoderState->mDecoder->mSourceFormat.mSampleRate);
+        }
+    }
+    
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStart failed: " << result);
@@ -2525,6 +2572,47 @@ bool AudioPlayer::ResetOutput()
 	}
 
 	return true;
+}
+
+bool AudioPlayer::ResetRingBufferForDecoder(AudioDecoder *decoder)
+{
+    if(mRingBufferChannelLayout)
+        free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
+    
+    // Open the decoder if necessary
+    CFErrorRef error = nullptr;
+    if(!decoder->IsOpen() && !decoder->Open(&error)) {
+        if(error) {
+            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
+            CFRelease(error), error = nullptr;
+        }
+        
+        return false;
+    }
+    
+    AudioStreamBasicDescription format = decoder->GetFormat();
+    if(!SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame))
+        return false;
+    
+    AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
+    
+    // Assign a default channel layout if the decoder has an unknown layout
+    bool allocatedChannelLayout = false;
+    if(nullptr == channelLayout)
+        channelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
+    
+    bool success = SetAUGraphChannelLayout(channelLayout);
+    
+    if(allocatedChannelLayout)
+        free(channelLayout), channelLayout = nullptr;
+    
+    if(!success)
+        return false;
+    
+    // Allocate enough space in the ring buffer for the new format
+    mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
+    
+    return true;
 }
 
 #pragma mark AUGraph Utilities
@@ -2922,6 +3010,35 @@ bool AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout *channelLayout)
 }
 
 #pragma mark Other Utilities
+
+bool AudioPlayer::GetRingBufferNeedsReset()
+{
+    bool result = (mFlags & eAudioPlayerFlagRingBufferNeedsReset);
+    return result;
+}
+
+void AudioPlayer::SetRingBufferNeedsReset(bool value)
+{
+    if (value)
+        OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+    else
+        OSAtomicTestAndClear(5 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+}
+
+bool AudioPlayer::GetShouldStopAfterRendering()
+{
+    bool result = (mFlags & eAudioPlayerFlagStopAfterRendering);
+    return result;    
+}
+
+void AudioPlayer::SetShouldStopAfterRendering(bool value)
+{
+    if (value)
+        OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagStopAfterRendering */, &mFlags);
+    else
+        OSAtomicTestAndClear(4 /* eAudioPlayerFlagStopAfterRendering */, &mFlags);
+}
+
 
 DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 {

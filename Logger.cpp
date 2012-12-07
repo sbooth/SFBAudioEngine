@@ -30,7 +30,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
-# include <CoreServices/CoreServices.h>
+//# include <CoreServices/CoreServices.h>
 #endif
 #include <iomanip>
 
@@ -186,7 +186,10 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 	}
 
 	CFStringRef s = CFURLGetString(u);
-#if !TARGET_OS_IPHONE
+    // i think this might be overkill.  to get this method to be available
+    // we need to include CoreServices.h, which in turn leads to a name collision
+    // w/ ChunkHeader and WavPack already defines it.
+/*#if !TARGET_OS_IPHONE
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
 		CFStringRef displayName = nullptr;
 		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
@@ -197,7 +200,7 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 		}
 	}
 	else
-#endif
+#endif*/
 		out << s;
 	
 	return out;

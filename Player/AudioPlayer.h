@@ -53,10 +53,29 @@ class DecoderStateData;
 #define kActiveDecoderArraySize 8
 
 // ========================================
+// Typedefs
+// ========================================
+// ========================================
+// Typedefs
+// ========================================
+typedef void (*AudioRenderCallback)(void *context, float *bufferLeft, float *bufferRight, UInt32 numberOfFrames);
+typedef void (*AudioCallback)(void *context);
+typedef void (*AudioSampleRateChangeCallback)(void *context, Float64 proposedSampleRate);
+
+struct AudioCallbackAndContext
+{
+	void                    *mCallback;
+	void					*mContext;
+};
+
+
+// ========================================
 // Enums
 // ========================================
 enum {
-	eAudioPlayerFlagMuteOutput				= 1u << 0
+	eAudioPlayerFlagMuteOutput				= 1u << 0, // shouldn't this be 1 if its tested against 6?
+    eAudioPlayerFlagRingBufferNeedsReset    = 1u << 2,
+    eAudioPlayerFlagStopAfterRendering      = 1u << 3
 };
 
 // ========================================
@@ -207,6 +226,11 @@ public:
 	inline uint32_t GetRingBufferWriteChunkSize() const	{ return mRingBufferWriteChunkSize; }
 	bool SetRingBufferWriteChunkSize(uint32_t chunkSize);
 
+    inline void SetAudioPreRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[0].mCallback = (void *)callbackPtr; mCallbacks[0].mContext = context; }
+    inline void SetAudioPostRenderCallback(AudioRenderCallback callbackPtr, void *context) { mCallbacks[1].mCallback = (void *)callbackPtr; mCallbacks[1].mContext = context; }
+    inline void SetAudioQueueEmptyCallback(AudioCallback callbackPtr, void *context) { mCallbacks[2].mCallback = (void *)callbackPtr; mCallbacks[2].mContext = context; }
+    inline void SetAudioSampleRateChangeCallback(AudioSampleRateChangeCallback callbackPtr, void *context) { mCallbacks[3].mCallback = (void *)callbackPtr; mCallbacks[3].mContext = context; }
+
 private:
 
 	// ========================================
@@ -219,6 +243,8 @@ private:
 
 	bool OutputIsRunning() const;
 	bool ResetOutput();
+    
+    bool ResetRingBufferForDecoder(AudioDecoder *decoder);
 
 	// ========================================
 	// AUGraph Utilities
@@ -236,6 +262,12 @@ private:
 	
 	DecoderStateData * GetCurrentDecoderState() const;
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
+    
+    bool GetRingBufferNeedsReset();
+    void SetRingBufferNeedsReset(bool value);
+    bool GetShouldStopAfterRendering();
+    void SetShouldStopAfterRendering(bool value);
+
 
 	// ========================================
 	// Data Members
@@ -256,6 +288,8 @@ private:
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	Guard								mGuard;
+    
+    Semaphore                           mRingBufferNeedsResetSemaphore;
 
 	pthread_t							mDecoderThread;
 	Semaphore							mDecoderSemaphore;
@@ -268,6 +302,8 @@ private:
 	int64_t								mFramesDecoded;
 	int64_t								mFramesRendered;
 	int64_t								mFramesRenderedLastPass;
+
+    AudioCallbackAndContext       mCallbacks[4];
 
 public:
 
