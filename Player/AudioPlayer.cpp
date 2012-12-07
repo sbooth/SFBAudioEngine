@@ -2492,7 +2492,7 @@ bool AudioPlayer::StartOutput()
     SetShouldStopAfterRendering(false);
     
     DecoderStateData *decoderState = GetCurrentDecoderState();
-    if (!decoderState)
+    if (decoderState)
     {
         AudioDecoder *decoder = decoderState->mDecoder;
         if (decoder)
