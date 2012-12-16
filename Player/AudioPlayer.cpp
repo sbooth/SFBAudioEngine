@@ -830,6 +830,25 @@ bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
 	return true;
 }
 
+bool AudioPlayer::GetSampleRateForInput(Float64& sampleRate)
+{
+    AudioUnit au = nullptr;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+    
+	UInt32 dataSize = sizeof(sampleRate);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Input, 0, &sampleRate, &dataSize);
+	if(noErr != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate) failed: " << result);
+		return false;
+	}
+    
+	return true;
+}
+
 #if !TARGET_OS_IPHONE
 
 #pragma mark Hog Mode

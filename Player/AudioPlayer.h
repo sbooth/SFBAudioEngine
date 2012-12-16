@@ -170,6 +170,7 @@ public:
 	bool IsPerformingSampleRateConversion() const;
 	bool GetSampleRateConverterComplexity(UInt32& complexity) const;
 	bool SetSampleRateConverterComplexity(UInt32 complexity);
+    bool GetSampleRateForInput(Float64& sourceSampleRate);
 
 #if !TARGET_OS_IPHONE
 	// ========================================
@@ -204,6 +205,7 @@ public:
 
 	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
 	bool SetOutputDeviceSampleRate(Float64 sampleRate);
+    
 #endif
 
 	// ========================================
