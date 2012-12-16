@@ -255,7 +255,7 @@ private:
 
 	bool SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
 	bool SetAUGraphChannelLayout(AudioChannelLayout *channelLayout);
-
+    
 	// ========================================
 	// Other Utilities
 	void StopActiveDecoders();
@@ -268,7 +268,8 @@ private:
     bool GetShouldStopAfterRendering();
     void SetShouldStopAfterRendering(bool value);
 
-
+    bool WaitForDeviceToMatchSampleRate(Float64 sampleRate);
+    
 	// ========================================
 	// Data Members
 	AUGraph								mAUGraph;

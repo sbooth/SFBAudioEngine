@@ -1502,6 +1502,25 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate) const
 	return true;
 }
 
+bool AudioPlayer::WaitForDeviceToMatchSampleRate(Float64 sampleRate)
+{
+    Float64 outputSampleRate = 0;
+
+    // wait a maximum of 5 seconds
+    int count = 0;
+    while (outputSampleRate != sampleRate && count < 5)
+    {
+        GetOutputDeviceSampleRate(outputSampleRate);
+        if (outputSampleRate == sampleRate)
+            return true;
+
+        sleep(1);
+        count++;
+    }
+    
+    return false;
+}
+
 bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
 	AudioDeviceID deviceID;
@@ -1527,6 +1546,13 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	// Nothing to do
 	if(currentSampleRate == sampleRate)
 		return true;
+    
+    bool running = OutputIsRunning();
+    if (running)
+    {
+        // this prevents garbage noise from coming through.
+        StopOutput();
+    }
 
 	// Set the sample rate
 	dataSize = sizeof(sampleRate);
@@ -1535,6 +1561,25 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
 		return false;
 	}
+
+    // we need to wait for the sample rate to be set.  we can set it, and immediately check and see that its not the right value,
+    // however if you wait a bit it will get set correctly.  if we don't do this and the graph keeps going, it gets lost completely.
+    if (!WaitForDeviceToMatchSampleRate(sampleRate))
+    {
+        // it never matched, we should go back to the old one.
+        dataSize = sizeof(currentSampleRate);
+        result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(currentSampleRate), &currentSampleRate);
+        if(kAudioHardwareNoError != result) {
+            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+            return false;
+        }
+    }
+
+    if (running)
+    {
+        // start things back up if we stopped them previously.
+        StartOutput();
+    }
 
 	return true;
 }
@@ -1960,7 +2005,10 @@ void * AudioPlayer::DecoderThreadEntry()
                 // the weirdness he was seeing unless decoders were set to auto-open.
                 SetRingBufferNeedsReset(true);
                 //printf("*** Decoder Thread: waiting for renderer to come around\n");
+                
+                // sometimes it gets hung here...
                 mRingBufferNeedsResetSemaphore.Wait();
+                
                 //printf("*** Decoder Thread: ring buffer reset start\n");
                 
                 // allow for the caller to be able to set sample rate to match decoder.
@@ -2940,7 +2988,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Global) failed: " << result);
 		return false;
 	}
-
+    
 	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
 
 	UInt32 newMaxFrames = mDefaultMaximumFramesPerSlice;
