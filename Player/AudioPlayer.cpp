@@ -1881,7 +1881,10 @@ void * AudioPlayer::DecoderThreadEntry()
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set decoder thread importance");
 	
 	// Two seconds and zero nanoseconds
-	mach_timespec_t timeout = { 2, 0 };
+	mach_timespec_t timeout = {
+		.tv_sec = 2,
+		.tv_nsec = 0
+	};
 
 	while(mKeepDecoding) {
 
@@ -2166,7 +2169,10 @@ void * AudioPlayer::CollectorThreadEntry()
 	pthread_setname_np("org.sbooth.AudioEngine.Collector");
 
 	// The collector should be signaled when there is cleanup to be done, so there is no need for a short timeout
-	mach_timespec_t timeout = { 30, 0 };
+	mach_timespec_t timeout = {
+		.tv_sec = 30,
+		.tv_nsec = 0
+	};
 
 	while(mKeepCollecting) {
 		
