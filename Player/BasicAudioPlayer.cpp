@@ -2824,6 +2824,10 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 		}
 	}
 
+	LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "Device channel map: ");
+	for(UInt32 i = 0; i < deviceChannelCount; ++i)
+		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  " << i << " -> " << deviceChannelMap[i]);
+
 	// For efficiency disable streams that aren't needed
 	size_t streamUsageSize = offsetof(AudioHardwareIOProcStreamUsage, mStreamIsOn) + (sizeof(UInt32) * mOutputDeviceStreamIDs.size());
 	AudioHardwareIOProcStreamUsage *streamUsage = static_cast<AudioHardwareIOProcStreamUsage *>(calloc(1, streamUsageSize));
@@ -2869,14 +2873,18 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 			return false;
 		}
 		
+		// For some reason every device I've seen except AirPlay uses 1-based channel numbering
+		if(0 == startingChannel)
+			++startingChannel;
+
 		LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  Starting channel: " << startingChannel);
 		
 		UInt32 endingChannel = startingChannel + virtualFormat.mChannelsPerFrame;
 
 		std::map<int, int> channelMap;
-		for(UInt32 channel = startingChannel; channel < endingChannel; ++channel) {
-			if(-1 != deviceChannelMap[channel - startingChannel])
-				channelMap[channel - startingChannel] = deviceChannelMap[channel - startingChannel];
+		for(UInt32 channel = startingChannel - 1; channel < endingChannel - 1; ++channel) {
+			if(-1 != deviceChannelMap[channel])
+				channelMap[channel] = deviceChannelMap[channel];
 		}
 
 		// If the channel map isn't empty, the stream is used and an output converter is necessary
@@ -2893,7 +2901,7 @@ bool BasicAudioPlayer::CreateConvertersAndSRCBuffer()
 
 			mOutputConverters[i]->SetChannelMap(channelMap);
 
-			LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  Channel map: ");
+			LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "  Stream channel map: ");
 			for(std::map<int, int>::const_iterator mapIterator = channelMap.begin(); mapIterator != channelMap.end(); ++mapIterator)
 				LOGGER_INFO("org.sbooth.AudioEngine.BasicAudioPlayer", "    " << mapIterator->first << " -> " << mapIterator->second);
 
