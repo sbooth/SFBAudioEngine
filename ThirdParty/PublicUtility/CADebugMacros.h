@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright ï¿½ 2007 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -132,7 +132,7 @@
 			#define DebugMessageN8(msg, N1, N2, N3, N4, N5, N6, N7, N8)		DebugPrintfRtn(DebugPrintfFileComma "%.4f: "msg DebugPrintfLineEnding, ((Float64)(CAHostTimeBase::GetCurrentTimeInNanos()) / 1000000.0), N1, N2, N3, N4, N5, N6, N7, N8) FlushRtn
 			#define DebugMessageN9(msg, N1, N2, N3, N4, N5, N6, N7, N8, N9)	DebugPrintfRtn(DebugPrintfFileComma "%.4f: "msg DebugPrintfLineEnding, ((Float64)(CAHostTimeBase::GetCurrentTimeInNanos()) / 1000000.0), N1, N2, N3, N4, N5, N6, N7, N8, N9) FlushRtn
 		#else
-			#define	DebugMessage(msg)										DebugPrintfRtn(DebugPrintfFileComma "%s"DebugPrintfLineEnding, msg) FlushRtn
+			#define	DebugMessage(msg)										DebugPrintfRtn(DebugPrintfFileComma "%s" DebugPrintfLineEnding, msg) FlushRtn
 			#define DebugMessageN1(msg, N1)									DebugPrintfRtn(DebugPrintfFileComma msg DebugPrintfLineEnding, N1) FlushRtn
 			#define DebugMessageN2(msg, N1, N2)								DebugPrintfRtn(DebugPrintfFileComma msg DebugPrintfLineEnding, N1, N2) FlushRtn
 			#define DebugMessageN3(msg, N1, N2, N3)							DebugPrintfRtn(DebugPrintfFileComma msg DebugPrintfLineEnding, N1, N2, N3) FlushRtn
