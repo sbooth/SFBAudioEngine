@@ -266,14 +266,14 @@ CARingBufferError	CARingBuffer::Fetch(AudioBufferList *abl, UInt32 nFrames, Samp
 		return noErr;
 	}
 
-	SInt32 destStartOffset = startRead - startRead0; 
+	SInt32 destStartOffset = (SInt32)(startRead - startRead0);
 	if (destStartOffset > 0) {
 		ZeroABL(abl, 0, destStartOffset * mBytesPerFrame);
 	}
 
-	SInt32 destEndSize = endRead0 - endRead; 
+	SInt32 destEndSize = (SInt32)(endRead0 - endRead);
 	if (destEndSize > 0) {
-		ZeroABL(abl, destStartOffset + size, destEndSize * mBytesPerFrame);
+		ZeroABL(abl, (int)(destStartOffset + size), destEndSize * mBytesPerFrame);
 	}
 	
 	Byte **buffers = mBuffers;

@@ -1771,7 +1771,8 @@ bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 
 #pragma mark Callbacks
 
-static bool bLastRBResetValue = false;
+// part of ring buffer reset testing.
+//static bool bLastRBResetValue = false;
 
 OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 								const AudioTimeStamp			*inTimeStamp,
