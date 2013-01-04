@@ -35,7 +35,7 @@
 #if TARGET_OS_IPHONE
 # include <CFNetwork/CFNetwork.h>
 #else
-#include <CoreServices/CoreServices.h>
+#include <CFNetwork/CFNetwork.h>
 #endif
 #include "InputSource.h"
 

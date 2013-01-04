@@ -11,24 +11,17 @@
 
 @implementation SimplePlayerAppDelegate
 
-@synthesize playerWindowController = _playerWindowController;
-@synthesize openURLPanel = _openURLPanel;
-@synthesize openURLPanelTextField = _openURLPanelTextField;
-
-- (void) dealloc
-{
-	[_playerWindowController release], _playerWindowController = nil;
-	[_openURLPanel release], _openURLPanel = nil;
-	[_openURLPanelTextField release], _openURLPanelTextField = nil;
-	[super dealloc];
-}
+@synthesize playerWindowController, openURLPanel, openURLPanelTextField;
 
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 #pragma unused(aNotification)
+	// Enable verbose logging to stderr
 	asl_add_log_file(nullptr, STDERR_FILENO);
 	::logger::SetCurrentLevel(::logger::debug);
-	[_playerWindowController showWindow:self];
+
+	// Show the player window
+	[playerWindowController showWindow:self];
 }
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
@@ -40,14 +33,11 @@
 - (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
 #pragma unused(theApplication)
-	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();	
-	BOOL extensionValid = [(NSArray *)supportedTypes containsObject:[filename pathExtension]];
-	CFRelease(supportedTypes), supportedTypes = nullptr;
-	
-	if(NO == extensionValid)
+	NSArray *supportedTypes = (__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions();
+	if(![supportedTypes containsObject:[filename pathExtension]])
 		return NO;
 	
-	return [_playerWindowController playURL:[NSURL fileURLWithPath:filename]];
+	return [playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
 - (IBAction) openFile:(id)sender
@@ -55,36 +45,32 @@
 #pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	
-	CFArrayRef supportedTypes = AudioDecoder::CreateSupportedFileExtensions();
-
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
-	[openPanel setAllowedFileTypes:(NSArray *)supportedTypes];
+	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions()];
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
 		NSArray *URLs = [openPanel URLs];
-		[_playerWindowController playURL:[URLs objectAtIndex:0]];
+		[playerWindowController playURL:[URLs objectAtIndex:0]];
 	}	
-
-	CFRelease(supportedTypes), supportedTypes = nullptr;
 }
 
 - (IBAction) openURL:(id)sender
 {
-	[_openURLPanel center];
-	[_openURLPanel makeKeyAndOrderFront:sender];	
+	[openURLPanel center];
+	[openURLPanel makeKeyAndOrderFront:sender];	
 }
 
 - (IBAction) openURLPanelOpenAction:(id)sender
 {
-	[_openURLPanel orderOut:sender];
-	NSURL *url = [NSURL URLWithString:[_openURLPanelTextField stringValue]];
-	[_playerWindowController playURL:url];
+	[openURLPanel orderOut:sender];
+	NSURL *url = [NSURL URLWithString:[openURLPanelTextField stringValue]];
+	[playerWindowController playURL:url];
 }
 
 - (IBAction) openURLPanelCancelAction:(id)sender
 {
-	[_openURLPanel orderOut:sender];
+	[openURLPanel orderOut:sender];
 }
 
 @end
