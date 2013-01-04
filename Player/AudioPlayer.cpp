@@ -2026,7 +2026,7 @@ void * AudioPlayer::DecoderThreadEntry()
                 //printf("*** Decoder Thread: waiting for renderer to come around\n");
                 
                 // sometimes it gets hung here...
-                mRingBufferNeedsResetSemaphore.Wait();
+                mRingBufferNeedsResetSemaphore.TimedWait(timeout);
                 
                 //printf("*** Decoder Thread: ring buffer reset start\n");
                 
