@@ -10,8 +10,6 @@
 #include <SFBAudioEngine/AudioPlayer.h>
 #include <SFBAudioEngine/AudioDecoder.h>
 
-#define PLAYER (static_cast<AudioPlayer *>(_player))
-
 // ========================================
 // Player flags
 // ========================================
@@ -21,6 +19,16 @@ enum {
 };
 
 volatile static uint32_t sPlayerFlags = 0;
+
+@interface PlayerWindowController ()
+{
+@private
+	AudioPlayer		*_player;		// The player instance
+}
+
+@property (nonatomic, strong) NSTimer * uiTimer;
+
+@end
 
 @interface PlayerWindowController (Callbacks)
 - (void) decodingStarted:(const AudioDecoder *)decoder;
@@ -33,7 +41,7 @@ volatile static uint32_t sPlayerFlags = 0;
 
 static void decodingStarted(void *context, const AudioDecoder *decoder)
 {
-	[(PlayerWindowController *)context decodingStarted:decoder];
+	[(__bridge PlayerWindowController *)context decodingStarted:decoder];
 }
 
 // This is called from the realtime rendering thread and as such MUST NOT BLOCK!!
@@ -54,45 +62,29 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 @implementation PlayerWindowController
 
-@synthesize slider = _slider;
-@synthesize elapsed = _elapsed;
-@synthesize remaining = _remaining;
-@synthesize playButton = _playButton;
-@synthesize forwardButton = _forwardButton;
-@synthesize backwardButton = _backwardButton;
+@synthesize slider, elapsed, remaining, playButton, forwardButton, backwardButton;
+@synthesize uiTimer;
 
 - (id) init
 {
-	if(nil == (self = [super initWithWindowNibName:@"PlayerWindow"])) {
-		[self release];
-		return nil;
+	if((self = [super initWithWindowNibName:@"PlayerWindow"])) {
+		_player = new AudioPlayer();
+
+		// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
+		self.uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
+
+		// addTimer:forMode: will retain _uiTimer
+		[[NSRunLoop mainRunLoop] addTimer:uiTimer forMode:NSRunLoopCommonModes];
 	}
-	
-	_player = new AudioPlayer();
 
-	// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
-	_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
-
-	// addTimer:forMode: will retain _uiTimer
-	[[NSRunLoop mainRunLoop] addTimer:_uiTimer forMode:NSRunLoopCommonModes];
-	
 	return self;
 }
 
 - (void) dealloc
 {
-	[_uiTimer invalidate], _uiTimer = nil;
+	[uiTimer invalidate], self.uiTimer = nil;
 	
-	delete PLAYER, _player = nullptr;
-
-	[_slider release], _slider = nil;
-	[_elapsed release], _elapsed = nil;
-	[_remaining release], _remaining = nil;
-	[_playButton release], _playButton = nil;
-	[_forwardButton release], _forwardButton = nil;
-	[_backwardButton release], _backwardButton = nil;
-	
-	[super dealloc];
+	delete _player, _player = nullptr;
 }
 
 - (void) awakeFromNib
@@ -109,19 +101,19 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 - (IBAction) playPause:(id)sender
 {
 #pragma unused(sender)
-	PLAYER->PlayPause();
+	_player->PlayPause();
 }
 
 - (IBAction) seekForward:(id)sender
 {
 #pragma unused(sender)
-	PLAYER->SeekForward();
+	_player->SeekForward();
 }
 
 - (IBAction) seekBackward:(id)sender
 {
 #pragma unused(sender)
-	PLAYER->SeekBackward();
+	_player->SeekBackward();
 }
 
 - (IBAction) seek:(id)sender
@@ -129,9 +121,9 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	NSParameterAssert(nil != sender);
 	
 	SInt64 totalFrames;
-	if(PLAYER->GetTotalFrames(totalFrames)) {
+	if(_player->GetTotalFrames(totalFrames)) {
 		SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * totalFrames);
-		PLAYER->SeekToFrame(desiredFrame);
+		_player->SeekToFrame(desiredFrame);
 	}
 }
 
@@ -139,18 +131,18 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 {
 	NSParameterAssert(nil != url);
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(reinterpret_cast<CFURLRef>(url));
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
 	if(nullptr == decoder)
 		return NO;
 
-	PLAYER->Stop();
+	_player->Stop();
 
 	// Register for rendering started/finished notifications so the UI can be updated properly
-	decoder->SetDecodingStartedCallback(decodingStarted, self);
-	decoder->SetRenderingStartedCallback(renderingStarted, self);
-	decoder->SetRenderingFinishedCallback(renderingFinished, self);
+	decoder->SetDecodingStartedCallback(decodingStarted, (__bridge void *)self);
+	decoder->SetRenderingStartedCallback(renderingStarted, (__bridge void *)self);
+	decoder->SetRenderingFinishedCallback(renderingFinished, (__bridge void *)self);
 	
-	if(decoder->Open() && PLAYER->Enqueue(decoder))
+	if(decoder->Open() && _player->Enqueue(decoder))
 		[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
 	else {
 		delete decoder;
@@ -167,7 +159,7 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 - (void) decodingStarted:(const AudioDecoder *)decoder
 {
 #pragma unused(decoder)
-	PLAYER->Play();
+	_player->Play();
 }
 
 - (void) uiTimerFired:(NSTimer *)timer
@@ -189,20 +181,20 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 		return;
 	}
 
-	if(!PLAYER->IsPlaying())
-		[_playButton setTitle:@"Resume"];
+	if(!_player->IsPlaying())
+		[playButton setTitle:@"Resume"];
 	else
-		[_playButton setTitle:@"Pause"];
+		[playButton setTitle:@"Pause"];
 
 	SInt64 currentFrame, totalFrames;
 	CFTimeInterval currentTime, totalTime;
 
-	if(PLAYER->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
+	if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
 		double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
 		
-		[_slider setDoubleValue:fractionComplete];
-		[_elapsed setDoubleValue:currentTime];
-		[_remaining setDoubleValue:(-1 * (totalTime - currentTime))];
+		[slider setDoubleValue:fractionComplete];
+		[elapsed setDoubleValue:currentTime];
+		[remaining setDoubleValue:(-1 * (totalTime - currentTime))];
 	}
 }
 
@@ -212,26 +204,26 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 
 - (void) updateWindowUI
 {
-	NSURL *url = (NSURL *)PLAYER->GetPlayingURL();
+	NSURL *url = (__bridge NSURL *)_player->GetPlayingURL();
 	
 	// Nothing happening, reset the window
 	if(nullptr == url) {
 		[[self window] setRepresentedURL:nil];
 		[[self window] setTitle:@""];
 		
-		[_slider setEnabled:NO];
-		[_playButton setState:NSOffState];
-		[_playButton setEnabled:NO];
-		[_backwardButton setEnabled:NO];
-		[_forwardButton setEnabled:NO];
+		[slider setEnabled:NO];
+		[playButton setState:NSOffState];
+		[playButton setEnabled:NO];
+		[backwardButton setEnabled:NO];
+		[forwardButton setEnabled:NO];
 		
-		[_elapsed setHidden:YES];
-		[_remaining setHidden:YES];
+		[elapsed setHidden:YES];
+		[remaining setHidden:YES];
 		
 		return;
 	}
 	
-	bool seekable = PLAYER->SupportsSeeking();
+	bool seekable = _player->SupportsSeeking();
 	
 	// Update the window's title and represented file
 	[[self window] setRepresentedURL:url];
@@ -240,17 +232,17 @@ static void renderingFinished(void *context, const AudioDecoder *decoder)
 	[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
 	
 	// Update the UI
-	[_slider setEnabled:seekable];
-	[_playButton setEnabled:YES];
-	[_backwardButton setEnabled:seekable];
-	[_forwardButton setEnabled:seekable];
+	[slider setEnabled:seekable];
+	[playButton setEnabled:YES];
+	[backwardButton setEnabled:seekable];
+	[forwardButton setEnabled:seekable];
 	
 	// Show the times
-	[_elapsed setHidden:NO];
+	[elapsed setHidden:NO];
 
 	SInt64 totalFrames;
-	if(PLAYER->GetTotalFrames(totalFrames) && -1 != totalFrames)
-		[_remaining setHidden:NO];	
+	if(_player->GetTotalFrames(totalFrames) && -1 != totalFrames)
+		[remaining setHidden:NO];	
 }
 
 @end

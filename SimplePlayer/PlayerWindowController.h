@@ -1,31 +1,20 @@
 /*
- *  Copyright (C) 2009 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
 #import <Cocoa/Cocoa.h>
 
 @interface PlayerWindowController : NSWindowController
-{
-@private
-	void			*_player;				// An instance of AudioPlayer
-	NSTimer			*_uiTimer;				// User interface update timer
-
-	NSSlider		*_slider;				// UI elements
-	NSTextField		*_elapsed;
-	NSTextField		*_remaining;
-	NSButton		*_playButton;
-	NSButton		*_forwardButton;
-	NSButton		*_backwardButton;
-}
+{}
 
 // IB properties
-@property (assign) IBOutlet NSSlider *		slider;
-@property (assign) IBOutlet NSTextField *	elapsed;
-@property (assign) IBOutlet NSTextField *	remaining;
-@property (assign) IBOutlet NSButton *		playButton;
-@property (assign) IBOutlet NSButton *		forwardButton;
-@property (assign) IBOutlet NSButton *		backwardButton;
+@property (nonatomic, weak) IBOutlet NSSlider *		slider;
+@property (nonatomic, weak) IBOutlet NSTextField *	elapsed;
+@property (nonatomic, weak) IBOutlet NSTextField *	remaining;
+@property (nonatomic, weak) IBOutlet NSButton *		playButton;
+@property (nonatomic, weak) IBOutlet NSButton *		forwardButton;
+@property (nonatomic, weak) IBOutlet NSButton *		backwardButton;
 
 // Action methods
 - (IBAction) playPause:(id)sender;
