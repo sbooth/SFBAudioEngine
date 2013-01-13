@@ -54,16 +54,6 @@ class PCMConverter;
 #define kActiveDecoderArraySize 8
 
 // ========================================
-// Enums
-// ========================================
-enum {
-	eAudioPlayerFlagIsPlaying				= 1u << 0,
-	eAudioPlayerFlagMuteOutput				= 1u << 1,
-	eAudioPlayerFlagStopRequested			= 1u << 2,
-	eAudioPlayerFlagResetNeeded				= 1u << 3
-};
-
-// ========================================
 // An audio player class
 //
 // The player primarily uses two threads:
@@ -77,11 +67,41 @@ enum {
 // used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
 // rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
 // method would be hazard pointers.
+//
+// The player supports block-based callback for the following events:
+//  1) Decoding started
+//  2) Decoding finished
+//  3) Rendering started
+//  4) Rendering finished
+//
+// The decoding callbacks wil be performed from the decoding thread.  Although not a real time thread,
+// lengthy operations should be avoided to prevent audio glitching.
+//
+// The rendering callbacks will be performed from the realtime rendering thread.  Execution of this thread must not be blocked!  
+// Examples of prohibited actions that could cause problems:
+//  - Memory allocation
+//  - Objective-C messaging
+//  - File IO
 // ========================================
 class BasicAudioPlayer
 {
 	
 public:
+
+	// ========================================
+	// Enums
+	// ========================================
+	enum {
+		eAudioPlayerFlagIsPlaying				= 1u << 0,
+		eAudioPlayerFlagMuteOutput				= 1u << 1,
+		eAudioPlayerFlagStopRequested			= 1u << 2,
+		eAudioPlayerFlagResetNeeded				= 1u << 3
+	};
+
+	// ========================================
+	// Typedefs
+	// ========================================
+	typedef void (^AudioPlayerDecoderEventBlock)(const AudioDecoder *decoder);
 
 	// ========================================
 	// Creation/Destruction
@@ -117,6 +137,13 @@ public:
 	inline bool IsStopped() const					{ return (eStopped == GetPlayerState()); }
 
 	CFURLRef GetPlayingURL() const;
+
+	// ========================================
+	// Block-based callback support
+	void SetDecodingStartedBlock(AudioPlayerDecoderEventBlock block);		// Called from the decoding thread before the first audio frame is decoded
+	void SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock block);		// Called from the decoding thread after the last audio frame has been decoded
+	void SetRenderingStartedBlock(AudioPlayerDecoderEventBlock block);		// Called from the real-time rendering thread before the first audio frame is rendered
+	void SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block);		// Called from the real-time rendering thread after the last audio frame is rendered
 
 	// ========================================
 	// Playback Properties
@@ -280,6 +307,10 @@ private:
 	int64_t								mFramesDecoded;
 	int64_t								mFramesRendered;
 	int64_t								mFramesRenderedLastPass;
+
+	// ========================================
+	// Callbacks
+	AudioPlayerDecoderEventBlock		mDecoderEventBlocks [4];
 
 public:
 

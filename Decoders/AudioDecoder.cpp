@@ -681,7 +681,6 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 AudioDecoder::AudioDecoder()
 	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false)
 {
-	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
@@ -690,7 +689,6 @@ AudioDecoder::AudioDecoder(InputSource *inputSource)
 {
 	assert(nullptr != inputSource);
 
-	memset(&mCallbacks, 0, sizeof(mCallbacks));
 	memset(&mFormat, 0, sizeof(mSourceFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
@@ -770,54 +768,4 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 	}
 	
 	return channelLayoutDescription;
-}
-
-#pragma mark Callbacks
-
-void AudioDecoder::SetDecodingStartedCallback(AudioDecoderCallback callback, void *context)
-{
-	mCallbacks[0].mCallback = callback;
-	mCallbacks[0].mContext = context;
-}
-
-void AudioDecoder::SetDecodingFinishedCallback(AudioDecoderCallback callback, void *context)
-{
-	mCallbacks[1].mCallback = callback;
-	mCallbacks[1].mContext = context;
-}
-
-void AudioDecoder::SetRenderingStartedCallback(AudioDecoderCallback callback, void *context)
-{
-	mCallbacks[2].mCallback = callback;
-	mCallbacks[2].mContext = context;
-}
-
-void AudioDecoder::SetRenderingFinishedCallback(AudioDecoderCallback callback, void *context)
-{
-	mCallbacks[3].mCallback = callback;
-	mCallbacks[3].mContext = context;
-}
-
-void AudioDecoder::PerformDecodingStartedCallback()
-{
-	if(nullptr != mCallbacks[0].mCallback)
-		mCallbacks[0].mCallback(mCallbacks[0].mContext, this);
-}
-
-void AudioDecoder::PerformDecodingFinishedCallback()
-{
-	if(nullptr != mCallbacks[1].mCallback)
-		mCallbacks[1].mCallback(mCallbacks[1].mContext, this);
-}
-
-void AudioDecoder::PerformRenderingStartedCallback()
-{
-	if(nullptr != mCallbacks[2].mCallback)
-		mCallbacks[2].mCallback(mCallbacks[2].mContext, this);
-}
-
-void AudioDecoder::PerformRenderingFinishedCallback()
-{
-	if(nullptr != mCallbacks[3].mCallback)
-		mCallbacks[3].mCallback(mCallbacks[3].mContext, this);
 }
