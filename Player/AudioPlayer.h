@@ -96,6 +96,7 @@ public:
 	// Typedefs
 	// ========================================
 	typedef void (^AudioPlayerDecoderEventBlock)(const AudioDecoder *decoder);
+	typedef void (^AudioPlayerRenderEventBlock)(AudioBufferList *data, UInt32 frameCount);
 
 	// ========================================
 	// Creation/Destruction
@@ -141,6 +142,9 @@ public:
 	void SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock block);		// Called from the decoding thread after the last audio frame has been decoded
 	void SetRenderingStartedBlock(AudioPlayerDecoderEventBlock block);		// Called from the real-time rendering thread before the first audio frame is rendered
 	void SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block);		// Called from the real-time rendering thread after the last audio frame is rendered
+
+	void SetPreRenderBlock(AudioPlayerRenderEventBlock block);				// Called from the real-time rendering thread before audio is rendered
+	void SetPostRenderBlock(AudioPlayerRenderEventBlock block);				// Called from the real-time rendering thread after audio is rendered
 
 	// ========================================
 	// Playback Properties
@@ -301,6 +305,7 @@ private:
 	// ========================================
 	// Callbacks
 	AudioPlayerDecoderEventBlock		mDecoderEventBlocks [4];
+	AudioPlayerRenderEventBlock			mRenderEventBlocks [2];
 	
 public:
 

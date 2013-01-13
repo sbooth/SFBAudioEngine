@@ -131,155 +131,6 @@ auGraphDidRender(void *							inRefCon,
 	return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 }
 
-//#pragma mark -Audio Session Interruption Listener
-//
-//void rioInterruptionListener(void *inClientData, UInt32 inInterruption)
-//{
-//    printf("Session interrupted! --- %s ---", inInterruption == kAudioSessionBeginInterruption ? "Begin Interruption" : "End Interruption");
-//    
-//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate*)inClientData;
-//    
-//    if (inInterruption == kAudioSessionEndInterruption) {
-//        // make sure we are again the active session
-//        AudioSessionSetActive(true);
-//        AudioOutputUnitStart(THIS->rioUnit);
-//    }
-//    
-//    if (inInterruption == kAudioSessionBeginInterruption) {
-//        AudioOutputUnitStop(THIS->rioUnit);
-//    }
-//}
-//
-//#pragma mark -Audio Session Property Listener
-//
-//void propListener(  void *                  inClientData,
-//				  AudioSessionPropertyID  inID,
-//				  UInt32                  inDataSize,
-//				  const void *            inData)
-//{
-//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate*)inClientData;
-//    if (inID == kAudioSessionProperty_AudioRouteChange)
-//    {
-//        try {
-//            // if there was a route change, we need to dispose the current rio unit and create a new one
-//            XThrowIfError(AudioComponentInstanceDispose(THIS->rioUnit), "couldn't dispose remote i/o unit");        
-//			
-//            SetupRemoteIO(THIS->rioUnit, THIS->inputProc, THIS->thruFormat);
-//            
-//            UInt32 size = sizeof(THIS->hwSampleRate);
-//            XThrowIfError(AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate, &size, &THIS->hwSampleRate), "couldn't get new sample rate");
-//			
-//            XThrowIfError(AudioOutputUnitStart(THIS->rioUnit), "couldn't start unit");
-//			
-//            // we need to rescale the sonogram view's color thresholds for different input
-//            CFStringRef newRoute;
-//            size = sizeof(CFStringRef);
-//            XThrowIfError(AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &newRoute), "couldn't get new audio route");
-//            if (newRoute)
-//            {   
-//                CFShow(newRoute);
-//                if (CFStringCompare(newRoute, CFSTR("Headset"), nullptr) == kCFCompareEqualTo) // headset plugged in
-//                {
-//                    colorLevels[0] = .3;                
-//                    colorLevels[5] = .5;
-//                }
-//                else if (CFStringCompare(newRoute, CFSTR("Receiver"), nullptr) == kCFCompareEqualTo) // headset plugged in
-//                {
-//                    colorLevels[0] = 0;
-//                    colorLevels[5] = .333;
-//                    colorLevels[10] = .667;
-//                    colorLevels[15] = 1.0;
-//                    
-//                }           
-//                else
-//                {
-//                    colorLevels[0] = 0;
-//                    colorLevels[5] = .333;
-//                    colorLevels[10] = .667;
-//                    colorLevels[15] = 1.0;
-//                    
-//                }
-//            }
-//        } catch (CAXException e) {
-//            char buf[256];
-//            fprintf(stderr, "Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
-//        }
-//        
-//    }
-//}
-//
-//#pragma mark -RIO Render Callback
-//
-//static OSStatus PerformThru(
-//                            void                        *inRefCon, 
-//                            AudioUnitRenderActionFlags  *ioActionFlags, 
-//                            const AudioTimeStamp        *inTimeStamp, 
-//                            UInt32                      inBusNumber, 
-//                            UInt32                      inNumberFrames, 
-//                            AudioBufferList             *ioData)
-//{
-//    aurioTouchAppDelegate *THIS = (aurioTouchAppDelegate *)inRefCon;
-//    OSStatus err = AudioUnitRender(THIS->rioUnit, ioActionFlags, inTimeStamp, 1, inNumberFrames, ioData);
-//    if (err) { printf("PerformThru: error %d\n", (int)err); return err; }
-//    
-//    // Remove DC component
-//    for(UInt32 i = 0; i < ioData->mNumberBuffers; ++i)
-//        THIS->dcFilter[i].InplaceFilter((SInt32*)(ioData->mBuffers[i].mData), inNumberFrames, 1);
-//    
-//    if (THIS->displayMode == aurioTouchDisplayModeOscilloscopeWaveform)
-//    {
-//        // The draw buffer is used to hold a copy of the most recent PCM data to be drawn on the oscilloscope
-//        if (drawBufferLen != drawBufferLen_alloced)
-//        {
-//            int drawBuffer_i;
-//            
-//            // Allocate our draw buffer if needed
-//            if (drawBufferLen_alloced == 0)
-//                for (drawBuffer_i=0; drawBuffer_i<kNumDrawBuffers; drawBuffer_i++)
-//                    drawBuffers[drawBuffer_i] = nullptr;
-//            
-//            // Fill the first element in the draw buffer with PCM data
-//            for (drawBuffer_i=0; drawBuffer_i<kNumDrawBuffers; drawBuffer_i++)
-//            {
-//                drawBuffers[drawBuffer_i] = (SInt8 *)realloc(drawBuffers[drawBuffer_i], drawBufferLen);
-//                bzero(drawBuffers[drawBuffer_i], drawBufferLen);
-//            }
-//            
-//            drawBufferLen_alloced = drawBufferLen;
-//        }
-//        
-//        int i;
-//        
-//        SInt8 *data_ptr = (SInt8 *)(ioData->mBuffers[0].mData);
-//        for (i=0; i<inNumberFrames; i++)
-//        {
-//            if ((i+drawBufferIdx) >= drawBufferLen)
-//            {
-//                cycleOscilloscopeLines();
-//                drawBufferIdx = -i;
-//            }
-//            drawBuffers[0][i + drawBufferIdx] = data_ptr[2];
-//            data_ptr += 4;
-//        }
-//        drawBufferIdx += inNumberFrames;
-//    }
-//    
-//    else if ((THIS->displayMode == aurioTouchDisplayModeSpectrum) || (THIS->displayMode == aurioTouchDisplayModeOscilloscopeFFT))
-//    {
-//        if (THIS->fftBufferManager == nullptr) return noErr;
-//        
-//        if (THIS->fftBufferManager->NeedsNewAudioData())
-//        {
-//            THIS->fftBufferManager->GrabAudioData(ioData); 
-//        }
-//        
-//    }
-//    if (THIS->mute == YES) { SilenceData(ioData); }
-//    
-//    return err;
-//}
-
-
 // ========================================
 // The decoder thread's entry point
 // ========================================
@@ -339,11 +190,11 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 
 #pragma mark Creation/Destruction
 
-
 AudioPlayer::AudioPlayer()
 	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
+	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
 
 	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
 	
@@ -474,6 +325,11 @@ AudioPlayer::~AudioPlayer()
 		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
 	if(mDecoderEventBlocks[3])
 		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
+
+	if(mRenderEventBlocks[0])
+		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
+	if(mRenderEventBlocks[1])
+		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
 }
 
 #pragma mark Playback Control
@@ -582,6 +438,22 @@ void AudioPlayer::SetRenderingFinishedBlock(AudioPlayer::AudioPlayerDecoderEvent
 		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
 	if(block)
 		mDecoderEventBlocks[3] = Block_copy(block);
+}
+
+void AudioPlayer::SetPreRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock block)
+{
+	if(mRenderEventBlocks[0])
+		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
+	if(block)
+		mRenderEventBlocks[0] = Block_copy(block);
+}
+
+void AudioPlayer::SetPostRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock block)
+{
+	if(mRenderEventBlocks[1])
+		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
+	if(block)
+		mRenderEventBlocks[1] = Block_copy(block);
 }
 
 #pragma mark Playback Properties
@@ -1835,6 +1707,10 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		return 1;
 	}
 
+	// Call the pre-render block
+	if(mRenderEventBlocks[0])
+		mRenderEventBlocks[0](ioData, framesToRead);
+
 	mFramesRenderedLastPass = framesToRead;
 	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
 
@@ -1873,6 +1749,10 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 #pragma unused(ioData)
 	
 	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
+
+		// Call the post-render block
+		if(mRenderEventBlocks[1])
+			mRenderEventBlocks[1](ioData, inNumberFrames);
 
 		// There is nothing more to do if no frames were rendered
 		if(0 == mFramesRenderedLastPass)
