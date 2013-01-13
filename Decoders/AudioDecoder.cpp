@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -679,13 +679,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 #pragma mark Creation and Destruction
 
 AudioDecoder::AudioDecoder()
-	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false)
+	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 AudioDecoder::AudioDecoder(InputSource *inputSource)
-	: mInputSource(inputSource), mChannelLayout(nullptr), mIsOpen(false)
+	: mInputSource(inputSource), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	assert(nullptr != inputSource);
 

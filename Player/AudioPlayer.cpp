@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -538,6 +538,16 @@ CFURLRef AudioPlayer::GetPlayingURL() const
 		return nullptr;
 	
 	return currentDecoderState->mDecoder->GetURL();
+}
+
+void * AudioPlayer::GetPlayingRepresentedObject() const
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(nullptr == currentDecoderState)
+		return nullptr;
+
+	return currentDecoderState->mDecoder->GetRepresentedObject();
 }
 
 #pragma mark Block-based callback support

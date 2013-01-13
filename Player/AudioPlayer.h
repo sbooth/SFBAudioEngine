@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -130,7 +130,10 @@ public:
 	inline bool IsPending() const					{ return (ePending == GetPlayerState()); }
 	inline bool IsStopped() const					{ return (eStopped == GetPlayerState()); }
 
+	// ========================================
+	// Information on the decoder that is currently rendering
 	CFURLRef GetPlayingURL() const;
+	void * GetPlayingRepresentedObject() const;
 
 	// ========================================
 	// Block-based callback support
@@ -206,7 +209,7 @@ public:
 	bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
 	bool SetOutputDeviceUID(CFStringRef deviceUID);
 
-	bool GetOutputDeviceID(AudioDeviceID& devieID) const;
+	bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
 	bool SetOutputDeviceID(AudioDeviceID deviceID);
 
 	bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
@@ -298,7 +301,7 @@ private:
 	// ========================================
 	// Callbacks
 	AudioPlayerDecoderEventBlock		mDecoderEventBlocks [4];
-
+	
 public:
 
 	// ========================================

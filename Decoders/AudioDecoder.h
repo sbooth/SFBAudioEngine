@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -101,6 +101,11 @@ public:
 	AudioDecoder& operator=(const AudioDecoder& rhs) = delete;
 
 	// ========================================
+	// These methods allow the decoder to be easily associated with a model object such as a playlist entry or track
+	void * GetRepresentedObject() const							{ return mRepresentedObject; }
+	inline void SetRepresentedObject(void *representedObject)	{ mRepresentedObject = representedObject; }
+
+	// ========================================
 	// The URL this decoder will process
 	inline CFURLRef GetURL() const								{ return mInputSource->GetURL(); }
 	
@@ -163,6 +168,8 @@ protected:
 	AudioDecoder(InputSource *inputSource);
 
 private:
+
+	void							*mRepresentedObject;
 
 	// ========================================
 	// Controls whether Open() is called for decoders created in the factory methods

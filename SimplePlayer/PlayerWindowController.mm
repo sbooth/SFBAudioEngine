@@ -43,6 +43,7 @@ enum {
 		_player = new AudioPlayer();
 
 		_playerFlags = 0;
+
 		// Once decoding has started, begin playing the track
 		_player->SetDecodingStartedBlock(^(const AudioDecoder */*decoder*/){
 			_player->Play();
@@ -60,6 +61,9 @@ enum {
 
 		// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
 		_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
+
+		// addTimer:forMode: will keep a reference _uiTimer
+		[[NSRunLoop mainRunLoop] addTimer:_uiTimer forMode:NSRunLoopCommonModes];
 	}
 
 	return self;
