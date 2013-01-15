@@ -26,4 +26,7 @@
 // Attempt to play the specified file- returns YES if successful
 - (BOOL) playURL:(NSURL *)url;
 
+// Enqueues the URL on the player
+- (BOOL) enqueueURL:(NSURL *)url;
+
 @end

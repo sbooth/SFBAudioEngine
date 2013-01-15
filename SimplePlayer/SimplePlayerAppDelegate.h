@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -17,6 +17,8 @@
 
 - (IBAction) openFile:(id)sender;
 - (IBAction) openURL:(id)sender;
+
+- (IBAction) enqueueFile:(id)sender;
 
 - (IBAction) openURLPanelOpenAction:(id)sender;
 - (IBAction) openURLPanelCancelAction:(id)sender;

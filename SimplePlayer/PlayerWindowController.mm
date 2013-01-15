@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -24,6 +24,7 @@ enum {
 	AudioPlayer		*_player;		// The player instance
 	uint32_t		_playerFlags;
 	NSTimer			*_uiTimer;
+	BOOL			_playWhenDecodingStarts;
 }
 @end
 
@@ -46,7 +47,10 @@ enum {
 
 		// Once decoding has started, begin playing the track
 		_player->SetDecodingStartedBlock(^(const AudioDecoder */*decoder*/){
-			_player->Play();
+			if(_playWhenDecodingStarts) {
+				_playWhenDecodingStarts = NO;
+				_player->Play();
+			}
 		});
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
@@ -126,13 +130,29 @@ enum {
 
 	_player->Stop();
 
-	if(decoder->Open() && _player->Enqueue(decoder))
-		[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
-	else {
+	_playWhenDecodingStarts = YES;
+	if(!decoder->Open() || !_player->Enqueue(decoder)) {
+		_playWhenDecodingStarts = NO;
 		delete decoder;
 		return NO;
 	}
-	
+
+	return YES;
+}
+
+- (BOOL) enqueueURL:(NSURL *)url
+{
+	NSParameterAssert(nil != url);
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
+	if(nullptr == decoder)
+		return NO;
+
+	if(!decoder->Open() || !_player->Enqueue(decoder)) {
+		delete decoder;
+		return NO;
+	}
+
 	return YES;
 }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009, 2010, 2011, 2012 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2009, 2010, 2011, 2012, 2013 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved
  */
 
@@ -11,8 +11,6 @@
 
 @implementation SimplePlayerAppDelegate
 
-@synthesize playerWindowController, openURLPanel, openURLPanelTextField;
-
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 #pragma unused(aNotification)
@@ -21,7 +19,7 @@
 	::logger::SetCurrentLevel(::logger::debug);
 
 	// Show the player window
-	[playerWindowController showWindow:self];
+	[self.playerWindowController showWindow:self];
 }
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
@@ -37,7 +35,7 @@
 	if(![supportedTypes containsObject:[filename pathExtension]])
 		return NO;
 	
-	return [playerWindowController playURL:[NSURL fileURLWithPath:filename]];
+	return [self.playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
 - (IBAction) openFile:(id)sender
@@ -51,26 +49,41 @@
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
 		NSArray *URLs = [openPanel URLs];
-		[playerWindowController playURL:[URLs objectAtIndex:0]];
+		[self.playerWindowController playURL:[URLs objectAtIndex:0]];
 	}	
 }
 
 - (IBAction) openURL:(id)sender
 {
-	[openURLPanel center];
-	[openURLPanel makeKeyAndOrderFront:sender];	
+	[self.openURLPanel center];
+	[self.openURLPanel makeKeyAndOrderFront:sender];
+}
+
+- (IBAction) enqueueFile:(id)sender
+{
+#pragma unused(sender)
+	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+
+	[openPanel setAllowsMultipleSelection:NO];
+	[openPanel setCanChooseDirectories:NO];
+	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions()];
+
+	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
+		NSArray *URLs = [openPanel URLs];
+		[self.playerWindowController enqueueURL:[URLs objectAtIndex:0]];
+	}
 }
 
 - (IBAction) openURLPanelOpenAction:(id)sender
 {
-	[openURLPanel orderOut:sender];
-	NSURL *url = [NSURL URLWithString:[openURLPanelTextField stringValue]];
-	[playerWindowController playURL:url];
+	[self.openURLPanel orderOut:sender];
+	NSURL *url = [NSURL URLWithString:[self.openURLPanelTextField stringValue]];
+	[self.playerWindowController playURL:url];
 }
 
 - (IBAction) openURLPanelCancelAction:(id)sender
 {
-	[openURLPanel orderOut:sender];
+	[self.openURLPanel orderOut:sender];
 }
 
 @end
