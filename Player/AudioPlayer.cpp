@@ -33,10 +33,7 @@
 #include <mach/mach_init.h>
 #include <mach/thread_act.h>
 #include <mach/mach_error.h>
-#include <mach/task.h>
-#include <mach/semaphore.h>
 #include <mach/sync_policy.h>
-#include <Accelerate/Accelerate.h>
 #include <stdexcept>
 #include <new>
 #include <algorithm>
