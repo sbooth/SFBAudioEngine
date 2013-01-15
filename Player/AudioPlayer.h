@@ -89,7 +89,8 @@ public:
 	// Enums
 	// ========================================
 	enum {
-		eAudioPlayerFlagMuteOutput				= 1u << 0
+		eAudioPlayerFlagMuteOutput				= 1u << 0,
+		eAudioPlayerFlagFormatMismatch			= 1u << 1
 	};
 
 	// ========================================
@@ -97,6 +98,7 @@ public:
 	// ========================================
 	typedef void (^AudioPlayerDecoderEventBlock)(const AudioDecoder *decoder);
 	typedef void (^AudioPlayerRenderEventBlock)(AudioBufferList *data, UInt32 frameCount);
+	typedef void (^AudioPlayerFormatMismatchBlock)(AudioStreamBasicDescription currentFormat, AudioStreamBasicDescription nextFormat);
 
 	// ========================================
 	// Creation/Destruction
@@ -145,6 +147,8 @@ public:
 
 	void SetPreRenderBlock(AudioPlayerRenderEventBlock block);				// Called from the real-time rendering thread before audio is rendered
 	void SetPostRenderBlock(AudioPlayerRenderEventBlock block);				// Called from the real-time rendering thread after audio is rendered
+
+	void SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block);		// Called from the decoding thread when the player's sample rate or channel count will change
 
 	// ========================================
 	// Playback Properties
@@ -270,6 +274,8 @@ private:
 	DecoderStateData * GetCurrentDecoderState() const;
 	DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
+	bool SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder);
+
 	// ========================================
 	// Data Members
 	AUGraph								mAUGraph;
@@ -289,6 +295,7 @@ private:
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
 	Guard								mGuard;
+	Semaphore							mSemaphore;
 
 	pthread_t							mDecoderThread;
 	Semaphore							mDecoderSemaphore;
@@ -306,6 +313,7 @@ private:
 	// Callbacks
 	AudioPlayerDecoderEventBlock		mDecoderEventBlocks [4];
 	AudioPlayerRenderEventBlock			mRenderEventBlocks [2];
+	AudioPlayerFormatMismatchBlock		mFormatMismatchBlock;
 	
 public:
 
