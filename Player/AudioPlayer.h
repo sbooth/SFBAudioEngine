@@ -66,13 +66,15 @@ class DecoderStateData;
 // rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
 // method would be hazard pointers.
 //
-// The player supports block-based callback for the following events:
+// The player supports block-based callbacks for the following events:
 //  1) Decoding started
 //  2) Decoding finished
 //  3) Rendering started
 //  4) Rendering finished
+//  5) Pre- and post- audio rendering
+//  6) Audio format mismatches preventing gapless playback
 //
-// The decoding callbacks wil be performed from the decoding thread.  Although not a real time thread,
+// The decoding callbacks will be performed from the decoding thread.  Although not a real time thread,
 // lengthy operations should be avoided to prevent audio glitching.
 //
 // The rendering callbacks will be performed from the realtime rendering thread.  Execution of this thread must not be blocked!  

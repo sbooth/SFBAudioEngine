@@ -1746,7 +1746,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 		}
 
 		if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState()) {
-
+			// Signal the decoding thread that it is safe to manipulate the ring buffer
 			if(eAudioPlayerFlagFormatMismatch & mFlags) {
 				OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 				OSAtomicTestAndClearBarrier(6 /* eAudioPlayerFlagFormatMismatch */, &mFlags);
