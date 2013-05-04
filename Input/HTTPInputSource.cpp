@@ -75,7 +75,7 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 
 	// Seek support
 	if(0 < mDesiredOffset) {
-		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%ld-"), mDesiredOffset);
+		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset);
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
 		CFRelease(byteRange), byteRange = nullptr;
 	}
