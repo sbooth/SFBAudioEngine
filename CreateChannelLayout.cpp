@@ -48,7 +48,7 @@ size_t GetChannelLayoutSize(const AudioChannelLayout *layout)
 AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions)
 {
 	size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
-	AudioChannelLayout *channelLayout = static_cast<AudioChannelLayout *>(malloc(layoutSize));
+	AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
 	memset(channelLayout, 0, layoutSize);
 
 	return channelLayout;
@@ -74,7 +74,7 @@ AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs)
 		return nullptr;
 
 	size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
-	AudioChannelLayout *channelLayout = static_cast<AudioChannelLayout *>(malloc(layoutSize));
+	AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
 	memcpy(channelLayout, rhs, layoutSize);
 	
 	return channelLayout;

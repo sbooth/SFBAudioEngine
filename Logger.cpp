@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream& out, CFStringRef s)
 	CFIndex bytesWritten;
 
 	while(currentCharacter < totalCharacters) {
-		charactersConverted = CFStringGetBytes(s, CFRangeMake(currentCharacter, totalCharacters), kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), BUFFER_LENGTH, &bytesWritten);
+		charactersConverted = CFStringGetBytes(s, CFRangeMake(currentCharacter, totalCharacters), kCFStringEncodingUTF8, 0, false, (UInt8 *)buf, BUFFER_LENGTH, &bytesWritten);
 		currentCharacter += charactersConverted;
 		out.write(buf, bytesWritten);
 	};

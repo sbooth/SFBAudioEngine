@@ -111,7 +111,7 @@ namespace logger {
 	extern int currentLogLevel;
 
 	// Utilities to get/set the current level
-	inline levels	GetCurrentLevel()				{ return static_cast<levels>(currentLogLevel); }
+	inline levels	GetCurrentLevel()				{ return (levels)currentLogLevel; }
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
 	// The meat & potatoes

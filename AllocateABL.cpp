@@ -48,12 +48,12 @@ AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UIn
 	UInt32 numBuffers = interleaved ? 1 : channelsPerFrame;
 	UInt32 channelsPerBuffer = interleaved ? channelsPerFrame : 1;
 	
-	bufferList = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers)));
+	bufferList = (AudioBufferList *)calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers));
 	
 	bufferList->mNumberBuffers = numBuffers;
 	
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-		bufferList->mBuffers[bufferIndex].mData = static_cast<void *>(calloc(capacityFrames, bytesPerFrame));
+		bufferList->mBuffers[bufferIndex].mData = calloc(capacityFrames, bytesPerFrame);
 		bufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame;
 		bufferList->mBuffers[bufferIndex].mNumberChannels = channelsPerBuffer;
 	}
