@@ -296,7 +296,7 @@ bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
 			extensionIsSupported = true;
 			break;
@@ -321,7 +321,7 @@ bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 	
 	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
-		CFStringRef currentMIMEType = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex));
+		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
 			mimeTypeIsSupported = true;
 			break;
@@ -353,7 +353,7 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		// Verify the file exists
 		SInt32 errorCode = noErr;
-		CFBooleanRef fileExists = static_cast<CFBooleanRef>(CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
+		CFBooleanRef fileExists = (CFBooleanRef)CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode);
 		
 		if(fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
@@ -484,7 +484,7 @@ AudioMetadata::AudioMetadata()
 AudioMetadata::AudioMetadata(CFURLRef url)
 	: AudioMetadata()
 {
-	mURL = static_cast<CFURLRef>(CFRetain(url));
+	mURL = (CFURLRef)CFRetain(url);
 }
 
 AudioMetadata::~AudioMetadata()
@@ -515,7 +515,7 @@ void AudioMetadata::SetURL(CFURLRef URL)
 		CFRelease(mURL), mURL = nullptr;
 
 	if(URL)
-		mURL = static_cast<CFURLRef>(CFRetain(URL));
+		mURL = (CFURLRef)CFRetain(URL);
 }
 
 #pragma mark Change management
@@ -678,7 +678,7 @@ CFBooleanRef AudioMetadata::GetCompilation() const
 	if(CFBooleanGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFBooleanRef>(value);
+		return (CFBooleanRef)value;
 }
 
 void AudioMetadata::SetCompilation(CFBooleanRef compilation)
@@ -878,7 +878,7 @@ CFDictionaryRef AudioMetadata::GetAdditionalMetadata() const
 	if(CFDictionaryGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFDictionaryRef>(value);
+		return (CFDictionaryRef)value;
 }
 
 void AudioMetadata::SetAdditionalMetadata(CFDictionaryRef additionalMetadata)
@@ -1027,7 +1027,7 @@ CFStringRef AudioMetadata::GetStringValue(CFStringRef key) const
 	if(CFStringGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFStringRef>(value);
+		return (CFStringRef)value;
 }
 
 CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
@@ -1040,7 +1040,7 @@ CFNumberRef AudioMetadata::GetNumberValue(CFStringRef key) const
 	if(CFNumberGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFNumberRef>(value);
+		return (CFNumberRef)value;
 }
 
 #pragma mark Generic Access
@@ -1097,8 +1097,8 @@ void AudioMetadata::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
 	
-	CFTypeRef *keys = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
-	CFTypeRef *values = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
+	CFTypeRef *keys = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+	CFTypeRef *values = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
 	
 	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
 	

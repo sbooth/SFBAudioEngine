@@ -55,13 +55,13 @@
 CFArrayRef FLACMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("flac") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef FLACMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
@@ -107,8 +107,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	// TODO: Use unique_ptr once the switch to C++11 STL is made
-	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
@@ -151,7 +150,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 		if(properties->sampleWidth())
 			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->sampleWidth());
 		if(properties->sampleFrames())
-			AddLongLongToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
+			AddLongLongToDictionary(mMetadata, kPropertiesTotalFramesKey, (long)properties->sampleFrames());
 	}
 
 	// Add all tags that are present
@@ -174,13 +173,13 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 
 	// Add album art
 	for(auto iter : file.pictureList()) {
-		CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(iter->data().data()), iter->data().size());
+		CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)iter->data().data(), (CFIndex)iter->data().size());
 
 		CFStringRef description = nullptr;
 		if(!iter->description().isNull())
 			description = CFStringCreateWithCString(kCFAllocatorDefault, iter->description().toCString(true), kCFStringEncodingUTF8);
 
-		AttachedPicture *picture = new AttachedPicture(data, static_cast<AttachedPicture::Type>(iter->type()), description);
+		AttachedPicture *picture = new AttachedPicture(data, (AttachedPicture::Type)iter->type(), description);
 		AddSavedPicture(picture);
 
 		if(data)
@@ -199,8 +198,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	// TODO: Use unique_ptr once the switch to C++11 STL is made
-	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf)));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
@@ -217,7 +215,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	TagLib::FLAC::File file(stream.get(), TagLib::ID3v2::FrameFactory::instance(), false);
+	TagLib::FLAC::File file(stream.get(), false, TagLib::AudioProperties::Average, TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
@@ -258,7 +256,7 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 
 		TagLib::FLAC::Picture *picture = new TagLib::FLAC::Picture;
 		picture->setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
-		picture->setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture->GetType()));
+		picture->setType((TagLib::FLAC::Picture::Type)attachedPicture->GetType());
 		if(attachedPicture->GetDescription())
 			picture->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 

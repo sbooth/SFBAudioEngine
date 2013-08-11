@@ -49,13 +49,13 @@ static void DisableMP4v2Logging()
 CFArrayRef MP4Metadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("m4a"), CFSTR("mp4") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MP4Metadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg-4") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
@@ -104,7 +104,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	
 	// Open the file for reading
-	MP4FileHandle file = MP4Read(reinterpret_cast<const char *>(buf));
+	MP4FileHandle file = MP4Read((const char *)buf);
 	
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
@@ -157,7 +157,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
 		CFRelease(sampleRate), sampleRate = nullptr;
 		
-		double length = static_cast<double>(mp4Duration / mp4TimeScale);
+		double length = (double)mp4Duration / (double)mp4TimeScale;
 		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
 		CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
 		CFRelease(duration), duration = nullptr;
@@ -183,7 +183,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 				CFRelease(bitsPerChannel), bitsPerChannel = nullptr;
 
-				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * decoderConfig[9]) / 1000;
+				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * decoderConfig[9]) / 1000.0;
 				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 				CFRelease(bitrate), bitrate = nullptr;
@@ -195,7 +195,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
 				CFRelease(bitsPerChannel), bitsPerChannel = nullptr;
 
-				double losslessBitrate = static_cast<double>(mp4TimeScale * channels * sampleSize) / 1000;
+				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * sampleSize) / 1000.0;
 				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
 				CFRelease(bitrate), bitrate = nullptr;
@@ -420,7 +420,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Album art
 	if(tags->artworkCount) {
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {
-			CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(tags->artwork[i].data), tags->artwork[i].size);
+			CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)tags->artwork[i].data, tags->artwork[i].size);
 
 			AttachedPicture *picture = new AttachedPicture(data);
 			AddSavedPicture(picture);
@@ -434,7 +434,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
 	if(nullptr != items) {
 		float referenceLoudnessValue;
-		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &referenceLoudnessValue)) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &referenceLoudnessValue)) {
 			CFNumberRef referenceLoudness = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &referenceLoudnessValue);
 			CFDictionaryAddValue(mMetadata, kReplayGainReferenceLoudnessKey, referenceLoudness);
 			CFRelease(referenceLoudness), referenceLoudness = nullptr;
@@ -447,7 +447,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_gain");
 	if(nullptr != items) {
 		float trackGainValue;
-		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &trackGainValue)) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &trackGainValue)) {
 			CFNumberRef trackGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackGainValue);
 			CFDictionaryAddValue(mMetadata, kReplayGainTrackGainKey, trackGain);
 			CFRelease(trackGain), trackGain = nullptr;
@@ -460,7 +460,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_peak");
 	if(nullptr != items) {
 		float trackPeakValue;
-		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &trackPeakValue)) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &trackPeakValue)) {
 			CFNumberRef trackPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackPeakValue);
 			CFDictionaryAddValue(mMetadata, kReplayGainTrackPeakKey, trackPeak);
 			CFRelease(trackPeak), trackPeak = nullptr;
@@ -473,7 +473,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_gain");
 	if(nullptr != items) {
 		float albumGainValue;
-		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &albumGainValue)) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &albumGainValue)) {
 			CFNumberRef albumGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumGainValue);
 			CFDictionaryAddValue(mMetadata, kReplayGainAlbumGainKey, albumGain);
 			CFRelease(albumGain), albumGain = nullptr;
@@ -486,7 +486,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_peak");
 	if(nullptr != items) {
 		float albumPeakValue;
-		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf(reinterpret_cast<const char *>(items->elements[0].dataList.elements[0].value), "%f", &albumPeakValue)) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &albumPeakValue)) {
 			CFNumberRef albumPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumPeakValue);
 			CFDictionaryAddValue(mMetadata, kReplayGainAlbumPeakKey, albumPeak);
 			CFRelease(albumPeak), albumPeak = nullptr;
@@ -509,7 +509,7 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	
 	// Open the file for modification
-	MP4FileHandle file = MP4Modify(reinterpret_cast<const char *>(buf));
+	MP4FileHandle file = MP4Modify((const char *)buf);
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), "");
@@ -845,8 +845,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 		MP4TagArtwork artwork;
 		CFDataRef data = attachedPicture->GetData();
 		if(data) {
-			artwork.data = reinterpret_cast<void *>(const_cast<UInt8 *>(CFDataGetBytePtr(data)));
-			artwork.size = static_cast<uint32_t>(CFDataGetLength(data));
+			artwork.data = (void *)CFDataGetBytePtr(data);
+			artwork.size = (uint32_t)CFDataGetLength(data);
 			artwork.type = MP4_ART_UNDEFINED;
 			
 			MP4TagsAddArtwork(tags, &artwork);
@@ -880,8 +880,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			item->name = strdup("replaygain_reference_loudness");
 			
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
-			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
-			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
 
 			if(!MP4ItmfAddItem(file, item)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
@@ -912,8 +912,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			item->name = strdup("replaygain_track_gain");
 			
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
-			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
-			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
 
 			if(!MP4ItmfAddItem(file, item)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
@@ -944,8 +944,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			item->name = strdup("replaygain_track_peak");
 			
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
-			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
-			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
 
 			if(!MP4ItmfAddItem(file, item)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
@@ -976,8 +976,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			item->name = strdup("replaygain_album_gain");
 			
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
-			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
-			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
 
 			if(!MP4ItmfAddItem(file, item)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
@@ -1008,8 +1008,8 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 			item->name = strdup("replaygain_album_peak");
 			
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
-			item->dataList.elements[0].value = reinterpret_cast<uint8_t *>(strdup(value));
-			item->dataList.elements[0].valueSize = static_cast<uint32_t>(strlen(value));
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
 
 			if(!MP4ItmfAddItem(file, item)) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");

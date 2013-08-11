@@ -47,7 +47,7 @@ AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFS
 	if(data)
 		CFDictionarySetValue(mMetadata, kAttachedPictureDataKey, data);
 
-	AddIntToDictionary(mMetadata, kAttachedPictureTypeKey, static_cast<int>(type));
+	AddIntToDictionary(mMetadata, kAttachedPictureTypeKey, (int)type);
 
 	if(description)
 		CFDictionarySetValue(mMetadata, kAttachedPictureDescriptionKey, description);
@@ -112,7 +112,7 @@ CFStringRef AttachedPicture::GetStringValue(CFStringRef key) const
 	if(CFStringGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFStringRef>(value);
+		return (CFStringRef)value;
 }
 
 CFNumberRef AttachedPicture::GetNumberValue(CFStringRef key) const
@@ -125,7 +125,7 @@ CFNumberRef AttachedPicture::GetNumberValue(CFStringRef key) const
 	if(CFNumberGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFNumberRef>(value);
+		return (CFNumberRef)value;
 }
 
 CFDataRef AttachedPicture::GetDataValue(CFStringRef key) const
@@ -138,7 +138,7 @@ CFDataRef AttachedPicture::GetDataValue(CFStringRef key) const
 	if(CFDataGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
-		return reinterpret_cast<CFDataRef>(value);
+		return (CFDataRef)value;
 }
 
 #pragma mark Generic Access
@@ -184,8 +184,8 @@ void AttachedPicture::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
 
-	CFTypeRef *keys = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
-	CFTypeRef *values = static_cast<CFTypeRef *>(malloc(sizeof(CFTypeRef) * count));
+	CFTypeRef *keys = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+	CFTypeRef *values = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
 
 	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
 

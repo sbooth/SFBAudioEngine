@@ -51,13 +51,13 @@
 CFArrayRef MP3Metadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mp3") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MP3Metadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
@@ -103,8 +103,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 	
-	// TODO: Use unique_ptr once the switch to C++11 STL is made
-	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
@@ -172,7 +171,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 #endif
 
 		if(properties->xingHeader() && properties->xingHeader()->totalFrames())
-			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->xingHeader()->totalFrames());
+			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, (int)properties->xingHeader()->totalFrames());
 	}
 
 	if(file.APETag()) {
@@ -201,8 +200,7 @@ bool MP3Metadata::WriteMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	// TODO: Use unique_ptr once the switch to C++11 STL is made
-	std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf)));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");

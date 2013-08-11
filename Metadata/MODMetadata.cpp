@@ -47,13 +47,13 @@
 CFArrayRef MODMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("it"), CFSTR("xm"), CFSTR("s3m"), CFSTR("mod") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 4, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 4, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MODMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/it"), CFSTR("audio/xm"), CFSTR("audio/s3m"), CFSTR("audio/mod"), CFSTR("audio/x-mod") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 5, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 5, &kCFTypeArrayCallBacks);
 }
 
 bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
@@ -119,8 +119,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 
 	bool fileIsValid = false;
 	if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("it"), kCFCompareCaseInsensitive)) {
-		// TODO: Use unique_ptr once the switch to C++11 STL is made
-		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
 				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
@@ -152,8 +151,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("xm"), kCFCompareCaseInsensitive)) {
-		// TODO: Use unique_ptr once the switch to C++11 STL is made
-		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
 				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
@@ -185,8 +183,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("s3m"), kCFCompareCaseInsensitive)) {
-		// TODO: Use unique_ptr once the switch to C++11 STL is made
-		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
 				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
@@ -218,8 +215,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive)) {
-		// TODO: Use unique_ptr once the switch to C++11 STL is made
-		std::auto_ptr<TagLib::FileStream> stream(new TagLib::FileStream(reinterpret_cast<const char *>(buf), true));
+		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
 				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
