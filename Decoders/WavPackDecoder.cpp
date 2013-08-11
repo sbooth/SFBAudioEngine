@@ -46,7 +46,7 @@ read_bytes_callback(void *id, void *data, int32_t bcount)
 	assert(nullptr != id);
 
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return static_cast<int32_t>(decoder->GetInputSource()->Read(data, bcount));
+	return (int32_t)decoder->GetInputSource()->Read(data, bcount);
 }
 
 static uint32_t
@@ -55,7 +55,7 @@ get_pos_callback(void *id)
 	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return static_cast<uint32_t>(decoder->GetInputSource()->GetOffset());
+	return (uint32_t)decoder->GetInputSource()->GetOffset();
 }
 
 static int
@@ -119,7 +119,7 @@ get_length_callback(void *id)
 	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return static_cast<uint32_t>(decoder->GetInputSource()->GetLength());
+	return (uint32_t)decoder->GetInputSource()->GetLength();
 }
 
 static int
@@ -128,7 +128,7 @@ can_seek_callback(void *id)
 	assert(nullptr != id);
 	
 	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return static_cast<uint32_t>(decoder->GetInputSource()->SupportsSeeking());
+	return (int)decoder->GetInputSource()->SupportsSeeking();
 }
 
 #pragma mark Static Methods
@@ -136,13 +136,13 @@ can_seek_callback(void *id)
 CFArrayRef WavPackDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("wv") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack"), CFSTR("audio/x-wavpack") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
 bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -233,7 +233,7 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 		mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
 		
 		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-		mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);		
+		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC);
 		mFormat.mBitsPerChannel		= 8 * sizeof(float);
 		
 		mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
@@ -250,8 +250,8 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 		mFormat.mFormatFlags		|= (32 == WavpackGetBitsPerSample(mWPC) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh);
 
 		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-		mFormat.mChannelsPerFrame	= WavpackGetNumChannels(mWPC);
-		mFormat.mBitsPerChannel		= WavpackGetBitsPerSample(mWPC);
+		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC);
+		mFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC);
 		
 		mFormat.mBytesPerPacket		= sizeof(int32_t);
 		mFormat.mFramesPerPacket	= 1;
@@ -266,8 +266,8 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mFormatID				= 'WVPK';
 	
 	mSourceFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-	mSourceFormat.mChannelsPerFrame		= WavpackGetNumChannels(mWPC);
-	mSourceFormat.mBitsPerChannel		= WavpackGetBitsPerSample(mWPC);
+	mSourceFormat.mChannelsPerFrame		= (UInt32)WavpackGetNumChannels(mWPC);
+	mSourceFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC);
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
@@ -276,7 +276,7 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
-	mBuffer = static_cast<int32_t *>(calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t)));
+	mBuffer = (int32_t *)calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t));
 
 	if(nullptr == mBuffer) {
 		if(error)
@@ -317,7 +317,7 @@ CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("WavPack, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
@@ -325,7 +325,7 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 	
-	int result = WavpackSeekSample(mWPC, static_cast<uint32_t>(frame));
+	int result = WavpackSeekSample(mWPC, (uint32_t)frame);
 	if(result)
 		mCurrentFrame = frame;
 	
@@ -345,7 +345,7 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	UInt32 totalFramesRead = 0;
 	
 	while(0 < framesRemaining) {
-		UInt32 framesToRead = std::min(framesRemaining, static_cast<UInt32>(BUFFER_SIZE_FRAMES));
+		UInt32 framesToRead = std::min(framesRemaining, (UInt32)BUFFER_SIZE_FRAMES);
 		
 		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
 		uint32_t samplesRead = WavpackUnpackSamples(mWPC, mBuffer, framesToRead);
@@ -358,33 +358,33 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		
 		// Floating point files require no special handling other than deinterleaving
 		if(MODE_FLOAT & mode) {
-			float *inputBuffer = reinterpret_cast<float *>(mBuffer);
+			float *inputBuffer = (float *)mBuffer;
 			
 			// Deinterleave the samples
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-				float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
+				float *floatBuffer = (float *)bufferList->mBuffers[channel].mData;
 				
 				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
 					*floatBuffer++ = inputBuffer[sample];
 				
 				bufferList->mBuffers[channel].mNumberChannels	= 1;
-				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
+				bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(float);
 			}
 		}
 		// Lossless files will be handed off as integers
 		else if(MODE_LOSSLESS & mode) {
 			// WavPack hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
-			UInt32 shift = static_cast<UInt32>(8 * (sizeof(int32_t) - WavpackGetBytesPerSample(mWPC)));
+			UInt32 shift = (UInt32)(8 * (sizeof(int32_t) - (size_t)WavpackGetBytesPerSample(mWPC)));
 			
 			// Deinterleave the 32-bit samples and shift to high-alignment
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-				int32_t *shiftedBuffer = static_cast<int32_t *>(bufferList->mBuffers[channel].mData);
+				int32_t *shiftedBuffer = (int32_t *)bufferList->mBuffers[channel].mData;
 				
 				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
 					*shiftedBuffer++ = mBuffer[sample] << shift;
 				
 				bufferList->mBuffers[channel].mNumberChannels	= 1;
-				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(int32_t));
+				bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(int32_t);
 			}		
 		}
 		// Convert lossy files to float
@@ -393,13 +393,13 @@ UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			
 			// Deinterleave the 32-bit samples and convert to float
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-				float *floatBuffer = static_cast<float *>(bufferList->mBuffers[channel].mData);
+				float *floatBuffer = (float *)bufferList->mBuffers[channel].mData;
 				
 				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
 					*floatBuffer++ = mBuffer[sample] / scaleFactor;
 				
 				bufferList->mBuffers[channel].mNumberChannels	= 1;
-				bufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(samplesRead * sizeof(float));
+				bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(float);
 			}
 		}
 		

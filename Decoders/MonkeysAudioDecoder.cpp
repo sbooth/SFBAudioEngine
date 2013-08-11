@@ -74,7 +74,7 @@ public:
 		if(-1 == bytesRead)
 			return ERROR_IO_READ;
 
-		*pBytesRead = static_cast<unsigned int>(bytesRead);
+		*pBytesRead = (unsigned int)bytesRead;
 
 		return ERROR_SUCCESS;
 	}
@@ -127,13 +127,13 @@ public:
     virtual int GetPosition()
 	{
 		SInt64 offset = mInputSource->GetOffset();
-		return static_cast<int>(offset);
+		return (int)offset;
 	}
 
     virtual int GetSize()
 	{
 		SInt64 length = mInputSource->GetLength();
-		return static_cast<int>(length);
+		return (int)length;
 	}
 
     virtual int GetName(wchar_t * pBuffer)
@@ -151,13 +151,13 @@ private:
 CFArrayRef MonkeysAudioDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ape") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio"), CFSTR("audio/x-monkeys-audio") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
 bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -235,9 +235,9 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
 	
-	mFormat.mBitsPerChannel		= static_cast<UInt32>(mDecompressor->GetInfo(APE_INFO_BITS_PER_SAMPLE));
+	mFormat.mBitsPerChannel		= (UInt32)mDecompressor->GetInfo(APE_INFO_BITS_PER_SAMPLE);
 	mFormat.mSampleRate			= mDecompressor->GetInfo(APE_INFO_SAMPLE_RATE);
-	mFormat.mChannelsPerFrame	= static_cast<UInt32>(mDecompressor->GetInfo(APE_INFO_CHANNELS));
+	mFormat.mChannelsPerFrame	= (UInt32)mDecompressor->GetInfo(APE_INFO_CHANNELS);
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
@@ -287,7 +287,7 @@ CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 MonkeysAudioDecoder::GetTotalFrames() const
@@ -311,7 +311,7 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 	
-	if(ERROR_SUCCESS != mDecompressor->Seek(static_cast<int>(frame)))
+	if(ERROR_SUCCESS != mDecompressor->Seek((int)frame))
 		return -1;
 
 	return this->GetCurrentFrame();
@@ -323,10 +323,10 @@ UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameC
 		return 0;
 
 	int blocksRead = 0;
-	if(ERROR_SUCCESS != mDecompressor->GetData(reinterpret_cast<char *>(bufferList->mBuffers[0].mData), frameCount, &blocksRead)) {
+	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int)frameCount, &blocksRead)) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Monkey's Audio invalid checksum");
 		return 0;
 	}
 
-	return blocksRead;
+	return (UInt32)blocksRead;
 }

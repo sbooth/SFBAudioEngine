@@ -138,8 +138,8 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 	
-	mCompletedPasses			= static_cast<UInt32>(frame / mFrameCount);
-	mFramesReadInCurrentPass	= static_cast<UInt32>(frame % mFrameCount);
+	mCompletedPasses			= (UInt32)(frame / mFrameCount);
+	mFramesReadInCurrentPass	= (UInt32)(frame % mFrameCount);
 	mTotalFramesRead			= frame;
 	
 	mDecoder->SeekToFrame(mStartingFrame + mFramesReadInCurrentPass);
@@ -157,7 +157,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 		return 0;
 
 	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
-	AudioBufferList *bufferListAlias = static_cast<AudioBufferList *>(calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers)));
+	AudioBufferList *bufferListAlias = (AudioBufferList *)calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers));
 	
 	if(nullptr == bufferListAlias) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Unable to allocate memory");
@@ -180,7 +180,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	UInt32 totalFramesRead = 0;
 	
 	while(0 < framesRemaining) {
-		UInt32 framesRemainingInCurrentPass	= static_cast<UInt32>(mStartingFrame + mFrameCount - mDecoder->GetCurrentFrame());
+		UInt32 framesRemainingInCurrentPass	= (UInt32)(mStartingFrame + mFrameCount - mDecoder->GetCurrentFrame());
 		UInt32 framesToRead					= std::min(framesRemaining, framesRemainingInCurrentPass);
 		
 		// Nothing left to read
@@ -195,8 +195,8 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 
 		// Advance the write pointers and update the capacity
 		for(UInt32 i = 0; i < bufferListAlias->mNumberBuffers; ++i) {
-			int8_t *buf									= static_cast<int8_t *>(bufferListAlias->mBuffers[i].mData);
-			bufferListAlias->mBuffers[i].mData			= static_cast<void *>(buf + (framesRead * mFormat.mBytesPerFrame));
+			int8_t *buf									= (int8_t *)bufferListAlias->mBuffers[i].mData;
+			bufferListAlias->mBuffers[i].mData			= (void *)(buf + (framesRead * mFormat.mBytesPerFrame));
 
 			bufferList->mBuffers[i].mDataByteSize		+= bufferListAlias->mBuffers[i].mDataByteSize;
 			
@@ -236,7 +236,7 @@ bool LoopableRegionDecoder::SetupDecoder(bool forceReset)
 	mSourceFormat	= mDecoder->GetSourceFormat();
 	
 	if(0 == mFrameCount)
-		mFrameCount = static_cast<UInt32>(mDecoder->GetTotalFrames() - mStartingFrame);
+		mFrameCount = (UInt32)(mDecoder->GetTotalFrames() - mStartingFrame);
 	
 	if(forceReset || 0 != mStartingFrame)
 		return Reset();

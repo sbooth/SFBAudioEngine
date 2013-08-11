@@ -50,7 +50,7 @@ readCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__byte buffer[], size_t
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
 	InputSource *inputSource = flacDecoder->GetInputSource();
 
-	*bytes = inputSource->Read(buffer, *bytes);
+	*bytes = (size_t)inputSource->Read(buffer, (SInt64)*bytes);
 	
 	if(0 == *bytes)
 		return (inputSource->AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
@@ -69,7 +69,7 @@ seekCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 absolute_byte_
 	if(!inputSource->SupportsSeeking())
 		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
 	
-	if(!inputSource->SeekToOffset(absolute_byte_offset))
+	if(!inputSource->SeekToOffset((SInt64)absolute_byte_offset))
 		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 	
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -82,7 +82,7 @@ tellCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *absolute_byte
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
 
-	*absolute_byte_offset = flacDecoder->GetInputSource()->GetOffset();
+	*absolute_byte_offset = (FLAC__uint64)flacDecoder->GetInputSource()->GetOffset();
 	
 	if(-1ULL == *absolute_byte_offset)
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
@@ -97,7 +97,7 @@ lengthCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *stream_leng
 	
 	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
 
-	*stream_length = flacDecoder->GetInputSource()->GetLength();
+	*stream_length = (FLAC__uint64)flacDecoder->GetInputSource()->GetLength();
 	
 	if(-1ULL == *stream_length)
 		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
@@ -146,13 +146,13 @@ errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus
 CFArrayRef FLACDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("flac"), CFSTR("oga") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef FLACDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac"), CFSTR("audio/ogg") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
 bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -432,7 +432,7 @@ CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("FLAC, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
@@ -440,7 +440,7 @@ SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(mFLAC, frame);	
+	FLAC__bool result = FLAC__stream_decoder_seek_absolute(mFLAC, (FLAC__uint64)frame);
 	
 	// Attempt to re-sync the stream if necessary
 	if(FLAC__STREAM_DECODER_SEEK_ERROR == FLAC__stream_decoder_get_state(mFLAC))
@@ -468,23 +468,23 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	
 	for(;;) {
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
+		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
+		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			unsigned char *pullBuffer = static_cast<unsigned char *>(bufferList->mBuffers[i].mData);
+			unsigned char *pullBuffer = (unsigned char *)bufferList->mBuffers[i].mData;
 			memcpy(pullBuffer + (framesToSkip * mFormat.mBytesPerFrame), mBufferList->mBuffers[i].mData, framesToCopy * mFormat.mBytesPerFrame);
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * mFormat.mBytesPerFrame);
+			bufferList->mBuffers[i].mDataByteSize += framesToCopy * mFormat.mBytesPerFrame;
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[i].mData);
+				pullBuffer = (unsigned char *)mBufferList->mBuffers[i].mData;
 				memmove(pullBuffer, pullBuffer + (framesToCopy * mFormat.mBytesPerFrame), (framesInBuffer - framesToCopy) * mFormat.mBytesPerFrame);
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * mFormat.mBytesPerFrame);
+			mBufferList->mBuffers[i].mDataByteSize -= (UInt32)(framesToCopy * mFormat.mBytesPerFrame);
 		}
 		
 		framesRead += framesToCopy;
@@ -528,13 +528,13 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 		case 1:
 		{
 			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-				char *pullBuffer = static_cast<char *>(mBufferList->mBuffers[channel].mData);
+				char *pullBuffer = (char *)mBufferList->mBuffers[channel].mData;
 
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<char>(buffer[channel][sample] << shift);
+					*pullBuffer++ = (char)(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
-				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(char));
+				mBufferList->mBuffers[channel].mDataByteSize		= frame->header.blocksize * sizeof(char);
 			}
 
 			break;
@@ -543,13 +543,13 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 		case 2:
 		{
 			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-				short *pullBuffer = static_cast<short *>(mBufferList->mBuffers[channel].mData);
+				short *pullBuffer = (short *)mBufferList->mBuffers[channel].mData;
 				
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<short>(buffer[channel][sample] << shift);
+					*pullBuffer++ = (short)(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
-				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(short));
+				mBufferList->mBuffers[channel].mDataByteSize		= frame->header.blocksize * sizeof(short);
 			}
 			
 			break;
@@ -558,26 +558,26 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 		case 3:
 		{
 			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-				unsigned char *pullBuffer = static_cast<unsigned char *>(mBufferList->mBuffers[channel].mData);
+				unsigned char *pullBuffer = (unsigned char *)mBufferList->mBuffers[channel].mData;
 
 				FLAC__int32 value;
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample) {
 					value = buffer[channel][sample] << shift;
 #if __BIG_ENDIAN__
-					*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
-					*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
-					*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
+					*pullBuffer++ = (unsigned char)((value >> 16) & 0xff);
+					*pullBuffer++ = (unsigned char)((value >> 8) & 0xff);
+					*pullBuffer++ = (unsigned char)(value & 0xff);
 #elif __LITTLE_ENDIAN__
-					*pullBuffer++ = static_cast<unsigned char>(value & 0xff);
-					*pullBuffer++ = static_cast<unsigned char>((value >> 8) & 0xff);
-					*pullBuffer++ = static_cast<unsigned char>((value >> 16) & 0xff);
+					*pullBuffer++ = (unsigned char)(value & 0xff);
+					*pullBuffer++ = (unsigned char)((value >> 8) & 0xff);
+					*pullBuffer++ = (unsigned char)((value >> 16) & 0xff);
 #else
 #  error Unknown OS byte order
 #endif
 				}
 
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
-				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * 3 * sizeof(unsigned char));
+				mBufferList->mBuffers[channel].mDataByteSize		= frame->header.blocksize * 3 * sizeof(unsigned char);
 			}
 
 			break;
@@ -586,13 +586,13 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 		case 4:
 		{
 			for(unsigned channel = 0; channel < frame->header.channels; ++channel) {
-				int *pullBuffer = static_cast<int *>(mBufferList->mBuffers[channel].mData);
+				int *pullBuffer = (int *)mBufferList->mBuffers[channel].mData;
 				
 				for(unsigned sample = 0; sample < frame->header.blocksize; ++sample)
-					*pullBuffer++ = static_cast<int>(buffer[channel][sample] << shift);
+					*pullBuffer++ = (int)(buffer[channel][sample] << shift);
 				
 				mBufferList->mBuffers[channel].mNumberChannels		= 1;
-				mBufferList->mBuffers[channel].mDataByteSize		= static_cast<UInt32>(frame->header.blocksize * sizeof(int));
+				mBufferList->mBuffers[channel].mDataByteSize		= frame->header.blocksize * sizeof(int);
 			}
 			
 			break;

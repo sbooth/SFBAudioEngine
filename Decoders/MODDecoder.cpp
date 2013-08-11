@@ -75,13 +75,13 @@ static void close_callback(void */*f*/)
 CFArrayRef MODDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("it"), CFSTR("xm"), CFSTR("s3m"), CFSTR("mod") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 4, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 4, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MODDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/it"), CFSTR("audio/xm"), CFSTR("audio/s3m"), CFSTR("audio/mod"), CFSTR("audio/x-mod") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 5, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 5, &kCFTypeArrayCallBacks);
 }
 
 bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -279,7 +279,7 @@ CFStringRef MODDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("MOD, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 MODDecoder::SeekToFrame(SInt64 frame)
@@ -298,7 +298,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 	}
 
 	long framesToSkip = frame - mCurrentFrame;
-	duh_sigrenderer_generate_samples(dsr, 1, static_cast<float>(65536 / DUMB_SAMPLE_RATE), framesToSkip, nullptr);
+	duh_sigrenderer_generate_samples(dsr, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, nullptr);
 	mCurrentFrame += framesToSkip;
 	
 	return mCurrentFrame;
@@ -313,12 +313,12 @@ UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	if(duh_sigrenderer_get_position(dsr) > mTotalFrames)
 		return 0;
 
-	long framesRendered = duh_render(dsr, DUMB_BIT_DEPTH, 0, 1, static_cast<float>(65536.0 / DUMB_SAMPLE_RATE), frameCount, bufferList->mBuffers[0].mData);
+	long framesRendered = duh_render(dsr, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, frameCount, bufferList->mBuffers[0].mData);
 
 	mCurrentFrame += framesRendered;
 
-	bufferList->mBuffers[0].mDataByteSize = static_cast<UInt32>(framesRendered * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRendered * mFormat.mBytesPerFrame);
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
-	return static_cast<UInt32>(framesRendered);
+	return (UInt32)framesRendered;
 }

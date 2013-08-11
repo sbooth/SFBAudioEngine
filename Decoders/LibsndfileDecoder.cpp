@@ -138,7 +138,7 @@ bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
 			extensionIsSupported = true;
 			break;
@@ -215,7 +215,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 
 	mFormat.mSampleRate			= mFileInfo.samplerate;
-	mFormat.mChannelsPerFrame	= mFileInfo.channels;
+	mFormat.mChannelsPerFrame	= (UInt32)mFileInfo.channels;
 
 	int subFormat = SF_FORMAT_SUBMASK & mFileInfo.format;
 
@@ -225,7 +225,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 
 		mFormat.mBitsPerChannel		= 8;
 
-		mFormat.mBytesPerPacket		= static_cast<UInt32>(sizeof(short) * mFormat.mChannelsPerFrame);
+		mFormat.mBytesPerPacket		= sizeof(short) * mFormat.mChannelsPerFrame;
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
@@ -236,7 +236,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		
 		mFormat.mBitsPerChannel		= 8;
 		
-		mFormat.mBytesPerPacket		= static_cast<UInt32>(sizeof(short) * mFormat.mChannelsPerFrame);
+		mFormat.mBytesPerPacket		= sizeof(short) * mFormat.mChannelsPerFrame;
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
@@ -260,7 +260,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 
 		mFormat.mBitsPerChannel		= 24;
 
-		mFormat.mBytesPerPacket		= static_cast<UInt32>(sizeof(int) * mFormat.mChannelsPerFrame);
+		mFormat.mBytesPerPacket		= sizeof(int) * mFormat.mChannelsPerFrame;
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
@@ -316,21 +316,11 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 
 	mFormat.mReserved			= 0;
 
-	// Set up the channel layout
-	switch(mFileInfo.channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);		break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);		break;
-		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
-	}
-
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'SNDF';
 	
 	mSourceFormat.mSampleRate			= mFileInfo.samplerate;
-	mSourceFormat.mChannelsPerFrame		= mFileInfo.channels;
+	mSourceFormat.mChannelsPerFrame		= (UInt32)mFileInfo.channels;
 
 	switch(subFormat) {
 		case SF_FORMAT_PCM_U8:
@@ -412,7 +402,7 @@ CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
 									CFSTR("%s, %u channels, %u Hz"), 
 									formatInfo.name,
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 LibsndfileDecoder::GetTotalFrames() const
@@ -446,15 +436,15 @@ UInt32 LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCou
 
 	sf_count_t framesRead = 0;
 	switch(mReadMethod) {
-		case eUnknown:	/* Do nothing */																						break;
-		case eShort:	framesRead = sf_readf_short(mFile, static_cast<short *>(bufferList->mBuffers[0].mData), frameCount);	break;
-		case eInt:		framesRead = sf_readf_int(mFile, static_cast<int *>(bufferList->mBuffers[0].mData), frameCount);		break;
-		case eFloat:	framesRead = sf_readf_float(mFile, static_cast<float *>(bufferList->mBuffers[0].mData), frameCount);	break;
-		case eDouble:	framesRead = sf_readf_double(mFile, static_cast<double *>(bufferList->mBuffers[0].mData), frameCount);	break;
+		case eUnknown:	/* Do nothing */																			break;
+		case eShort:	framesRead = sf_readf_short(mFile, (short *)bufferList->mBuffers[0].mData, frameCount);		break;
+		case eInt:		framesRead = sf_readf_int(mFile, (int *)bufferList->mBuffers[0].mData, frameCount);			break;
+		case eFloat:	framesRead = sf_readf_float(mFile, (float *)bufferList->mBuffers[0].mData, frameCount);		break;
+		case eDouble:	framesRead = sf_readf_double(mFile, (double *)bufferList->mBuffers[0].mData, frameCount);	break;
 	}
 
-	bufferList->mBuffers[0].mDataByteSize = static_cast<UInt32>(framesRead * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRead * mFormat.mBytesPerFrame);
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
-	return static_cast<UInt32>(framesRead);
+	return (UInt32)framesRead;
 }

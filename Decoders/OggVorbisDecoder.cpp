@@ -46,7 +46,7 @@ read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 	assert(nullptr != datasource);
 	
 	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-	return decoder->GetInputSource()->Read(ptr, size * nmemb);
+	return (size_t)decoder->GetInputSource()->Read(ptr, (SInt64)(size * nmemb));
 }
 
 static int
@@ -82,7 +82,7 @@ tell_func_callback(void *datasource)
 	assert(nullptr != datasource);
 	
 	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-	return static_cast<long>(decoder->GetInputSource()->GetOffset());
+	return (long)decoder->GetInputSource()->GetOffset();
 }
 
 #pragma mark Static Methods
@@ -90,13 +90,13 @@ tell_func_callback(void *datasource)
 CFArrayRef OggVorbisDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef OggVorbisDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg-vorbis") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -197,7 +197,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	mFormat.mSampleRate			= ovInfo->rate;
-	mFormat.mChannelsPerFrame	= ovInfo->channels;
+	mFormat.mChannelsPerFrame	= (UInt32)ovInfo->channels;
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
@@ -209,7 +209,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mFormatID				= 'VORB';
 	
 	mSourceFormat.mSampleRate			= ovInfo->rate;
-	mSourceFormat.mChannelsPerFrame		= ovInfo->channels;
+	mSourceFormat.mChannelsPerFrame		= (UInt32)ovInfo->channels;
 	
 	switch(ovInfo->channels) {
 			// Default channel layouts from Vorbis I specification section 4.3.9
@@ -249,7 +249,7 @@ CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
@@ -283,7 +283,7 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		// Decode a chunk of samples from the file
 		long framesRead = ov_read_float(&mVorbisFile, 
 										&buffer, 
-										std::min(BUFFER_SIZE_FRAMES, static_cast<int>(framesRemaining)), 
+										std::min(BUFFER_SIZE_FRAMES, (int)framesRemaining),
 										&currentSection);
 			
 		if(0 > framesRead) {
@@ -298,12 +298,12 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		// Copy the frames from the decoding buffer to the output buffer
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
 			// Skip over any frames already decoded
-			memcpy(static_cast<float *>(bufferList->mBuffers[channel].mData) + totalFramesRead, buffer[channel], framesRead * sizeof(float));
-			bufferList->mBuffers[channel].mDataByteSize += static_cast<UInt32>(framesRead * sizeof(float));
+			memcpy((float *)bufferList->mBuffers[channel].mData + totalFramesRead, buffer[channel], (size_t)framesRead * sizeof(float));
+			bufferList->mBuffers[channel].mDataByteSize += (size_t)framesRead * sizeof(float);
 		}
 		
-		totalFramesRead += static_cast<UInt32>(framesRead);
-		framesRemaining -= static_cast<UInt32>(framesRead);
+		totalFramesRead += (UInt32)framesRead;
+		framesRemaining -= (UInt32)framesRead;
 	}
 	
 	return totalFramesRead;

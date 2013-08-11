@@ -76,7 +76,7 @@ public:
 
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mStreamInfo.total_samples; }
+	virtual inline SInt64 GetTotalFrames() const			{ return (SInt64)mStreamInfo.total_samples; }
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
 	// ========================================

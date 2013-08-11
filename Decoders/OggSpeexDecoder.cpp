@@ -51,13 +51,13 @@
 CFArrayRef OggSpeexDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("spx") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef OggSpeexDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex"), CFSTR("audio/ogg") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
 bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -221,7 +221,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	++mOggPacketCount;
 	
 	// Convert the packet to the Speex header
-	SpeexHeader *header = speex_packet_to_header((char *)op.packet, static_cast<int>(op.bytes));
+	SpeexHeader *header = speex_packet_to_header((char *)op.packet, (int)op.bytes);
 	if(nullptr == header) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
@@ -298,7 +298,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_SET_SAMPLING_RATE, &header->rate);
 	
 	mSpeexFramesPerOggPacket = (0 == header->frames_per_packet ? 1 : header->frames_per_packet);
-	mExtraSpeexHeaderCount = header->extra_headers;
+	mExtraSpeexHeaderCount = (UInt32)header->extra_headers;
 
 	// Initialize the speex bit-packing data structure
 	speex_bits_init(&mSpeexBits);
@@ -320,7 +320,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	mFormat.mSampleRate			= header->rate;
-	mFormat.mChannelsPerFrame	= header->nb_channels;
+	mFormat.mChannelsPerFrame	= (UInt32)header->nb_channels;
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
@@ -332,7 +332,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mFormatID				= 'SPEE';
 	
 	mSourceFormat.mSampleRate			= header->rate;
-	mSourceFormat.mChannelsPerFrame		= header->nb_channels;
+	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
 	
 	switch(header->nb_channels) {
 		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
@@ -345,7 +345,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	spx_int32_t speexFrameSize = 0;
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 	
-	mBufferList = AllocateABL(mFormat, speexFrameSize);
+	mBufferList = AllocateABL(mFormat, (UInt32)speexFrameSize);
 	if(nullptr == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -398,7 +398,7 @@ CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("Ogg Speex, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
@@ -415,23 +415,23 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 	for(;;) {
 		
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[i].mData);
+			float *floatBuffer = (float *)bufferList->mBuffers[i].mData;
 			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(float));
+			bufferList->mBuffers[i].mDataByteSize += framesToCopy * sizeof(float);
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
+				floatBuffer = (float *)mBufferList->mBuffers[i].mData;
 				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(float));
+			mBufferList->mBuffers[i].mDataByteSize -= framesToCopy * sizeof(float);
 		}
 		
 		framesRead += framesToCopy;
@@ -485,7 +485,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 						float buffer [(2 == mFormat.mChannelsPerFrame) ? 2 * speexFrameSize : speexFrameSize];
 						
 						// Copy the Ogg packet to the Speex bitstream
-						speex_bits_read_from(&mSpeexBits, (char *)oggPacket.packet, static_cast<int>(oggPacket.bytes));
+						speex_bits_read_from(&mSpeexBits, (char *)oggPacket.packet, (int)oggPacket.bytes);
 						
 						// Decode each frame in the Speex packet
 						for(spx_int32_t i = 0; i < mSpeexFramesPerOggPacket; ++i) {
@@ -507,20 +507,20 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 							
 							// Normalize the values
 							float maxSampleValue = 1u << 15;
-							vDSP_vsdiv(buffer, 1, &maxSampleValue, buffer, 1, speexFrameSize);
+							vDSP_vsdiv(buffer, 1, &maxSampleValue, buffer, 1, (vDSP_Length)speexFrameSize);
 
 							// Copy the frames from the decoding buffer to the output buffer, skipping over any frames already decoded
-							framesInBuffer = static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
-							memcpy(static_cast<float *>(mBufferList->mBuffers[0].mData) + framesInBuffer, buffer, speexFrameSize * sizeof(float));
-							mBufferList->mBuffers[0].mDataByteSize += static_cast<UInt32>(speexFrameSize * sizeof(float));
+							framesInBuffer = mBufferList->mBuffers[0].mDataByteSize / sizeof(float);
+							memcpy((float *)mBufferList->mBuffers[0].mData + framesInBuffer, buffer, (size_t)speexFrameSize * sizeof(float));
+							mBufferList->mBuffers[0].mDataByteSize += (size_t)speexFrameSize * sizeof(float);
 							
 							// Process stereo channel, if present
 							if(2 == mFormat.mChannelsPerFrame) {
 								speex_decode_stereo(buffer, speexFrameSize, mSpeexStereoState);
-								vDSP_vsdiv(buffer + speexFrameSize, 1, &maxSampleValue, buffer + speexFrameSize, 1, speexFrameSize);
+								vDSP_vsdiv(buffer + speexFrameSize, 1, &maxSampleValue, buffer + speexFrameSize, 1, (vDSP_Length)speexFrameSize);
 
-								memcpy(static_cast<float *>(mBufferList->mBuffers[1].mData) + framesInBuffer, buffer + speexFrameSize, speexFrameSize * sizeof(float));
-								mBufferList->mBuffers[1].mDataByteSize += static_cast<UInt32>(speexFrameSize * sizeof(float));
+								memcpy((float *)mBufferList->mBuffers[1].mData + framesInBuffer, buffer + speexFrameSize, (size_t)speexFrameSize * sizeof(float));
+								mBufferList->mBuffers[1].mDataByteSize += (size_t)speexFrameSize * sizeof(float);
 							}
 							
 							// Packet processing finished

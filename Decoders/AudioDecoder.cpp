@@ -194,7 +194,7 @@ bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
 			extensionIsSupported = true;
 			break;
@@ -219,7 +219,7 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
-		CFStringRef currentMIMEType = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex));
+		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
 			mimeTypeIsSupported = true;
 			break;
@@ -718,7 +718,7 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 	}
@@ -740,7 +740,7 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 	}
@@ -762,7 +762,7 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 	}

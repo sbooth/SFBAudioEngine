@@ -54,13 +54,13 @@ static TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 CFArrayRef TrueAudioDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("tta") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef TrueAudioDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/x-tta") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -242,7 +242,7 @@ CFStringRef TrueAudioDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("True Audio, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
@@ -250,7 +250,7 @@ SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 
-	TTAuint32 seconds = static_cast<TTAuint32>(frame / mSourceFormat.mSampleRate);
+	TTAuint32 seconds = (TTAuint32)(frame / mSourceFormat.mSampleRate);
 	TTAuint32 frame_start = 0;
 
 	try {
@@ -284,11 +284,11 @@ UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 	try {
 		while(mFramesToSkip && !eos) {
 			if(mFramesToSkip >= frameCount) {
-				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
+				framesRead = (UInt32)mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
 				mFramesToSkip -= framesRead;
 			}
 			else {
-				framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, mFramesToSkip);
+				framesRead = (UInt32)mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, mFramesToSkip);
 				mFramesToSkip = 0;
 			}
 
@@ -297,20 +297,20 @@ UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		}
 		
 		if(!eos) {
-			framesRead = mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
+			framesRead = (UInt32)mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
 			if(0 == framesRead)
 				eos = true;
 		}
 	}
 	catch(tta::tta_exception e) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio decoding error: " << e.code());
-		return -1;
+		return 0;
 	}
 
 	if(eos)
 		return 0;
 
-	bufferList->mBuffers[0].mDataByteSize = static_cast<UInt32>(framesRead * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRead * mFormat.mBytesPerFrame);
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
 	mCurrentFrame += framesRead;

@@ -61,7 +61,7 @@ myAudioFile_ReadProc(void		*inClientData,
 			return kAudioFileOperationNotSupportedError;
 	} 
 	
-	*actualCount = static_cast<UInt32>(inputSource->Read(buffer, requestCount));
+	*actualCount = (UInt32)inputSource->Read(buffer, requestCount);
 	
 	if(0 == *actualCount)
 #if !TARGET_OS_IPHONE
@@ -95,7 +95,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 
@@ -116,7 +116,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 		
@@ -140,7 +140,7 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 		
@@ -151,7 +151,7 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		CFStringRef currentExtension = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedExtensions, currentIndex));
+		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
 			extensionIsSupported = true;
 			break;
@@ -177,7 +177,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType(result);
+		CFStringRef osType = CreateStringForOSType((OSType)result);
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
 		CFRelease(osType), osType = nullptr;
 		
@@ -188,7 +188,7 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	
 	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
-		CFStringRef currentMIMEType = static_cast<CFStringRef>(CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex));
+		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
 			mimeTypeIsSupported = true;
 			break;
@@ -362,7 +362,7 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 //	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
 	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, nullptr);
 	if(noErr == result) {
-		mChannelLayout = static_cast<AudioChannelLayout *>(malloc(dataSize));
+		mChannelLayout = (AudioChannelLayout *)malloc(dataSize);
 //		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
 		result = AudioFileGetProperty(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, mChannelLayout);
 

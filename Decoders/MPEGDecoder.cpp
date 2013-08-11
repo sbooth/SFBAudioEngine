@@ -67,7 +67,7 @@ read_callback(void *dataSource, void *ptr, size_t size)
 	assert(nullptr != dataSource);
 	
 	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
-	return decoder->GetInputSource()->Read(ptr, size);
+	return decoder->GetInputSource()->Read(ptr, (SInt64)size);
 }
 
 static off_t
@@ -105,13 +105,13 @@ lseek_callback(void *datasource, off_t offset, int whence)
 CFArrayRef MPEGDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mp3") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
 bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -246,7 +246,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
 	
 	mFormat.mSampleRate			= rate;
-	mFormat.mChannelsPerFrame	= channels;
+	mFormat.mChannelsPerFrame	= (UInt32)channels;
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
@@ -256,13 +256,13 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	size_t bufferSizeBytes = mpg123_outblock(mDecoder);
-	UInt32 framesPerMPEGFrame = static_cast<UInt32>(bufferSizeBytes / (channels * sizeof(float)));
+	UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
 
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'MPEG';
 	
 	mSourceFormat.mSampleRate			= rate;
-	mSourceFormat.mChannelsPerFrame		= channels;
+	mSourceFormat.mChannelsPerFrame		= (UInt32)channels;
 
 	mSourceFormat.mFramesPerPacket		= framesPerMPEGFrame;
 	
@@ -341,7 +341,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 										nullptr, 
 										CFSTR("MPEG-1 Audio, %u channels, %u Hz"), 
 										mSourceFormat.mChannelsPerFrame, 
-										static_cast<unsigned int>(mSourceFormat.mSampleRate));
+										(unsigned int)mSourceFormat.mSampleRate);
 	}
 
 	CFStringRef layerDescription = nullptr;
@@ -364,7 +364,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 									CFSTR("MPEG-1 Audio (%@), %@, %u Hz"), 
 									layerDescription,
 									channelDescription,
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
@@ -393,23 +393,23 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	for(;;) {
 		
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[i].mData);
+			float *floatBuffer = (float *)bufferList->mBuffers[i].mData;
 			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(float));
+			bufferList->mBuffers[i].mDataByteSize += framesToCopy * sizeof(float);
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
+				floatBuffer = (float *)mBufferList->mBuffers[i].mData;
 				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(float));
+			mBufferList->mBuffers[i].mDataByteSize -= framesToCopy * sizeof(float);
 		}
 		
 		framesRead += framesToCopy;
@@ -432,19 +432,19 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		}
 
 		// The analyzer error about division by zero may be safely ignored, because mChannelsPerFrame is verified > 0 in Open()
-		UInt32 framesDecoded = static_cast<UInt32>(bytesDecoded / (sizeof(float) * mFormat.mChannelsPerFrame));
+		UInt32 framesDecoded = (UInt32)(bytesDecoded / (sizeof(float) * mFormat.mChannelsPerFrame));
 
 		// Deinterleave the samples
 		// In my experiments adding zero using Accelerate.framework is faster than looping through the buffer and copying each sample
 		float zero = 0;
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-			float *inputBuffer = reinterpret_cast<float *>(audioData) + channel;
-			float *outputBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
+			float *inputBuffer = (float *)audioData + channel;
+			float *outputBuffer = (float *)mBufferList->mBuffers[channel].mData;
 
 			vDSP_vsadd(inputBuffer, mFormat.mChannelsPerFrame, &zero, outputBuffer, 1, framesDecoded);
 
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
-			mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>(framesDecoded * sizeof(float));
+			mBufferList->mBuffers[channel].mDataByteSize	= framesDecoded * sizeof(float);
 		}		
 	}
 	

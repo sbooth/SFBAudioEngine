@@ -48,7 +48,7 @@ read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return static_cast<mpc_int32_t>(decoder->GetInputSource()->Read(ptr, size));
+	return (mpc_int32_t)decoder->GetInputSource()->Read(ptr, size);
 }
 
 static mpc_bool_t
@@ -66,7 +66,7 @@ tell_callback(mpc_reader *p_reader)
 	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetOffset());
+	return (mpc_int32_t)decoder->GetInputSource()->GetOffset();
 }
 
 static mpc_int32_t
@@ -75,7 +75,7 @@ get_size_callback(mpc_reader *p_reader)
 	assert(nullptr != p_reader);
 	
 	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return static_cast<mpc_int32_t>(decoder->GetInputSource()->GetLength());
+	return (mpc_int32_t)decoder->GetInputSource()->GetLength();
 }
 
 static mpc_bool_t
@@ -92,13 +92,13 @@ canseek_callback(mpc_reader *p_reader)
 CFArrayRef MusepackDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedExtensions), 1, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack"), CFSTR("audio/x-musepack") };
-	return CFArrayCreate(kCFAllocatorDefault, reinterpret_cast<const void **>(supportedMIMETypes), 2, &kCFTypeArrayCallBacks);
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
 bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -266,7 +266,7 @@ CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 									nullptr, 
 									CFSTR("Musepack, %u channels, %u Hz"), 
 									mSourceFormat.mChannelsPerFrame, 
-									static_cast<unsigned int>(mSourceFormat.mSampleRate));
+									(unsigned int)mSourceFormat.mSampleRate);
 }
 
 SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
@@ -274,7 +274,7 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 
-	mpc_status result = mpc_demux_seek_sample(mDemux, frame);
+	mpc_status result = mpc_demux_seek_sample(mDemux, (mpc_uint64_t)frame);
 	if(MPC_STATUS_OK == result)
 		mCurrentFrame = frame;
 	
@@ -295,23 +295,23 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 	
 	for(;;) {
 		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= static_cast<UInt32>(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
-		UInt32	framesInBuffer	= static_cast<UInt32>(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
+		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
 		
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			float *floatBuffer = static_cast<float *>(bufferList->mBuffers[i].mData);
+			float *floatBuffer = (float *)bufferList->mBuffers[i].mData;
 			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
-			bufferList->mBuffers[i].mDataByteSize += static_cast<UInt32>(framesToCopy * sizeof(float));
+			bufferList->mBuffers[i].mDataByteSize += framesToCopy * sizeof(float);
 			
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
-				floatBuffer = static_cast<float *>(mBufferList->mBuffers[i].mData);
+				floatBuffer = (float *)mBufferList->mBuffers[i].mData;
 				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
 			}
 			
-			mBufferList->mBuffers[i].mDataByteSize -= static_cast<UInt32>(framesToCopy * sizeof(float));
+			mBufferList->mBuffers[i].mDataByteSize -= framesToCopy * sizeof(float);
 		}
 		
 		framesRead += framesToCopy;
@@ -337,7 +337,7 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 #ifdef MPC_FIXED_POINT
 #error "Fixed point not yet supported"
 #else
-		float *inputBuffer = reinterpret_cast<float *>(buffer);
+		float *inputBuffer = (float *)buffer;
 
 		// Clip the samples to [-1, 1)
 		float minValue = -1.f;
@@ -347,13 +347,13 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 
 		// Deinterleave the normalized samples
 		for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-			float *floatBuffer = static_cast<float *>(mBufferList->mBuffers[channel].mData);
+			float *floatBuffer = (float *)mBufferList->mBuffers[channel].mData;
 
 			for(UInt32 sample = channel; sample < frame.samples * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
 				*floatBuffer++ = inputBuffer[sample];
 			
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
-			mBufferList->mBuffers[channel].mDataByteSize	= static_cast<UInt32>(frame.samples * sizeof(float));
+			mBufferList->mBuffers[channel].mDataByteSize	= frame.samples * sizeof(float);
 		}
 #endif /* MPC_FIXED_POINT */		
 	}
