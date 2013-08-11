@@ -35,7 +35,7 @@
 #include "CreateChannelLayout.h"
 #include "Logger.h"
 
-#define DUMB_SAMPLE_RATE	44100
+#define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
 
@@ -201,6 +201,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 		return false;
 	}
 
+	// NB: This must change if the sample rate changes because it is based on 65536 Hz
 	mTotalFrames = duh_get_length(duh);
 
 	dsr = duh_start_sigrenderer(duh, 0, 2, 0);
@@ -310,8 +311,10 @@ UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		return 0;
 
 	// EOF reached
-	if(duh_sigrenderer_get_position(dsr) > mTotalFrames)
+	if(duh_sigrenderer_get_position(dsr) > mTotalFrames) {
+		bufferList->mBuffers[0].mDataByteSize = 0;
 		return 0;
+	}
 
 	long framesRendered = duh_render(dsr, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, frameCount, bufferList->mBuffers[0].mData);
 
