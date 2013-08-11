@@ -101,7 +101,7 @@ protected:
 
 	// For AudioMetadata change tracking
 	// Valid states are { Saved, Added, Saved | Removed, Added | Removed }
-	enum ChangeState {
+	enum ChangeState : unsigned int {
 		Saved		= 1 << 0,
 		Added		= 1 << 1,
 		Removed		= 1 << 2
