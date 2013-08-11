@@ -28,20 +28,12 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define USE_SECURITY_FRAMEWORK 0
-
-#if USE_SECURITY_FRAMEWORK
-# include <Security/Security.h>
-#else
-# include <openssl/bio.h>
-# include <openssl/evp.h>
-#endif
+#include <Security/Security.h>
 
 #include "Base64Utilities.h"
 
 TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 {
-#if USE_SECURITY_FRAMEWORK
 	ByteVector result;
 
 	CFErrorRef error;
@@ -51,7 +43,7 @@ TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 		return TagLib::ByteVector::null;
 	}
 
-	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
+	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull);
 	if(nullptr == sourceData) {
 		CFRelease(decoder), decoder = nullptr;
 
@@ -84,29 +76,10 @@ TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 	CFRelease(decoder), decoder = nullptr;
 	
 	return result;
-#else
-	ByteVector result;
-
-	BIO *b64 = BIO_new(BIO_f_base64());
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-
-	BIO *bio = BIO_new_mem_buf(reinterpret_cast<void *>(const_cast<char *>(input.data())), input.size());
-	bio = BIO_push(b64, bio);
-
-	char inbuf [512];
-	int inlen;
-	while(0 < (inlen = BIO_read(bio, inbuf, 512)))
-		result.append(ByteVector(inbuf, inlen));
-
-	BIO_free_all(bio);
-	
-	return result;
-#endif
 }
 
 TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 {
-#if USE_SECURITY_FRAMEWORK
 	ByteVector result;
 
 	CFErrorRef error;
@@ -116,7 +89,7 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 		return TagLib::ByteVector::null;
 	}
 
-	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), input.size(), kCFAllocatorNull);
+	CFDataRef sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull);
 	if(nullptr == sourceData) {
 		CFRelease(encoder), encoder = nullptr;
 		
@@ -149,24 +122,4 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 	CFRelease(encoder), encoder = nullptr;
 
 	return result;
-#else
-	ByteVector result;
-
-	BIO *b64 = BIO_new(BIO_f_base64());
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-
-	BIO *bio = BIO_new(BIO_s_mem());
-	bio = BIO_push(b64, bio);
-	BIO_write(bio, input.data(), input.size());
-	(void)BIO_flush(bio);
-
-	void *mem = nullptr;
-	long size = BIO_get_mem_data(bio, &mem);
-	if(0 < size)
-		result.setData(static_cast<const char *>(mem), static_cast<uint>(size));
-
-	BIO_free_all(bio);
-
-	return result;
-#endif
 }
