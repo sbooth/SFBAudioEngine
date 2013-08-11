@@ -231,7 +231,7 @@ AudioPlayer::AudioPlayer()
 		if(0 != joinResult)
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
 		
-		mDecoderThread = static_cast<pthread_t>(0);
+		mDecoderThread = (pthread_t)0;
 		
 		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 		delete mRingBuffer, mRingBuffer = nullptr;
@@ -278,7 +278,7 @@ AudioPlayer::~AudioPlayer()
 	if(0 != joinResult)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
 	
-	mDecoderThread = static_cast<pthread_t>(0);
+	mDecoderThread = (pthread_t)0;
 
 	// End the collector thread
 	mKeepCollecting = false;
@@ -288,7 +288,7 @@ AudioPlayer::~AudioPlayer()
 	if(0 != joinResult)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
 	
-	mCollectorThread = static_cast<pthread_t>(0);
+	mCollectorThread = (pthread_t)0;
 
 	// Force any decoders left hanging by the collector to end
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -298,7 +298,7 @@ AudioPlayer::~AudioPlayer()
 	
 	// Clean up any queued decoders
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		AudioDecoder *decoder = static_cast<AudioDecoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
 		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
@@ -543,7 +543,7 @@ bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 	if(nullptr == currentDecoderState)
 		return false;
 
-	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);
+	SInt64 frameCount		= (SInt64)(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);
 	SInt64 currentFrame		= (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 	SInt64 desiredFrame		= currentFrame + frameCount;
 	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
@@ -558,7 +558,7 @@ bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 	if(nullptr == currentDecoderState)
 		return false;
 
-	SInt64 frameCount		= static_cast<SInt64>(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
+	SInt64 frameCount		= (SInt64)(secondsToSkip * currentDecoderState->mDecoder->GetFormat().mSampleRate);
 	SInt64 currentFrame		= (-1 == currentDecoderState->mFrameToSeek ? currentDecoderState->mFramesRendered : currentDecoderState->mFrameToSeek);
 	SInt64 desiredFrame		= currentFrame - frameCount;
 	
@@ -572,7 +572,7 @@ bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 	if(nullptr == currentDecoderState)
 		return false;
 	
-	SInt64 desiredFrame		= static_cast<SInt64>(timeInSeconds * currentDecoderState->mDecoder->GetFormat().mSampleRate);	
+	SInt64 desiredFrame		= (SInt64)(timeInSeconds * currentDecoderState->mDecoder->GetFormat().mSampleRate);
 	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
 	
 	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
@@ -775,7 +775,7 @@ bool AudioPlayer::OutputDeviceIsHogged() const
 		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
-	pid_t hogPID = static_cast<pid_t>(-1);
+	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
 	AudioDeviceID deviceID;
@@ -806,7 +806,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
-	pid_t hogPID = static_cast<pid_t>(-1);
+	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
@@ -816,7 +816,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	}
 
 	// The device is already hogged
-	if(hogPID != static_cast<pid_t>(-1)) {
+	if(hogPID != (pid_t)-1) {
 		LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Device is already hogged by pid: " << hogPID);
 		return false;
 	}
@@ -855,7 +855,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		.mElement	= kAudioObjectPropertyElementMaster 
 	};
 
-	pid_t hogPID = static_cast<pid_t>(-1);
+	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
@@ -873,7 +873,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 		StopOutput();
 
 	// Release hog mode.
-	hogPID = static_cast<pid_t>(-1);
+	hogPID = (pid_t)-1;
 
 	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
@@ -1230,7 +1230,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 		return false;
 	}
 
-	AUNodeInteraction *interactions = static_cast<AUNodeInteraction *>(calloc(numInteractions, sizeof(AUNodeInteraction)));
+	AUNodeInteraction *interactions = (AUNodeInteraction *)calloc(numInteractions, sizeof(AUNodeInteraction));
 	if(nullptr == interactions) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate memory");
 		return false;
@@ -1576,7 +1576,7 @@ bool AudioPlayer::ClearQueuedDecoders()
 		return false;
 
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		AudioDecoder *decoder = static_cast<AudioDecoder *>(const_cast<void *>(CFArrayGetValueAtIndex(mDecoderQueue, 0)));
+		AudioDecoder *decoder = static_cast<AudioDecoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
 		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
@@ -1593,7 +1593,7 @@ bool AudioPlayer::SetRingBufferCapacity(uint32_t bufferCapacity)
 
 	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting ring buffer capacity to " << bufferCapacity);
 
-	return OSAtomicCompareAndSwap32Barrier(mRingBufferCapacity, bufferCapacity, reinterpret_cast<int32_t *>(&mRingBufferCapacity));
+	return OSAtomicCompareAndSwap32Barrier((int32_t)mRingBufferCapacity, (int32_t)bufferCapacity, (int32_t *)&mRingBufferCapacity);
 }
 
 bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
@@ -1603,7 +1603,7 @@ bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 
 	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting ring buffer write chunk size to " << chunkSize);
 
-	return OSAtomicCompareAndSwap32Barrier(mRingBufferWriteChunkSize, chunkSize, reinterpret_cast<int32_t *>(&mRingBufferWriteChunkSize));
+	return OSAtomicCompareAndSwap32Barrier((int32_t)mRingBufferWriteChunkSize, (int32_t)chunkSize, (int32_t *)&mRingBufferWriteChunkSize);
 }
 
 #pragma mark Callbacks
@@ -1626,14 +1626,14 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		return noErr;
 
 	// If the ring buffer doesn't contain any valid audio, skip some work
-	UInt32 framesAvailableToRead = static_cast<UInt32>(mFramesDecoded - mFramesRendered);
+	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
 		size_t byteCountToZero = inNumberFrames * sizeof(float);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
-			ioData->mBuffers[bufferIndex].mDataByteSize = static_cast<UInt32>(byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
 		
 		return noErr;
@@ -1661,14 +1661,14 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		UInt32 framesOfSilence = inNumberFrames - framesToRead;
 		size_t byteCountToZero = framesOfSilence * sizeof(AudioUnitSampleType);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
-			AudioUnitSampleType *bufferAlias = static_cast<AudioUnitSampleType *>(ioData->mBuffers[bufferIndex].mData);
+			AudioUnitSampleType *bufferAlias = (AudioUnitSampleType *)ioData->mBuffers[bufferIndex].mData;
 			memset(bufferAlias + framesToRead, 0, byteCountToZero);
-			ioData->mBuffers[bufferIndex].mDataByteSize += static_cast<UInt32>(byteCountToZero);
+			ioData->mBuffers[bufferIndex].mDataByteSize += byteCountToZero;
 		}
 	}
 
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
-	UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
+	UInt32 framesAvailableToWrite = (UInt32)(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 	
 	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
 		mDecoderSemaphore.Signal();
@@ -1711,7 +1711,7 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 			SInt64 timeStamp = decoderState->mTimeStamp;
 
 			SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
-			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, static_cast<SInt64>(mFramesRenderedLastPass));
+			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, (SInt64)mFramesRenderedLastPass);
 
 			if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
 				// Call the rendering started block
@@ -1890,7 +1890,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				if(nullptr != mActiveDecoders[bufferIndex])
 					continue;
 				
-				if(OSAtomicCompareAndSwapPtrBarrier(nullptr, decoderState, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex])))
+				if(OSAtomicCompareAndSwapPtrBarrier(nullptr, decoderState, (void **)&mActiveDecoders[bufferIndex]))
 					break;
 				else
 					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwapPtrBarrier() failed");
@@ -1942,7 +1942,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
 					// Determine how many frames are available in the ring buffer
-					UInt32 framesAvailableToWrite = static_cast<UInt32>(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
+					UInt32 framesAvailableToWrite = (UInt32)(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
 
 					// Force writes to the ring buffer to be at least mRingBufferWriteChunkSize
 					if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
@@ -2115,7 +2115,7 @@ void * AudioPlayer::CollectorThreadEntry()
 			if(!(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) || !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags))
 				continue;
 
-			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, reinterpret_cast<void **>(&mActiveDecoders[bufferIndex]));
+			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, (void **)&mActiveDecoders[bufferIndex]);
 
 			if(swapSucceeded)
 				delete decoderState, decoderState = nullptr;
@@ -2799,7 +2799,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 		Float64 multiplier = std::max(1.0, ratio);
 
 		// Round up to the nearest 16 frames
-		newMaxFrames = static_cast<UInt32>(ceil(mDefaultMaximumFramesPerSlice * multiplier));
+		newMaxFrames = (UInt32)ceil(mDefaultMaximumFramesPerSlice * multiplier);
 		newMaxFrames += 16;
 		newMaxFrames &= 0xFFFFFFF0;
 	}
@@ -2983,7 +2983,7 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 		return false;
 
 	// Allocate enough space in the ring buffer for the new format
-	mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
+	mRingBuffer->Allocate((int)mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
 
 	return true;
 }
