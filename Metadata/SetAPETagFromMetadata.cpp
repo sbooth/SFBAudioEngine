@@ -154,18 +154,18 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool
 		const void * keys [count];
 		const void * values [count];
 		
-		CFDictionaryGetKeysAndValues(additionalMetadata, reinterpret_cast<const void **>(keys), reinterpret_cast<const void **>(values));
+		CFDictionaryGetKeysAndValues(additionalMetadata, (const void **)keys, (const void **)values);
 		
 		for(CFIndex i = 0; i < count; ++i) {
-			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(reinterpret_cast<CFStringRef>(keys[i])), kCFStringEncodingASCII);
+			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength((CFStringRef)keys[i]), kCFStringEncodingASCII);
 			char key [keySize + 1];
 			
-			if(!CFStringGetCString(reinterpret_cast<CFStringRef>(keys[i]), key, keySize + 1, kCFStringEncodingASCII)) {
+			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
 				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
 				continue;
 			}
 			
-			SetAPETag(tag, key, reinterpret_cast<CFStringRef>(values[i]));
+			SetAPETag(tag, key, (CFStringRef)values[i]);
 		}
 	}
 	
@@ -207,7 +207,7 @@ SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool
 
 				TagLib::FLAC::Picture picture;
 				picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
-				picture.setType(static_cast<TagLib::FLAC::Picture::Type>(attachedPicture->GetType()));
+				picture.setType((TagLib::FLAC::Picture::Type)attachedPicture->GetType());
 				if(attachedPicture->GetDescription())
 					picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 

@@ -45,10 +45,10 @@ AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag)
 	TagLib::AddStringToCFDictionary(dictionary, kMetadataGenreKey, tag->genre());
 
 	if(tag->year())
-		AddIntToDictionaryAsString(dictionary, kMetadataReleaseDateKey, tag->year());
+		AddIntToDictionaryAsString(dictionary, kMetadataReleaseDateKey, (int)tag->year());
 
 	if(tag->track())
-		AddIntToDictionary(dictionary, kMetadataTrackNumberKey, tag->track());
+		AddIntToDictionary(dictionary, kMetadataTrackNumberKey, (int)tag->track());
 
 	TagLib::AddStringToCFDictionary(dictionary, kMetadataCommentKey, tag->comment());
 

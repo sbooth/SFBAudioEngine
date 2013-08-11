@@ -122,13 +122,13 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<Attach
 				TagLib::FLAC::Picture picture;
 				picture.parse(decodedBlock);
 				
-				CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
+				CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), (CFIndex)picture.data().size());
 
 				CFStringRef description = nullptr;
 				if(!picture.description().isNull())
 					description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
-				AttachedPicture *p = new AttachedPicture(data, static_cast<AttachedPicture::Type>(picture.type()), description);
+				AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)picture.type(), description);
 				attachedPictures.push_back(p);
 				
 				if(data)

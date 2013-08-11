@@ -43,13 +43,13 @@ SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag)
 	tag->setAlbum(TagLib::StringFromCFString(metadata.GetAlbumTitle()));
 	tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
 	tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
-	tag->setYear(metadata.GetReleaseDate() ? CFStringGetIntValue(metadata.GetReleaseDate()) : 0);
+	tag->setYear(metadata.GetReleaseDate() ? (TagLib::uint)CFStringGetIntValue(metadata.GetReleaseDate()) : 0);
 
 	int track = 0;
 	if(metadata.GetTrackNumber())
 		// Ignore return value
 		CFNumberGetValue(metadata.GetTrackNumber(), kCFNumberIntType, &track);
-	tag->setTrack(track);
+	tag->setTrack((TagLib::uint)track);
 
 	return true;
 }
