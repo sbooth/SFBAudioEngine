@@ -97,8 +97,8 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 	int year = 0;
 	if(metadata.GetReleaseDate())
 		year = CFStringGetIntValue(metadata.GetReleaseDate());
-	tag->setYear(year);
-	
+	tag->setYear((TagLib::uint)year);
+
 	// Comment
 	tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
 	
@@ -365,9 +365,7 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 
 	// Album art
 	if(setAlbumArt) {
-		// For some reason for(auto frame : tag->frameList("APIC")) crashes (clang C++11 bug?)
-		auto frames = tag->frameList("APIC");
-		for(auto frame : frames)
+		for(auto frame : tag->frameList("APIC"))
 			tag->removeFrame(frame);
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
@@ -384,8 +382,8 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 				CFRelease(mimeType), mimeType = nullptr;
 			}
 
-			frame->setPicture(TagLib::ByteVector(reinterpret_cast<const char *>(CFDataGetBytePtr(attachedPicture->GetData())), static_cast<TagLib::uint>(CFDataGetLength(attachedPicture->GetData()))));
-			frame->setType(static_cast<TagLib::ID3v2::AttachedPictureFrame::Type>(attachedPicture->GetType()));
+			frame->setPicture(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+			frame->setType((TagLib::ID3v2::AttachedPictureFrame::Type)attachedPicture->GetType());
 			if(attachedPicture->GetDescription())
 				frame->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 			tag->addFrame(frame);
