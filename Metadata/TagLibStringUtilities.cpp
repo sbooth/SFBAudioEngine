@@ -47,7 +47,7 @@ TagLib::StringFromCFString(CFStringRef s)
 
 	// Convert it
 	CFIndex used;
-	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, reinterpret_cast<UInt8 *>(buf), count, &used);
+	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, (UInt8 *)buf, count, &used);
 
 	if(CFStringGetLength(s) != converted)
 		LOGGER_WARNING("org.sbooth.AudioEngine", "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
@@ -66,8 +66,11 @@ void TagLib::AddStringToCFDictionary(CFMutableDictionaryRef d, CFStringRef key, 
 {
 	if(nullptr == d || nullptr == key || value.isNull())
 		return;
-	
+
 	CFStringRef string = CFStringCreateWithCString(kCFAllocatorDefault, value.toCString(true), kCFStringEncodingUTF8);
-	CFDictionarySetValue(d, key, string);
-	CFRelease(string), string = nullptr;
+
+	if(string) {
+		CFDictionarySetValue(d, key, string);
+		CFRelease(string), string = nullptr;
+	}
 }
