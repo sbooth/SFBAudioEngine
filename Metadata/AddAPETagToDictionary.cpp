@@ -127,13 +127,13 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 					TagLib::FLAC::Picture picture;
 					picture.parse(decodedBlock);
 
-					CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(picture.data().data()), picture.data().size());
+					CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), picture.data().size());
 
 					CFStringRef description = nullptr;
 					if(!picture.description().isNull())
 						description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
-					AttachedPicture *p = new AttachedPicture(data, static_cast<AttachedPicture::Type>(picture.type()), description);
+					AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)picture.type(), description);
 					attachedPictures.push_back(p);
 
 					if(data)
@@ -165,10 +165,11 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 			 <cover data> binary
 			 */
 			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) || kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Back)"), kCFCompareCaseInsensitive)) {
-				int pos = item.binaryData().find('\0');
-				if(-1 != pos && 3 < item.value().size()) {
-					CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(item.value().mid(pos + 1).data()), item.value().size() - pos - 1);
-					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(item.value().mid(0, pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
+				auto binaryData = item.binaryData();
+				size_t pos = binaryData.find('\0');
+				if(TagLib::ByteVector::npos != pos && 3 < binaryData.size()) {
+					CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
+					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
 
 					AttachedPicture *p = new AttachedPicture(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description);
 					attachedPictures.push_back(p);

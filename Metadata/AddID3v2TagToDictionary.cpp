@@ -83,13 +83,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 		TagLib::String s = frameList.front()->toString();
 
 		bool ok;
-		int pos = s.find("/", 0);		
-		if(-1 != pos) {
-			int trackNum = s.substr(0, pos).toInt(&ok);
+		size_t pos = s.find("/", 0);
+		if(TagLib::String::npos != pos) {
+			int trackNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, kMetadataTrackNumberKey, trackNum);
 
-			int trackTotal = s.substr(pos + 1).toInt(&ok);
+			int trackTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, kMetadataTrackTotalKey, trackTotal);
 		}
@@ -107,13 +107,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 		TagLib::String s = frameList.front()->toString();
 
 		bool ok;
-		int pos = s.find("/", 0);
-		if(-1 != pos) {
-			int discNum = s.substr(0, pos).toInt(&ok);
+		size_t pos = s.find("/", 0);
+		if(TagLib::String::npos != pos) {
+			int discNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, kMetadataDiscNumberKey, discNum);
 
-			int discTotal = s.substr(pos + 1).toInt(&ok);
+			int discTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, kMetadataDiscTotalKey, discTotal);
 		}
@@ -239,7 +239,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
-				if(volumeAdjustment)
+				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, kReplayGainTrackGainKey, volumeAdjustment);
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
@@ -253,7 +253,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
-				if(volumeAdjustment)
+				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
 			}
 			// Fall back to track gain if identification is not specified
@@ -268,7 +268,7 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 				
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
-				if(volumeAdjustment)
+				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
 			}
 		}			
@@ -278,13 +278,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 	for(auto it : tag->frameListMap()["APIC"]) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
 		if(frame) {
-			CFDataRef data = CFDataCreate(kCFAllocatorDefault, reinterpret_cast<const UInt8 *>(frame->picture().data()), frame->picture().size());
+			CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
 			
 			CFStringRef description = nullptr;
 			if(!frame->description().isNull())
 				description = CFStringCreateWithCString(kCFAllocatorDefault, frame->description().toCString(true), kCFStringEncodingUTF8);
 			
-			AttachedPicture *p = new AttachedPicture(data, static_cast<AttachedPicture::Type>(frame->type()), description);
+			AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)frame->type(), description);
 			attachedPictures.push_back(p);
 			
 			if(data)
