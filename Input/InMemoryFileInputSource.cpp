@@ -63,7 +63,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
-	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
+	int fd = open((const char *)buf, O_RDONLY);
 	if(-1 == fd) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
@@ -81,7 +81,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 
 	// Perform the allocation
-	mMemory = static_cast<int8_t *>(malloc(mFilestats.st_size));
+	mMemory = (int8_t *)malloc((size_t)mFilestats.st_size);
 	if(nullptr == mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
@@ -95,7 +95,7 @@ bool InMemoryFileInputSource::Open(CFErrorRef *error)
 	}
 
 	// Read the file
-	if(-1 == read(fd, mMemory, mFilestats.st_size)) {
+	if(-1 == read(fd, mMemory, (size_t)mFilestats.st_size)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
@@ -154,7 +154,7 @@ SInt64 InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 	if(byteCount > remaining)
 		byteCount = remaining;
 
-	memcpy(buffer, mCurrentPosition, byteCount);
+	memcpy(buffer, mCurrentPosition, (size_t)byteCount);
 	mCurrentPosition += byteCount;
 	return byteCount;
 }

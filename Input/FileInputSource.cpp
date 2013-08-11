@@ -63,7 +63,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
-	mFile = fopen(reinterpret_cast<const char *>(buf), "r");
+	mFile = fopen((const char *)buf, "r");
 
 	if(nullptr == mFile) {
 		if(error)
@@ -71,7 +71,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(-1 == stat(reinterpret_cast<const char *>(buf), &mFilestats)) {
+	if(-1 == stat((const char *)buf, &mFilestats)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
@@ -117,7 +117,7 @@ SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
 	if(!IsOpen() || nullptr == buffer)
 		return -1;
 
-	return fread(buffer, 1, byteCount, mFile);
+	return (SInt64)fread(buffer, 1, (size_t)byteCount, mFile);
 }
 
 bool FileInputSource::SeekToOffset(SInt64 offset)

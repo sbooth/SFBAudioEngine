@@ -64,7 +64,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
-	int fd = open(reinterpret_cast<const char *>(buf), O_RDONLY);
+	int fd = open((const char *)buf, O_RDONLY);
 
 	if(-1 == fd) {
 		if(error)
@@ -95,7 +95,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 		return false;
 	}
 
-	mMemory = static_cast<int8_t *>(mmap(0, mFilestats.st_size, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
+	mMemory = (int8_t *)mmap(0, (size_t)mFilestats.st_size, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
 
 	if(MAP_FAILED == mMemory) {
 		if(error)
@@ -134,7 +134,7 @@ bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 	memset(&mFilestats, 0, sizeof(mFilestats));
 
 	if(nullptr != mMemory) {
-		int result = munmap(mMemory, mFilestats.st_size);
+		int result = munmap(mMemory, (size_t)mFilestats.st_size);
 
 		mMemory = nullptr;
 		mCurrentPosition = nullptr;
@@ -160,7 +160,7 @@ SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 	if(byteCount > remaining)
 		byteCount = remaining;
 
-	memcpy(buffer, mCurrentPosition, byteCount);
+	memcpy(buffer, mCurrentPosition, (size_t)byteCount);
 	mCurrentPosition += byteCount;
 	return byteCount;
 }
