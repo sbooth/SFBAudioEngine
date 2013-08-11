@@ -328,5 +328,7 @@ UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameC
 		return 0;
 	}
 
+	bufferList->mBuffers[0].mDataByteSize = mFormat.mBytesPerFrame * (UInt32)blocksRead;
+
 	return (UInt32)blocksRead;
 }
