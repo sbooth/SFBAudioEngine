@@ -151,7 +151,7 @@ SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 	else if(kCFStreamStatusNotOpen == status || kCFStreamStatusClosed == status || kCFStreamStatusError == status)
 		return -1;
 
-	CFIndex bytesRead = CFReadStreamRead(mReadStream, static_cast<UInt8 *>(buffer), byteCount);
+	CFIndex bytesRead = CFReadStreamRead(mReadStream, (UInt8 *)buffer, (CFIndex)byteCount);
 
 	mOffset += bytesRead;
 

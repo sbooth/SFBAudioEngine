@@ -316,7 +316,7 @@ CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("WavPack, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
+									(unsigned int)mSourceFormat.mChannelsPerFrame, 
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 

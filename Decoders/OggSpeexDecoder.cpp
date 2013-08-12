@@ -117,7 +117,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
 	
 	// Read bitstream from input file
-	ssize_t bytesRead = GetInputSource()->Read(data, READ_SIZE_BYTES);
+	ssize_t bytesRead = (ssize_t)GetInputSource()->Read(data, READ_SIZE_BYTES);
 	if(-1 == bytesRead) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), "");
@@ -397,7 +397,7 @@ CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Ogg Speex, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
+									(unsigned int)mSourceFormat.mChannelsPerFrame, 
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
@@ -539,7 +539,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 					char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
 					
 					// Read bitstream from input file
-					ssize_t bytesRead = GetInputSource()->Read(data, READ_SIZE_BYTES);
+					ssize_t bytesRead = (ssize_t)GetInputSource()->Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
 						LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Unable to read from the input file");
 						break;

@@ -431,7 +431,7 @@ CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("FLAC, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
+									(unsigned int)mSourceFormat.mChannelsPerFrame,
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 

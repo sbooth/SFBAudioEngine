@@ -33,11 +33,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
-#if TARGET_OS_IPHONE
-# include <mpg123.h>
-#else
-# include <mpg123/mpg123.h>
-#endif
+#include <mpg123/mpg123.h>
 
 #import "AudioDecoder.h"
 

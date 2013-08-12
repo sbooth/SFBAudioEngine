@@ -248,7 +248,7 @@ CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
+									(unsigned int)mSourceFormat.mChannelsPerFrame, 
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 

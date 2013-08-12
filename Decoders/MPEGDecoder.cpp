@@ -67,7 +67,7 @@ read_callback(void *dataSource, void *ptr, size_t size)
 	assert(nullptr != dataSource);
 	
 	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
-	return decoder->GetInputSource()->Read(ptr, (SInt64)size);
+	return (ssize_t)decoder->GetInputSource()->Read(ptr, (SInt64)size);
 }
 
 static off_t
@@ -340,7 +340,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 		return CFStringCreateWithFormat(kCFAllocatorDefault, 
 										nullptr, 
 										CFSTR("MPEG-1 Audio, %u channels, %u Hz"), 
-										mSourceFormat.mChannelsPerFrame, 
+										(unsigned int)mSourceFormat.mChannelsPerFrame, 
 										(unsigned int)mSourceFormat.mSampleRate);
 	}
 
@@ -441,7 +441,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			float *inputBuffer = (float *)audioData + channel;
 			float *outputBuffer = (float *)mBufferList->mBuffers[channel].mData;
 
-			vDSP_vsadd(inputBuffer, mFormat.mChannelsPerFrame, &zero, outputBuffer, 1, framesDecoded);
+			vDSP_vsadd(inputBuffer, (vDSP_Stride)mFormat.mChannelsPerFrame, &zero, outputBuffer, 1, framesDecoded);
 
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
 			mBufferList->mBuffers[channel].mDataByteSize	= framesDecoded * sizeof(float);

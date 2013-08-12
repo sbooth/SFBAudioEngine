@@ -152,10 +152,10 @@ private:
 CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-	
-	CFArrayRef decoderExtensions = nullptr;
 
 #if !TARGET_OS_IPHONE
+	CFArrayRef decoderExtensions = nullptr;
+
 	decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
 	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
 	CFRelease(decoderExtensions), decoderExtensions = nullptr;
@@ -220,9 +220,9 @@ CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 	
+#if !TARGET_OS_IPHONE
 	CFArrayRef decoderMIMETypes = nullptr;
 
-#if !TARGET_OS_IPHONE
 	decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
 	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
