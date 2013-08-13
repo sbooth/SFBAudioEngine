@@ -32,25 +32,25 @@
 
 std::ostream& operator<<(std::ostream& out, NSString *s)
 {
-	out << (CFStringRef)s;
+	out << (__bridge CFStringRef)s;
 	return out;
 }
 
 std::ostream& operator<<(std::ostream& out, NSNumber *n)
 {
-	out << (CFNumberRef)n;
+	out << (__bridge CFNumberRef)n;
 	return out;
 }
 
 std::ostream& operator<<(std::ostream& out, NSURL *u)
 {
-	out << (CFURLRef)u;
+	out << (__bridge CFURLRef)u;
 	return out;
 }
 
 std::ostream& operator<<(std::ostream& out, NSError *e)
 {
-	out << (CFErrorRef)e;
+	out << (__bridge CFErrorRef)e;
 	return out;
 }
 
