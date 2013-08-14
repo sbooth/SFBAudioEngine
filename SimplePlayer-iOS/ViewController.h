@@ -36,9 +36,9 @@
 @property (nonatomic, weak) IBOutlet UIButton * playButton;
 @property (nonatomic, weak) IBOutlet UIButton * backwardButton;
 @property (nonatomic, weak) IBOutlet UIButton * forwardButton;
-@property (nonatomic, weak) IBOutlet UITextField * elapsed;
-@property (nonatomic, weak) IBOutlet UITextField * remaining;
-//@property (nonatomic, weak) IBOutlet UILabel * title;
+@property (nonatomic, weak) IBOutlet UILabel * elapsed;
+@property (nonatomic, weak) IBOutlet UILabel * remaining;
+@property (nonatomic, weak) IBOutlet UILabel * trackTitle;
 
 - (IBAction) playPause:(id)sender;
 
@@ -47,6 +47,8 @@
 
 - (IBAction) seek:(id)sender;
 
-- (BOOL) playFile:(NSString *)file;
+- (IBAction) playTestTrack:(id)sender;
+
+- (BOOL) playURL:(NSURL *)url;
 
 @end

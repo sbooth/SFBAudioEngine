@@ -111,9 +111,7 @@ enum {
 	// Set up a UI timer that fires 5 times per second
 	_userInterfaceTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 5.0) target:self selector:@selector(userInterfaceTimerFired:) userInfo:nil repeats:YES];
 
-	// Just play the file
-	if(![self playFile:[[NSBundle mainBundle] pathForResource:@"tone24bit" ofType:@"flac"]])
-		LOGGER_ERR("org.sbooth.SimplePlayer-iOS", "Could not play");
+	[self updateUserInterface];
 }
 
 - (void)didReceiveMemoryWarning
@@ -153,12 +151,16 @@ enum {
 	}
 }
 
-- (BOOL) playFile:(NSString *)file
+- (IBAction) playTestTrack:(id)sender
 {
-	if(nil == file)
-		return NO;
+	if(![self playURL:[[NSBundle mainBundle] URLForResource:@"tone16bit" withExtension:@"flac"]])
+		LOGGER_ERR("org.sbooth.SimplePlayer-iOS", "Could not play");
+}
 
-	NSURL *url = [NSURL fileURLWithPath:file];
+- (BOOL) playURL:(NSURL *)url;
+{
+	if(nil == url)
+		return NO;
 
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
 	if(nullptr == decoder)
@@ -229,7 +231,7 @@ enum {
 	CFTimeInterval currentTime, totalTime;
 
 	if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
-		float fractionComplete = static_cast<float>(currentFrame) / static_cast<float>(totalFrames);
+		float fractionComplete = (float)currentFrame / (float)totalFrames;
 
 		[self.slider setValue:fractionComplete];
 		[self.elapsed setText:[NSString stringWithFormat:@"%f", currentTime]];
@@ -248,7 +250,6 @@ enum {
 	// Nothing happening, reset the window
 	if(nullptr == url) {
 		[self.slider setEnabled:NO];
-//		[self.playButton setState:NSOffState];
 		[self.playButton setEnabled:NO];
 		[self.backwardButton setEnabled:NO];
 		[self.forwardButton setEnabled:NO];
@@ -256,13 +257,15 @@ enum {
 		[self.elapsed setHidden:YES];
 		[self.remaining setHidden:YES];
 
+		[self.trackTitle setText:@""];
+
 		return;
 	}
 
 	bool seekable = _player->SupportsSeeking();
 
 	// Update the window's title and represented file
-//	[_title setText:[url lastPathComponent]];
+	[self.trackTitle setText:[url lastPathComponent]];
 
 	// Update the UI
 	[self.slider setEnabled:seekable];
