@@ -2226,20 +2226,7 @@ bool AudioPlayer::OpenOutput()
 		mAUGraph = nullptr;
 		return false;
 	}
-	
-	// Initialize the graph
-	result = AUGraphInitialize(mAUGraph);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphInitialize failed: " << result);
 
-		result = DisposeAUGraph(mAUGraph);
-		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
-
-		mAUGraph = nullptr;
-		return false;
-	}
-	
 	// Set the mixer's volume on the input and output
 	AudioUnit au = nullptr;
 	result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
@@ -2329,6 +2316,19 @@ bool AudioPlayer::OpenOutput()
 		return false;
 	}
 #endif
+
+	// Initialize the graph
+	result = AUGraphInitialize(mAUGraph);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphInitialize failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
 
 	return true;
 }
