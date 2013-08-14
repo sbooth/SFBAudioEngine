@@ -30,11 +30,23 @@
 
 #import <UIKit/UIKit.h>
 
-#import "AppDelegate.h"
+@interface ViewController : UIViewController
 
-int main(int argc, char * argv[])
-{
-	@autoreleasepool {
-	    return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-	}
-}
+@property (nonatomic, weak) IBOutlet UISlider * slider;
+@property (nonatomic, weak) IBOutlet UIButton * playButton;
+@property (nonatomic, weak) IBOutlet UIButton * backwardButton;
+@property (nonatomic, weak) IBOutlet UIButton * forwardButton;
+@property (nonatomic, weak) IBOutlet UITextField * elapsed;
+@property (nonatomic, weak) IBOutlet UITextField * remaining;
+//@property (nonatomic, weak) IBOutlet UILabel * title;
+
+- (IBAction) playPause:(id)sender;
+
+- (IBAction) seekForward:(id)sender;
+- (IBAction) seekBackward:(id)sender;
+
+- (IBAction) seek:(id)sender;
+
+- (BOOL) playFile:(NSString *)file;
+
+@end

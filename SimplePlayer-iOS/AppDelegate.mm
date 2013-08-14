@@ -28,13 +28,18 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <UIKit/UIKit.h>
-
 #import "AppDelegate.h"
 
-int main(int argc, char * argv[])
+#include "Logger.h"
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-	@autoreleasepool {
-	    return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-	}
+	asl_add_log_file(nullptr, STDERR_FILENO);
+	::logger::SetCurrentLevel(::logger::debug);
+
+	return YES;
 }
+
+@end

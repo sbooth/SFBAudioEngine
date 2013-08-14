@@ -11,7 +11,7 @@
  *    - Redistributions in binary form must reproduce the above copyright
  *      notice, this list of conditions and the following disclaimer in the
  *      documentation and/or other materials provided with the distribution.
- *    - Neither the name of Stephen F. Booth nor the names of its 
+ *    - Neither the name of Stephen F. Booth nor the names of its
  *      contributors may be used to endorse or promote products derived
  *      from this software without specific prior written permission.
  *
@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "SimplePlayer_iOSAppDelegate.h"
+#import "ViewController.h"
 
 #include <libkern/OSAtomic.h>
 
@@ -36,7 +36,6 @@
 #include "AudioDecoder.h"
 
 #include "Logger.h"
-
 
 // ========================================
 // Player flags
@@ -46,36 +45,48 @@ enum {
 	ePlayerFlagRenderingFinished		= 1 << 1
 };
 
-volatile static uint32_t sPlayerFlags = 0;
-
-@interface SimplePlayer_iOSAppDelegate ()
+@interface ViewController ()
 {
 @private
 	AudioPlayer		*_player;		// The player instance
 	uint32_t		_playerFlags;
-	NSTimer			*_uiTimer;
+	NSTimer			*_userInterfaceTimer;
 	BOOL			_playWhenDecodingStarts;
 
 	BOOL			_resume;
 }
 @end
 
-@interface SimplePlayer_iOSAppDelegate (Callbacks)
-- (void) uiTimerFired:(NSTimer *)timer;
+@interface ViewController (Callbacks)
+- (void)applicationWillResignActive:(UIApplication *)application;
+- (void)applicationDidEnterBackground:(UIApplication *)application;
+- (void)applicationWillEnterForeground:(UIApplication *)application;
+- (void)applicationDidBecomeActive:(UIApplication *)application;
+- (void) userInterfaceTimerFired:(NSTimer *)timer;
 @end
 
-@interface SimplePlayer_iOSAppDelegate (Private)
-- (void) updateWindowUI;
+@interface ViewController (Private)
+- (void) updateUserInterface;
 @end
 
-@implementation SimplePlayer_iOSAppDelegate
+@implementation ViewController
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+- (void)viewDidLoad
 {
-	asl_add_log_file(nullptr, STDERR_FILENO);
-	::logger::SetCurrentLevel(::logger::debug);
+    [super viewDidLoad];
 
-	_player = new AudioPlayer();
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillResignActive:) name:UIApplicationWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+	try {
+		_player = new AudioPlayer();
+	}
+
+	catch(std::exception& e) {
+		LOGGER_CRIT("org.sbooth.SimplePlayer-iOS", "Unable to create an AudioPlayer: " << e.what());
+	}
 
 	_playerFlags = 0;
 
@@ -98,41 +109,18 @@ volatile static uint32_t sPlayerFlags = 0;
 	});
 
 	// Set up a UI timer that fires 5 times per second
-	_uiTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 5.0) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
-	
-	[self.window makeKeyAndVisible];
+	_userInterfaceTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 5.0) target:self selector:@selector(userInterfaceTimerFired:) userInfo:nil repeats:YES];
 
 	// Just play the file
-	if(![self playFile:[[NSBundle mainBundle] pathForResource:@"test" ofType:@"flac"]])
-		NSLog(@"Couldn't play");
-
-	return YES;
+	if(![self playFile:[[NSBundle mainBundle] pathForResource:@"tone24bit" ofType:@"flac"]])
+		LOGGER_ERR("org.sbooth.SimplePlayer-iOS", "Could not play");
 }
 
-- (void)applicationWillResignActive:(UIApplication *)application
+- (void)didReceiveMemoryWarning
 {
-	_resume = _player->IsPlaying();
-	_player->Pause();
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
 }
-
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-	[_uiTimer invalidate], _uiTimer = nil;
-}
-
-- (void)applicationWillEnterForeground:(UIApplication *)application
-{
-	_uiTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 5.0) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
-}
-
-- (void)applicationDidBecomeActive:(UIApplication *)application
-{
-	if(_resume)
-		_player->Play();
-}
-
-- (void)applicationWillTerminate:(UIApplication *)application
-{}
 
 - (void)dealloc
 {
@@ -141,26 +129,23 @@ volatile static uint32_t sPlayerFlags = 0;
 
 - (IBAction) playPause:(id)sender
 {
-#pragma unused(sender)
 	_player->PlayPause();
 }
 
 - (IBAction) seekForward:(id)sender
 {
-#pragma unused(sender)
 	_player->SeekForward();
 }
 
 - (IBAction) seekBackward:(id)sender
 {
-#pragma unused(sender)
 	_player->SeekBackward();
 }
 
 - (IBAction) seek:(id)sender
 {
 	NSParameterAssert(nil != sender);
-	
+
 	SInt64 totalFrames;
 	if(_player->GetTotalFrames(totalFrames)) {
 		SInt64 desiredFrame = (SInt64)([(UISlider *)sender value] * totalFrames);
@@ -172,102 +157,125 @@ volatile static uint32_t sPlayerFlags = 0;
 {
 	if(nil == file)
 		return NO;
-	
+
 	NSURL *url = [NSURL fileURLWithPath:file];
-	
+
 	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
 	if(nullptr == decoder)
 		return NO;
-	
+
 	_player->Stop();
-	
+
+	_playWhenDecodingStarts = YES;
 	if(!decoder->Open() || !_player->Enqueue(decoder)) {
+		_playWhenDecodingStarts = NO;
 		delete decoder;
 		return NO;
 	}
-	
+
 	return YES;
 }
 
 @end
 
-@implementation SimplePlayer_iOSAppDelegate (Callbacks)
+@implementation ViewController (Callbacks)
 
-- (void) uiTimerFired:(NSTimer *)timer
+- (void)applicationWillResignActive:(UIApplication *)application
 {
-#pragma unused(timer)
+	_resume = _player->IsPlaying();
+	_player->Pause();
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+	[_userInterfaceTimer invalidate], _userInterfaceTimer = nil;
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+	_userInterfaceTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 5.0) target:self selector:@selector(userInterfaceTimerFired:) userInfo:nil repeats:YES];
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+	if(_resume)
+		_player->Play();
+}
+
+- (void) userInterfaceTimerFired:(NSTimer *)timer
+{
 	// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
-	if(ePlayerFlagRenderingStarted & sPlayerFlags) {
-		OSAtomicTestAndClearBarrier(7 /* ePlayerFlagRenderingStarted */, &sPlayerFlags);
-		
-		[self updateWindowUI];
-		
+	if(ePlayerFlagRenderingStarted & _playerFlags) {
+		OSAtomicTestAndClearBarrier(7 /* ePlayerFlagRenderingStarted */, &_playerFlags);
+
+		[self updateUserInterface];
+
 		return;
 	}
-	else if(ePlayerFlagRenderingFinished & sPlayerFlags) {
-		OSAtomicTestAndClearBarrier(6 /* ePlayerFlagRenderingFinished */, &sPlayerFlags);
-		
-		[self updateWindowUI];
-		
+	else if(ePlayerFlagRenderingFinished & _playerFlags) {
+		OSAtomicTestAndClearBarrier(6 /* ePlayerFlagRenderingFinished */, &_playerFlags);
+
+		[self updateUserInterface];
+
 		return;
 	}
-	
+
 	if(!_player->IsPlaying())
-		[_playButton setTitle:@"Resume" forState:UIControlStateNormal];
+		[self.playButton setTitle:@"Resume" forState:UIControlStateNormal];
 	else
-		[_playButton setTitle:@"Pause" forState:UIControlStateNormal];
-	
+		[self.playButton setTitle:@"Pause" forState:UIControlStateNormal];
+
 	SInt64 currentFrame, totalFrames;
 	CFTimeInterval currentTime, totalTime;
-	
+
 	if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
 		float fractionComplete = static_cast<float>(currentFrame) / static_cast<float>(totalFrames);
 
-		[_slider setValue:fractionComplete];
-		[_elapsed setText:[NSString stringWithFormat:@"%f", currentTime]];
-		[_remaining setText:[NSString stringWithFormat:@"%f", (-1 * (totalTime - currentTime))]];
+		[self.slider setValue:fractionComplete];
+		[self.elapsed setText:[NSString stringWithFormat:@"%f", currentTime]];
+		[self.remaining setText:[NSString stringWithFormat:@"%f", (-1 * (totalTime - currentTime))]];
 	}
 }
 
 @end
 
-@implementation SimplePlayer_iOSAppDelegate (Private)
+@implementation ViewController (Private)
 
-- (void) updateWindowUI
+- (void) updateUserInterface
 {
 	NSURL *url = (__bridge NSURL *)_player->GetPlayingURL();
-	
+
 	// Nothing happening, reset the window
 	if(nullptr == url) {
-		[_slider setEnabled:NO];
-//		[_playButton setState:NSOffState];
-		[_playButton setEnabled:NO];
-		[_backwardButton setEnabled:NO];
-		[_forwardButton setEnabled:NO];
-		
-		[_elapsed setHidden:YES];
-		[_remaining setHidden:YES];
-		
+		[self.slider setEnabled:NO];
+//		[self.playButton setState:NSOffState];
+		[self.playButton setEnabled:NO];
+		[self.backwardButton setEnabled:NO];
+		[self.forwardButton setEnabled:NO];
+
+		[self.elapsed setHidden:YES];
+		[self.remaining setHidden:YES];
+
 		return;
 	}
-	
+
 	bool seekable = _player->SupportsSeeking();
-	
+
 	// Update the window's title and represented file
-	[_title setText:[url lastPathComponent]];
-	
+//	[_title setText:[url lastPathComponent]];
+
 	// Update the UI
-	[_slider setEnabled:seekable];
-	[_playButton setEnabled:YES];
-	[_backwardButton setEnabled:seekable];
-	[_forwardButton setEnabled:seekable];
-	
+	[self.slider setEnabled:seekable];
+	[self.playButton setEnabled:YES];
+	[self.backwardButton setEnabled:seekable];
+	[self.forwardButton setEnabled:seekable];
+
 	// Show the times
-	[_elapsed setHidden:NO];
-	
+	[self.elapsed setHidden:NO];
+
 	SInt64 totalFrames;
 	if(_player->GetTotalFrames(totalFrames) && -1 != totalFrames)
-		[_remaining setHidden:NO];	
+		[self.remaining setHidden:NO];
 }
 
 @end

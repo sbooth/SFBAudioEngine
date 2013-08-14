@@ -30,40 +30,16 @@
 
 #import <UIKit/UIKit.h>
 
-#ifdef __cplusplus
-# include "AudioPlayer.h"
-#endif
-
 @interface SimplePlayer_iOSAppDelegate : NSObject <UIApplicationDelegate>
-{
-@private
-	UIWindow *_window;
-	UIButton *_playButton;
-	UIButton *_backwardButton;
-	UIButton *_forwardButton;
-    UISlider *_slider;
-	UITextField *_elapsed;
-	UITextField *_remaining;
-	UILabel *_title;
-	
-#ifdef __cplusplus
-	AudioPlayer *_player;
-#else
-	void *_player;
-#endif
-	NSTimer *_uiTimer;
+{}
 
-	BOOL _resume;
-}
-
-@property (nonatomic, retain) IBOutlet UIWindow * window;
-@property (nonatomic, retain) IBOutlet UISlider * slider;
-@property (nonatomic, retain) IBOutlet UIButton * playButton;
-@property (nonatomic, retain) IBOutlet UIButton * backwardButton;
-@property (nonatomic, retain) IBOutlet UIButton * forwardButton;
-@property (nonatomic, retain) IBOutlet UITextField * elapsed;
-@property (nonatomic, retain) IBOutlet UITextField * remaining;
-@property (nonatomic, retain) IBOutlet UILabel * title;
+@property (nonatomic, weak) IBOutlet UISlider * slider;
+@property (nonatomic, weak) IBOutlet UIButton * playButton;
+@property (nonatomic, weak) IBOutlet UIButton * backwardButton;
+@property (nonatomic, weak) IBOutlet UIButton * forwardButton;
+@property (nonatomic, weak) IBOutlet UITextField * elapsed;
+@property (nonatomic, weak) IBOutlet UITextField * remaining;
+@property (nonatomic, weak) IBOutlet UILabel * title;
 
 - (IBAction) playPause:(id)sender;
 
