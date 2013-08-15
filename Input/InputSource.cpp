@@ -84,7 +84,7 @@ InputSource::InputSource(CFURLRef url)
 {
 	assert(nullptr != url);
 	
-	mURL = static_cast<CFURLRef>(CFRetain(url));
+	mURL = (CFURLRef)CFRetain(url);
 }
 
 InputSource::~InputSource()
