@@ -206,7 +206,11 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mBitsPerChannel		= streamInfo.bps;
 
 	// Setup the channel layout
-	mChannelLayout = CreateChannelLayoutWithTag(streamInfo.nch);
+	switch(streamInfo.nch) {
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+	}
 
 	mTotalFrames = streamInfo.samples;
 
