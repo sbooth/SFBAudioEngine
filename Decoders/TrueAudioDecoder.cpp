@@ -245,7 +245,7 @@ CFStringRef TrueAudioDecoder::CreateSourceFormatDescription() const
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("True Audio, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
+									(unsigned int)mSourceFormat.mChannelsPerFrame,
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
