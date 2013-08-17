@@ -59,18 +59,18 @@
 	[self.openURLPanel makeKeyAndOrderFront:sender];
 }
 
-- (IBAction) enqueueFile:(id)sender
+- (IBAction) enqueueFiles:(id)sender
 {
 #pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 
-	[openPanel setAllowsMultipleSelection:NO];
+	[openPanel setAllowsMultipleSelection:YES];
 	[openPanel setCanChooseDirectories:NO];
 	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions()];
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
-		NSArray *URLs = [openPanel URLs];
-		[self.playerWindowController enqueueURL:[URLs objectAtIndex:0]];
+		for(NSURL *url in [openPanel URLs])
+			[self.playerWindowController enqueueURL:url];
 	}
 }
 

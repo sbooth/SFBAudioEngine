@@ -18,7 +18,7 @@
 - (IBAction) openFile:(id)sender;
 - (IBAction) openURL:(id)sender;
 
-- (IBAction) enqueueFile:(id)sender;
+- (IBAction) enqueueFiles:(id)sender;
 
 - (IBAction) openURLPanelOpenAction:(id)sender;
 - (IBAction) openURLPanelCancelAction:(id)sender;
