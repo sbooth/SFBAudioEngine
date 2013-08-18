@@ -41,13 +41,12 @@
 
 #include "AudioPlayer.h"
 #include "DecoderStateData.h"
+#include "RingBuffer.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "ChannelLayoutsAreEqual.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
-
-#include "CARingBuffer.h"
 
 // ========================================
 // Macros
@@ -197,7 +196,7 @@ AudioPlayer::AudioPlayer()
 	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
-	mRingBuffer = new CARingBuffer();
+	mRingBuffer = new RingBuffer();
 
 	// ========================================
 	// Initialize the decoder array
@@ -1641,9 +1640,8 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	// Restrict reads to valid decoded audio
 	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
-	CARingBufferError result = mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered);
-	if(kCARingBufferError_OK != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Fetch failed: " << result << ", requested " << framesToRead << " frames from " << mFramesRendered);
+	if(!mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered)) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::Fetch failed: Requested " << framesToRead << " frames from " << mFramesRendered);
 		return 1;
 	}
 
@@ -2024,10 +2022,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						// Store the decoded audio
 						if(0 != framesDecoded) {
-
-							result = mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime);
-							if(kCARingBufferError_OK != result)
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CARingBuffer::Store failed: " << result);
+							if(!mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime))
+								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::Store failed");
 
 							OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
 						}
@@ -2983,7 +2979,10 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 		return false;
 
 	// Allocate enough space in the ring buffer for the new format
-	mRingBuffer->Allocate((int)mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity);
+	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate ring buffer");
+		return false;
+	}
 
 	return true;
 }

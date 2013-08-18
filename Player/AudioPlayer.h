@@ -44,7 +44,7 @@
 // ========================================
 // Forward declarations
 // ========================================
-class CARingBuffer;
+class RingBuffer;
 class DecoderStateData;
 
 // ========================================
@@ -285,7 +285,7 @@ private:
 	AUNode								mOutputNode;
 	UInt32								mDefaultMaximumFramesPerSlice;
 
-	CARingBuffer						*mRingBuffer;
+	RingBuffer							*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
 	AudioChannelLayout					*mRingBufferChannelLayout;
 	uint32_t							mRingBufferCapacity;

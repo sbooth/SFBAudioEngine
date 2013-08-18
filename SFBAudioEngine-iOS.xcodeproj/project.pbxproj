@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		321FCF9817C14FEE00828C3A /* RingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 321FCF9617C14FEE00828C3A /* RingBuffer.cpp */; };
 		3240F9ED17BA579F002360A3 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3240F9EB17BA578C002360A3 /* AudioToolbox.framework */; };
 		3240F9EF17BA57B4002360A3 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3240F9EE17BA57B4002360A3 /* Accelerate.framework */; };
 		3240F9F117BA58B1002360A3 /* libSFBAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3296821B17B9D23100B3CDB4 /* libSFBAudioEngine.a */; };
@@ -33,9 +34,6 @@
 		3296825017B9D33100B3CDB4 /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
 		3296825117B9D33100B3CDB4 /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		3296825217B9D33100B3CDB4 /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
-		3296825317B9D33D00B3CDB4 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4C8111614540091D56B /* CADebugMacros.cpp */; };
-		3296825417B9D33D00B3CDB4 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328AA4CA111614540091D56B /* CADebugPrintf.cpp */; };
-		3296825517B9D33D00B3CDB4 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5D93108C221100CA9BDE /* CARingBuffer.cpp */; };
 		3296825617B9D47000B3CDB4 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
 		3296825717B9D47000B3CDB4 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
 		3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
@@ -81,15 +79,12 @@
 		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
+		321FCF9617C14FEE00828C3A /* RingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RingBuffer.cpp; sourceTree = "<group>"; };
+		321FCF9717C14FEE00828C3A /* RingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RingBuffer.h; sourceTree = "<group>"; };
 		322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioDecoder.h; sourceTree = "<group>"; };
 		322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		322B5C1D108BC70600CA9BDE /* CoreAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioDecoder.h; sourceTree = "<group>"; };
 		322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = CoreAudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		322B5D93108C221100CA9BDE /* CARingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CARingBuffer.cpp; sourceTree = "<group>"; };
-		322B5D94108C221100CA9BDE /* CARingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CARingBuffer.h; sourceTree = "<group>"; };
-		322B5D99108C223900CA9BDE /* CAAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAAtomic.h; sourceTree = "<group>"; };
-		322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAAutoDisposer.h; sourceTree = "<group>"; };
-		322B5D9B108C223900CA9BDE /* CABitOperations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CABitOperations.h; sourceTree = "<group>"; };
 		322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateDisplayNameForURL.cpp; sourceTree = "<group>"; };
 		322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateDisplayNameForURL.h; sourceTree = "<group>"; };
 		32386EF213D2135400D25175 /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
@@ -108,11 +103,6 @@
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
 		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
 		3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateChannelLayout.h; sourceTree = "<group>"; };
-		328AA4C8111614540091D56B /* CADebugMacros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugMacros.cpp; sourceTree = "<group>"; };
-		328AA4C9111614540091D56B /* CADebugMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugMacros.h; sourceTree = "<group>"; };
-		328AA4CA111614540091D56B /* CADebugPrintf.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CADebugPrintf.cpp; sourceTree = "<group>"; };
-		328AA4CB111614540091D56B /* CADebugPrintf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CADebugPrintf.h; sourceTree = "<group>"; };
-		328AA4CC111614540091D56B /* CAMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAMath.h; sourceTree = "<group>"; };
 		3296821B17B9D23100B3CDB4 /* libSFBAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSFBAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3296821C17B9D23100B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3296822A17B9D23200B3CDB4 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -209,6 +199,8 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				321FCF9717C14FEE00828C3A /* RingBuffer.h */,
+				321FCF9617C14FEE00828C3A /* RingBuffer.cpp */,
 				32AEB2901409AF2B001F9A60 /* Logger.h */,
 				32AEB28F1409AF2B001F9A60 /* Logger.cpp */,
 				32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */,
@@ -300,31 +292,6 @@
 			path = Player;
 			sourceTree = "<group>";
 		};
-		322B5D91108C21E000CA9BDE /* ThirdParty */ = {
-			isa = PBXGroup;
-			children = (
-				322B5D92108C21F000CA9BDE /* PublicUtility */,
-			);
-			path = ThirdParty;
-			sourceTree = "<group>";
-		};
-		322B5D92108C21F000CA9BDE /* PublicUtility */ = {
-			isa = PBXGroup;
-			children = (
-				322B5D99108C223900CA9BDE /* CAAtomic.h */,
-				322B5D9A108C223900CA9BDE /* CAAutoDisposer.h */,
-				322B5D9B108C223900CA9BDE /* CABitOperations.h */,
-				328AA4C9111614540091D56B /* CADebugMacros.h */,
-				328AA4C8111614540091D56B /* CADebugMacros.cpp */,
-				328AA4CB111614540091D56B /* CADebugPrintf.h */,
-				328AA4CA111614540091D56B /* CADebugPrintf.cpp */,
-				328AA4CC111614540091D56B /* CAMath.h */,
-				322B5D94108C221100CA9BDE /* CARingBuffer.h */,
-				322B5D93108C221100CA9BDE /* CARingBuffer.cpp */,
-			);
-			path = PublicUtility;
-			sourceTree = "<group>";
-		};
 		3296832217B9DD0300B3CDB4 /* SimplePlayer-iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -359,7 +326,6 @@
 				322B5B9D108BA7E400CA9BDE /* Decoders */,
 				32D65528115FC570002B275C /* Input */,
 				29B97315FDCFA39411CA2CEA /* Other */,
-				322B5D91108C21E000CA9BDE /* ThirdParty */,
 			);
 			name = SFBAudioEngine;
 			sourceTree = "<group>";
@@ -475,17 +441,16 @@
 				3240F9F517BB2203002360A3 /* MPEGDecoder.cpp in Sources */,
 				3296824E17B9D33100B3CDB4 /* Logger.cpp in Sources */,
 				3296824B17B9D31100B3CDB4 /* HTTPInputSource.cpp in Sources */,
-				3296825517B9D33D00B3CDB4 /* CARingBuffer.cpp in Sources */,
 				3296824017B9D24600B3CDB4 /* AudioPlayer.cpp in Sources */,
 				3296824C17B9D31100B3CDB4 /* InMemoryFileInputSource.cpp in Sources */,
 				3240F9F317BB2159002360A3 /* CreateDisplayNameForURL.cpp in Sources */,
 				3296824417B9D30100B3CDB4 /* CoreAudioDecoder.cpp in Sources */,
 				3296824F17B9D33100B3CDB4 /* Logger+NSOverloads.mm in Sources */,
-				3296825417B9D33D00B3CDB4 /* CADebugPrintf.cpp in Sources */,
 				3296825617B9D47000B3CDB4 /* CreateChannelLayout.cpp in Sources */,
 				3296825B17B9D47000B3CDB4 /* CFErrorUtilities.cpp in Sources */,
 				3296824917B9D31100B3CDB4 /* InputSource.cpp in Sources */,
 				3296825A17B9D47000B3CDB4 /* CreateStringForOSType.cpp in Sources */,
+				321FCF9817C14FEE00828C3A /* RingBuffer.cpp in Sources */,
 				3296824317B9D30100B3CDB4 /* LoopableRegionDecoder.cpp in Sources */,
 				3296824117B9D24B00B3CDB4 /* DecoderStateData.cpp in Sources */,
 				3240F9F417BB21FC002360A3 /* FLACDecoder.cpp in Sources */,
@@ -494,7 +459,6 @@
 				3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */,
 				3296825017B9D33100B3CDB4 /* Mutex.cpp in Sources */,
 				3296825717B9D47000B3CDB4 /* ChannelLayoutsAreEqual.cpp in Sources */,
-				3296825317B9D33D00B3CDB4 /* CADebugMacros.cpp in Sources */,
 				3296824D17B9D31100B3CDB4 /* MemoryMappedFileInputSource.cpp in Sources */,
 				3296825917B9D47000B3CDB4 /* DeallocateABL.cpp in Sources */,
 			);
