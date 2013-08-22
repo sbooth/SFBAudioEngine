@@ -88,16 +88,7 @@ class AudioPlayer
 	
 public:
 	// ========================================
-	// Enums
-	// ========================================
-	enum {
-		eAudioPlayerFlagMuteOutput				= 1u << 0,
-		eAudioPlayerFlagFormatMismatch			= 1u << 1
-	};
-
-	// ========================================
-	// Typedefs
-	// ========================================
+	// Block callback types
 	typedef void (^AudioPlayerDecoderEventBlock)(const AudioDecoder *decoder);
 	typedef void (^AudioPlayerRenderEventBlock)(AudioBufferList *data, UInt32 frameCount);
 	typedef void (^AudioPlayerFormatMismatchBlock)(AudioStreamBasicDescription currentFormat, AudioStreamBasicDescription nextFormat);

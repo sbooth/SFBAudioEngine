@@ -55,6 +55,14 @@
 #define RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES		2048
 #define DECODER_THREAD_IMPORTANCE				6
 
+// ========================================
+// Enums
+// ========================================
+enum {
+	eAudioPlayerFlagMuteOutput				= 1u << 0,
+	eAudioPlayerFlagFormatMismatch			= 1u << 1
+};
+
 static void InitializeLoggingSubsystem() __attribute__ ((constructor));
 static void InitializeLoggingSubsystem()
 {
