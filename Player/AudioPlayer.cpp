@@ -368,20 +368,20 @@ bool AudioPlayer::Stop()
 AudioPlayer::PlayerState AudioPlayer::GetPlayerState() const
 {
 	if(OutputIsRunning())
-		return AudioPlayer::ePlaying;
+		return PlayerState::Playing;
 
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
-		return AudioPlayer::eStopped;
+		return PlayerState::Stopped;
 
 	if(eDecoderStateDataFlagRenderingStarted & currentDecoderState->mFlags)
-		return AudioPlayer::ePaused;
+		return PlayerState::Paused;
 
 	if(eDecoderStateDataFlagDecodingStarted & currentDecoderState->mFlags)
-		return AudioPlayer::ePending;
+		return PlayerState::Pending;
 
-	return AudioPlayer::eStopped;
+	return PlayerState::Stopped;
 }
 
 CFURLRef AudioPlayer::GetPlayingURL() const
