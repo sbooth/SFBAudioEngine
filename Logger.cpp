@@ -104,6 +104,78 @@ static const char * GetChannelLayoutTagName(AudioChannelLayoutTag layoutTag)
 	}	
 }
 
+static const char * GetChannelLabelName(AudioChannelLabel label)
+{
+	switch(label) {
+		case kAudioChannelLabel_Unknown:					return "kAudioChannelLabel_Unknown";
+		case kAudioChannelLabel_Unused:						return "kAudioChannelLabel_Unused";
+		case kAudioChannelLabel_UseCoordinates:				return "kAudioChannelLabel_UseCoordinates";
+		case kAudioChannelLabel_Left:						return "kAudioChannelLabel_Left";
+		case kAudioChannelLabel_Right:						return "kAudioChannelLabel_Right";
+		case kAudioChannelLabel_Center:						return "kAudioChannelLabel_Center";
+		case kAudioChannelLabel_LFEScreen:					return "kAudioChannelLabel_LFEScreen";
+		case kAudioChannelLabel_LeftSurround:				return "kAudioChannelLabel_LeftSurround";
+		case kAudioChannelLabel_RightSurround:				return "kAudioChannelLabel_RightSurround";
+		case kAudioChannelLabel_LeftCenter:					return "kAudioChannelLabel_LeftCenter";
+		case kAudioChannelLabel_RightCenter:				return "kAudioChannelLabel_RightCenter";
+		case kAudioChannelLabel_CenterSurround:				return "kAudioChannelLabel_CenterSurround";
+		case kAudioChannelLabel_LeftSurroundDirect:			return "kAudioChannelLabel_LeftSurroundDirect";
+		case kAudioChannelLabel_RightSurroundDirect:		return "kAudioChannelLabel_RightSurroundDirect";
+		case kAudioChannelLabel_TopCenterSurround:			return "kAudioChannelLabel_TopCenterSurround";
+		case kAudioChannelLabel_VerticalHeightLeft:			return "kAudioChannelLabel_VerticalHeightLeft";
+		case kAudioChannelLabel_VerticalHeightCenter:		return "kAudioChannelLabel_VerticalHeightCenter";
+		case kAudioChannelLabel_VerticalHeightRight:		return "kAudioChannelLabel_VerticalHeightRight";
+		case kAudioChannelLabel_TopBackLeft:				return "kAudioChannelLabel_TopBackLeft";
+		case kAudioChannelLabel_TopBackCenter:				return "kAudioChannelLabel_TopBackCenter";
+		case kAudioChannelLabel_TopBackRight:				return "kAudioChannelLabel_TopBackRight";
+		case kAudioChannelLabel_RearSurroundLeft:			return "kAudioChannelLabel_RearSurroundLeft";
+		case kAudioChannelLabel_RearSurroundRight:			return "kAudioChannelLabel_RearSurroundRight";
+		case kAudioChannelLabel_LeftWide:					return "kAudioChannelLabel_LeftWide";
+		case kAudioChannelLabel_RightWide:					return "kAudioChannelLabel_RightWide";
+		case kAudioChannelLabel_LFE2:						return "kAudioChannelLabel_LFE2";
+		case kAudioChannelLabel_LeftTotal:					return "kAudioChannelLabel_LeftTotal";
+		case kAudioChannelLabel_RightTotal:					return "kAudioChannelLabel_RightTotal";
+		case kAudioChannelLabel_HearingImpaired:			return "kAudioChannelLabel_HearingImpaired";
+		case kAudioChannelLabel_Narration:					return "kAudioChannelLabel_Narration";
+		case kAudioChannelLabel_Mono:						return "kAudioChannelLabel_Mono";
+		case kAudioChannelLabel_DialogCentricMix:			return "kAudioChannelLabel_DialogCentricMix";
+		case kAudioChannelLabel_CenterSurroundDirect:		return "kAudioChannelLabel_CenterSurroundDirect";
+		case kAudioChannelLabel_Haptic:						return "kAudioChannelLabel_Haptic";
+		case kAudioChannelLabel_Ambisonic_W:				return "kAudioChannelLabel_Ambisonic_W";
+		case kAudioChannelLabel_Ambisonic_X:				return "kAudioChannelLabel_Ambisonic_X";
+		case kAudioChannelLabel_Ambisonic_Y:				return "kAudioChannelLabel_Ambisonic_Y";
+		case kAudioChannelLabel_Ambisonic_Z:				return "kAudioChannelLabel_Ambisonic_Z";
+		case kAudioChannelLabel_MS_Mid:						return "kAudioChannelLabel_MS_Mid";
+		case kAudioChannelLabel_MS_Side:					return "kAudioChannelLabel_MS_Side";
+		case kAudioChannelLabel_XY_X:						return "kAudioChannelLabel_XY_X";
+		case kAudioChannelLabel_XY_Y:						return "kAudioChannelLabel_XY_Y";
+		case kAudioChannelLabel_HeadphonesLeft:				return "kAudioChannelLabel_HeadphonesLeft";
+		case kAudioChannelLabel_HeadphonesRight:			return "kAudioChannelLabel_HeadphonesRight";
+		case kAudioChannelLabel_ClickTrack:					return "kAudioChannelLabel_ClickTrack";
+		case kAudioChannelLabel_ForeignLanguage:			return "kAudioChannelLabel_ForeignLanguage";
+		case kAudioChannelLabel_Discrete:					return "kAudioChannelLabel_Discrete";
+		case kAudioChannelLabel_Discrete_0:					return "kAudioChannelLabel_Discrete_0";
+		case kAudioChannelLabel_Discrete_1:					return "kAudioChannelLabel_Discrete_1";
+		case kAudioChannelLabel_Discrete_2:					return "kAudioChannelLabel_Discrete_2";
+		case kAudioChannelLabel_Discrete_3:					return "kAudioChannelLabel_Discrete_3";
+		case kAudioChannelLabel_Discrete_4:					return "kAudioChannelLabel_Discrete_4";
+		case kAudioChannelLabel_Discrete_5:					return "kAudioChannelLabel_Discrete_5";
+		case kAudioChannelLabel_Discrete_6:					return "kAudioChannelLabel_Discrete_6";
+		case kAudioChannelLabel_Discrete_7:					return "kAudioChannelLabel_Discrete_7";
+		case kAudioChannelLabel_Discrete_8:					return "kAudioChannelLabel_Discrete_8";
+		case kAudioChannelLabel_Discrete_9:					return "kAudioChannelLabel_Discrete_9";
+		case kAudioChannelLabel_Discrete_10:				return "kAudioChannelLabel_Discrete_10";
+		case kAudioChannelLabel_Discrete_11:				return "kAudioChannelLabel_Discrete_11";
+		case kAudioChannelLabel_Discrete_12:				return "kAudioChannelLabel_Discrete_12";
+		case kAudioChannelLabel_Discrete_13:				return "kAudioChannelLabel_Discrete_13";
+		case kAudioChannelLabel_Discrete_14:				return "kAudioChannelLabel_Discrete_14";
+		case kAudioChannelLabel_Discrete_15:				return "kAudioChannelLabel_Discrete_15";
+		case kAudioChannelLabel_Discrete_65535:				return "kAudioChannelLabel_Discrete_65535";
+
+		default:											return nullptr;
+	}
+}
+
 void logger::Log(levels level, const char *facility, const char *message, const char *function, const char *file, int line)
 {
 	if(currentLogLevel < level)
@@ -331,7 +403,7 @@ std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout)
 			if(kAudioChannelLabel_UseCoordinates == desc->mChannelLabel)
 				out << "\t" << i << ". Coordinates = (" << desc->mCoordinates[0] << ", " << desc->mCoordinates[1] << ", " << desc->mCoordinates[2] << "), flags = 0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelFlags << std::dec;
 			else
-				out << "\t" << i << ". Label =  0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelLabel << std::dec;
+				out << "\t" << i << ". Label = " << GetChannelLabelName(desc->mChannelLabel) << " (0x" << std::hex << std::setw(8) << std::setfill('0') << desc->mChannelLabel << std::dec << ")";
 			if(i < layout->mNumberChannelDescriptions - 1)
 				out << std::endl;
 		}
