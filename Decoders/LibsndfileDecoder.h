@@ -32,11 +32,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-#if TARGET_OS_IPHONE
-# include <sndfile.h>
-#else
-# include <sndfile/sndfile.h>
-#endif
+#include <sndfile/sndfile.h>
 
 #include "AudioDecoder.h"
 
@@ -89,12 +85,12 @@ public:
 
 private:
 
-	enum ReadMethod {
-		eUnknown,
-		eShort,
-		eInt,
-		eFloat,
-		eDouble	
+	enum class ReadMethod {
+		Unknown,
+		Short,
+		Int,
+		Float,
+		Double
 	};
 
 	SNDFILE				*mFile;

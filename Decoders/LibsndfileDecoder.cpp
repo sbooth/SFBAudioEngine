@@ -158,7 +158,7 @@ bool LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
 #pragma mark Creation and Destruction
 
 LibsndfileDecoder::LibsndfileDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mFile(nullptr), mReadMethod(eUnknown)
+	: AudioDecoder(inputSource), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
 {
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 }
@@ -229,7 +229,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eShort;
+		mReadMethod					= ReadMethod::Short;
 	}
 	else if(SF_FORMAT_PCM_S8 == subFormat) {
 		mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh;
@@ -240,7 +240,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eShort;
+		mReadMethod					= ReadMethod::Short;
 	}
 	// 16-bit PCM
 	else if(SF_FORMAT_PCM_16 == subFormat) {
@@ -252,7 +252,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eShort;
+		mReadMethod					= ReadMethod::Short;
 	}
 	// 24-bit PCM will be high-aligned in ints
 	else if(SF_FORMAT_PCM_24 == subFormat) {
@@ -264,7 +264,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eInt;
+		mReadMethod					= ReadMethod::Int;
 	}
 	// 32-bit PCM
 	else if(SF_FORMAT_PCM_32 == subFormat) {
@@ -276,7 +276,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eInt;
+		mReadMethod					= ReadMethod::Int;
 	}
 	// Floating point formats
 	else if(SF_FORMAT_FLOAT == subFormat) {
@@ -288,7 +288,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eFloat;
+		mReadMethod					= ReadMethod::Float;
 	}
 	else if(SF_FORMAT_DOUBLE == subFormat) {
 		mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked;
@@ -299,7 +299,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eDouble;
+		mReadMethod					= ReadMethod::Double;
 	}
 	// Everything else will be converted to 32-bit float
 	else {
@@ -311,7 +311,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
-		mReadMethod					= eFloat;
+		mReadMethod					= ReadMethod::Float;
 	}
 
 	mFormat.mReserved			= 0;
@@ -378,7 +378,7 @@ bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
-	mReadMethod = eUnknown;
+	mReadMethod = ReadMethod::Unknown;
 
 	mIsOpen = false;
 	return true;
@@ -436,11 +436,11 @@ UInt32 LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCou
 
 	sf_count_t framesRead = 0;
 	switch(mReadMethod) {
-		case eUnknown:	/* Do nothing */																			break;
-		case eShort:	framesRead = sf_readf_short(mFile, (short *)bufferList->mBuffers[0].mData, frameCount);		break;
-		case eInt:		framesRead = sf_readf_int(mFile, (int *)bufferList->mBuffers[0].mData, frameCount);			break;
-		case eFloat:	framesRead = sf_readf_float(mFile, (float *)bufferList->mBuffers[0].mData, frameCount);		break;
-		case eDouble:	framesRead = sf_readf_double(mFile, (double *)bufferList->mBuffers[0].mData, frameCount);	break;
+		case ReadMethod::Unknown:	/* Do nothing */																			break;
+		case ReadMethod::Short:		framesRead = sf_readf_short(mFile, (short *)bufferList->mBuffers[0].mData, frameCount);		break;
+		case ReadMethod::Int:		framesRead = sf_readf_int(mFile, (int *)bufferList->mBuffers[0].mData, frameCount);			break;
+		case ReadMethod::Float:		framesRead = sf_readf_float(mFile, (float *)bufferList->mBuffers[0].mData, frameCount);		break;
+		case ReadMethod::Double:	framesRead = sf_readf_double(mFile, (double *)bufferList->mBuffers[0].mData, frameCount);	break;
 	}
 
 	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRead * mFormat.mBytesPerFrame);
