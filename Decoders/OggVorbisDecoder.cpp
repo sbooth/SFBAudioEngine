@@ -150,12 +150,13 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	ov_callbacks callbacks;
-	callbacks.read_func = read_func_callback;
-	callbacks.seek_func = seek_func_callback;
-	callbacks.tell_func = tell_func_callback;
-	callbacks.close_func = nullptr;
-	
+	ov_callbacks callbacks = {
+		.read_func = read_func_callback,
+		.seek_func = seek_func_callback,
+		.tell_func = tell_func_callback,
+		.close_func = nullptr
+	};
+
 	if(0 != ov_test_callbacks(this, &mVorbisFile, nullptr, 0, callbacks)) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
