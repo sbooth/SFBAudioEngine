@@ -140,6 +140,8 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 	SetXiphCommentNumber(tag, "RATING", metadata.GetRating());
 	SetXiphComment(tag, "ISRC", metadata.GetISRC());
 	SetXiphComment(tag, "MCN", metadata.GetMCN());
+	SetXiphComment(tag, "MUSICBRAINZ_ALBUMID", metadata.GetMusicBrainzReleaseID());
+	SetXiphComment(tag, "MUSICBRAINZ_TRACKID", metadata.GetMusicBrainzRecordingID());
 	SetXiphComment(tag, "TITLESORT", metadata.GetTitleSortOrder());
 	SetXiphComment(tag, "ALBUMTITLESORT", metadata.GetAlbumTitleSortOrder());
 	SetXiphComment(tag, "ARTISTSORT", metadata.GetArtistSortOrder());

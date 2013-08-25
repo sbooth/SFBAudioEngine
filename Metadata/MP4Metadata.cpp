@@ -428,10 +428,34 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 			CFRelease(data), data = nullptr;
 		}
 	}
-	
+
+	// MusicBrainz
+	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Album Id");
+	if(nullptr != items) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size) {
+			CFStringRef releaseID = CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8);
+			CFDictionaryAddValue(mMetadata, kMetadataMusicBrainzReleaseIDKey, releaseID);
+			CFRelease(releaseID), releaseID = nullptr;
+		}
+
+		MP4ItmfItemListFree(items), items = nullptr;
+	}
+
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Track Id");
+	if(nullptr != items) {
+		if(1 <= items->size && 1 <= items->elements[0].dataList.size) {
+			CFStringRef recordingID = CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8);
+			CFDictionaryAddValue(mMetadata, kMetadataMusicBrainzRecordingIDKey, recordingID);
+			CFRelease(recordingID), recordingID = nullptr;
+		}
+
+		MP4ItmfItemListFree(items), items = nullptr;
+	}
+
+
 	// ReplayGain
 	// Reference loudness
-	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
 	if(nullptr != items) {
 		float referenceLoudnessValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &referenceLoudnessValue)) {
@@ -857,9 +881,76 @@ bool MP4Metadata::WriteMetadata(CFErrorRef *error)
 	MP4TagsStore(tags, file);
 	MP4TagsFree(tags), tags = nullptr;
 
+	// MusicBrainz
+	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Album Id");
+	if(items) {
+		for(uint32_t i = 0; i < items->size; ++i)
+			MP4ItmfRemoveItem(file, items->elements + i);
+		MP4ItmfItemListFree(items), items = nullptr;
+	}
+
+	CFStringRef musicBrainzReleaseID = GetMusicBrainzReleaseID();
+	if(musicBrainzReleaseID) {
+		CFIndex valueSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(musicBrainzReleaseID), kCFStringEncodingUTF8);
+		char value [valueSize + 1];
+
+		if(!CFStringGetCString(musicBrainzReleaseID, value, valueSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;
+		}
+
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(nullptr != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("MusicBrainz Album Id");
+
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
+
+			if(!MP4ItmfAddItem(file, item)) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
+				return false;
+			}
+		}
+	}
+
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Track Id");
+	if(items) {
+		for(uint32_t i = 0; i < items->size; ++i)
+			MP4ItmfRemoveItem(file, items->elements + i);
+		MP4ItmfItemListFree(items), items = nullptr;
+	}
+
+	CFStringRef musicBrainzRecordingID = GetMusicBrainzRecordingID();
+	if(musicBrainzRecordingID) {
+		CFIndex valueSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(musicBrainzRecordingID), kCFStringEncodingUTF8);
+		char value [valueSize + 1];
+
+		if(!CFStringGetCString(musicBrainzRecordingID, value, valueSize + 1, kCFStringEncodingUTF8)) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
+			return false;
+		}
+
+		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
+		if(nullptr != item) {
+			item->mean = strdup("com.apple.iTunes");
+			item->name = strdup("MusicBrainz Track Id");
+
+			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
+			item->dataList.elements[0].value = (uint8_t *)strdup(value);
+			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
+
+			if(!MP4ItmfAddItem(file, item)) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "MP4ItmfAddItem() failed");
+				return false;
+			}
+		}
+	}
+
 	// Replay Gain
 	// Reference loudness
-	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
+	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_reference_loudness");
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);

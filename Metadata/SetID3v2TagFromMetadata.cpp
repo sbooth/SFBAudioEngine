@@ -226,6 +226,32 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 		tag->addFrame(frame);
 	}
 
+	// MusicBrainz
+	auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(tag, "MusicBrainz Album Id");
+	if(nullptr != musicBrainzReleaseIDFrame)
+		tag->removeFrame(musicBrainzReleaseIDFrame);
+
+	CFStringRef musicBrainzReleaseID = metadata.GetMusicBrainzReleaseID();
+	if(musicBrainzReleaseID) {
+		auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		frame->setDescription("MusicBrainz Album Id");
+		frame->setText(TagLib::StringFromCFString(musicBrainzReleaseID));
+		tag->addFrame(frame);
+	}
+
+
+	auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
+	if(nullptr != musicBrainzRecordingIDFrame)
+		tag->removeFrame(musicBrainzRecordingIDFrame);
+
+	CFStringRef musicBrainzRecordingID = metadata.GetMusicBrainzRecordingID();
+	if(musicBrainzRecordingID) {
+		auto frame = new TagLib::ID3v2::UserTextIdentificationFrame();
+		frame->setDescription("MusicBrainz Track Id");
+		frame->setText(TagLib::StringFromCFString(musicBrainzRecordingID));
+		tag->addFrame(frame);
+	}
+
 	// Sorting and grouping
 	tag->removeFrames("TSOT");
 	if(metadata.GetTitleSortOrder()) {

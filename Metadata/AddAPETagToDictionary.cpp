@@ -92,6 +92,10 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 				CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
 				CFDictionarySetValue(dictionary, kMetadataMCNKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MUSICBRAINZ_ALBUMID"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataMusicBrainzReleaseIDKey, value);
+			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MUSICBRAINZ_TRACKID"), kCFCompareCaseInsensitive))
+				CFDictionarySetValue(dictionary, kMetadataMusicBrainzRecordingIDKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLESORT"), kCFCompareCaseInsensitive))
 				CFDictionarySetValue(dictionary, kMetadataTitleSortOrderKey, value);
 			else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMTITLESORT"), kCFCompareCaseInsensitive))

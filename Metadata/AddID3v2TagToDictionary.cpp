@@ -139,6 +139,15 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 	if(!frameList.isEmpty())
 		TagLib::AddStringToCFDictionary(dictionary, kMetadataISRCKey, frameList.front()->toString());
 
+	// MusicBrainz
+	auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
+	if(musicBrainzReleaseIDFrame)
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataMusicBrainzReleaseIDKey, musicBrainzReleaseIDFrame->fieldList().back());
+
+	auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
+	if(musicBrainzRecordingIDFrame)
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataMusicBrainzRecordingIDKey, musicBrainzRecordingIDFrame->fieldList().back());
+
 	// Sorting and grouping
 	frameList = tag->frameListMap()["TSOT"];
 	if(!frameList.isEmpty())
