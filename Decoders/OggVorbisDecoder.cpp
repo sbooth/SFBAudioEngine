@@ -214,13 +214,51 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	
 	switch(ovInfo->channels) {
 			// Default channel layouts from Vorbis I specification section 4.3.9
+			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
+
 		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
 		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-			// FIXME: Is this the right tag for 3 channels?
-		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);		break;
+		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
 		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);		break;
 		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
+
+		case 7:
+			mChannelLayout = CreateChannelLayout(7);
+
+			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+			mChannelLayout->mChannelBitmap = 0;
+			
+			mChannelLayout->mNumberChannelDescriptions = 7;
+
+			mChannelLayout->mChannelDescriptions[0].mChannelLabel = kAudioChannelLabel_Left;
+			mChannelLayout->mChannelDescriptions[1].mChannelLabel = kAudioChannelLabel_Center;
+			mChannelLayout->mChannelDescriptions[2].mChannelLabel = kAudioChannelLabel_Right;
+			mChannelLayout->mChannelDescriptions[3].mChannelLabel = kAudioChannelLabel_LeftSurround;
+			mChannelLayout->mChannelDescriptions[4].mChannelLabel = kAudioChannelLabel_RightSurround;
+			mChannelLayout->mChannelDescriptions[5].mChannelLabel = kAudioChannelLabel_CenterSurround;
+			mChannelLayout->mChannelDescriptions[6].mChannelLabel = kAudioChannelLabel_LFEScreen;
+
+			break;
+
+		case 8:
+			mChannelLayout = CreateChannelLayout(8);
+
+			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+			mChannelLayout->mChannelBitmap = 0;
+
+			mChannelLayout->mNumberChannelDescriptions = 8;
+
+			mChannelLayout->mChannelDescriptions[0].mChannelLabel = kAudioChannelLabel_Left;
+			mChannelLayout->mChannelDescriptions[1].mChannelLabel = kAudioChannelLabel_Center;
+			mChannelLayout->mChannelDescriptions[2].mChannelLabel = kAudioChannelLabel_Right;
+			mChannelLayout->mChannelDescriptions[3].mChannelLabel = kAudioChannelLabel_LeftSurround;
+			mChannelLayout->mChannelDescriptions[4].mChannelLabel = kAudioChannelLabel_RightSurround;
+			mChannelLayout->mChannelDescriptions[5].mChannelLabel = kAudioChannelLabel_RearSurroundLeft;
+			mChannelLayout->mChannelDescriptions[6].mChannelLabel = kAudioChannelLabel_RearSurroundRight;
+			mChannelLayout->mChannelDescriptions[7].mChannelLabel = kAudioChannelLabel_LFEScreen;
+
+			break;
 	}
 
 	mIsOpen = true;
