@@ -79,24 +79,3 @@ AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs)
 	
 	return channelLayout;
 }
-
-AudioChannelLayout * CreateDefaultAudioChannelLayout(UInt32 channelsPerFrame)
-{
-	assert(0 < channelsPerFrame);
-
-	AudioChannelLayout *channelLayout = nullptr;
-
-	switch(channelsPerFrame) {
-		case 1:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 4:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 6:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
-		case 8:		channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
-			
-		default:
-			channelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Unknown | channelsPerFrame);
-			break;
-	}
-
-	return channelLayout;
-}

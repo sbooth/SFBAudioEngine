@@ -258,7 +258,8 @@ private:
 	bool SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
 
 	bool SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
-	bool SetAUGraphChannelLayout(AudioChannelLayout *channelLayout);
+
+	bool SetOutputUnitChannelMap(AudioChannelLayout *channelLayout);
 
 	// ========================================
 	// Other Utilities

@@ -44,7 +44,6 @@
 #include "RingBuffer.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
-#include "ChannelLayoutsAreEqual.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
 
@@ -1833,22 +1832,27 @@ void * AudioPlayer::DecoderThreadEntry()
 				formatsMatch = false;
 			}
 
-			// If the decoder has an explicit channel layout, enqueue it if it matches the ring buffer's channel layout
-			if(nextChannelLayout && !ChannelLayoutsAreEqual(nextChannelLayout, mRingBufferChannelLayout)) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
-				formatsMatch = false;
-			}
-			// If the decoder doesn't have an explicit channel layout, enqueue it if the default layout matches
-			else if(nullptr == nextChannelLayout) {
-				AudioChannelLayout *defaultLayout = CreateDefaultAudioChannelLayout(nextFormat.mChannelsPerFrame);
-				bool layoutsMatch = ChannelLayoutsAreEqual(defaultLayout, mRingBufferChannelLayout);
-				free(defaultLayout), defaultLayout = nullptr;
+			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output AU will remain valid)
+			if(nextChannelLayout && mRingBufferChannelLayout) {
+				AudioChannelLayout *layouts [] = {
+					nextChannelLayout,
+					mRingBufferChannelLayout
+				};
 
-				if(!layoutsMatch) {
-					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Decoder has no channel layout and ring buffer channel layout (" << mRingBufferChannelLayout << ") isn't the default for " << nextFormat.mChannelsPerFrame << " channels");
+				UInt32 layoutsEqual = false;
+				UInt32 propertySize = sizeof(layoutsEqual);
+				OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &layoutsEqual);
+
+				if(noErr != result)
+					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+
+				if(!layoutsEqual) {
+					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 					formatsMatch = false;
 				}
 			}
+			else if((nullptr == nextChannelLayout || nullptr == mRingBufferChannelLayout) && nextChannelLayout != mRingBufferChannelLayout)
+				formatsMatch = false;
 
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
 			if(!formatsMatch) {
@@ -2596,14 +2600,15 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 			}
 
 			for(UInt32 j = 0; j < elementCount; ++j) {
-/*				Boolean writable;
-				 err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Input, j, &dataSize, &writable);
-
-				 if(noErr != err && kAudioUnitErr_InvalidProperty != err)
-				 return err;
-
-				 if(kAudioUnitErr_InvalidProperty == err || !writable)
-				 continue;*/
+//				Boolean writable;
+//				result = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Input, j, &dataSize, &writable);
+//				if(noErr != result && kAudioUnitErr_InvalidProperty != result) {
+//					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+//					return false;
+//				}
+//
+//				if(kAudioUnitErr_InvalidProperty == result || !writable)
+//					continue;
 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, j, propertyData, propertyDataSize);				
 				if(noErr != result) {
@@ -2621,14 +2626,15 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 			}
 
 			for(UInt32 j = 0; j < elementCount; ++j) {
-/*				Boolean writable;
-				 err = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Output, j, &dataSize, &writable);
-
-				 if(noErr != err && kAudioUnitErr_InvalidProperty != err)
-				 return err;
-
-				 if(kAudioUnitErr_InvalidProperty == err || !writable)
-				 continue;*/
+//				Boolean writable;
+//				result = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Output, j, &dataSize, &writable);
+//				if(noErr != result && kAudioUnitErr_InvalidProperty != result) {
+//					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
+//					return false;
+//				}
+//
+//				if(kAudioUnitErr_InvalidProperty == result || !writable)
+//					continue;
 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, j, propertyData, propertyDataSize);				
 				if(noErr != result) {
@@ -2848,25 +2854,88 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	return true;
 }
 
-bool AudioPlayer::SetAUGraphChannelLayout(AudioChannelLayout *channelLayout)
+bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 {
-	AudioUnit au = nullptr;
-	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	AudioUnit outputUnit = nullptr;
+	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &outputUnit);
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
-	
-	// Attempt to set the new channel layout
-	result = SetPropertyOnAUGraphNodes(kAudioUnitProperty_AudioChannelLayout, channelLayout, sizeof(channelLayout));
+
+	// Clear the existing channel map
+	result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, nullptr, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "SetPropertyOnAUGraphNodes (kAudioUnitProperty_AudioChannelLayout) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
-	else {
-		if(mRingBufferChannelLayout)
-			free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
-		mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
+
+	if(nullptr == channelLayout)
+		return true;
+
+	// Get the device's preferred channel layout
+	UInt32 devicePreferredChannelLayoutSize = 0;
+	result = AudioUnitGetPropertyInfo(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, &devicePreferredChannelLayoutSize, nullptr);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+		return false;
+	}
+
+	AudioChannelLayout *devicePreferredChannelLayout = (AudioChannelLayout *)malloc(devicePreferredChannelLayoutSize);
+
+	result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, devicePreferredChannelLayout, &devicePreferredChannelLayoutSize);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+
+		if(devicePreferredChannelLayout)
+			free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+
+		return false;
+	}
+
+//	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Device preferred channel layout: " << devicePreferredChannelLayout);
+//	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Audio channel layout: " << channelLayout);
+
+	UInt32 channelCount = 0;
+	UInt32 dataSize = sizeof(channelCount);
+	result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, devicePreferredChannelLayoutSize, devicePreferredChannelLayout, &dataSize, &channelCount);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
+
+		if(devicePreferredChannelLayout)
+			free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+		
+		return false;
+	}
+
+	// Create the channel map
+	SInt32 channelMap [ channelCount ];
+	dataSize = (UInt32)sizeof(channelMap);
+
+	AudioChannelLayout *channelLayouts [] = {
+		channelLayout,
+		devicePreferredChannelLayout
+	};
+
+	result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
+
+	if(devicePreferredChannelLayout)
+		free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+		return false;
+	}
+
+	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using channel map: ");
+	for(UInt32 i = 0; i < channelCount; ++i)
+		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
+
+	// Set the channel map
+	result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, sizeof(channelMap));
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+		return false;
 	}
 
 	return true;
@@ -2950,9 +3019,6 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 	if(nullptr == decoder)
 		return false;
 
-	if(mRingBufferChannelLayout)
-		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
-
 	// Open the decoder if necessary
 	CFErrorRef error = nullptr;
 	if(!decoder->IsOpen() && !decoder->Open(&error)) {
@@ -2968,23 +3034,16 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 	if(!SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame))
 		return false;
 
+	// Attempt to set the output audio unit's channel map
 	AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
-
-	// Assign a default channel layout if the decoder has an unknown layout
-	bool allocatedChannelLayout = false;
-	if(nullptr == channelLayout) {
-		channelLayout = CreateDefaultAudioChannelLayout(mRingBufferFormat.mChannelsPerFrame);
-		if(channelLayout)
-			allocatedChannelLayout = true;
-	}
-
-	bool success = SetAUGraphChannelLayout(channelLayout);
-
-	if(allocatedChannelLayout)
-		free(channelLayout), channelLayout = nullptr;
-
-	if(!success)
+	if(!SetOutputUnitChannelMap(channelLayout))
 		return false;
+
+	// The decoder's channel layout becomes the ring buffer's channel layout
+	if(mRingBufferChannelLayout)
+		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
+
+	mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {
