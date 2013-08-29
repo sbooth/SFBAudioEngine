@@ -102,7 +102,7 @@ public:
 
 	// ========================================
 	// These methods allow the decoder to be easily associated with a model object such as a playlist entry or track
-	void * GetRepresentedObject() const							{ return mRepresentedObject; }
+	inline void * GetRepresentedObject() const					{ return mRepresentedObject; }
 	inline void SetRepresentedObject(void *representedObject)	{ mRepresentedObject = representedObject; }
 
 	// ========================================
