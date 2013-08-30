@@ -89,7 +89,13 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 	}
 
 	// Start the HTTP connection
-	CFStreamClientContext myContext = { 0, this, nullptr, nullptr, nullptr };
+	CFStreamClientContext myContext = {
+		.version = 0,
+		.info = this,
+		.retain = nullptr,
+		.release = nullptr,
+		.copyDescription = nullptr
+	};
 
 	CFOptionFlags clientFlags = kCFStreamEventOpenCompleted | kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered;
     if(!CFReadStreamSetClient(mReadStream, clientFlags, myCFReadStreamClientCallBack, &myContext)) {
