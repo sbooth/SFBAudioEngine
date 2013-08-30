@@ -2856,6 +2856,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 
 bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 {
+#if !TARGET_OS_IPHONE
 	AudioUnit outputUnit = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &outputUnit);
 	if(noErr != result) {
@@ -2937,6 +2938,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
+#endif
 
 	return true;
 }
