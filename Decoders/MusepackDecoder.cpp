@@ -30,8 +30,8 @@
 
 #include <AudioToolbox/AudioFormat.h>
 #include <Accelerate/Accelerate.h>
+
 #include <algorithm>
-#include <stdexcept>
 
 #include "MusepackDecoder.h"
 #include "CFErrorUtilities.h"
@@ -39,6 +39,12 @@
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
+
+static void RegisterMusepackDecoder() __attribute__ ((constructor));
+static void RegisterMusepackDecoder()
+{
+	AudioDecoder::RegisterSubclass<MusepackDecoder>();
+}
 
 #pragma mark Callbacks
 
@@ -124,6 +130,11 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 
 	return false;
+}
+
+AudioDecoder * MusepackDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new MusepackDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

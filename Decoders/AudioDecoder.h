@@ -33,6 +33,9 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
+#include <vector>
+#include <algorithm>
+
 #include "InputSource.h"
 
 // ========================================
@@ -175,4 +178,50 @@ private:
 	// Controls whether Open() is called for decoders created in the factory methods
 	static bool						sAutomaticallyOpenDecoders;
 
+	// ========================================
+	// Subclass registration support
+	struct SubclassInfo
+	{
+		CFArrayRef (*mCreateSupportedFileExtensions)();
+		CFArrayRef (*mCreateSupportedMIMETypes)();
+
+		bool (*mHandlesFilesWithExtension)(CFStringRef);
+		bool (*mHandlesMIMEType)(CFStringRef);
+
+		AudioDecoder * (*mCreateDecoder)(InputSource *);
+
+		int mPriority;
+	};
+
+	static std::vector <SubclassInfo> sRegisteredSubclasses;
+
+public:
+
+	template <typename T> static void RegisterSubclass(int priority = 0);
+
 };
+
+// ========================================
+// Template implementation
+template <typename T> void AudioDecoder::RegisterSubclass(int priority)
+{
+	SubclassInfo subclassInfo = {
+		.mCreateSupportedFileExtensions = T::CreateSupportedFileExtensions,
+		.mCreateSupportedMIMETypes = T::CreateSupportedMIMETypes,
+
+		.mHandlesFilesWithExtension = T::HandlesFilesWithExtension,
+		.mHandlesMIMEType = T::HandlesMIMEType,
+
+		.mCreateDecoder = T::CreateDecoder,
+
+		.mPriority = priority
+	};
+
+	sRegisteredSubclasses.push_back(subclassInfo);
+
+	// Sort subclasses by priority
+	std::sort(sRegisteredSubclasses.begin(), sRegisteredSubclasses.end(), [](const SubclassInfo& a, const SubclassInfo& b)
+	{
+		return a.mPriority > b.mPriority;
+	});
+}

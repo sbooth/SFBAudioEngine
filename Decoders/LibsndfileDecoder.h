@@ -37,7 +37,7 @@
 #include "AudioDecoder.h"
 
 // ========================================
-// An AudioDecoder subclass supporting all formats handled by Core Audio
+// An AudioDecoder subclass supporting all formats handled by Libsndfile
 // ========================================
 class LibsndfileDecoder : public AudioDecoder
 {
@@ -51,6 +51,8 @@ public:
 
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
+
+	static AudioDecoder * CreateDecoder(InputSource *inputSource);
 
 	// ========================================
 	// Creation

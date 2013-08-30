@@ -29,7 +29,6 @@
  */
 
 #include <AudioToolbox/AudioFormat.h>
-#include <stdexcept>
 
 #include "WavPackDecoder.h"
 #include "CFErrorUtilities.h"
@@ -37,6 +36,12 @@
 #include "Logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
+
+static void RegisterWavPackDecoder() __attribute__ ((constructor));
+static void RegisterWavPackDecoder()
+{
+	AudioDecoder::RegisterSubclass<WavPackDecoder>();
+}
 
 #pragma mark Callbacks
 
@@ -168,6 +173,11 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 
 	return false;
+}
+
+AudioDecoder * WavPackDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new WavPackDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

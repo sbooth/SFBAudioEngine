@@ -33,6 +33,12 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
+static void RegisterLibsndfileDecoder() __attribute__ ((constructor));
+static void RegisterLibsndfileDecoder()
+{
+	AudioDecoder::RegisterSubclass<LibsndfileDecoder>(-50);
+}
+
 #pragma mark Callbacks
 
 static sf_count_t
@@ -153,6 +159,11 @@ bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 bool LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
 {
 	return false;
+}
+
+AudioDecoder * LibsndfileDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new LibsndfileDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

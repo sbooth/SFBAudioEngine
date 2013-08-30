@@ -29,7 +29,6 @@
  */
 
 #include <AudioToolbox/AudioFormat.h>
-#include <stdexcept>
 
 #include "MonkeysAudioDecoder.h"
 #include "CFErrorUtilities.h"
@@ -39,6 +38,12 @@
 #include <mac/All.h>
 #include <mac/MACLib.h>
 #include <mac/IO.h>
+
+static void RegisterMonkeysAudioDecoder() __attribute__ ((constructor));
+static void RegisterMonkeysAudioDecoder()
+{
+	AudioDecoder::RegisterSubclass<MonkeysAudioDecoder>();
+}
 
 #pragma mark IO Interface
 
@@ -183,6 +188,11 @@ bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 
 	return false;
+}
+
+AudioDecoder * MonkeysAudioDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new MonkeysAudioDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

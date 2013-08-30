@@ -29,7 +29,6 @@
  */
 
 #include <AudioToolbox/AudioFormat.h>
-#include <stdexcept>
 
 #include "OggVorbisDecoder.h"
 #include "CFErrorUtilities.h"
@@ -37,6 +36,12 @@
 #include "Logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
+
+static void RegisterOggVorbisDecoder() __attribute__ ((constructor));
+static void RegisterOggVorbisDecoder()
+{
+	AudioDecoder::RegisterSubclass<OggVorbisDecoder>();
+}
 
 #pragma mark Callbacks
 
@@ -121,6 +126,11 @@ bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioDecoder * OggVorbisDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new OggVorbisDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

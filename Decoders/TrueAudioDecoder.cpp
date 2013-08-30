@@ -35,6 +35,12 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
+static void RegisterTrueAudioDecoder() __attribute__ ((constructor));
+static void RegisterTrueAudioDecoder()
+{
+	AudioDecoder::RegisterSubclass<TrueAudioDecoder>();
+}
+
 #pragma mark Callbacks
 
 static TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
@@ -83,6 +89,11 @@ bool TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioDecoder * TrueAudioDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new TrueAudioDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

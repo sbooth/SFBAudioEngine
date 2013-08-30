@@ -34,13 +34,18 @@
 #endif
 #include <AudioToolbox/AudioFormat.h>
 #include <Accelerate/Accelerate.h>
-#include <stdexcept>
 
 #include "CoreAudioDecoder.h"
 #include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
 #include "CreateStringForOSType.h"
 #include "Logger.h"
+
+static void RegisterCoreAudioDecoder() __attribute__ ((constructor));
+static void RegisterCoreAudioDecoder()
+{
+	AudioDecoder::RegisterSubclass<CoreAudioDecoder>(-100);
+}
 
 #pragma mark Callbacks
 
@@ -198,6 +203,11 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
 	
 	return mimeTypeIsSupported;
+}
+
+AudioDecoder * CoreAudioDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new CoreAudioDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

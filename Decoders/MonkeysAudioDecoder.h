@@ -54,6 +54,8 @@ public:
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
 
+	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+
 	// ========================================
 	// Creation
 	MonkeysAudioDecoder(InputSource *inputSource);

@@ -29,10 +29,11 @@
  */
 
 #include <algorithm>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdexcept>
+
 #include <Accelerate/Accelerate.h>
 
 #include "MPEGDecoder.h"
@@ -41,6 +42,12 @@
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
+
+static void RegisterMPEGDecoder() __attribute__ ((constructor));
+static void RegisterMPEGDecoder()
+{
+	AudioDecoder::RegisterSubclass<MPEGDecoder>();
+}
 
 #pragma mark Initialization
 
@@ -134,6 +141,11 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioDecoder * MPEGDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new MPEGDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

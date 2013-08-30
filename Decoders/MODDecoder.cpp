@@ -28,8 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#include <CoreServices/CoreServices.h>
-
 #include "MODDecoder.h"
 #include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
@@ -38,6 +36,12 @@
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
+
+static void RegisterMODDecoder() __attribute__ ((constructor));
+static void RegisterMODDecoder()
+{
+	AudioDecoder::RegisterSubclass<MODDecoder>();
+}
 
 #pragma mark Callbacks
 
@@ -118,6 +122,11 @@ bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 
 	return false;
+}
+
+AudioDecoder * MODDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new MODDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction

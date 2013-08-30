@@ -29,7 +29,6 @@
  */
 
 #include <AudioToolbox/AudioFormat.h>
-#include <stdexcept>
 
 #include <FLAC/metadata.h>
 
@@ -39,6 +38,12 @@
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
+
+static void RegisterFLACDecoder() __attribute__ ((constructor));
+static void RegisterFLACDecoder()
+{
+	AudioDecoder::RegisterSubclass<FLACDecoder>();
+}
 
 #pragma mark Callbacks
 
@@ -179,6 +184,11 @@ bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioDecoder * FLACDecoder::CreateDecoder(InputSource *inputSource)
+{
+	return new FLACDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
