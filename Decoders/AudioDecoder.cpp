@@ -34,7 +34,6 @@
 #include "HTTPInputSource.h"
 #include "AudioDecoder.h"
 #include "Logger.h"
-#include "CreateChannelLayout.h"
 #include "CFErrorUtilities.h"
 #include "CreateStringForOSType.h"
 #include "LoopableRegionDecoder.h"
@@ -72,11 +71,7 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 		CFRelease(decoderMIMETypes);
 	}
 
-	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
-	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
-	
-	return result;
+	return supportedMIMETypes;
 }
 
 bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
@@ -189,20 +184,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(!inputURL)
 		return nullptr;
 
-	// Determining the extension isn't as simple as using CFURLCopyPathExtension (wouldn't that be nice?),
-	// because although the behavior on Lion works like one would expect, on Snow Leopard it returns
-	// a number that I believe is part of the inode number, but is definitely NOT the extension
-	CFStringRef pathExtension = nullptr;
-#if !TARGET_OS_IPHONE
-	CFURLRef filePathURL = CFURLCreateFilePathURL(kCFAllocatorDefault, inputURL, nullptr);
-	if(filePathURL) {
-		pathExtension = CFURLCopyPathExtension(filePathURL);
-		CFRelease(filePathURL), filePathURL = nullptr;
-	}
-	else
-#endif
-		pathExtension = CFURLCopyPathExtension(inputURL);
-
+	CFStringRef pathExtension = CFURLCopyPathExtension(inputURL);
 	if(!pathExtension) {
 		if(error) {
 			CFStringRef description = CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), "");
