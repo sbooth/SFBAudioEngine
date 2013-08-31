@@ -36,7 +36,7 @@ const UInt32 kGeneralRingTimeBoundsQueueSize = 32;
 const UInt32 kGeneralRingTimeBoundsQueueMask = kGeneralRingTimeBoundsQueueSize - 1;
 
 // ========================================
-// Ring buffer classed based off of Apple's CARingBuffer
+// Ring buffer class based off of Apple's CARingBuffer
 // This class implements a ring buffer that is thread safe for the case of
 // one reader and one writer (single producer, single consumer).
 // ========================================
