@@ -14,6 +14,9 @@
 @property (nonatomic, weak) IBOutlet NSButton *		playButton;
 @property (nonatomic, weak) IBOutlet NSButton *		forwardButton;
 @property (nonatomic, weak) IBOutlet NSButton *		backwardButton;
+@property (nonatomic, weak) IBOutlet NSImageView *	albumArt;
+@property (nonatomic, weak) IBOutlet NSTextField *	title;
+@property (nonatomic, weak) IBOutlet NSTextField *	artist;
 
 // Action methods
 - (IBAction) playPause:(id)sender;

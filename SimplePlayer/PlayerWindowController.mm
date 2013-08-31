@@ -9,6 +9,7 @@
 
 #include <SFBAudioEngine/AudioPlayer.h>
 #include <SFBAudioEngine/AudioDecoder.h>
+#include <SFBAudioEngine/AudioMetadata.h>
 
 // ========================================
 // Player flags
@@ -217,7 +218,11 @@ enum {
 		
 		[self.elapsed setHidden:YES];
 		[self.remaining setHidden:YES];
-		
+
+		[self.albumArt setImage:nil];
+		[self.title setStringValue:@""];
+		[self.artist setStringValue:@""];
+
 		return;
 	}
 	
@@ -241,6 +246,34 @@ enum {
 	SInt64 totalFrames;
 	if(_player->GetTotalFrames(totalFrames) && -1 != totalFrames)
 		[self.remaining setHidden:NO];
+
+	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
+	// but for simplicity's sake it is done here.
+	AudioMetadata *metadata = AudioMetadata::CreateMetadataForURL((__bridge CFURLRef)url);
+	if(metadata) {
+		auto pictures = metadata->GetAttachedPictures();
+		if(!pictures.empty())
+			[self.albumArt setImage:[[NSImage alloc] initWithData:(__bridge NSData *)pictures.front()->GetData()]];
+		else
+			[self.albumArt setImage:nil];
+
+		if(metadata->GetTitle())
+			[self.title setStringValue:(__bridge NSString *)metadata->GetTitle()];
+		else
+			[self.title setStringValue:@""];
+
+		if(metadata->GetArtist())
+			[self.artist setStringValue:(__bridge NSString *)metadata->GetArtist()];
+		else
+			[self.artist setStringValue:@""];
+
+		delete metadata;
+	}
+	else {
+		[self.albumArt setImage:nil];
+		[self.title setStringValue:@""];
+		[self.artist setStringValue:@""];
+	}
 }
 
 @end
