@@ -48,7 +48,9 @@ public:
 	
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 	static bool HandlesMIMEType(CFStringRef mimeType);
-	
+
+	static AudioMetadata * CreateMetadata(CFURLRef url);
+
 	// ========================================
 	// Creation
 	MonkeysAudioMetadata(CFURLRef url);

@@ -46,6 +46,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterMP3Metadata() __attribute__ ((constructor));
+static void RegisterMP3Metadata()
+{
+	AudioMetadata::RegisterSubclass<MP3Metadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef MP3Metadata::CreateSupportedFileExtensions()
@@ -80,6 +86,11 @@ bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * MP3Metadata::CreateMetadata(CFURLRef url)
+{
+	return new MP3Metadata(url);
 }
 
 #pragma mark Creation and Destruction

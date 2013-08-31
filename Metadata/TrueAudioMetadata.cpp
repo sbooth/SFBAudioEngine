@@ -44,6 +44,12 @@
 #include "SetID3v2TagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterTrueAudioMetadata() __attribute__ ((constructor));
+static void RegisterTrueAudioMetadata()
+{
+	AudioMetadata::RegisterSubclass<TrueAudioMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef TrueAudioMetadata::CreateSupportedFileExtensions()
@@ -78,6 +84,11 @@ bool TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * TrueAudioMetadata::CreateMetadata(CFURLRef url)
+{
+	return new TrueAudioMetadata(url);
 }
 
 #pragma mark Creation and Destruction

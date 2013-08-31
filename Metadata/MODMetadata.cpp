@@ -42,6 +42,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddTagToDictionary.h"
 
+static void RegisterMODMetadata() __attribute__ ((constructor));
+static void RegisterMODMetadata()
+{
+	AudioMetadata::RegisterSubclass<MODMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef MODMetadata::CreateSupportedFileExtensions()
@@ -90,6 +96,11 @@ bool MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * MODMetadata::CreateMetadata(CFURLRef url)
+{
+	return new MODMetadata(url);
 }
 
 #pragma mark Creation and Destruction

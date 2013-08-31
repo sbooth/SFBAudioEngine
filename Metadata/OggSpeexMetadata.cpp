@@ -39,6 +39,12 @@
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
+static void RegisterOggSpeexMetadata() __attribute__ ((constructor));
+static void RegisterOggSpeexMetadata()
+{
+	AudioMetadata::RegisterSubclass<OggSpeexMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef OggSpeexMetadata::CreateSupportedFileExtensions()
@@ -73,6 +79,11 @@ bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * OggSpeexMetadata::CreateMetadata(CFURLRef url)
+{
+	return new OggSpeexMetadata(url);
 }
 
 #pragma mark Creation and Destruction

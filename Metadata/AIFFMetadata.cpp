@@ -40,6 +40,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterAIFFMetadata() __attribute__ ((constructor));
+static void RegisterAIFFMetadata()
+{
+	AudioMetadata::RegisterSubclass<AIFFMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef AIFFMetadata::CreateSupportedFileExtensions()
@@ -76,6 +82,11 @@ bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * AIFFMetadata::CreateMetadata(CFURLRef url)
+{
+	return new AIFFMetadata(url);
 }
 
 #pragma mark Creation and Destruction

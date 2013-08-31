@@ -28,8 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdexcept>
-
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
@@ -38,22 +36,6 @@
 #include "AudioMetadata.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
-
-#if !TARGET_OS_IPHONE
-# include "FLACMetadata.h"
-# include "WavPackMetadata.h"
-# include "MP3Metadata.h"
-# include "MP4Metadata.h"
-# include "WAVEMetadata.h"
-# include "AIFFMetadata.h"
-# include "MusepackMetadata.h"
-# include "OggVorbisMetadata.h"
-# include "OggFLACMetadata.h"
-# include "MonkeysAudioMetadata.h"
-# include "OggSpeexMetadata.h"
-# include "MODMetadata.h"
-# include "TrueAudioMetadata.h"
-#endif
 
 // ========================================
 // Error Codes
@@ -117,14 +99,14 @@ class PointerIdentityComparator : public std::unary_function<T *, bool>
 {
 public:
 	inline explicit PointerIdentityComparator(T *value)
-		: mValue(value) 
+		: mValue(value)
 	{}
-	
+
 	inline bool operator() (const T *value) const
 	{
 		return mValue == value;
 	}
-	
+
 private:
 	T *mValue;
 };
@@ -135,202 +117,72 @@ class AttachedPictureTypeComparator : public std::unary_function<AttachedPicture
 {
 public:
 	inline explicit AttachedPictureTypeComparator(AttachedPicture::Type type)
-		: mType(type) 
+		: mType(type)
 	{}
-	
+
 	inline bool operator() (const AttachedPicture *picture) const
 	{
 		return mType == picture->GetType();
 	}
-	
+
 private:
 	AttachedPicture::Type mType;
 };
 
 #pragma mark Static Methods
 
+std::vector<AudioMetadata::SubclassInfo> AudioMetadata::sRegisteredSubclasses;
+
 CFArrayRef AudioMetadata::CreateSupportedFileExtensions()
 {
-	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedFileExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
-#if !TARGET_OS_IPHONE
-	CFArrayRef decoderExtensions = nullptr;
+	for(auto subclassInfo : sRegisteredSubclasses) {
+		CFArrayRef decoderFileExtensions = subclassInfo.mCreateSupportedFileExtensions();
+		CFArrayAppendArray(supportedFileExtensions, decoderFileExtensions, CFRangeMake(0, CFArrayGetCount(decoderFileExtensions)));
+		CFRelease(decoderFileExtensions);
+	}
 
-	decoderExtensions = FLACMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = WavPackMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = MP3Metadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = MP4Metadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-	
-	decoderExtensions = WAVEMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = AIFFMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = MusepackMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = OggVorbisMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = OggFLACMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = MonkeysAudioMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-	
-	decoderExtensions = OggSpeexMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = MODMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-
-	decoderExtensions = TrueAudioMetadata::CreateSupportedFileExtensions();
-	CFArrayAppendArray(supportedExtensions, decoderExtensions, CFRangeMake(0, CFArrayGetCount(decoderExtensions)));
-	CFRelease(decoderExtensions), decoderExtensions = nullptr;
-#endif
-
-	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedExtensions);
-	
-	CFRelease(supportedExtensions), supportedExtensions = nullptr;
-	
-	return result;
+	return supportedFileExtensions;
 }
 
 CFArrayRef AudioMetadata::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-	
-#if !TARGET_OS_IPHONE
-	CFArrayRef decoderMIMETypes = nullptr;
 
-	decoderMIMETypes = FLACMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
+	for(auto subclassInfo : sRegisteredSubclasses) {
+		CFArrayRef decoderMIMETypes = subclassInfo.mCreateSupportedMIMETypes();
+		CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
+		CFRelease(decoderMIMETypes);
+	}
 
-	decoderMIMETypes = WavPackMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = MP3Metadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = MP4Metadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-	
-	decoderMIMETypes = WAVEMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = AIFFMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = MusepackMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = OggVorbisMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = OggFLACMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-	
-	decoderMIMETypes = MonkeysAudioMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = OggSpeexMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = MODMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-
-	decoderMIMETypes = TrueAudioMetadata::CreateSupportedMIMETypes();
-	CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-	CFRelease(decoderMIMETypes), decoderMIMETypes = nullptr;
-#endif
-
-	CFArrayRef result = CFArrayCreateCopy(kCFAllocatorDefault, supportedMIMETypes);
-	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
-	
-	return result;
+	return supportedMIMETypes;
 }
 
 bool AudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
-	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
-	if(nullptr == supportedExtensions)
-		return false;
-	
-	bool extensionIsSupported = false;
-	
-	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
-	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
-		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
-		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
-			extensionIsSupported = true;
-			break;
-		}
+
+	for(auto subclassInfo : sRegisteredSubclasses) {
+		if(subclassInfo.mHandlesFilesWithExtension(extension))
+			return true;
 	}
-	
-	CFRelease(supportedExtensions), supportedExtensions = nullptr;
-	
-	return extensionIsSupported;
+
+	return false;
 }
 
 bool AudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
-	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
-	if(nullptr == supportedMIMETypes)
-		return false;
-	
-	bool mimeTypeIsSupported = false;
-	
-	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
-	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
-		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
-		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
-			mimeTypeIsSupported = true;
-			break;
-		}
+
+	for(auto subclassInfo : sRegisteredSubclasses) {
+		if(subclassInfo.mHandlesMIMEType(mimeType))
+			return true;
 	}
-	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
-	
-	return mimeTypeIsSupported;
+
+	return false;
 }
 
 AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
@@ -357,90 +209,21 @@ AudioMetadata * AudioMetadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *er
 		
 		if(fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
-				CFStringRef fileSystemPath = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-				CFStringRef pathExtension = nullptr;
-
-				CFRange range;
-				if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
-					pathExtension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
-				}
-
-				CFRelease(fileSystemPath), fileSystemPath = nullptr;
-
+				CFStringRef pathExtension = CFURLCopyPathExtension(url);
 				if(pathExtension) {
 					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
 
-					// As a factory this class has knowledge of its subclasses
-					// It would be possible (and perhaps preferable) to switch to a generic
-					// plugin interface at a later date
-#if !TARGET_OS_IPHONE
-					if(FLACMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new FLACMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
+					for(auto subclassInfo : sRegisteredSubclasses) {
+						if(subclassInfo.mHandlesFilesWithExtension(pathExtension)) {
+							metadata = subclassInfo.mCreateMetadata(url);
+							if(!metadata->ReadMetadata(error))
+								delete metadata, metadata = nullptr;
+						}
+
+						if(metadata)
+							break;
 					}
-					if(!metadata && WavPackMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new WavPackMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && MP3Metadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new MP3Metadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && MP4Metadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new MP4Metadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && WAVEMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new WAVEMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && AIFFMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new AIFFMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && MusepackMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new MusepackMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && OggVorbisMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new OggVorbisMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && OggFLACMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new OggFLACMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && MonkeysAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new MonkeysAudioMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && OggSpeexMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new OggSpeexMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && MODMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new MODMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-					if(!metadata && TrueAudioMetadata::HandlesFilesWithExtension(pathExtension)) {
-						metadata = new TrueAudioMetadata(url);
-						if(!metadata->ReadMetadata(error))
-							delete metadata, metadata = nullptr;
-					}
-#endif
 
 					CFRelease(pathExtension), pathExtension = nullptr;
 				}				
@@ -988,7 +771,7 @@ void AudioMetadata::RemoveAttachedPicture(AttachedPicture *picture)
 			(*match)->mState |= AttachedPicture::ChangeState::Removed;
 
 #if 0
-		// TODO: It would be more correct to remove picture from mPictures if the state is Added 
+		// TODO: It would be more correct to remove picture from mPictures if the state is Added
 		// but that necessitates std::shared_ptr since picture can't be immediately deleted (in use by the caller)
 		if(match != mPictures.end()) {
 			if((*match)->mState & AttachedPicture::ChangeState::Added)

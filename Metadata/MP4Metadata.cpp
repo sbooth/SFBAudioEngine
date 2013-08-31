@@ -36,6 +36,12 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
+static void RegisterMP4Metadata() __attribute__ ((constructor));
+static void RegisterMP4Metadata()
+{
+	AudioMetadata::RegisterSubclass<MP4Metadata>();
+}
+
 #pragma mark Initialization
 
 static void DisableMP4v2Logging() __attribute__ ((constructor));
@@ -80,6 +86,11 @@ bool MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * MP4Metadata::CreateMetadata(CFURLRef url)
+{
+	return new MP4Metadata(url);
 }
 
 #pragma mark Creation and Destruction
@@ -424,7 +435,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 
 			AttachedPicture *picture = new AttachedPicture(data);
 			AddSavedPicture(picture);
-			
+
 			CFRelease(data), data = nullptr;
 		}
 	}

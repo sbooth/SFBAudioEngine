@@ -42,6 +42,12 @@
 #include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterMusepackMetadata() __attribute__ ((constructor));
+static void RegisterMusepackMetadata()
+{
+	AudioMetadata::RegisterSubclass<MusepackMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef MusepackMetadata::CreateSupportedFileExtensions()
@@ -76,6 +82,11 @@ bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * MusepackMetadata::CreateMetadata(CFURLRef url)
+{
+	return new MusepackMetadata(url);
 }
 
 #pragma mark Creation and Destruction

@@ -50,6 +50,12 @@
 #include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterFLACMetadata() __attribute__ ((constructor));
+static void RegisterFLACMetadata()
+{
+	AudioMetadata::RegisterSubclass<FLACMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef FLACMetadata::CreateSupportedFileExtensions()
@@ -84,6 +90,11 @@ bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * FLACMetadata::CreateMetadata(CFURLRef url)
+{
+	return new FLACMetadata(url);
 }
 
 #pragma mark Creation and Destruction

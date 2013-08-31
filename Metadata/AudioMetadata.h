@@ -31,6 +31,7 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+
 #include <vector>
 
 #include "AttachedPicture.h"
@@ -295,4 +296,50 @@ private:
 	// Sadly, clang's libc++ doesn't work on Snow Leopard otherwise I would use std::vector<std::shared_ptr<AttachedPicture>>
 //	std::vector<std::shared_ptr<AttachedPicture>> mPictures;
 	std::vector<AttachedPicture *>	mPictures;			// The attached picture information
+
+	// ========================================
+	// Subclass registration support
+	struct SubclassInfo
+	{
+		CFArrayRef (*mCreateSupportedFileExtensions)();
+		CFArrayRef (*mCreateSupportedMIMETypes)();
+
+		bool (*mHandlesFilesWithExtension)(CFStringRef);
+		bool (*mHandlesMIMEType)(CFStringRef);
+
+		AudioMetadata * (*mCreateMetadata)(CFURLRef);
+
+		int mPriority;
+	};
+
+	static std::vector <SubclassInfo> sRegisteredSubclasses;
+
+public:
+
+	template <typename T> static void RegisterSubclass(int priority = 0);
+
 };
+
+// ========================================
+// Template implementation
+template <typename T> void AudioMetadata::RegisterSubclass(int priority)
+{
+	SubclassInfo subclassInfo = {
+		.mCreateSupportedFileExtensions = T::CreateSupportedFileExtensions,
+		.mCreateSupportedMIMETypes = T::CreateSupportedMIMETypes,
+
+		.mHandlesFilesWithExtension = T::HandlesFilesWithExtension,
+		.mHandlesMIMEType = T::HandlesMIMEType,
+
+		.mCreateMetadata = T::CreateMetadata,
+
+		.mPriority = priority
+	};
+
+	sRegisteredSubclasses.push_back(subclassInfo);
+
+	// Sort subclasses by priority
+	std::sort(sRegisteredSubclasses.begin(), sRegisteredSubclasses.end(), [](const SubclassInfo& a, const SubclassInfo& b) {
+		return a.mPriority > b.mPriority;
+	});
+}

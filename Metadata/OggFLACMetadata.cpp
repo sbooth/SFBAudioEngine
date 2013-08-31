@@ -41,6 +41,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterOggFLACMetadata() __attribute__ ((constructor));
+static void RegisterOggFLACMetadata()
+{
+	AudioMetadata::RegisterSubclass<OggFLACMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef OggFLACMetadata::CreateSupportedFileExtensions()
@@ -77,6 +83,11 @@ bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * OggFLACMetadata::CreateMetadata(CFURLRef url)
+{
+	return new OggFLACMetadata(url);
 }
 
 #pragma mark Creation and Destruction

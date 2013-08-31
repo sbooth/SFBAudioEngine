@@ -43,6 +43,12 @@
 #include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterWavPackMetadata() __attribute__ ((constructor));
+static void RegisterWavPackMetadata()
+{
+	AudioMetadata::RegisterSubclass<WavPackMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef WavPackMetadata::CreateSupportedFileExtensions()
@@ -77,6 +83,11 @@ bool WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * WavPackMetadata::CreateMetadata(CFURLRef url)
+{
+	return new WavPackMetadata(url);
 }
 
 #pragma mark Creation and Destruction

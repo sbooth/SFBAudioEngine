@@ -42,6 +42,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterWAVEMetadata() __attribute__ ((constructor));
+static void RegisterWAVEMetadata()
+{
+	AudioMetadata::RegisterSubclass<WAVEMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef WAVEMetadata::CreateSupportedFileExtensions()
@@ -78,6 +84,11 @@ bool WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * WAVEMetadata::CreateMetadata(CFURLRef url)
+{
+	return new WAVEMetadata(url);
 }
 
 #pragma mark Creation and Destruction

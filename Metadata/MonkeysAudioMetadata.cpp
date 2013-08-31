@@ -43,6 +43,12 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
+static void RegisterMonkeysAudioMetadata() __attribute__ ((constructor));
+static void RegisterMonkeysAudioMetadata()
+{
+	AudioMetadata::RegisterSubclass<MonkeysAudioMetadata>();
+}
+
 #pragma mark Static Methods
 
 CFArrayRef MonkeysAudioMetadata::CreateSupportedFileExtensions()
@@ -77,6 +83,11 @@ bool MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	
 	return false;
+}
+
+AudioMetadata * MonkeysAudioMetadata::CreateMetadata(CFURLRef url)
+{
+	return new MonkeysAudioMetadata(url);
 }
 
 #pragma mark Creation and Destruction
