@@ -161,13 +161,9 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.InfoTag())
 		AddTagToDictionary(mMetadata, file.InfoTag());
 
-	if(file.ID3v2Tag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
-	
+	if(file.ID3v2Tag())
+		AddID3v2TagToDictionary(mMetadata, mPictures, file.ID3v2Tag());
+
 	return true;
 }
 

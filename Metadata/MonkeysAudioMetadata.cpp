@@ -160,12 +160,8 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
 
-	if(file.APETag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddAPETagToDictionary(mMetadata, pictures, file.APETag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
+	if(file.APETag())
+		AddAPETagToDictionary(mMetadata, mPictures, file.APETag());
 
 	return true;
 }

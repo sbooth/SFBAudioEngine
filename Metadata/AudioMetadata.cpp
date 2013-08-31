@@ -90,45 +90,6 @@ const CFStringRef	kReplayGainTrackPeakKey					= CFSTR("Replay Gain Track Peak");
 const CFStringRef	kReplayGainAlbumGainKey					= CFSTR("Replay Gain Album Gain");
 const CFStringRef	kReplayGainAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
 
-#pragma mark Helper Classes
-
-// ============================================================
-// Class PointerIdentityComparator
-template <class T>
-class PointerIdentityComparator : public std::unary_function<T *, bool>
-{
-public:
-	inline explicit PointerIdentityComparator(T *value)
-		: mValue(value)
-	{}
-
-	inline bool operator() (const T *value) const
-	{
-		return mValue == value;
-	}
-
-private:
-	T *mValue;
-};
-
-// ============================================================
-// Class AttachedPictureTypeComparator
-class AttachedPictureTypeComparator : public std::unary_function<AttachedPicture *, bool>
-{
-public:
-	inline explicit AttachedPictureTypeComparator(AttachedPicture::Type type)
-		: mType(type)
-	{}
-
-	inline bool operator() (const AttachedPicture *picture) const
-	{
-		return mType == picture->GetType();
-	}
-
-private:
-	AttachedPicture::Type mType;
-};
-
 #pragma mark Static Methods
 
 std::vector<AudioMetadata::SubclassInfo> AudioMetadata::sRegisteredSubclasses;
@@ -280,16 +241,6 @@ AudioMetadata::~AudioMetadata()
 
 	if(mChangedMetadata)
 		CFRelease(mChangedMetadata), mChangedMetadata = nullptr;
-
-	auto iter = mPictures.begin();
-	while(iter != mPictures.end()) {
-		AttachedPicture *picture = *iter;
-		iter = mPictures.erase(iter);
-		delete picture;
-	}
-//	for(auto picture : mPictures)
-//		delete picture;
-	mPictures.clear();
 }
 
 void AudioMetadata::SetURL(CFURLRef URL)
@@ -309,11 +260,7 @@ bool AudioMetadata::HasUnsavedChanges() const
 		return true;
 
 	for(auto picture : mPictures) {
-		// TODO: Remove this check once std::shared_ptr is used (because no pictures with this state should be present in mPictures)
-		if(AttachedPicture::ChangeState::Added & picture->mState && AttachedPicture::ChangeState::Removed & picture->mState)
-			continue;
-
-		if(AttachedPicture::ChangeState::Added & picture->mState || AttachedPicture::ChangeState::Removed & picture->mState || picture->HasUnsavedChanges())
+		if(AttachedPicture::ChangeState::Added == picture->mState || AttachedPicture::ChangeState::Removed == picture->mState || picture->HasUnsavedChanges())
 			return true;
 	}
 
@@ -326,16 +273,10 @@ void AudioMetadata::RevertUnsavedChanges()
 
 	auto iter = mPictures.begin();
 	while(iter != mPictures.end()) {
-		AttachedPicture *picture = *iter;
-		if(AttachedPicture::ChangeState::Removed & picture->mState) {
-			if(AttachedPicture::ChangeState::Added & picture->mState) {
-				iter = mPictures.erase(iter);
-				delete picture;
-			}
-			else {
-				picture->mState &= ~AttachedPicture::ChangeState::Removed;
-				picture->RevertUnsavedChanges();
-			}
+		auto picture = *iter;
+		if(AttachedPicture::ChangeState::Removed == picture->mState) {
+			picture->mState = AttachedPicture::ChangeState::Saved;
+			picture->RevertUnsavedChanges();
 		}
 		else
 			picture->RevertUnsavedChanges();
@@ -723,79 +664,75 @@ void AudioMetadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 
 #pragma mark Album Artwork
 
-const std::vector<AttachedPicture *> AudioMetadata::GetAttachedPictures() const
+const std::vector<std::shared_ptr<AttachedPicture>> AudioMetadata::GetAttachedPictures() const
 {
-	std::vector<AttachedPicture *> result;
+	std::vector<std::shared_ptr<AttachedPicture>> result;
 
-	for(auto picture : mPictures) {
-		if(!(AttachedPicture::ChangeState::Removed & picture->mState))
-			result.push_back(picture);
-	}
+	std::copy_if(mPictures.begin(), mPictures.end(), std::back_inserter(result), [](const std::shared_ptr<AttachedPicture>& picture) {
+		return AttachedPicture::ChangeState::Removed != picture->mState;
+	});
 
 	return result;
 }
 
-const std::vector<AttachedPicture *> AudioMetadata::GetAttachedPicturesOfType(AttachedPicture::Type type) const
+const std::vector<std::shared_ptr<AttachedPicture>> AudioMetadata::GetAttachedPicturesOfType(AttachedPicture::Type type) const
 {
-	std::vector<AttachedPicture *> result;
+	std::vector<std::shared_ptr<AttachedPicture>> result;
 
-	for(auto picture : mPictures) {
-		if(!(AttachedPicture::ChangeState::Removed & picture->mState) && type == picture->GetType())
-			result.push_back(picture);
-	}
+	std::copy_if(mPictures.begin(), mPictures.end(), std::back_inserter(result), [type](const std::shared_ptr<AttachedPicture>& picture) {
+		return AttachedPicture::ChangeState::Removed != picture->mState && type == picture->GetType();
+	});
 
 	return result;
 }
 
-void AudioMetadata::AttachPicture(AttachedPicture *picture)
+void AudioMetadata::AttachPicture(std::shared_ptr<AttachedPicture> picture)
 {
 	if(picture) {
-		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
+		auto match = std::find(mPictures.begin(), mPictures.end(), picture);
 		if(match != mPictures.end()) {
-			if(AttachedPicture::ChangeState::Removed & picture->mState)
-				picture->mState &= ~AttachedPicture::ChangeState::Removed;
+			if(AttachedPicture::ChangeState::Removed == picture->mState)
+				picture->mState = AttachedPicture::ChangeState::Saved;
 		}
+		// By default a picture is created with mState == ChangeState::Saved
 		else {
-			picture->mState = AttachedPicture::Added;
-			mPictures.push_back(picture);
+			picture->mState = AttachedPicture::ChangeState::Added;
+			mPictures.push_back(std::shared_ptr<AttachedPicture>(picture));
 		}
 	}
 }
 
-void AudioMetadata::RemoveAttachedPicture(AttachedPicture *picture)
+void AudioMetadata::RemoveAttachedPicture(std::shared_ptr<AttachedPicture> picture)
 {
 	if(picture) {
-//		auto match = std::find_if(mPictures.begin(), mPictures.end(), [] (AttachedPicture *p) -> bool { p == picture; });
-		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
-		if(match != mPictures.end())
-			(*match)->mState |= AttachedPicture::ChangeState::Removed;
-
-#if 0
-		// TODO: It would be more correct to remove picture from mPictures if the state is Added
-		// but that necessitates std::shared_ptr since picture can't be immediately deleted (in use by the caller)
+		auto match = std::find(mPictures.begin(), mPictures.end(), picture);
 		if(match != mPictures.end()) {
-			if((*match)->mState & AttachedPicture::ChangeState::Added)
+			if((*match)->mState == AttachedPicture::ChangeState::Added)
 				mPictures.erase(match);
 			else
-				(*match)->mState |= AttachedPicture::ChangeState::Removed;
+				(*match)->mState = AttachedPicture::ChangeState::Removed;
 		}
-#endif
 	}
 }
 
 void AudioMetadata::RemoveAttachedPicturesOfType(AttachedPicture::Type type)
 {
-	for(auto picture : mPictures) {
-		if(type == picture->GetType())
-			picture->mState |= AttachedPicture::ChangeState::Removed;
+	for(auto iter = mPictures.begin(); iter != mPictures.end(); ++iter) {
+		auto picture = *iter;
+		if(type == picture->GetType()) {
+			if(picture->mState == AttachedPicture::ChangeState::Added)
+				iter = mPictures.erase(iter);
+			else
+				picture->mState = AttachedPicture::ChangeState::Removed;
+		}
 	}
 }
 
 void AudioMetadata::RemoveAllAttachedPictures()
 {
-//	std::for_each(mPictures.begin(), mPictures.end(), [] (AttachedPicture *picture){ picture->mState |= AttachedPicture::ChangeState::Removed; });
-	for(auto picture : mPictures)
-		picture->mState |= AttachedPicture::ChangeState::Removed;
+	std::for_each(mPictures.begin(), mPictures.end(), [](const std::shared_ptr<AttachedPicture>& picture){
+		picture->mState = AttachedPicture::ChangeState::Removed;
+	});
 }
 
 #pragma mark Type-Specific Access
@@ -865,17 +802,6 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 	}
 }
 
-void AudioMetadata::AddSavedPicture(AttachedPicture *picture)
-{
-	if(picture) {
-		auto match = std::find_if(mPictures.begin(), mPictures.end(), PointerIdentityComparator<AttachedPicture>(picture));
-		if(match == mPictures.end()) {
-			picture->mState = AttachedPicture::Saved;
-			mPictures.push_back(picture);
-		}
-	}
-}
-
 void AudioMetadata::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
@@ -899,11 +825,9 @@ void AudioMetadata::MergeChangedMetadataIntoMetadata()
 
 	auto iter = mPictures.begin();
 	while(iter != mPictures.end()) {
-		AttachedPicture *picture = *iter;
-		if(AttachedPicture::ChangeState::Removed & picture->mState) {
+		auto picture = *iter;
+		if(AttachedPicture::ChangeState::Removed == picture->mState)
 			iter = mPictures.erase(iter);
-			delete picture;
-		}
 		else {
 			picture->MergeChangedMetadataIntoMetadata();
 			picture->mState = AttachedPicture::ChangeState::Saved;

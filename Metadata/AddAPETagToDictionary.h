@@ -39,4 +39,4 @@ class AttachedPicture;
 // ========================================
 // Add the metadata specified in the APE::Tag instance to dictionary
 // ========================================
-bool AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::APE::Tag *tag);
+bool AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::APE::Tag *tag);

@@ -156,13 +156,9 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 			AddLongLongToDictionary(mMetadata, kPropertiesTotalFramesKey, properties->sampleFrames());
 	}
 
-	if(file.tag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddID3v2TagToDictionary(mMetadata, pictures, file.tag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
-	
+	if(file.tag())
+		AddID3v2TagToDictionary(mMetadata, mPictures, file.tag());
+
 	return true;
 }
 

@@ -148,12 +148,8 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
 	
-	if(file.tag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddXiphCommentToDictionary(mMetadata, pictures, file.tag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
+	if(file.tag())
+		AddXiphCommentToDictionary(mMetadata, mPictures, file.tag());
 
 	return true;
 }

@@ -41,18 +41,36 @@
 #include "CFDictionaryUtilities.h"
 
 bool
-AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::ID3v2::Tag *tag)
+AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
 
-	attachedPictures.clear();
-
 	// Add the basic tags not specific to ID3v2
 	AddTagToDictionary(dictionary, tag);
 
+	// Release date
+	auto frameList = tag->frameListMap()["TDRC"];
+	if(!frameList.isEmpty()) {
+		/*
+		 The timestamp fields are based on a subset of ISO 8601. When being as
+		 precise as possible the format of a time string is
+		 yyyy-MM-ddTHH:mm:ss (year, "-", month, "-", day, "T", hour (out of
+		 24), ":", minutes, ":", seconds), but the precision may be reduced by
+		 removing as many time indicators as wanted. Hence valid timestamps
+		 are
+		 yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm and
+		 yyyy-MM-ddTHH:mm:ss. All time stamps are UTC. For durations, use
+		 the slash character as described in 8601, and for multiple non-
+		 contiguous dates, use multiple strings, if allowed by the frame
+		 definition.
+		 */
+
+		TagLib::AddStringToCFDictionary(dictionary, kMetadataReleaseDateKey, frameList.front()->toString());
+	}
+
 	// Extract composer if present
-	auto frameList = tag->frameListMap()["TCOM"];
+	frameList = tag->frameListMap()["TCOM"];
 	if(!frameList.isEmpty())
 		TagLib::AddStringToCFDictionary(dictionary, kMetadataComposerKey, frameList.front()->toString());
 	
@@ -293,9 +311,8 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedP
 			if(!frame->description().isNull())
 				description = CFStringCreateWithCString(kCFAllocatorDefault, frame->description().toCString(true), kCFStringEncodingUTF8);
 			
-			AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)frame->type(), description);
-			attachedPictures.push_back(p);
-			
+			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));
+
 			if(data)
 				CFRelease(data), data = nullptr;
 			

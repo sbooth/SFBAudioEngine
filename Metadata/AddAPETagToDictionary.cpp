@@ -36,7 +36,7 @@
 #include "CFDictionaryUtilities.h"
 
 bool
-AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::APE::Tag *tag)
+AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::APE::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
@@ -137,8 +137,7 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 					if(!picture.description().isNull())
 						description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
-					AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)picture.type(), description);
-					attachedPictures.push_back(p);
+					attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)picture.type(), description));
 
 					if(data)
 						CFRelease(data), data = nullptr;
@@ -175,8 +174,7 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPic
 					CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
 					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
 
-					AttachedPicture *p = new AttachedPicture(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description);
-					attachedPictures.push_back(p);
+					attachedPictures.push_back(std::make_shared<AttachedPicture>(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description));
 
 					if(data)
 						CFRelease(data), data = nullptr;

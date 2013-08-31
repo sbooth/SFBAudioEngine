@@ -253,12 +253,12 @@ public:
 
 	// ========================================
 	// Album artwork
-	const std::vector<AttachedPicture *> GetAttachedPictures() const;
-	const std::vector<AttachedPicture *> GetAttachedPicturesOfType(AttachedPicture::Type type) const;
+	const std::vector<std::shared_ptr<AttachedPicture>> GetAttachedPictures() const;
+	const std::vector<std::shared_ptr<AttachedPicture>> GetAttachedPicturesOfType(AttachedPicture::Type type) const;
 
-	void AttachPicture(AttachedPicture *picture); // AudioMetadata takes over ownership of picture
+	void AttachPicture(std::shared_ptr<AttachedPicture> picture);
+	void RemoveAttachedPicture(std::shared_ptr<AttachedPicture> picture);
 
-	void RemoveAttachedPicture(AttachedPicture *picture);
 	void RemoveAttachedPicturesOfType(AttachedPicture::Type type);
 	void RemoveAllAttachedPictures();
 	
@@ -271,13 +271,12 @@ protected:
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
 	CFMutableDictionaryRef			mChangedMetadata;	// The metadata information that has been changed but not saved
 
+	std::vector<std::shared_ptr<AttachedPicture>>	mPictures; // The attached picture information
+
 	// ========================================
 	// For subclass use only
 	AudioMetadata();
 	AudioMetadata(CFURLRef url);
-
-	// mPictures is private to prevent direct subclass manipulation, so the following methods are provided
-	void AddSavedPicture(AttachedPicture *picture);
 
 	// Subclasses should call this after a successful save operation
 	void MergeChangedMetadataIntoMetadata();
@@ -291,11 +290,6 @@ protected:
 	void SetValue(CFStringRef key, CFTypeRef value);
 
 private:
-	// It is bad form to use a std::vector of raw pointers (exceptions can cause memory leaks), however I don't
-	// want to use boost solely for this single data member.
-	// Sadly, clang's libc++ doesn't work on Snow Leopard otherwise I would use std::vector<std::shared_ptr<AttachedPicture>>
-//	std::vector<std::shared_ptr<AttachedPicture>> mPictures;
-	std::vector<AttachedPicture *>	mPictures;			// The attached picture information
 
 	// ========================================
 	// Subclass registration support

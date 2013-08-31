@@ -433,8 +433,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {
 			CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)tags->artwork[i].data, tags->artwork[i].size);
 
-			AttachedPicture *picture = new AttachedPicture(data);
-			AddSavedPicture(picture);
+			mPictures.push_back(std::make_shared<AttachedPicture>(data));
 
 			CFRelease(data), data = nullptr;
 		}

@@ -36,13 +36,11 @@
 #include "CFDictionaryUtilities.h"
 
 bool
-AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::Ogg::XiphComment *tag)
+AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
 
-	attachedPictures.clear();
-	
 	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	
 	for(auto it : tag->fieldListMap()) {
@@ -132,8 +130,7 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<Attach
 				if(!picture.description().isNull())
 					description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
-				AttachedPicture *p = new AttachedPicture(data, (AttachedPicture::Type)picture.type(), description);
-				attachedPictures.push_back(p);
+				attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)picture.type(), description));
 				
 				if(data)
 					CFRelease(data), data = nullptr;

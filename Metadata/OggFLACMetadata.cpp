@@ -155,12 +155,8 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->sampleWidth());
 	}
 
-	if(file.tag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddXiphCommentToDictionary(mMetadata, pictures, file.tag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
+	if(file.tag())
+		AddXiphCommentToDictionary(mMetadata, mPictures, file.tag());
 
 	return true;
 }

@@ -102,18 +102,17 @@ protected:
 	AttachedPicture& operator=(const AttachedPicture& rhs) = delete;
 
 	// For AudioMetadata change tracking
-	// Valid states are { Saved, Added, Saved | Removed, Added | Removed }
-	enum ChangeState : unsigned int {
-		Saved		= 1 << 0,
-		Added		= 1 << 1,
-		Removed		= 1 << 2
+	enum class ChangeState {
+		Saved,
+		Added,
+		Removed
 	};
 
 	// ========================================
 	// Data members
 	CFMutableDictionaryRef			mMetadata;			// The metadata information
 	CFMutableDictionaryRef			mChangedMetadata;	// The metadata information that has been changed but not saved
-	unsigned int					mState;				// The state of the picture
+	ChangeState						mState;				// The state of the picture relative to the saved file
 
 	// Subclasses should call this after a successful save operation
 	void MergeChangedMetadataIntoMetadata();

@@ -39,7 +39,7 @@ const CFStringRef	kAttachedPictureDescriptionKey			= CFSTR("Picture Description"
 const CFStringRef	kAttachedPictureDataKey					= CFSTR("Picture Data");
 
 AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFStringRef description)
-	: mState(0)
+	: mState(ChangeState::Saved)
 {
 	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);

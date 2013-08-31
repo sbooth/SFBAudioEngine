@@ -39,4 +39,4 @@ class AttachedPicture;
 // ========================================
 // Add the metadata specified in the Ogg::XiphComment instance to dictionary
 // ========================================
-bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::Ogg::XiphComment *tag);
+bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag);

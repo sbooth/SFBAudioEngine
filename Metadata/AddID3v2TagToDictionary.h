@@ -39,4 +39,4 @@ class AttachedPicture;
 // ========================================
 // Add the metadata specified in the ID3v2::Tag instance to dictionary
 // ========================================
-bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<AttachedPicture *>& attachedPictures, const TagLib::ID3v2::Tag *tag);
+bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag);

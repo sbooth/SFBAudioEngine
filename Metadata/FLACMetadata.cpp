@@ -168,19 +168,11 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
 
-	if(file.ID3v2Tag()) {
-		std::vector<AttachedPicture *> pictures;
-		AddID3v2TagToDictionary(mMetadata, pictures, file.ID3v2Tag());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
+	if(file.ID3v2Tag())
+		AddID3v2TagToDictionary(mMetadata, mPictures, file.ID3v2Tag());
 
-	if(file.xiphComment()) {
-		std::vector<AttachedPicture *> pictures;
-		AddXiphCommentToDictionary(mMetadata, pictures, file.xiphComment());
-		for(auto picture : pictures)
-			AddSavedPicture(picture);
-	}
+	if(file.xiphComment())
+		AddXiphCommentToDictionary(mMetadata, mPictures, file.xiphComment());
 
 	// Add album art
 	for(auto iter : file.pictureList()) {
@@ -190,8 +182,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 		if(!iter->description().isNull())
 			description = CFStringCreateWithCString(kCFAllocatorDefault, iter->description().toCString(true), kCFStringEncodingUTF8);
 
-		AttachedPicture *picture = new AttachedPicture(data, (AttachedPicture::Type)iter->type(), description);
-		AddSavedPicture(picture);
+		mPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)iter->type(), description));
 
 		if(data)
 			CFRelease(data), data = nullptr;
