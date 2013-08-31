@@ -260,7 +260,7 @@ bool AudioMetadata::HasUnsavedChanges() const
 		return true;
 
 	for(auto picture : mPictures) {
-		if(AttachedPicture::ChangeState::Added == picture->mState || AttachedPicture::ChangeState::Removed == picture->mState || picture->HasUnsavedChanges())
+		if(AttachedPicture::ChangeState::Saved != picture->mState || picture->HasUnsavedChanges())
 			return true;
 	}
 
