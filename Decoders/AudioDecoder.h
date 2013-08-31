@@ -220,8 +220,7 @@ template <typename T> void AudioDecoder::RegisterSubclass(int priority)
 	sRegisteredSubclasses.push_back(subclassInfo);
 
 	// Sort subclasses by priority
-	std::sort(sRegisteredSubclasses.begin(), sRegisteredSubclasses.end(), [](const SubclassInfo& a, const SubclassInfo& b)
-	{
+	std::sort(sRegisteredSubclasses.begin(), sRegisteredSubclasses.end(), [](const SubclassInfo& a, const SubclassInfo& b) {
 		return a.mPriority > b.mPriority;
 	});
 }
