@@ -278,6 +278,9 @@ protected:
 	AudioMetadata();
 	AudioMetadata(CFURLRef url);
 
+	// Subclasses should call this from ReadMetadata() to clear mMetadata, mChangedMetadata, and mPictures
+	void ClearAllMetadata();
+
 	// Subclasses should call this after a successful save operation
 	void MergeChangedMetadataIntoMetadata();
 	

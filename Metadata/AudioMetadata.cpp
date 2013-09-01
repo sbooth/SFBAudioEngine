@@ -802,6 +802,13 @@ void AudioMetadata::SetValue(CFStringRef key, CFTypeRef value)
 	}
 }
 
+void AudioMetadata::ClearAllMetadata()
+{
+	CFDictionaryRemoveAllValues(mMetadata);
+	CFDictionaryRemoveAllValues(mChangedMetadata);
+	mPictures.clear();
+}
+
 void AudioMetadata::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
