@@ -1915,7 +1915,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder format: " << decoder->GetFormat());
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder channel layout: " << decoder->GetChannelLayout());
-			
+
 			SInt64 startTime = decoderState->mTimeStamp;
 
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
@@ -1927,8 +1927,15 @@ void * AudioPlayer::DecoderThreadEntry()
 			if(noErr != result) {
 				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterNew failed: " << result);
 
+				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+				OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
+
+				decoderState = nullptr;
+
 				// If this happens, output will be impossible
-				OSAtomicTestAndSetBarrier(7 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
+				mCollectorSemaphore.Signal();
+
+				continue;
 			}
 
 			// ========================================
@@ -1990,21 +1997,6 @@ void * AudioPlayer::DecoderThreadEntry()
 								result = AudioConverterReset(audioConverter);
 								if(noErr != result)
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
-
-								// If sample rate conversion is being performed, ResetOutput() needs to be called to flush any
-								// state the AudioConverter may have.  In the future, if ResetOutput() does anything other than
-								// reset the AudioConverter state the if(mSampleRateConverter) will need to be removed
-//								if(mSampleRateConverter) {
-//									// ResetOutput() is not safe to call when the device is running, because the player
-//									// could be in the middle of a render callback
-//									if(OutputIsRunning())
-//										OSAtomicTestAndSetBarrier(2 /* eAudioPlayerFlagResetNeeded */, &mFlags);
-//									// Even if the device isn't running, AudioConverters are not thread-safe
-//									else {
-//										Mutex::Locker lock(mGuard);
-//										ResetOutput();
-//									}
-//								}
 							}
 
 							OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
