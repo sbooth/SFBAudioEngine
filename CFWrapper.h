@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
 # include <Security/Security.h>
@@ -130,7 +132,7 @@ namespace SFB {
 		// ========================================
 		// CoreFoundation object access
 
-		inline operator bool() const							{ return mObject; }
+		inline operator bool() const							{ return nullptr != mObject; }
 		inline operator T() const								{ return mObject; }
 
 	private:
@@ -141,6 +143,7 @@ namespace SFB {
 	// ========================================
 	// Typedefs for common CoreFoundation types
 
+	typedef CFWrapper<CFTypeRef> CFType;
 	typedef CFWrapper<CFDataRef> CFData;
 	typedef CFWrapper<CFMutableDataRef> CFMutableData;
 	typedef CFWrapper<CFStringRef> CFString;
@@ -169,14 +172,15 @@ namespace SFB {
 #if !TARGET_OS_IPHONE
 	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;
 	typedef CFWrapper<SecCertificateRef> SecCertificate;
+	typedef CFWrapper<SecTransformRef> SecTransform;
 	typedef CFWrapper<CGImageSourceRef> CGImageSource;
 #endif
 
-	template <typename T>
-	std::ostream& operator<<(std::ostream& out, CFWrapper<T> obj)
-	{
-		out << (T)obj;
-		return out;
-	}
+}
 
+template <typename T>
+std::ostream& operator<<(std::ostream& out, SFB::CFWrapper<T> obj)
+{
+	out << (T)obj;
+	return out;
 }
