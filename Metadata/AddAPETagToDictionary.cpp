@@ -32,6 +32,7 @@
 
 #include "AddAPETagToDictionary.h"
 #include "AudioMetadata.h"
+#include "CFWrapper.h"
 #include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
 
@@ -44,7 +45,7 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared
 	if(tag->isEmpty())
 		return true;
 
-	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	SFB::CFMutableDictionary additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	
 	for(auto iterator : tag->itemListMap()) {
 		auto item = iterator.second;
@@ -53,8 +54,8 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared
 			continue;
 
 		if(TagLib::APE::Item::Text == item.type()) {
-			CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault, item.key().toCString(true), kCFStringEncodingUTF8);
-			CFStringRef value = CFStringCreateWithCString(kCFAllocatorDefault, item.toString().toCString(true), kCFStringEncodingUTF8);
+			SFB::CFString key = CFStringCreateWithCString(kCFAllocatorDefault, item.key().toCString(true), kCFStringEncodingUTF8);
+			SFB::CFString value = CFStringCreateWithCString(kCFAllocatorDefault, item.toString().toCString(true), kCFStringEncodingUTF8);
 
 			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
 				CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, value);
@@ -131,31 +132,22 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared
 					TagLib::FLAC::Picture picture;
 					picture.parse(decodedBlock);
 
-					CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), picture.data().size());
+					SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), picture.data().size());
 
-					CFStringRef description = nullptr;
+					SFB::CFString description = nullptr;
 					if(!picture.description().isNull())
 						description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
 					attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)picture.type(), description));
-
-					if(data)
-						CFRelease(data), data = nullptr;
-
-					if(description)
-						CFRelease(description), description = nullptr;
 				}
 			}
 #endif
 			// Put all unknown tags into the additional metadata
 			else
 				CFDictionarySetValue(additionalMetadata, key, value);
-
-			CFRelease(key), key = nullptr;
-			CFRelease(value), value = nullptr;
 		}
 		else if(TagLib::APE::Item::Binary == item.type()) {
-			CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault, item.key().toCString(true), kCFStringEncodingUTF8);
+			SFB::CFString key = CFStringCreateWithCString(kCFAllocatorDefault, item.key().toCString(true), kCFStringEncodingUTF8);
 
 			// From http://www.hydrogenaudio.org/forums/index.php?showtopic=40603&view=findpost&p=504669
 			/*
@@ -171,27 +163,17 @@ AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared
 				auto binaryData = item.binaryData();
 				size_t pos = binaryData.find('\0');
 				if(TagLib::ByteVector::npos != pos && 3 < binaryData.size()) {
-					CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
-					CFStringRef description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
+					SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
+					SFB::CFString description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
 
 					attachedPictures.push_back(std::make_shared<AttachedPicture>(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description));
-
-					if(data)
-						CFRelease(data), data = nullptr;
-
-					if(description)
-						CFRelease(description), description = nullptr;
 				}
 			}
-
-			CFRelease(key), key = nullptr;
 		}
 	}
 
 	if(CFDictionaryGetCount(additionalMetadata))
 		CFDictionarySetValue(dictionary, kMetadataAdditionalMetadataKey, additionalMetadata);
-	
-	CFRelease(additionalMetadata), additionalMetadata = nullptr;
 
 	return true;
 }

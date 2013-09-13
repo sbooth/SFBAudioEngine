@@ -37,10 +37,11 @@
 #include <Accelerate/Accelerate.h>
 
 #include "MPEGDecoder.h"
-#include "CFErrorUtilities.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 static void RegisterMPEGDecoder() __attribute__ ((constructor));
@@ -173,82 +174,61 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	mDecoder = mpg123_new(nullptr, nullptr);
-	if(nullptr == mDecoder) {
+	auto decoder = std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>>(mpg123_new(nullptr, nullptr), [](mpg123_handle *mh) {
+		mpg123_close(mh);
+		mpg123_delete(mh);
+	});
+
+	if(!decoder) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
 	}
 
 	// Force decode to floating point instead of 16-bit signed integer
-	mpg123_param(mDecoder, MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
-	mpg123_param(mDecoder, MPG123_RESYNC_LIMIT, 2048, 0);
+	mpg123_param(decoder.get(), MPG123_FLAGS, MPG123_FORCE_FLOAT | MPG123_SKIP_ID3V2 | MPG123_GAPLESS | MPG123_QUIET, 0);
+	mpg123_param(decoder.get(), MPG123_RESYNC_LIMIT, 2048, 0);
 
-	if(MPG123_OK != mpg123_replace_reader_handle(mDecoder, read_callback, lseek_callback, nullptr)) {
+	if(MPG123_OK != mpg123_replace_reader_handle(decoder.get(), read_callback, lseek_callback, nullptr)) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
-
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
 
-	if(MPG123_OK != mpg123_open_handle(mDecoder, this)) {
+	if(MPG123_OK != mpg123_open_handle(decoder.get(), this)) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
-
 		return false;
  	}
 
 	long rate;
 	int channels, encoding;
-	if(MPG123_OK != mpg123_getformat(mDecoder, &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding || 0 >= channels) {
+	if(MPG123_OK != mpg123_getformat(decoder.get(), &rate, &channels, &encoding) || MPG123_ENC_FLOAT_32 != encoding || 0 >= channels) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
-
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
@@ -267,7 +247,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	
 	mFormat.mReserved			= 0;
 
-	size_t bufferSizeBytes = mpg123_outblock(mDecoder);
+	size_t bufferSizeBytes = mpg123_outblock(decoder.get());
 	UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
 
 	// Set up the source format
@@ -284,21 +264,14 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
 	}
 
-	if(MPG123_OK != mpg123_scan(mDecoder)) {
+	if(MPG123_OK != mpg123_scan(decoder.get())) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MP3 file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
-
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
 
 		return false;
 	}
@@ -310,14 +283,13 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
-		
 		return false;
 	}
 	
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
+
+	mDecoder = std::move(decoder);
 
 	mIsOpen = true;
 	return true;
@@ -330,10 +302,7 @@ bool MPEGDecoder::Close(CFErrorRef */*error*/)
 		return true;
 	}
 
-	if(mDecoder) {
-		mpg123_close(mDecoder);
-		mpg123_delete(mDecoder), mDecoder = nullptr;
-	}
+	mDecoder.reset();
 
 	if(mBufferList)
 		mBufferList = DeallocateABL(mBufferList);
@@ -348,7 +317,7 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 		return nullptr;
 
 	mpg123_frameinfo mi;
-	if(MPG123_OK != mpg123_info(mDecoder, &mi)) {
+	if(MPG123_OK != mpg123_info(mDecoder.get(), &mi)) {
 		return CFStringCreateWithFormat(kCFAllocatorDefault, 
 										nullptr, 
 										CFSTR("MPEG-1 Audio, %u channels, %u Hz"), 
@@ -379,12 +348,17 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
+SInt64 MPEGDecoder::GetTotalFrames() const
+{
+	return mpg123_length(mDecoder.get());
+}
+
 SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
 	
-	frame = mpg123_seek(mDecoder, frame, SEEK_SET);
+	frame = mpg123_seek(mDecoder.get(), frame, SEEK_SET);
 	if(0 <= frame)
 		mCurrentFrame = frame;
 	
@@ -434,12 +408,12 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		off_t frameNumber;
 		unsigned char *audioData = nullptr;
 		size_t bytesDecoded;
-		int result = mpg123_decode_frame(mDecoder, &frameNumber, &audioData, &bytesDecoded);
+		int result = mpg123_decode_frame(mDecoder.get(), &frameNumber, &audioData, &bytesDecoded);
 
 		if(MPG123_DONE == result)
 			break;
 		else if(MPG123_OK != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder));
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
 			break;
 		}
 

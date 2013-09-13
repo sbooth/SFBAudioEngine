@@ -89,6 +89,6 @@ public:
 
 private:
 
-	APEIOInterface		*mIOInterface;
-	IAPEDecompress		*mDecompressor;
+	std::unique_ptr<APEIOInterface> mIOInterface;
+	std::unique_ptr<IAPEDecompress> mDecompressor;
 };

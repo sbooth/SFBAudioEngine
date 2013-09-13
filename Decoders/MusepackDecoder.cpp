@@ -34,10 +34,11 @@
 #include <algorithm>
 
 #include "MusepackDecoder.h"
-#include "CFErrorUtilities.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 static void RegisterMusepackDecoder() __attribute__ ((constructor));
@@ -178,15 +179,11 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	mDemux = mpc_demux_init(&mReader);
 	if(nullptr == mDemux) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		mpc_reader_exit_stdio(&mReader);

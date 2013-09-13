@@ -31,8 +31,9 @@
 #include <taglib/flacpicture.h>
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "AudioMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
+#include "AudioMetadata.h"
+#include "CFWrapper.h"
 #include "TagLibStringUtilities.h"
 #include "Base64Utilities.h"
 #include "Logger.h"
@@ -64,16 +65,12 @@ SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 	assert(nullptr != tag);
 	assert(nullptr != key);
 	
-	CFStringRef numberString = nullptr;
-	
+	SFB::CFString numberString;
 	if(nullptr != value)
 		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
 	
 	bool result = SetXiphComment(tag, key, numberString);
-	
-	if(numberString)
-		CFRelease(numberString), numberString = nullptr;
-	
+
 	return result;
 }
 
@@ -97,8 +94,7 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 	assert(nullptr != tag);
 	assert(nullptr != key);
 	
-	CFStringRef numberString = nullptr;
-	
+	SFB::CFString numberString;
 	if(nullptr != value) {
 		double f;
 		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
@@ -108,10 +104,7 @@ SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef
 	}
 	
 	bool result = SetXiphComment(tag, key, numberString);
-	
-	if(numberString)
-		CFRelease(numberString), numberString = nullptr;
-	
+
 	return result;
 }
 
@@ -184,8 +177,8 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 		tag->removeField("METADATA_BLOCK_PICTURE");
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
-			CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
-			if(nullptr == imageSource)
+			SFB::CGImageSource imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+			if(!imageSource)
 				return false;
 			
 			TagLib::FLAC::Picture picture;
@@ -195,14 +188,12 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 				picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 			
 			// Convert the image's UTI into a MIME type
-			CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-			if(mimeType) {
+			SFB::CFString mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+			if(mimeType)
 				picture.setMimeType(TagLib::StringFromCFString(mimeType));
-				CFRelease(mimeType), mimeType = nullptr;
-			}
-			
+
 			// Flesh out the height, width, and depth
-			CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+			SFB::CFDictionary imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
 			if(imagePropertiesDictionary) {
 				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
@@ -218,14 +209,10 @@ SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComme
 				picture.setHeight(height);
 				picture.setWidth(width);
 				picture.setColorDepth(depth);
-				
-				CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = nullptr;
 			}
 			
 			TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
 			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
-
-			CFRelease(imageSource), imageSource = nullptr;
 		}
 	}
 

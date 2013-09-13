@@ -34,6 +34,7 @@
 #include <taglib/vorbisfile.h>
 
 #include "OggVorbisMetadata.h"
+#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
@@ -110,15 +111,11 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -127,15 +124,11 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	TagLib::Ogg::Vorbis::File file(stream.get());
 	if(!file.isValid()) {
 		if(nullptr != error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -161,15 +154,11 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -178,15 +167,11 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 	TagLib::Ogg::Vorbis::File file(stream.get(), false);
 	if(!file.isValid()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -196,15 +181,11 @@ bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 
 	if(!file.save()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

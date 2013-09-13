@@ -30,12 +30,14 @@
 
 #pragma once
 
+#include <functional>
+
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
-#include <mpg123/mpg123.h>
-
 #import "AudioDecoder.h"
+
+#include <mpg123/mpg123.h>
 
 // ========================================
 // An AudioDecoder subclass supporting MPEG Layers I, II and III
@@ -78,7 +80,7 @@ public:
 
 	// ========================================
 	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mpg123_length(mDecoder); }
+	virtual SInt64 GetTotalFrames() const;
 	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
 	// ========================================
@@ -88,7 +90,7 @@ public:
 
 private:
 
-	mpg123_handle		*mDecoder;
+	std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>> mDecoder;
 	AudioBufferList		*mBufferList;
 	SInt64				mCurrentFrame;
 };

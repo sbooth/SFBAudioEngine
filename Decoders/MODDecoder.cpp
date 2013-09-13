@@ -29,8 +29,9 @@
  */
 
 #include "MODDecoder.h"
-#include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #define DUMB_SAMPLE_RATE	65536
@@ -165,43 +166,27 @@ bool MODDecoder::Open(CFErrorRef *error)
 		return false;
 	}
 
-	CFStringRef fileSystemPath = CFURLCopyFileSystemPath(GetURL(), kCFURLPOSIXPathStyle);
-	CFStringRef extension = nullptr;
-
-	CFRange range;
-	if(CFStringFindWithOptionsAndLocale(fileSystemPath, CFSTR("."), CFRangeMake(0, CFStringGetLength(fileSystemPath)), kCFCompareBackwards, CFLocaleGetSystem(), &range)) {
-		extension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
-	}
-
-	CFRelease(fileSystemPath), fileSystemPath = nullptr;
-
-	if(nullptr == extension) {
+	SFB::CFString pathExtension = CFURLCopyPathExtension(GetURL());
+	if(nullptr == pathExtension)
 		return false;
-	}
-	
+
 	// Attempt to create the appropriate decoder based on the file's extension
-	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("it"), kCFCompareCaseInsensitive))
 		duh = dumb_read_it(df);
-	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("xm"), kCFCompareCaseInsensitive))
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("xm"), kCFCompareCaseInsensitive))
 		duh = dumb_read_xm(df);
-	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("s3m"), kCFCompareCaseInsensitive))
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("s3m"), kCFCompareCaseInsensitive))
 		duh = dumb_read_s3m(df);
-	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mod"), kCFCompareCaseInsensitive))
+	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive))
 		duh = dumb_read_mod(df);
 	
-	CFRelease(extension), extension = nullptr;
-
 	if(nullptr == duh) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		if(df)
@@ -216,15 +201,11 @@ bool MODDecoder::Open(CFErrorRef *error)
 	dsr = duh_start_sigrenderer(duh, 0, 2, 0);
 	if(nullptr == dsr) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		if(df)

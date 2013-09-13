@@ -39,6 +39,7 @@
 
 #include "FLACMetadata.h"
 #include "Logger.h"
+#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
@@ -119,15 +120,11 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -136,15 +133,11 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	TagLib::FLAC::File file(stream.get(), TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(nullptr != error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -174,19 +167,13 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 
 	// Add album art
 	for(auto iter : file.pictureList()) {
-		CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)iter->data().data(), (CFIndex)iter->data().size());
+		SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)iter->data().data(), (CFIndex)iter->data().size());
 
-		CFStringRef description = nullptr;
+		SFB::CFString description;
 		if(!iter->description().isNull())
 			description = CFStringCreateWithCString(kCFAllocatorDefault, iter->description().toCString(true), kCFStringEncodingUTF8);
 
 		mPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)iter->type(), description));
-
-		if(data)
-			CFRelease(data), data = nullptr;
-
-		if(description)
-			CFRelease(description), description = nullptr;
 	}
 
 	return true;
@@ -201,15 +188,11 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -218,15 +201,11 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	TagLib::FLAC::File file(stream.get(), false, TagLib::AudioProperties::Average, TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -248,8 +227,8 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 	// Add album art
 	for(auto attachedPicture : GetAttachedPictures()) {
 	
-		CGImageSourceRef imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
-		if(nullptr == imageSource) {
+		SFB::CGImageSource imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+		if(!imageSource) {
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioMetadata.FLAC", "Skipping album art (unable to create image)");
 			continue;
 		}
@@ -261,14 +240,12 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			picture->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 
 		// Convert the image's UTI into a MIME type
-		CFStringRef mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
-		if(mimeType) {
+		SFB::CFString mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+		if(mimeType)
 			picture->setMimeType(TagLib::StringFromCFString(mimeType));
-			CFRelease(mimeType), mimeType = nullptr;
-		}
 
 		// Flesh out the height, width, and depth
-		CFDictionaryRef imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+		SFB::CFDictionary imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
 		if(imagePropertiesDictionary) {
 			CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 			CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
@@ -284,26 +261,18 @@ bool FLACMetadata::WriteMetadata(CFErrorRef *error)
 			picture->setHeight(height);
 			picture->setWidth(width);
 			picture->setColorDepth(depth);
-
-			CFRelease(imagePropertiesDictionary), imagePropertiesDictionary = nullptr;
 		}
 
 		file.addPicture(picture);
-
-		CFRelease(imageSource), imageSource = nullptr;
 	}
 
 	if(!file.save()) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;

@@ -28,8 +28,8 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "AudioMetadata.h"
 #include "SetTagFromMetadata.h"
+#include "AudioMetadata.h"
 #include "TagLibStringUtilities.h"
 
 bool

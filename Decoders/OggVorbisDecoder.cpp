@@ -31,8 +31,9 @@
 #include <AudioToolbox/AudioFormat.h>
 
 #include "OggVorbisDecoder.h"
-#include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #define BUFFER_SIZE_FRAMES 2048
@@ -169,15 +170,11 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 
 	if(0 != ov_test_callbacks(this, &mVorbisFile, nullptr, 0, callbacks)) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;

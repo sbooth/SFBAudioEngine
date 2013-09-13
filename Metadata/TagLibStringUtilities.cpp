@@ -29,6 +29,7 @@
  */
 
 #include "TagLibStringUtilities.h"
+#include "CFWrapper.h"
 #include "Logger.h"
 
 TagLib::String 
@@ -67,10 +68,7 @@ void TagLib::AddStringToCFDictionary(CFMutableDictionaryRef d, CFStringRef key, 
 	if(nullptr == d || nullptr == key || value.isNull())
 		return;
 
-	CFStringRef string = CFStringCreateWithCString(kCFAllocatorDefault, value.toCString(true), kCFStringEncodingUTF8);
-
-	if(string) {
+	SFB::CFString string = CFStringCreateWithCString(kCFAllocatorDefault, value.toCString(true), kCFStringEncodingUTF8);
+	if(string)
 		CFDictionarySetValue(d, key, string);
-		CFRelease(string), string = nullptr;
-	}
 }

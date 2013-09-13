@@ -32,4 +32,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-CFStringRef CreateStringForOSType(OSType osType);
+#include "CFWrapper.h"
+
+namespace SFB {
+	CFString StringForOSType(OSType osType);
+}

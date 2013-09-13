@@ -29,6 +29,7 @@
  */
 
 #include "TrueAudioDecoder.h"
+#include "CFWrapper.h"
 #include "CreateChannelLayout.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -141,15 +142,11 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 
 	if(nullptr == mDecoder) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
@@ -191,15 +188,11 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
-				CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
-				CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
-				CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
+				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
+				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
+				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
 				
 				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-				
-				CFRelease(description), description = nullptr;
-				CFRelease(failureReason), failureReason = nullptr;
-				CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 			}
 
 			delete mDecoder, mDecoder = nullptr;

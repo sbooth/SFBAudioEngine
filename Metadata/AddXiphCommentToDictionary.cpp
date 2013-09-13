@@ -32,6 +32,7 @@
 
 #include "AddXiphCommentToDictionary.h"
 #include "AudioMetadata.h"
+#include "CFWrapper.h"
 #include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
 
@@ -41,14 +42,14 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::s
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
 
-	CFMutableDictionaryRef additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	
+	SFB::CFMutableDictionary additionalMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+
 	for(auto it : tag->fieldListMap()) {
 		// According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is a safer choice
-		CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault, it.first.toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString key = CFStringCreateWithCString(kCFAllocatorDefault, it.first.toCString(true), kCFStringEncodingUTF8);
 		
 		// Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
-		CFStringRef value = CFStringCreateWithCString(kCFAllocatorDefault, it.second.front().toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString value = CFStringCreateWithCString(kCFAllocatorDefault, it.second.front().toCString(true), kCFStringEncodingUTF8);
 		
 		if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, value);
@@ -124,33 +125,22 @@ AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::s
 				TagLib::FLAC::Picture picture;
 				picture.parse(decodedBlock);
 				
-				CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), (CFIndex)picture.data().size());
+				SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), (CFIndex)picture.data().size());
 
-				CFStringRef description = nullptr;
+				SFB::CFString description;
 				if(!picture.description().isNull())
 					description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
 				attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)picture.type(), description));
-				
-				if(data)
-					CFRelease(data), data = nullptr;
-				
-				if(description)
-					CFRelease(description), description = nullptr;
 			}
 		}
 		// Put all unknown tags into the additional metadata
 		else
 			CFDictionarySetValue(additionalMetadata, key, value);
-		
-		CFRelease(key), key = nullptr;
-		CFRelease(value), value = nullptr;
 	}
 	
 	if(CFDictionaryGetCount(additionalMetadata))
 		CFDictionarySetValue(dictionary, kMetadataAdditionalMetadataKey, additionalMetadata);
-	
-	CFRelease(additionalMetadata), additionalMetadata = nullptr;
-	
+
 	return true;
 }

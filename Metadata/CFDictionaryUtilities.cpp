@@ -29,17 +29,16 @@
  */
 
 #include "CFDictionaryUtilities.h"
+#include "CFWrapper.h"
 
 void AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int value)
 {
 	if(nullptr == d || nullptr == key)
 		return;
 	
-	CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
-	if(num) {
+	SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value);
+	if(num)
 		CFDictionarySetValue(d, key, num);
-		CFRelease(num), num = nullptr;
-	}
 }
 
 void AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, int value)
@@ -47,11 +46,9 @@ void AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, int v
 	if(nullptr == d || nullptr == key)
 		return;
 
-	CFStringRef str = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"), value);
-	if(str) {
+	SFB::CFString str = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"), value);
+	if(str)
 		CFDictionarySetValue(d, key, str);
-		CFRelease(str), str = nullptr;
-	}
 }
 
 void AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, long long value)
@@ -59,11 +56,9 @@ void AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, long lon
 	if(nullptr == d || nullptr == key)
 		return;
 
-	CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &value);
-	if(num) {
+	SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &value);
+	if(num)
 		CFDictionarySetValue(d, key, num);
-		CFRelease(num), num = nullptr;
-	}
 }
 
 void AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float value)
@@ -71,11 +66,9 @@ void AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float value
 	if(nullptr == d || nullptr == key)
 		return;
 
-	CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &value);
-	if(num) {
+	SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &value);
+	if(num)
 		CFDictionarySetValue(d, key, num);
-		CFRelease(num), num = nullptr;
-	}
 }
 
 void AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, double value)
@@ -83,9 +76,7 @@ void AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, double val
 	if(nullptr == d || nullptr == key)
 		return;
 	
-	CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value);
-	if(num) {
+	SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value);
+	if(num)
 		CFDictionarySetValue(d, key, num);
-		CFRelease(num), num = nullptr;
-	}
 }

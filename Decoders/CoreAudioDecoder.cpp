@@ -36,8 +36,9 @@
 #include <Accelerate/Accelerate.h>
 
 #include "CoreAudioDecoder.h"
-#include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "CreateStringForOSType.h"
 #include "Logger.h"
 
@@ -100,9 +101,7 @@ CFArrayRef CoreAudioDecoder::CreateSupportedFileExtensions()
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 		return nullptr;
 	}
@@ -121,10 +120,8 @@ CFArrayRef CoreAudioDecoder::CreateSupportedMIMETypes()
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 		return nullptr;
 	}
 	
@@ -145,10 +142,8 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 		return false;
 	}
 	
@@ -182,10 +177,8 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-		
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 		return false;
 	}
 	
@@ -242,15 +235,11 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
 		
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
@@ -262,15 +251,11 @@ bool CoreAudioDecoder::Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
 		
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		result = AudioFileClose(mAudioFile);

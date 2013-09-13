@@ -37,6 +37,7 @@
 #include "AddID3v2TagToDictionary.h"
 #include "AddTagToDictionary.h"
 #include "AudioMetadata.h"
+#include "CFWrapper.h"
 #include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
 
@@ -203,9 +204,8 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shar
 	if(!trackGainFrame)
 		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
-		CFRelease(str), str = nullptr;
 
 		AddDoubleToDictionary(dictionary, kReplayGainTrackGainKey, num);
 		AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, 89.0);
@@ -216,20 +216,18 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shar
 	if(!trackPeakFrame)
 		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
-		CFRelease(str), str = nullptr;
-		
+
 		AddDoubleToDictionary(dictionary, kReplayGainTrackPeakKey, num);
 	}
 	
 	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
-		CFRelease(str), str = nullptr;
-		
+
 		AddDoubleToDictionary(dictionary, kReplayGainAlbumGainKey, num);
 		AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, 89.0);
 		
@@ -239,9 +237,8 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shar
 	if(!albumPeakFrame)
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
-		CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
+		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
-		CFRelease(str), str = nullptr;
 
 		AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, num);
 	}
@@ -305,19 +302,13 @@ AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shar
 	for(auto it : tag->frameListMap()["APIC"]) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
 		if(frame) {
-			CFDataRef data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
+			SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
 			
-			CFStringRef description = nullptr;
+			SFB::CFString description;
 			if(!frame->description().isNull())
 				description = CFStringCreateWithCString(kCFAllocatorDefault, frame->description().toCString(true), kCFStringEncodingUTF8);
 			
 			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));
-
-			if(data)
-				CFRelease(data), data = nullptr;
-			
-			if(description)
-				CFRelease(description), description = nullptr;
 		}
 	}
 

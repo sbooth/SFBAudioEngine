@@ -33,10 +33,11 @@
 #include <FLAC/metadata.h>
 
 #include "FLACDecoder.h"
-#include "CFErrorUtilities.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 static void RegisterFLACDecoder() __attribute__ ((constructor));
@@ -224,7 +225,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		return false;
 	}
 	
-	CFStringRef fileSystemPath = CFURLCopyFileSystemPath(GetURL(), kCFURLPOSIXPathStyle);
+	SFB::CFString fileSystemPath = CFURLCopyFileSystemPath(GetURL(), kCFURLPOSIXPathStyle);
 	CFStringRef extension = nullptr;
 	
 	CFRange range;
@@ -232,8 +233,6 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		extension = CFStringCreateWithSubstring(kCFAllocatorDefault, fileSystemPath, CFRangeMake(range.location + 1, CFStringGetLength(fileSystemPath) - range.location - 1));
 	}
 	
-	CFRelease(fileSystemPath), fileSystemPath = nullptr;
-
 	if(nullptr == extension) {
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 		return false;

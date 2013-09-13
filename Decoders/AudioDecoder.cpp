@@ -34,6 +34,7 @@
 #include "HTTPInputSource.h"
 #include "AudioDecoder.h"
 #include "Logger.h"
+#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "CreateStringForOSType.h"
 #include "LoopableRegionDecoder.h"
@@ -53,9 +54,8 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	CFMutableArrayRef supportedFileExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		CFArrayRef decoderFileExtensions = subclassInfo.mCreateSupportedFileExtensions();
+		SFB::CFArray decoderFileExtensions = subclassInfo.mCreateSupportedFileExtensions();
 		CFArrayAppendArray(supportedFileExtensions, decoderFileExtensions, CFRangeMake(0, CFArrayGetCount(decoderFileExtensions)));
-		CFRelease(decoderFileExtensions);
 	}
 
 	return supportedFileExtensions;
@@ -66,9 +66,8 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		CFArrayRef decoderMIMETypes = subclassInfo.mCreateSupportedMIMETypes();
+		SFB::CFArray decoderMIMETypes = subclassInfo.mCreateSupportedMIMETypes();
 		CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
-		CFRelease(decoderMIMETypes);
 	}
 
 	return supportedMIMETypes;
@@ -184,18 +183,14 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	if(!inputURL)
 		return nullptr;
 
-	CFStringRef pathExtension = CFURLCopyPathExtension(inputURL);
+	SFB::CFString pathExtension = CFURLCopyPathExtension(inputURL);
 	if(!pathExtension) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Unknown file type"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unknown file type"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(InputSourceErrorDomain, InputSourceFileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return nullptr;
@@ -217,8 +212,6 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 		if(decoder)
 			break;
 	}
-
-	CFRelease(pathExtension), pathExtension = nullptr;
 
 	return decoder;
 }
@@ -435,12 +428,9 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 																		 &sourceFormatNameSize, 
 																		 &sourceFormatDescription);
 
-	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-	}
-	
+	if(noErr != result)
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 	return sourceFormatDescription;
 }
 
@@ -457,12 +447,9 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 																		 &specifierSize, 
 																		 &sourceFormatDescription);
 
-	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-	}
-	
+	if(noErr != result)
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 	return sourceFormatDescription;
 }
 
@@ -479,11 +466,8 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 																		 &specifierSize, 
 																		 &channelLayoutDescription);
 
-	if(noErr != result) {
-		CFStringRef osType = CreateStringForOSType((OSType)result);
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << osType);
-		CFRelease(osType), osType = nullptr;
-	}
-	
+	if(noErr != result)
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
 	return channelLayoutDescription;
 }

@@ -20,7 +20,6 @@
 		3240F9FC17BC4298002360A3 /* tone16bit.flac in Resources */ = {isa = PBXBuildFile; fileRef = 3240F9FB17BC4298002360A3 /* tone16bit.flac */; };
 		3296821D17B9D23200B3CDB4 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3296821C17B9D23100B3CDB4 /* Foundation.framework */; };
 		3296824017B9D24600B3CDB4 /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D429E413E308DB00FA07DE /* AudioPlayer.cpp */; };
-		3296824117B9D24B00B3CDB4 /* DecoderStateData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3201ECB910901F08000082BF /* DecoderStateData.cpp */; };
 		3296824217B9D2FB00B3CDB4 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
 		3296824317B9D30100B3CDB4 /* LoopableRegionDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */; };
 		3296824417B9D30100B3CDB4 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
@@ -35,7 +34,6 @@
 		3296825117B9D33100B3CDB4 /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		3296825217B9D33100B3CDB4 /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		3296825617B9D47000B3CDB4 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
-		3296825717B9D47000B3CDB4 /* ChannelLayoutsAreEqual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */; };
 		3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
 		3296825917B9D47000B3CDB4 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
 		3296825A17B9D47000B3CDB4 /* CreateStringForOSType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 320723C7138D564700007369 /* CreateStringForOSType.cpp */; };
@@ -75,8 +73,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3201ECB810901F08000082BF /* DecoderStateData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DecoderStateData.h; sourceTree = "<group>"; };
-		3201ECB910901F08000082BF /* DecoderStateData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DecoderStateData.cpp; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
 		321FCF9617C14FEE00828C3A /* RingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RingBuffer.cpp; sourceTree = "<group>"; };
@@ -101,6 +97,7 @@
 		3268C0BF139C06AB00CC5C5C /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
+		326CE06C17E365B8003877AB /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
 		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
 		3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateChannelLayout.h; sourceTree = "<group>"; };
 		3296821B17B9D23100B3CDB4 /* libSFBAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSFBAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -143,8 +140,6 @@
 		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AllocateABL.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
 		32DEDA13122C095600C25252 /* DeallocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeallocateABL.cpp; sourceTree = "<group>"; };
-		32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChannelLayoutsAreEqual.h; sourceTree = "<group>"; };
-		32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ChannelLayoutsAreEqual.cpp; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
 		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
 		32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFErrorUtilities.cpp; sourceTree = "<group>"; };
@@ -199,6 +194,7 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				326CE06C17E365B8003877AB /* CFWrapper.h */,
 				321FCF9717C14FEE00828C3A /* RingBuffer.h */,
 				321FCF9617C14FEE00828C3A /* RingBuffer.cpp */,
 				32AEB2901409AF2B001F9A60 /* Logger.h */,
@@ -212,8 +208,6 @@
 				326A98F51392F38A0061A65F /* Semaphore.cpp */,
 				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
 				3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */,
-				32DEDA24122C0B0700C25252 /* ChannelLayoutsAreEqual.h */,
-				32DEDA25122C0B0700C25252 /* ChannelLayoutsAreEqual.cpp */,
 				32DEDA06122C07AF00C25252 /* AllocateABL.h */,
 				32DEDA07122C07AF00C25252 /* AllocateABL.cpp */,
 				32DEDA12122C095600C25252 /* DeallocateABL.h */,
@@ -286,8 +280,6 @@
 			children = (
 				32D429E513E308DB00FA07DE /* AudioPlayer.h */,
 				32D429E413E308DB00FA07DE /* AudioPlayer.cpp */,
-				3201ECB810901F08000082BF /* DecoderStateData.h */,
-				3201ECB910901F08000082BF /* DecoderStateData.cpp */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -452,13 +444,11 @@
 				3296825A17B9D47000B3CDB4 /* CreateStringForOSType.cpp in Sources */,
 				321FCF9817C14FEE00828C3A /* RingBuffer.cpp in Sources */,
 				3296824317B9D30100B3CDB4 /* LoopableRegionDecoder.cpp in Sources */,
-				3296824117B9D24B00B3CDB4 /* DecoderStateData.cpp in Sources */,
 				3240F9F417BB21FC002360A3 /* FLACDecoder.cpp in Sources */,
 				3296824A17B9D31100B3CDB4 /* FileInputSource.cpp in Sources */,
 				3240F9F717BB2203002360A3 /* OggVorbisDecoder.cpp in Sources */,
 				3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */,
 				3296825017B9D33100B3CDB4 /* Mutex.cpp in Sources */,
-				3296825717B9D47000B3CDB4 /* ChannelLayoutsAreEqual.cpp in Sources */,
 				3296824D17B9D31100B3CDB4 /* MemoryMappedFileInputSource.cpp in Sources */,
 				3296825917B9D47000B3CDB4 /* DeallocateABL.cpp in Sources */,
 			);

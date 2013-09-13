@@ -30,7 +30,7 @@
 
 #include "CreateStringForOSType.h"
 
-CFStringRef CreateStringForOSType(OSType osType)
+SFB::CFString SFB::StringForOSType(OSType osType)
 {
 	unsigned char formatID [4];
 	*(UInt32 *)formatID = OSSwapHostToBigInt32(osType);

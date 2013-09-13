@@ -31,8 +31,9 @@
 #include <AudioToolbox/AudioFormat.h>
 
 #include "MonkeysAudioDecoder.h"
-#include "CFErrorUtilities.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #include <mac/All.h>
@@ -220,26 +221,23 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
 		return false;
 
-	mIOInterface = new APEIOInterface(GetInputSource());
+	auto ioInterface = 	std::unique_ptr<APEIOInterface>(new APEIOInterface(GetInputSource()));
 
-	int errorCode;
-	mDecompressor = CreateIAPEDecompressEx(mIOInterface, &errorCode);
-	
-	if(nullptr == mDecompressor) {
+	auto decompressor = std::unique_ptr<IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
+	if(!decompressor) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-			
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 		
 		return false;
 	}
+
+	mDecompressor = std::move(decompressor);
+	mIOInterface = std::move(ioInterface);
 
 	// The file format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
@@ -278,11 +276,8 @@ bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 		return true;
 	}
 
-	if(mIOInterface)
-		delete mIOInterface, mIOInterface = nullptr;
-
-	if(mDecompressor)
-		delete mDecompressor, mDecompressor = nullptr;
+	mIOInterface.reset();
+	mDecompressor.reset();
 
 	mIsOpen = false;
 	return true;
