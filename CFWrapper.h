@@ -31,7 +31,10 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <Security/Security.h>
+#if !TARGET_OS_IPHONE
+# include <Security/Security.h>
+# include <ImageIO/ImageIO.h>
+#endif
 
 namespace SFB {
 
@@ -160,10 +163,14 @@ namespace SFB {
 	typedef CFWrapper<CFURLRef> CFURL;
 	typedef CFWrapper<CFUUIDRef> CFUUID;
 	typedef CFWrapper<CFNumberRef> CFNumber;
+	typedef CFWrapper<CFBooleanRef> CFBoolean;
 	typedef CFWrapper<CFErrorRef> CFError;
 	typedef CFWrapper<CFDateRef> CFDate;
+#if !TARGET_OS_IPHONE
 	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;
 	typedef CFWrapper<SecCertificateRef> SecCertificate;
+	typedef CFWrapper<CGImageSourceRef> CGImageSource;
+#endif
 
 	template <typename T>
 	std::ostream& operator<<(std::ostream& out, CFWrapper<T> obj)
