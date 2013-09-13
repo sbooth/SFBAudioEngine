@@ -45,7 +45,6 @@
 // Forward declarations
 // ========================================
 class RingBuffer;
-class DecoderStateData;
 
 // ========================================
 // Constants
@@ -236,6 +235,9 @@ public:
 	// The minimum size of writes to the ring buffer, which implies the minimum read size from an AudioDecoder
 	inline uint32_t GetRingBufferWriteChunkSize() const	{ return mRingBufferWriteChunkSize; }
 	bool SetRingBufferWriteChunkSize(uint32_t chunkSize);
+
+	// This class is exposed so it can be used inside C callbacks
+	class DecoderStateData;
 
 private:
 

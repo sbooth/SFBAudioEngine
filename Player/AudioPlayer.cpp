@@ -40,7 +40,6 @@
 #include <iomanip>
 
 #include "AudioPlayer.h"
-#include "DecoderStateData.h"
 #include "RingBuffer.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
@@ -58,6 +57,14 @@
 // Enums
 // ========================================
 enum {
+	eDecoderStateDataFlagDecodingStarted	= 1u << 0,
+	eDecoderStateDataFlagDecodingFinished	= 1u << 1,
+	eDecoderStateDataFlagRenderingStarted	= 1u << 2,
+	eDecoderStateDataFlagRenderingFinished	= 1u << 3,
+	eDecoderStateDataFlagStopDecoding		= 1u << 4
+};
+
+enum {
 	eAudioPlayerFlagMuteOutput				= 1u << 0,
 	eAudioPlayerFlagFormatMismatch			= 1u << 1
 };
@@ -68,6 +75,83 @@ static void InitializeLoggingSubsystem()
 	// Turn off logging by default
 	::logger::SetCurrentLevel(::logger::disabled);
 }
+
+// ========================================
+// State data for decoders that are decoding and/or rendering
+// ========================================
+class AudioPlayer::DecoderStateData
+{
+
+public:
+
+	// Takes ownership of decoder
+	DecoderStateData(AudioDecoder *decoder)
+		: DecoderStateData()
+	{
+		assert(nullptr != decoder);
+		mDecoder = decoder;
+
+		// NB: The decoder may return an estimate of the total frames
+		mTotalFrames = mDecoder->GetTotalFrames();
+	}
+
+	~DecoderStateData()
+	{
+		// Delete the decoder
+		if(mDecoder)
+			delete mDecoder, mDecoder = nullptr;
+
+		DeallocateBufferList();
+	}
+
+	DecoderStateData(const DecoderStateData& rhs) = delete;
+	DecoderStateData& operator=(const DecoderStateData& rhs) = delete;
+
+	void AllocateBufferList(UInt32 capacityFrames)
+	{
+		DeallocateBufferList();
+
+		mBufferCapacityFrames = capacityFrames;
+		mBufferList = AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
+	}
+
+	void DeallocateBufferList()
+	{
+		if(mBufferList) {
+			mBufferCapacityFrames = 0;
+			mBufferList = DeallocateABL(mBufferList);
+		}
+	}
+
+	void ResetBufferList()
+	{
+		AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
+
+		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
+			mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
+	}
+
+	AudioDecoder			*mDecoder;
+
+	AudioBufferList			*mBufferList;
+	UInt32					mBufferCapacityFrames;
+
+	SInt64					mTimeStamp;
+
+	SInt64					mTotalFrames;
+	volatile SInt64			mFramesRendered;
+
+	SInt64					mFrameToSeek;
+
+	volatile uint32_t		mFlags;
+
+private:
+
+	DecoderStateData()
+		: mDecoder(nullptr), mBufferList(nullptr), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
+	{}
+
+};
 
 // ========================================
 // Set the calling thread's timesharing and importance
@@ -174,7 +258,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 	assert(nullptr != inUserData);
 	assert(nullptr != ioNumberDataPackets);
 
-	DecoderStateData *decoderStateData = static_cast<DecoderStateData *>(inUserData);
+	AudioPlayer::DecoderStateData *decoderStateData = static_cast<AudioPlayer::DecoderStateData *>(inUserData);
 
 	decoderStateData->ResetBufferList();
 
@@ -2937,7 +3021,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 
 #pragma mark Other Utilities
 
-DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
+AudioPlayer::DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -2958,7 +3042,7 @@ DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 	return result;
 }
 
-DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
+AudioPlayer::DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
