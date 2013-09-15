@@ -123,6 +123,17 @@ namespace SFB {
 		}
 
 		// ========================================
+		// Pointer management
+
+		inline T Relinquish()
+		{
+			T object = mObject;
+			mObject = nullptr;
+
+			return object;
+		}
+
+		// ========================================
 		// Equality testing
 
 		// Convenience methods for equality testing (wraps CFEqual)
