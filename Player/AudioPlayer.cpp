@@ -159,8 +159,11 @@ private:
 static bool
 setThreadPolicy(integer_t importance)
 {
+	return true;
 	// Turn off timesharing
-	thread_extended_policy_data_t extendedPolicy = { 0 };
+	thread_extended_policy_data_t extendedPolicy = {
+		.timeshare = false
+	};
 	kern_return_t error = thread_policy_set(mach_thread_self(),
 											THREAD_EXTENDED_POLICY,
 											(thread_policy_t)&extendedPolicy, 
@@ -172,7 +175,9 @@ setThreadPolicy(integer_t importance)
 	}
 	
 	// Give the thread the specified importance
-	thread_precedence_policy_data_t precedencePolicy = { importance };
+	thread_precedence_policy_data_t precedencePolicy = {
+		.importance = importance
+	};
 	error = thread_policy_set(mach_thread_self(), 
 							  THREAD_PRECEDENCE_POLICY, 
 							  (thread_policy_t)&precedencePolicy, 
@@ -306,7 +311,7 @@ AudioPlayer::AudioPlayer()
 
 		throw std::runtime_error("pthread_create failed");
 	}
-	
+
 	// ========================================
 	// Launch the collector thread
 	mKeepCollecting = true;
@@ -1720,7 +1725,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
-		size_t byteCountToZero = inNumberFrames * sizeof(float);
+		size_t byteCountToZero = inNumberFrames * sizeof(AudioUnitSampleType);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
@@ -1856,7 +1861,7 @@ void * AudioPlayer::DecoderThreadEntry()
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set decoder thread importance");
-	
+
 	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = {
 		.tv_sec = 2,
@@ -2234,7 +2239,7 @@ bool AudioPlayer::OpenOutput()
 	desc.componentType			= kAudioUnitType_Mixer;
 	desc.componentSubType		= kAudioUnitSubType_MultiChannelMixer;
 	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
-	desc.componentFlags			= 0;
+	desc.componentFlags			= kAudioComponentFlag_SandboxSafe;
 	desc.componentFlagsMask		= 0;
 
 	result = AUGraphAddNode(mAUGraph, &desc, &mMixerNode);
@@ -2253,11 +2258,12 @@ bool AudioPlayer::OpenOutput()
 	desc.componentType			= kAudioUnitType_Output;
 #if TARGET_OS_IPHONE
 	desc.componentSubType		= kAudioUnitSubType_RemoteIO;
+	desc.componentFlags			= 0;
 #else
 	desc.componentSubType		= kAudioUnitSubType_HALOutput;
+	desc.componentFlags			= kAudioComponentFlag_SandboxSafe;
 #endif
 	desc.componentManufacturer	= kAudioUnitManufacturer_Apple;
-	desc.componentFlags			= 0;
 	desc.componentFlagsMask		= 0;
 
 	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
