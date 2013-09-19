@@ -74,7 +74,8 @@ namespace SFB {
 		~CFWrapper()
 		{
 			if(mObject && mRelease)
-				CFRelease(mObject), mObject = nullptr;
+				CFRelease(mObject);
+			mObject = nullptr;
 		}
 
 		// This object will take ownership of T (i.e., it will consume a reference)
