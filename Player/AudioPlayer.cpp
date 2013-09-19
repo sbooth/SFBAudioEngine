@@ -848,7 +848,7 @@ bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
 		return false;
 	}
 
-	result = AudioUnitSetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, sizeof(complexity));
+	result = AudioUnitSetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, (UInt32)sizeof(complexity));
 	if(noErr != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
 		return false;
@@ -1195,7 +1195,7 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	// All AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
 	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
 	UInt32 framesPerSlice = 4096;
-	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, sizeof(framesPerSlice));
+	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 
@@ -1498,7 +1498,7 @@ bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 	}
 
 	// Update our output AU to use the specified device
-	result = AudioUnitSetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, sizeof(deviceID));
+	result = AudioUnitSetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
 		return false;
@@ -2368,7 +2368,7 @@ bool AudioPlayer::OpenOutput()
 	}
 
 	UInt32 framesPerSlice = 4096;
-	result = AudioUnitSetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, sizeof(framesPerSlice));
+	result = AudioUnitSetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 
@@ -3015,7 +3015,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
 
 	// Set the channel map
-	result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, sizeof(channelMap));
+	result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 		return false;
