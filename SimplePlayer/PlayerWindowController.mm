@@ -219,7 +219,7 @@ enum {
 		[self.elapsed setHidden:YES];
 		[self.remaining setHidden:YES];
 
-		[self.albumArt setImage:nil];
+		[self.albumArt setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
 		[self.title setStringValue:@""];
 		[self.artist setStringValue:@""];
 
@@ -270,7 +270,7 @@ enum {
 		delete metadata;
 	}
 	else {
-		[self.albumArt setImage:nil];
+		[self.albumArt setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
 		[self.title setStringValue:@""];
 		[self.artist setStringValue:@""];
 	}
