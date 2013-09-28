@@ -147,7 +147,7 @@ namespace SFB {
 		inline operator bool() const							{ return nullptr != mObject; }
 		inline operator T() const								{ return mObject; }
 
-		inline T object() const									{ return mObject; }
+		inline T Object() const									{ return mObject; }
 
 	private:
 		T mObject;
