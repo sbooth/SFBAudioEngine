@@ -29,6 +29,7 @@
  */
 
 #include "AttachedPicture.h"
+#include "CFWrapper.h"
 #include "CFDictionaryUtilities.h"
 
 // ========================================
@@ -75,9 +76,8 @@ AttachedPicture::Type AttachedPicture::GetType() const
 
 void AttachedPicture::SetType(Type type)
 {
-	CFNumberRef wrapper = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type);
+	SFB::CFNumber wrapper = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type);
 	SetValue(kAttachedPictureTypeKey, wrapper);
-	CFRelease(wrapper), wrapper = nullptr;
 }
 
 CFStringRef AttachedPicture::GetDescription() const

@@ -29,6 +29,7 @@
  */
 
 #include "HTTPInputSource.h"
+#include "CFWrapper.h"
 #include "Logger.h"
 
 // ========================================
@@ -75,9 +76,8 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 
 	// Seek support
 	if(0 < mDesiredOffset) {
-		CFStringRef byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset);
+		SFB::CFString byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset);
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
-		CFRelease(byteRange), byteRange = nullptr;
 	}
 
 	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, nullptr);
@@ -208,21 +208,18 @@ void HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventTy
 
 		case kCFStreamEventHasBytesAvailable:
 			if(nullptr == mResponseHeaders) {
-				CFTypeRef responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
+				SFB::CFType responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
 				if(responseHeader) {
-					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields(static_cast<CFHTTPMessageRef>(const_cast<void *>(responseHeader)));
-					CFRelease(responseHeader), responseHeader = nullptr;
-				}				
+					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)responseHeader.Object());
+				}
 			}
 			break;
 		
 		case kCFStreamEventErrorOccurred:
 		{
-			CFErrorRef error = CFReadStreamCopyError(stream);
-			if(error) {
+			SFB::CFError error = CFReadStreamCopyError(stream);
+			if(error)
 				LOGGER_ERR("org.sbooth.AudioEngine.InputSource.HTTP", "Error: " << error);
-				CFRelease(error), error = nullptr;
-			}
 			break;
 		}
 

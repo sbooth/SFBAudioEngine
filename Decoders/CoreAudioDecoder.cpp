@@ -133,34 +133,18 @@ bool CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	if(nullptr == extension)
 		return false;
 
-	CFArrayRef		supportedExtensions			= nullptr;
-	UInt32			size						= sizeof(supportedExtensions);
-	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 
-																		 0, 
-																		 nullptr, 
-																		 &size, 
-																		 &supportedExtensions);
-	
-	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
-
+	SFB::CFArray supportedExtensions = CreateSupportedFileExtensions();
+	if(!supportedExtensions)
 		return false;
-	}
-	
-	bool extensionIsSupported = false;
-	
+
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
 		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
-		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
-			extensionIsSupported = true;
-			break;
-		}
+		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive))
+			return true;
 	}
-		
-	CFRelease(supportedExtensions), supportedExtensions = nullptr;
-	
-	return extensionIsSupported;
+
+	return false;
 }
 
 bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
@@ -168,34 +152,18 @@ bool CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	if(nullptr == mimeType)
 		return false;
 
-	CFArrayRef		supportedMIMETypes			= nullptr;
-	UInt32			size						= sizeof(supportedMIMETypes);
-	OSStatus		result						= AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 
-																		 0, 
-																		 nullptr, 
-																		 &size, 
-																		 &supportedMIMETypes);
-	
-	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
-
+	SFB::CFArray supportedMIMETypes = CreateSupportedMIMETypes();
+	if(!supportedMIMETypes)
 		return false;
-	}
-	
-	bool mimeTypeIsSupported = false;
-	
+
 	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
 		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
-		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
-			mimeTypeIsSupported = true;
-			break;
-		}
+		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive))
+			return true;
 	}
-	
-	CFRelease(supportedMIMETypes), supportedMIMETypes = nullptr;
-	
-	return mimeTypeIsSupported;
+
+	return false;
 }
 
 AudioDecoder * CoreAudioDecoder::CreateDecoder(InputSource *inputSource)

@@ -33,6 +33,7 @@
 #include "MemoryMappedFileInputSource.h"
 #include "InMemoryFileInputSource.h"
 #include "HTTPInputSource.h"
+#include "CFWrapper.h"
 
 // ========================================
 // Error Codes
@@ -45,13 +46,10 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 {
 	if(nullptr == url)
 		return nullptr;
-	
-	InputSource *inputSource = nullptr;
-	
-	CFStringRef scheme = CFURLCopyScheme(url);
 
 	// If there is no scheme the URL is invalid
-	if(nullptr == scheme) {
+	SFB::CFString scheme = CFURLCopyScheme(url);
+	if(!scheme) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, nullptr);
 		return nullptr;
@@ -59,18 +57,16 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		if(InputSourceFlagMemoryMapFiles & flags)
-			inputSource = new MemoryMappedFileInputSource(url);
+			return new MemoryMappedFileInputSource(url);
 		else if(InputSourceFlagLoadFilesInMemory & flags)
-			inputSource = new InMemoryFileInputSource(url);
+			return new InMemoryFileInputSource(url);
 		else
-			inputSource = new FileInputSource(url);
+			return new FileInputSource(url);
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive))
-		inputSource = new HTTPInputSource(url);
+		return new HTTPInputSource(url);
 
-	CFRelease(scheme), scheme = nullptr;
-
-	return inputSource;
+	return nullptr;
 }
 
 #pragma mark Creation and Destruction

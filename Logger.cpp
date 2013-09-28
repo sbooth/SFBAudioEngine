@@ -35,6 +35,7 @@
 #include <iomanip>
 
 #include "Logger.h"
+#include "CFWrapper.h"
 
 #define BUFFER_LENGTH 512
 
@@ -282,11 +283,9 @@ std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 		return out;
 	}
 
-	CFStringRef r = CFErrorCopyDescription(e);
-	if(r) {
+	SFB::CFString r = CFErrorCopyDescription(e);
+	if(r)
 		out << r;
-		CFRelease(r), r = nullptr;
-	}
 
 	return out;
 }
@@ -298,22 +297,18 @@ std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 		return out;
 	}
 
-	CFStringRef r = CFUUIDCreateString(kCFAllocatorDefault, u);
-	if(r) {
+	SFB::CFString r = CFUUIDCreateString(kCFAllocatorDefault, u);
+	if(r)
 		out << r;
-		CFRelease(r), r = nullptr;
-	}
 
 	return out;
 }
 
 std::ostream& operator<<(std::ostream& out, CFUUIDBytes b)
 {
-	CFUUIDRef u = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, b);
-	if(u) {
+	SFB::CFUUID u = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, b);
+	if(u)
 		out << u;
-		CFRelease(u), u = nullptr;
-	}
 
 	return out;
 }

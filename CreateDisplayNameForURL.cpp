@@ -34,6 +34,7 @@
 #endif
 
 #include "CreateDisplayNameForURL.h"
+#include "CFWrapper.h"
 #include "Logger.h"
 
 CFStringRef
@@ -44,10 +45,9 @@ CreateDisplayNameForURL(CFURLRef url)
 	CFStringRef displayName = nullptr;
 
 #if !TARGET_OS_IPHONE
-	CFStringRef scheme = CFURLCopyScheme(url);
+	SFB::CFString scheme = CFURLCopyScheme(url);
 	if(scheme) {
 		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
-		CFRelease(scheme), scheme = nullptr;
 
 		if(isFileURL) {
 			OSStatus result = LSCopyDisplayNameForURL(url, &displayName);

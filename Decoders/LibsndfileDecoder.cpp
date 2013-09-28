@@ -113,11 +113,9 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 		SF_FORMAT_INFO formatInfo;
 		formatInfo.format = i;
 		if(0 == sf_command(nullptr, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
-			CFStringRef extension = CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8);
-			if(extension) {
+			SFB::CFString extension = CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8);
+			if(extension)
 				CFArrayAppendValue(supportedExtensions, extension);
-				CFRelease(extension), extension = nullptr;
-			}
 		}
 		else
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
@@ -136,25 +134,18 @@ bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	if(nullptr == extension)
 		return false;
 
-	CFArrayRef supportedExtensions = CreateSupportedFileExtensions();
-
-	if(nullptr == supportedExtensions)
+	SFB::CFArray supportedExtensions = CreateSupportedFileExtensions();
+	if(!supportedExtensions)
 		return false;
-	
-	bool extensionIsSupported = false;
 	
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
 		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
-		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive)) {
-			extensionIsSupported = true;
-			break;
-		}
+		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive))
+			return true;
 	}
 		
-	CFRelease(supportedExtensions), supportedExtensions = nullptr;
-	
-	return extensionIsSupported;
+	return false;
 }
 
 bool LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
