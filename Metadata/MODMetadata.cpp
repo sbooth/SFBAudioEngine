@@ -233,8 +233,6 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 		}
 	}
 
-	CFRelease(pathExtension), pathExtension = nullptr;
-
 	if(!fileIsValid) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
