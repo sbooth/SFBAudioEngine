@@ -95,26 +95,34 @@ SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, 
 	tag->setGenre(TagLib::StringFromCFString(metadata.GetGenre()));
 	
 	// Date
-//	tag->removeFrames("TDRC");
-//	if(metadata.GetReleaseDate()) {
-//		/*
-//		 The timestamp fields are based on a subset of ISO 8601. When being as
-//		 precise as possible the format of a time string is
-//		 yyyy-MM-ddTHH:mm:ss (year, "-", month, "-", day, "T", hour (out of
-//		 24), ":", minutes, ":", seconds), but the precision may be reduced by
-//		 removing as many time indicators as wanted. Hence valid timestamps
-//		 are
-//		 yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm and
-//		 yyyy-MM-ddTHH:mm:ss. All time stamps are UTC. For durations, use
-//		 the slash character as described in 8601, and for multiple non-
-//		 contiguous dates, use multiple strings, if allowed by the frame
-//		 definition.
-//		*/
-////		year = CFStringGetIntValue(metadata.GetReleaseDate());
-//		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
-//		frame->setText("");
-//		tag->addFrame(frame);
-//	}
+#if 1
+	int year = 0;
+	if(metadata.GetReleaseDate())
+		year = CFStringGetIntValue(metadata.GetReleaseDate());
+	tag->setYear((TagLib::uint)year);
+#else
+	// TODO: Parse the release date into components and set the frame appropriately
+	tag->removeFrames("TDRC");
+	if(metadata.GetReleaseDate()) {
+		/*
+		 The timestamp fields are based on a subset of ISO 8601. When being as
+		 precise as possible the format of a time string is
+		 yyyy-MM-ddTHH:mm:ss (year, "-", month, "-", day, "T", hour (out of
+		 24), ":", minutes, ":", seconds), but the precision may be reduced by
+		 removing as many time indicators as wanted. Hence valid timestamps
+		 are
+		 yyyy, yyyy-MM, yyyy-MM-dd, yyyy-MM-ddTHH, yyyy-MM-ddTHH:mm and
+		 yyyy-MM-ddTHH:mm:ss. All time stamps are UTC. For durations, use
+		 the slash character as described in 8601, and for multiple non-
+		 contiguous dates, use multiple strings, if allowed by the frame
+		 definition.
+		*/
+//		year = CFStringGetIntValue(metadata.GetReleaseDate());
+		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
+		frame->setText("");
+		tag->addFrame(frame);
+	}
+#endif
 
 	// Comment
 	tag->setComment(TagLib::StringFromCFString(metadata.GetComment()));
