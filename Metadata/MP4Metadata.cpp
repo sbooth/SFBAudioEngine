@@ -151,24 +151,20 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 		MP4Duration mp4Duration = MP4GetTrackDuration(file, trackID);
 		uint32_t mp4TimeScale = MP4GetTrackTimeScale(file, trackID);
 		
-		CFNumberRef totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
+		SFB::CFNumber totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
 		CFDictionarySetValue(mMetadata, kPropertiesTotalFramesKey, totalFrames);
-		CFRelease(totalFrames), totalFrames = nullptr;
-		
-		CFNumberRef sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
+
+		SFB::CFNumber sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
 		CFDictionarySetValue(mMetadata, kPropertiesSampleRateKey, sampleRate);
-		CFRelease(sampleRate), sampleRate = nullptr;
-		
+
 		double length = (double)mp4Duration / (double)mp4TimeScale;
-		CFNumberRef duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+		SFB::CFNumber duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
 		CFDictionarySetValue(mMetadata, kPropertiesDurationKey, duration);
-		CFRelease(duration), duration = nullptr;
 
 		// "mdia.minf.stbl.stsd.*[0].channels"
 		int channels = MP4GetTrackAudioChannels(file, trackID);
-		CFNumberRef channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels);
+		SFB::CFNumber channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels);
 		CFDictionaryAddValue(mMetadata, kPropertiesChannelsPerFrameKey, channelsPerFrame);
-		CFRelease(channelsPerFrame), channelsPerFrame = nullptr;
 
 		// ALAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
@@ -181,26 +177,22 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 				// The ALAC magic cookie seems to have the following layout (28 bytes, BE):
 				// Byte 10: Sample size
 				// Bytes 25-28: Sample rate
-				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, decoderConfig + 9);
+				SFB::CFNumber bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, decoderConfig + 9);
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-				CFRelease(bitsPerChannel), bitsPerChannel = nullptr;
 
 				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * decoderConfig[9]) / 1000.0;
-				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
-				CFRelease(bitrate), bitrate = nullptr;
 
 				free(decoderConfig), decoderConfig = nullptr;
 			}			
 			else if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
-				CFNumberRef bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
+				SFB::CFNumber bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
 				CFDictionaryAddValue(mMetadata, kPropertiesBitsPerChannelKey, bitsPerChannel);
-				CFRelease(bitsPerChannel), bitsPerChannel = nullptr;
 
 				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * sampleSize) / 1000.0;
-				CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kPropertiesBitrateKey, bitrate);
-				CFRelease(bitrate), bitrate = nullptr;
 			}
 		}
 
@@ -210,10 +202,9 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 
 			// "mdia.minf.stbl.stsd.*.esds.decConfigDescr.avgBitrate"
 			uint32_t trackBitrate = MP4GetTrackBitRate(file, trackID) / 1000;
-			CFNumberRef bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackBitrate);
+			SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackBitrate);
 			CFDictionaryAddValue(mMetadata, kPropertiesBitrateKey, bitrate);
-			CFRelease(bitrate), bitrate = nullptr;
-			
+
 		}
 	}
 	// No valid tracks in file
@@ -304,15 +295,13 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	// Track number
 	if(tags->track) {
 		if(tags->track->index) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index);
+			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index);
 			CFDictionarySetValue(mMetadata, kMetadataTrackNumberKey, num);
-			CFRelease(num), num = nullptr;
 		}
 		
 		if(tags->track->total) {
-			CFNumberRef num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total);
+			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total);
 			CFDictionarySetValue(mMetadata, kMetadataTrackTotalKey, num);
-			CFRelease(num), num = nullptr;
 		}
 	}
 	
