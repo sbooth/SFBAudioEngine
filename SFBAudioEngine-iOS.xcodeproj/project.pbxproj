@@ -578,6 +578,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = "SimplePlayer-iOS/SimplePlayer-iOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				OTHER_LDFLAGS = "-Wl,-force_load,$(BUILT_PRODUCTS_DIR)/libSFBAudioEngine.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -598,6 +599,7 @@
 				GCC_PREFIX_HEADER = "SimplePlayer-iOS/SimplePlayer-iOS-Prefix.pch";
 				INFOPLIST_FILE = "SimplePlayer-iOS/SimplePlayer-iOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				OTHER_LDFLAGS = "-Wl,-force_load,$(BUILT_PRODUCTS_DIR)/libSFBAudioEngine.a";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
