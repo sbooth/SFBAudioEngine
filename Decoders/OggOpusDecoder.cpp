@@ -30,6 +30,7 @@
 
 #include "OggOpusDecoder.h"
 #include "CreateChannelLayout.h"
+#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
@@ -169,15 +170,11 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 
 	if(nullptr == mOpusFile) {
 		if(error) {
-			CFStringRef description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
-			CFStringRef failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
-			CFStringRef recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
-
-			CFRelease(description), description = nullptr;
-			CFRelease(failureReason), failureReason = nullptr;
-			CFRelease(recoverySuggestion), recoverySuggestion = nullptr;
 		}
 
 		return false;
