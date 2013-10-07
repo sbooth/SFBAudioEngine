@@ -304,15 +304,30 @@ UInt32 OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
 
-	int framesRead = op_read_float(mOpusFile, (float *)bufferList->mBuffers[0].mData, (int)(bufferList->mBuffers[0].mDataByteSize / sizeof(float)), nullptr);
+	float		*buffer				= (float *)bufferList->mBuffers[0].mData;
+	UInt32		framesRemaining		= frameCount;
+	UInt32		totalFramesRead		= 0;
 
-	if(0 > framesRead) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
-		return 0;
+	while(0 < framesRemaining) {
+		int framesRead = op_read_float(mOpusFile, buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
+
+		if(0 > framesRead) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
+			return 0;
+		}
+
+		// 0 frames indicates EOS
+		if(0 == framesRead)
+			break;
+
+		buffer += (UInt32)framesRead * mFormat.mChannelsPerFrame;
+
+		totalFramesRead += (UInt32)framesRead;
+		framesRemaining -= (UInt32)framesRead;
 	}
 
-	bufferList->mBuffers[0].mDataByteSize = (UInt32)framesRead * mFormat.mBytesPerFrame;
+	bufferList->mBuffers[0].mDataByteSize = totalFramesRead * mFormat.mBytesPerFrame;
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
-	return (UInt32)framesRead;
+	return totalFramesRead;
 }
