@@ -29,77 +29,60 @@
  */
 
 #include "RingBuffer.h"
-#include "Logger.h"
 
 #include <stdlib.h>
 #include <algorithm>
 
-#include <libkern/OSAtomic.h>
-
 // ========================================
 
-/**
- * return the smallest power of two value
- * greater than x
- *
- * Input range:  [2..2147483648]
- * Output range: [2..2147483648]
+/*!
+ * Copy non-interleaved audio from \c bufferList to \c buffers
+ * @param buffers The destination buffers
+ * @param destOffset The byte offset in \c buffers to begin writing
+ * @param bufferList The source buffers
+ * @param srcOffset The byte offset in \c bufferList to begin reading
+ * @param byteCount The number of bytes per non-interleaved buffer to read and write
+ */
+inline static void StoreABL(unsigned char **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
+{
+	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+		memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
+}
+
+/*!
+ * Copy non-interleaved audio from \c buffers to \c bufferList
+ * @param bufferList The destination buffers
+ * @param destOffset The byte offset in \c bufferList to begin writing
+ * @param buffers The source buffers
+ * @param srcOffset The byte offset in \c bufferList to begin reading
+ * @param byteCount The number of bytes per non-interleaved buffer to read and write
+ */
+inline static void FetchABL(AudioBufferList *bufferList, size_t destOffset, const unsigned char **buffers, size_t srcOffset, size_t byteCount)
+{
+	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+		memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
+}
+
+/*!
+ * Return the smallest power of two value greater than \c x
+ * @param x A value in the range [2..2147483648]
+ * @return The smallest power of two greater than \c x
  *
  */
-__attribute__ ((const)) static inline uint32_t p2(uint32_t x)
+__attribute__ ((const)) static inline uint32_t NextPowerOfTwo(uint32_t x)
 {
 #if 0
     assert(x > 1);
     assert(x <= ((UINT32_MAX / 2) + 1));
 #endif
 
-    return 1 << (32 - __builtin_clz (x - 1));
-}
-
-// From http://graphics.stanford.edu/~seander/bithacks.html
-inline static unsigned int NextPowerOfTwo(unsigned int v)
-{
-	v--;
-
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-
-	v++;
-
-	return v;
-}
-
-inline static void ZeroRange(unsigned char **buffers, UInt32 bufferCount, UInt32 byteOffset, UInt32 byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferCount; ++bufferIndex)
-		memset(buffers[bufferIndex] + byteOffset, 0, byteCount);
-}
-
-inline static void ZeroABL(AudioBufferList *bufferList, UInt32 byteOffset, UInt32 byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		memset((unsigned char *)bufferList->mBuffers[bufferIndex].mData + byteOffset, 0, byteCount);
-}
-
-inline static void StoreABL(unsigned char **buffers, UInt32 destOffset, const AudioBufferList *bufferList, UInt32 srcOffset, UInt32 byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
-}
-
-inline static void FetchABL(AudioBufferList *bufferList, UInt32 destOffset, const unsigned char **buffers, UInt32 srcOffset, UInt32 byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
+    return 1 << (32 - __builtin_clz(x - 1));
 }
 
 #pragma mark Creation and Destruction
 
 RingBuffer::RingBuffer()
-	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0)
+	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
 {}
 
 RingBuffer::~RingBuffer()
@@ -107,26 +90,32 @@ RingBuffer::~RingBuffer()
 	Deallocate();
 }
 
-bool RingBuffer::Allocate(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
+#pragma mark Buffer Management
+
+bool RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
 {
+	if(!(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags))
+		return false;
 	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, capacityFrames);
 }
 
-bool RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, UInt32 capacityFrames)
+bool RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
 {
 	Deallocate();
 
 	// Round up to the next power of two
-	capacityFrames = NextPowerOfTwo(capacityFrames);
-	
+	capacityFrames = NextPowerOfTwo((uint32_t)capacityFrames);
+
 	mNumberChannels = channelCount;
 	mBytesPerFrame = bytesPerFrame;
+
 	mCapacityFrames = capacityFrames;
 	mCapacityFramesMask = capacityFrames - 1;
+
 	mCapacityBytes = bytesPerFrame * capacityFrames;
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
-	UInt32 allocationSize = (mCapacityBytes + sizeof(unsigned char *)) * channelCount;
+	size_t allocationSize = (mCapacityBytes + sizeof(unsigned char *)) * channelCount;
 	unsigned char *memoryChunk = (unsigned char *)malloc(allocationSize);
 	if(nullptr == memoryChunk)
 		return false;
@@ -142,14 +131,8 @@ bool RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, UInt32 capa
 		memoryChunk += mCapacityBytes;
 	}
 
-	// Zero the time bounds queue
-	for(UInt32 i = 0; i < kGeneralRingTimeBoundsQueueSize; ++i) {
-		mTimeBoundsQueue[i].mStartTime = 0;
-		mTimeBoundsQueue[i].mEndTime = 0;
-		mTimeBoundsQueue[i].mUpdateCounter = 0;
-	}
-
-	mTimeBoundsQueueCounter = 0;
+	mReadPointer = 0;
+	mWritePointer = 0;
 
 	return true;
 }
@@ -158,179 +141,108 @@ void RingBuffer::Deallocate()
 {
 	if(mBuffers)
 		free(mBuffers), mBuffers = nullptr;
-
-	mNumberChannels = 0;
-	mCapacityBytes = 0;
-	mCapacityFrames = 0;
 }
 
-bool RingBuffer::Store(const AudioBufferList *bufferList, UInt32 frameCount, SampleTime startWrite)
+
+void RingBuffer::Reset()
 {
-	if(0 == frameCount)
-		return true;
+	mReadPointer = 0;
+	mWritePointer = 0;
 
-	if(frameCount > mCapacityFrames) {
-#if DEBUG
-		LOGGER_ERR("org.sbooth.AudioEngine.RingBuffer", "Insufficient ring buffer capacity: caller attempted to store " << frameCount << " frames, maximum " << mCapacityFrames);
-#endif
-		return false;
-	}
+	for(UInt32 i = 0; i < mNumberChannels; ++i)
+		memset(mBuffers[i], 0, mCapacityBytes);
+}
 
-	SampleTime endWrite = startWrite + frameCount;
-	
-	// going backwards, throw everything out
-	if(startWrite < EndTime())
-		SetTimeBounds(startWrite, startWrite);
-	else if(endWrite - StartTime() <= mCapacityFrames) {
-		// the buffer has not yet wrapped and will not need to
-	}
-	else {
-		// advance the start time past the region we are about to overwrite
-		SampleTime newStart = endWrite - mCapacityFrames;	// one buffer of time behind where we're writing
-		SampleTime newEnd = std::max(newStart, EndTime());
-		SetTimeBounds(newStart, newEnd);
-	}
-	
-	// write the new frames
-	unsigned char **buffers = mBuffers;
-	UInt32 channelCount = mNumberChannels;
-	UInt32 offset0, offset1, byteCount;
-	SampleTime curEnd = EndTime();
-	
-	if(startWrite > curEnd) {
-		// we are skipping some samples, so zero the range we are skipping
-		offset0 = FrameOffset(curEnd);
-		offset1 = FrameOffset(startWrite);
+size_t RingBuffer::GetFramesAvailableToRead() const
+{
+	size_t w = mWritePointer;
+	size_t r = mReadPointer;
 
-		if(offset0 < offset1)
-			ZeroRange(buffers, channelCount, offset0, offset1 - offset0);
-		else {
-			ZeroRange(buffers, channelCount, offset0, mCapacityBytes - offset0);
-			ZeroRange(buffers, channelCount, 0, offset1);
-		}
-
-		offset0 = offset1;
-	}
+	if(w > r)
+		return w - r;
 	else
-		offset0 = FrameOffset(startWrite);
-
-	offset1 = FrameOffset(endWrite);
-	if(offset0 < offset1)
-		StoreABL(buffers, offset0, bufferList, 0, offset1 - offset0);
-	else {
-		byteCount = mCapacityBytes - offset0;
-		StoreABL(buffers, offset0, bufferList, 0, byteCount);
-		StoreABL(buffers, 0, bufferList, byteCount, offset1);
-	}
-	
-	// now update the end time
-	SetTimeBounds(StartTime(), endWrite);
-	
-	return true;
+		return (w - r + mCapacityFrames) & mCapacityFramesMask;
 }
 
-bool RingBuffer::Fetch(AudioBufferList *bufferList, UInt32 frameCount, SampleTime startRead) const
+size_t RingBuffer::GetFramesAvailableToWrite() const
+{
+	size_t w = mWritePointer;
+	size_t r = mReadPointer;
+
+	if(w > r)
+		return ((r - w + mCapacityFrames) & mCapacityFramesMask) - 1;
+	else if(w < r)
+		return (r - w) - 1;
+	else
+		return mCapacityFrames - 1;
+}
+
+size_t RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
 {
 	if(0 == frameCount)
-		return true;
+		return 0;
 
-	SampleTime endRead = startRead + frameCount;
+	size_t framesAvailable = GetFramesAvailableToRead();
+	if(0 == framesAvailable)
+		return 0;
 
-	SampleTime startRead0 = startRead;
-	SampleTime endRead0 = endRead;
-	SampleTime size;
+	size_t framesToRead = std::min(framesAvailable, frameCount);
+	size_t cnt2 = mReadPointer + framesToRead;
 
-	if(!ConstrainTimesToBounds(startRead, endRead))
-		return false;
-
-	size = endRead - startRead;
-
-	// Don't perform out-of-bounds writes
-	if((startRead - startRead0) > frameCount || (endRead0 - endRead) > frameCount || startRead == endRead) {
-		ZeroABL(bufferList, 0, frameCount * mBytesPerFrame);
-		return true;
+	size_t n1, n2;
+	if(cnt2 > mCapacityFrames) {
+		n1 = mCapacityFrames - mReadPointer;
+		n2 = cnt2 & mCapacityFramesMask;
+	}
+	else {
+		n1 = framesToRead;
+		n2 = 0;
 	}
 
-	UInt32 destStartOffset = (UInt32)(startRead - startRead0);
-	if(destStartOffset > 0)
-		ZeroABL(bufferList, 0, destStartOffset * mBytesPerFrame);
+	FetchABL(bufferList, 0, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n1 * mBytesPerFrame);
+	mReadPointer = (mReadPointer + n1) & mCapacityFramesMask;
 
-	UInt32 destEndSize = (UInt32)(endRead0 - endRead);
-	if(destEndSize > 0)
-		ZeroABL(bufferList, (UInt32)(destStartOffset + size), destEndSize * mBytesPerFrame);
-
-	const unsigned char **buffers = (const unsigned char **)mBuffers;
-	UInt32 offset0 = FrameOffset(startRead);
-	UInt32 offset1 = FrameOffset(endRead);
-	UInt32 byteCount;
-
-	if(offset0 < offset1)
-		FetchABL(bufferList, destStartOffset, buffers, offset0, byteCount = offset1 - offset0);
-	else {
-		byteCount = mCapacityBytes - offset0;
-		FetchABL(bufferList, destStartOffset, buffers, offset0, byteCount);
-		FetchABL(bufferList, destStartOffset + byteCount, buffers, 0, offset1);
-		byteCount += offset1;
+	if(n2) {
+		FetchABL(bufferList, n1 * mBytesPerFrame, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n2 * mBytesPerFrame);
+		mReadPointer = (mReadPointer + n2) & mCapacityFramesMask;
 	}
 
 	// Set the buffer sizes
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		bufferList->mBuffers[bufferIndex].mDataByteSize = byteCount;
+		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)(framesToRead * mBytesPerFrame);
 
-	return true;
+	return framesToRead;
 }
 
-// Get the range of timestamps contained in the buffer
-bool RingBuffer::GetTimeBounds(SampleTime& startTime, SampleTime& endTime) const
+size_t RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
 {
-	for(int i = 0; i < 8; ++i) {
-		UInt32 currentCounter = mTimeBoundsQueueCounter;
-		UInt32 currentIndex = currentCounter & kGeneralRingTimeBoundsQueueMask;
+	if(0 == frameCount)
+		return 0;
 
-		const RingBuffer::TimeBounds *bounds = mTimeBoundsQueue + currentIndex;
+	size_t framesAvailable = GetFramesAvailableToWrite();
+	if(0 == framesAvailable)
+		return 0;
 
-		startTime = bounds->mStartTime;
-		endTime = bounds->mEndTime;
+	size_t framesToWrite = std::min(framesAvailable, frameCount);
+	size_t cnt2 = mWritePointer + framesToWrite;
 
-		UInt32 counter = bounds->mUpdateCounter;
-
-		if(counter == currentCounter)
-			return true;
+	size_t n1, n2;
+	if(cnt2 > mCapacityFrames) {
+		n1 = mCapacityFrames - mWritePointer;
+		n2 = cnt2 & mCapacityFramesMask;
+	}
+	else {
+		n1 = framesToWrite;
+		n2 = 0;
 	}
 
-#if DEBUG
-	LOGGER_ERR("org.sbooth.AudioEngine.RingBuffer", "CPU overload: Unable to determine time bounds")
-#endif
+	StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, 0, n1 * mBytesPerFrame);
+	mWritePointer = (mWritePointer + n1) & mCapacityFramesMask;
 
-	return false;
-}
+	if(n2) {
+		StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, n1 * mBytesPerFrame, n2 * mBytesPerFrame);
+		mWritePointer = (mWritePointer + n2) & mCapacityFramesMask;
+	}
 
-#pragma mark Internals
-
-// Set the range of timestamps contained in the buffer
-void RingBuffer::SetTimeBounds(SampleTime startTime, SampleTime endTime)
-{
-	UInt32 nextCounter = mTimeBoundsQueueCounter + 1;
-	UInt32 nextIndex = nextCounter & kGeneralRingTimeBoundsQueueMask;
-	
-	mTimeBoundsQueue[nextIndex].mStartTime = startTime;
-	mTimeBoundsQueue[nextIndex].mEndTime = endTime;
-	mTimeBoundsQueue[nextIndex].mUpdateCounter = nextCounter;
-
-	OSAtomicIncrement32Barrier((int32_t *)&mTimeBoundsQueueCounter);
-}
-
-// Constrain startRead and endRead to valid timestamps in the buffer
-bool RingBuffer::ConstrainTimesToBounds(SampleTime& startRead, SampleTime& endRead) const
-{
-	SampleTime startTime, endTime;
-
-	if(!GetTimeBounds(startTime, endTime))
-		return false;
-
-	startRead = std::max(startRead, startTime);
-	endRead = std::min(endRead, endTime);
-	endRead = std::max(endRead, startRead);
-
-	return true;
+	return framesToWrite;
 }

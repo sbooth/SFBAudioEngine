@@ -32,80 +32,116 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
-const UInt32 kGeneralRingTimeBoundsQueueSize = 32;
-const UInt32 kGeneralRingTimeBoundsQueueMask = kGeneralRingTimeBoundsQueueSize - 1;
-
 // ========================================
-// Ring buffer class based off of Apple's CARingBuffer
-// This class implements a ring buffer that is thread safe for the case of
-// one reader and one writer (single producer, single consumer).
+// A ring buffer implementation supporting non-interleaved audio
+//
+// This class is thread safe when used from one reader thread
+// and one writer thread (single producer, single consumer model).
+//
+// The read and write routines are based on JACK's ringbuffer implementation,
+// but modified for non-interleaved audio
 // ========================================
 class RingBuffer
 {
 public:
 	// ========================================
-	// Typedefs
-	// ========================================
-	typedef SInt64 SampleTime;
-
-	// ========================================
 	// Creation/Destruction
+
+	/*!
+	 * Create a new \c RingBuffer
+	 * @note Allocate() must be called before the object may be used.
+	 */
 	RingBuffer();
+
+	/*!
+	 * Destroy the \c RingBuffer and release all associated resources.
+	 */
 	~RingBuffer();
 
 	// ========================================
 	// Buffer management
-	bool Allocate(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
-	bool Allocate(UInt32 channelCount, UInt32 bytesPerFrame, UInt32 capacityFrames);
 
+	/*!
+	 * Allocate space for audio data.
+	 * @note Only interleaved formats are supported.
+	 * @note This method is not thread safe.
+	 * @param format The format of the audio that will be written to and read from this buffer.
+	 * @param capacityFrames The desired capacity, in frames
+	 * @return \c true on success, \c false on error
+	 */
+	bool Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames);
+
+	/*!
+	 * Allocate space for audio data.
+	 * @note This method is not thread safe.
+	 * @param channelCount The number of interleaved channels
+	 * @param bytesPerFrame The number of bytes per audio frame
+	 * @param capacityFrames The desired capacity, in frames
+	 * @return \c true on success, \c false on error
+	 */
+	bool Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames);
+
+	/*!
+	 * Free the resources used by this \c RingBuffer
+	 * @note This method is not thread safe.
+	 */
 	void Deallocate();
 
-	inline UInt32 GetCapacityFrames() const						{ return mCapacityFrames; }
+	/*!
+	 * Reset this \c RingBuffer to its default state.
+	 * @note This method is not thread safe.
+	 */
+	void Reset();
+
+	/*!
+	 * Get the capacity of this RingBuffer in frames
+	 * @return The capacity of this RingBuffer in frames
+	 */
+	inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
+
+	/*!
+	 * Get the number of frames available for reading
+	 * @return The number of frames available for reading
+	 */
+	size_t GetFramesAvailableToRead() const;
+
+	/*!
+	 * Get the free space available for writing
+	 * @return The number of frames available for writing
+	 */
+	size_t GetFramesAvailableToWrite() const;
 
 	// ========================================
-	// Storing and fetching audio
+	// Reading and writing audio
 
-	// Copies nFrames of data into the ring buffer at the specified sample time.
-	// The sample time should normally increase sequentially, though gaps
-	// are filled with zeroes. A sufficiently large gap effectively empties
-	// the buffer before storing the new data.
+	/*!
+	 * Read audio from the \c RingBuffer, advancing the read pointer.
+	 * @param bufferList An \c AudioBufferList to receive the audio
+	 * @param frameCount The desired number of frames to read
+	 * @return The number of frames actually read
+	 */
+	size_t ReadAudio(AudioBufferList *bufferList, size_t frameCount);
 
-	// If frameNumber is less than the previous frame number, the behavior is undefined.
+	/*!
+	 * Write audio to the \c RingBuffer, advancing the write pointer.
+	 * @param bufferList An \c AudioBufferList containing the audio to copy
+	 * @param frameCount The desired number of frames to write
+	 * @return The number of frames actually written
+	 */
+	size_t WriteAudio(const AudioBufferList *bufferList, size_t frameCount);
 
-	// Return false for failure (buffer not large enough).
-	bool Store(const AudioBufferList *bufferList, UInt32 frameCount, SampleTime frameNumber);
+private:
 
-	bool Fetch(AudioBufferList *bufferList, UInt32 frameCount, SampleTime frameNumber) const;
+	UInt32				mNumberChannels;		// The number of interleaved channels
+	UInt32				mBytesPerFrame;			// The number of bytes per audio frames
 
-	// Get the time range contained in the buffer
-	bool GetTimeBounds(SampleTime& startTime, SampleTime& endTime) const;
-	
-protected:
+	unsigned char		**mBuffers;				// The channel pointers and buffers, allocated in one chunk of memory
 
-	inline UInt32 FrameOffset(SampleTime frameNumber) const		{ return (frameNumber & mCapacityFramesMask) * mBytesPerFrame; }
+	size_t				mCapacityFrames;		// Frame capacity per channel
+	size_t				mCapacityFramesMask;
 
-	// These should only be called from Store()
-	inline SampleTime StartTime() const							{ return mTimeBoundsQueue[mTimeBoundsQueueCounter & kGeneralRingTimeBoundsQueueMask].mStartTime; }
-	inline SampleTime EndTime() const							{ return mTimeBoundsQueue[mTimeBoundsQueueCounter & kGeneralRingTimeBoundsQueueMask].mEndTime; }
+	size_t				mCapacityBytes;			// Byte capacity per frame
 
-	bool ConstrainTimesToBounds(SampleTime& startRead, SampleTime& endRead) const;
-
-	void SetTimeBounds(SampleTime startTime, SampleTime endTime);
-	
-	unsigned char			**mBuffers;				// allocated in one chunk of memory
-	UInt32					mNumberChannels;
-	UInt32					mBytesPerFrame;			// within one deinterleaved channel
-	UInt32					mCapacityFrames;		// per channel, must be a power of 2
-	UInt32					mCapacityFramesMask;
-	UInt32					mCapacityBytes;			// per channel
-	
-	// Range of valid sample time in the buffer
-	struct TimeBounds {
-		volatile SampleTime		mStartTime;
-		volatile SampleTime		mEndTime;
-		volatile UInt32			mUpdateCounter;
-	};
-	
-	RingBuffer::TimeBounds mTimeBoundsQueue[kGeneralRingTimeBoundsQueueSize];
-	UInt32 mTimeBoundsQueueCounter;
+	volatile size_t		mWritePointer;			// In frames
+	volatile size_t		mReadPointer;
 };

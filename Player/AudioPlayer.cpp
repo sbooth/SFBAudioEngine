@@ -66,7 +66,9 @@ enum {
 
 enum {
 	eAudioPlayerFlagMuteOutput				= 1u << 0,
-	eAudioPlayerFlagFormatMismatch			= 1u << 1
+	eAudioPlayerFlagFormatMismatch			= 1u << 1,
+	eAudioPlayerFlagRequestMute				= 1u << 2,
+	eAudioPlayerFlagRingBufferNeedsReset	= 1u << 3
 };
 
 static void InitializeLoggingSubsystem() __attribute__ ((constructor));
@@ -688,6 +690,9 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 
 	if(!OSAtomicCompareAndSwap64Barrier(currentDecoderState->mFrameToSeek, frame, &currentDecoderState->mFrameToSeek))
 		return false;
+
+	// Force a flush of the ring buffer to prevent audible seek artifacts
+	OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
 	mDecoderSemaphore.Signal();
 
@@ -1720,8 +1725,18 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	if(eAudioPlayerFlagMuteOutput & mFlags)
 		return noErr;
 
+	if(eAudioPlayerFlagRequestMute & mFlags) {
+		// Signal the decoding thread that it is safe to manipulate the ring buffer
+		OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+
+		mSemaphore.Signal();
+
+		return noErr;
+	}
+
 	// If the ring buffer doesn't contain any valid audio, skip some work
-	UInt32 framesAvailableToRead = (UInt32)(mFramesDecoded - mFramesRendered);
+	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
 	if(0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
 		
@@ -1735,35 +1750,35 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	}
 
 	// Restrict reads to valid decoded audio
-	UInt32 framesToRead = std::min(framesAvailableToRead, inNumberFrames);
-	if(!mRingBuffer->Fetch(ioData, framesToRead, mFramesRendered)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::Fetch failed: Requested " << framesToRead << " frames from " << mFramesRendered);
+	UInt32 framesToRead = std::min((UInt32)framesAvailableToRead, inNumberFrames);
+	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(ioData, framesToRead);
+	if(framesRead != framesToRead) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
 		return 1;
 	}
 
 	// Call the pre-render block
 	if(mRenderEventBlocks[0])
-		mRenderEventBlocks[0](ioData, framesToRead);
+		mRenderEventBlocks[0](ioData, framesRead);
 
-	mFramesRenderedLastPass = framesToRead;
-	OSAtomicAdd64Barrier(framesToRead, &mFramesRendered);
+	mFramesRenderedLastPass = framesRead;
+	OSAtomicAdd64Barrier(framesRead, &mFramesRendered);
 
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
-	if(framesToRead != inNumberFrames) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Insufficient audio in ring buffer: " << framesToRead << " frames available, " << inNumberFrames << " requested");
+	if(framesRead != inNumberFrames) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << inNumberFrames << " requested");
 		
-		UInt32 framesOfSilence = inNumberFrames - framesToRead;
+		UInt32 framesOfSilence = inNumberFrames - framesRead;
 		size_t byteCountToZero = framesOfSilence * sizeof(AudioUnitSampleType);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			AudioUnitSampleType *bufferAlias = (AudioUnitSampleType *)ioData->mBuffers[bufferIndex].mData;
-			memset(bufferAlias + framesToRead, 0, byteCountToZero);
+			memset(bufferAlias + framesRead, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize += byteCountToZero;
 		}
 	}
 
 	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
-	UInt32 framesAvailableToWrite = (UInt32)(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
-	
+	size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
 	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
 		mDecoderSemaphore.Signal();
 
@@ -1862,9 +1877,8 @@ void * AudioPlayer::DecoderThreadEntry()
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set decoder thread importance");
 
-	// Two seconds and zero nanoseconds
 	mach_timespec_t timeout = {
-		.tv_sec = 2,
+		.tv_sec = 5,
 		.tv_nsec = 0
 	};
 
@@ -2005,8 +2019,6 @@ void * AudioPlayer::DecoderThreadEntry()
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder format: " << decoder->GetFormat());
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder channel layout: " << decoder->GetChannelLayout());
 
-			SInt64 startTime = decoderState->mTimeStamp;
-
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 
 			// ========================================
@@ -2047,8 +2059,34 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
+
+					// Flush the ring buffer if required
+					if(eAudioPlayerFlagRingBufferNeedsReset & mFlags) {
+
+						OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+
+						// Set a flag indicating the rendering thread should output silence
+						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+
+						// Wait for the render thread to complete its current cycle
+						mach_timespec_t renderTimeout = {
+							.tv_sec = 0,
+							.tv_nsec = NSEC_PER_SEC / 100
+						};
+
+						// The rendering thread will clear eAudioPlayerFlagRequestMute when rendering is finished
+						while(eAudioPlayerFlagRequestMute & mFlags)
+							mSemaphore.TimedWait(renderTimeout);
+
+						// Reset() is not thread safe but the rendering thread is outputting silence
+						mRingBuffer->Reset();
+
+						// Clear the mute flag that was set in the rendering thread
+						OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+					}
+
 					// Determine how many frames are available in the ring buffer
-					UInt32 framesAvailableToWrite = (UInt32)(mRingBuffer->GetCapacityFrames() - (mFramesDecoded - mFramesRendered));
+					size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
 
 					// Force writes to the ring buffer to be at least mRingBufferWriteChunkSize
 					if(mRingBufferWriteChunkSize <= framesAvailableToWrite) {
@@ -2057,8 +2095,6 @@ void * AudioPlayer::DecoderThreadEntry()
 						if(-1 != decoderState->mFrameToSeek) {
 							LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Seeking to frame " << decoderState->mFrameToSeek);
 
-							OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-							
 							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
 							
 							SInt64 newFrame = decoder->SeekToFrame(decoderState->mFrameToSeek);
@@ -2087,8 +2123,6 @@ void * AudioPlayer::DecoderThreadEntry()
 								if(noErr != result)
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
 							}
-
-							OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 						}
 
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
@@ -2115,10 +2149,11 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						// Store the decoded audio
 						if(0 != framesDecoded) {
-							if(!mRingBuffer->Store(bufferList, framesDecoded, startingFrameNumber + startTime))
+							UInt32 framesWritten = (UInt32)mRingBuffer->WriteAudio(bufferList, framesDecoded);
+							if(framesWritten != framesDecoded)
 								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::Store failed");
 
-							OSAtomicAdd64Barrier(framesDecoded, &mFramesDecoded);
+							OSAtomicAdd64Barrier(framesWritten, &mFramesDecoded);
 						}
 						
 						// If no frames were returned, this is the end of stream
