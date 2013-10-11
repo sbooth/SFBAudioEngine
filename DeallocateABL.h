@@ -35,4 +35,10 @@
 // ========================================
 // Utility function for deallocating an AudioBufferList struct
 // ========================================
+
+/*!
+ * Deallocate an \c AudioBufferList
+ * @param bufferList The \c AudioBufferList to deallocate
+ * @return nullptr
+ */
 AudioBufferList * DeallocateABL(AudioBufferList *bufferList);

@@ -32,22 +32,46 @@
 
 #include <mach/task.h>
 
-// ========================================
-// A wrapper around a mach semaphore
-// ========================================
+/*! A wrapper around a mach semaphore */
 class Semaphore
 {
 public:
+	/*!
+	 * Create a new \c Semaphore
+	 * @throws std::runtime_exception
+	 */
 	Semaphore();
+
+	/*! Destroy this \c Semaphore */
 	~Semaphore();
 
+	// Copying is not allowed
 	Semaphore(const Semaphore& rhs) = delete;
 	Semaphore& operator=(const Semaphore& rhs) = delete;
 
+	/*!
+	 * Signal the \c Semaphore to wake a blocked thread
+	 * @return \c true if successful, \c false otherwise
+	 */
 	bool Signal();
+
+	/*!
+	 * Signal the \c Semaphore to wake all blocked threads
+	 * @return \c true if successful, \c false otherwise
+	 */
 	bool SignalAll();
 
+	/*!
+	 * Block the calling thread until the \c Semaphore is signaled
+	 * @return \c true if successful, \c false otherwise
+	 */
 	bool Wait();
+
+	/*!
+	 * Block the calling thread until the \c Semaphore is signaled
+	 * @param duration The maximum duration to block
+	 * @return \c true if successful, \c false otherwise
+	 */
 	bool TimedWait(mach_timespec_t duration);
 
 private:

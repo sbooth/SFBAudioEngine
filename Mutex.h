@@ -32,28 +32,55 @@
 
 #include <pthread.h>
 
-// ========================================
-// A wrapper around a pthread mutex
-// ========================================
+/*! A wrapper around a pthread mutex */
 class Mutex
 {
 public:
+	/*!
+	 * Create a new \c Mutex
+	 * @throws std::runtime_exception
+	 */
 	Mutex();
+
+	/*! Destroy this \c Mutex*/
 	virtual ~Mutex();
 
+	// Copying not allowed
 	Mutex(const Mutex& rhs) = delete;
 	Mutex& operator=(const Mutex& rhs) = delete;
 
-	// Lock() and Unlock() return true if the operation was successful, false otherwise
-	// TryLock() returns true if the lock is held by the current thread, false otherwise
-	// All three may throw std::runtime_exception if something bad happens
-
+	/*!
+	 * Lock this \c Mutex.
+	 * @return \c true if the lock was obtained, \c false otherwise
+	 * @throws std::runtime_exception
+	 */
 	bool Lock();
+
+	/*!
+	 * Unlock this \c Mutex
+	 * @throws std::runtime_exception
+	 */
 	void Unlock();
 
+	/*!
+	 * Attempt to lock this \c Mutex
+	 * @return \c true if the lock is held by the calling thread, \c false otherwise
+	 * @throws std::runtime_exception
+	 */
 	bool TryLock();
+
+	/*!
+	 * Attempt to lock this \c Mutex
+	 * @param acquiredLock \c true if the lock was acquired in the call, \c false otherwise
+	 * @return \c true if the lock is held by the calling thread, \c false otherwise
+	 * @throws std::runtime_exception
+	 */
 	bool TryLock(bool& acquiredLock);
 
+	/*!
+	 * Determine if the calling thread owns the \c Mutex
+	 * @return \c true if the calling thread owns the \c Mutex, \c false otherwise
+	 */
 	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
@@ -62,15 +89,20 @@ protected:
 
 public:
 
-	// ========================================
-	// Scope-based helpers for Mutex
-	// ========================================
-
-	// Uses Mutex::Lock()
+	/*! A scope based wrapper around \c Mutex::Lock() */
 	class Locker
 	{
 	public:
+		/*!
+		 * Create a new \c Mutex::Locker()
+		 * @discussion On creation this class calls \c Mutex::Lock().
+		 * On destruction, if the lock was acquired \c Mutex::Unlock() is called.
+		 * @param mutex The \c Mutex to lock
+		 * @throws std::runtime_exception
+		 */
 		Locker(Mutex& mutex);
+
+		/*! Destroy this \c Mutex::Locker */
 		~Locker();
 
 	private:
@@ -78,14 +110,26 @@ public:
 		bool mReleaseLock;
 	};
 
-	// Uses Mutex::TryLock()
+	/*! A scope based wrapper around \c Mutex::TryLock() */
 	class Tryer
 	{
 	public:
+		/*!
+		 * Create a new \c Mutex::Tryer()
+		 * @discussion On creation this class calls \c Mutex::TryLock().
+		 * On destruction, if the lock was acquired \c Mutex::Unlock() is called.
+		 * @param mutex The \c Mutex to attempt to lock
+		 * @throws std::runtime_exception
+		 */
 		Tryer(Mutex& mutex);
+
+		/*! Destroy this \c Mutex::Tryer */
 		~Tryer();
 
-		// Returns true if mutex is owned and locked, false otherwise
+		/*!
+		 * Determine if the mutex is owned and locked by the calling thread
+		 * @return true if the mutex is owned and locked, false otherwise
+		 */
 		inline operator bool() const { return mLocked; }
 
 	private:

@@ -94,7 +94,7 @@
 
 namespace logger {
 
-	// The possible logging levels for ASL
+	/*! The possible logging levels for ASL */
 	enum levels {
 		emerg		= ASL_LEVEL_EMERG,
 		alert		= ASL_LEVEL_ALERT,
@@ -107,24 +107,81 @@ namespace logger {
 		disabled	= 33,
 	};
 
-	// The current log level
+	/*! The current log level below which messages are ignored */
 	extern int currentLogLevel;
 
-	// Utilities to get/set the current level
+	/*!
+	 * Get the log level below which messages are ignored
+	 * @return The current log level
+	 */
 	inline levels	GetCurrentLevel()				{ return (levels)currentLogLevel; }
+
+	/*!
+	 * Set the log level below which messages will be ignored
+	 * @param level The desired log level
+	 */
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
-	// The meat & potatoes
+	/*!
+	 * Log a message
+	 * @note If \c level is below \c currentLogLevel nothing is logged.
+	 * @param level The log level of the message
+	 * @param facility The sender's logging facility, or \c nullptr to use the default
+	 * @param message The log message
+	 * @param function The name of the calling function or \c nullptr to omit
+	 * @param file The name of the file containing \c function or \c nullptr to omit
+	 * @param line The line number in \c file or \c -1 to omit
+	 */
 	void Log(levels level, const char *facility, const char *message, const char *function = nullptr, const char *file = nullptr, int line = -1);
 
 	// Convenience functions
+
+	/*!
+	 * Log a message at the \c emerg level
+	 * @param message The message to log
+	 */
 	inline void Emerg(const char *message)			{ Log(emerg, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c alert level
+	 * @param message The message to log
+	 */
 	inline void Alert(const char *message)			{ Log(alert, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c crit level
+	 * @param message The message to log
+	 */
 	inline void Crit(const char *message)			{ Log(crit, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c err level
+	 * @param message The message to log
+	 */
 	inline void Err(const char *message)			{ Log(err, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c warning level
+	 * @param message The message to log
+	 */
 	inline void Warn(const char *message)			{ Log(warning, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c notice level
+	 * @param message The message to log
+	 */
 	inline void Notice(const char *message)			{ Log(notice, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c info level
+	 * @param message The message to log
+	 */
 	inline void Info(const char *message)			{ Log(info, nullptr, message); }
+
+	/*!
+	 * Log a message at the \c debug level
+	 * @param message The message to log
+	 */
 	inline void Debug(const char *message)			{ Log(debug, nullptr, message); }
 };
 
