@@ -1721,31 +1721,26 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	assert(nullptr != ioActionFlags);
 	assert(nullptr != ioData);
 
-	// Mute functionality
-	if(eAudioPlayerFlagMuteOutput & mFlags)
-		return noErr;
+	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
 
+	// Mute ourselves if requested
 	if(eAudioPlayerFlagRequestMute & mFlags) {
-		// Signal the decoding thread that it is safe to manipulate the ring buffer
 		OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
 
 		mSemaphore.Signal();
-
-		return noErr;
 	}
-
-	// If the ring buffer doesn't contain any valid audio, skip some work
-	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
-	if(0 == framesAvailableToRead) {
+	
+	// Output silence if muted or the ring buffer is empty
+	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
-		
+
 		size_t byteCountToZero = inNumberFrames * sizeof(AudioUnitSampleType);
 		for(UInt32 bufferIndex = 0; bufferIndex < ioData->mNumberBuffers; ++bufferIndex) {
 			memset(ioData->mBuffers[bufferIndex].mData, 0, byteCountToZero);
 			ioData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
-		
+
 		return noErr;
 	}
 
