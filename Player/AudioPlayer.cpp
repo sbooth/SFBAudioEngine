@@ -284,7 +284,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 #pragma mark Creation/Destruction
 
 AudioPlayer::AudioPlayer()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mGuard(), mSemaphore(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mMutex(), mSemaphore(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -448,7 +448,7 @@ bool AudioPlayer::Pause()
 
 bool AudioPlayer::Stop()
 {
-	Guard::Locker lock(mGuard);
+	Mutex::Locker lock(mMutex);
 
 	if(OutputIsRunning())
 		StopOutput();
@@ -1614,7 +1614,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Mutex::Locker lock(mGuard);
+	Mutex::Locker lock(mMutex);
 
 	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
 
@@ -1671,7 +1671,7 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	Mutex::Tryer lock(mGuard);
+	Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1883,7 +1883,7 @@ void * AudioPlayer::DecoderThreadEntry()
 		// Try to lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = nullptr;
 		{
-			Mutex::Tryer lock(mGuard);
+			Mutex::Tryer lock(mMutex);
 
 			if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
 				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
@@ -1972,7 +1972,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				// Adjust the formats
 				{
-					Mutex::Tryer lock(mGuard);
+					Mutex::Tryer lock(mMutex);
 					if(lock) {
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
 
@@ -2511,7 +2511,7 @@ bool AudioPlayer::StartOutput()
 	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "StartOutput");
 
 	// We don't want to start output in the middle of a buffer modification
-	Mutex::Locker lock(mGuard);
+	Mutex::Locker lock(mMutex);
 
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {

@@ -38,7 +38,7 @@
 #include <utility>
 
 #include "AudioDecoder.h"
-#include "Guard.h"
+#include "Mutex.h"
 #include "Semaphore.h"
 
 // ========================================
@@ -290,7 +290,7 @@ private:
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
-	Guard								mGuard;
+	Mutex								mMutex;
 	Semaphore							mSemaphore;
 
 	pthread_t							mDecoderThread;
