@@ -242,7 +242,7 @@ public:
 private:
 
 	// ========================================
-	// AudioHardware Utilities (for non-mixable audio)
+	// AUGraph Setup and Control
 	bool OpenOutput();
 	bool CloseOutput();
 
