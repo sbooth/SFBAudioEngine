@@ -33,13 +33,13 @@
 #include <CoreAudio/CoreAudioTypes.h>
 
 /*!
- * A ring buffer implementation supporting non-interleaved audio
+ * A ring buffer implementation supporting non-interleaved audio.
  *
  * This class is thread safe when used from one reader thread
  * and one writer thread (single producer, single consumer model).
  *
  * The read and write routines are based on JACK's ringbuffer implementation
- * but are modified for non-interleaved audio
+ * but are modified for non-interleaved audio.
  */
 class RingBuffer
 {
@@ -53,9 +53,7 @@ public:
 	 */
 	RingBuffer();
 
-	/*!
-	 * Destroy the \c RingBuffer and release all associated resources.
-	 */
+	/*! Destroy the \c RingBuffer and release all associated resources. */
 	~RingBuffer();
 
 	// ========================================
