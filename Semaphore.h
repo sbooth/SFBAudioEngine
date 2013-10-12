@@ -45,11 +45,15 @@ public:
 	/*! Destroy this \c Semaphore */
 	~Semaphore();
 
-	/*! This class is non-copyable */
+	/*! @cond */
+
+	/*! @internal This class is non-copyable */
 	Semaphore(const Semaphore& rhs) = delete;
 
-	/*! This class is non-assignable */
+	/*! @internal This class is non-assignable */
 	Semaphore& operator=(const Semaphore& rhs) = delete;
+
+	/*! @endcond */
 
 	/*!
 	 * Signal the \c Semaphore to wake a blocked thread

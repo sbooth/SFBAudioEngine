@@ -45,11 +45,15 @@ public:
 	/*! Destroy this \c Mutex*/
 	virtual ~Mutex();
 
-	/*! This class is non-copyable */
+	/*! @cond */
+
+	/*! @internal This class is non-copyable */
 	Mutex(const Mutex& rhs) = delete;
 
-	/*! This class is non-assignable */
+	/*! @internal This class is non-assignable */
 	Mutex& operator=(const Mutex& rhs) = delete;
+
+	/*! @endcond */
 
 	/*!
 	 * Lock this \c Mutex.

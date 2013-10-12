@@ -45,11 +45,15 @@ public:
 	/*! Destroy this \c Guard */
 	virtual ~Guard();
 
-	/*! This class is non-copyable */
+	/*! @cond */
+
+	/*! @internal This class is non-copyable */
 	Guard(const Guard& rhs) = delete;
 
-	/*! This class is non-assignable */
+	/*! @internal This class is non-assignable */
 	Guard& operator=(const Guard& rhs) = delete;
+
+	/*! @endcond */
 
 	// Wait() and WaitUntil() will throw std::runtime_error if the mutex isn't locked
 	// WaitUntil() returns true if the request timed out, false otherwise

@@ -56,11 +56,15 @@ public:
 	/*! Destroy the \c RingBuffer and release all associated resources. */
 	~RingBuffer();
 
-	/*! This class is non-copyable */
+	/*! @cond */
+
+	/*! @internal This class is non-copyable */
 	RingBuffer(const RingBuffer& rhs) = delete;
 
-	/*! This class is non-assignable */
+	/*! @internal This class is non-assignable */
 	RingBuffer& operator=(const RingBuffer& rhs) = delete;
+
+	/*! @endcond */
 
 	// ========================================
 	// Buffer management
