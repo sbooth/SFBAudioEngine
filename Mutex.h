@@ -45,8 +45,10 @@ public:
 	/*! Destroy this \c Mutex*/
 	virtual ~Mutex();
 
-	// Copying not allowed
+	/*! This class is non-copyable */
 	Mutex(const Mutex& rhs) = delete;
+
+	/*! This class is non-assignable */
 	Mutex& operator=(const Mutex& rhs) = delete;
 
 	/*!
@@ -84,7 +86,9 @@ public:
 	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
+	/*! The pthread mutex */
 	pthread_mutex_t mMutex;
+	/*! The thread that owns the mutex */
 	pthread_t mOwner;
 
 public:
@@ -94,8 +98,8 @@ public:
 	{
 	public:
 		/*!
-		 * Create a new \c Mutex::Locker()
-		 * @discussion On creation this class calls \c Mutex::Lock().
+		 * @brief Create a new \c Mutex::Locker()
+		 * On creation this class calls \c Mutex::Lock().
 		 * On destruction, if the lock was acquired \c Mutex::Unlock() is called.
 		 * @param mutex The \c Mutex to lock
 		 * @throws std::runtime_exception
@@ -115,8 +119,8 @@ public:
 	{
 	public:
 		/*!
-		 * Create a new \c Mutex::Tryer()
-		 * @discussion On creation this class calls \c Mutex::TryLock().
+		 * @brief Create a new \c Mutex::Tryer()
+		 * On creation this class calls \c Mutex::TryLock().
 		 * On destruction, if the lock was acquired \c Mutex::Unlock() is called.
 		 * @param mutex The \c Mutex to attempt to lock
 		 * @throws std::runtime_exception

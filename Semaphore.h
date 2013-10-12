@@ -45,8 +45,10 @@ public:
 	/*! Destroy this \c Semaphore */
 	~Semaphore();
 
-	// Copying is not allowed
+	/*! This class is non-copyable */
 	Semaphore(const Semaphore& rhs) = delete;
+
+	/*! This class is non-assignable */
 	Semaphore& operator=(const Semaphore& rhs) = delete;
 
 	/*!

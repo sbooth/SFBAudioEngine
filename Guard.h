@@ -45,8 +45,10 @@ public:
 	/*! Destroy this \c Guard */
 	virtual ~Guard();
 
-	// Copying is not allowed
+	/*! This class is non-copyable */
 	Guard(const Guard& rhs) = delete;
+
+	/*! This class is non-assignable */
 	Guard& operator=(const Guard& rhs) = delete;
 
 	// Wait() and WaitUntil() will throw std::runtime_error if the mutex isn't locked
@@ -62,7 +64,7 @@ public:
 	/*!
 	 * Block the calling thread until the condition variable is signaled
 	 * @note The \c Mutex must be locked or an exception will be thrown
-	 * @param The latest time to block
+	 * @param absoluteTime The latest time to block
 	 * @return \c true if the request timed out, \c false otherwise
 	 * @throws std::runtime_exception
 	 */
@@ -81,6 +83,7 @@ public:
 	void Broadcast();
 
 protected:
+	/*! The pthread condition variable */
 	pthread_cond_t mCondition;
 
 public:
@@ -89,8 +92,8 @@ public:
 	{
 	public:
 		/*!
-		 * Create a new \c Guard::Locker
-		 * @discussion On creation this class calls \c Guard::Lock().
+		 * @brief Create a new \c Guard::Locker
+		 * On creation this class calls \c Guard::Lock().
 		 * On destruction, if the lock was acquired \c Guard::Unlock() is called.
 		 * @param guard The \c Guard to lock
 		 * @throws std::runtime_exception
@@ -108,7 +111,7 @@ public:
 
 		/*!
 		 * Block the calling thread until the condition variable is signaled
-		 * @param The latest time to block
+		 * @param absoluteTime The latest time to block
 		 * @return \c true if the request timed out, \c false otherwise
 		 * @throws std::runtime_exception
 		 */
