@@ -31,74 +31,74 @@
 #include <memory>
 
 #include <taglib/tfilestream.h>
-#include <taglib/speexfile.h>
+#include <taglib/opusfile.h>
 
-#include "OggSpeexMetadata.h"
+#include "OggOpusMetadata.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "AddXiphCommentToDictionary.h"
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-static void RegisterOggSpeexMetadata() __attribute__ ((constructor));
-static void RegisterOggSpeexMetadata()
+static void RegisterOggOpusMetadata() __attribute__ ((constructor));
+static void RegisterOggOpusMetadata()
 {
-	AudioMetadata::RegisterSubclass<OggSpeexMetadata>();
+	AudioMetadata::RegisterSubclass<OggOpusMetadata>();
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggSpeexMetadata::CreateSupportedFileExtensions()
+CFArrayRef OggOpusMetadata::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("spx") };
+	CFStringRef supportedExtensions [] = { CFSTR("opus") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggSpeexMetadata::CreateSupportedMIMETypes()
+CFArrayRef OggOpusMetadata::CreateSupportedMIMETypes()
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex") };
+	CFStringRef supportedMIMETypes [] = { CFSTR("audio/opus") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool OggOpusMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
 	
-	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("spx"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("opus"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
 }
 
-bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
 	
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/speex"), kCFCompareCaseInsensitive))
+	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/opus"), kCFCompareCaseInsensitive))
 		return true;
 	
 	return false;
 }
 
-AudioMetadata * OggSpeexMetadata::CreateMetadata(CFURLRef url)
+AudioMetadata * OggOpusMetadata::CreateMetadata(CFURLRef url)
 {
-	return new OggSpeexMetadata(url);
+	return new OggOpusMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-OggSpeexMetadata::OggSpeexMetadata(CFURLRef url)
+OggOpusMetadata::OggOpusMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-OggSpeexMetadata::~OggSpeexMetadata()
+OggOpusMetadata::~OggOpusMetadata()
 {}
 
 #pragma mark Functionality
 
-bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
+bool OggOpusMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -119,11 +119,11 @@ bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	TagLib::Ogg::Speex::File file(stream.get());
+	TagLib::Ogg::Opus::File file(stream.get());
 	if(!file.isValid()) {
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
@@ -132,7 +132,7 @@ bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 		return false;
 	}
 	
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Ogg Speex"));
+	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Ogg Opus"));
 	
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
@@ -143,7 +143,7 @@ bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
+bool OggOpusMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -162,11 +162,11 @@ bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
 		return false;
 	}
 
-	TagLib::Ogg::Speex::File file(stream.get(), false);
+	TagLib::Ogg::Opus::File file(stream.get(), false);
 	if(!file.isValid()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
 			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
@@ -179,7 +179,7 @@ bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
 	
 	if(!file.save()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			

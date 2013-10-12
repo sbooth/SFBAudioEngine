@@ -34,9 +34,9 @@
 #import "AudioMetadata.h"
 
 // ========================================
-// An AudioMetadata subclass supporting Ogg Speex files
+// An AudioMetadata subclass supporting Ogg Opus files
 // ========================================
-class OggSpeexMetadata : public AudioMetadata
+class OggOpusMetadata : public AudioMetadata
 {
 	
 public:
@@ -53,11 +53,11 @@ public:
 
 	// ========================================
 	// Creation
-	OggSpeexMetadata(CFURLRef url);
+	OggOpusMetadata(CFURLRef url);
 	
 	// ========================================
 	// Destruction
-	virtual ~OggSpeexMetadata();
+	virtual ~OggOpusMetadata();
 	
 	// ========================================
 	// The core functionality
