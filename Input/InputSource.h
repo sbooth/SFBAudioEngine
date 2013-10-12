@@ -55,7 +55,7 @@ enum InputSourceFlags {
 };
 
 
-/*! An abstract class allowing access to a stream of bytes */
+/*! @brief An abstract class allowing access to a stream of bytes */
 class InputSource
 {
 

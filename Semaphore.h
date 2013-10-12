@@ -32,7 +32,7 @@
 
 #include <mach/task.h>
 
-/*! A wrapper around a mach semaphore */
+/*! @brief A wrapper around a mach semaphore */
 class Semaphore
 {
 public:

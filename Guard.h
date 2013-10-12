@@ -32,7 +32,7 @@
 
 #include "Mutex.h"
 
-/*! A wrapper around a pthread mutex and condition variable */
+/*! @brief A wrapper around a pthread mutex and condition variable */
 class Guard : public Mutex
 {
 public:
@@ -91,7 +91,7 @@ protected:
 	pthread_cond_t mCondition;
 
 public:
-	/*! A scope based wrapper around \c Guard::Lock() */
+	/*! @brief A scope based wrapper around \c Guard::Lock() */
 	class Locker
 	{
 	public:

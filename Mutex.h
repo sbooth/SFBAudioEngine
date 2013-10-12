@@ -32,7 +32,7 @@
 
 #include <pthread.h>
 
-/*! A wrapper around a pthread mutex */
+/*! @brief A wrapper around a pthread mutex */
 class Mutex
 {
 public:
@@ -97,7 +97,7 @@ protected:
 
 public:
 
-	/*! A scope based wrapper around \c Mutex::Lock() */
+	/*! @brief A scope based wrapper around \c Mutex::Lock() */
 	class Locker
 	{
 	public:
@@ -118,7 +118,7 @@ public:
 		bool mReleaseLock;
 	};
 
-	/*! A scope based wrapper around \c Mutex::TryLock() */
+	/*! @brief A scope based wrapper around \c Mutex::TryLock() */
 	class Tryer
 	{
 	public:
