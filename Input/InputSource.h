@@ -190,7 +190,7 @@ protected:
 	/*! The location of the bytes to be read */
 	CFURLRef mURL;
 
-	/*! Subclasses should set this to true if Open() is successful */
+	/*! Subclasses should set this to \c true if Open() is successful and \c false if Close() is successful */
 	bool mIsOpen;
 
 
