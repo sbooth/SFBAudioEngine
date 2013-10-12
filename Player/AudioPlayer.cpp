@@ -862,6 +862,266 @@ bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
 	return true;
 }
 
+#pragma mark DSP Effects
+
+bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adding DSP effect: " << subType << " " << manufacturer);
+
+	// Get the source node for the graph's output node
+	UInt32 numInteractions = 0;
+	OSStatus result = AUGraphCountNodeInteractions(mAUGraph, mOutputNode, &numInteractions);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
+		return false;
+	}
+
+	AUNodeInteraction interactions [numInteractions];
+
+	result = AUGraphGetNodeInteractions(mAUGraph, mOutputNode, &numInteractions, interactions);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
+		return false;
+	}
+
+	AUNode sourceNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType && mOutputNode == interaction.nodeInteraction.connection.destNode) {
+			sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			break;
+		}
+	}
+
+	// Unable to determine the preceding node, so bail
+	if(-1 == sourceNode) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to determine input node");
+		return false;
+	}
+
+	// Create the effect node and set its format
+	AudioComponentDescription componentDescription = {
+		.componentType = kAudioUnitType_Effect,
+		.componentSubType = subType,
+		.componentManufacturer = manufacturer,
+		.componentFlags = flags,
+		.componentFlagsMask = mask
+	};
+
+	AUNode effectNode = -1;
+	result = AUGraphAddNode(mAUGraph, &componentDescription, &effectNode);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddNode failed: " << result);
+		return false;
+	}
+
+	AudioUnit effectUnit = nullptr;
+	result = AUGraphNodeInfo(mAUGraph, effectNode, nullptr, &effectUnit);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+
+#if TARGET_OS_IPHONE
+	// All AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
+	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
+	UInt32 framesPerSlice = 4096;
+	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+#endif
+
+//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
+//	if(noErr != result) {
+////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+//
+//		// If the property couldn't be set (the AU may not support this format), remove the new node
+//		result = AUGraphRemoveNode(mAUGraph, effectNode);
+//		if(noErr != result)
+//			;//			ERR("AUGraphRemoveNode failed: %i", result);
+//
+//		return false;
+//	}
+//
+//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
+//	if(noErr != result) {
+////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
+//
+//		// If the property couldn't be set (the AU may not support this format), remove the new node
+//		result = AUGraphRemoveNode(mAUGraph, effectNode);
+//		if(noErr != result)
+//			;			//ERR("AUGraphRemoveNode failed: %i", result);
+//
+//		return false;
+//	}
+
+	// Insert the effect at the end of the graph, before the output node
+	result = AUGraphDisconnectNodeInput(mAUGraph, mOutputNode, 0);
+
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+
+		result = AUGraphRemoveNode(mAUGraph, effectNode);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+
+		return false;
+	}
+
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, effectNode, 0);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphConnectNodeInput(mAUGraph, effectNode, 0, mOutputNode, 0);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphUpdate(mAUGraph, nullptr);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
+
+		// If the update failed, restore the previous node state
+		result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, mOutputNode, 0);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+			return false;
+		}
+	}
+
+	if(nullptr != effectUnit1)
+		*effectUnit1 = effectUnit;
+
+	return true;
+}
+
+bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
+{
+	if(nullptr == effectUnit)
+		return false;
+
+	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Removing DSP effect: " << effectUnit);
+
+	UInt32 nodeCount = 0;
+	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+		return false;
+	}
+
+	AUNode effectNode = -1;
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = -1;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			return false;
+		}
+
+		AudioUnit au = nullptr;
+		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+			return false;
+		}
+
+		// This is the unit to remove
+		if(effectUnit == au) {
+			effectNode = node;
+			break;
+		}
+	}
+
+	if(-1 == effectNode) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the AUNode for the specified AudioUnit");
+		return false;
+	}
+
+	// Get the current input and output nodes for the node to delete
+	UInt32 numInteractions = 0;
+	result = AUGraphCountNodeInteractions(mAUGraph, effectNode, &numInteractions);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
+		return false;
+	}
+
+	AUNodeInteraction interactions [numInteractions];
+
+	result = AUGraphGetNodeInteractions(mAUGraph, effectNode, &numInteractions, interactions);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
+
+		return false;
+	}
+
+	AUNode sourceNode = -1, destNode = -1;
+	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
+		AUNodeInteraction interaction = interactions[interactionIndex];
+
+		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType) {
+			if(effectNode == interaction.nodeInteraction.connection.destNode)
+				sourceNode = interaction.nodeInteraction.connection.sourceNode;
+			else if(effectNode == interaction.nodeInteraction.connection.sourceNode)
+				destNode = interaction.nodeInteraction.connection.destNode;
+		}
+	}
+
+	if(-1 == sourceNode || -1 == destNode) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the source or destination nodes");
+		return false;
+	}
+
+	result = AUGraphDisconnectNodeInput(mAUGraph, effectNode, 0);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphDisconnectNodeInput(mAUGraph, destNode, 0);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphRemoveNode(mAUGraph, effectNode);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+		return false;
+	}
+
+	// Reconnect the nodes
+	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, destNode, 0);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		return false;
+	}
+
+	result = AUGraphUpdate(mAUGraph, nullptr);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
+		return false;
+	}
+	
+	return true;
+}
+
 #if !TARGET_OS_IPHONE
 
 #pragma mark Hog Mode
@@ -1132,268 +1392,6 @@ bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& pr
 
 	preferredStereoChannels.first = preferredChannels[0];
 	preferredStereoChannels.second = preferredChannels[1];
-
-	return true;
-}
-
-#pragma mark DSP Effects
-
-bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
-{
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adding DSP effect: " << subType << " " << manufacturer);
-
-	// Get the source node for the graph's output node
-	UInt32 numInteractions = 0;
-	OSStatus result = AUGraphCountNodeInteractions(mAUGraph, mOutputNode, &numInteractions);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
-		return false;
-	}
-
-	AUNodeInteraction interactions [numInteractions];
-
-	result = AUGraphGetNodeInteractions(mAUGraph, mOutputNode, &numInteractions, interactions);	
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
-		return false;
-	}
-
-	AUNode sourceNode = -1;
-	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
-		AUNodeInteraction interaction = interactions[interactionIndex];
-
-		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType && mOutputNode == interaction.nodeInteraction.connection.destNode) {
-			sourceNode = interaction.nodeInteraction.connection.sourceNode;
-			break;
-		}
-	}						
-
-	// Unable to determine the preceding node, so bail
-	if(-1 == sourceNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to determine input node");
-		return false;
-	}
-
-	// Create the effect node and set its format
-	AudioComponentDescription desc = { kAudioUnitType_Effect, subType, manufacturer, flags, mask };
-
-	AUNode effectNode = -1;
-	result = AUGraphAddNode(mAUGraph, &desc, &effectNode);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddNode failed: " << result);
-		return false;
-	}
-
-	AudioUnit effectUnit = nullptr;
-	result = AUGraphNodeInfo(mAUGraph, effectNode, nullptr, &effectUnit);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
-
-		result = AUGraphRemoveNode(mAUGraph, effectNode);
-		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
-
-		return false;
-	}
-
-#if TARGET_OS_IPHONE
-	// All AudioUnits on iOS except RemoteIO require kAudioUnitProperty_MaximumFramesPerSlice to be 4096
-	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
-	UInt32 framesPerSlice = 4096;
-	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
-
-		result = AUGraphRemoveNode(mAUGraph, effectNode);
-		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
-
-		return false;
-	}
-#endif
-
-//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
-//	if(noErr != result) {
-////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
-//
-//		// If the property couldn't be set (the AU may not support this format), remove the new node
-//		result = AUGraphRemoveNode(mAUGraph, effectNode);
-//		if(noErr != result)
-//			;//			ERR("AUGraphRemoveNode failed: %i", result);
-//
-//		return false;
-//	}
-//
-//	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &mRingBufferFormat, sizeof(mRingBufferFormat));
-//	if(noErr != result) {
-////		ERR("AudioUnitSetProperty(kAudioUnitProperty_StreamFormat) failed: %i", result);
-//
-//		// If the property couldn't be set (the AU may not support this format), remove the new node
-//		result = AUGraphRemoveNode(mAUGraph, effectNode);
-//		if(noErr != result)
-//			;			//ERR("AUGraphRemoveNode failed: %i", result);
-//
-//		return false;
-//	}
-
-	// Insert the effect at the end of the graph, before the output node
-	result = AUGraphDisconnectNodeInput(mAUGraph, mOutputNode, 0);
-
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
-
-		result = AUGraphRemoveNode(mAUGraph, effectNode);
-		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
-
-		return false;
-	}
-
-	// Reconnect the nodes
-	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, effectNode, 0);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
-		return false;
-	}
-
-	result = AUGraphConnectNodeInput(mAUGraph, effectNode, 0, mOutputNode, 0);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
-		return false;
-	}
-
-	result = AUGraphUpdate(mAUGraph, nullptr);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
-
-		// If the update failed, restore the previous node state
-		result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, mOutputNode, 0);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
-			return false;
-		}
-	}
-
-	if(nullptr != effectUnit1)
-		*effectUnit1 = effectUnit;
-
-	return true;
-}
-
-bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
-{
-	if(nullptr == effectUnit)
-		return false;
-
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Removing DSP effect: " << effectUnit);
-
-	UInt32 nodeCount = 0;
-	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
-		return false;
-	}
-
-	AUNode effectNode = -1;
-	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
-		AUNode node = -1;
-		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
-			return false;
-		}
-
-		AudioUnit au = nullptr;
-		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
-			return false;
-		}
-
-		// This is the unit to remove
-		if(effectUnit == au) {
-			effectNode = node;
-			break;
-		}
-	}
-
-	if(-1 == effectNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the AUNode for the specified AudioUnit");
-		return false;
-	}
-
-	// Get the current input and output nodes for the node to delete
-	UInt32 numInteractions = 0;
-	result = AUGraphCountNodeInteractions(mAUGraph, effectNode, &numInteractions);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
-		return false;
-	}
-
-	AUNodeInteraction *interactions = (AUNodeInteraction *)calloc(numInteractions, sizeof(AUNodeInteraction));
-	if(nullptr == interactions) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate memory");
-		return false;
-	}
-
-	result = AUGraphGetNodeInteractions(mAUGraph, effectNode, &numInteractions, interactions);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
-
-		free(interactions), interactions = nullptr;
-
-		return false;
-	}
-
-	AUNode sourceNode = -1, destNode = -1;
-	for(UInt32 interactionIndex = 0; interactionIndex < numInteractions; ++interactionIndex) {
-		AUNodeInteraction interaction = interactions[interactionIndex];
-
-		if(kAUNodeInteraction_Connection == interaction.nodeInteractionType) {
-			if(effectNode == interaction.nodeInteraction.connection.destNode)
-				sourceNode = interaction.nodeInteraction.connection.sourceNode;
-			else if(effectNode == interaction.nodeInteraction.connection.sourceNode)
-				destNode = interaction.nodeInteraction.connection.destNode;
-		}
-	}						
-
-	free(interactions), interactions = nullptr;
-
-	if(-1 == sourceNode || -1 == destNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the source or destination nodes");
-		return false;
-	}
-
-	result = AUGraphDisconnectNodeInput(mAUGraph, effectNode, 0);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
-		return false;
-	}
-
-	result = AUGraphDisconnectNodeInput(mAUGraph, destNode, 0);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
-		return false;
-	}
-
-	result = AUGraphRemoveNode(mAUGraph, effectNode);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
-		return false;
-	}
-
-	// Reconnect the nodes
-	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, destNode, 0);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
-		return false;
-	}
-
-	result = AUGraphUpdate(mAUGraph, nullptr);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
-		return false;
-	}
 
 	return true;
 }

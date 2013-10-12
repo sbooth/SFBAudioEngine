@@ -181,6 +181,11 @@ public:
 	bool GetSampleRateConverterComplexity(UInt32& complexity) const;
 	bool SetSampleRateConverterComplexity(UInt32 complexity);
 
+	// ========================================
+	// DSP Effects
+	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
+	bool RemoveEffect(AudioUnit effectUnit);
+
 #if !TARGET_OS_IPHONE
 	// ========================================
 	// Hog Mode
@@ -198,11 +203,6 @@ public:
 
 	bool GetDeviceChannelCount(UInt32& channelCount) const;
 	bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
-
-	// ========================================
-	// DSP Effects
-	bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
-	bool RemoveEffect(AudioUnit effectUnit);
 
 	// ========================================
 	// Device Management
