@@ -196,7 +196,9 @@ AudioDecoder * FLACDecoder::CreateDecoder(InputSource *inputSource)
 
 FLACDecoder::FLACDecoder(InputSource *inputSource)
 	: AudioDecoder(inputSource), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
-{}
+{
+	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
+}
 
 FLACDecoder::~FLACDecoder()
 {
