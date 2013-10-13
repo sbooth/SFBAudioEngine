@@ -25,7 +25,6 @@ enum {
 	AudioPlayer		*_player;		// The player instance
 	uint32_t		_playerFlags;
 	NSTimer			*_uiTimer;
-	BOOL			_playWhenDecodingStarts;
 }
 @end
 
@@ -45,14 +44,6 @@ enum {
 		_player = new AudioPlayer();
 
 		_playerFlags = 0;
-
-		// Once decoding has started, begin playing the track
-		_player->SetDecodingStartedBlock(^(const AudioDecoder */*decoder*/){
-			if(_playWhenDecodingStarts) {
-				_playWhenDecodingStarts = NO;
-				_player->Play();
-			}
-		});
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
 		_player->SetRenderingStartedBlock(^(const AudioDecoder */*decoder*/){
@@ -125,36 +116,14 @@ enum {
 {
 	NSParameterAssert(nil != url);
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
-	if(nullptr == decoder)
-		return NO;
-
-	_player->Stop();
-
-	_playWhenDecodingStarts = YES;
-	if(!decoder->Open() || !_player->Enqueue(decoder)) {
-		_playWhenDecodingStarts = NO;
-		delete decoder;
-		return NO;
-	}
-
-	return YES;
+	return _player->Play((__bridge CFURLRef)url);
 }
 
 - (BOOL) enqueueURL:(NSURL *)url
 {
 	NSParameterAssert(nil != url);
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
-	if(nullptr == decoder)
-		return NO;
-
-	if(!decoder->Open() || !_player->Enqueue(decoder)) {
-		delete decoder;
-		return NO;
-	}
-
-	return YES;
+	return _player->Enqueue((__bridge CFURLRef)url);
 }
 
 @end
