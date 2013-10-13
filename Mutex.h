@@ -90,10 +90,8 @@ public:
 	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
-	/*! The pthread mutex */
-	pthread_mutex_t mMutex;
-	/*! The thread that owns the mutex */
-	pthread_t mOwner;
+	pthread_mutex_t mMutex;		/*!< The pthread mutex */
+	pthread_t mOwner;			/*!< The thread that owns the mutex */
 
 public:
 
@@ -114,8 +112,8 @@ public:
 		~Locker();
 
 	private:
-		Mutex& mMutex;
-		bool mReleaseLock;
+		Mutex& mMutex;		/*!< The associated \c Mutex */
+		bool mReleaseLock;	/*!< Whether the destructor should call \c Mutex::Unlock() */
 	};
 
 	/*! @brief A scope based wrapper around \c Mutex::TryLock() */
@@ -141,8 +139,8 @@ public:
 		inline operator bool() const { return mLocked; }
 
 	private:
-		Mutex& mMutex;
-		bool mLocked;
-		bool mReleaseLock;
+		Mutex& mMutex;		/*!< The associated \c Mutex */
+		bool mLocked;		/*!< Whether the mutex is locked */
+		bool mReleaseLock;	/*!< Whether the destructor should call \c Mutex::Unlock() */
 	};
 };

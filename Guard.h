@@ -55,9 +55,6 @@ public:
 
 	/*! @endcond */
 
-	// Wait() and WaitUntil() will throw std::runtime_error if the mutex isn't locked
-	// WaitUntil() returns true if the request timed out, false otherwise
-
 	/*!
 	 * Block the calling thread until the condition variable is signaled
 	 * @note The \c Mutex must be locked or an exception will be thrown
@@ -87,8 +84,7 @@ public:
 	void Broadcast();
 
 protected:
-	/*! The pthread condition variable */
-	pthread_cond_t mCondition;
+	pthread_cond_t mCondition;	/*!< The pthread condition variable */
 
 public:
 	/*! @brief A scope based wrapper around \c Guard::Lock() */
@@ -134,7 +130,7 @@ public:
 		inline void Broadcast()									{ mGuard.Broadcast(); }
 
 	private:
-		Guard& mGuard;
-		bool mReleaseLock;	
+		Guard& mGuard;		/*!< The associated \c Guard */
+		bool mReleaseLock;	/*!< Whether the destructor should call \c Guard::Unlock() */
 	};
 };

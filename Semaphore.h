@@ -81,5 +81,5 @@ public:
 	bool TimedWait(mach_timespec_t duration);
 
 private:
-	semaphore_t mSemaphore;
+	semaphore_t mSemaphore;		/*!< The mach semahore */
 };
