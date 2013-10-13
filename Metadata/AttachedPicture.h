@@ -32,18 +32,13 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-/*! @file */
+/*! @file AttachedPicture.h @brief Support for attached pictures */
 
 /*! @name Metadata Dictionary Keys */
 //@{
-
-/*! Picture type (\c CFNumber) */
-extern const CFStringRef		kAttachedPictureTypeKey;
-/*! Picture description (\c CFString) */
-extern const CFStringRef		kAttachedPictureDescriptionKey;
-/*! Picture data (\c CFData) */
-extern const CFStringRef		kAttachedPictureDataKey;
-
+extern const CFStringRef		kAttachedPictureTypeKey;			/*!< @brief Picture type (\c CFNumber) */
+extern const CFStringRef		kAttachedPictureDescriptionKey;		/*!< @brief Picture description (\c CFString) */
+extern const CFStringRef		kAttachedPictureDataKey;			/*!< @brief Picture data (\c CFData) */
 //@}
 
 
@@ -58,50 +53,29 @@ class AttachedPicture
 
 public:
 	// ========================================
-	/*! The function or content of a picture */
+	/*! @brief The function or content of a picture */
 	enum class Type : unsigned int {
-		/*! A type not otherwise enumerated */
-		Other				= 0x00,
-		/*! 32x32 PNG image that should be used as the file icon */
-		FileIcon			= 0x01,
-		/*! File icon of a different size or format */
-		OtherFileIcon		= 0x02,
-		/*! Front cover image of the album */
-		FrontCover			= 0x03,
-		/*! Back cover image of the album */
-		BackCover			= 0x04,
-		/*! Inside leaflet page of the album */
-		LeafletPage			= 0x05,
-		/*! Image from the album itself */
-		Media				= 0x06,
-		/*! Picture of the lead artist or soloist */
-		LeadArtist			= 0x07,
-		/*! Picture of the artist or performer */
-		Artist				= 0x08,
-		/*! Picture of the conductor */
-		Conductor			= 0x09,
-		/*! Picture of the band or orchestra */
-		Band				= 0x0A,
-		/*! Picture of the composer */
-		Composer			= 0x0B,
-		/*! Picture of the lyricist or text writer */
-		Lyricist			= 0x0C,
-		/*! Picture of the recording location or studio */
-		RecordingLocation	= 0x0D,
-		/*! Picture of the artists during recording */
-		DuringRecording		= 0x0E,
-		/*! Picture of the artists during performance */
-		DuringPerformance	= 0x0F,
-		/*! Picture from a movie or video related to the track */
-		MovieScreenCapture	= 0x10,
-		/*! Picture of a large, coloured fish */
-		ColouredFish		= 0x11,
-		/*! Illustration related to the track */
-		Illustration		= 0x12,
-		/*! Logo of the band or performer */
-		BandLogo			= 0x13,
-		/*! Logo of the publisher (record company) */
-		PublisherLogo		= 0x14
+		Other				= 0x00,		/*!< A type not otherwise enumerated */
+		FileIcon			= 0x01,		/*!< 32x32 PNG image that should be used as the file icon */
+		OtherFileIcon		= 0x02,		/*!< File icon of a different size or format */
+		FrontCover			= 0x03,		/*!< Front cover image of the album */
+		BackCover			= 0x04,		/*!< Back cover image of the album */
+		LeafletPage			= 0x05,		/*!< Inside leaflet page of the album */
+		Media				= 0x06,		/*!< Image from the album itself */
+		LeadArtist			= 0x07,		/*!< Picture of the lead artist or soloist */
+		Artist				= 0x08,		/*!< Picture of the artist or performer */
+		Conductor			= 0x09,		/*!< Picture of the conductor */
+		Band				= 0x0A,		/*!< Picture of the band or orchestra */
+		Composer			= 0x0B,		/*!< Picture of the composer */
+		Lyricist			= 0x0C,		/*!< Picture of the lyricist or text writer */
+		RecordingLocation	= 0x0D,		/*!< Picture of the recording location or studio */
+		DuringRecording		= 0x0E,		/*!< Picture of the artists during recording */
+		DuringPerformance	= 0x0F,		/*!< Picture of the artists during performance */
+		MovieScreenCapture	= 0x10,		/*!< Picture from a movie or video related to the track */
+		ColouredFish		= 0x11,		/*!< Picture of a large, coloured fish */
+		Illustration		= 0x12,		/*!< Illustration related to the track */
+		BandLogo			= 0x13,		/*!< Logo of the band or performer */
+		PublisherLogo		= 0x14		/*!< Logo of the publisher (record company) */
 	};
 
 
@@ -110,14 +84,14 @@ public:
 	//@{
 
 	/*!
-	 * Create a new \c AttachedPicture
+	 * @brief Create a new \c AttachedPicture
 	 * @param data The raw image data
 	 * @param type An optional artwork type
 	 * @param description An optional image description
 	 */
 	AttachedPicture(CFDataRef data = nullptr, AttachedPicture::Type type = Type::Other, CFStringRef description = nullptr);
 
-	/*! Destroy this \c AttachedPicture */
+	/*! @brief Destroy this \c AttachedPicture */
 	~AttachedPicture();
 
 	/*! @cond */
@@ -133,45 +107,30 @@ public:
 
 
 	// ========================================
-	/*! @name Picture information */
+	/*! 
+	 * @name Picture information
+	 * To remove an existing value call the appropriate \c Set() function with \c nullptr
+	 */
 	//@{
 
-	/*!
-	 * Get the artwork type
-	 * @return The artwork type
-	 */
+	/*! @brief Get the artwork type */
 	Type GetType() const;
 
-	/*!
-	 * Set the artwork type
-	 * @param type The artwork type
-	 */
+	/*! @brief Set the artwork type */
 	void SetType(Type type);
 
 
-	/*!
-	 * Get the image description
-	 * @return The image description
-	 */
+	/*! @brief Get the image description */
 	CFStringRef GetDescription() const;
 
-	/*!
-	 * Set the image description
-	 * @param description The image description
-	 */
+	/*! @brief Set the image description */
 	void SetDescription(CFStringRef description);
 
 
-	/*!
-	 * Get the image data
-	 * @return The image data
-	 */
+	/*! @brief Get the image data */
 	CFDataRef GetData() const;
 
-	/*!
-	 * Set the image data
-	 * @param data The image data
-	 */
+	/*! @brief Set the image data */
 	void SetData(CFDataRef data);
 
 	//@}
@@ -181,20 +140,13 @@ public:
 	/*! @name Change management */
 	//@{
 
-	/*!
-	 * Query the object for unsaved changes
-	 * @return \c true if there are unsaved changes, false otherwise
-	 */
+	/*! @brief Query the object for unsaved changes */
 	inline bool HasUnsavedChanges() const					{ return (0 != CFDictionaryGetCount(mChangedMetadata));}
 
-	/*! Revert unsaved changes */
+	/*! @brief Revert unsaved changes */
 	inline void RevertUnsavedChanges()						{ CFDictionaryRemoveAllValues(mChangedMetadata); }
 	
-	/*!
-	 * Query a particular key for unsaved changes
-	 * @param key The key to query
-	 * @return \true if this object has unsaved changes for \c key, false otherwise
-	 */
+	/*! @brief Query a particular key for unsaved changes */
 	inline bool HasUnsavedChangesForKey(CFStringRef key) const { return CFDictionaryContainsKey(mChangedMetadata, key); }
 
 	//@}
@@ -202,50 +154,39 @@ public:
 
 protected:
 
-	/*! For AudioMetadata change tracking */
+	/*! @brief For AudioMetadata change tracking */
 	enum class ChangeState {
-		/*! The picure is saved */
-		Saved,
-		/*! The picture is added but not yet saved */
-		Added,
-		/*! The picture has been removed but not yet saved*/
-		Removed
+		Saved,		/*!< The picure is saved */
+		Added,		/*!< The picture is added but not yet saved */
+		Removed		/*!< The picture has been removed but not yet saved*/
 	};
 
+	CFMutableDictionaryRef			mMetadata;			/*!< @brief The metadata information */
+	CFMutableDictionaryRef			mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
+	ChangeState						mState;				/*!< @brief The state of the picture relative to the saved file */
 
-	/*! The metadata information */
-	CFMutableDictionaryRef			mMetadata;
-
-	/*! The metadata information that has been changed but not saved */
-	CFMutableDictionaryRef			mChangedMetadata;
-
-	/*! The state of the picture relative to the saved file */
-	ChangeState						mState;
-
-
-	/*! Subclasses should call this after a successful save operation */
+	/*! @brief Subclasses should call this after a successful save operation */
 	void MergeChangedMetadataIntoMetadata();
-
 
 	/*! @name Type-specific access */
 	//@{
 
 	/*!
-	 * Retrieve a string from the metadata dictionary
+	 * @brief Retrieve a string from the metadata dictionary
 	 * @param key The key to retrieve
 	 * @return The value associated with \c key if present and a string, \c nullptr otherwise
 	 */
 	CFStringRef GetStringValue(CFStringRef key) const;
 
 	/*!
-	 * Retrieve a number from the metadata dictionary
+	 * @brief Retrieve a number from the metadata dictionary
 	 * @param key The key to retrieve
 	 * @return The value associated with \c key if present and a number, \c nullptr otherwise
 	 */
 	CFNumberRef GetNumberValue(CFStringRef key) const;
 
 	/*!
-	 * Retrieve data from the metadata dictionary
+	 * @brief Retrieve data from the metadata dictionary
 	 * @param key The key to retrieve
 	 * @return The value associated with \c key if present and data, \c nullptr otherwise
 	 */
@@ -258,14 +199,14 @@ protected:
 	//@{
 
 	/*!
-	 * Retrieve an object from the metadata dictionary
+	 * @brief Retrieve an object from the metadata dictionary
 	 * @param key The key to retrieve
 	 * @return The value associated with \c key
 	 */
 	CFTypeRef GetValue(CFStringRef key) const;
 
 	/*!
-	 * Set a value in the metadata dictionary
+	 * @brief Set a value in the metadata dictionary
 	 * @param key The key to associate with \c value
 	 * @param value The value to set
 	 */
