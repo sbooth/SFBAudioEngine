@@ -43,7 +43,8 @@ extern const CFStringRef		kAttachedPictureDataKey;			/*!< @brief Picture data (\
 
 
 /*! 
- * @brief A class encapsulating a single attached picture.  
+ * @brief A class encapsulating a single attached picture.
+ *
  * Most file formats may have more than one attached picture of each type.
  */
 class AttachedPicture

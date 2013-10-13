@@ -135,18 +135,10 @@ public:
 	static CFArrayRef CreateSupportedMIMETypes();
 
 
-	/*!
-	 * @brief Test whether a file extension is supported
-	 * @param extension The file extension to test
-	 * @return \c true if the file extension is supported, \c false otherwise
-	 */
+	/*! @brief Test whether a file extension is supported */
 	static bool HandlesFilesWithExtension(CFStringRef extension);
 
-	/*!
-	 * @brief Test whether a MIME type is supported
-	 * @param mimeType The MIME type to test
-	 * @return \c true if the MIME type is supported, \c false otherwise
-	 */
+	/*! @brief Test whether a MIME type is supported */
 	static bool HandlesMIMEType(CFStringRef mimeType);
 
 	//@}
