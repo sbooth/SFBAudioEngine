@@ -12,6 +12,7 @@ SFBAudioEngine is a set of C++ classes enabling Mac OS X and iOS applications to
 * WavPack
 * Ogg Vorbis
 * Ogg Speex
+* Ogg Opus
 * Musepack (Mac OS X only)
 * Monkey's Audio (Mac OS X only)
 * True Audio (Mac OS X only)
