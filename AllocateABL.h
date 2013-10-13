@@ -32,12 +32,10 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
-// ========================================
-// Utility function for allocating an AudioBufferList struct
-// ========================================
+/*! @file AllocateABL.h @brief Utility functions for allocating \c AudioBufferList structs */
 
 /*!
- * Allocate an \c AudioBufferList
+ * @brief Allocate an \c AudioBufferList
  * @param format The format of the audio which will be stored in the \c AudioBufferList
  * @param capacityFrames The desired capacity, in frames, of the \c AudioBufferList
  * @return An \c AudioBufferList
@@ -45,7 +43,7 @@
 AudioBufferList * AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
 
 /*!
- * Allocate an \c AudioBufferList
+ * @brief Allocate an \c AudioBufferList
  * @param channelsPerFrame The number of audio channels
  * @param bytesPerFrame The size, in bytes, of a single audio frame
  * @param interleaved \c true if the audio will be interleaved in the \c AudioBufferList, \c false otherwise

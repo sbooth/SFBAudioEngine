@@ -32,13 +32,11 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
-// ========================================
-// Utility function for deallocating an AudioBufferList struct
-// ========================================
+/*! @file DeallocateABL.h @brief Utility function for deallocating \c AudioBufferList structs */
 
 /*!
- * Deallocate an \c AudioBufferList
+ * @brief Deallocate an \c AudioBufferList
  * @param bufferList The \c AudioBufferList to deallocate
- * @return nullptr
+ * @return \c nullptr
  */
 AudioBufferList * DeallocateABL(AudioBufferList *bufferList);
