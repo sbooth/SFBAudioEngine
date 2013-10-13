@@ -33,9 +33,7 @@
 #include <asl.h>
 #include <sstream>
 
-/*! @file */
-
-// A simplified interface to ASL
+/*! @file Logger.h @brief A simplified interface to the Apple System Log (ASL) */
 
 /*!
  * @brief Log a message at the \c logger::emerg level
