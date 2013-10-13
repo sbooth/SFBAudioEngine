@@ -1646,7 +1646,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//  7. Thread A is awakened, and immediately allocates a new ring buffer
 	//  8. The decoding or rendering threads crash, because the memory they are using was freed out
 	//     from underneath them
-	// In practce, the only time I've seen this happen is when using GuardMalloc, presumably because the 
+	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the 
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
 	Mutex::Locker lock(mMutex);
 
@@ -2274,8 +2274,10 @@ void * AudioPlayer::CollectorThreadEntry()
 
 			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, (void **)&mActiveDecoders[bufferIndex]);
 
-			if(swapSucceeded)
+			if(swapSucceeded) {
+				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
 				delete decoderState, decoderState = nullptr;
+			}
 		}
 		
 		// Wait for any thread to signal us to try and collect finished decoders
