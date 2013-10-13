@@ -457,8 +457,11 @@ bool AudioPlayer::Stop()
 	
 	ResetOutput();
 
+	// Reset the ring buffer
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
+
+	OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
 	return true;
 }
@@ -1573,6 +1576,39 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 
 #pragma mark Playlist Management
 
+bool AudioPlayer::Play(CFURLRef url)
+{
+	if(nullptr == url)
+		return false;
+
+	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+
+	if(nullptr == decoder)
+		return false;
+
+	bool success = Play(decoder);
+
+	if(!success)
+		delete decoder;
+
+	return success;
+}
+
+bool AudioPlayer::Play(AudioDecoder *decoder)
+{
+	if(nullptr == decoder)
+		return false;
+
+	Stop();
+
+	ClearQueuedDecoders();
+
+	if(!Enqueue(decoder))
+		return false;
+
+	return Play();
+}
+
 bool AudioPlayer::Enqueue(CFURLRef url)
 {
 	if(nullptr == url)
@@ -1655,10 +1691,12 @@ bool AudioPlayer::SkipToNextTrack()
 
 	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
 
-	// Effect a flush of the ring buffer
+	// Reset the ring buffer
 	mFramesDecoded = 0;
 	mFramesRendered = 0;
-	
+
+	OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+
 	// Signal the decoding thread to start the next decoder (outer loop)
 	mDecoderSemaphore.Signal();
 
@@ -1974,9 +2012,11 @@ void * AudioPlayer::DecoderThreadEntry()
 					if(lock) {
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
 
-						// Effect a flush of the ring buffer so if Stop() was called in mFormatMismatchBlock playback can still continue
+						// Reset the ring buffer so if Stop() wasn't called in mFormatMismatchBlock playback can still continue
 						mFramesDecoded = 0;
 						mFramesRendered = 0;
+
+						OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
 						decoderState->mTimeStamp = mFramesDecoded;
 					}

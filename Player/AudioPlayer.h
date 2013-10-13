@@ -606,6 +606,23 @@ public:
 	//@{
 
 	/*!
+	 * @brief Play a URL
+	 * @note This will clear any enqueued decoders
+	 * @param url The URL to play
+	 * @return \c true on success, \c false otherwise
+	 */
+	bool Play(CFURLRef url);
+
+	/*!
+	 * @brief Start playback of an \c AudioDecoder
+	 * @note This will clear any enqueued decoders
+	 * @param decoder The \c AudioDecoder to play
+	 * @return \c true on success, \c false otherwise
+	 */
+	bool Play(AudioDecoder *decoder);
+
+
+	/*!
 	 * @brief Enqueue a URL for playback
 	 * @param url The URL of the location to enqueue
 	 * @return \c true on success, \c false otherwise
