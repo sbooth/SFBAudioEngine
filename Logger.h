@@ -33,9 +33,15 @@
 #include <asl.h>
 #include <sstream>
 
+/*! @file */
+
 // A simplified interface to ASL
 
-// 9 times out of 10 these macros should be used for logging because they are the most efficient
+/*!
+ * @brief Log a message at the \c logger::emerg level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_EMERG(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::emerg) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -43,6 +49,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::alert level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_ALERT(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::alert) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -50,6 +61,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::crit level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_CRIT(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::crit) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -57,6 +73,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::err level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_ERR(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::err) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -64,6 +85,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::warning level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_WARNING(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::warning) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -71,6 +97,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::notice level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_NOTICE(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::notice) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -78,6 +109,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::info level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_INFO(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::info) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -85,6 +121,11 @@
 	} \
 }
 
+/*!
+ * @brief Log a message at the \c logger::debug level
+ * @param facility The sender's logging facility, or \c nullptr to use the default
+ * @param message The log message
+ */
 #define LOGGER_DEBUG(facility, message) { \
 	if(::logger::currentLogLevel >= ::logger::debug) { \
 		::std::stringstream ss_; ss_ << message; \
@@ -92,38 +133,39 @@
 	} \
 }
 
+/*! @brief The namespace containing all logging functionality */
 namespace logger {
 
-	/*! The possible logging levels for ASL */
+	/*! @brief The possible logging levels for ASL */
 	enum levels {
-		emerg		= ASL_LEVEL_EMERG,
-		alert		= ASL_LEVEL_ALERT,
-		crit		= ASL_LEVEL_CRIT,
-		err			= ASL_LEVEL_ERR,
-		warning		= ASL_LEVEL_WARNING,
-		notice		= ASL_LEVEL_NOTICE,
-		info		= ASL_LEVEL_INFO,
-		debug		= ASL_LEVEL_DEBUG,
-		disabled	= 33,
+		emerg		= ASL_LEVEL_EMERG,		/*!< The emergency log level */
+		alert		= ASL_LEVEL_ALERT,		/*!< The alert log level */
+		crit		= ASL_LEVEL_CRIT,		/*!< The critical log level */
+		err			= ASL_LEVEL_ERR,		/*!< The error log level */
+		warning		= ASL_LEVEL_WARNING,	/*!< The warning log level */
+		notice		= ASL_LEVEL_NOTICE,		/*!< The notice log level */
+		info		= ASL_LEVEL_INFO,		/*!< The information log level */
+		debug		= ASL_LEVEL_DEBUG,		/*!< The debug log level */
+		disabled	= 33,					/*!< Disable logging */
 	};
 
-	/*! The current log level below which messages are ignored */
+	/*! @brief The current log level below which messages are ignored */
 	extern int currentLogLevel;
 
 	/*!
-	 * Get the log level below which messages are ignored
+	 * @brief Get the log level below which messages are ignored
 	 * @return The current log level
 	 */
 	inline levels	GetCurrentLevel()				{ return (levels)currentLogLevel; }
 
 	/*!
-	 * Set the log level below which messages will be ignored
+	 * @brief Set the log level below which messages will be ignored
 	 * @param level The desired log level
 	 */
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
 	/*!
-	 * Log a message
+	 * @brief Log a message
 	 * @note If \c level is below \c currentLogLevel nothing is logged.
 	 * @param level The log level of the message
 	 * @param facility The sender's logging facility, or \c nullptr to use the default
@@ -134,61 +176,76 @@ namespace logger {
 	 */
 	void Log(levels level, const char *facility, const char *message, const char *function = nullptr, const char *file = nullptr, int line = -1);
 
-	// Convenience functions
+
+	/*! @name Convenience functions */
+	//@{
 
 	/*!
-	 * Log a message at the \c emerg level
+	 * @brief Log a message at the \c #emerg level
+	 * @note It is preferable to use LOGGER_EMERG() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Emerg(const char *message)			{ Log(emerg, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c alert level
+	 * @brief Log a message at the \c #alert level
+	 * @note It is preferable to use LOGGER_ALERT() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Alert(const char *message)			{ Log(alert, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c crit level
+	 * @brief Log a message at the \c #crit level
+	 * @note It is preferable to use LOGGER_CRIT() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Crit(const char *message)			{ Log(crit, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c err level
+	 * @brief Log a message at the \c #err level
+	 * @note It is preferable to use LOGGER_ERR() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Err(const char *message)			{ Log(err, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c warning level
+	 * @brief Log a message at the \c #warning level
+	 * @note It is preferable to use LOGGER_WARN() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Warn(const char *message)			{ Log(warning, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c notice level
+	 * @brief Log a message at the \c #notice level
+	 * @note It is preferable to use LOGGER_NOTICE() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Notice(const char *message)			{ Log(notice, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c info level
+	 * @brief Log a message at the \c #info level
+	 * @note It is preferable to use LOGGER_INFO() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Info(const char *message)			{ Log(info, nullptr, message); }
 
 	/*!
-	 * Log a message at the \c debug level
+	 * @brief Log a message at the \c #debug level
+	 * @note It is preferable to use LOGGER_DEBUG() for efficiency
 	 * @param message The message to log
 	 */
 	inline void Debug(const char *message)			{ Log(debug, nullptr, message); }
+
+	//@}
 };
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreAudio/CoreAudioTypes.h>
 
+/*! @cond */
+
 // Useful ostream overloads
+
 std::ostream& operator<<(std::ostream& out, CFStringRef s);
 std::ostream& operator<<(std::ostream& out, CFNumberRef n);
 std::ostream& operator<<(std::ostream& out, CFURLRef u);
@@ -209,3 +266,5 @@ std::ostream& operator<<(std::ostream& out, NSURL *u);
 std::ostream& operator<<(std::ostream& out, NSError *e);
 
 #endif
+
+/*! @endcond */

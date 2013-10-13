@@ -37,12 +37,12 @@ class Guard : public Mutex
 {
 public:
 	/*!
-	 * Create a new \c Guard
+	 * @brief Create a new \c Guard
 	 * @throws std::runtime_exception
 	 */
 	Guard();
 
-	/*! Destroy this \c Guard */
+	/*! @brief Destroy this \c Guard */
 	virtual ~Guard();
 
 	/*! @cond */
@@ -56,14 +56,14 @@ public:
 	/*! @endcond */
 
 	/*!
-	 * Block the calling thread until the condition variable is signaled
+	 * @brief Block the calling thread until the condition variable is signaled
 	 * @note The \c Mutex must be locked or an exception will be thrown
 	 * @throws std::runtime_exception
 	 */
 	void Wait();
 
 	/*!
-	 * Block the calling thread until the condition variable is signaled
+	 * @brief Block the calling thread until the condition variable is signaled
 	 * @note The \c Mutex must be locked or an exception will be thrown
 	 * @param absoluteTime The latest time to block
 	 * @return \c true if the request timed out, \c false otherwise
@@ -72,19 +72,19 @@ public:
 	bool WaitUntil(struct timespec absoluteTime);
 
 	/*!
-	 * Unblock a thread waiting on the condition variable
+	 * @brief Unblock a thread waiting on the condition variable
 	 * @throws std::runtime_exception
 	 */
 	void Signal();
 
 	/*!
-	 * Unblock all threads waiting on the condition variable
+	 * @brief Unblock all threads waiting on the condition variable
 	 * @throws std::runtime_exception
 	 */
 	void Broadcast();
 
 protected:
-	pthread_cond_t mCondition;	/*!< The pthread condition variable */
+	pthread_cond_t mCondition;	/*!< @brief The pthread condition variable */
 
 public:
 	/*! @brief A scope based wrapper around \c Guard::Lock() */
@@ -100,17 +100,17 @@ public:
 		 */
 		Locker(Guard& guard);
 
-		/*! Destroy this \c Guard::Locker */
+		/*! @brief Destroy this \c Guard::Locker */
 		~Locker();
 
 		/*!
-		 * Block the calling thread until the condition variable is signaled
+		 * @brief Block the calling thread until the condition variable is signaled
 		 * @throws std::runtime_exception
 		 */
 		inline void Wait()										{ mGuard.Wait(); }
 
 		/*!
-		 * Block the calling thread until the condition variable is signaled
+		 * @brief Block the calling thread until the condition variable is signaled
 		 * @param absoluteTime The latest time to block
 		 * @return \c true if the request timed out, \c false otherwise
 		 * @throws std::runtime_exception
@@ -118,13 +118,13 @@ public:
 		inline bool WaitUntil(struct timespec absoluteTime)		{ return mGuard.WaitUntil(absoluteTime); }
 
 		/*!
-		 * Unblock a thread waiting on the condition variable
+		 * @brief Unblock a thread waiting on the condition variable
 		 * @throws std::runtime_exception
 		 */
 		inline void Signal()									{ mGuard.Signal(); }
 
 		/*!
-		 * Unblock all threads waiting on the condition variable
+		 * @brief Unblock all threads waiting on the condition variable
 		 * @throws std::runtime_exception
 		 */
 		inline void Broadcast()									{ mGuard.Broadcast(); }

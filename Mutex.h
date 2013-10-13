@@ -37,12 +37,12 @@ class Mutex
 {
 public:
 	/*!
-	 * Create a new \c Mutex
+	 * @brief Create a new \c Mutex
 	 * @throws std::runtime_exception
 	 */
 	Mutex();
 
-	/*! Destroy this \c Mutex*/
+	/*! @brief Destroy this \c Mutex*/
 	virtual ~Mutex();
 
 	/*! @cond */
@@ -56,27 +56,27 @@ public:
 	/*! @endcond */
 
 	/*!
-	 * Lock this \c Mutex.
+	 * @brief Lock this \c Mutex.
 	 * @return \c true if the lock was obtained, \c false otherwise
 	 * @throws std::runtime_exception
 	 */
 	bool Lock();
 
 	/*!
-	 * Unlock this \c Mutex
+	 * @brief Unlock this \c Mutex
 	 * @throws std::runtime_exception
 	 */
 	void Unlock();
 
 	/*!
-	 * Attempt to lock this \c Mutex
+	 * @brief Attempt to lock this \c Mutex
 	 * @return \c true if the lock is held by the calling thread, \c false otherwise
 	 * @throws std::runtime_exception
 	 */
 	bool TryLock();
 
 	/*!
-	 * Attempt to lock this \c Mutex
+	 * @brief Attempt to lock this \c Mutex
 	 * @param acquiredLock \c true if the lock was acquired in the call, \c false otherwise
 	 * @return \c true if the lock is held by the calling thread, \c false otherwise
 	 * @throws std::runtime_exception
@@ -84,14 +84,14 @@ public:
 	bool TryLock(bool& acquiredLock);
 
 	/*!
-	 * Determine if the calling thread owns the \c Mutex
+	 * @brief Determine if the calling thread owns the \c Mutex
 	 * @return \c true if the calling thread owns the \c Mutex, \c false otherwise
 	 */
 	inline bool Owned() const { return pthread_equal(mOwner, pthread_self()); }
 
 protected:
-	pthread_mutex_t mMutex;		/*!< The pthread mutex */
-	pthread_t mOwner;			/*!< The thread that owns the mutex */
+	pthread_mutex_t mMutex;		/*!< @brief The pthread mutex */
+	pthread_t mOwner;			/*!< @brief The thread that owns the mutex */
 
 public:
 
@@ -129,11 +129,11 @@ public:
 		 */
 		Tryer(Mutex& mutex);
 
-		/*! Destroy this \c Mutex::Tryer */
+		/*! @brief Destroy this \c Mutex::Tryer */
 		~Tryer();
 
 		/*!
-		 * Determine if the mutex is owned and locked by the calling thread
+		 * @brief Determine if the mutex is owned and locked by the calling thread
 		 * @return true if the mutex is owned and locked, false otherwise
 		 */
 		inline operator bool() const { return mLocked; }
