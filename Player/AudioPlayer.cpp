@@ -1915,6 +1915,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 	while(mKeepDecoding) {
 
+		int64_t decoderCounter = 0;
+
 		DecoderStateData *decoderState = nullptr;
 		{
 			// ========================================
@@ -1932,7 +1934,6 @@ void * AudioPlayer::DecoderThreadEntry()
 			// ========================================
 			// Open the decoder if necessary
 			if(decoder && !decoder->IsOpen()) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Opening decoder: \"" << decoder->GetURL() << "\"");
 				CFErrorRef error = nullptr;
 				if(!decoder->Open(&error))  {
 					if(error) {
@@ -1948,9 +1949,8 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// Create the decoder state
 			if(decoder) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Creating decoder state: \"" << decoder->GetURL() << "\", total frames = " << decoder->GetTotalFrames());
 				decoderState = new DecoderStateData(decoder);
-				decoderState->mTimeStamp = mFramesDecoded;
+				decoderState->mTimeStamp = decoderCounter++;
 			}
 		}
 
@@ -2015,10 +2015,8 @@ void * AudioPlayer::DecoderThreadEntry()
 				// Adjust the formats
 				{
 					Mutex::Tryer lock(mMutex);
-					if(lock) {
+					if(lock)
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
-						decoderState->mTimeStamp = mFramesDecoded;
-					}
 					else
 						delete decoderState, decoderState = nullptr;
 				}
