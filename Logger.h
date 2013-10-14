@@ -147,19 +147,13 @@ namespace logger {
 		disabled	= 33,					/*!< Disable logging */
 	};
 
-	/*! @brief The current log level below which messages are ignored */
+	/*! @brief The log level below which messages are ignored */
 	extern int currentLogLevel;
 
-	/*!
-	 * @brief Get the log level below which messages are ignored
-	 * @return The current log level
-	 */
+	/*! @brief Get the log level below which messages are ignored */
 	inline levels	GetCurrentLevel()				{ return (levels)currentLogLevel; }
 
-	/*!
-	 * @brief Set the log level below which messages will be ignored
-	 * @param level The desired log level
-	 */
+	/*! @brief Set the log level below which messages will be ignored */
 	inline void		SetCurrentLevel(levels level)	{ currentLogLevel = level; }
 
 	/*!
