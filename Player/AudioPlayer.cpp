@@ -1646,7 +1646,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//  7. Thread A is awakened, and immediately allocates a new ring buffer
 	//  8. The decoding or rendering threads crash, because the memory they are using was freed out
 	//     from underneath them
-	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the 
+	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
 	Mutex::Locker lock(mMutex);
 
@@ -1915,36 +1915,42 @@ void * AudioPlayer::DecoderThreadEntry()
 
 	while(mKeepDecoding) {
 
-		// ========================================
-		// Try to lock the queue and remove the head element, which contains the next decoder to use
 		DecoderStateData *decoderState = nullptr;
 		{
-			Mutex::Tryer lock(mMutex);
+			// ========================================
+			// Lock the queue and remove the head element that contains the next decoder to use
+			AudioDecoder *decoder = nullptr;
+			{
+				Mutex::Tryer lock(mMutex);
 
-			if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
-				AudioDecoder *decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+				if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
+					decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+					CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+				}
+			}
 
-				// Create the decoder state
+			// ========================================
+			// Open the decoder if necessary
+			if(decoder && !decoder->IsOpen()) {
+				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Opening decoder: \"" << decoder->GetURL() << "\"");
+				CFErrorRef error = nullptr;
+				if(!decoder->Open(&error))  {
+					if(error) {
+						LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
+						CFRelease(error), error = nullptr;
+					}
+
+					// TODO: Perform CouldNotOpenDecoder() callback ??
+
+					delete decoder, decoder = nullptr;
+				}
+			}
+
+			// Create the decoder state
+			if(decoder) {
+				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Creating decoder state: \"" << decoder->GetURL() << "\", total frames = " << decoder->GetTotalFrames());
 				decoderState = new DecoderStateData(decoder);
 				decoderState->mTimeStamp = mFramesDecoded;
-
-				CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
-			}
-		}
-
-		// ========================================
-		// Open the decoder if necessary
-		if(decoderState) {
-			CFErrorRef error = nullptr;
-			if(!decoderState->mDecoder->IsOpen() && !decoderState->mDecoder->Open(&error))  {
-				if(error) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
-					CFRelease(error), error = nullptr;
-				}
-
-				// TODO: Perform CouldNotOpenDecoder() callback ??
-
-				delete decoderState, decoderState = nullptr;
 			}
 		}
 
@@ -2011,20 +2017,13 @@ void * AudioPlayer::DecoderThreadEntry()
 					Mutex::Tryer lock(mMutex);
 					if(lock) {
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
-
-						// Reset the ring buffer so if Stop() wasn't called in mFormatMismatchBlock playback can still continue
-						mFramesDecoded = 0;
-						mFramesRendered = 0;
-
-						OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
-
 						decoderState->mTimeStamp = mFramesDecoded;
 					}
 					else
 						delete decoderState, decoderState = nullptr;
 				}
 
-				// Clear the mute flag that was set in the rendering thread
+				// Clear the mute flag that was set in the rendering thread so output will resume
 				OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 			}
 		}
@@ -2093,7 +2092,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
 
-					// Flush the ring buffer if required
+					// Reset the ring buffer if required
 					if(eAudioPlayerFlagRingBufferNeedsReset & mFlags) {
 
 						OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
@@ -2128,10 +2127,8 @@ void * AudioPlayer::DecoderThreadEntry()
 						if(-1 != decoderState->mFrameToSeek) {
 							LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Seeking to frame " << decoderState->mFrameToSeek);
 
-							SInt64 currentFrameBeforeSeeking = decoder->GetCurrentFrame();
-							
 							SInt64 newFrame = decoder->SeekToFrame(decoderState->mFrameToSeek);
-							
+
 							if(newFrame != decoderState->mFrameToSeek)
 								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error seeking to frame  " << decoderState->mFrameToSeek);
 							
@@ -2139,19 +2136,18 @@ void * AudioPlayer::DecoderThreadEntry()
 							if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFrameToSeek, -1, &decoderState->mFrameToSeek))
 								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
 							
-							// If the seek failed do not update the counters
+							// Update the counters accordingly
 							if(-1 != newFrame) {
-								SInt64 framesSkipped = newFrame - currentFrameBeforeSeeking;
-								
-								// Treat the skipped frames as if they were rendered, and update the counters accordingly
 								if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFramesRendered, newFrame, &decoderState->mFramesRendered))
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
-								
-								OSAtomicAdd64Barrier(framesSkipped, &mFramesDecoded);
-								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, mFramesDecoded, &mFramesRendered))
+
+								if(!OSAtomicCompareAndSwap64Barrier(mFramesDecoded, newFrame, &mFramesDecoded))
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
 
-								// Reset the converter and output to flush any buffers
+								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, newFrame, &mFramesRendered))
+									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
+
+								// Reset the converter to flush any buffers
 								result = AudioConverterReset(audioConverter);
 								if(noErr != result)
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
