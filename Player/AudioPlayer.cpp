@@ -448,7 +448,9 @@ bool AudioPlayer::Pause()
 
 bool AudioPlayer::Stop()
 {
-	Mutex::Locker lock(mMutex);
+	Mutex::Tryer lock(mMutex);
+	if(!lock)
+		return false;
 
 	if(OutputIsRunning())
 		StopOutput();
@@ -695,7 +697,8 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 		return false;
 
 	// Force a flush of the ring buffer to prevent audible seek artifacts
-	OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
+	if(!OutputIsRunning())
+		OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
 	mDecoderSemaphore.Signal();
 
@@ -1648,7 +1651,9 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Mutex::Locker lock(mMutex);
+	Mutex::Tryer lock(mMutex);
+	if(!lock)
+		return false;
 
 	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
 
@@ -1673,11 +1678,26 @@ bool AudioPlayer::SkipToNextTrack()
 	if(nullptr == currentDecoderState)
 		return false;
 
-	OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
+
+	if(OutputIsRunning()) {
+		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+
+		mach_timespec_t renderTimeout = {
+			.tv_sec = 0,
+			.tv_nsec = NSEC_PER_SEC / 10
+		};
+
+		// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+		while(eAudioPlayerFlagRequestMute & mFlags)
+			mSemaphore.TimedWait(renderTimeout);
+	}
+	else
+		OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 	OSAtomicTestAndSetBarrier(3 /* eDecoderStateDataFlagStopDecoding */, &currentDecoderState->mFlags);
 
-	// Signal the decoding thread that decoding is finished (inner loop)
+	// Signal the decoding thread that decoding should stop (inner loop)
 	mDecoderSemaphore.Signal();
 
 	// Wait for decoding to finish or a SIGSEGV could occur if the collector collects an active decoder
@@ -1690,12 +1710,6 @@ bool AudioPlayer::SkipToNextTrack()
 		mSemaphore.TimedWait(timeout);
 
 	OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &currentDecoderState->mFlags);
-
-	// Reset the ring buffer
-	mFramesDecoded = 0;
-	mFramesRendered = 0;
-
-	OSAtomicTestAndSetBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
 	// Signal the decoding thread to start the next decoder (outer loop)
 	mDecoderSemaphore.Signal();
@@ -1996,18 +2010,20 @@ void * AudioPlayer::DecoderThreadEntry()
 
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
 			if(!formatsMatch) {
-				// Set a flag indicating the rendering thread should output silence after the current decoder completes
-				OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagFormatMismatch */, &mFlags);
+				// Ensure output is muted before performing operations that aren't thread safe
+				if(OutputIsRunning()) {
+					OSAtomicTestAndSetBarrier(6 /* eAudioPlayerFlagFormatMismatch */, &mFlags);
 
-				// Wait for the currently rendering decoder to finish
-				mach_timespec_t renderTimeout = {
-					.tv_sec = 0,
-					.tv_nsec = NSEC_PER_SEC / 100
-				};
+					// Wait for the currently rendering decoder to finish
+					mach_timespec_t renderTimeout = {
+						.tv_sec = 0,
+						.tv_nsec = NSEC_PER_SEC / 100
+					};
 
-				// The rendering thread will clear eAudioPlayerFlagFormatMismatch when rendering is finished
-				while(eAudioPlayerFlagFormatMismatch & mFlags)
-					mSemaphore.TimedWait(renderTimeout);
+					// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+					while(eAudioPlayerFlagFormatMismatch & mFlags)
+						mSemaphore.TimedWait(renderTimeout);
+				}
 
 				if(mFormatMismatchBlock)
 					mFormatMismatchBlock(mRingBufferFormat, nextFormat);
@@ -2095,23 +2111,31 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						OSAtomicTestAndClearBarrier(4 /* eAudioPlayerFlagRingBufferNeedsReset */, &mFlags);
 
-						// Set a flag indicating the rendering thread should output silence
-						OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+						// Ensure output is muted before performing operations that aren't thread safe
+						if(OutputIsRunning()) {
+							OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
 
-						// Wait for the render thread to complete its current cycle
-						mach_timespec_t renderTimeout = {
-							.tv_sec = 0,
-							.tv_nsec = NSEC_PER_SEC / 100
-						};
+							mach_timespec_t renderTimeout = {
+								.tv_sec = 0,
+								.tv_nsec = NSEC_PER_SEC / 100
+							};
 
-						// The rendering thread will clear eAudioPlayerFlagRequestMute when rendering is finished
-						while(eAudioPlayerFlagRequestMute & mFlags)
-							mSemaphore.TimedWait(renderTimeout);
+							// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+							while(eAudioPlayerFlagRequestMute & mFlags)
+								mSemaphore.TimedWait(renderTimeout);
+						}
+						else
+							OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+
+						// Reset the converter to flush any buffers
+						result = AudioConverterReset(audioConverter);
+						if(noErr != result)
+							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
 
 						// Reset() is not thread safe but the rendering thread is outputting silence
 						mRingBuffer->Reset();
 
-						// Clear the mute flag that was set in the rendering thread
+						// Clear the mute flag
 						OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 					}
 
@@ -2124,6 +2148,22 @@ void * AudioPlayer::DecoderThreadEntry()
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
 							LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Seeking to frame " << decoderState->mFrameToSeek);
+
+							// Ensure output is muted before performing operations that aren't thread safe
+							if(OutputIsRunning()) {
+								OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+
+								mach_timespec_t renderTimeout = {
+									.tv_sec = 0,
+									.tv_nsec = NSEC_PER_SEC / 100
+								};
+
+								// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+								while(eAudioPlayerFlagRequestMute & mFlags)
+									mSemaphore.TimedWait(renderTimeout);
+							}
+							else
+								OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 
 							SInt64 newFrame = decoder->SeekToFrame(decoderState->mFrameToSeek);
 
@@ -2149,7 +2189,13 @@ void * AudioPlayer::DecoderThreadEntry()
 								result = AudioConverterReset(audioConverter);
 								if(noErr != result)
 									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
+
+								// Reset the ring buffer
+								mRingBuffer->Reset();
 							}
+
+							// Clear the mute flag
+							OSAtomicTestAndClearBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
 						}
 
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
@@ -2545,7 +2591,9 @@ bool AudioPlayer::StartOutput()
 	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "StartOutput");
 
 	// We don't want to start output in the middle of a buffer modification
-	Mutex::Locker lock(mMutex);
+	Mutex::Tryer lock(mMutex);
+	if(!lock)
+		return false;
 
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {
