@@ -26,6 +26,8 @@
 
 - (IBAction) seek:(id)sender;
 
+- (IBAction) skipToNextTrack:(id)sender;
+
 // Attempt to play the specified file- returns YES if successful
 - (BOOL) playURL:(NSURL *)url;
 

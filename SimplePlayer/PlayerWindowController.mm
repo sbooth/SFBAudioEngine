@@ -112,6 +112,11 @@ enum {
 	}
 }
 
+- (IBAction) skipToNextTrack:(id)sender
+{
+	_player->SkipToNextTrack();
+}
+
 - (BOOL) playURL:(NSURL *)url
 {
 	NSParameterAssert(nil != url);
