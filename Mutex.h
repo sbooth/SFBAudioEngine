@@ -32,6 +32,8 @@
 
 #include <pthread.h>
 
+/*! @file Mutex.h @brief A \c pthread_mutex_t wrapper */
+
 /*! @brief A wrapper around a pthread mutex */
 class Mutex
 {

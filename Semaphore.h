@@ -32,6 +32,8 @@
 
 #include <mach/task.h>
 
+/*! @file Semaphore.h @brief A mach \c semaphore_t wrapper */
+
 /*! @brief A wrapper around a mach semaphore */
 class Semaphore
 {

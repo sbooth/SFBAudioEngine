@@ -32,9 +32,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-/*! @file */
+/*! @file InputSource.h @brief Support for arbitrary bytestream input to \c AudioDecoder */
 
-/*! The \c CFErrorRef error domain used by \c InputSource */
+/*! @brief The \c CFErrorRef error domain used by \c InputSource */
 extern const CFStringRef		InputSourceErrorDomain;
 
 /*! Possible \c CFErrorRef error codes used by \c InputSource */

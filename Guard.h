@@ -32,6 +32,8 @@
 
 #include "Mutex.h"
 
+/*! @file Guard.h @brief A \c pthread_mutex_t and \c pthread_cond_t wrapper */
+
 /*! @brief A wrapper around a pthread mutex and condition variable */
 class Guard : public Mutex
 {

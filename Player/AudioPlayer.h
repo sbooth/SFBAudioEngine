@@ -41,6 +41,8 @@
 #include "Mutex.h"
 #include "Semaphore.h"
 
+/*! @file AudioPlayer.h @brief Core playback functionality */
+
 // ========================================
 // Forward declarations
 // ========================================
@@ -49,10 +51,11 @@ class RingBuffer;
 // ========================================
 // Constants
 // ========================================
+/*! @brief The length of the array containing active audio decoders */
 #define kActiveDecoderArraySize 8
 
 /*!
- * @brief An audio player class
+ * @brief The audio player class
  *
  * The player primarily uses two threads:
  *  1. A decoding thread, which reads audio via an AudioDecoder instance and stores it in the ring buffer.

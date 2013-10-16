@@ -32,10 +32,33 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
+/*! @file CreateChannelLayout.h @brief Utility functions for allocating \c AudioChannelLayout structs */
+
+/*! @brief Get the size, in bytes, of \c layout */
 size_t GetChannelLayoutSize(const AudioChannelLayout *layout);
 
+
+/*! 
+ * @brief Allocate an \c AudioChannelLayout
+ * @param numberChannelDescriptions The number of channel descriptions that will be stored in the channel layout
+ * @return An \c AudioChannelLayout
+ */
 AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions = 0);
+
+/*!
+ * @brief Allocate an \c AudioChannelLayout
+ * @param layoutTag The layout tag for the channel layout
+ * @return An \c AudioChannelLayout
+ */
 AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag);
+
+/*!
+ * @brief Allocate an \c AudioChannelLayout
+ * @param channelBitmap The channel bitmap for the channel layout
+ * @return An \c AudioChannelLayout
+ */
 AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap);
 
+
+/*! @brief Create a copy of \c rhs */
 AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs);
