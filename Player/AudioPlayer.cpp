@@ -3068,31 +3068,31 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 	if(nullptr == channelLayout)
 		return true;
 
-    AudioChannelLayout stereoChannelLayout = {
-        .mChannelLayoutTag = kAudioChannelLayoutTag_Stereo
-    };
-    
-    AudioChannelLayout *layouts [] = {
-        channelLayout,
-        &stereoChannelLayout
-    };
-    
-    UInt32 channelLayoutIsStereo = false;
-    UInt32 propertySize = sizeof(channelLayoutIsStereo);
-    result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &channelLayoutIsStereo);
-    
-    if(noErr != result)
-        LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
-    
-    // Stereo
-    if(channelLayoutIsStereo) {
-        UInt32 preferredChannelsForStereo [2];
-        UInt32 preferredChannelsForStereoSize = sizeof(preferredChannelsForStereo);
-        result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelsForStereo, kAudioUnitScope_Output, 0, preferredChannelsForStereo, &preferredChannelsForStereoSize);
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
-            return false;
-        }
+	AudioChannelLayout stereoChannelLayout = {
+		.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo
+	};
+
+	AudioChannelLayout *layouts [] = {
+		channelLayout,
+		&stereoChannelLayout
+	};
+
+	UInt32 channelLayoutIsStereo = false;
+	UInt32 propertySize = sizeof(channelLayoutIsStereo);
+	result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &channelLayoutIsStereo);
+
+	if(noErr != result)
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+
+	// Stereo
+	if(channelLayoutIsStereo) {
+		UInt32 preferredChannelsForStereo [2];
+		UInt32 preferredChannelsForStereoSize = sizeof(preferredChannelsForStereo);
+		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelsForStereo, kAudioUnitScope_Output, 0, preferredChannelsForStereo, &preferredChannelsForStereoSize);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
+			return false;
+		}
 
 		// Build a channel map using the preferred stereo channels
 		AudioStreamBasicDescription outputFormat;
@@ -3103,7 +3103,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 			return false;
 		}
 
-        SInt32 channelMap [ outputFormat.mChannelsPerFrame ];
+		SInt32 channelMap [ outputFormat.mChannelsPerFrame ];
 		for(UInt32 i = 0; i <  outputFormat.mChannelsPerFrame; ++i)
 			channelMap[i] = -1;
 
@@ -3112,81 +3112,81 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		channelMap[preferredChannelsForStereo[0] - 1] = 0;
 		channelMap[preferredChannelsForStereo[1] - 1] = 1;
 
-    	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using  stereo channel map: ");
-        for(UInt32 i = 0; i < outputFormat.mChannelsPerFrame; ++i)
-            LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
-        
-        // Set the channel map
-        result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
-            return false;
-        }
-    }
-    // Multichannel or other non-stereo audio
-    else {
-        // Use the device's preferred channel layout
-        UInt32 devicePreferredChannelLayoutSize = 0;
-        result = AudioUnitGetPropertyInfo(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, &devicePreferredChannelLayoutSize, nullptr);
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
-            return false;
-        }
-        
-        AudioChannelLayout *devicePreferredChannelLayout = (AudioChannelLayout *)malloc(devicePreferredChannelLayoutSize);
-        
-        result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, devicePreferredChannelLayout, &devicePreferredChannelLayoutSize);
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
-            
-            if(devicePreferredChannelLayout)
-                free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
-            
-            return false;
-        }
+		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using  stereo channel map: ");
+		for(UInt32 i = 0; i < outputFormat.mChannelsPerFrame; ++i)
+			LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
 
-        UInt32 channelCount = 0;
-        UInt32 dataSize = sizeof(channelCount);
-        result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, devicePreferredChannelLayoutSize, devicePreferredChannelLayout, &dataSize, &channelCount);
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
-            
-            if(devicePreferredChannelLayout)
-                free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
-            
-            return false;
-        }
-        
-        // Create the channel map
-        SInt32 channelMap [ channelCount ];
-        dataSize = (UInt32)sizeof(channelMap);
-        
-        AudioChannelLayout *channelLayouts [] = {
-            channelLayout,
-            devicePreferredChannelLayout
-        };
-        
-        result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
-        
-        if(devicePreferredChannelLayout)
-            free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
-        
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
-            return false;
-        }
-        
-        LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using multichannel channel map: ");
-        for(UInt32 i = 0; i < channelCount; ++i)
-            LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
-        
-        // Set the channel map
-        result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
-        if(noErr != result) {
-            LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
-            return false;
-        }
-    }
+		// Set the channel map
+		result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+			return false;
+		}
+	}
+	// Multichannel or other non-stereo audio
+	else {
+		// Use the device's preferred channel layout
+		UInt32 devicePreferredChannelLayoutSize = 0;
+		result = AudioUnitGetPropertyInfo(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, &devicePreferredChannelLayoutSize, nullptr);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+			return false;
+		}
+
+		AudioChannelLayout *devicePreferredChannelLayout = (AudioChannelLayout *)malloc(devicePreferredChannelLayoutSize);
+
+		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, devicePreferredChannelLayout, &devicePreferredChannelLayoutSize);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+
+			if(devicePreferredChannelLayout)
+				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+
+			return false;
+		}
+
+		UInt32 channelCount = 0;
+		UInt32 dataSize = sizeof(channelCount);
+		result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, devicePreferredChannelLayoutSize, devicePreferredChannelLayout, &dataSize, &channelCount);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
+
+			if(devicePreferredChannelLayout)
+				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+
+			return false;
+		}
+
+		// Create the channel map
+		SInt32 channelMap [ channelCount ];
+		dataSize = (UInt32)sizeof(channelMap);
+
+		AudioChannelLayout *channelLayouts [] = {
+			channelLayout,
+			devicePreferredChannelLayout
+		};
+
+		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
+
+		if(devicePreferredChannelLayout)
+			free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+			return false;
+		}
+
+		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using multichannel channel map: ");
+		for(UInt32 i = 0; i < channelCount; ++i)
+			LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
+
+		// Set the channel map
+		result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+			return false;
+		}
+	}
 #endif
 
 	return true;
