@@ -133,6 +133,14 @@ public:
 			mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
 	}
 
+	UInt32 ReadAudio(UInt32 frameCount)
+	{
+		ResetBufferList();
+
+		frameCount = std::min(frameCount, mBufferCapacityFrames);
+		return mDecoder->ReadAudio(mBufferList, frameCount);
+	}
+
 	AudioDecoder			*mDecoder;
 
 	AudioBufferList			*mBufferList;
@@ -266,10 +274,7 @@ myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 	assert(nullptr != ioNumberDataPackets);
 
 	AudioPlayer::DecoderStateData *decoderStateData = static_cast<AudioPlayer::DecoderStateData *>(inUserData);
-
-	decoderStateData->ResetBufferList();
-
-	UInt32 framesRead = decoderStateData->mDecoder->ReadAudio(decoderStateData->mBufferList, *ioNumberDataPackets);
+	UInt32 framesRead = decoderStateData->ReadAudio(*ioNumberDataPackets);
 
 	// Point ioData at our decoded audio
 	ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
