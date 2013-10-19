@@ -733,13 +733,14 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = AllocateABL.h DeallocateABL.h \
+INPUT                  = AllocateABL.h DeallocateABL.h CreateChannelLayout.h \
 			Logger.h \
 			Guard.h Mutex.h Semaphore.h \
 			Input/InputSource.h \
 			Decoders/AudioDecoder.h \
 			Player/AudioPlayer.h \
-			Metadata/AudioMetadata.h Metadata/AttachedPicture.h
+			Metadata/AudioMetadata.h Metadata/AttachedPicture.h \
+			ReplayGainAnalyzer.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -2038,7 +2039,7 @@ HIDE_UNDOC_RELATIONS   = YES
 # set to NO
 # The default value is: NO.
 
-HAVE_DOT               = NO
+HAVE_DOT               = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
 # to run in parallel. When set to 0 doxygen will base this on the number of
