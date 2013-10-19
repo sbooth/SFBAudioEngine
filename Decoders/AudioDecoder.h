@@ -435,7 +435,7 @@ public:
 
 	/*!
 	 * @brief Register an \c AudioDecoder subclass
-	 * @tparam The subclass name
+	 * @tparam T The subclass name
 	 * @param priority The priority of the subclass
 	 */
 	template <typename T> static void RegisterSubclass(int priority = 0);
