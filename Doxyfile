@@ -734,7 +734,7 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = AllocateABL.h DeallocateABL.h CreateChannelLayout.h \
-			Logger.h \
+			Logger.h CFWrapper.h \
 			Guard.h Mutex.h Semaphore.h \
 			Input/InputSource.h \
 			Decoders/AudioDecoder.h \
