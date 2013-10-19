@@ -419,6 +419,9 @@ bool ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 
 			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
+
+		delete decoder, decoder = nullptr;
+
 		return false;
 	}
 
@@ -432,6 +435,9 @@ bool ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 
 			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
+
+		delete decoder, decoder = nullptr;
+
 		return false;
 	}
 
@@ -449,8 +455,15 @@ bool ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	
 	if(!SetSampleRate((int32_t)outputFormat.mSampleRate)) {
 		if(error) {
-			// TODO: Error message!
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+
+			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
+
+		delete decoder, decoder = nullptr;
+
 		return false;
 	}
 
