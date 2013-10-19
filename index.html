@@ -16,7 +16,7 @@
     <header>
       <div class="container">
         <h1>SFBAudioEngine</h1>
-        <h2>A powerful C++ audio playback engine for Mac OS X and iOS</h2>
+        <h2>A powerful audio playback engine for Mac OS X and iOS</h2>
 
         <section id="downloads">
           <a href="https://github.com/sbooth/SFBAudioEngine/zipball/master" class="btn">Download as .zip</a>
@@ -61,7 +61,15 @@
 <li>Download the dependencies and unpack in the project's root: <a href="http://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2">http://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2</a>
 </li>
 <li>Open the project and build!</li>
-</ol>
+</ol><h1>
+<a name="using-sfbaudioengine" class="anchor" href="#using-sfbaudioengine"><span class="octicon octicon-link"></span></a>Using SFBAudioEngine</h1>
+
+<p>Playing an audio file is as simple as:</p>
+
+<div class="highlight highlight-objc"><pre><span class="n">NSURL</span> <span class="o">*</span><span class="n">u</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="n">fileURLWithPath</span><span class="o">:</span><span class="s">@"example.flac"</span> <span class="n">isDirectory</span><span class="o">:</span><span class="nb">NO</span><span class="p">];</span>
+<span class="n">AudioPlayer</span> <span class="n">player</span><span class="p">;</span>
+<span class="n">player</span><span class="p">.</span><span class="n">PlayURL</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFURLRef</span><span class="p">)</span><span class="n">u</span><span class="p">);</span>
+</pre></div>
       </section>
     </div>
 
