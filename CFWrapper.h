@@ -38,32 +38,53 @@
 # include <ImageIO/ImageIO.h>
 #endif
 
+/*! @file CFWrapper.h @brief A  wrapper around a Core Foundation object */
+
+/*! @brief The namespace containing utility classes */
 namespace SFB {
 
-	// ========================================
-	// A wrapper around a Core Foundation object
-	// CFWrapper simplifies the use of CFTypes in C++ by wrapping a CF object, ensuring
-	// CFRelease will be called when the object goes out of scope.
-	// ========================================
+	/*!
+	 * @brief A wrapper around a Core Foundation object
+	 *
+	 * \c CFWrapper simplifies the use of CFTypes in C++ by wrapping a CF object, ensuring
+	 * \c CFRelease will be called when the \c CFWrapper goes out of scope.
+	 * @tparam T A \c CFType
+	 */
 	template <typename T>
 	class CFWrapper
 	{
 	public:
 		
 		// ========================================
-		// Creation and Destruction
+		/*! @name Creation and Destruction */
+		//@{
 
-		// If release is true or omitted then object will be released when this object goes out of scope
+		/*! @brief Create a new \c CFWrapper */
 		inline CFWrapper()						: CFWrapper(nullptr)					{}
+
+		/*!
+		 * @brief Create a new \c CFWrapper
+		 * @note The \c CFWrapper takes ownership of \c object
+		 * @param object The object to wrap
+		 */
 		inline CFWrapper(T object)				: CFWrapper(object, true)				{}
+
+		/*!
+		 * @brief Create a new \c CFWrapper
+		 * @param object The object to wrap
+		 * @param release Whether this \c CFWrapper should take ownership of \c object
+		 */
 		CFWrapper(T object, bool release)		: mObject(object), mRelease(release)	{}
 
+
+		/*! @brief Create a new \c CFWrapper */
 		CFWrapper(CFWrapper&& rhs)
 			: mObject(rhs.mObject), mRelease(rhs.mRelease)
 		{
 			rhs.mObject = nullptr;
 		}
 
+		/*! @brief Create a new \c CFWrapper */
 		CFWrapper(const CFWrapper& rhs)
 			: mObject(rhs.mObject), mRelease(rhs.mRelease)
 		{
@@ -71,6 +92,7 @@ namespace SFB {
 				CFRetain(mObject);
 		}
 
+		/*! @brief Destroy this \c CFWrapper and ensure \c CFRelease() is called if necessary */
 		~CFWrapper()
 		{
 			if(mObject && mRelease)
@@ -78,7 +100,17 @@ namespace SFB {
 			mObject = nullptr;
 		}
 
-		// This object will take ownership of T (i.e., it will consume a reference)
+		//@}
+
+
+		/*! @name Assignment */
+		//@{
+
+		/*!
+		 * @brief Replace the wrapped object
+		 * @note The \c CFWrapper takes ownership of \c rhs
+		 * @param rhs The object to wrap
+		 */
 		CFWrapper& operator=(const T& rhs)
 		{
 			if(mObject != rhs) {
@@ -92,6 +124,7 @@ namespace SFB {
 			return *this;
 		}
 
+		/*! @brief Replace the wrapped object */
 		CFWrapper& operator=(const CFWrapper& rhs)
 		{
 			if(mObject != rhs.mObject) {
@@ -108,6 +141,7 @@ namespace SFB {
 			return *this;
 		}
 
+		/*! @brief Replace the wrapped object */
 		CFWrapper& operator=(CFWrapper&& rhs)
 		{
 			if(mObject != rhs.mObject) {
@@ -123,9 +157,14 @@ namespace SFB {
 			return *this;
 		}
 
-		// ========================================
-		// Pointer management
+		//@}
 
+
+		// ========================================
+		/*! @name Pointer management */
+		//@{
+
+		/*! @brief Relinquish ownership of the wrapped object and return it */
 		inline T Relinquish()
 		{
 			T object = mObject;
@@ -134,63 +173,82 @@ namespace SFB {
 			return object;
 		}
 
-		// ========================================
-		// Equality testing
+		//@}
 
-		// Convenience methods for equality testing (wraps CFEqual)
+
+		// ========================================
+		/*! @name Equality testing */
+		//@{
+
+		/*! @brief Test two \c CFWrapper objects for equality using \c CFEqual() */
 		inline bool operator==(const CFWrapper& rhs) const		{ return CFEqual(mObject, rhs.mObject); }
+
+		/*! @brief Test two \c CFWrapper objects for inequality */
 		inline bool operator!=(const CFWrapper& rhs) const		{ return !operator==(rhs); }
 
-		// ========================================
-		// CoreFoundation object access
+		//@}
 
+
+		// ========================================
+		/*! @name CoreFoundation object access */
+		//@{
+
+		/*! @brief Check whether the wrapped object is \c nullptr */
 		inline operator bool() const							{ return nullptr != mObject; }
+
+		/*! @brief Get the wrapped object */
 		inline operator T() const								{ return mObject; }
 
+		
+		/*! @brief Get the wrapped object */
 		inline T Object() const									{ return mObject; }
 
+		//@}
+
 	private:
-		T mObject;
-		bool mRelease;
+		T mObject;				/*!< The Core Foundation object */
+		bool mRelease;			/*!< Whether \c CFRelease should be called on destruction or reassignment */
 	};
 
 	// ========================================
 	// Typedefs for common CoreFoundation types
 
-	typedef CFWrapper<CFTypeRef> CFType;
-	typedef CFWrapper<CFDataRef> CFData;
-	typedef CFWrapper<CFMutableDataRef> CFMutableData;
-	typedef CFWrapper<CFStringRef> CFString;
-	typedef CFWrapper<CFMutableStringRef> CFMutableString;
-	typedef CFWrapper<CFAttributedStringRef> CFAttributedString;
-	typedef CFWrapper<CFMutableAttributedStringRef> CFMutableAttributedString;
-	typedef CFWrapper<CFDictionaryRef> CFDictionary;
-	typedef CFWrapper<CFMutableDictionaryRef> CFMutableDictionary;
-	typedef CFWrapper<CFArrayRef> CFArray;
-	typedef CFWrapper<CFMutableArrayRef> CFMutableArray;
-	typedef CFWrapper<CFSetRef> CFSet;
-	typedef CFWrapper<CFMutableSetRef> CFMutableSet;
-	typedef CFWrapper<CFBagRef> CFBag;
-	typedef CFWrapper<CFMutableBagRef> CFMutableBag;
-	typedef CFWrapper<CFPropertyListRef> CFPropertyList;
-	typedef CFWrapper<CFBitVectorRef> CFBitVector;
-	typedef CFWrapper<CFMutableBitVectorRef> CFMutableBitVector;
-	typedef CFWrapper<CFCharacterSetRef> CFCharacterSet;
-	typedef CFWrapper<CFMutableCharacterSetRef> CFMutableCharacterSet;
-	typedef CFWrapper<CFURLRef> CFURL;
-	typedef CFWrapper<CFUUIDRef> CFUUID;
-	typedef CFWrapper<CFNumberRef> CFNumber;
-	typedef CFWrapper<CFBooleanRef> CFBoolean;
-	typedef CFWrapper<CFErrorRef> CFError;
-	typedef CFWrapper<CFDateRef> CFDate;
+	typedef CFWrapper<CFTypeRef> CFType;										/*!< @brief A wrapped \c CFTypeRef */
+	typedef CFWrapper<CFDataRef> CFData;										/*!< @brief A wrapped \c CFDataRef */
+	typedef CFWrapper<CFMutableDataRef> CFMutableData;							/*!< @brief A wrapped \c CFMutableDataRef */
+	typedef CFWrapper<CFStringRef> CFString;									/*!< @brief A wrapped \c CFStringRef */
+	typedef CFWrapper<CFMutableStringRef> CFMutableString;						/*!< @brief A wrapped \c CFMutableStringRef */
+	typedef CFWrapper<CFAttributedStringRef> CFAttributedString;				/*!< @brief A wrapped \c CFAttributedStringRef */
+	typedef CFWrapper<CFMutableAttributedStringRef> CFMutableAttributedString;	/*!< @brief A wrapped \c CFMutableAttributedStringRef */
+	typedef CFWrapper<CFDictionaryRef> CFDictionary;							/*!< @brief A wrapped \c CFDictionaryRef */
+	typedef CFWrapper<CFMutableDictionaryRef> CFMutableDictionary;				/*!< @brief A wrapped \c CFMutableDictionaryRef */
+	typedef CFWrapper<CFArrayRef> CFArray;										/*!< @brief A wrapped \c CFArrayRef */
+	typedef CFWrapper<CFMutableArrayRef> CFMutableArray;						/*!< @brief A wrapped \c CFMutableArrayRef */
+	typedef CFWrapper<CFSetRef> CFSet;											/*!< @brief A wrapped \c CFSetRef */
+	typedef CFWrapper<CFMutableSetRef> CFMutableSet;							/*!< @brief A wrapped \c CFMutableSetRef */
+	typedef CFWrapper<CFBagRef> CFBag;											/*!< @brief A wrapped \c CFBagRef */
+	typedef CFWrapper<CFMutableBagRef> CFMutableBag;							/*!< @brief A wrapped \c CFMutableBagRef */
+	typedef CFWrapper<CFPropertyListRef> CFPropertyList;						/*!< @brief A wrapped \c CFPropertyListRef */
+	typedef CFWrapper<CFBitVectorRef> CFBitVector;								/*!< @brief A wrapped \c CFBitVectorRef */
+	typedef CFWrapper<CFMutableBitVectorRef> CFMutableBitVector;				/*!< @brief A wrapped \c CFMutableBitVectorRef */
+	typedef CFWrapper<CFCharacterSetRef> CFCharacterSet;						/*!< @brief A wrapped \c CFCharacterSetRef */
+	typedef CFWrapper<CFMutableCharacterSetRef> CFMutableCharacterSet;			/*!< @brief A wrapped \c CFMutableCharacterSetRef */
+	typedef CFWrapper<CFURLRef> CFURL;											/*!< @brief A wrapped \c CFURLRef */
+	typedef CFWrapper<CFUUIDRef> CFUUID;										/*!< @brief A wrapped \c CFUUIDRef */
+	typedef CFWrapper<CFNumberRef> CFNumber;									/*!< @brief A wrapped \c CFNumberRef */
+	typedef CFWrapper<CFBooleanRef> CFBoolean;									/*!< @brief A wrapped \c CFBooleanRef */
+	typedef CFWrapper<CFErrorRef> CFError;										/*!< @brief A wrapped \c CFErrorRef */
+	typedef CFWrapper<CFDateRef> CFDate;										/*!< @brief A wrapped \c CFDateRef */
 #if !TARGET_OS_IPHONE
-	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;
-	typedef CFWrapper<SecCertificateRef> SecCertificate;
-	typedef CFWrapper<SecTransformRef> SecTransform;
-	typedef CFWrapper<CGImageSourceRef> CGImageSource;
+	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;						/*!< @brief A wrapped \c SecKeychainItemRef */
+	typedef CFWrapper<SecCertificateRef> SecCertificate;						/*!< @brief A wrapped \c SecCertificateRef */
+	typedef CFWrapper<SecTransformRef> SecTransform;							/*!< @brief A wrapped \c SecTransformRef */
+	typedef CFWrapper<CGImageSourceRef> CGImageSource;							/*!< @brief A wrapped \c CGImageSourceRef */
 #endif
 
 }
+
+/*! @cond */
 
 template <typename T>
 std::ostream& operator<<(std::ostream& out, SFB::CFWrapper<T> obj)
@@ -198,3 +256,5 @@ std::ostream& operator<<(std::ostream& out, SFB::CFWrapper<T> obj)
 	out << (T)obj;
 	return out;
 }
+
+/*! @endcond */
