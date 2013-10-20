@@ -38,7 +38,7 @@
 # include <ImageIO/ImageIO.h>
 #endif
 
-/*! @file CFWrapper.h @brief A  wrapper around a Core Foundation object */
+/*! @file CFWrapper.h @brief A wrapper around a Core Foundation object */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
