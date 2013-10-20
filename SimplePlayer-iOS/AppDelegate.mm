@@ -37,7 +37,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 	asl_add_log_file(nullptr, STDERR_FILENO);
-	::logger::SetCurrentLevel(::logger::debug);
+	::SFB::Logger::SetCurrentLevel(::SFB::Logger::debug);
 
 	return YES;
 }
