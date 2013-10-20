@@ -33,7 +33,7 @@
 #include <CoreAudio/CoreAudioTypes.h>
 
 /*!
- * A ring buffer implementation supporting non-interleaved audio.
+ * @brief A ring buffer implementation supporting non-interleaved audio.
  *
  * This class is thread safe when used from one reader thread
  * and one writer thread (single producer, single consumer model).
@@ -45,15 +45,16 @@ class RingBuffer
 {
 public:
 	// ========================================
-	// Creation/Destruction
+	/*! @name Creation and Destruction */
+	//@{
 
 	/*!
-	 * Create a new \c RingBuffer
+	 * @brief Create a new \c RingBuffer
 	 * @note Allocate() must be called before the object may be used.
 	 */
 	RingBuffer();
 
-	/*! Destroy the \c RingBuffer and release all associated resources. */
+	/*! @brief Destroy the \c RingBuffer and release all associated resources. */
 	~RingBuffer();
 
 	/*! @cond */
@@ -66,11 +67,15 @@ public:
 
 	/*! @endcond */
 
+	//@}
+
+
 	// ========================================
-	// Buffer management
+	/*! @name Buffer management */
+	//@{
 
 	/*!
-	 * Allocate space for audio data.
+	 * @brief Allocate space for audio data.
 	 * @note Only interleaved formats are supported.
 	 * @note This method is not thread safe.
 	 * @param format The format of the audio that will be written to and read from this buffer.
@@ -80,7 +85,7 @@ public:
 	bool Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames);
 
 	/*!
-	 * Allocate space for audio data.
+	 * @brief Allocate space for audio data.
 	 * @note This method is not thread safe.
 	 * @param channelCount The number of interleaved channels
 	 * @param bytesPerFrame The number of bytes per audio frame
@@ -90,40 +95,35 @@ public:
 	bool Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames);
 
 	/*!
-	 * Free the resources used by this \c RingBuffer
+	 * @brief Free the resources used by this \c RingBuffer
 	 * @note This method is not thread safe.
 	 */
 	void Deallocate();
 
 	/*!
-	 * Reset this \c RingBuffer to its default state.
+	 * @brief Reset this \c RingBuffer to its default state.
 	 * @note This method is not thread safe.
 	 */
 	void Reset();
 
-	/*!
-	 * Get the capacity of this RingBuffer in frames
-	 * @return The capacity of this RingBuffer in frames
-	 */
+	/*! @brief Get the capacity of this RingBuffer in frames */
 	inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
 
-	/*!
-	 * Get the number of frames available for reading
-	 * @return The number of frames available for reading
-	 */
+	/*! @brief  Get the number of frames available for reading */
 	size_t GetFramesAvailableToRead() const;
 
-	/*!
-	 * Get the free space available for writing
-	 * @return The number of frames available for writing
-	 */
+	/*! @brief Get the free space available for writing in frames */
 	size_t GetFramesAvailableToWrite() const;
 
+	//@}
+
+
 	// ========================================
-	// Reading and writing audio
+	/*! @name Reading and writing audio */
+	//@{
 
 	/*!
-	 * Read audio from the \c RingBuffer, advancing the read pointer.
+	 * @brief Read audio from the \c RingBuffer, advancing the read pointer.
 	 * @param bufferList An \c AudioBufferList to receive the audio
 	 * @param frameCount The desired number of frames to read
 	 * @return The number of frames actually read
@@ -131,12 +131,14 @@ public:
 	size_t ReadAudio(AudioBufferList *bufferList, size_t frameCount);
 
 	/*!
-	 * Write audio to the \c RingBuffer, advancing the write pointer.
+	 * @brief Write audio to the \c RingBuffer, advancing the write pointer.
 	 * @param bufferList An \c AudioBufferList containing the audio to copy
 	 * @param frameCount The desired number of frames to write
 	 * @return The number of frames actually written
 	 */
 	size_t WriteAudio(const AudioBufferList *bufferList, size_t frameCount);
+
+	//@}
 
 private:
 
