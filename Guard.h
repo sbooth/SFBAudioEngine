@@ -34,105 +34,110 @@
 
 /*! @file Guard.h @brief A \c pthread_mutex_t and \c pthread_cond_t wrapper */
 
-/*! @brief A wrapper around a pthread mutex and condition variable */
-class Guard : public Mutex
-{
-public:
-	/*!
-	 * @brief Create a new \c Guard
-	 * @throws std::runtime_exception
-	 */
-	Guard();
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
 
-	/*! @brief Destroy this \c Guard */
-	virtual ~Guard();
-
-	/*! @cond */
-
-	/*! @internal This class is non-copyable */
-	Guard(const Guard& rhs) = delete;
-
-	/*! @internal This class is non-assignable */
-	Guard& operator=(const Guard& rhs) = delete;
-
-	/*! @endcond */
-
-	/*!
-	 * @brief Block the calling thread until the condition variable is signaled
-	 * @note The \c Mutex must be locked or an exception will be thrown
-	 * @throws std::runtime_exception
-	 */
-	void Wait();
-
-	/*!
-	 * @brief Block the calling thread until the condition variable is signaled
-	 * @note The \c Mutex must be locked or an exception will be thrown
-	 * @param absoluteTime The latest time to block
-	 * @return \c true if the request timed out, \c false otherwise
-	 * @throws std::runtime_exception
-	 */
-	bool WaitUntil(struct timespec absoluteTime);
-
-	/*!
-	 * @brief Unblock a thread waiting on the condition variable
-	 * @throws std::runtime_exception
-	 */
-	void Signal();
-
-	/*!
-	 * @brief Unblock all threads waiting on the condition variable
-	 * @throws std::runtime_exception
-	 */
-	void Broadcast();
-
-protected:
-	pthread_cond_t mCondition;	/*!< @brief The pthread condition variable */
-
-public:
-	/*! @brief A scope based wrapper around \c Guard::Lock() */
-	class Locker
+	/*! @brief A wrapper around a pthread mutex and condition variable */
+	class Guard : public Mutex
 	{
 	public:
 		/*!
-		 * @brief Create a new \c Guard::Locker
-		 * On creation this class calls \c Guard::Lock().
-		 * On destruction, if the lock was acquired \c Guard::Unlock() is called.
-		 * @param guard The \c Guard to lock
+		 * @brief Create a new \c Guard
 		 * @throws std::runtime_exception
 		 */
-		Locker(Guard& guard);
+		Guard();
 
-		/*! @brief Destroy this \c Guard::Locker */
-		~Locker();
+		/*! @brief Destroy this \c Guard */
+		virtual ~Guard();
+
+		/*! @cond */
+
+		/*! @internal This class is non-copyable */
+		Guard(const Guard& rhs) = delete;
+
+		/*! @internal This class is non-assignable */
+		Guard& operator=(const Guard& rhs) = delete;
+
+		/*! @endcond */
 
 		/*!
 		 * @brief Block the calling thread until the condition variable is signaled
+		 * @note The \c Mutex must be locked or an exception will be thrown
 		 * @throws std::runtime_exception
 		 */
-		inline void Wait()										{ mGuard.Wait(); }
+		void Wait();
 
 		/*!
 		 * @brief Block the calling thread until the condition variable is signaled
+		 * @note The \c Mutex must be locked or an exception will be thrown
 		 * @param absoluteTime The latest time to block
 		 * @return \c true if the request timed out, \c false otherwise
 		 * @throws std::runtime_exception
 		 */
-		inline bool WaitUntil(struct timespec absoluteTime)		{ return mGuard.WaitUntil(absoluteTime); }
+		bool WaitUntil(struct timespec absoluteTime);
 
 		/*!
 		 * @brief Unblock a thread waiting on the condition variable
 		 * @throws std::runtime_exception
 		 */
-		inline void Signal()									{ mGuard.Signal(); }
+		void Signal();
 
 		/*!
 		 * @brief Unblock all threads waiting on the condition variable
 		 * @throws std::runtime_exception
 		 */
-		inline void Broadcast()									{ mGuard.Broadcast(); }
+		void Broadcast();
 
-	private:
-		Guard& mGuard;		/*!< The associated \c Guard */
-		bool mReleaseLock;	/*!< Whether the destructor should call \c Guard::Unlock() */
+	protected:
+		pthread_cond_t mCondition;	/*!< @brief The pthread condition variable */
+
+	public:
+		/*! @brief A scope based wrapper around \c Guard::Lock() */
+		class Locker
+		{
+		public:
+			/*!
+			 * @brief Create a new \c Guard::Locker
+			 * On creation this class calls \c Guard::Lock().
+			 * On destruction, if the lock was acquired \c Guard::Unlock() is called.
+			 * @param guard The \c Guard to lock
+			 * @throws std::runtime_exception
+			 */
+			Locker(Guard& guard);
+
+			/*! @brief Destroy this \c Guard::Locker */
+			~Locker();
+
+			/*!
+			 * @brief Block the calling thread until the condition variable is signaled
+			 * @throws std::runtime_exception
+			 */
+			inline void Wait()										{ mGuard.Wait(); }
+
+			/*!
+			 * @brief Block the calling thread until the condition variable is signaled
+			 * @param absoluteTime The latest time to block
+			 * @return \c true if the request timed out, \c false otherwise
+			 * @throws std::runtime_exception
+			 */
+			inline bool WaitUntil(struct timespec absoluteTime)		{ return mGuard.WaitUntil(absoluteTime); }
+
+			/*!
+			 * @brief Unblock a thread waiting on the condition variable
+			 * @throws std::runtime_exception
+			 */
+			inline void Signal()									{ mGuard.Signal(); }
+
+			/*!
+			 * @brief Unblock all threads waiting on the condition variable
+			 * @throws std::runtime_exception
+			 */
+			inline void Broadcast()									{ mGuard.Broadcast(); }
+
+		private:
+			Guard& mGuard;		/*!< The associated \c Guard */
+			bool mReleaseLock;	/*!< Whether the destructor should call \c Guard::Unlock() */
+		};
 	};
-};
+
+}

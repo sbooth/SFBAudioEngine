@@ -32,7 +32,12 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-// ========================================
-// Get the localized display name for a URL
-// ========================================
-CFStringRef CreateDisplayNameForURL(CFURLRef url);
+/*! @file CreateDisplayNameForURL.h @brief URL display name creation */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	/*! @brief Get the localized display name for a URL */
+	CFStringRef CreateDisplayNameForURL(CFURLRef url);
+
+}

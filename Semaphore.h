@@ -34,54 +34,59 @@
 
 /*! @file Semaphore.h @brief A mach \c semaphore_t wrapper */
 
-/*! @brief A wrapper around a mach semaphore */
-class Semaphore
-{
-public:
-	/*!
-	 * @brief Create a new \c Semaphore
-	 * @throws std::runtime_exception
-	 */
-	Semaphore();
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
 
-	/*! @brief Destroy this \c Semaphore */
-	~Semaphore();
+	/*! @brief A wrapper around a mach semaphore */
+	class Semaphore
+	{
+	public:
+		/*!
+		 * @brief Create a new \c Semaphore
+		 * @throws std::runtime_exception
+		 */
+		Semaphore();
 
-	/*! @cond */
+		/*! @brief Destroy this \c Semaphore */
+		~Semaphore();
 
-	/*! @internal This class is non-copyable */
-	Semaphore(const Semaphore& rhs) = delete;
+		/*! @cond */
 
-	/*! @internal This class is non-assignable */
-	Semaphore& operator=(const Semaphore& rhs) = delete;
+		/*! @internal This class is non-copyable */
+		Semaphore(const Semaphore& rhs) = delete;
 
-	/*! @endcond */
+		/*! @internal This class is non-assignable */
+		Semaphore& operator=(const Semaphore& rhs) = delete;
 
-	/*!
-	 * @brief Signal the \c Semaphore to wake a blocked thread
-	 * @return \c true if successful, \c false otherwise
-	 */
-	bool Signal();
+		/*! @endcond */
 
-	/*!
-	 * @brief Signal the \c Semaphore to wake all blocked threads
-	 * @return \c true if successful, \c false otherwise
-	 */
-	bool SignalAll();
+		/*!
+		 * @brief Signal the \c Semaphore to wake a blocked thread
+		 * @return \c true if successful, \c false otherwise
+		 */
+		bool Signal();
 
-	/*!
-	 * @brief Block the calling thread until the \c Semaphore is signaled
-	 * @return \c true if successful, \c false otherwise
-	 */
-	bool Wait();
+		/*!
+		 * @brief Signal the \c Semaphore to wake all blocked threads
+		 * @return \c true if successful, \c false otherwise
+		 */
+		bool SignalAll();
 
-	/*!
-	 * @brief Block the calling thread until the \c Semaphore is signaled
-	 * @param duration The maximum duration to block
-	 * @return \c true if successful, \c false otherwise
-	 */
-	bool TimedWait(mach_timespec_t duration);
+		/*!
+		 * @brief Block the calling thread until the \c Semaphore is signaled
+		 * @return \c true if successful, \c false otherwise
+		 */
+		bool Wait();
 
-private:
-	semaphore_t mSemaphore;		/*!< The mach semahore */
-};
+		/*!
+		 * @brief Block the calling thread until the \c Semaphore is signaled
+		 * @param duration The maximum duration to block
+		 * @return \c true if successful, \c false otherwise
+		 */
+		bool TimedWait(mach_timespec_t duration);
+
+	private:
+		semaphore_t mSemaphore;		/*!< The mach semahore */
+	};
+
+}

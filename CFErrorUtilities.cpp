@@ -32,7 +32,7 @@
 #include "CreateDisplayNameForURL.h"
 #include "CFWrapper.h"
 
-CFErrorRef CreateError(CFStringRef domain, CFIndex code, CFStringRef description, CFStringRef failureReason, CFStringRef recoverySuggestion)
+CFErrorRef SFB::CreateError(CFStringRef domain, CFIndex code, CFStringRef description, CFStringRef failureReason, CFStringRef recoverySuggestion)
 {
 	if(nullptr == domain)
 		return nullptr;
@@ -53,7 +53,7 @@ CFErrorRef CreateError(CFStringRef domain, CFIndex code, CFStringRef description
 	return CFErrorCreate(kCFAllocatorDefault, domain, code, errorDictionary);
 }
 
-CFErrorRef CreateErrorForURL(CFStringRef domain, CFIndex code, CFStringRef descriptionFormatStringForURL, CFURLRef url, CFStringRef failureReason, CFStringRef recoverySuggestion)
+CFErrorRef SFB::CreateErrorForURL(CFStringRef domain, CFIndex code, CFStringRef descriptionFormatStringForURL, CFURLRef url, CFStringRef failureReason, CFStringRef recoverySuggestion)
 {
 	if(nullptr == domain)
 		return nullptr;

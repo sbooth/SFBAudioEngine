@@ -40,7 +40,7 @@
 
 /*! @file CFWrapper.h @brief A  wrapper around a Core Foundation object */
 
-/*! @brief The namespace containing utility classes */
+/*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
 	/*!

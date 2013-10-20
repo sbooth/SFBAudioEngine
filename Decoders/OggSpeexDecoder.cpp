@@ -310,8 +310,8 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
 	
 	switch(header->nb_channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
 	}
 	
 	speex_header_free(header), header = nullptr;
@@ -320,7 +320,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	spx_int32_t speexFrameSize = 0;
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 	
-	mBufferList = AllocateABL(mFormat, (UInt32)speexFrameSize);
+	mBufferList = SFB::AllocateABL(mFormat, (UInt32)speexFrameSize);
 	if(nullptr == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -349,7 +349,7 @@ bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+		mBufferList = SFB::DeallocateABL(mBufferList);
 
 	// Speex cleanup
 	speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = nullptr;

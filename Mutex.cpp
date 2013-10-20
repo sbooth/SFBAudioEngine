@@ -34,7 +34,7 @@
 #include "Mutex.h"
 #include "Logger.h"
 
-Mutex::Mutex()
+SFB::Mutex::Mutex()
 	: mOwner(0)
 {
 	int success = pthread_mutex_init(&mMutex, nullptr);
@@ -45,7 +45,7 @@ Mutex::Mutex()
 	}
 }
 
-Mutex::~Mutex()
+SFB::Mutex::~Mutex()
 {
 	int success = pthread_mutex_destroy(&mMutex);
 
@@ -53,7 +53,7 @@ Mutex::~Mutex()
 		LOGGER_ERR("org.sbooth.AudioEngine.Mutex", "pthread_mutex_destroy failed: " << strerror(success));
 }
 
-bool Mutex::Lock()
+bool SFB::Mutex::Lock()
 {
 	pthread_t currentThread = pthread_self();
 	if(pthread_equal(mOwner, currentThread))
@@ -71,7 +71,7 @@ bool Mutex::Lock()
 	return true;
 }
 
-void Mutex::Unlock()
+void SFB::Mutex::Unlock()
 {
 	pthread_t currentThread = pthread_self();
 	if(pthread_equal(mOwner, currentThread)) {
@@ -88,13 +88,13 @@ void Mutex::Unlock()
 		LOGGER_INFO("org.sbooth.AudioEngine.Mutex", "A thread is attempting to unlock a mutex it doesn't own");
 }
 
-bool Mutex::TryLock()
+bool SFB::Mutex::TryLock()
 {
 	bool acquiredLock;
 	return TryLock(acquiredLock);
 }
 
-bool Mutex::TryLock(bool& acquiredLock)
+bool SFB::Mutex::TryLock(bool& acquiredLock)
 {
 	acquiredLock = false;
 
@@ -121,13 +121,13 @@ bool Mutex::TryLock(bool& acquiredLock)
 
 #pragma mark Locker
 
-Mutex::Locker::Locker(Mutex& mutex)
+SFB::Mutex::Locker::Locker(Mutex& mutex)
 	: mMutex(mutex)
 {
 	mReleaseLock = mMutex.Lock();
 }
 
-Mutex::Locker::~Locker()
+SFB::Mutex::Locker::~Locker()
 {
 	if(mReleaseLock)
 		mMutex.Unlock();
@@ -135,13 +135,13 @@ Mutex::Locker::~Locker()
 
 #pragma mark Tryer
 
-Mutex::Tryer::Tryer(Mutex& mutex)
+SFB::Mutex::Tryer::Tryer(Mutex& mutex)
 	: mMutex(mutex)
 {
 	mLocked = mMutex.TryLock(mReleaseLock);
 }
 
-Mutex::Tryer::~Tryer()
+SFB::Mutex::Tryer::~Tryer()
 {
 	if(mReleaseLock)
 		mMutex.Unlock();

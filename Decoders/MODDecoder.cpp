@@ -237,7 +237,7 @@ bool MODDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= DUMB_CHANNELS;
 	
 	// Setup the channel layout
-	mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
+	mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 
 	mIsOpen = true;
 	return true;

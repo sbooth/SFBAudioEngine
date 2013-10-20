@@ -356,18 +356,18 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mFramesPerPacket		= mStreamInfo.max_blocksize;
 	
 	switch(mStreamInfo.channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);		break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);		break;
-		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
-		case 7:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_6_1_A);		break;
-		case 8:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
+		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 3:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);	break;
+		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);	break;
+		case 6:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);	break;
+		case 7:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_6_1_A);	break;
+		case 8:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);	break;
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = AllocateABL(mFormat, mStreamInfo.max_blocksize);
+	mBufferList = SFB::AllocateABL(mFormat, mStreamInfo.max_blocksize);
 	
 	if(nullptr == mBufferList) {
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unable to allocate memory")
@@ -405,7 +405,7 @@ bool FLACDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+		mBufferList = SFB::DeallocateABL(mBufferList);
 
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 

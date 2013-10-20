@@ -34,6 +34,12 @@
 
 #include "CFWrapper.h"
 
+/*! @file CreateStringForOSType.h @brief OSType to CFString conversion */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
+
+	/*! @brief Create a string representation of the four character code \c osType */
 	CFString StringForOSType(OSType osType);
+
 }

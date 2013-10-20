@@ -260,8 +260,8 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
+		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
 
 	if(MPG123_OK != mpg123_scan(decoder.get())) {
@@ -277,7 +277,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat, framesPerMPEGFrame);
+	mBufferList = SFB::AllocateABL(mFormat, framesPerMPEGFrame);
 	
 	if(nullptr == mBufferList) {
 		if(error)
@@ -305,7 +305,7 @@ bool MPEGDecoder::Close(CFErrorRef */*error*/)
 	mDecoder.reset();
 
 	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+		mBufferList = SFB::DeallocateABL(mBufferList);
 
 	mIsOpen = false;
 	return true;

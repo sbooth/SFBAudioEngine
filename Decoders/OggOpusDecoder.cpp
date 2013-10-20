@@ -214,15 +214,15 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 			// Default channel layouts from Vorbis I specification section 4.3.9
 			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
 
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);		break;
-		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
+		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 3:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
+		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);	break;
+		case 6:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);	break;
 
 		case 7:
-			mChannelLayout = CreateChannelLayout(7);
+			mChannelLayout = SFB::CreateChannelLayout(7);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;
@@ -240,7 +240,7 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 			break;
 
 		case 8:
-			mChannelLayout = CreateChannelLayout(8);
+			mChannelLayout = SFB::CreateChannelLayout(8);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;

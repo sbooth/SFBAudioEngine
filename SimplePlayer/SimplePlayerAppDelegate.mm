@@ -16,7 +16,7 @@
 #pragma unused(aNotification)
 	// Enable verbose logging to stderr
 	asl_add_log_file(nullptr, STDERR_FILENO);
-	::logger::SetCurrentLevel(::logger::debug);
+	::SFB::Logger::SetCurrentLevel(::SFB::Logger::debug);
 
 	// Show the player window
 	[self.playerWindowController showWindow:self];

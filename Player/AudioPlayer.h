@@ -46,7 +46,7 @@
 // ========================================
 // Forward declarations
 // ========================================
-class RingBuffer;
+namespace SFB { class RingBuffer; }
 
 // ========================================
 // Constants
@@ -737,7 +737,7 @@ private:
 	AUNode								mOutputNode;
 	UInt32								mDefaultMaximumFramesPerSlice;
 
-	RingBuffer							*mRingBuffer;
+	SFB::RingBuffer						*mRingBuffer;
 	AudioStreamBasicDescription			mRingBufferFormat;
 	AudioChannelLayout					*mRingBufferChannelLayout;
 	uint32_t							mRingBufferCapacity;
@@ -748,15 +748,15 @@ private:
 	CFMutableArrayRef					mDecoderQueue;
 	DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
 
-	Mutex								mMutex;
-	Semaphore							mSemaphore;
+	SFB::Mutex							mMutex;
+	SFB::Semaphore						mSemaphore;
 
 	pthread_t							mDecoderThread;
-	Semaphore							mDecoderSemaphore;
+	SFB::Semaphore						mDecoderSemaphore;
 	bool								mKeepDecoding;
 
 	pthread_t							mCollectorThread;
-	Semaphore							mCollectorSemaphore;
+	SFB::Semaphore						mCollectorSemaphore;
 	bool								mKeepCollecting;
 
 	int64_t								mFramesDecoded;

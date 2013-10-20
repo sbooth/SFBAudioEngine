@@ -33,73 +33,75 @@
 #include <stdlib.h>
 #include <algorithm>
 
-// ========================================
+namespace {
 
-/*!
- * Copy non-interleaved audio from \c bufferList to \c buffers
- * @param buffers The destination buffers
- * @param destOffset The byte offset in \c buffers to begin writing
- * @param bufferList The source buffers
- * @param srcOffset The byte offset in \c bufferList to begin reading
- * @param byteCount The number of bytes per non-interleaved buffer to read and write
- */
-inline static void StoreABL(unsigned char **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
-}
+	/*!
+	 * Copy non-interleaved audio from \c bufferList to \c buffers
+	 * @param buffers The destination buffers
+	 * @param destOffset The byte offset in \c buffers to begin writing
+	 * @param bufferList The source buffers
+	 * @param srcOffset The byte offset in \c bufferList to begin reading
+	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
+	 */
+	inline void StoreABL(unsigned char **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
+	{
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+			memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
+	}
 
-/*!
- * Copy non-interleaved audio from \c buffers to \c bufferList
- * @param bufferList The destination buffers
- * @param destOffset The byte offset in \c bufferList to begin writing
- * @param buffers The source buffers
- * @param srcOffset The byte offset in \c bufferList to begin reading
- * @param byteCount The number of bytes per non-interleaved buffer to read and write
- */
-inline static void FetchABL(AudioBufferList *bufferList, size_t destOffset, const unsigned char **buffers, size_t srcOffset, size_t byteCount)
-{
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
-}
+	/*!
+	 * Copy non-interleaved audio from \c buffers to \c bufferList
+	 * @param bufferList The destination buffers
+	 * @param destOffset The byte offset in \c bufferList to begin writing
+	 * @param buffers The source buffers
+	 * @param srcOffset The byte offset in \c bufferList to begin reading
+	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
+	 */
+	inline void FetchABL(AudioBufferList *bufferList, size_t destOffset, const unsigned char **buffers, size_t srcOffset, size_t byteCount)
+	{
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+			memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
+	}
 
-/*!
- * Return the smallest power of two value greater than \c x
- * @param x A value in the range [2..2147483648]
- * @return The smallest power of two greater than \c x
- *
- */
-__attribute__ ((const)) static inline uint32_t NextPowerOfTwo(uint32_t x)
-{
+	/*!
+	 * Return the smallest power of two value greater than \c x
+	 * @param x A value in the range [2..2147483648]
+	 * @return The smallest power of two greater than \c x
+	 *
+	 */
+	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
+	{
 #if 0
-    assert(x > 1);
-    assert(x <= ((UINT32_MAX / 2) + 1));
+		assert(x > 1);
+		assert(x <= ((UINT32_MAX / 2) + 1));
 #endif
 
-    return 1 << (32 - __builtin_clz(x - 1));
+		return 1 << (32 - __builtin_clz(x - 1));
+	}
+
 }
 
 #pragma mark Creation and Destruction
 
-RingBuffer::RingBuffer()
+SFB::RingBuffer::RingBuffer()
 	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
 {}
 
-RingBuffer::~RingBuffer()
+SFB::RingBuffer::~RingBuffer()
 {
 	Deallocate();
 }
 
 #pragma mark Buffer Management
 
-bool RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
+bool SFB::RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
 {
 	if(!(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags))
 		return false;
 	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, capacityFrames);
 }
 
-bool RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
+bool SFB::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
 {
 	Deallocate();
 
@@ -137,14 +139,14 @@ bool RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capa
 	return true;
 }
 
-void RingBuffer::Deallocate()
+void SFB::RingBuffer::Deallocate()
 {
 	if(mBuffers)
 		free(mBuffers), mBuffers = nullptr;
 }
 
 
-void RingBuffer::Reset()
+void SFB::RingBuffer::Reset()
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
@@ -153,7 +155,7 @@ void RingBuffer::Reset()
 		memset(mBuffers[i], 0, mCapacityBytes);
 }
 
-size_t RingBuffer::GetFramesAvailableToRead() const
+size_t SFB::RingBuffer::GetFramesAvailableToRead() const
 {
 	size_t w = mWritePointer;
 	size_t r = mReadPointer;
@@ -164,7 +166,7 @@ size_t RingBuffer::GetFramesAvailableToRead() const
 		return (w - r + mCapacityFrames) & mCapacityFramesMask;
 }
 
-size_t RingBuffer::GetFramesAvailableToWrite() const
+size_t SFB::RingBuffer::GetFramesAvailableToWrite() const
 {
 	size_t w = mWritePointer;
 	size_t r = mReadPointer;
@@ -177,7 +179,7 @@ size_t RingBuffer::GetFramesAvailableToWrite() const
 		return mCapacityFrames - 1;
 }
 
-size_t RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
 {
 	if(0 == frameCount)
 		return 0;
@@ -214,7 +216,7 @@ size_t RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
 	return framesToRead;
 }
 
-size_t RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
 {
 	if(0 == frameCount)
 		return 0;

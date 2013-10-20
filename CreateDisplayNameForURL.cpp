@@ -38,7 +38,7 @@
 #include "Logger.h"
 
 CFStringRef
-CreateDisplayNameForURL(CFURLRef url)
+SFB::CreateDisplayNameForURL(CFURLRef url)
 {
 	assert(nullptr != url);
 

@@ -71,11 +71,16 @@ enum {
 	eAudioPlayerFlagRingBufferNeedsReset	= 1u << 3
 };
 
-static void InitializeLoggingSubsystem() __attribute__ ((constructor));
-static void InitializeLoggingSubsystem()
-{
+namespace {
+
+	// ========================================
 	// Turn off logging by default
-	::logger::SetCurrentLevel(::logger::disabled);
+	void InitializeLoggingSubsystem() __attribute__ ((constructor));
+	void InitializeLoggingSubsystem()
+	{
+		::SFB::Logger::SetCurrentLevel(::SFB::Logger::disabled);
+	}
+
 }
 
 // ========================================
@@ -114,14 +119,14 @@ public:
 		DeallocateBufferList();
 
 		mBufferCapacityFrames = capacityFrames;
-		mBufferList = AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
+		mBufferList = SFB::AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
 	}
 
 	void DeallocateBufferList()
 	{
 		if(mBufferList) {
 			mBufferCapacityFrames = 0;
-			mBufferList = DeallocateABL(mBufferList);
+			mBufferList = SFB::DeallocateABL(mBufferList);
 		}
 	}
 
@@ -163,127 +168,121 @@ private:
 
 };
 
-// ========================================
-// Set the calling thread's timesharing and importance
-// ========================================
-static bool
-setThreadPolicy(integer_t importance)
-{
-	return true;
-	// Turn off timesharing
-	thread_extended_policy_data_t extendedPolicy = {
-		.timeshare = false
-	};
-	kern_return_t error = thread_policy_set(mach_thread_self(),
-											THREAD_EXTENDED_POLICY,
-											(thread_policy_t)&extendedPolicy, 
-											THREAD_EXTENDED_POLICY_COUNT);
-	
-	if(KERN_SUCCESS != error) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's extended policy: " << mach_error_string(error));
-		return false;
+namespace {
+
+	// ========================================
+	// Set the calling thread's timesharing and importance
+	bool setThreadPolicy(integer_t importance)
+	{
+		// Turn off timesharing
+		thread_extended_policy_data_t extendedPolicy = {
+			.timeshare = false
+		};
+		kern_return_t error = thread_policy_set(mach_thread_self(),
+												THREAD_EXTENDED_POLICY,
+												(thread_policy_t)&extendedPolicy,
+												THREAD_EXTENDED_POLICY_COUNT);
+
+		if(KERN_SUCCESS != error) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's extended policy: " << mach_error_string(error));
+			return false;
+		}
+
+		// Give the thread the specified importance
+		thread_precedence_policy_data_t precedencePolicy = {
+			.importance = importance
+		};
+		error = thread_policy_set(mach_thread_self(),
+								  THREAD_PRECEDENCE_POLICY,
+								  (thread_policy_t)&precedencePolicy,
+								  THREAD_PRECEDENCE_POLICY_COUNT);
+
+		if (error != KERN_SUCCESS) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's precedence policy: " << mach_error_string(error));
+			return false;
+		}
+
+		return true;
 	}
-	
-	// Give the thread the specified importance
-	thread_precedence_policy_data_t precedencePolicy = {
-		.importance = importance
-	};
-	error = thread_policy_set(mach_thread_self(), 
-							  THREAD_PRECEDENCE_POLICY, 
-							  (thread_policy_t)&precedencePolicy, 
-							  THREAD_PRECEDENCE_POLICY_COUNT);
-	
-	if (error != KERN_SUCCESS) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's precedence policy: " << mach_error_string(error));
-		return false;
+
+	// ========================================
+	// AUGraph input callback
+	OSStatus myAURenderCallback(void							*inRefCon,
+								AudioUnitRenderActionFlags		*ioActionFlags,
+								const AudioTimeStamp			*inTimeStamp,
+								UInt32							inBusNumber,
+								UInt32							inNumberFrames,
+								AudioBufferList					*ioData)
+	{
+		assert(nullptr != inRefCon);
+
+		AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+		return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 	}
-	
-	return true;
-}
 
-// ========================================
-// The AUGraph input callback
-// ========================================
-static OSStatus
-myAURenderCallback(void *							inRefCon,
-				   AudioUnitRenderActionFlags *		ioActionFlags,
-				   const AudioTimeStamp *			inTimeStamp,
-				   UInt32							inBusNumber,
-				   UInt32							inNumberFrames,
-				   AudioBufferList *				ioData)
-{
-	assert(nullptr != inRefCon);
+	// ========================================
+	// AUGraph post render callback
+	OSStatus auGraphDidRender(void								*inRefCon,
+							  AudioUnitRenderActionFlags		*ioActionFlags,
+							  const AudioTimeStamp				*inTimeStamp,
+							  UInt32							inBusNumber,
+							  UInt32							inNumberFrames,
+							  AudioBufferList					*ioData)
+	{
+		assert(nullptr != inRefCon);
 
-	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
-	return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
-}
+		AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+		return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
+	}
 
-static OSStatus
-auGraphDidRender(void *							inRefCon,
-				 AudioUnitRenderActionFlags *	ioActionFlags,
-				 const AudioTimeStamp *			inTimeStamp,
-				 UInt32							inBusNumber,
-				 UInt32							inNumberFrames,
-				 AudioBufferList *				ioData)
-{
-	assert(nullptr != inRefCon);
+	// ========================================
+	// The decoder thread's entry point
+	void * decoderEntry(void *arg)
+	{
+		assert(nullptr != arg);
 
-	AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
-	return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
-}
+		AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+		return player->DecoderThreadEntry();
+	}
 
-// ========================================
-// The decoder thread's entry point
-// ========================================
-static void *
-decoderEntry(void *arg)
-{
-	assert(nullptr != arg);
-	
-	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
-	return player->DecoderThreadEntry();
-}
+	// ========================================
+	// The collector thread's entry point
+	void * collectorEntry(void *arg)
+	{
+		assert(nullptr != arg);
 
-// ========================================
-// The collector thread's entry point
-// ========================================
-static void *
-collectorEntry(void *arg)
-{
-	assert(nullptr != arg);
-	
-	AudioPlayer *player = static_cast<AudioPlayer *>(arg);
-	return player->CollectorThreadEntry();
-}
+		AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+		return player->CollectorThreadEntry();
+	}
 
-// ========================================
-// AudioConverter input callback
-// ========================================
-static OSStatus
-myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
-									 UInt32							*ioNumberDataPackets,
-									 AudioBufferList				*ioData,
-									 AudioStreamPacketDescription	**outDataPacketDescription,
-									 void							*inUserData)
-{
+	// ========================================
+	// AudioConverter input callback
+	OSStatus myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
+												  UInt32						*ioNumberDataPackets,
+												  AudioBufferList				*ioData,
+												  AudioStreamPacketDescription	**outDataPacketDescription,
+												  void							*inUserData)
+	{
 
 #pragma unused(inAudioConverter)
 #pragma unused(outDataPacketDescription)
 
-	assert(nullptr != inUserData);
-	assert(nullptr != ioNumberDataPackets);
+		assert(nullptr != inUserData);
+		assert(nullptr != ioNumberDataPackets);
 
-	AudioPlayer::DecoderStateData *decoderStateData = static_cast<AudioPlayer::DecoderStateData *>(inUserData);
-	UInt32 framesRead = decoderStateData->ReadAudio(*ioNumberDataPackets);
+		AudioPlayer::DecoderStateData *decoderStateData = static_cast<AudioPlayer::DecoderStateData *>(inUserData);
+		UInt32 framesRead = decoderStateData->ReadAudio(*ioNumberDataPackets);
 
-	// Point ioData at our decoded audio
-	ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
-	for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
-		ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
+		// Point ioData at our decoded audio
+		ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
+		for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
+			ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
+		
+		*ioNumberDataPackets = framesRead;
+		
+		return noErr;
+	}
 
-	*ioNumberDataPackets = framesRead;
-
-	return noErr;
 }
 
 #pragma mark Creation/Destruction
@@ -299,7 +298,7 @@ AudioPlayer::AudioPlayer()
 	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
-	mRingBuffer = new RingBuffer();
+	mRingBuffer = new SFB::RingBuffer();
 
 	// ========================================
 	// Initialize the decoder array
@@ -453,7 +452,7 @@ bool AudioPlayer::Pause()
 
 bool AudioPlayer::Stop()
 {
-	Mutex::Tryer lock(mMutex);
+	SFB::Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1656,7 +1655,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	Mutex::Tryer lock(mMutex);
+	SFB::Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1726,7 +1725,7 @@ bool AudioPlayer::SkipToNextTrack()
 
 bool AudioPlayer::ClearQueuedDecoders()
 {
-	Mutex::Tryer lock(mMutex);
+	SFB::Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1942,7 +1941,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			// Lock the queue and remove the head element that contains the next decoder to use
 			AudioDecoder *decoder = nullptr;
 			{
-				Mutex::Tryer lock(mMutex);
+				SFB::Mutex::Tryer lock(mMutex);
 
 				if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
 					decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
@@ -2035,7 +2034,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				// Adjust the formats
 				{
-					Mutex::Tryer lock(mMutex);
+					SFB::Mutex::Tryer lock(mMutex);
 					if(lock)
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
 					else
@@ -2102,7 +2101,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
 			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
-			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
+			AudioBufferList *bufferList = SFB::AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
 
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -2277,7 +2276,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			}
 
 			if(bufferList)
-				DeallocateABL(bufferList), bufferList = nullptr;
+				bufferList = SFB::DeallocateABL(bufferList);
 			
 			if(audioConverter) {
 				result = AudioConverterDispose(audioConverter);
@@ -2596,7 +2595,7 @@ bool AudioPlayer::StartOutput()
 	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "StartOutput");
 
 	// We don't want to start output in the middle of a buffer modification
-	Mutex::Tryer lock(mMutex);
+	SFB::Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -3299,7 +3298,7 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 	if(mRingBufferChannelLayout)
 		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
-	mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
+	mRingBufferChannelLayout = SFB::CopyChannelLayout(channelLayout);
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {

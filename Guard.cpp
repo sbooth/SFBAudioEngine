@@ -34,7 +34,7 @@
 #include "Guard.h"
 #include "Logger.h"
 
-Guard::Guard()
+SFB::Guard::Guard()
 {
 	int success = pthread_cond_init(&mCondition, nullptr);
 
@@ -44,7 +44,7 @@ Guard::Guard()
 	}
 }
 
-Guard::~Guard()
+SFB::Guard::~Guard()
 {
 	int success = pthread_cond_destroy(&mCondition);
 
@@ -52,7 +52,7 @@ Guard::~Guard()
 		LOGGER_ERR("org.sbooth.AudioEngine.Guard", "pthread_cond_destroy failed: " << strerror(success));
 }
 
-void Guard::Wait()
+void SFB::Guard::Wait()
 {
 	pthread_t currentThread = pthread_self();
 	if(!pthread_equal(mOwner, currentThread))
@@ -70,7 +70,7 @@ void Guard::Wait()
 	mOwner = currentThread;
 }
 
-bool Guard::WaitUntil(struct timespec absoluteTime)
+bool SFB::Guard::WaitUntil(struct timespec absoluteTime)
 {
 	pthread_t currentThread = pthread_self();
 	if(!pthread_equal(mOwner, currentThread))
@@ -90,7 +90,7 @@ bool Guard::WaitUntil(struct timespec absoluteTime)
 	return (ETIMEDOUT == success);
 }
 
-void Guard::Signal()
+void SFB::Guard::Signal()
 {
 	int success = pthread_cond_signal(&mCondition);
 
@@ -100,7 +100,7 @@ void Guard::Signal()
 	}
 }
 
-void Guard::Broadcast()
+void SFB::Guard::Broadcast()
 {
 	int success = pthread_cond_broadcast(&mCondition);
 
@@ -112,13 +112,13 @@ void Guard::Broadcast()
 
 #pragma mark Locker
 
-Guard::Locker::Locker(Guard& guard)
+SFB::Guard::Locker::Locker(Guard& guard)
 	: mGuard(guard)
 {
 	mReleaseLock = mGuard.Lock();
 }
 
-Guard::Locker::~Locker()
+SFB::Guard::Locker::~Locker()
 {
 	if(mReleaseLock)
 		mGuard.Unlock();

@@ -34,7 +34,7 @@
 #include "Semaphore.h"
 #include "Logger.h"
 
-Semaphore::Semaphore()
+SFB::Semaphore::Semaphore()
 {
 	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
 
@@ -44,7 +44,7 @@ Semaphore::Semaphore()
 	}
 }
 
-Semaphore::~Semaphore()
+SFB::Semaphore::~Semaphore()
 {
 	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
 
@@ -52,7 +52,7 @@ Semaphore::~Semaphore()
 		LOGGER_ERR("org.sbooth.AudioEngine.Semaphore", "semaphore_destroy failed: " << mach_error_string(result));
 }
 
-bool Semaphore::Signal()
+bool SFB::Semaphore::Signal()
 {
 	kern_return_t result = semaphore_signal(mSemaphore);
 
@@ -64,7 +64,7 @@ bool Semaphore::Signal()
 	return true;
 }
 
-bool Semaphore::SignalAll()
+bool SFB::Semaphore::SignalAll()
 {
 	kern_return_t result = semaphore_signal_all(mSemaphore);
 
@@ -76,7 +76,7 @@ bool Semaphore::SignalAll()
 	return true;
 }
 
-bool Semaphore::Wait()
+bool SFB::Semaphore::Wait()
 {
 	kern_return_t result = semaphore_wait(mSemaphore);
 
@@ -88,7 +88,7 @@ bool Semaphore::Wait()
 	return true;
 }
 
-bool Semaphore::TimedWait(mach_timespec_t duration)
+bool SFB::Semaphore::TimedWait(mach_timespec_t duration)
 {
 	kern_return_t result = semaphore_timedwait(mSemaphore, duration);
 

@@ -34,31 +34,39 @@
 
 /*! @file CreateChannelLayout.h @brief Utility functions for allocating \c AudioChannelLayout structs */
 
-/*! @brief Get the size, in bytes, of \c layout */
-size_t GetChannelLayoutSize(const AudioChannelLayout *layout);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	/*! @brief Get the size in bytes of an \c AudioChannelLayout with the specified number of channel descriptions */
+	size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions);
+
+	/*! @brief Get the size, in bytes, of \c layout */
+	size_t GetChannelLayoutSize(const AudioChannelLayout *layout);
 
 
-/*! 
- * @brief Allocate an \c AudioChannelLayout
- * @param numberChannelDescriptions The number of channel descriptions that will be stored in the channel layout
- * @return An \c AudioChannelLayout
- */
-AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions = 0);
+	/*!
+	 * @brief Allocate an \c AudioChannelLayout
+	 * @param numberChannelDescriptions The number of channel descriptions that will be stored in the channel layout
+	 * @return An \c AudioChannelLayout
+	 */
+	AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions = 0);
 
-/*!
- * @brief Allocate an \c AudioChannelLayout
- * @param layoutTag The layout tag for the channel layout
- * @return An \c AudioChannelLayout
- */
-AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag);
+	/*!
+	 * @brief Allocate an \c AudioChannelLayout
+	 * @param layoutTag The layout tag for the channel layout
+	 * @return An \c AudioChannelLayout
+	 */
+	AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag);
 
-/*!
- * @brief Allocate an \c AudioChannelLayout
- * @param channelBitmap The channel bitmap for the channel layout
- * @return An \c AudioChannelLayout
- */
-AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap);
+	/*!
+	 * @brief Allocate an \c AudioChannelLayout
+	 * @param channelBitmap The channel bitmap for the channel layout
+	 * @return An \c AudioChannelLayout
+	 */
+	AudioChannelLayout * CreateChannelLayoutWithBitmap(UInt32 channelBitmap);
 
 
-/*! @brief Create a copy of \c rhs */
-AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs);
+	/*! @brief Create a copy of \c rhs */
+	AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs);
+
+}
