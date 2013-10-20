@@ -43,10 +43,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterWAVEMetadata() __attribute__ ((constructor));
-static void RegisterWAVEMetadata()
-{
-	AudioMetadata::RegisterSubclass<WAVEMetadata>();
+namespace {
+
+	void RegisterWAVEMetadata() __attribute__ ((constructor));
+	void RegisterWAVEMetadata()
+	{
+		AudioMetadata::RegisterSubclass<WAVEMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

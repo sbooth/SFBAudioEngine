@@ -44,10 +44,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterMonkeysAudioMetadata() __attribute__ ((constructor));
-static void RegisterMonkeysAudioMetadata()
-{
-	AudioMetadata::RegisterSubclass<MonkeysAudioMetadata>();
+namespace {
+
+	void RegisterMonkeysAudioMetadata() __attribute__ ((constructor));
+	void RegisterMonkeysAudioMetadata()
+	{
+		AudioMetadata::RegisterSubclass<MonkeysAudioMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

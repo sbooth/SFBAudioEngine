@@ -40,10 +40,14 @@
 #include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
 
-static void RegisterOggOpusMetadata() __attribute__ ((constructor));
-static void RegisterOggOpusMetadata()
-{
-	AudioMetadata::RegisterSubclass<OggOpusMetadata>();
+namespace {
+
+	void RegisterOggOpusMetadata() __attribute__ ((constructor));
+	void RegisterOggOpusMetadata()
+	{
+		AudioMetadata::RegisterSubclass<OggOpusMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

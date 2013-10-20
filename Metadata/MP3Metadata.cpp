@@ -47,10 +47,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterMP3Metadata() __attribute__ ((constructor));
-static void RegisterMP3Metadata()
-{
-	AudioMetadata::RegisterSubclass<MP3Metadata>();
+namespace {
+
+	void RegisterMP3Metadata() __attribute__ ((constructor));
+	void RegisterMP3Metadata()
+	{
+		AudioMetadata::RegisterSubclass<MP3Metadata>();
+	}
+
 }
 
 #pragma mark Static Methods

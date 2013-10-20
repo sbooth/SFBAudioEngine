@@ -37,10 +37,14 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-static void RegisterMP4Metadata() __attribute__ ((constructor));
-static void RegisterMP4Metadata()
-{
-	AudioMetadata::RegisterSubclass<MP4Metadata>();
+namespace {
+
+	void RegisterMP4Metadata() __attribute__ ((constructor));
+	void RegisterMP4Metadata()
+	{
+		AudioMetadata::RegisterSubclass<MP4Metadata>();
+	}
+
 }
 
 #pragma mark Initialization

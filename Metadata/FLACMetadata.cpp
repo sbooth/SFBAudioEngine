@@ -51,10 +51,14 @@
 #include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterFLACMetadata() __attribute__ ((constructor));
-static void RegisterFLACMetadata()
-{
-	AudioMetadata::RegisterSubclass<FLACMetadata>();
+namespace {
+
+	void RegisterFLACMetadata() __attribute__ ((constructor));
+	void RegisterFLACMetadata()
+	{
+		AudioMetadata::RegisterSubclass<FLACMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

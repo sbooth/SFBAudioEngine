@@ -43,10 +43,14 @@
 #include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterMusepackMetadata() __attribute__ ((constructor));
-static void RegisterMusepackMetadata()
-{
-	AudioMetadata::RegisterSubclass<MusepackMetadata>();
+namespace {
+
+	void RegisterMusepackMetadata() __attribute__ ((constructor));
+	void RegisterMusepackMetadata()
+	{
+		AudioMetadata::RegisterSubclass<MusepackMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

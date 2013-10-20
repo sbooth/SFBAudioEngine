@@ -41,10 +41,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterAIFFMetadata() __attribute__ ((constructor));
-static void RegisterAIFFMetadata()
-{
-	AudioMetadata::RegisterSubclass<AIFFMetadata>();
+namespace {
+
+	void RegisterAIFFMetadata() __attribute__ ((constructor));
+	void RegisterAIFFMetadata()
+	{
+		AudioMetadata::RegisterSubclass<AIFFMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

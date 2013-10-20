@@ -42,10 +42,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterOggFLACMetadata() __attribute__ ((constructor));
-static void RegisterOggFLACMetadata()
-{
-	AudioMetadata::RegisterSubclass<OggFLACMetadata>();
+namespace {
+
+	void RegisterOggFLACMetadata() __attribute__ ((constructor));
+	void RegisterOggFLACMetadata()
+	{
+		AudioMetadata::RegisterSubclass<OggFLACMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

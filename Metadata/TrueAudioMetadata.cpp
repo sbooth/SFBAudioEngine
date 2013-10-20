@@ -45,10 +45,14 @@
 #include "SetID3v2TagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterTrueAudioMetadata() __attribute__ ((constructor));
-static void RegisterTrueAudioMetadata()
-{
-	AudioMetadata::RegisterSubclass<TrueAudioMetadata>();
+namespace {
+
+	void RegisterTrueAudioMetadata() __attribute__ ((constructor));
+	void RegisterTrueAudioMetadata()
+	{
+		AudioMetadata::RegisterSubclass<TrueAudioMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

@@ -44,10 +44,14 @@
 #include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterWavPackMetadata() __attribute__ ((constructor));
-static void RegisterWavPackMetadata()
-{
-	AudioMetadata::RegisterSubclass<WavPackMetadata>();
+namespace {
+
+	void RegisterWavPackMetadata() __attribute__ ((constructor));
+	void RegisterWavPackMetadata()
+	{
+		AudioMetadata::RegisterSubclass<WavPackMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

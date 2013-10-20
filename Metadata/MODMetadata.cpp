@@ -43,10 +43,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddTagToDictionary.h"
 
-static void RegisterMODMetadata() __attribute__ ((constructor));
-static void RegisterMODMetadata()
-{
-	AudioMetadata::RegisterSubclass<MODMetadata>();
+namespace {
+
+	void RegisterMODMetadata() __attribute__ ((constructor));
+	void RegisterMODMetadata()
+	{
+		AudioMetadata::RegisterSubclass<MODMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods

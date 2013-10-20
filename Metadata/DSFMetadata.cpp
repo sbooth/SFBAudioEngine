@@ -41,10 +41,14 @@
 #include "AddAudioPropertiesToDictionary.h"
 #include "CFDictionaryUtilities.h"
 
-static void RegisterDSFMetadata() __attribute__ ((constructor));
-static void RegisterDSFMetadata()
-{
-	AudioMetadata::RegisterSubclass<DSFMetadata>();
+namespace {
+
+	void RegisterDSFMetadata() __attribute__ ((constructor));
+	void RegisterDSFMetadata()
+	{
+		AudioMetadata::RegisterSubclass<DSFMetadata>();
+	}
+
 }
 
 #pragma mark Static Methods
