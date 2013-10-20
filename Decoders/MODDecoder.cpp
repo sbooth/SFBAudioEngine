@@ -38,42 +38,46 @@
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
 
-static void RegisterMODDecoder() __attribute__ ((constructor));
-static void RegisterMODDecoder()
-{
-	AudioDecoder::RegisterSubclass<MODDecoder>();
-}
+namespace {
+
+	void RegisterMODDecoder() __attribute__ ((constructor));
+	void RegisterMODDecoder()
+	{
+		AudioDecoder::RegisterSubclass<MODDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static int skip_callback(void *f, long n)
-{
-	assert(nullptr != f);
-	
-	MODDecoder *decoder = static_cast<MODDecoder *>(f);
-	return (decoder->GetInputSource()->SeekToOffset(decoder->GetInputSource()->GetOffset() + n) ? 0 : 1);
-}
+	int skip_callback(void *f, long n)
+	{
+		assert(nullptr != f);
 
-static int getc_callback(void *f)
-{
-	assert(nullptr != f);
-	
-	MODDecoder *decoder = static_cast<MODDecoder *>(f);
-	
-	uint8_t value;
-	return (1 == decoder->GetInputSource()->Read(&value, 1) ? value : -1);
-}
+		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+		return (decoder->GetInputSource()->SeekToOffset(decoder->GetInputSource()->GetOffset() + n) ? 0 : 1);
+	}
 
-static long getnc_callback(char *ptr, long n, void *f)
-{
-	assert(nullptr != f);
-	
-	MODDecoder *decoder = static_cast<MODDecoder *>(f);
-	return static_cast<long>(decoder->GetInputSource()->Read(ptr, n));
-}
+	int getc_callback(void *f)
+	{
+		assert(nullptr != f);
 
-static void close_callback(void */*f*/)
-{}
+		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+
+		uint8_t value;
+		return (1 == decoder->GetInputSource()->Read(&value, 1) ? value : -1);
+	}
+
+	long getnc_callback(char *ptr, long n, void *f)
+	{
+		assert(nullptr != f);
+
+		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+		return static_cast<long>(decoder->GetInputSource()->Read(ptr, n));
+	}
+
+	void close_callback(void */*f*/)
+	{}
+
+}
 
 #pragma mark Static Methods
 

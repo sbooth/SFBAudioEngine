@@ -36,58 +36,59 @@
 
 #define OPUS_SAMPLE_RATE 48000
 
-static void RegisterOggOpusDecoder() __attribute__ ((constructor));
-static void RegisterOggOpusDecoder()
-{
-	AudioDecoder::RegisterSubclass<OggOpusDecoder>();
-}
+namespace {
+
+	void RegisterOggOpusDecoder() __attribute__ ((constructor));
+	void RegisterOggOpusDecoder()
+	{
+		AudioDecoder::RegisterSubclass<OggOpusDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static int
-read_callback(void *stream, unsigned char *ptr, int nbytes)
-{
-	assert(nullptr != stream);
+	int read_callback(void *stream, unsigned char *ptr, int nbytes)
+	{
+		assert(nullptr != stream);
 
-	OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
-	return (int)decoder->GetInputSource()->Read(ptr, nbytes);
-}
-
-
-static int
-seek_callback(void *stream, opus_int64 offset, int whence)
-{
-	assert(nullptr != stream);
-
-	OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
-	InputSource *inputSource = decoder->GetInputSource();
-
-	if(!inputSource->SupportsSeeking())
-		return -1;
-
-	// Adjust offset as required
-	switch(whence) {
-		case SEEK_SET:
-			// offset remains unchanged
-			break;
-		case SEEK_CUR:
-			offset += inputSource->GetOffset();
-			break;
-		case SEEK_END:
-			offset += inputSource->GetLength();
-			break;
+		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
+		return (int)decoder->GetInputSource()->Read(ptr, nbytes);
 	}
 
-	return (!inputSource->SeekToOffset(offset));
-}
 
-static opus_int64
-tell_callback(void *stream)
-{
-	assert(nullptr != stream);
+	int seek_callback(void *stream, opus_int64 offset, int whence)
+	{
+		assert(nullptr != stream);
 
-	OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
-	return decoder->GetInputSource()->GetOffset();
+		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
+		InputSource *inputSource = decoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return -1;
+
+		// Adjust offset as required
+		switch(whence) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += inputSource->GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource->GetLength();
+				break;
+		}
+
+		return (!inputSource->SeekToOffset(offset));
+	}
+
+	opus_int64 tell_callback(void *stream)
+	{
+		assert(nullptr != stream);
+
+		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
+		return decoder->GetInputSource()->GetOffset();
+	}
+
 }
 
 #pragma mark Static Methods

@@ -36,24 +36,28 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
-static void RegisterTrueAudioDecoder() __attribute__ ((constructor));
-static void RegisterTrueAudioDecoder()
-{
-	AudioDecoder::RegisterSubclass<TrueAudioDecoder>();
-}
+namespace {
+
+	void RegisterTrueAudioDecoder() __attribute__ ((constructor));
+	void RegisterTrueAudioDecoder()
+	{
+		AudioDecoder::RegisterSubclass<TrueAudioDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
-{
-	TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
-	return (TTAint32)iocb->decoder->GetInputSource()->Read(buffer, size);
-}
+	TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
+	{
+		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
+		return (TTAint32)iocb->decoder->GetInputSource()->Read(buffer, size);
+	}
 
-static TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
-{
-	TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
-	return iocb->decoder->GetInputSource()->SeekToOffset(offset);
+	TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
+	{
+		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
+		return iocb->decoder->GetInputSource()->SeekToOffset(offset);
+	}
+	
 }
 
 #pragma mark Static Methods

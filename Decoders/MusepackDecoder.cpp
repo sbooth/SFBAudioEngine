@@ -41,57 +41,56 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-static void RegisterMusepackDecoder() __attribute__ ((constructor));
-static void RegisterMusepackDecoder()
-{
-	AudioDecoder::RegisterSubclass<MusepackDecoder>();
-}
+namespace {
+
+	void RegisterMusepackDecoder() __attribute__ ((constructor));
+	void RegisterMusepackDecoder()
+	{
+		AudioDecoder::RegisterSubclass<MusepackDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static mpc_int32_t
-read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
-{
-	assert(nullptr != p_reader);
-	
-	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return (mpc_int32_t)decoder->GetInputSource()->Read(ptr, size);
-}
+	mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
+	{
+		assert(nullptr != p_reader);
 
-static mpc_bool_t
-seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
-{
-	assert(nullptr != p_reader);
-	
-	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return decoder->GetInputSource()->SeekToOffset(offset);
-}
+		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		return (mpc_int32_t)decoder->GetInputSource()->Read(ptr, size);
+	}
 
-static mpc_int32_t
-tell_callback(mpc_reader *p_reader)
-{
-	assert(nullptr != p_reader);
-	
-	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return (mpc_int32_t)decoder->GetInputSource()->GetOffset();
-}
+	mpc_bool_t seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
+	{
+		assert(nullptr != p_reader);
 
-static mpc_int32_t
-get_size_callback(mpc_reader *p_reader)
-{
-	assert(nullptr != p_reader);
-	
-	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return (mpc_int32_t)decoder->GetInputSource()->GetLength();
-}
+		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		return decoder->GetInputSource()->SeekToOffset(offset);
+	}
 
-static mpc_bool_t
-canseek_callback(mpc_reader *p_reader)
-{
-	assert(nullptr != p_reader);
-	
-	MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
-	return decoder->GetInputSource()->SupportsSeeking();
+	mpc_int32_t tell_callback(mpc_reader *p_reader)
+	{
+		assert(nullptr != p_reader);
+
+		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		return (mpc_int32_t)decoder->GetInputSource()->GetOffset();
+	}
+
+	mpc_int32_t get_size_callback(mpc_reader *p_reader)
+	{
+		assert(nullptr != p_reader);
+
+		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		return (mpc_int32_t)decoder->GetInputSource()->GetLength();
+	}
+
+	mpc_bool_t canseek_callback(mpc_reader *p_reader)
+	{
+		assert(nullptr != p_reader);
+
+		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		return decoder->GetInputSource()->SupportsSeeking();
+	}
+
 }
 
 #pragma mark Static Methods

@@ -35,7 +35,7 @@
 
 #import "AudioDecoder.h"
 
-class APEIOInterface;
+namespace { class APEIOInterface; }
 class IAPEDecompress;
 
 // ========================================

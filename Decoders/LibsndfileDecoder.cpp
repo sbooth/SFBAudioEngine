@@ -34,69 +34,69 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-static void RegisterLibsndfileDecoder() __attribute__ ((constructor));
-static void RegisterLibsndfileDecoder()
-{
-	AudioDecoder::RegisterSubclass<LibsndfileDecoder>(-50);
-}
+namespace {
+
+	void RegisterLibsndfileDecoder() __attribute__ ((constructor));
+	void RegisterLibsndfileDecoder()
+	{
+		AudioDecoder::RegisterSubclass<LibsndfileDecoder>(-50);
+	}
 
 #pragma mark Callbacks
 
-static sf_count_t
-my_sf_vio_get_filelen(void *user_data)
-{
-	assert(nullptr != user_data);
+	sf_count_t my_sf_vio_get_filelen(void *user_data)
+	{
+		assert(nullptr != user_data);
 
-	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
-	return decoder->GetInputSource()->GetLength();
-}
-
-static sf_count_t
-my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
-{
-	assert(nullptr != user_data);
-	
-	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
-	InputSource *inputSource = decoder->GetInputSource();
-
-	if(!inputSource->SupportsSeeking())
-		return -1;
-
-	// Adjust offset as required
-	switch(whence) {
-		case SEEK_SET:
-			// offset remains unchanged
-			break;
-		case SEEK_CUR:
-			offset += inputSource->GetOffset();
-			break;
-		case SEEK_END:
-			offset += inputSource->GetLength();
-			break;
+		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		return decoder->GetInputSource()->GetLength();
 	}
 
-	if(!inputSource->SeekToOffset(offset))
-		return -1;
+	sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
+	{
+		assert(nullptr != user_data);
 
-	return inputSource->GetOffset();
-}
+		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		InputSource *inputSource = decoder->GetInputSource();
 
-static sf_count_t
-my_sf_vio_read(void *ptr, sf_count_t count, void *user_data)
-{
-	assert(nullptr != user_data);
+		if(!inputSource->SupportsSeeking())
+			return -1;
 
-	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
-	return decoder->GetInputSource()->Read(ptr, count);
-}
+		// Adjust offset as required
+		switch(whence) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += inputSource->GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource->GetLength();
+				break;
+		}
 
-static sf_count_t
-my_sf_vio_tell(void *user_data)
-{
-	assert(nullptr != user_data);
+		if(!inputSource->SeekToOffset(offset))
+			return -1;
 
-	LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
-	return decoder->GetInputSource()->GetOffset();
+		return inputSource->GetOffset();
+	}
+
+	sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data)
+	{
+		assert(nullptr != user_data);
+
+		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		return decoder->GetInputSource()->Read(ptr, count);
+	}
+
+	sf_count_t my_sf_vio_tell(void *user_data)
+	{
+		assert(nullptr != user_data);
+
+		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		return decoder->GetInputSource()->GetOffset();
+	}
+	
 }
 
 #pragma mark Static Methods

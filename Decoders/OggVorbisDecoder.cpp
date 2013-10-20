@@ -38,57 +38,58 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
-static void RegisterOggVorbisDecoder() __attribute__ ((constructor));
-static void RegisterOggVorbisDecoder()
-{
-	AudioDecoder::RegisterSubclass<OggVorbisDecoder>();
-}
+namespace {
+
+	void RegisterOggVorbisDecoder() __attribute__ ((constructor));
+	void RegisterOggVorbisDecoder()
+	{
+		AudioDecoder::RegisterSubclass<OggVorbisDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static size_t
-read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
-{
-	assert(nullptr != datasource);
-	
-	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-	return (size_t)decoder->GetInputSource()->Read(ptr, (SInt64)(size * nmemb));
-}
+	size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
+	{
+		assert(nullptr != datasource);
 
-static int
-seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
-{
-	assert(nullptr != datasource);
-	
-	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-	InputSource *inputSource = decoder->GetInputSource();
-	
-	if(!inputSource->SupportsSeeking())
-		return -1;
-	
-	// Adjust offset as required
-	switch(whence) {
-		case SEEK_SET:
-			// offset remains unchanged
-			break;
-		case SEEK_CUR:
-			offset += inputSource->GetOffset();
-			break;
-		case SEEK_END:
-			offset += inputSource->GetLength();
-			break;
+		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+		return (size_t)decoder->GetInputSource()->Read(ptr, (SInt64)(size * nmemb));
 	}
-	
-	return (!inputSource->SeekToOffset(offset));
-}
 
-static long
-tell_func_callback(void *datasource)
-{
-	assert(nullptr != datasource);
-	
-	OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-	return (long)decoder->GetInputSource()->GetOffset();
+	int seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
+	{
+		assert(nullptr != datasource);
+
+		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+		InputSource *inputSource = decoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return -1;
+
+		// Adjust offset as required
+		switch(whence) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += inputSource->GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource->GetLength();
+				break;
+		}
+
+		return (!inputSource->SeekToOffset(offset));
+	}
+
+	long tell_func_callback(void *datasource)
+	{
+		assert(nullptr != datasource);
+
+		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+		return (long)decoder->GetInputSource()->GetOffset();
+	}
+
 }
 
 #pragma mark Static Methods

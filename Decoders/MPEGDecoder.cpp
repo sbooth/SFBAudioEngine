@@ -44,68 +44,70 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-static void RegisterMPEGDecoder() __attribute__ ((constructor));
-static void RegisterMPEGDecoder()
-{
-	AudioDecoder::RegisterSubclass<MPEGDecoder>();
-}
+namespace {
+
+	void RegisterMPEGDecoder() __attribute__ ((constructor));
+	void RegisterMPEGDecoder()
+	{
+		AudioDecoder::RegisterSubclass<MPEGDecoder>();
+	}
 
 #pragma mark Initialization
 
-static void Setupmpg123() __attribute__ ((constructor));
-static void Setupmpg123()
-{
-	// What happens if this fails?
-	int result = mpg123_init();
-	if(MPG123_OK != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
-}
+	void Setupmpg123() __attribute__ ((constructor));
+	void Setupmpg123()
+	{
+		// What happens if this fails?
+		int result = mpg123_init();
+		if(MPG123_OK != result)
+			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
+	}
 
-static void Teardownmpg123() __attribute__ ((destructor));
-static void Teardownmpg123()
-{
-	mpg123_exit();
-}
+	void Teardownmpg123() __attribute__ ((destructor));
+	void Teardownmpg123()
+	{
+		mpg123_exit();
+	}
 
 #pragma mark Callbacks
 
-static ssize_t
-read_callback(void *dataSource, void *ptr, size_t size)
-{
-	assert(nullptr != dataSource);
-	
-	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
-	return (ssize_t)decoder->GetInputSource()->Read(ptr, (SInt64)size);
-}
+	ssize_t read_callback(void *dataSource, void *ptr, size_t size)
+	{
+		assert(nullptr != dataSource);
 
-static off_t
-lseek_callback(void *datasource, off_t offset, int whence)
-{
-	assert(nullptr != datasource);
-	
-	MPEGDecoder *decoder = static_cast<MPEGDecoder *>(datasource);
-	InputSource *inputSource = decoder->GetInputSource();
-	
-	if(!inputSource->SupportsSeeking())
-		return -1;
-	
-	// Adjust offset as required
-	switch(whence) {
-		case SEEK_SET:
-			// offset remains unchanged
-			break;
-		case SEEK_CUR:
-			offset += inputSource->GetOffset();
-			break;
-		case SEEK_END:
-			offset += inputSource->GetLength();
-			break;
+		MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
+		return (ssize_t)decoder->GetInputSource()->Read(ptr, (SInt64)size);
 	}
-	
-	if(!inputSource->SeekToOffset(offset))
-		return -1;
 
-	return offset;
+	off_t lseek_callback(void *datasource, off_t offset, int whence)
+	{
+		assert(nullptr != datasource);
+
+		MPEGDecoder *decoder = static_cast<MPEGDecoder *>(datasource);
+		InputSource *inputSource = decoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return -1;
+
+		// Adjust offset as required
+		switch(whence) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += inputSource->GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource->GetLength();
+				break;
+		}
+
+		if(!inputSource->SeekToOffset(offset))
+			return -1;
+		
+		return offset;
+	}
+
 }
 
 #pragma mark Static Methods

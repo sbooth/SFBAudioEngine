@@ -40,117 +40,121 @@
 #include <mac/MACLib.h>
 #include <mac/IO.h>
 
-static void RegisterMonkeysAudioDecoder() __attribute__ ((constructor));
-static void RegisterMonkeysAudioDecoder()
-{
-	AudioDecoder::RegisterSubclass<MonkeysAudioDecoder>();
-}
+namespace {
+
+	void RegisterMonkeysAudioDecoder() __attribute__ ((constructor));
+	void RegisterMonkeysAudioDecoder()
+	{
+		AudioDecoder::RegisterSubclass<MonkeysAudioDecoder>();
+	}
 
 #pragma mark IO Interface
 
-// ========================================
-// The I/O interface for MAC
-// ========================================
-class APEIOInterface : public CIO
-{
-public:
-    APEIOInterface(InputSource *inputSource)
+	// ========================================
+	// The I/O interface for MAC
+	// ========================================
+	class APEIOInterface : public CIO
+	{
+	public:
+		APEIOInterface(InputSource *inputSource)
 		: mInputSource(inputSource)
-	{}
+		{}
 
-    virtual ~APEIOInterface()
-	{
-		mInputSource = nullptr;
-	};
-	
-    virtual int Open(const wchar_t * pName)
-	{
+		virtual ~APEIOInterface()
+		{
+			mInputSource = nullptr;
+		};
+
+		virtual int Open(const wchar_t * pName)
+		{
 #pragma unused(pName)
-		return ERROR_INVALID_INPUT_FILE;
-	}
-    
-	virtual int Close()
-	{
-		return ERROR_SUCCESS;
-	}
-    
-    virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
-	{
-		SInt64 bytesRead = mInputSource->Read(pBuffer, nBytesToRead);
-		if(-1 == bytesRead)
-			return ERROR_IO_READ;
+			return ERROR_INVALID_INPUT_FILE;
+		}
 
-		*pBytesRead = (unsigned int)bytesRead;
+		virtual int Close()
+		{
+			return ERROR_SUCCESS;
+		}
 
-		return ERROR_SUCCESS;
-	}
+		virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+		{
+			SInt64 bytesRead = mInputSource->Read(pBuffer, nBytesToRead);
+			if(-1 == bytesRead)
+				return ERROR_IO_READ;
 
-    virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
-	{
+			*pBytesRead = (unsigned int)bytesRead;
+
+			return ERROR_SUCCESS;
+		}
+
+		virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+		{
 #pragma unused(pBuffer)
 #pragma unused(nBytesToWrite)
 #pragma unused(pBytesWritten)
-		return ERROR_IO_WRITE;
-	}
-    
-    virtual int Seek(int nDistance, unsigned int nMoveMode)
-	{
-		if(!mInputSource->SupportsSeeking())
-			return ERROR_IO_READ;
-		
-		SInt64 offset = nDistance;
-		switch(nMoveMode) {
-			case SEEK_SET:
-				// offset remains unchanged
-				break;
-			case SEEK_CUR:
-				offset += mInputSource->GetOffset();
-				break;
-			case SEEK_END:
-				offset += mInputSource->GetLength();
-				break;
+			return ERROR_IO_WRITE;
+		}
+
+		virtual int Seek(int nDistance, unsigned int nMoveMode)
+		{
+			if(!mInputSource->SupportsSeeking())
+				return ERROR_IO_READ;
+
+			SInt64 offset = nDistance;
+			switch(nMoveMode) {
+				case SEEK_SET:
+					// offset remains unchanged
+					break;
+				case SEEK_CUR:
+					offset += mInputSource->GetOffset();
+					break;
+				case SEEK_END:
+					offset += mInputSource->GetLength();
+					break;
+			}
+
+			return (!mInputSource->SeekToOffset(offset));
+		}
+
+		virtual int Create(const wchar_t * pName)
+		{
+#pragma unused(pName)
+			return ERROR_IO_WRITE;
+		}
+
+		virtual int Delete()
+		{
+			return ERROR_IO_WRITE;
+		}
+
+		virtual int SetEOF()
+		{
+			return ERROR_IO_WRITE;
+		}
+
+		virtual int GetPosition()
+		{
+			SInt64 offset = mInputSource->GetOffset();
+			return (int)offset;
+		}
+
+		virtual int GetSize()
+		{
+			SInt64 length = mInputSource->GetLength();
+			return (int)length;
+		}
+
+		virtual int GetName(wchar_t * pBuffer)
+		{
+#pragma unused(pBuffer)
+			return ERROR_SUCCESS;
 		}
 		
-		return (!mInputSource->SeekToOffset(offset));
-	}
-    
-    virtual int Create(const wchar_t * pName)
-	{
-#pragma unused(pName)
-		return ERROR_IO_WRITE;
-	}
+	private:
+		InputSource *mInputSource;
+	};
 
-    virtual int Delete()
-	{
-		return ERROR_IO_WRITE;
-	}
-	
-    virtual int SetEOF()
-	{
-		return ERROR_IO_WRITE;
-	}
-	
-    virtual int GetPosition()
-	{
-		SInt64 offset = mInputSource->GetOffset();
-		return (int)offset;
-	}
-
-    virtual int GetSize()
-	{
-		SInt64 length = mInputSource->GetLength();
-		return (int)length;
-	}
-
-    virtual int GetName(wchar_t * pBuffer)
-	{
-#pragma unused(pBuffer)
-		return ERROR_SUCCESS;
-	}
-
-private:
-	InputSource *mInputSource;
-};
+}
 
 #pragma mark Static Methods
 

@@ -38,103 +38,100 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
-static void RegisterWavPackDecoder() __attribute__ ((constructor));
-static void RegisterWavPackDecoder()
-{
-	AudioDecoder::RegisterSubclass<WavPackDecoder>();
-}
+namespace {
+
+	void RegisterWavPackDecoder() __attribute__ ((constructor));
+	void RegisterWavPackDecoder()
+	{
+		AudioDecoder::RegisterSubclass<WavPackDecoder>();
+	}
 
 #pragma mark Callbacks
 
-static int32_t
-read_bytes_callback(void *id, void *data, int32_t bcount)
-{
-	assert(nullptr != id);
+	int32_t read_bytes_callback(void *id, void *data, int32_t bcount)
+	{
+		assert(nullptr != id);
 
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return (int32_t)decoder->GetInputSource()->Read(data, bcount);
-}
-
-static uint32_t
-get_pos_callback(void *id)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return (uint32_t)decoder->GetInputSource()->GetOffset();
-}
-
-static int
-set_pos_abs_callback(void *id, uint32_t pos)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return !decoder->GetInputSource()->SeekToOffset(pos);
-}
-
-static int
-set_pos_rel_callback(void *id, int32_t delta, int mode)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	InputSource *inputSource = decoder->GetInputSource();
-
-	if(!inputSource->SupportsSeeking())
-		return -1;
-	
-	// Adjust offset as required
-	SInt64 offset = delta;
-	switch(mode) {
-		case SEEK_SET:
-			// offset remains unchanged
-			break;
-		case SEEK_CUR:
-			offset += inputSource->GetOffset();
-			break;
-		case SEEK_END:
-			offset += inputSource->GetLength();
-			break;
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		return (int32_t)decoder->GetInputSource()->Read(data, bcount);
 	}
-	
-	return (!inputSource->SeekToOffset(offset));
-}
 
-// FIXME: How does one emulate ungetc when the data is non-seekable?
-static int
-push_back_byte_callback(void *id, int c)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	InputSource *inputSource = decoder->GetInputSource();
-	
-	if(!inputSource->SupportsSeeking())
-		return EOF;
-	
-	if(!inputSource->SeekToOffset(inputSource->GetOffset() - 1))
-		return EOF;
-	
-	return c;
-}
+	uint32_t get_pos_callback(void *id)
+	{
+		assert(nullptr != id);
 
-static uint32_t
-get_length_callback(void *id)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return (uint32_t)decoder->GetInputSource()->GetLength();
-}
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		return (uint32_t)decoder->GetInputSource()->GetOffset();
+	}
 
-static int
-can_seek_callback(void *id)
-{
-	assert(nullptr != id);
-	
-	WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-	return (int)decoder->GetInputSource()->SupportsSeeking();
+	int set_pos_abs_callback(void *id, uint32_t pos)
+	{
+		assert(nullptr != id);
+
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		return !decoder->GetInputSource()->SeekToOffset(pos);
+	}
+
+	int set_pos_rel_callback(void *id, int32_t delta, int mode)
+	{
+		assert(nullptr != id);
+
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		InputSource *inputSource = decoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return -1;
+
+		// Adjust offset as required
+		SInt64 offset = delta;
+		switch(mode) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += inputSource->GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource->GetLength();
+				break;
+		}
+
+		return (!inputSource->SeekToOffset(offset));
+	}
+
+	// FIXME: How does one emulate ungetc when the data is non-seekable?
+	int push_back_byte_callback(void *id, int c)
+	{
+		assert(nullptr != id);
+
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		InputSource *inputSource = decoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return EOF;
+
+		if(!inputSource->SeekToOffset(inputSource->GetOffset() - 1))
+			return EOF;
+
+		return c;
+	}
+
+	uint32_t get_length_callback(void *id)
+	{
+		assert(nullptr != id);
+
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		return (uint32_t)decoder->GetInputSource()->GetLength();
+	}
+
+	int can_seek_callback(void *id)
+	{
+		assert(nullptr != id);
+
+		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		return (int)decoder->GetInputSource()->SupportsSeeking();
+	}
+
 }
 
 #pragma mark Static Methods

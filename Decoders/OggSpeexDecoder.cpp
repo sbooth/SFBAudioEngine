@@ -46,10 +46,14 @@
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
 
-static void RegisterOggSpeexDecoder() __attribute__ ((constructor));
-static void RegisterOggSpeexDecoder()
-{
-	AudioDecoder::RegisterSubclass<OggSpeexDecoder>();
+namespace {
+
+	void RegisterOggSpeexDecoder() __attribute__ ((constructor));
+	void RegisterOggSpeexDecoder()
+	{
+		AudioDecoder::RegisterSubclass<OggSpeexDecoder>();
+	}
+
 }
 
 #pragma mark Static Methods

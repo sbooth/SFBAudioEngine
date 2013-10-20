@@ -40,10 +40,14 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-static void RegisterFLACDecoder() __attribute__ ((constructor));
-static void RegisterFLACDecoder()
-{
-	AudioDecoder::RegisterSubclass<FLACDecoder>();
+namespace {
+	
+	void RegisterFLACDecoder() __attribute__ ((constructor));
+	void RegisterFLACDecoder()
+	{
+		AudioDecoder::RegisterSubclass<FLACDecoder>();
+	}
+
 }
 
 #pragma mark Callbacks
