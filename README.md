@@ -28,3 +28,21 @@ Building SFBAudioEngine
 1. Get the source code: `git clone https://github.com/sbooth/SFBAudioEngine.git`
 2. Download the dependencies and unpack in the project's root: http://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2
 3. Open the project and build!
+
+Using SFBAudioEngine
+====================
+
+Playing an audio file is as simple as:
+
+~~~
+NSURL *u = [NSURL fileURLWithPath:@"example.flac" isDirectory:NO];
+AudioPlayer player;
+player.PlayURL((__bridge CFURLRef)u);
+~~~
+
+Documentation
+=============
+
+All public headers are documented using doxygen.  If you have doxygen installed, you may create a local copy of the documentation by running `doxygen` in SFBAudioEngine's root.  The HTML files will be saved in `doc/html/`.
+
+The [documentation is also available online](http://sbooth.github.io/SFBAudioEngine/).
