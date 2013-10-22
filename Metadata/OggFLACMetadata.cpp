@@ -47,26 +47,26 @@ namespace {
 	void RegisterOggFLACMetadata() __attribute__ ((constructor));
 	void RegisterOggFLACMetadata()
 	{
-		AudioMetadata::RegisterSubclass<OggFLACMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::OggFLACMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggFLACMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggFLACMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggFLACMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggFLACMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -79,7 +79,7 @@ bool OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -90,23 +90,23 @@ bool OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * OggFLACMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::OggFLACMetadata::CreateMetadata(CFURLRef url)
 {
 	return new OggFLACMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-OggFLACMetadata::OggFLACMetadata(CFURLRef url)
+SFB::Audio::OggFLACMetadata::OggFLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-OggFLACMetadata::~OggFLACMetadata()
+SFB::Audio::OggFLACMetadata::~OggFLACMetadata()
 {}
 
 #pragma mark Functionality
 
-bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -156,7 +156,7 @@ bool OggFLACMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool OggFLACMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::OggFLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

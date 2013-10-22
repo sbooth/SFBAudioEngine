@@ -37,62 +37,69 @@
 
 #import "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting Musepack
-// ========================================
-class MusepackDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting Musepack
+		// ========================================
+		class MusepackDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	MusepackDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~MusepackDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			MusepackDecoder(InputSource *inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			// ========================================
+			// Destruction
+			virtual ~MusepackDecoder();
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
+			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
-	mpc_reader			mReader;
-	mpc_demux			*mDemux;
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
 
-	AudioBufferList		*mBufferList;
+		private:
 
-	SInt64				mTotalFrames;
-	SInt64				mCurrentFrame;
-};
+			mpc_reader			mReader;
+			mpc_demux			*mDemux;
+			
+			AudioBufferList		*mBufferList;
+			
+			SInt64				mTotalFrames;
+			SInt64				mCurrentFrame;
+		};
+		
+	}
+}

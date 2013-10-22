@@ -48,26 +48,26 @@ namespace {
 	void RegisterMusepackMetadata() __attribute__ ((constructor));
 	void RegisterMusepackMetadata()
 	{
-		AudioMetadata::RegisterSubclass<MusepackMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MusepackMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef MusepackMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MusepackMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MusepackMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MusepackMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -78,7 +78,7 @@ bool MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -89,23 +89,23 @@ bool MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * MusepackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::MusepackMetadata::CreateMetadata(CFURLRef url)
 {
 	return new MusepackMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-MusepackMetadata::MusepackMetadata(CFURLRef url)
+SFB::Audio::MusepackMetadata::MusepackMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-MusepackMetadata::~MusepackMetadata()
+SFB::Audio::MusepackMetadata::~MusepackMetadata()
 {}
 
 #pragma mark Functionality
 
-bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MusepackMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -158,7 +158,7 @@ bool MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool MusepackMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MusepackMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

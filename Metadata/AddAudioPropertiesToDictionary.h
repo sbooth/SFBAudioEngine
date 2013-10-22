@@ -33,9 +33,20 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <taglib/audioproperties.h>
 
-class AudioMetadata;
+/*! @file AddAudioPropertiesToDictionary.h @brief Utility method for adding \c TagLib::AudioProperties contents to \c CFDictionary */
 
-// ========================================
-// Add the properties specified in the AudioProperties instance to dictionary
-// ========================================
-bool AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		/*!
+		 * @brief Add the properties specified in the \c TagLib::AudioProperties instance to \c dictionary
+		 * @param dictionary The dictionary
+		 * @param properties The audio properties
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties);
+		
+	}
+}

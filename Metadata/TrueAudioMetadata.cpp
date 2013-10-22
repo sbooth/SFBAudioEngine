@@ -50,26 +50,26 @@ namespace {
 	void RegisterTrueAudioMetadata() __attribute__ ((constructor));
 	void RegisterTrueAudioMetadata()
 	{
-		AudioMetadata::RegisterSubclass<TrueAudioMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::TrueAudioMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef TrueAudioMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::TrueAudioMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("tta") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef TrueAudioMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::TrueAudioMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/x-tta") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -80,7 +80,7 @@ bool TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -91,23 +91,23 @@ bool TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * TrueAudioMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::TrueAudioMetadata::CreateMetadata(CFURLRef url)
 {
 	return new TrueAudioMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-TrueAudioMetadata::TrueAudioMetadata(CFURLRef url)
+SFB::Audio::TrueAudioMetadata::TrueAudioMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-TrueAudioMetadata::~TrueAudioMetadata()
+SFB::Audio::TrueAudioMetadata::~TrueAudioMetadata()
 {}
 
 #pragma mark Functionality
 
-bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -163,7 +163,7 @@ bool TrueAudioMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool TrueAudioMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::TrueAudioMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

@@ -36,8 +36,7 @@
 #include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
 
-bool
-AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag)
+bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;

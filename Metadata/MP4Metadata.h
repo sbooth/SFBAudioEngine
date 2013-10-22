@@ -33,34 +33,41 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-// ========================================
-// An AudioMetadata subclass supporting MPEG-4
-// ========================================
-class MP4Metadata : public AudioMetadata
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
-	
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+namespace SFB {
 
-	static AudioMetadata * CreateMetadata(CFURLRef url);
+	namespace Audio {
 
-	// ========================================
-	// Creation
-	MP4Metadata(CFURLRef url);
-	
-	// ========================================
-	// Destruction
-	virtual ~MP4Metadata();
-	
-	// ========================================
-	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = nullptr);
-	virtual bool WriteMetadata(CFErrorRef *error = nullptr);
-};
+		// ========================================
+		// A Metadata subclass supporting MPEG-4
+		// ========================================
+		class MP4Metadata : public Metadata
+		{
+
+		public:
+
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
+
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
+
+			static Metadata * CreateMetadata(CFURLRef url);
+
+			// ========================================
+			// Creation
+			MP4Metadata(CFURLRef url);
+
+			// ========================================
+			// Destruction
+			virtual ~MP4Metadata();
+
+			// ========================================
+			// The core functionality
+			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
+			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
+		};
+		
+	}
+}

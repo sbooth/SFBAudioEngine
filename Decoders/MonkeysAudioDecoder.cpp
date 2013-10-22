@@ -45,7 +45,7 @@ namespace {
 	void RegisterMonkeysAudioDecoder() __attribute__ ((constructor));
 	void RegisterMonkeysAudioDecoder()
 	{
-		AudioDecoder::RegisterSubclass<MonkeysAudioDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::MonkeysAudioDecoder>();
 	}
 
 #pragma mark IO Interface
@@ -56,8 +56,8 @@ namespace {
 	class APEIOInterface : public CIO
 	{
 	public:
-		APEIOInterface(InputSource *inputSource)
-		: mInputSource(inputSource)
+		APEIOInterface(SFB::InputSource *inputSource)
+			: mInputSource(inputSource)
 		{}
 
 		virtual ~APEIOInterface()
@@ -151,26 +151,26 @@ namespace {
 		}
 		
 	private:
-		InputSource *mInputSource;
+		SFB::InputSource *mInputSource;
 	};
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef MonkeysAudioDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MonkeysAudioDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ape") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MonkeysAudioDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MonkeysAudioDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio"), CFSTR("audio/x-monkeys-audio") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -181,7 +181,7 @@ bool MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -195,18 +195,18 @@ bool MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * MonkeysAudioDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::MonkeysAudioDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new MonkeysAudioDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDecompressor(nullptr)
+SFB::Audio::MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mDecompressor(nullptr)
 {}
 
-MonkeysAudioDecoder::~MonkeysAudioDecoder()
+SFB::Audio::MonkeysAudioDecoder::~MonkeysAudioDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -214,10 +214,10 @@ MonkeysAudioDecoder::~MonkeysAudioDecoder()
 
 #pragma mark Functionality
 
-bool MonkeysAudioDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MonkeysAudioDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -264,19 +264,19 @@ bool MonkeysAudioDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
 	
 	switch(mFormat.mChannelsPerFrame) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 
 	mIsOpen = true;
 	return true;
 }
 
-bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -287,7 +287,7 @@ bool MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::MonkeysAudioDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -299,7 +299,7 @@ CFStringRef MonkeysAudioDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 MonkeysAudioDecoder::GetTotalFrames() const
+SInt64 SFB::Audio::MonkeysAudioDecoder::GetTotalFrames() const
 {
 	if(!IsOpen())
 		return -1;
@@ -307,7 +307,7 @@ SInt64 MonkeysAudioDecoder::GetTotalFrames() const
 	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
 }
 
-SInt64 MonkeysAudioDecoder::GetCurrentFrame() const
+SInt64 SFB::Audio::MonkeysAudioDecoder::GetCurrentFrame() const
 {
 	if(!IsOpen())
 		return -1;
@@ -315,7 +315,7 @@ SInt64 MonkeysAudioDecoder::GetCurrentFrame() const
 	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
 }
 
-SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -326,14 +326,14 @@ SInt64 MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
 	return this->GetCurrentFrame();
 }
 
-UInt32 MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	int blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int)frameCount, &blocksRead)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MonkeysAudio", "Monkey's Audio invalid checksum");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
 		return 0;
 	}
 

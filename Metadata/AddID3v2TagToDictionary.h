@@ -34,9 +34,23 @@
 #include <vector>
 #include <taglib/id3v2tag.h>
 
-class AttachedPicture;
+/*! @file AddID3v2TagToDictionary.h @brief Utility method for adding \c TagLib::ID3v2::Tag contents to \c CFDictionary */
 
-// ========================================
-// Add the metadata specified in the ID3v2::Tag instance to dictionary
-// ========================================
-bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		class AttachedPicture;
+
+		/*!
+		 * @brief Add the metadata specified in the \c TagLib::ID3v2::Tag instance to \c dictionary
+		 * @param dictionary A \c CFMutableDictionaryRef to receive the metadata
+		 * @param attachedPictures A \c std::vector to receive the attached pictures
+		 * @param properties The tag
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag);
+		
+	}
+}

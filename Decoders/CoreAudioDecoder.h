@@ -33,55 +33,62 @@
 #include <AudioToolbox/ExtendedAudioFile.h>
 #include "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting all formats handled by Core Audio
-// ========================================
-class CoreAudioDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting all formats handled by Core Audio
+		// ========================================
+		class CoreAudioDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	CoreAudioDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~CoreAudioDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			CoreAudioDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Destruction
+			virtual ~CoreAudioDecoder();
 
-	// ========================================
-	// Source audio information
-	virtual SInt64 GetTotalFrames() const;
-	virtual SInt64 GetCurrentFrame() const;
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// ========================================
+			// Source audio information
+			virtual SInt64 GetTotalFrames() const;
+			virtual SInt64 GetCurrentFrame() const;
 
-	AudioFileID			mAudioFile;
-	ExtAudioFileRef		mExtAudioFile;
-	bool				mUseM4AWorkarounds;
-	SInt64				mCurrentFrame;	
-};
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
+
+		private:
+
+			AudioFileID			mAudioFile;
+			ExtAudioFileRef		mExtAudioFile;
+			bool				mUseM4AWorkarounds;
+			SInt64				mCurrentFrame;	
+		};
+		
+	}
+}

@@ -32,8 +32,7 @@
 #include "SetID3v1TagFromMetadata.h"
 #include "SetTagFromMetadata.h"
 
-bool
-SetID3v1TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v1::Tag *tag)
+bool SFB::Audio::SetID3v1TagFromMetadata(const Metadata& metadata, TagLib::ID3v1::Tag *tag)
 {
 	// TagLib::ID3v1::Tag has no additonal functionality over TagLib::Tag
 	return SetTagFromMetadata(metadata, tag);

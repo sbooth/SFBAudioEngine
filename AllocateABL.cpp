@@ -35,13 +35,13 @@
 #include "AllocateABL.h"
 
 AudioBufferList * 
-SFB::AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
+SFB::Audio::AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
 {
 	return AllocateABL(format.mChannelsPerFrame, format.mBytesPerFrame, !(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags), capacityFrames);
 }
 
 AudioBufferList *
-SFB::AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames)
+SFB::Audio::AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames)
 {
 	AudioBufferList *bufferList = nullptr;
 	

@@ -41,9 +41,23 @@
 
 #pragma clang diagnostic pop
 
-class AudioMetadata;
+/*! @file SetID3v1TagFromMetadata.h @brief Utility method for setting \c TagLib::ID3v1::Tag values from \c Metadata */
 
-// ========================================
-// Fill in an ID3v1 tag from the specified AudioMetadata
-// ========================================
-bool SetID3v1TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v1::Tag *tag);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		class Metadata;
+
+		/*!
+		 * @brief Set the values in a \c TagLib::ID3v1::Tag from \c Metadata
+		 * @param metadata The metadata
+		 * @param tag A \c TagLib::ID3v1::Tag to receive the metadata
+		 * @param setAlbumArt Whether to set album art
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool SetID3v1TagFromMetadata(const Metadata& metadata, TagLib::ID3v1::Tag *tag);
+		
+	}
+}

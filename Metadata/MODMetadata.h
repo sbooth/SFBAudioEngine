@@ -33,34 +33,41 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-// ========================================
-// An AudioMetadata subclass supporting MOD files
-// ========================================
-class MODMetadata : public AudioMetadata
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Metadata subclass supporting MOD files
+		// ========================================
+		class MODMetadata : public Metadata
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioMetadata * CreateMetadata(CFURLRef url);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	MODMetadata(CFURLRef url);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~MODMetadata();
+			static Metadata * CreateMetadata(CFURLRef url);
 
-	// ========================================
-	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = nullptr);
-	virtual bool WriteMetadata(CFErrorRef *error = nullptr);
-};
+			// ========================================
+			// Creation
+			MODMetadata(CFURLRef url);
+
+			// ========================================
+			// Destruction
+			virtual ~MODMetadata();
+
+			// ========================================
+			// The core functionality
+			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
+			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
+		};
+		
+	}
+}

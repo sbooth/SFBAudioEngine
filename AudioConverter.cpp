@@ -43,11 +43,11 @@
 // ========================================
 // State data for conversion
 // ========================================
-class SFB::AudioConverter::ConverterStateData
+class SFB::Audio::Converter::ConverterStateData
 {	
 public:	
 
-	ConverterStateData(AudioDecoder *decoder)
+	ConverterStateData(Decoder *decoder)
 		: mDecoder(decoder), mBufferList(nullptr), mBufferCapacityFrames(0)
 	{}
 
@@ -93,7 +93,7 @@ public:
 		return mDecoder->ReadAudio(mBufferList, frameCount);
 	}
 
-	AudioDecoder			*mDecoder;
+	Decoder					*mDecoder;
 	AudioBufferList			*mBufferList;
 	UInt32					mBufferCapacityFrames;
 
@@ -111,7 +111,7 @@ namespace {
 												  AudioStreamPacketDescription	**outDataPacketDescription,
 												  void							*inUserData)
 	{
-		SFB::AudioConverter::ConverterStateData *converterStateData = static_cast<SFB::AudioConverter::ConverterStateData *>(inUserData);
+		SFB::Audio::Converter::ConverterStateData *converterStateData = static_cast<SFB::Audio::Converter::ConverterStateData *>(inUserData);
 		UInt32 framesRead = converterStateData->ReadAudio(*ioNumberDataPackets);
 
 		ioData->mNumberBuffers = converterStateData->mBufferList->mNumberBuffers;
@@ -124,13 +124,13 @@ namespace {
 	}
 }
 
-SFB::AudioConverter::AudioConverter(AudioDecoder *decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout)
+SFB::Audio::Converter::Converter(Decoder *decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout)
 	: mDecoder(decoder), mFormat(format), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
 {
 	mChannelLayout = CopyChannelLayout(channelLayout);
 }
 
-SFB::AudioConverter::~AudioConverter()
+SFB::Audio::Converter::~Converter()
 {
 	if(IsOpen())
 		Close();
@@ -139,7 +139,7 @@ SFB::AudioConverter::~AudioConverter()
 		free(mChannelLayout), mChannelLayout = nullptr;
 }
 
-bool SFB::AudioConverter::Open(CFErrorRef *error)
+bool SFB::Audio::Converter::Open(CFErrorRef *error)
 {
 	if(nullptr == mDecoder)
 		return false;
@@ -199,7 +199,7 @@ bool SFB::AudioConverter::Open(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::AudioConverter::Close(CFErrorRef *error)
+bool SFB::Audio::Converter::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "Close() called on an AudioConverter that hasn't been opened");
@@ -219,7 +219,7 @@ bool SFB::AudioConverter::Close(CFErrorRef *error)
 	return true;
 }
 
-CFStringRef SFB::AudioConverter::CreateFormatDescription() const
+CFStringRef SFB::Audio::Converter::CreateFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -238,7 +238,7 @@ CFStringRef SFB::AudioConverter::CreateFormatDescription() const
 	return sourceFormatDescription;
 }
 
-CFStringRef SFB::AudioConverter::CreateChannelLayoutDescription() const
+CFStringRef SFB::Audio::Converter::CreateChannelLayoutDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -258,7 +258,7 @@ CFStringRef SFB::AudioConverter::CreateChannelLayoutDescription() const
 }
 
 
-UInt32 SFB::AudioConverter::ConvertAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::Converter::ConvertAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
@@ -270,7 +270,7 @@ UInt32 SFB::AudioConverter::ConvertAudio(AudioBufferList *bufferList, UInt32 fra
 	return frameCount;
 }
 
-bool SFB::AudioConverter::Reset()
+bool SFB::Audio::Converter::Reset()
 {
 	if(!IsOpen())
 		return false;

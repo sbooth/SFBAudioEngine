@@ -34,18 +34,18 @@
 
 #include "CreateChannelLayout.h"
 
-size_t SFB::GetChannelLayoutSize(UInt32 numberChannelDescriptions)
+size_t SFB::Audio::GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 {
 	return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));
 }
 
-size_t SFB::GetChannelLayoutSize(const AudioChannelLayout *layout)
+size_t SFB::Audio::GetChannelLayoutSize(const AudioChannelLayout *layout)
 {
 	assert(nullptr != layout);
 	return GetChannelLayoutSize(layout->mNumberChannelDescriptions);
 }
 
-AudioChannelLayout * SFB::CreateChannelLayout(UInt32 numberChannelDescriptions)
+AudioChannelLayout * SFB::Audio::CreateChannelLayout(UInt32 numberChannelDescriptions)
 {
 	size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
 	AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
@@ -54,21 +54,21 @@ AudioChannelLayout * SFB::CreateChannelLayout(UInt32 numberChannelDescriptions)
 	return channelLayout;
 }
 
-AudioChannelLayout * SFB::CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
+AudioChannelLayout * SFB::Audio::CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
 {
 	AudioChannelLayout *channelLayout = CreateChannelLayout();
 	channelLayout->mChannelLayoutTag = layoutTag;
 	return channelLayout;
 }
 
-AudioChannelLayout * SFB::CreateChannelLayoutWithBitmap(UInt32 channelBitmap)
+AudioChannelLayout * SFB::Audio::CreateChannelLayoutWithBitmap(UInt32 channelBitmap)
 {
 	AudioChannelLayout *channelLayout = CreateChannelLayout();
 	channelLayout->mChannelBitmap = channelBitmap;
 	return channelLayout;
 }
 
-AudioChannelLayout * SFB::CopyChannelLayout(const AudioChannelLayout *rhs)
+AudioChannelLayout * SFB::Audio::CopyChannelLayout(const AudioChannelLayout *rhs)
 {
 	if(nullptr == rhs)
 		return nullptr;

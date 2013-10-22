@@ -41,7 +41,7 @@ namespace {
 	void RegisterOggOpusDecoder() __attribute__ ((constructor));
 	void RegisterOggOpusDecoder()
 	{
-		AudioDecoder::RegisterSubclass<OggOpusDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::OggOpusDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -50,7 +50,7 @@ namespace {
 	{
 		assert(nullptr != stream);
 
-		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
+		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
 		return (int)decoder->GetInputSource()->Read(ptr, nbytes);
 	}
 
@@ -59,8 +59,8 @@ namespace {
 	{
 		assert(nullptr != stream);
 
-		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return -1;
@@ -85,7 +85,7 @@ namespace {
 	{
 		assert(nullptr != stream);
 
-		OggOpusDecoder *decoder = static_cast<OggOpusDecoder *>(stream);
+		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
 		return decoder->GetInputSource()->GetOffset();
 	}
 
@@ -93,19 +93,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef OggOpusDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggOpusDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("opus") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggOpusDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggOpusDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/opus"), CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool OggOpusDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggOpusDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -116,7 +116,7 @@ bool OggOpusDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggOpusDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggOpusDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -129,18 +129,18 @@ bool OggOpusDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * OggOpusDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::OggOpusDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new OggOpusDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-OggOpusDecoder::OggOpusDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mOpusFile(nullptr)
+SFB::Audio::OggOpusDecoder::OggOpusDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mOpusFile(nullptr)
 {}
 
-OggOpusDecoder::~OggOpusDecoder()
+SFB::Audio::OggOpusDecoder::~OggOpusDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -148,10 +148,10 @@ OggOpusDecoder::~OggOpusDecoder()
 
 #pragma mark Functionality
 
-bool OggOpusDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggOpusDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "Open() called on an AudioDecoder that is already open");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Open() called on a Decoder that is already open");
 		return true;
 	}
 
@@ -182,7 +182,7 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 	}
 
 	if(0 != op_test_open(mOpusFile)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "op_test_open failed");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "op_test_open failed");
 
 		op_free(mOpusFile), mOpusFile = nullptr;
 
@@ -215,15 +215,15 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 			// Default channel layouts from Vorbis I specification section 4.3.9
 			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
 
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 3:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);	break;
-		case 6:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);	break;
+		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);	break;
 
 		case 7:
-			mChannelLayout = SFB::CreateChannelLayout(7);
+			mChannelLayout = CreateChannelLayout(7);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;
@@ -241,7 +241,7 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 			break;
 
 		case 8:
-			mChannelLayout = SFB::CreateChannelLayout(8);
+			mChannelLayout = CreateChannelLayout(8);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;
@@ -264,10 +264,10 @@ bool OggOpusDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool OggOpusDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggOpusDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -277,7 +277,7 @@ bool OggOpusDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef OggOpusDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::OggOpusDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -289,7 +289,7 @@ CFStringRef OggOpusDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 OggOpusDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::OggOpusDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -300,7 +300,7 @@ SInt64 OggOpusDecoder::SeekToFrame(SInt64 frame)
 	return this->GetCurrentFrame();
 }
 
-UInt32 OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -313,7 +313,7 @@ UInt32 OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		int framesRead = op_read_float(mOpusFile, buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
 
 		if(0 > framesRead) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
 			return 0;
 		}
 

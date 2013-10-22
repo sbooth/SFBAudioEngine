@@ -41,8 +41,7 @@
 #include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
 
-bool
-AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag)
+bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;

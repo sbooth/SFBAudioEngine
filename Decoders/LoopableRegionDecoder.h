@@ -35,95 +35,102 @@
 
 #include "AudioDecoder.h"
 
-// ========================================
-// A wrapper around an AudioDecoder that decodes a specific file region
-// ========================================
-class LoopableRegionDecoder : public AudioDecoder
-{
+namespace SFB {
 
-	friend class AudioDecoder;
-	
-public:
+	namespace Audio {
 
-	// ========================================
-	// Destruction
-	virtual ~LoopableRegionDecoder();
-	
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+		// ========================================
+		// A wrapper around a Decoder that decodes a specific file region
+		// ========================================
+		class LoopableRegionDecoder : public Decoder
+		{
 
-	virtual inline bool IsOpen() const						{ return mDecoder->IsOpen(); }
+			friend class Decoder;
 
-	// ========================================
-	// The native format of the source audio
-	inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mDecoder->GetSourceFormat(); }
-	virtual inline CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
+		public:
 
-	// ========================================
-	// The type of PCM data provided by this decoder
-	inline AudioStreamBasicDescription GetFormat() const		{ return mDecoder->GetFormat(); }
+			// ========================================
+			// Destruction
+			virtual ~LoopableRegionDecoder();
 
-	// ========================================
-	// The layout of the channels this decoder provides
-	inline AudioChannelLayout * GetChannelLayout() const		{ return mDecoder->GetChannelLayout(); }
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// The starting frame for this audio file region
-	inline SInt64 GetStartingFrame() const					{ return mStartingFrame; }
-	inline void SetStartingFrame(SInt64 startingFrame)		{ mStartingFrame = startingFrame; }
-	
-	// ========================================
-	// The number of frames to decode
-	inline UInt32 GetFrameCount() const						{ return mFrameCount; }
-	inline void SetFrameCount(UInt32 frameCount)			{ mFrameCount = frameCount; }
-	
-	// ========================================
-	// The number of times to repeat the audio
-	inline UInt32 GetRepeatCount() const					{ return mRepeatCount; }
-	inline void SetRepeatCount(UInt32 repeatCount)			{ mRepeatCount = repeatCount; }
-	
-	inline UInt32 GetCompletedPasses() const				{ return mCompletedPasses; }
-	
-	// ========================================
-	// Reset to initial state
-	bool Reset();
-	
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-	
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return ((mRepeatCount + 1) * mFrameCount);}
-	virtual inline SInt64 GetCurrentFrame() const			{ return mTotalFramesRead;}
-	
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mDecoder->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
-	
-protected:
-	
-	// ========================================
-	// For these to work correctly decoder must be open already
-	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame);
-	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount);
-	LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
-	
-private:
+			virtual inline bool IsOpen() const						{ return mDecoder->IsOpen(); }
 
-	// Called when mDecoder is open
-	bool SetupDecoder(bool forceReset = true);
+			// ========================================
+			// The native format of the source audio
+			inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mDecoder->GetSourceFormat(); }
+			virtual inline CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
 
-	AudioDecoder	*mDecoder;
-	
-	SInt64			mStartingFrame;
-	UInt32			mFrameCount;
-	UInt32			mRepeatCount;
-	
-	UInt32			mFramesReadInCurrentPass;
-	SInt64			mTotalFramesRead;
-	UInt32			mCompletedPasses;
-};
+			// ========================================
+			// The type of PCM data provided by this decoder
+			inline AudioStreamBasicDescription GetFormat() const		{ return mDecoder->GetFormat(); }
+
+			// ========================================
+			// The layout of the channels this decoder provides
+			inline AudioChannelLayout * GetChannelLayout() const		{ return mDecoder->GetChannelLayout(); }
+
+			// ========================================
+			// The starting frame for this audio file region
+			inline SInt64 GetStartingFrame() const					{ return mStartingFrame; }
+			inline void SetStartingFrame(SInt64 startingFrame)		{ mStartingFrame = startingFrame; }
+
+			// ========================================
+			// The number of frames to decode
+			inline UInt32 GetFrameCount() const						{ return mFrameCount; }
+			inline void SetFrameCount(UInt32 frameCount)			{ mFrameCount = frameCount; }
+
+			// ========================================
+			// The number of times to repeat the audio
+			inline UInt32 GetRepeatCount() const					{ return mRepeatCount; }
+			inline void SetRepeatCount(UInt32 repeatCount)			{ mRepeatCount = repeatCount; }
+
+			inline UInt32 GetCompletedPasses() const				{ return mCompletedPasses; }
+
+			// ========================================
+			// Reset to initial state
+			bool Reset();
+
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return ((mRepeatCount + 1) * mFrameCount);}
+			virtual inline SInt64 GetCurrentFrame() const			{ return mTotalFramesRead;}
+
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mDecoder->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
+
+		protected:
+
+			// ========================================
+			// For these to work correctly decoder must be open already
+			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame);
+			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount);
+			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
+
+		private:
+
+			// Called when mDecoder is open
+			bool SetupDecoder(bool forceReset = true);
+
+			Decoder			*mDecoder;
+
+			SInt64			mStartingFrame;
+			UInt32			mFrameCount;
+			UInt32			mRepeatCount;
+			
+			UInt32			mFramesReadInCurrentPass;
+			SInt64			mTotalFramesRead;
+			UInt32			mCompletedPasses;
+		};
+		
+	}
+}

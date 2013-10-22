@@ -37,11 +37,15 @@
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*!
-	 * @brief Deallocate an \c AudioBufferList
-	 * @param bufferList The \c AudioBufferList to deallocate
-	 * @return \c nullptr
-	 */
-	AudioBufferList * DeallocateABL(AudioBufferList *bufferList);
+	/*! @brief %Audio functionality */
+	namespace Audio {
 
+		/*!
+		 * @brief Deallocate an \c AudioBufferList
+		 * @param bufferList The \c AudioBufferList to deallocate
+		 * @return \c nullptr
+		 */
+		AudioBufferList * DeallocateABL(AudioBufferList *bufferList);
+		
+	}
 }

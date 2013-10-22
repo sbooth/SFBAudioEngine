@@ -33,34 +33,41 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-// ========================================
-// An AudioMetadata subclass supporting Ogg FLAC files
-// ========================================
-class OggFLACMetadata : public AudioMetadata
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
-	
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+namespace SFB {
 
-	static AudioMetadata * CreateMetadata(CFURLRef url);
+	namespace Audio {
 
-	// ========================================
-	// Creation
-	OggFLACMetadata(CFURLRef url);
-	
-	// ========================================
-	// Destruction
-	virtual ~OggFLACMetadata();
-	
-	// ========================================
-	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = nullptr);
-	virtual bool WriteMetadata(CFErrorRef *error = nullptr);
-};
+		// ========================================
+		// A Metadata subclass supporting Ogg FLAC files
+		// ========================================
+		class OggFLACMetadata : public Metadata
+		{
+
+		public:
+
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
+
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
+
+			static Metadata * CreateMetadata(CFURLRef url);
+
+			// ========================================
+			// Creation
+			OggFLACMetadata(CFURLRef url);
+
+			// ========================================
+			// Destruction
+			virtual ~OggFLACMetadata();
+
+			// ========================================
+			// The core functionality
+			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
+			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
+		};
+		
+	}
+}

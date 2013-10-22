@@ -49,26 +49,26 @@ namespace {
 	void RegisterMonkeysAudioMetadata() __attribute__ ((constructor));
 	void RegisterMonkeysAudioMetadata()
 	{
-		AudioMetadata::RegisterSubclass<MonkeysAudioMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MonkeysAudioMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef MonkeysAudioMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MonkeysAudioMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ape") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MonkeysAudioMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MonkeysAudioMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/monkeys-audio") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -79,7 +79,7 @@ bool MonkeysAudioMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -90,23 +90,23 @@ bool MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * MonkeysAudioMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::MonkeysAudioMetadata::CreateMetadata(CFURLRef url)
 {
 	return new MonkeysAudioMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-MonkeysAudioMetadata::MonkeysAudioMetadata(CFURLRef url)
+SFB::Audio::MonkeysAudioMetadata::MonkeysAudioMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-MonkeysAudioMetadata::~MonkeysAudioMetadata()
+SFB::Audio::MonkeysAudioMetadata::~MonkeysAudioMetadata()
 {}
 
 #pragma mark Functionality
 
-bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -161,7 +161,7 @@ bool MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MonkeysAudioMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

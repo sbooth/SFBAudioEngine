@@ -32,8 +32,7 @@
 #include "AudioMetadata.h"
 #include "TagLibStringUtilities.h"
 
-bool
-SetTagFromMetadata(const AudioMetadata& metadata, TagLib::Tag *tag)
+bool SFB::Audio::SetTagFromMetadata(const Metadata& metadata, TagLib::Tag *tag)
 {
 	if(nullptr == tag)
 		return false;

@@ -51,26 +51,26 @@ namespace {
 	void RegisterOggSpeexDecoder() __attribute__ ((constructor));
 	void RegisterOggSpeexDecoder()
 	{
-		AudioDecoder::RegisterSubclass<OggSpeexDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::OggSpeexDecoder>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggSpeexDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggSpeexDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("spx") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggSpeexDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggSpeexDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex"), CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -81,7 +81,7 @@ bool OggSpeexDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -95,18 +95,18 @@ bool OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * OggSpeexDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::OggSpeexDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new OggSpeexDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mSpeexDecoder(nullptr), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
+SFB::Audio::OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mSpeexDecoder(nullptr), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
 {}
 
-OggSpeexDecoder::~OggSpeexDecoder()
+SFB::Audio::OggSpeexDecoder::~OggSpeexDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -114,10 +114,10 @@ OggSpeexDecoder::~OggSpeexDecoder()
 
 #pragma mark Functionality
 
-bool OggSpeexDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -314,8 +314,8 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
 	
 	switch(header->nb_channels) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
 	}
 	
 	speex_header_free(header), header = nullptr;
@@ -324,7 +324,7 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	spx_int32_t speexFrameSize = 0;
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 	
-	mBufferList = SFB::AllocateABL(mFormat, (UInt32)speexFrameSize);
+	mBufferList = AllocateABL(mFormat, (UInt32)speexFrameSize);
 	if(nullptr == mBufferList) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -345,15 +345,15 @@ bool OggSpeexDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggSpeexDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
 	if(mBufferList)
-		mBufferList = SFB::DeallocateABL(mBufferList);
+		mBufferList = DeallocateABL(mBufferList);
 
 	// Speex cleanup
 	speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = nullptr;
@@ -368,7 +368,7 @@ bool OggSpeexDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::OggSpeexDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -380,7 +380,7 @@ CFStringRef OggSpeexDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -434,7 +434,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				ogg_packet oggPacket;
 				int result = ogg_stream_packetout(&mOggStreamState, &oggPacket);
 				if(-1 == result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding error: Ogg loss of streaming");
+					LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: Ogg loss of streaming");
 					break;
 				}
 				
@@ -475,12 +475,12 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 							if(-1 == result)
 								break;
 							else if(-2 == result) {
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding error: possible corrupted stream");
+								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: possible corrupted stream");
 								break;
 							}
 							
 							if(0 > speex_bits_remaining(&mSpeexBits)) {
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Ogg Speex decoding overflow: possible corrupted stream");
+								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding overflow: possible corrupted stream");
 								break;
 							}
 							
@@ -520,7 +520,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 					// Read bitstream from input file
 					ssize_t bytesRead = (ssize_t)GetInputSource()->Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
-						LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Unable to read from the input file");
+						LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Unable to read from the input file");
 						break;
 					}
 					
@@ -538,7 +538,7 @@ UInt32 OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 				// Get the resultant Ogg page
 				int result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 				if(0 != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.OggSpeex", "Error reading Ogg page");
+					LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Error reading Ogg page");
 					break;
 				}
 			}

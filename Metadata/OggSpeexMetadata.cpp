@@ -45,26 +45,26 @@ namespace {
 	void RegisterOggSpeexMetadata() __attribute__ ((constructor));
 	void RegisterOggSpeexMetadata()
 	{
-		AudioMetadata::RegisterSubclass<OggSpeexMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::OggSpeexMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggSpeexMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggSpeexMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("spx") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggSpeexMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggSpeexMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/speex") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -75,7 +75,7 @@ bool OggSpeexMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -86,23 +86,23 @@ bool OggSpeexMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * OggSpeexMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::OggSpeexMetadata::CreateMetadata(CFURLRef url)
 {
 	return new OggSpeexMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-OggSpeexMetadata::OggSpeexMetadata(CFURLRef url)
+SFB::Audio::OggSpeexMetadata::OggSpeexMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-OggSpeexMetadata::~OggSpeexMetadata()
+SFB::Audio::OggSpeexMetadata::~OggSpeexMetadata()
 {}
 
 #pragma mark Functionality
 
-bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -147,7 +147,7 @@ bool OggSpeexMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::OggSpeexMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

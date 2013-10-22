@@ -42,56 +42,63 @@
 
 #import "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting Ogg Vorbis
-// ========================================
-class OggVorbisDecoder : public AudioDecoder
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+namespace SFB {
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+	namespace Audio {
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+		// ========================================
+		// A Decoder subclass supporting Ogg Vorbis
+		// ========================================
+		class OggVorbisDecoder : public Decoder
+		{
 
-	// ========================================
-	// Creation
-	OggVorbisDecoder(InputSource *inputSource);
+		public:
 
-	// ========================================
-	// Destruction
-	virtual ~OggVorbisDecoder();
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Creation
+			OggVorbisDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
-	virtual inline SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
+			// ========================================
+			// Destruction
+			virtual ~OggVorbisDecoder();
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-private:
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-	OggVorbis_File		mVorbisFile;
-};
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
+			virtual inline SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
+
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
+			
+		private:
+			
+			OggVorbis_File		mVorbisFile;
+		};
+		
+	}
+}

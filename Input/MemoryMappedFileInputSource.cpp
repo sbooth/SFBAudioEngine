@@ -37,19 +37,19 @@
 
 #pragma mark Creation and Destruction
 
-MemoryMappedFileInputSource::MemoryMappedFileInputSource(CFURLRef url)
+SFB::MemoryMappedFileInputSource::MemoryMappedFileInputSource(CFURLRef url)
 	: InputSource(url), mMemory(nullptr), mCurrentPosition(nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
 
-MemoryMappedFileInputSource::~MemoryMappedFileInputSource()
+SFB::MemoryMappedFileInputSource::~MemoryMappedFileInputSource()
 {
 	if(IsOpen())
 		Close();
 }
 
-bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
+bool SFB::MemoryMappedFileInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Open() called on an InputSource that is already open");
@@ -124,7 +124,7 @@ bool MemoryMappedFileInputSource::Open(CFErrorRef *error)
 	return true;
 }
 
-bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
+bool SFB::MemoryMappedFileInputSource::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Close() called on an InputSource that hasn't been opened");
@@ -150,7 +150,7 @@ bool MemoryMappedFileInputSource::Close(CFErrorRef *error)
 	return true;
 }
 
-SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 {
 	if(!IsOpen() || nullptr == buffer)
 		return -1;
@@ -165,7 +165,7 @@ SInt64 MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 	return byteCount;
 }
 
-bool MemoryMappedFileInputSource::SeekToOffset(SInt64 offset)
+bool SFB::MemoryMappedFileInputSource::SeekToOffset(SInt64 offset)
 {
 	if(!IsOpen())
 		return false;

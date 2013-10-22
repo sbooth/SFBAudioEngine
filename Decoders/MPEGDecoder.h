@@ -39,58 +39,65 @@
 
 #include <mpg123/mpg123.h>
 
-// ========================================
-// An AudioDecoder subclass supporting MPEG Layers I, II and III
-// ========================================
-class MPEGDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting MPEG Layers I, II and III
+		// ========================================
+		class MPEGDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	MPEGDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~MPEGDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			MPEGDecoder(InputSource *inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			// ========================================
+			// Destruction
+			virtual ~MPEGDecoder();
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Source audio information
-	virtual SInt64 GetTotalFrames() const;
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// ========================================
+			// Source audio information
+			virtual SInt64 GetTotalFrames() const;
+			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
-	std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>> mDecoder;
-	AudioBufferList		*mBufferList;
-	SInt64				mCurrentFrame;
-};
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
+
+		private:
+
+			std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>> mDecoder;
+			AudioBufferList		*mBufferList;
+			SInt64				mCurrentFrame;
+		};
+		
+	}
+}

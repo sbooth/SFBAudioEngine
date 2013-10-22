@@ -38,11 +38,11 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	InputSourceErrorDomain			= CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
+const CFStringRef	SFB::InputSourceErrorDomain		= CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
 
 #pragma mark Static Methods
 
-InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
+SFB::InputSource * SFB::InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -71,11 +71,11 @@ InputSource * InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFEr
 
 #pragma mark Creation and Destruction
 
-InputSource::InputSource()
+SFB::InputSource::InputSource()
 	: mURL(nullptr), mIsOpen(false)
 {}
 
-InputSource::InputSource(CFURLRef url)
+SFB::InputSource::InputSource(CFURLRef url)
 	: mURL(nullptr), mIsOpen(false)
 {
 	assert(nullptr != url);
@@ -83,7 +83,7 @@ InputSource::InputSource(CFURLRef url)
 	mURL = (CFURLRef)CFRetain(url);
 }
 
-InputSource::~InputSource()
+SFB::InputSource::~InputSource()
 {
 	if(mURL)
 		CFRelease(mURL), mURL = nullptr;

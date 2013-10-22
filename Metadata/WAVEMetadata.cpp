@@ -48,26 +48,26 @@ namespace {
 	void RegisterWAVEMetadata() __attribute__ ((constructor));
 	void RegisterWAVEMetadata()
 	{
-		AudioMetadata::RegisterSubclass<WAVEMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::WAVEMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef WAVEMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::WAVEMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("wave"), CFSTR("wav") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef WAVEMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::WAVEMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wave") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool WAVEMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::WAVEMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -80,7 +80,7 @@ bool WAVEMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -91,23 +91,23 @@ bool WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * WAVEMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::WAVEMetadata::CreateMetadata(CFURLRef url)
 {
 	return new WAVEMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-WAVEMetadata::WAVEMetadata(CFURLRef url)
+SFB::Audio::WAVEMetadata::WAVEMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-WAVEMetadata::~WAVEMetadata()
+SFB::Audio::WAVEMetadata::~WAVEMetadata()
 {}
 
 #pragma mark Functionality
 
-bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::WAVEMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -162,7 +162,7 @@ bool WAVEMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool WAVEMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::WAVEMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

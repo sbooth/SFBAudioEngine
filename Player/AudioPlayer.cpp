@@ -86,13 +86,13 @@ namespace {
 // ========================================
 // State data for decoders that are decoding and/or rendering
 // ========================================
-class AudioPlayer::DecoderStateData
+class SFB::Audio::Player::DecoderStateData
 {
 
 public:
 
 	// Takes ownership of decoder
-	DecoderStateData(AudioDecoder *decoder)
+	DecoderStateData(Decoder *decoder)
 		: DecoderStateData()
 	{
 		assert(nullptr != decoder);
@@ -119,14 +119,14 @@ public:
 		DeallocateBufferList();
 
 		mBufferCapacityFrames = capacityFrames;
-		mBufferList = SFB::AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
+		mBufferList = AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
 	}
 
 	void DeallocateBufferList()
 	{
 		if(mBufferList) {
 			mBufferCapacityFrames = 0;
-			mBufferList = SFB::DeallocateABL(mBufferList);
+			mBufferList = DeallocateABL(mBufferList);
 		}
 	}
 
@@ -146,7 +146,7 @@ public:
 		return mDecoder->ReadAudio(mBufferList, frameCount);
 	}
 
-	AudioDecoder			*mDecoder;
+	Decoder					*mDecoder;
 
 	AudioBufferList			*mBufferList;
 	UInt32					mBufferCapacityFrames;
@@ -184,7 +184,7 @@ namespace {
 												THREAD_EXTENDED_POLICY_COUNT);
 
 		if(KERN_SUCCESS != error) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's extended policy: " << mach_error_string(error));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's extended policy: " << mach_error_string(error));
 			return false;
 		}
 
@@ -198,7 +198,7 @@ namespace {
 								  THREAD_PRECEDENCE_POLICY_COUNT);
 
 		if (error != KERN_SUCCESS) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set thread's precedence policy: " << mach_error_string(error));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's precedence policy: " << mach_error_string(error));
 			return false;
 		}
 
@@ -216,7 +216,7 @@ namespace {
 	{
 		assert(nullptr != inRefCon);
 
-		AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+		auto player = static_cast<SFB::Audio::Player *>(inRefCon);
 		return player->Render(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 	}
 
@@ -231,7 +231,7 @@ namespace {
 	{
 		assert(nullptr != inRefCon);
 
-		AudioPlayer *player = static_cast<AudioPlayer *>(inRefCon);
+		auto player = static_cast<SFB::Audio::Player *>(inRefCon);
 		return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 	}
 
@@ -241,7 +241,7 @@ namespace {
 	{
 		assert(nullptr != arg);
 
-		AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+		auto player = static_cast<SFB::Audio::Player *>(arg);
 		return player->DecoderThreadEntry();
 	}
 
@@ -251,7 +251,7 @@ namespace {
 	{
 		assert(nullptr != arg);
 
-		AudioPlayer *player = static_cast<AudioPlayer *>(arg);
+		auto player = static_cast<SFB::Audio::Player *>(arg);
 		return player->CollectorThreadEntry();
 	}
 
@@ -270,7 +270,7 @@ namespace {
 		assert(nullptr != inUserData);
 		assert(nullptr != ioNumberDataPackets);
 
-		AudioPlayer::DecoderStateData *decoderStateData = static_cast<AudioPlayer::DecoderStateData *>(inUserData);
+		auto decoderStateData = static_cast<SFB::Audio::Player::DecoderStateData *>(inUserData);
 		UInt32 framesRead = decoderStateData->ReadAudio(*ioNumberDataPackets);
 
 		// Point ioData at our decoded audio
@@ -287,7 +287,7 @@ namespace {
 
 #pragma mark Creation/Destruction
 
-AudioPlayer::AudioPlayer()
+SFB::Audio::Player::Player()
 	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mMutex(), mSemaphore(), mDecoderSemaphore(), mCollectorSemaphore(), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
@@ -298,7 +298,7 @@ AudioPlayer::AudioPlayer()
 	if(nullptr == mDecoderQueue)
 		throw std::bad_alloc();
 
-	mRingBuffer = new SFB::RingBuffer();
+	mRingBuffer = new RingBuffer();
 
 	// ========================================
 	// Initialize the decoder array
@@ -310,7 +310,7 @@ AudioPlayer::AudioPlayer()
 	mKeepDecoding = true;
 	int creationResult = pthread_create(&mDecoderThread, nullptr, decoderEntry, this);
 	if(0 != creationResult) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.AudioPlayer", "pthread_create failed: " << strerror(creationResult));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "pthread_create failed: " << strerror(creationResult));
 		
 		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 		delete mRingBuffer, mRingBuffer = nullptr;
@@ -323,14 +323,14 @@ AudioPlayer::AudioPlayer()
 	mKeepCollecting = true;
 	creationResult = pthread_create(&mCollectorThread, nullptr, collectorEntry, this);
 	if(0 != creationResult) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.AudioPlayer", "pthread_create failed: " << strerror(creationResult));
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "pthread_create failed: " << strerror(creationResult));
 		
 		mKeepDecoding = false;
 		mDecoderSemaphore.Signal();
 		
 		int joinResult = pthread_join(mDecoderThread, nullptr);
 		if(0 != joinResult)
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "pthread_join failed: " << strerror(joinResult));
 		
 		mDecoderThread = (pthread_t)0;
 		
@@ -358,18 +358,18 @@ AudioPlayer::AudioPlayer()
 	// ========================================
 	// Set up output
 	if(!OpenOutput()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.AudioPlayer", "OpenOutput() failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "OpenOutput() failed");
 		throw std::runtime_error("OpenOutput() failed");
 	}
 }
 
-AudioPlayer::~AudioPlayer()
+SFB::Audio::Player::~Player()
 {
 	Stop();
 
 	// Stop the processing graph and reclaim its resources
 	if(!CloseOutput())
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "CloseOutput() failed");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "CloseOutput() failed");
 
 	// End the decoding thread
 	mKeepDecoding = false;
@@ -377,7 +377,7 @@ AudioPlayer::~AudioPlayer()
 
 	int joinResult = pthread_join(mDecoderThread, nullptr);
 	if(0 != joinResult)
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "pthread_join failed: " << strerror(joinResult));
 	
 	mDecoderThread = (pthread_t)0;
 
@@ -387,7 +387,7 @@ AudioPlayer::~AudioPlayer()
 	
 	joinResult = pthread_join(mCollectorThread, nullptr);
 	if(0 != joinResult)
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "pthread_join failed: " << strerror(joinResult));
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "pthread_join failed: " << strerror(joinResult));
 	
 	mCollectorThread = (pthread_t)0;
 
@@ -399,7 +399,7 @@ AudioPlayer::~AudioPlayer()
 	
 	// Clean up any queued decoders
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		AudioDecoder *decoder = static_cast<AudioDecoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
+		Decoder *decoder = static_cast<Decoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
 		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
@@ -434,7 +434,7 @@ AudioPlayer::~AudioPlayer()
 
 #pragma mark Playback Control
 
-bool AudioPlayer::Play()
+bool SFB::Audio::Player::Play()
 {
 	if(!OutputIsRunning())
 		return StartOutput();
@@ -442,7 +442,7 @@ bool AudioPlayer::Play()
 	return true;
 }
 
-bool AudioPlayer::Pause()
+bool SFB::Audio::Player::Pause()
 {
 	if(OutputIsRunning())
 		StopOutput();
@@ -450,9 +450,9 @@ bool AudioPlayer::Pause()
 	return true;
 }
 
-bool AudioPlayer::Stop()
+bool SFB::Audio::Player::Stop()
 {
-	SFB::Mutex::Tryer lock(mMutex);
+	Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -472,7 +472,7 @@ bool AudioPlayer::Stop()
 	return true;
 }
 
-AudioPlayer::PlayerState AudioPlayer::GetPlayerState() const
+SFB::Audio::Player::PlayerState SFB::Audio::Player::GetPlayerState() const
 {
 	if(OutputIsRunning())
 		return PlayerState::Playing;
@@ -491,7 +491,7 @@ AudioPlayer::PlayerState AudioPlayer::GetPlayerState() const
 	return PlayerState::Stopped;
 }
 
-CFURLRef AudioPlayer::GetPlayingURL() const
+CFURLRef SFB::Audio::Player::GetPlayingURL() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -501,7 +501,7 @@ CFURLRef AudioPlayer::GetPlayingURL() const
 	return currentDecoderState->mDecoder->GetURL();
 }
 
-void * AudioPlayer::GetPlayingRepresentedObject() const
+void * SFB::Audio::Player::GetPlayingRepresentedObject() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
@@ -513,7 +513,7 @@ void * AudioPlayer::GetPlayingRepresentedObject() const
 
 #pragma mark Block-based callback support
 
-void AudioPlayer::SetDecodingStartedBlock(AudioPlayer::AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetDecodingStartedBlock(AudioPlayerDecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[0])
 		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
@@ -521,7 +521,7 @@ void AudioPlayer::SetDecodingStartedBlock(AudioPlayer::AudioPlayerDecoderEventBl
 		mDecoderEventBlocks[0] = Block_copy(block);
 }
 
-void AudioPlayer::SetDecodingFinishedBlock(AudioPlayer::AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[1])
 		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
@@ -529,7 +529,7 @@ void AudioPlayer::SetDecodingFinishedBlock(AudioPlayer::AudioPlayerDecoderEventB
 		mDecoderEventBlocks[1] = Block_copy(block);
 }
 
-void AudioPlayer::SetRenderingStartedBlock(AudioPlayer::AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetRenderingStartedBlock(AudioPlayerDecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[2])
 		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
@@ -537,7 +537,7 @@ void AudioPlayer::SetRenderingStartedBlock(AudioPlayer::AudioPlayerDecoderEventB
 		mDecoderEventBlocks[2] = Block_copy(block);
 }
 
-void AudioPlayer::SetRenderingFinishedBlock(AudioPlayer::AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[3])
 		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
@@ -545,7 +545,7 @@ void AudioPlayer::SetRenderingFinishedBlock(AudioPlayer::AudioPlayerDecoderEvent
 		mDecoderEventBlocks[3] = Block_copy(block);
 }
 
-void AudioPlayer::SetPreRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock block)
+void SFB::Audio::Player::SetPreRenderBlock(AudioPlayerRenderEventBlock block)
 {
 	if(mRenderEventBlocks[0])
 		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
@@ -553,7 +553,7 @@ void AudioPlayer::SetPreRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock blo
 		mRenderEventBlocks[0] = Block_copy(block);
 }
 
-void AudioPlayer::SetPostRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock block)
+void SFB::Audio::Player::SetPostRenderBlock(AudioPlayerRenderEventBlock block)
 {
 	if(mRenderEventBlocks[1])
 		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
@@ -561,7 +561,7 @@ void AudioPlayer::SetPostRenderBlock(AudioPlayer::AudioPlayerRenderEventBlock bl
 		mRenderEventBlocks[1] = Block_copy(block);
 }
 
-void AudioPlayer::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block)
+void SFB::Audio::Player::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block)
 {
 	if(mFormatMismatchBlock)
 		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
@@ -571,19 +571,19 @@ void AudioPlayer::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block)
 
 #pragma mark Playback Properties
 
-bool AudioPlayer::GetCurrentFrame(SInt64& currentFrame) const
+bool SFB::Audio::Player::GetCurrentFrame(SInt64& currentFrame) const
 {
 	SInt64 totalFrames;
 	return GetPlaybackPosition(currentFrame, totalFrames);
 }
 
-bool AudioPlayer::GetTotalFrames(SInt64& totalFrames) const
+bool SFB::Audio::Player::GetTotalFrames(SInt64& totalFrames) const
 {
 	SInt64 currentFrame;
 	return GetPlaybackPosition(currentFrame, totalFrames);
 }
 
-bool AudioPlayer::GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames) const
+bool SFB::Audio::Player::GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames) const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
@@ -596,19 +596,19 @@ bool AudioPlayer::GetPlaybackPosition(SInt64& currentFrame, SInt64& totalFrames)
 	return true;
 }
 
-bool AudioPlayer::GetCurrentTime(CFTimeInterval& currentTime) const
+bool SFB::Audio::Player::GetCurrentTime(CFTimeInterval& currentTime) const
 {
 	CFTimeInterval totalTime;
 	return GetPlaybackTime(currentTime, totalTime);
 }
 
-bool AudioPlayer::GetTotalTime(CFTimeInterval& totalTime) const
+bool SFB::Audio::Player::GetTotalTime(CFTimeInterval& totalTime) const
 {
 	CFTimeInterval currentTime;
 	return GetPlaybackTime(currentTime, totalTime);
 }
 
-bool AudioPlayer::GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime) const
+bool SFB::Audio::Player::GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& totalTime) const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
@@ -624,7 +624,7 @@ bool AudioPlayer::GetPlaybackTime(CFTimeInterval& currentTime, CFTimeInterval& t
 	return true;
 }
 
-bool AudioPlayer::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime) const
+bool SFB::Audio::Player::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& totalFrames, CFTimeInterval& currentTime, CFTimeInterval& totalTime) const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
@@ -642,7 +642,7 @@ bool AudioPlayer::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64& total
 
 #pragma mark Seeking
 
-bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
+bool SFB::Audio::Player::SeekForward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -657,7 +657,7 @@ bool AudioPlayer::SeekForward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::min(desiredFrame, totalFrames - 1));
 }
 
-bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
+bool SFB::Audio::Player::SeekBackward(CFTimeInterval secondsToSkip)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -671,7 +671,7 @@ bool AudioPlayer::SeekBackward(CFTimeInterval secondsToSkip)
 	return SeekToFrame(std::max(0LL, desiredFrame));
 }
 
-bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
+bool SFB::Audio::Player::SeekToTime(CFTimeInterval timeInSeconds)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -684,7 +684,7 @@ bool AudioPlayer::SeekToTime(CFTimeInterval timeInSeconds)
 	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
 }
 
-bool AudioPlayer::SeekToFrame(SInt64 frame)
+bool SFB::Audio::Player::SeekToFrame(SInt64 frame)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -709,7 +709,7 @@ bool AudioPlayer::SeekToFrame(SInt64 frame)
 	return true;	
 }
 
-bool AudioPlayer::SupportsSeeking() const
+bool SFB::Audio::Player::SupportsSeeking() const
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 	
@@ -721,35 +721,35 @@ bool AudioPlayer::SupportsSeeking() const
 
 #pragma mark Player Parameters
 
-bool AudioPlayer::GetVolume(Float32& volume) const
+bool SFB::Audio::Player::GetVolume(Float32& volume) const
 {
 	return GetVolumeForChannel(0, volume);
 }
 
-bool AudioPlayer::SetVolume(Float32 volume)
+bool SFB::Audio::Player::SetVolume(Float32 volume)
 {
 	return SetVolumeForChannel(0, volume);
 }
 
-bool AudioPlayer::GetVolumeForChannel(UInt32 channel, Float32& volume) const
+bool SFB::Audio::Player::GetVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &volume);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
+bool SFB::Audio::Player::SetVolumeForChannel(UInt32 channel, Float32 volume)
 {
 	if(0 > volume || 1 < volume)
 		return false;
@@ -757,40 +757,40 @@ bool AudioPlayer::SetVolumeForChannel(UInt32 channel, Float32 volume)
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, volume, 0);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, " << channel << ") failed: " << result);
 		return false;
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Volume for channel " << channel << " set to " << volume);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Volume for channel " << channel << " set to " << volume);
 
 	return true;
 }
 
-bool AudioPlayer::GetPreGain(Float32& preGain) const
+bool SFB::Audio::Player::GetPreGain(Float32& preGain) const
 {
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 	
 	result = AudioUnitGetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, &preGain);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
 	
 	return true;
 }
 
-bool AudioPlayer::SetPreGain(Float32 preGain)
+bool SFB::Audio::Player::SetPreGain(Float32 preGain)
 {
 	if(0 > preGain || 1 < preGain)
 		return false;
@@ -798,27 +798,27 @@ bool AudioPlayer::SetPreGain(Float32 preGain)
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, preGain, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Pregain set to " << preGain);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Pregain set to " << preGain);
 
 	return true;
 }
 
-bool AudioPlayer::IsPerformingSampleRateConversion() const
+bool SFB::Audio::Player::IsPerformingSampleRateConversion() const
 {
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
@@ -826,46 +826,46 @@ bool AudioPlayer::IsPerformingSampleRateConversion() const
 	UInt32 dataSize = sizeof(sampleRate);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Global, 0, &sampleRate, &dataSize);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate) failed: " << result);
 		return false;
 	}
 
 	return (sampleRate != mRingBufferFormat.mSampleRate);
 }
 
-bool AudioPlayer::GetSampleRateConverterComplexity(UInt32& complexity) const
+bool SFB::Audio::Player::GetSampleRateConverterComplexity(UInt32& complexity) const
 {
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	UInt32 dataSize = sizeof(complexity);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, &dataSize);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
+bool SFB::Audio::Player::SetSampleRateConverterComplexity(UInt32 complexity)
 {
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting sample rate converter quality to " << complexity);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting sample rate converter quality to " << complexity);
 
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	result = AudioUnitSetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, (UInt32)sizeof(complexity));
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
 		return false;
 	}
 
@@ -874,15 +874,15 @@ bool AudioPlayer::SetSampleRateConverterComplexity(UInt32 complexity)
 
 #pragma mark DSP Effects
 
-bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
+bool SFB::Audio::Player::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adding DSP effect: " << subType << " " << manufacturer);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Adding DSP effect: " << subType << " " << manufacturer);
 
 	// Get the source node for the graph's output node
 	UInt32 numInteractions = 0;
 	OSStatus result = AUGraphCountNodeInteractions(mAUGraph, mOutputNode, &numInteractions);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphCountNodeInteractions failed: " << result);
 		return false;
 	}
 
@@ -890,7 +890,7 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 
 	result = AUGraphGetNodeInteractions(mAUGraph, mOutputNode, &numInteractions, interactions);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeInteractions failed: " << result);
 		return false;
 	}
 
@@ -906,7 +906,7 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 
 	// Unable to determine the preceding node, so bail
 	if(-1 == sourceNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to determine input node");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine input node");
 		return false;
 	}
 
@@ -922,18 +922,18 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	AUNode effectNode = -1;
 	result = AUGraphAddNode(mAUGraph, &componentDescription, &effectNode);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddNode failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphAddNode failed: " << result);
 		return false;
 	}
 
 	AudioUnit effectUnit = nullptr;
 	result = AUGraphNodeInfo(mAUGraph, effectNode, nullptr, &effectUnit);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 
 		result = AUGraphRemoveNode(mAUGraph, effectNode);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphRemoveNode failed: " << result);
 
 		return false;
 	}
@@ -944,11 +944,11 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	UInt32 framesPerSlice = 4096;
 	result = AudioUnitSetProperty(effectUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 
 		result = AUGraphRemoveNode(mAUGraph, effectNode);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphRemoveNode failed: " << result);
 
 		return false;
 	}
@@ -982,11 +982,11 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	result = AUGraphDisconnectNodeInput(mAUGraph, mOutputNode, 0);
 
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphDisconnectNodeInput failed: " << result);
 
 		result = AUGraphRemoveNode(mAUGraph, effectNode);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphRemoveNode failed: " << result);
 
 		return false;
 	}
@@ -994,24 +994,24 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	// Reconnect the nodes
 	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, effectNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 		return false;
 	}
 
 	result = AUGraphConnectNodeInput(mAUGraph, effectNode, 0, mOutputNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 		return false;
 	}
 
 	result = AUGraphUpdate(mAUGraph, nullptr);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphUpdate failed: " << result);
 
 		// If the update failed, restore the previous node state
 		result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, mOutputNode, 0);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 			return false;
 		}
 	}
@@ -1022,17 +1022,17 @@ bool AudioPlayer::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, U
 	return true;
 }
 
-bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
+bool SFB::Audio::Player::RemoveEffect(AudioUnit effectUnit)
 {
 	if(nullptr == effectUnit)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Removing DSP effect: " << effectUnit);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Removing DSP effect: " << effectUnit);
 
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeCount failed: " << result);
 		return false;
 	}
 
@@ -1041,14 +1041,14 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 		AUNode node = -1;
 		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
 
 		AudioUnit au = nullptr;
 		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 			return false;
 		}
 
@@ -1060,7 +1060,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 	}
 
 	if(-1 == effectNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the AUNode for the specified AudioUnit");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to find the AUNode for the specified AudioUnit");
 		return false;
 	}
 
@@ -1068,7 +1068,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 	UInt32 numInteractions = 0;
 	result = AUGraphCountNodeInteractions(mAUGraph, effectNode, &numInteractions);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphCountNodeInteractions failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphCountNodeInteractions failed: " << result);
 		return false;
 	}
 
@@ -1076,7 +1076,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 
 	result = AUGraphGetNodeInteractions(mAUGraph, effectNode, &numInteractions, interactions);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeInteractions failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeInteractions failed: " << result);
 
 		return false;
 	}
@@ -1094,38 +1094,38 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 	}
 
 	if(-1 == sourceNode || -1 == destNode) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to find the source or destination nodes");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to find the source or destination nodes");
 		return false;
 	}
 
 	result = AUGraphDisconnectNodeInput(mAUGraph, effectNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphDisconnectNodeInput failed: " << result);
 		return false;
 	}
 
 	result = AUGraphDisconnectNodeInput(mAUGraph, destNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphDisconnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphDisconnectNodeInput failed: " << result);
 		return false;
 	}
 
 	result = AUGraphRemoveNode(mAUGraph, effectNode);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphRemoveNode failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphRemoveNode failed: " << result);
 		return false;
 	}
 
 	// Reconnect the nodes
 	result = AUGraphConnectNodeInput(mAUGraph, sourceNode, 0, destNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 		return false;
 	}
 
 	result = AUGraphUpdate(mAUGraph, nullptr);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUpdate failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphUpdate failed: " << result);
 		return false;
 	}
 	
@@ -1136,7 +1136,7 @@ bool AudioPlayer::RemoveEffect(AudioUnit effectUnit)
 
 #pragma mark Hog Mode
 
-bool AudioPlayer::OutputDeviceIsHogged() const
+bool SFB::Audio::Player::OutputDeviceIsHogged() const
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1154,20 +1154,20 @@ bool AudioPlayer::OutputDeviceIsHogged() const
 
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 
 	return (hogPID == getpid() ? true : false);
 }
 
-bool AudioPlayer::StartHoggingOutputDevice()
+bool SFB::Audio::Player::StartHoggingOutputDevice()
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Taking hog mode for device 0x" << std::hex << deviceID);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Taking hog mode for device 0x" << std::hex << deviceID);
 
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1181,13 +1181,13 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 
 	// The device is already hogged
 	if(hogPID != (pid_t)-1) {
-		LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Device is already hogged by pid: " << hogPID);
+		LOGGER_INFO("org.sbooth.AudioEngine.Player", "Device is already hogged by pid: " << hogPID);
 		return false;
 	}
 
@@ -1199,7 +1199,7 @@ bool AudioPlayer::StartHoggingOutputDevice()
 
 	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 
@@ -1210,13 +1210,13 @@ bool AudioPlayer::StartHoggingOutputDevice()
 	return true;
 }
 
-bool AudioPlayer::StopHoggingOutputDevice()
+bool SFB::Audio::Player::StopHoggingOutputDevice()
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Releasing hog mode for device 0x" << std::hex << deviceID);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Releasing hog mode for device 0x" << std::hex << deviceID);
 
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = { 
@@ -1230,7 +1230,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 
@@ -1247,7 +1247,7 @@ bool AudioPlayer::StopHoggingOutputDevice()
 
 	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: " << result);
 		return false;
 	}
 
@@ -1259,17 +1259,17 @@ bool AudioPlayer::StopHoggingOutputDevice()
 
 #pragma mark Device Parameters
 
-bool AudioPlayer::GetDeviceMasterVolume(Float32& volume) const
+bool SFB::Audio::Player::GetDeviceMasterVolume(Float32& volume) const
 {
 	return GetDeviceVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
-bool AudioPlayer::SetDeviceMasterVolume(Float32 volume)
+bool SFB::Audio::Player::SetDeviceMasterVolume(Float32 volume)
 {
 	return SetDeviceVolumeForChannel(kAudioObjectPropertyElementMaster, volume);
 }
 
-bool AudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const
+bool SFB::Audio::Player::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1282,7 +1282,7 @@ bool AudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) con
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 
@@ -1290,20 +1290,20 @@ bool AudioPlayer::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) con
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &volume);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
+bool SFB::Audio::Player::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting output device 0x" << std::hex << deviceID << " channel " << channel << " volume to " << volume);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting output device 0x" << std::hex << deviceID << " channel " << channel << " volume to " << volume);
 
 	AudioObjectPropertyAddress propertyAddress = { 
 		.mSelector	= kAudioDevicePropertyVolumeScalar, 
@@ -1312,21 +1312,21 @@ bool AudioPlayer::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 
 	OSStatus result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(volume), &volume);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
+bool SFB::Audio::Player::GetDeviceChannelCount(UInt32& channelCount) const
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1339,7 +1339,7 @@ bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
 		return false;
 	}
 
@@ -1347,21 +1347,21 @@ bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 	OSStatus result = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, nullptr, &dataSize);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
 		return false;
 	}
 
 	AudioBufferList *bufferList = (AudioBufferList *)malloc(dataSize);
 
 	if(nullptr == bufferList) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate << " << dataSize << " bytes");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Unable to allocate << " << dataSize << " bytes");
 		return false;
 	}
 
 	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, bufferList);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
 		free(bufferList), bufferList = nullptr;
 		return false;
 	}
@@ -1374,7 +1374,7 @@ bool AudioPlayer::GetDeviceChannelCount(UInt32& channelCount) const
 	return true;
 }
 
-bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
+bool SFB::Audio::Player::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1387,7 +1387,7 @@ bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& pr
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
 		return false;
 	}
 
@@ -1396,7 +1396,7 @@ bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& pr
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &preferredChannels);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
 		return false;
 	}
 
@@ -1408,7 +1408,7 @@ bool AudioPlayer::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& pr
 
 #pragma mark Device Management
 
-bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
+bool SFB::Audio::Player::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1423,14 +1423,14 @@ bool AudioPlayer::CreateOutputDeviceUID(CFStringRef& deviceUID) const
 	UInt32 dataSize = sizeof(deviceUID);
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
 		return nullptr;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
+bool SFB::Audio::Player::SetOutputDeviceUID(CFStringRef deviceUID)
 {
 	AudioDeviceID deviceID = kAudioDeviceUnknown;
 
@@ -1446,7 +1446,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 
 		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &deviceID);
 		if(kAudioHardwareNoError != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
 			return false;
 		}
 	}
@@ -1466,7 +1466,7 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 
 		OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &translation);
 		if(kAudioHardwareNoError != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
 			return false;
 		}
 	}
@@ -1478,12 +1478,12 @@ bool AudioPlayer::SetOutputDeviceUID(CFStringRef deviceUID)
 	return SetOutputDeviceID(deviceID);
 }
 
-bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
+bool SFB::Audio::Player::GetOutputDeviceID(AudioDeviceID& deviceID) const
 {
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
@@ -1491,14 +1491,14 @@ bool AudioPlayer::GetOutputDeviceID(AudioDeviceID& deviceID) const
 
 	result = AudioUnitGetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
+bool SFB::Audio::Player::SetOutputDeviceID(AudioDeviceID deviceID)
 {
 	if(kAudioDeviceUnknown == deviceID)
 		return false;
@@ -1506,21 +1506,21 @@ bool AudioPlayer::SetOutputDeviceID(AudioDeviceID deviceID)
 	AudioUnit au = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	// Update our output AU to use the specified device
 	result = AudioUnitSetProperty(au, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate) const
+bool SFB::Audio::Player::GetOutputDeviceSampleRate(Float64& sampleRate) const
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1535,14 +1535,14 @@ bool AudioPlayer::GetOutputDeviceSampleRate(Float64& sampleRate) const
 	UInt32 dataSize = sizeof(sampleRate);
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &sampleRate);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
 		return false;
 	}
 
 	return true;
 }
 
-bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
+bool SFB::Audio::Player::SetOutputDeviceSampleRate(Float64 sampleRate)
 {
 	AudioDeviceID deviceID;
 	if(!GetOutputDeviceID(deviceID))
@@ -1560,7 +1560,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	
 	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &currentSampleRate);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
 		return false;
 	}
 
@@ -1572,7 +1572,7 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 	dataSize = sizeof(sampleRate);
 	result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(sampleRate), &sampleRate);
 	if(kAudioHardwareNoError != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
 		return false;
 	}
 
@@ -1583,12 +1583,12 @@ bool AudioPlayer::SetOutputDeviceSampleRate(Float64 sampleRate)
 
 #pragma mark Playlist Management
 
-bool AudioPlayer::Play(CFURLRef url)
+bool SFB::Audio::Player::Play(CFURLRef url)
 {
 	if(nullptr == url)
 		return false;
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	Decoder *decoder = Decoder::CreateDecoderForURL(url);
 
 	if(nullptr == decoder)
 		return false;
@@ -1601,7 +1601,7 @@ bool AudioPlayer::Play(CFURLRef url)
 	return success;
 }
 
-bool AudioPlayer::Play(AudioDecoder *decoder)
+bool SFB::Audio::Player::Play(Decoder *decoder)
 {
 	if(nullptr == decoder)
 		return false;
@@ -1616,12 +1616,12 @@ bool AudioPlayer::Play(AudioDecoder *decoder)
 	return Play();
 }
 
-bool AudioPlayer::Enqueue(CFURLRef url)
+bool SFB::Audio::Player::Enqueue(CFURLRef url)
 {
 	if(nullptr == url)
 		return false;
 	
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url);
+	Decoder *decoder = Decoder::CreateDecoderForURL(url);
 	
 	if(nullptr == decoder)
 		return false;
@@ -1634,12 +1634,12 @@ bool AudioPlayer::Enqueue(CFURLRef url)
 	return success;
 }
 
-bool AudioPlayer::Enqueue(AudioDecoder *decoder)
+bool SFB::Audio::Player::Enqueue(Decoder *decoder)
 {
 	if(nullptr == decoder)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Enqueuing \"" << decoder->GetURL() << "\"");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Enqueuing \"" << decoder->GetURL() << "\"");
 
 	// The lock is held for the entire method, because enqueuing a track is an inherently
 	// sequential operation.  Without the lock, if Enqueue() is called from multiple
@@ -1655,7 +1655,7 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	//     from underneath them
 	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	SFB::Mutex::Tryer lock(mMutex);
+	Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
@@ -1675,14 +1675,14 @@ bool AudioPlayer::Enqueue(AudioDecoder *decoder)
 	return true;
 }
 
-bool AudioPlayer::SkipToNextTrack()
+bool SFB::Audio::Player::SkipToNextTrack()
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
 
 	if(OutputIsRunning()) {
 		OSAtomicTestAndSetBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
@@ -1723,14 +1723,14 @@ bool AudioPlayer::SkipToNextTrack()
 	return true;
 }
 
-bool AudioPlayer::ClearQueuedDecoders()
+bool SFB::Audio::Player::ClearQueuedDecoders()
 {
-	SFB::Mutex::Tryer lock(mMutex);
+	Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
 	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		AudioDecoder *decoder = static_cast<AudioDecoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
+		Decoder *decoder = static_cast<Decoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
 		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 		delete decoder;
 	}
@@ -1740,29 +1740,29 @@ bool AudioPlayer::ClearQueuedDecoders()
 
 #pragma mark Ring Buffer Parameters
 
-bool AudioPlayer::SetRingBufferCapacity(uint32_t bufferCapacity)
+bool SFB::Audio::Player::SetRingBufferCapacity(uint32_t bufferCapacity)
 {
 	if(0 == bufferCapacity || mRingBufferWriteChunkSize > bufferCapacity)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting ring buffer capacity to " << bufferCapacity);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer capacity to " << bufferCapacity);
 
 	return OSAtomicCompareAndSwap32Barrier((int32_t)mRingBufferCapacity, (int32_t)bufferCapacity, (int32_t *)&mRingBufferCapacity);
 }
 
-bool AudioPlayer::SetRingBufferWriteChunkSize(uint32_t chunkSize)
+bool SFB::Audio::Player::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 {
 	if(0 == chunkSize || mRingBufferCapacity < chunkSize)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Setting ring buffer write chunk size to " << chunkSize);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer write chunk size to " << chunkSize);
 
 	return OSAtomicCompareAndSwap32Barrier((int32_t)mRingBufferWriteChunkSize, (int32_t)chunkSize, (int32_t *)&mRingBufferWriteChunkSize);
 }
 
 #pragma mark Callbacks
 
-OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
+OSStatus SFB::Audio::Player::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 								const AudioTimeStamp			*inTimeStamp,
 								UInt32							inBusNumber,
 								UInt32							inNumberFrames,
@@ -1802,7 +1802,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	UInt32 framesToRead = std::min((UInt32)framesAvailableToRead, inNumberFrames);
 	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(ioData, framesToRead);
 	if(framesRead != framesToRead) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
 		return 1;
 	}
 
@@ -1815,7 +1815,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesRead != inNumberFrames) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << inNumberFrames << " requested");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << inNumberFrames << " requested");
 		
 		UInt32 framesOfSilence = inNumberFrames - framesRead;
 		size_t byteCountToZero = framesOfSilence * sizeof(AudioUnitSampleType);
@@ -1834,7 +1834,7 @@ OSStatus AudioPlayer::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	return noErr;
 }
 
-OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
+OSStatus SFB::Audio::Player::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 								   const AudioTimeStamp				*inTimeStamp,
 								   UInt32							inBusNumber,
 								   UInt32							inNumberFrames,
@@ -1917,14 +1917,14 @@ OSStatus AudioPlayer::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
 
 #pragma mark Thread Entry Points
 
-void * AudioPlayer::DecoderThreadEntry()
+void * SFB::Audio::Player::DecoderThreadEntry()
 {
 	pthread_setname_np("org.sbooth.AudioEngine.Decoder");
 
 	// ========================================
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Couldn't set decoder thread importance");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set decoder thread importance");
 
 	mach_timespec_t timeout = {
 		.tv_sec = 5,
@@ -1939,12 +1939,12 @@ void * AudioPlayer::DecoderThreadEntry()
 		{
 			// ========================================
 			// Lock the queue and remove the head element that contains the next decoder to use
-			AudioDecoder *decoder = nullptr;
+			Decoder *decoder = nullptr;
 			{
-				SFB::Mutex::Tryer lock(mMutex);
+				Mutex::Tryer lock(mMutex);
 
 				if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
-					decoder = (AudioDecoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
+					decoder = (Decoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
 					CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
 				}
 			}
@@ -1955,7 +1955,7 @@ void * AudioPlayer::DecoderThreadEntry()
 				CFErrorRef error = nullptr;
 				if(!decoder->Open(&error))  {
 					if(error) {
-						LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
+						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 						CFRelease(error), error = nullptr;
 					}
 
@@ -1982,11 +1982,11 @@ void * AudioPlayer::DecoderThreadEntry()
 			bool formatsMatch = true;
 
 			if(nextFormat.mSampleRate != mRingBufferFormat.mSampleRate) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 				formatsMatch = false;
 			}
 			else if(nextFormat.mChannelsPerFrame != mRingBufferFormat.mChannelsPerFrame) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 				formatsMatch = false;
 			}
 
@@ -2002,10 +2002,10 @@ void * AudioPlayer::DecoderThreadEntry()
 				OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &layoutsEqual);
 
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
 
 				if(!layoutsEqual) {
-					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 					formatsMatch = false;
 				}
 			}
@@ -2034,7 +2034,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 				// Adjust the formats
 				{
-					SFB::Mutex::Tryer lock(mMutex);
+					Mutex::Tryer lock(mMutex);
 					if(lock)
 						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
 					else
@@ -2056,18 +2056,18 @@ void * AudioPlayer::DecoderThreadEntry()
 				if(OSAtomicCompareAndSwapPtrBarrier(nullptr, decoderState, (void **)&mActiveDecoders[bufferIndex]))
 					break;
 				else
-					LOGGER_WARNING("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwapPtrBarrier() failed");
+					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwapPtrBarrier() failed");
 			}
 		}
 		
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
-			AudioDecoder *decoder = decoderState->mDecoder;
+			Decoder *decoder = decoderState->mDecoder;
 
-			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding starting for \"" << decoder->GetURL() << "\"");
-			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder format: " << decoder->GetFormat());
-			LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoder channel layout: " << decoder->GetChannelLayout());
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoder->GetURL() << "\"");
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoder->GetFormat());
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoder->GetChannelLayout());
 
 			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
 
@@ -2076,7 +2076,7 @@ void * AudioPlayer::DecoderThreadEntry()
 			AudioConverterRef audioConverter = nullptr;
 			OSStatus result = AudioConverterNew(&decoderFormat, &mRingBufferFormat, &audioConverter);
 			if(noErr != result) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterNew failed: " << result);
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
 
 				OSAtomicTestAndSetBarrier(6 /* eDecoderStateDataFlagDecodingFinished */, &decoderState->mFlags);
 				OSAtomicTestAndSetBarrier(4 /* eDecoderStateDataFlagRenderingFinished */, &decoderState->mFlags);
@@ -2095,13 +2095,13 @@ void * AudioPlayer::DecoderThreadEntry()
 			UInt32 dataSize = sizeof(inputBufferSize);
 			result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
 			if(noErr != result)
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
 			
 			// ========================================
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
 			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
-			AudioBufferList *bufferList = SFB::AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
+			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
 
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -2134,7 +2134,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						// Reset the converter to flush any buffers
 						result = AudioConverterReset(audioConverter);
 						if(noErr != result)
-							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
 
 						// Reset() is not thread safe but the rendering thread is outputting silence
 						mRingBuffer->Reset();
@@ -2151,7 +2151,7 @@ void * AudioPlayer::DecoderThreadEntry()
 
 						// Seek to the specified frame
 						if(-1 != decoderState->mFrameToSeek) {
-							LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Seeking to frame " << decoderState->mFrameToSeek);
+							LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Seeking to frame " << decoderState->mFrameToSeek);
 
 							// Ensure output is muted before performing operations that aren't thread safe
 							if(OutputIsRunning()) {
@@ -2172,27 +2172,27 @@ void * AudioPlayer::DecoderThreadEntry()
 							SInt64 newFrame = decoder->SeekToFrame(decoderState->mFrameToSeek);
 
 							if(newFrame != decoderState->mFrameToSeek)
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error seeking to frame  " << decoderState->mFrameToSeek);
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error seeking to frame  " << decoderState->mFrameToSeek);
 							
 							// Update the seek request
 							if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFrameToSeek, -1, &decoderState->mFrameToSeek))
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwap64Barrier() failed ");
 							
 							// Update the counters accordingly
 							if(-1 != newFrame) {
 								if(!OSAtomicCompareAndSwap64Barrier(decoderState->mFramesRendered, newFrame, &decoderState->mFramesRendered))
-									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
+									LOGGER_ERR("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwap64Barrier() failed ");
 
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesDecoded, newFrame, &mFramesDecoded))
-									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
+									LOGGER_ERR("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwap64Barrier() failed ");
 
 								if(!OSAtomicCompareAndSwap64Barrier(mFramesRendered, newFrame, &mFramesRendered))
-									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "OSAtomicCompareAndSwap64Barrier() failed ");
+									LOGGER_ERR("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwap64Barrier() failed ");
 
 								// Reset the converter to flush any buffers
 								result = AudioConverterReset(audioConverter);
 								if(noErr != result)
-									LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterReset failed: " << result);
+									LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
 
 								// Reset the ring buffer
 								mRingBuffer->Reset();
@@ -2205,7 +2205,7 @@ void * AudioPlayer::DecoderThreadEntry()
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
-							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to determine starting frame number ");
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number ");
 							break;
 						}
 
@@ -2222,20 +2222,20 @@ void * AudioPlayer::DecoderThreadEntry()
 						
 						result = AudioConverterFillComplexBuffer(audioConverter, myAudioConverterComplexInputDataProc, decoderState, &framesDecoded, bufferList, nullptr);
 						if(noErr != result)
-							LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterFillComplexBuffer failed: " << result);
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterFillComplexBuffer failed: " << result);
 
 						// Store the decoded audio
 						if(0 != framesDecoded) {
 							UInt32 framesWritten = (UInt32)mRingBuffer->WriteAudio(bufferList, framesDecoded);
 							if(framesWritten != framesDecoded)
-								LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "RingBuffer::Store failed");
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::Store failed");
 
 							OSAtomicAdd64Barrier(framesWritten, &mFramesDecoded);
 						}
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)*/) {
-							LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding finished for \"" << decoder->GetURL() << "\"");
+							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
@@ -2276,12 +2276,12 @@ void * AudioPlayer::DecoderThreadEntry()
 			}
 
 			if(bufferList)
-				bufferList = SFB::DeallocateABL(bufferList);
+				bufferList = DeallocateABL(bufferList);
 			
 			if(audioConverter) {
 				result = AudioConverterDispose(audioConverter);
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioConverterDispose failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterDispose failed: " << result);
 				audioConverter = nullptr;
 			}
 		}
@@ -2290,12 +2290,12 @@ void * AudioPlayer::DecoderThreadEntry()
 		mDecoderSemaphore.TimedWait(timeout);
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Decoding thread terminating");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding thread terminating");
 
 	return nullptr;
 }
 
-void * AudioPlayer::CollectorThreadEntry()
+void * SFB::Audio::Player::CollectorThreadEntry()
 {
 	pthread_setname_np("org.sbooth.AudioEngine.Collector");
 
@@ -2319,7 +2319,7 @@ void * AudioPlayer::CollectorThreadEntry()
 			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, (void **)&mActiveDecoders[bufferIndex]);
 
 			if(swapSucceeded) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
+				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
 				delete decoderState, decoderState = nullptr;
 			}
 		}
@@ -2328,20 +2328,20 @@ void * AudioPlayer::CollectorThreadEntry()
 		mCollectorSemaphore.TimedWait(timeout);
 	}
 	
-	LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Collecting thread terminating");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Collecting thread terminating");
 	
 	return nullptr;
 }
 
 #pragma mark AudioHardware Utilities
 
-bool AudioPlayer::OpenOutput()
+bool SFB::Audio::Player::OpenOutput()
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "OpenOutput");
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "OpenOutput");
 
 	OSStatus result = NewAUGraph(&mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "NewAUGraph failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "NewAUGraph failed: " << result);
 		return false;
 	}
 
@@ -2358,11 +2358,11 @@ bool AudioPlayer::OpenOutput()
 
 	result = AUGraphAddNode(mAUGraph, &desc, &mMixerNode);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddNode failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphAddNode failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2382,11 +2382,11 @@ bool AudioPlayer::OpenOutput()
 
 	result = AUGraphAddNode(mAUGraph, &desc, &mOutputNode);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddNode failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphAddNode failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2394,11 +2394,11 @@ bool AudioPlayer::OpenOutput()
 
 	result = AUGraphConnectNodeInput(mAUGraph, mMixerNode, 0, mOutputNode, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 		
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 		
 		mAUGraph = nullptr;
 		return false;
@@ -2408,11 +2408,11 @@ bool AudioPlayer::OpenOutput()
 	AURenderCallbackStruct cbs = { myAURenderCallback, this };
 	result = AUGraphSetNodeInputCallback(mAUGraph, mMixerNode, 0, &cbs);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphSetNodeInputCallback failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphSetNodeInputCallback failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2421,11 +2421,11 @@ bool AudioPlayer::OpenOutput()
 	// Open the graph
 	result = AUGraphOpen(mAUGraph);	
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphOpen failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphOpen failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2435,11 +2435,11 @@ bool AudioPlayer::OpenOutput()
 	AudioUnit au = nullptr;
 	result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2447,20 +2447,20 @@ bool AudioPlayer::OpenOutput()
 	
 	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, 1.f, 0);
 	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
 	
 	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Output, 0, 1.f, 0);
 	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Output) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Output) failed: " << result);
 	
 	// Install the render notification
 	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphAddRenderNotify failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphAddRenderNotify failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2471,11 +2471,11 @@ bool AudioPlayer::OpenOutput()
 	// See http://developer.apple.com/library/ios/#documentation/AudioUnit/Reference/AudioUnitPropertiesReference/Reference/reference.html#//apple_ref/c/econst/kAudioUnitProperty_MaximumFramesPerSlice
 	result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2484,11 +2484,11 @@ bool AudioPlayer::OpenOutput()
 	UInt32 framesPerSlice = 4096;
 	result = AudioUnitSetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &framesPerSlice, (UInt32)sizeof(framesPerSlice));
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2497,11 +2497,11 @@ bool AudioPlayer::OpenOutput()
 	// Save the default value of kAudioUnitProperty_MaximumFramesPerSlice for use when performing sample rate conversion
 	result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2510,11 +2510,11 @@ bool AudioPlayer::OpenOutput()
 	UInt32 dataSize = sizeof(mDefaultMaximumFramesPerSlice);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &mDefaultMaximumFramesPerSlice, &dataSize);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2524,11 +2524,11 @@ bool AudioPlayer::OpenOutput()
 	// Initialize the graph
 	result = AUGraphInitialize(mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphInitialize failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphInitialize failed: " << result);
 
 		result = DisposeAUGraph(mAUGraph);
 		if(noErr != result)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 
 		mAUGraph = nullptr;
 		return false;
@@ -2537,21 +2537,21 @@ bool AudioPlayer::OpenOutput()
 	return true;
 }
 
-bool AudioPlayer::CloseOutput()
+bool SFB::Audio::Player::CloseOutput()
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "CloseOutput");
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "CloseOutput");
 
 	Boolean graphIsRunning = false;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsRunning failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsRunning failed: " << result);
 		return false;
 	}
 
 	if(graphIsRunning) {
 		result = AUGraphStop(mAUGraph);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStop failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphStop failed: " << result);
 			return false;
 		}
 	}
@@ -2559,27 +2559,27 @@ bool AudioPlayer::CloseOutput()
 	Boolean graphIsInitialized = false;
 	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsInitialized failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsInitialized failed: " << result);
 		return false;
 	}
 
 	if(graphIsInitialized) {
 		result = AUGraphUninitialize(mAUGraph);		
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUninitialize failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphUninitialize failed: " << result);
 			return false;
 		}
 	}
 
 	result = AUGraphClose(mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphClose failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphClose failed: " << result);
 		return false;
 	}
 
 	result = DisposeAUGraph(mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "DisposeAUGraph failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "DisposeAUGraph failed: " << result);
 		return false;
 	}
 
@@ -2590,57 +2590,57 @@ bool AudioPlayer::CloseOutput()
 	return true;
 }
 
-bool AudioPlayer::StartOutput()
+bool SFB::Audio::Player::StartOutput()
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "StartOutput");
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "StartOutput");
 
 	// We don't want to start output in the middle of a buffer modification
-	SFB::Mutex::Tryer lock(mMutex);
+	Mutex::Tryer lock(mMutex);
 	if(!lock)
 		return false;
 
 	OSStatus result = AUGraphStart(mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStart failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphStart failed: " << result);
 		return false;
 	}
 	
 	return true;
 }
 
-bool AudioPlayer::StopOutput()
+bool SFB::Audio::Player::StopOutput()
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "StopOutput");
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "StopOutput");
 
 	OSStatus result = AUGraphStop(mAUGraph);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStop failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphStop failed: " << result);
 		return false;
 	}
 	
 	return true;
 }
 
-bool AudioPlayer::OutputIsRunning() const
+bool SFB::Audio::Player::OutputIsRunning() const
 {
 	Boolean isRunning = false;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &isRunning);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsRunning failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsRunning failed: " << result);
 		return false;
 	}
 
 	return isRunning;
 }
 
-bool AudioPlayer::ResetOutput()
+bool SFB::Audio::Player::ResetOutput()
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Resetting output");
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Resetting output");
 
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsRunning failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsRunning failed: " << result);
 		return false;
 	}
 
@@ -2648,20 +2648,20 @@ bool AudioPlayer::ResetOutput()
 		AUNode node = 0;
 		result = AUGraphGetIndNode(mAUGraph, i, &node);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
 
 		AudioUnit au = nullptr;
 		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 			return false;
 		}
 
 		result = AudioUnitReset(au, kAudioUnitScope_Global, 0);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitReset failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitReset failed: " << result);
 			return false;
 		}
 	}
@@ -2671,14 +2671,14 @@ bool AudioPlayer::ResetOutput()
 
 #pragma mark AUGraph Utilities
 
-bool AudioPlayer::GetAUGraphLatency(Float64& latency) const
+bool SFB::Audio::Player::GetAUGraphLatency(Float64& latency) const
 {
 	latency = 0;
 
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeCount failed: " << result);
 		return false;
 	}
 
@@ -2686,14 +2686,14 @@ bool AudioPlayer::GetAUGraphLatency(Float64& latency) const
 		AUNode node = 0;
 		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
 
 		AudioUnit au = nullptr;
 		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 			return false;
 		}
 
@@ -2701,7 +2701,7 @@ bool AudioPlayer::GetAUGraphLatency(Float64& latency) const
 		UInt32 dataSize = sizeof(auLatency);
 		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &auLatency, &dataSize);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_Latency, kAudioUnitScope_Global) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_Latency, kAudioUnitScope_Global) failed: " << result);
 			return false;
 		}
 
@@ -2711,14 +2711,14 @@ bool AudioPlayer::GetAUGraphLatency(Float64& latency) const
 	return true;
 }
 
-bool AudioPlayer::GetAUGraphTailTime(Float64& tailTime) const
+bool SFB::Audio::Player::GetAUGraphTailTime(Float64& tailTime) const
 {
 	tailTime = 0;
 
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeCount failed: " << result);
 		return false;
 	}
 
@@ -2726,14 +2726,14 @@ bool AudioPlayer::GetAUGraphTailTime(Float64& tailTime) const
 		AUNode node = 0;
 		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
 
 		AudioUnit au = nullptr;
 		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 			return false;
 		}
 
@@ -2741,7 +2741,7 @@ bool AudioPlayer::GetAUGraphTailTime(Float64& tailTime) const
 		UInt32 dataSize = sizeof(auTailTime);
 		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &auTailTime, &dataSize);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_TailTime, kAudioUnitScope_Global) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_TailTime, kAudioUnitScope_Global) failed: " << result);
 			return false;
 		}
 
@@ -2751,7 +2751,7 @@ bool AudioPlayer::GetAUGraphTailTime(Float64& tailTime) const
 	return true;
 }
 
-bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
+bool SFB::Audio::Player::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
 {
 	if(nullptr == propertyData || 0 >= propertyDataSize)
 		return  false;
@@ -2759,7 +2759,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 	UInt32 nodeCount = 0;
 	OSStatus result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeCount failed: " << result);
 		return false;
 	}
 
@@ -2768,7 +2768,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 		AUNode node;
 		result = AUGraphGetIndNode(mAUGraph, i, &node);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetIndNode failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetIndNode failed: " << result);
 			return false;
 		}
 
@@ -2776,7 +2776,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
 
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNodeCount failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNodeCount failed: " << result);
 			return false;
 		}
 
@@ -2784,7 +2784,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 			// For AUHAL as the output node, you can't set the device side, so just set the client side
 			result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, 0, propertyData, propertyDataSize);
 			if(noErr != result) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
 				return false;
 			}
 		}
@@ -2793,7 +2793,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 			UInt32 dataSize = sizeof(elementCount);
 			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &elementCount, &dataSize);
 			if(noErr != result) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Input) failed: " << result);
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Input) failed: " << result);
 				return false;
 			}
 
@@ -2801,7 +2801,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 //				Boolean writable;
 //				result = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Input, j, &dataSize, &writable);
 //				if(noErr != result && kAudioUnitErr_InvalidProperty != result) {
-//					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+//					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
 //					return false;
 //				}
 //
@@ -2810,7 +2810,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Input, j, propertyData, propertyDataSize);				
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Input) failed: " << result);
 					return false;
 				}
 			}
@@ -2819,7 +2819,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 			dataSize = sizeof(elementCount);
 			result = AudioUnitGetProperty(au, kAudioUnitProperty_ElementCount, kAudioUnitScope_Output, 0, &elementCount, &dataSize);			
 			if(noErr != result) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Output) failed: " << result);
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_ElementCount, kAudioUnitScope_Output) failed: " << result);
 				return false;
 			}
 
@@ -2827,7 +2827,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 //				Boolean writable;
 //				result = AudioUnitGetPropertyInfo(au, propertyID, kAudioUnitScope_Output, j, &dataSize, &writable);
 //				if(noErr != result && kAudioUnitErr_InvalidProperty != result) {
-//					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
+//					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetPropertyInfo (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
 //					return false;
 //				}
 //
@@ -2836,7 +2836,7 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 
 				result = AudioUnitSetProperty(au, propertyID, kAudioUnitScope_Output, j, propertyData, propertyDataSize);				
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (" << propertyID << ", kAudioUnitScope_Output) failed: " << result);
 					return false;
 				}
 			}
@@ -2846,21 +2846,21 @@ bool AudioPlayer::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, cons
 	return true;
 }
 
-bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
+bool SFB::Audio::Player::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame)
 {
 	// ========================================
 	// If the graph is running, stop it
 	Boolean graphIsRunning = FALSE;
 	OSStatus result = AUGraphIsRunning(mAUGraph, &graphIsRunning);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsRunning failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsRunning failed: " << result);
 		return false;
 	}
 	
 	if(graphIsRunning) {
 		result = AUGraphStop(mAUGraph);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStop failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphStop failed: " << result);
 			return false;
 		}
 	}
@@ -2870,14 +2870,14 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	Boolean graphIsInitialized = FALSE;
 	result = AUGraphIsInitialized(mAUGraph, &graphIsInitialized);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphIsInitialized failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphIsInitialized failed: " << result);
 		return false;
 	}
 	
 	if(graphIsInitialized) {
 		result = AUGraphUninitialize(mAUGraph);		
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphUninitialize failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphUninitialize failed: " << result);
 			return false;
 		}
 	}
@@ -2887,7 +2887,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	UInt32 interactionCount = 0;
 	result = AUGraphGetNumberOfInteractions(mAUGraph, &interactionCount);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetNumberOfInteractions failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetNumberOfInteractions failed: " << result);
 		return false;
 	}
 
@@ -2896,14 +2896,14 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	for(UInt32 i = 0; i < interactionCount; ++i) {
 		result = AUGraphGetInteractionInfo(mAUGraph, i, &interactions[i]);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphGetInteractionInfo failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphGetInteractionInfo failed: " << result);
 			return false;
 		}
 	}
 
 	result = AUGraphClearConnections(mAUGraph);	
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphClearConnections failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphClearConnections failed: " << result);
 		return false;
 	}
 	
@@ -2917,7 +2917,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &format, sizeof(format))) {
 		// If the new format could not be set, restore the old format to ensure a working graph
 		if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mRingBufferFormat, sizeof(mRingBufferFormat))) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to restore AUGraph format: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to restore AUGraph format: " << result);
 		}
 
 		// Do not free connections here, so graph can be rebuilt
@@ -2940,7 +2940,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 												 interactions[i].nodeInteraction.connection.destInputNumber);
 				
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphConnectNodeInput failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphConnectNodeInput failed: " << result);
 					return false;
 				}
 
@@ -2956,7 +2956,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 													 &interactions[i].nodeInteraction.inputCallback.cback);
 
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphSetNodeInputCallback failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphSetNodeInputCallback failed: " << result);
 					return false;
 				}
 
@@ -2977,7 +2977,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	AudioUnit au = nullptr;
 	result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
@@ -2985,7 +2985,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	UInt32 dataSize = sizeof(inputSampleRate);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Input, 0, &inputSampleRate, &dataSize);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Input) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
 
@@ -2993,7 +2993,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	dataSize = sizeof(outputSampleRate);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_SampleRate, kAudioUnitScope_Output, 0, &outputSampleRate, &dataSize);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Output) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_SampleRate, kAudioUnitScope_Output) failed: " << result);
 		return false;
 	}
 
@@ -3001,7 +3001,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 
 	// If the output unit's input and output sample rates don't match, calculate a working maximum number of frames per slice
 	if(inputSampleRate != outputSampleRate) {
-		LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
+		LOGGER_INFO("org.sbooth.AudioEngine.Player", "Input sample rate (" << inputSampleRate << ") and output sample rate (" << outputSampleRate << ") don't match");
 		
 		Float64 ratio = inputSampleRate / outputSampleRate;
 		Float64 multiplier = std::max(1.0, ratio);
@@ -3016,16 +3016,16 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	dataSize = sizeof(currentMaxFrames);
 	result = AudioUnitGetProperty(au, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &currentMaxFrames, &dataSize);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global) failed: " << result);
 		return false;
 	}
 
 	// Adjust the maximum frames per slice if necessary
 	if(newMaxFrames != currentMaxFrames) {
-		LOGGER_INFO("org.sbooth.AudioEngine.AudioPlayer", "Adjusting kAudioUnitProperty_MaximumFramesPerSlice to " << newMaxFrames);
+		LOGGER_INFO("org.sbooth.AudioEngine.Player", "Adjusting kAudioUnitProperty_MaximumFramesPerSlice to " << newMaxFrames);
 
 		if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_MaximumFramesPerSlice, &newMaxFrames, sizeof(newMaxFrames))) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed");
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "SetPropertyOnAUGraphNodes (kAudioUnitProperty_MaximumFramesPerSlice) failed");
 			return false;
 		}
 	}
@@ -3035,7 +3035,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	if(graphIsInitialized) {
 		result = AUGraphInitialize(mAUGraph);		
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphInitialize failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphInitialize failed: " << result);
 			return false;
 		}
 	}
@@ -3044,7 +3044,7 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	if(graphIsRunning) {
 		result = AUGraphStart(mAUGraph);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphStart failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphStart failed: " << result);
 			return false;
 		}
 	}
@@ -3052,20 +3052,20 @@ bool AudioPlayer::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UI
 	return true;
 }
 
-bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
+bool SFB::Audio::Player::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 {
 #if !TARGET_OS_IPHONE
 	AudioUnit outputUnit = nullptr;
 	OSStatus result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &outputUnit);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AUGraphNodeInfo failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphNodeInfo failed: " << result);
 		return false;
 	}
 
 	// Clear the existing channel map
 	result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, nullptr, 0);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 		return false;
 	}
 
@@ -3086,7 +3086,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 	result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &channelLayoutIsStereo);
 
 	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
 
 	// Stereo
 	if(channelLayoutIsStereo) {
@@ -3094,7 +3094,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		UInt32 preferredChannelsForStereoSize = sizeof(preferredChannelsForStereo);
 		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelsForStereo, kAudioUnitScope_Output, 0, preferredChannelsForStereo, &preferredChannelsForStereoSize);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelsForStereo) failed: " << result);
 			return false;
 		}
 
@@ -3103,7 +3103,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		propertySize = sizeof(outputFormat);
 		result = AudioUnitGetProperty(outputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &outputFormat, &propertySize);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output) failed: " << result);
 			return false;
 		}
 
@@ -3116,14 +3116,14 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		channelMap[preferredChannelsForStereo[0] - 1] = 0;
 		channelMap[preferredChannelsForStereo[1] - 1] = 1;
 
-		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using  stereo channel map: ");
+		LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Using  stereo channel map: ");
 		for(UInt32 i = 0; i < outputFormat.mChannelsPerFrame; ++i)
-			LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
+			LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "  " << i << " -> " << channelMap[i]);
 
 		// Set the channel map
 		result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 			return false;
 		}
 	}
@@ -3133,7 +3133,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		UInt32 devicePreferredChannelLayoutSize = 0;
 		result = AudioUnitGetPropertyInfo(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, &devicePreferredChannelLayoutSize, nullptr);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetPropertyInfo (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetPropertyInfo (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
 			return false;
 		}
 
@@ -3141,7 +3141,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 
 		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output, 0, devicePreferredChannelLayout, &devicePreferredChannelLayoutSize);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
 
 			if(devicePreferredChannelLayout)
 				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
@@ -3153,7 +3153,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 		UInt32 dataSize = sizeof(channelCount);
 		result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, devicePreferredChannelLayoutSize, devicePreferredChannelLayout, &dataSize, &channelCount);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
 
 			if(devicePreferredChannelLayout)
 				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
@@ -3176,18 +3176,18 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 			free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
 
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
 			return false;
 		}
 
-		LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "Using multichannel channel map: ");
+		LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Using multichannel channel map: ");
 		for(UInt32 i = 0; i < channelCount; ++i)
-			LOGGER_DEBUG("org.sbooth.AudioEngine.AudioPlayer", "  " << i << " -> " << channelMap[i]);
+			LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "  " << i << " -> " << channelMap[i]);
 
 		// Set the channel map
 		result = AudioUnitSetProperty(outputUnit, kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input, 0, channelMap, (UInt32)sizeof(channelMap));
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetProperty (kAudioOutputUnitProperty_ChannelMap, kAudioUnitScope_Input) failed: " << result);
 			return false;
 		}
 	}
@@ -3198,7 +3198,7 @@ bool AudioPlayer::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
 
 #pragma mark Other Utilities
 
-AudioPlayer::DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
+SFB::Audio::Player::DecoderStateData * SFB::Audio::Player::GetCurrentDecoderState() const
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -3219,7 +3219,7 @@ AudioPlayer::DecoderStateData * AudioPlayer::GetCurrentDecoderState() const
 	return result;
 }
 
-AudioPlayer::DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
+SFB::Audio::Player::DecoderStateData * SFB::Audio::Player::GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -3240,7 +3240,7 @@ AudioPlayer::DecoderStateData * AudioPlayer::GetDecoderStateStartingAfterTimeSta
 	return result;
 }
 
-void AudioPlayer::StopActiveDecoders()
+void SFB::Audio::Player::StopActiveDecoders()
 {
 	// The player must be stopped or a SIGSEGV could occur in this method
 	// This must be ensured by the caller!
@@ -3269,7 +3269,7 @@ void AudioPlayer::StopActiveDecoders()
 	mCollectorSemaphore.Signal();
 }
 
-bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
+bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder *decoder)
 {
 	if(nullptr == decoder)
 		return false;
@@ -3278,7 +3278,7 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 	CFErrorRef error = nullptr;
 	if(!decoder->IsOpen() && !decoder->Open(&error)) {
 		if(error) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Error opening decoder: " << error);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 			CFRelease(error), error = nullptr;
 		}
 
@@ -3292,17 +3292,17 @@ bool AudioPlayer::SetupAUGraphAndRingBufferForDecoder(AudioDecoder *decoder)
 	// Attempt to set the output audio unit's channel map
 	AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
 	if(!SetOutputUnitChannelMap(channelLayout))
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to set output unit channel map");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to set output unit channel map");
 
 	// The decoder's channel layout becomes the ring buffer's channel layout
 	if(mRingBufferChannelLayout)
 		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
-	mRingBufferChannelLayout = SFB::CopyChannelLayout(channelLayout);
+	mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioPlayer", "Unable to allocate ring buffer");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to allocate ring buffer");
 		return false;
 	}
 

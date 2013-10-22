@@ -33,46 +33,50 @@
 #include <sys/stat.h>
 #include "InputSource.h"
 
-// ========================================
-// InputSource serving bytes from a file fully loaded in RAM
-// ========================================
-class InMemoryFileInputSource : public InputSource
-{
-	
-public:
-	
-	// ========================================
-	// Creation
-	InMemoryFileInputSource(CFURLRef url);
+namespace SFB {
 
 	// ========================================
-	// Destruction
-	virtual ~InMemoryFileInputSource();
+	// InputSource serving bytes from a file fully loaded in RAM
+	// ========================================
+	class InMemoryFileInputSource : public InputSource
+	{
 
-	// ========================================
-	// Bytestream access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
-	
-	virtual inline bool IsOpen() const						{ return (nullptr != mMemory);}
-	
-	// ========================================
-	//
-	virtual SInt64 Read(void *buffer, SInt64 byteCount);
-	virtual bool AtEOF() const								{ return ((mCurrentPosition - mMemory) == mFilestats.st_size); }
-	
-	virtual inline SInt64 GetOffset() const					{ return (mCurrentPosition - mMemory); }
-	virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
-	
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return true; }
-	virtual bool SeekToOffset(SInt64 offset);
-	
-private:
-	
-	struct stat						mFilestats;
-	int8_t							*mMemory;
-	int8_t							*mCurrentPosition;
-	
-};
+	public:
+
+		// ========================================
+		// Creation
+		InMemoryFileInputSource(CFURLRef url);
+
+		// ========================================
+		// Destruction
+		virtual ~InMemoryFileInputSource();
+
+		// ========================================
+		// Bytestream access
+		virtual bool Open(CFErrorRef *error = nullptr);
+		virtual bool Close(CFErrorRef *error = nullptr);
+
+		virtual inline bool IsOpen() const						{ return (nullptr != mMemory);}
+
+		// ========================================
+		//
+		virtual SInt64 Read(void *buffer, SInt64 byteCount);
+		virtual bool AtEOF() const								{ return ((mCurrentPosition - mMemory) == mFilestats.st_size); }
+
+		virtual inline SInt64 GetOffset() const					{ return (mCurrentPosition - mMemory); }
+		virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
+
+		// ========================================
+		// Seeking support
+		virtual inline bool SupportsSeeking() const				{ return true; }
+		virtual bool SeekToOffset(SInt64 offset);
+
+	private:
+
+		struct stat						mFilestats;
+		int8_t							*mMemory;
+		int8_t							*mCurrentPosition;
+		
+	};
+
+}

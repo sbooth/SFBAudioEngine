@@ -43,7 +43,7 @@ namespace {
 	void RegisterMODDecoder() __attribute__ ((constructor));
 	void RegisterMODDecoder()
 	{
-		AudioDecoder::RegisterSubclass<MODDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::MODDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -52,7 +52,7 @@ namespace {
 	{
 		assert(nullptr != f);
 
-		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
 		return (decoder->GetInputSource()->SeekToOffset(decoder->GetInputSource()->GetOffset() + n) ? 0 : 1);
 	}
 
@@ -60,7 +60,7 @@ namespace {
 	{
 		assert(nullptr != f);
 
-		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
 
 		uint8_t value;
 		return (1 == decoder->GetInputSource()->Read(&value, 1) ? value : -1);
@@ -70,7 +70,7 @@ namespace {
 	{
 		assert(nullptr != f);
 
-		MODDecoder *decoder = static_cast<MODDecoder *>(f);
+		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
 		return static_cast<long>(decoder->GetInputSource()->Read(ptr, n));
 	}
 
@@ -81,19 +81,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef MODDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MODDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("it"), CFSTR("xm"), CFSTR("s3m"), CFSTR("mod") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 4, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MODDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MODDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/it"), CFSTR("audio/xm"), CFSTR("audio/s3m"), CFSTR("audio/mod"), CFSTR("audio/x-mod") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 5, &kCFTypeArrayCallBacks);
 }
 
-bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -110,7 +110,7 @@ bool MODDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -129,18 +129,18 @@ bool MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * MODDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::MODDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new MODDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-MODDecoder::MODDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
+SFB::Audio::MODDecoder::MODDecoder(InputSource *inputSource)
+	: Decoder(inputSource), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
 {}
 
-MODDecoder::~MODDecoder()
+SFB::Audio::MODDecoder::~MODDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -148,10 +148,10 @@ MODDecoder::~MODDecoder()
 
 #pragma mark Functionality
 
-bool MODDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MOD", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -241,16 +241,16 @@ bool MODDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= DUMB_CHANNELS;
 	
 	// Setup the channel layout
-	mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
+	mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 
 	mIsOpen = true;
 	return true;
 }
 
-bool MODDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MODDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MOD", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -265,7 +265,7 @@ bool MODDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef MODDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::MODDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -277,7 +277,7 @@ CFStringRef MODDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 MODDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::MODDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -285,7 +285,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
 		if(!Close(nullptr) || !GetInputSource()->SeekToOffset(0) || !Open(nullptr)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.MOD", "Error reseting DUMB decoder");
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MOD", "Error reseting DUMB decoder");
 			return -1;
 		}
 
@@ -299,7 +299,7 @@ SInt64 MODDecoder::SeekToFrame(SInt64 frame)
 	return mCurrentFrame;
 }
 
-UInt32 MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;

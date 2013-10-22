@@ -48,26 +48,26 @@ namespace {
 	void RegisterMODMetadata() __attribute__ ((constructor));
 	void RegisterMODMetadata()
 	{
-		AudioMetadata::RegisterSubclass<MODMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MODMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef MODMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MODMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("it"), CFSTR("xm"), CFSTR("s3m"), CFSTR("mod") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 4, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MODMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MODMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/it"), CFSTR("audio/xm"), CFSTR("audio/s3m"), CFSTR("audio/mod"), CFSTR("audio/x-mod") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 5, &kCFTypeArrayCallBacks);
 }
 
-bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -84,7 +84,7 @@ bool MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MODMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -103,23 +103,23 @@ bool MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * MODMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::MODMetadata::CreateMetadata(CFURLRef url)
 {
 	return new MODMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-MODMetadata::MODMetadata(CFURLRef url)
+SFB::Audio::MODMetadata::MODMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-MODMetadata::~MODMetadata()
+SFB::Audio::MODMetadata::~MODMetadata()
 {}
 
 #pragma mark Functionality
 
-bool MODMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MODMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -252,7 +252,7 @@ bool MODMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool MODMetadata::WriteMetadata(CFErrorRef */*error*/)
+bool SFB::Audio::MODMetadata::WriteMetadata(CFErrorRef */*error*/)
 {
 	LOGGER_NOTICE("org.sbooth.AudioEngine.AudioMetadata.MOD", "Writing of MOD metadata is not supported");
 

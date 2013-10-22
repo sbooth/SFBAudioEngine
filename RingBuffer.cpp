@@ -83,25 +83,25 @@ namespace {
 
 #pragma mark Creation and Destruction
 
-SFB::RingBuffer::RingBuffer()
+SFB::Audio::RingBuffer::RingBuffer()
 	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
 {}
 
-SFB::RingBuffer::~RingBuffer()
+SFB::Audio::RingBuffer::~RingBuffer()
 {
 	Deallocate();
 }
 
 #pragma mark Buffer Management
 
-bool SFB::RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
+bool SFB::Audio::RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
 {
 	if(!(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags))
 		return false;
 	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, capacityFrames);
 }
 
-bool SFB::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
+bool SFB::Audio::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
 {
 	Deallocate();
 
@@ -139,14 +139,14 @@ bool SFB::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t
 	return true;
 }
 
-void SFB::RingBuffer::Deallocate()
+void SFB::Audio::RingBuffer::Deallocate()
 {
 	if(mBuffers)
 		free(mBuffers), mBuffers = nullptr;
 }
 
 
-void SFB::RingBuffer::Reset()
+void SFB::Audio::RingBuffer::Reset()
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
@@ -155,7 +155,7 @@ void SFB::RingBuffer::Reset()
 		memset(mBuffers[i], 0, mCapacityBytes);
 }
 
-size_t SFB::RingBuffer::GetFramesAvailableToRead() const
+size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
 {
 	size_t w = mWritePointer;
 	size_t r = mReadPointer;
@@ -166,7 +166,7 @@ size_t SFB::RingBuffer::GetFramesAvailableToRead() const
 		return (w - r + mCapacityFrames) & mCapacityFramesMask;
 }
 
-size_t SFB::RingBuffer::GetFramesAvailableToWrite() const
+size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
 {
 	size_t w = mWritePointer;
 	size_t r = mReadPointer;
@@ -179,7 +179,7 @@ size_t SFB::RingBuffer::GetFramesAvailableToWrite() const
 		return mCapacityFrames - 1;
 }
 
-size_t SFB::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::Audio::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
 {
 	if(0 == frameCount)
 		return 0;
@@ -216,7 +216,7 @@ size_t SFB::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount
 	return framesToRead;
 }
 
-size_t SFB::RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::Audio::RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
 {
 	if(0 == frameCount)
 		return 0;

@@ -136,7 +136,7 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	SFB::ReplayGainAnalyzerErrorDomain		= CFSTR("org.sbooth.AudioEngine.ErrorDomain.ReplayGainAnalyzer");
+const CFStringRef	SFB::Audio::ReplayGainAnalyzerErrorDomain		= CFSTR("org.sbooth.AudioEngine.ErrorDomain.ReplayGainAnalyzer");
 
 // ========================================
 // RG constants
@@ -244,7 +244,7 @@ namespace {
 }
 
 // This class exists to hide the internal state from the world
-class SFB::ReplayGainAnalyzer::ReplayGainAnalyzerPrivate
+class SFB::Audio::ReplayGainAnalyzer::ReplayGainAnalyzerPrivate
 {
 public:
 	float			linprebuf	[MAX_ORDER * 2];
@@ -295,22 +295,22 @@ public:
 };
 
 
-float SFB::ReplayGainAnalyzer::GetReferenceLoudness()
+float SFB::Audio::ReplayGainAnalyzer::GetReferenceLoudness()
 {
 	return 89.0;
 }
 
-int32_t SFB::ReplayGainAnalyzer::GetMaximumSupportedSampleRate()
+int32_t SFB::Audio::ReplayGainAnalyzer::GetMaximumSupportedSampleRate()
 {
 	return 48000;
 }
 
-int32_t SFB::ReplayGainAnalyzer::GetMinimumSupportedSampleRate()
+int32_t SFB::Audio::ReplayGainAnalyzer::GetMinimumSupportedSampleRate()
 {
 	return 8000;
 }
 
-bool SFB::ReplayGainAnalyzer::SampleRateIsSupported(int32_t sampleRate)
+bool SFB::Audio::ReplayGainAnalyzer::SampleRateIsSupported(int32_t sampleRate)
 {
 	switch(sampleRate) {
 		case 48000:
@@ -329,7 +329,7 @@ bool SFB::ReplayGainAnalyzer::SampleRateIsSupported(int32_t sampleRate)
 	}
 }
 
-bool SFB::ReplayGainAnalyzer::EvenMultipleSampleRateIsSupported(int32_t sampleRate)
+bool SFB::Audio::ReplayGainAnalyzer::EvenMultipleSampleRateIsSupported(int32_t sampleRate)
 {
 	const int32_t minSampleRate = GetMinimumSupportedSampleRate();
 	for(int32_t newSampleRate = sampleRate; newSampleRate > minSampleRate; newSampleRate /= 2) {
@@ -346,7 +346,7 @@ bool SFB::ReplayGainAnalyzer::EvenMultipleSampleRateIsSupported(int32_t sampleRa
 	return false;
 }
 
-int32_t SFB::ReplayGainAnalyzer::GetBestReplayGainSampleRateForSampleRate(int32_t sampleRate)
+int32_t SFB::Audio::ReplayGainAnalyzer::GetBestReplayGainSampleRateForSampleRate(int32_t sampleRate)
 {
 	// Avoid resampling if possible
 	if(SampleRateIsSupported(sampleRate))
@@ -389,23 +389,23 @@ int32_t SFB::ReplayGainAnalyzer::GetBestReplayGainSampleRateForSampleRate(int32_
 	return 44100;
 }
 
-SFB::ReplayGainAnalyzer::ReplayGainAnalyzer()
+SFB::Audio::ReplayGainAnalyzer::ReplayGainAnalyzer()
 {
 	priv = new ReplayGainAnalyzerPrivate;
 }
 
-SFB::ReplayGainAnalyzer::~ReplayGainAnalyzer()
+SFB::Audio::ReplayGainAnalyzer::~ReplayGainAnalyzer()
 {
 	if(priv)
 		delete priv, priv = nullptr;
 }
 
-bool SFB::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
+bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return false;
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL(url, error);
+	Decoder *decoder = Decoder::CreateDecoderForURL(url, error);
 	if(nullptr == decoder || !decoder->Open(error))
 		return false;
 	
@@ -471,8 +471,8 @@ bool SFB::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 		return false;
 	}
 
-	// AudioConverter takes ownership of decoder
-	AudioConverter converter(decoder, outputFormat);
+	// Converter takes ownership of decoder
+	Converter converter(decoder, outputFormat);
 	if(!converter.Open(error))
 		return false;
 	
@@ -513,7 +513,7 @@ bool SFB::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	return true;
 }
 
-bool SFB::ReplayGainAnalyzer::GetTrackGain(float& trackGain)
+bool SFB::Audio::ReplayGainAnalyzer::GetTrackGain(float& trackGain)
 {
 	if(!analyzeResult(priv->A, sizeof(priv->A) / sizeof(*(priv->A)), trackGain))
 		return false;
@@ -531,25 +531,25 @@ bool SFB::ReplayGainAnalyzer::GetTrackGain(float& trackGain)
 	return true;
 }
 
-bool SFB::ReplayGainAnalyzer::GetTrackPeak(float& trackPeak)
+bool SFB::Audio::ReplayGainAnalyzer::GetTrackPeak(float& trackPeak)
 {
 	trackPeak = priv->trackPeak;
 	priv->trackPeak = 0.;
 	return true;
 }
 
-bool SFB::ReplayGainAnalyzer::GetAlbumGain(float& albumGain)
+bool SFB::Audio::ReplayGainAnalyzer::GetAlbumGain(float& albumGain)
 {
     return analyzeResult(priv->B, sizeof(priv->B) / sizeof(*(priv->B)), albumGain);
 }
 
-bool SFB::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak)
+bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak)
 {
 	albumPeak = priv->albumPeak;
 	return true;
 }
 
-bool SFB::ReplayGainAnalyzer::SetSampleRate(int32_t sampleRate)
+bool SFB::Audio::ReplayGainAnalyzer::SetSampleRate(int32_t sampleRate)
 {
 	priv->Zero();
 	
@@ -578,7 +578,7 @@ bool SFB::ReplayGainAnalyzer::SetSampleRate(int32_t sampleRate)
 	return true;
 }
 
-bool SFB::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, const float *right_samples, size_t num_samples, bool stereo)
+bool SFB::Audio::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, const float *right_samples, size_t num_samples, bool stereo)
 {
 	if(0 == num_samples)
 		return true;

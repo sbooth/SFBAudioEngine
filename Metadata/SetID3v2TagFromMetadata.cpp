@@ -41,35 +41,36 @@
 #include "CFWrapper.h"
 #include "TagLibStringUtilities.h"
 
-// If type and format don't match, watch out!
-static CFStringRef
-CreateStringFromNumberWithFormat(CFNumberRef	value,
-								 CFNumberType	type,
-								 CFStringRef	format = nullptr)
-{
-	assert(nullptr != value);
-	
-	switch(type) {
-			// Double
-		case kCFNumberDoubleType:
-		{
-			double d;
-			CFNumberGetValue(value, type, &d);
+namespace {
 
-			return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, d);
+	// If type and format don't match, watch out!
+	CFStringRef CreateStringFromNumberWithFormat(CFNumberRef	value,
+												 CFNumberType	type,
+												 CFStringRef	format = nullptr)
+	{
+		assert(nullptr != value);
+
+		switch(type) {
+				// Double
+			case kCFNumberDoubleType:
+			{
+				double d;
+				CFNumberGetValue(value, type, &d);
+
+				return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, d);
+			}
+
+				// Everything else
+			default:
+				return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
 		}
-			
-			// Everything else
-		default:
-			return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
+		
+		return nullptr;
 	}
 
-	return nullptr;
 }
 
-
-bool
-SetID3v2TagFromMetadata(const AudioMetadata& metadata, TagLib::ID3v2::Tag *tag, bool setAlbumArt)
+bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2::Tag *tag, bool setAlbumArt)
 {
 	if(nullptr == tag)
 		return false;

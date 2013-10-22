@@ -32,8 +32,7 @@
 #include "AudioMetadata.h"
 #include "CFDictionaryUtilities.h"
 
-bool
-AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties)
+bool SFB::Audio::AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties)
 {
 	if(nullptr == dictionary || nullptr == properties)
 		return false;

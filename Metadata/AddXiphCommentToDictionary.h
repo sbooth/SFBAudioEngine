@@ -34,9 +34,23 @@
 #include <vector>
 #include <taglib/xiphcomment.h>
 
-class AttachedPicture;
+/*! @file AddXiphCommentToDictionary.h @brief Utility method for adding \c TagLib::Ogg::XiphComment contents to \c CFDictionary */
 
-// ========================================
-// Add the metadata specified in the Ogg::XiphComment instance to dictionary
-// ========================================
-bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		class AttachedPicture;
+
+		/*!
+		 * @brief Add the metadata specified in the \c TagLib::Ogg::XiphComment instance to \c dictionary
+		 * @param dictionary A \c CFMutableDictionaryRef to receive the metadata
+		 * @param attachedPictures A \c std::vector to receive the attached pictures
+		 * @param properties The Xiph comment
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag);
+		
+	}
+}

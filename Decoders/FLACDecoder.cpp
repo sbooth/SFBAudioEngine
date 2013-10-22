@@ -45,127 +45,119 @@ namespace {
 	void RegisterFLACDecoder() __attribute__ ((constructor));
 	void RegisterFLACDecoder()
 	{
-		AudioDecoder::RegisterSubclass<FLACDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::FLACDecoder>();
+	}
+
+#pragma mark Callbacks
+
+	FLAC__StreamDecoderReadStatus readCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__byte buffer[], size_t *bytes, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		SFB::InputSource *inputSource = flacDecoder->GetInputSource();
+
+		*bytes = (size_t)inputSource->Read(buffer, (SInt64)*bytes);
+
+		if(0 == *bytes)
+			return (inputSource->AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
+
+		return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
+	}
+
+	FLAC__StreamDecoderSeekStatus seekCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 absolute_byte_offset, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		SFB::InputSource *inputSource = flacDecoder->GetInputSource();
+
+		if(!inputSource->SupportsSeeking())
+			return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
+
+		if(!inputSource->SeekToOffset((SInt64)absolute_byte_offset))
+			return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
+
+		return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
+	}
+
+	FLAC__StreamDecoderTellStatus tellCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *absolute_byte_offset, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+
+		*absolute_byte_offset = (FLAC__uint64)flacDecoder->GetInputSource()->GetOffset();
+
+		if(-1ULL == *absolute_byte_offset)
+			return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
+
+		return FLAC__STREAM_DECODER_TELL_STATUS_OK;
+	}
+
+	FLAC__StreamDecoderLengthStatus lengthCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *stream_length, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+
+		*stream_length = (FLAC__uint64)flacDecoder->GetInputSource()->GetLength();
+
+		if(-1ULL == *stream_length)
+			return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
+
+		return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
+	}
+
+	FLAC__bool eofCallback(const FLAC__StreamDecoder */*decoder*/, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		return flacDecoder->GetInputSource()->AtEOF();
+	}
+
+	FLAC__StreamDecoderWriteStatus writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		return flacDecoder->Write(decoder, frame, buffer);
+	}
+
+	void metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		flacDecoder->Metadata(decoder, metadata);
+	}
+
+	void errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
+	{
+		assert(nullptr != client_data);
+
+		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
+		flacDecoder->Error(decoder, status);
 	}
 
 }
 
-#pragma mark Callbacks
-
-static FLAC__StreamDecoderReadStatus
-readCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__byte buffer[], size_t *bytes, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	InputSource *inputSource = flacDecoder->GetInputSource();
-
-	*bytes = (size_t)inputSource->Read(buffer, (SInt64)*bytes);
-	
-	if(0 == *bytes)
-		return (inputSource->AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
-	
-	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
-}
-
-static FLAC__StreamDecoderSeekStatus
-seekCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 absolute_byte_offset, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	InputSource *inputSource = flacDecoder->GetInputSource();
-	
-	if(!inputSource->SupportsSeeking())
-		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
-	
-	if(!inputSource->SeekToOffset((SInt64)absolute_byte_offset))
-		return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
-	
-	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
-}
-
-static FLAC__StreamDecoderTellStatus
-tellCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *absolute_byte_offset, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-
-	*absolute_byte_offset = (FLAC__uint64)flacDecoder->GetInputSource()->GetOffset();
-	
-	if(-1ULL == *absolute_byte_offset)
-		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
-
-	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
-}
-
-static FLAC__StreamDecoderLengthStatus
-lengthCallback(const FLAC__StreamDecoder */*decoder*/, FLAC__uint64 *stream_length, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-
-	*stream_length = (FLAC__uint64)flacDecoder->GetInputSource()->GetLength();
-	
-	if(-1ULL == *stream_length)
-		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
-	
-	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
-}
-
-static FLAC__bool
-eofCallback(const FLAC__StreamDecoder */*decoder*/, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	return flacDecoder->GetInputSource()->AtEOF();
-}
-
-static FLAC__StreamDecoderWriteStatus 
-writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	return flacDecoder->Write(decoder, frame, buffer);
-}
-
-static void
-metadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	flacDecoder->Metadata(decoder, metadata);
-}
-
-static void
-errorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
-{
-	assert(nullptr != client_data);
-	
-	FLACDecoder *flacDecoder = static_cast<FLACDecoder *>(client_data);
-	flacDecoder->Error(decoder, status);
-}
-
 #pragma mark Static Methods
 
-CFArrayRef FLACDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::FLACDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("flac"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef FLACDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::FLACDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac"), CFSTR("audio/ogg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -178,7 +170,7 @@ bool FLACDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -191,20 +183,20 @@ bool FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * FLACDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::FLACDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new FLACDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-FLACDecoder::FLACDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
+SFB::Audio::FLACDecoder::FLACDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
 {
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 }
 
-FLACDecoder::~FLACDecoder()
+SFB::Audio::FLACDecoder::~FLACDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -212,10 +204,10 @@ FLACDecoder::~FLACDecoder()
 
 #pragma mark Functionality
 
-bool FLACDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -280,7 +272,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	
 	// Process metadata
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
@@ -291,7 +283,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 		}
 
 		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 		
@@ -331,7 +323,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 
 		default:
 		{
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
 				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), "");
@@ -342,7 +334,7 @@ bool FLACDecoder::Open(CFErrorRef *error)
 			}
 			
 			if(!FLAC__stream_decoder_finish(mFLAC))
-				LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+				LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 			
 			FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 			
@@ -360,27 +352,27 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mFramesPerPacket		= mStreamInfo.max_blocksize;
 	
 	switch(mStreamInfo.channels) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 3:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);	break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);	break;
-		case 6:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);	break;
-		case 7:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_6_1_A);	break;
-		case 8:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_3_0_A);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);		break;
+		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);		break;
+		case 7:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_6_1_A);		break;
+		case 8:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = SFB::AllocateABL(mFormat, mStreamInfo.max_blocksize);
+	mBufferList = AllocateABL(mFormat, mStreamInfo.max_blocksize);
 	
 	if(nullptr == mBufferList) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Unable to allocate memory")
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "Unable to allocate memory")
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
 		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 		
@@ -394,22 +386,22 @@ bool FLACDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool FLACDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::FLACDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
 	if(mFLAC) {
 		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 		
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 	}
 
 	if(mBufferList)
-		mBufferList = SFB::DeallocateABL(mBufferList);
+		mBufferList = DeallocateABL(mBufferList);
 
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 
@@ -417,7 +409,7 @@ bool FLACDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef FLACDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::FLACDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -429,7 +421,7 @@ CFStringRef FLACDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::FLACDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -449,7 +441,7 @@ SInt64 FLACDecoder::SeekToFrame(SInt64 frame)
 	return (result ? frame : -1);
 }
 
-UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -494,7 +486,7 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		// Grab the next frame
 		FLAC__bool result = FLAC__stream_decoder_process_single(mFLAC);
 		if(!result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
 	}
 	
 	mCurrentFrame += framesRead;
@@ -504,7 +496,7 @@ UInt32 FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 
 #pragma mark Callbacks
 
-FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[])
+FLAC__StreamDecoderWriteStatus SFB::Audio::FLACDecoder::Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[])
 {
 	assert(IsOpen());
 	assert(nullptr != decoder);
@@ -596,7 +588,7 @@ FLAC__StreamDecoderWriteStatus FLACDecoder::Write(const FLAC__StreamDecoder *dec
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;	
 }
 
-void FLACDecoder::Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata)
+void SFB::Audio::FLACDecoder::Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata)
 {
 	assert(nullptr != decoder);
 	assert(nullptr != metadata);
@@ -611,9 +603,9 @@ void FLACDecoder::Metadata(const FLAC__StreamDecoder *decoder, const FLAC__Strea
 	}
 }
 
-void FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status)
+void SFB::Audio::FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status)
 {
 	assert(nullptr != decoder);
 	
-	LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.FLAC", "FLAC error: " << FLAC__StreamDecoderErrorStatusString[status]);
+	LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC error: " << FLAC__StreamDecoderErrorStatusString[status]);
 }

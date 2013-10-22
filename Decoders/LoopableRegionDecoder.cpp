@@ -34,7 +34,7 @@
 #include "AudioDecoder.h"
 #include "Logger.h"
 
-LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame)
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != decoder);
@@ -47,7 +47,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 		SetupDecoder();
 }
 
-LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount)
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != decoder);
@@ -60,7 +60,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 		SetupDecoder();
 }
 
-LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
 	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != decoder);
@@ -73,7 +73,7 @@ LoopableRegionDecoder::LoopableRegionDecoder(AudioDecoder *decoder, SInt64 start
 		SetupDecoder();
 }
 
-LoopableRegionDecoder::~LoopableRegionDecoder()
+SFB::Audio::LoopableRegionDecoder::~LoopableRegionDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -86,10 +86,10 @@ LoopableRegionDecoder::~LoopableRegionDecoder()
 		delete mDecoder, mDecoder = nullptr;
 }
 
-bool LoopableRegionDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::LoopableRegionDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Open() called on a Decoder that is already open");
 		return true;
 	}
 	
@@ -105,10 +105,10 @@ bool LoopableRegionDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool LoopableRegionDecoder::Close(CFErrorRef *error)
+bool SFB::Audio::LoopableRegionDecoder::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 	
@@ -119,7 +119,7 @@ bool LoopableRegionDecoder::Close(CFErrorRef *error)
 	return true;
 }
 
-bool LoopableRegionDecoder::Reset()
+bool SFB::Audio::LoopableRegionDecoder::Reset()
 {
 	if(!IsOpen())
 		return false;
@@ -133,7 +133,7 @@ bool LoopableRegionDecoder::Reset()
 
 #pragma mark Functionality
 
-SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -147,7 +147,7 @@ SInt64 LoopableRegionDecoder::SeekToFrame(SInt64 frame)
 	return GetCurrentFrame();
 }
 
-UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
@@ -160,7 +160,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	AudioBufferList *bufferListAlias = (AudioBufferList *)calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers));
 	
 	if(nullptr == bufferListAlias) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.LoopableRegion", "Unable to allocate memory");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Unable to allocate memory");
 		return 0;
 	}	
 
@@ -226,7 +226,7 @@ UInt32 LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fram
 	return totalFramesRead;
 }
 
-bool LoopableRegionDecoder::SetupDecoder(bool forceReset)
+bool SFB::Audio::LoopableRegionDecoder::SetupDecoder(bool forceReset)
 {
 	assert(mDecoder);
 	assert(mDecoder->IsOpen());

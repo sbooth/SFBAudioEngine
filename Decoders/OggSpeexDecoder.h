@@ -39,67 +39,74 @@
 
 #import "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting Speex
-// ========================================
-class OggSpeexDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting Speex
+		// ========================================
+		class OggSpeexDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	OggSpeexDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~OggSpeexDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			OggSpeexDecoder(InputSource *inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			// ========================================
+			// Destruction
+			virtual ~OggSpeexDecoder();
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-private:
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-	AudioBufferList		*mBufferList;
-	SInt64				mCurrentFrame;
-	SInt64				mTotalFrames;
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
+			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
-	ogg_sync_state		mOggSyncState;
-	ogg_page			mOggPage;
-	ogg_stream_state	mOggStreamState;
+		private:
 
-	void				*mSpeexDecoder;
-	SpeexBits			mSpeexBits;
-	SpeexStereoState	*mSpeexStereoState;
+			AudioBufferList		*mBufferList;
+			SInt64				mCurrentFrame;
+			SInt64				mTotalFrames;
 
-	long				mSpeexSerialNumber;
-	bool				mSpeexEOSReached;
-	spx_int32_t			mSpeexFramesPerOggPacket;
-	UInt32				mOggPacketCount;
-	UInt32				mExtraSpeexHeaderCount;
-};
+			ogg_sync_state		mOggSyncState;
+			ogg_page			mOggPage;
+			ogg_stream_state	mOggStreamState;
+
+			void				*mSpeexDecoder;
+			SpeexBits			mSpeexBits;
+			SpeexStereoState	*mSpeexStereoState;
+
+			long				mSpeexSerialNumber;
+			bool				mSpeexEOSReached;
+			spx_int32_t			mSpeexFramesPerOggPacket;
+			UInt32				mOggPacketCount;
+			UInt32				mExtraSpeexHeaderCount;
+		};
+		
+	}
+}

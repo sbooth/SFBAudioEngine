@@ -36,19 +36,19 @@
 
 #pragma mark Creation and Destruction
 
-FileInputSource::FileInputSource(CFURLRef url)
+SFB::FileInputSource::FileInputSource(CFURLRef url)
 	: InputSource(url), mFile(nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
 
-FileInputSource::~FileInputSource()
+SFB::FileInputSource::~FileInputSource()
 {
 	if(IsOpen())
 		Close();
 }
 
-bool FileInputSource::Open(CFErrorRef *error)
+bool SFB::FileInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Open() called on an InputSource that is already open");
@@ -87,7 +87,7 @@ bool FileInputSource::Open(CFErrorRef *error)
 	return true;
 }
 
-bool FileInputSource::Close(CFErrorRef *error)
+bool SFB::FileInputSource::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Close() called on an InputSource that hasn't been opened");
@@ -112,7 +112,7 @@ bool FileInputSource::Close(CFErrorRef *error)
 	return true;
 }
 
-SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::FileInputSource::Read(void *buffer, SInt64 byteCount)
 {
 	if(!IsOpen() || nullptr == buffer)
 		return -1;
@@ -120,7 +120,7 @@ SInt64 FileInputSource::Read(void *buffer, SInt64 byteCount)
 	return (SInt64)fread(buffer, 1, (size_t)byteCount, mFile);
 }
 
-bool FileInputSource::SeekToOffset(SInt64 offset)
+bool SFB::FileInputSource::SeekToOffset(SInt64 offset)
 {
 	if(!IsOpen())
 		return false;

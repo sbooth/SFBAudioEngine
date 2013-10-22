@@ -35,11 +35,11 @@
 // ========================================
 // Key names for the metadata dictionary
 // ========================================
-const CFStringRef	kAttachedPictureTypeKey					= CFSTR("Picture Type");
-const CFStringRef	kAttachedPictureDescriptionKey			= CFSTR("Picture Description");
-const CFStringRef	kAttachedPictureDataKey					= CFSTR("Picture Data");
+const CFStringRef	SFB::Audio::kAttachedPictureTypeKey					= CFSTR("Picture Type");
+const CFStringRef	SFB::Audio::kAttachedPictureDescriptionKey			= CFSTR("Picture Description");
+const CFStringRef	SFB::Audio::kAttachedPictureDataKey					= CFSTR("Picture Data");
 
-AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFStringRef description)
+SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFStringRef description)
 	: mState(ChangeState::Saved)
 {
 	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
@@ -54,7 +54,7 @@ AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFS
 		CFDictionarySetValue(mMetadata, kAttachedPictureDescriptionKey, description);
 }
 
-AttachedPicture::~AttachedPicture()
+SFB::Audio::AttachedPicture::~AttachedPicture()
 {
 	if(mMetadata)
 		CFRelease(mMetadata), mMetadata = nullptr;
@@ -65,7 +65,7 @@ AttachedPicture::~AttachedPicture()
 
 #pragma mark Type-Specific Access
 
-AttachedPicture::Type AttachedPicture::GetType() const
+SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const
 {
 	AttachedPicture::Type type = Type::Other;
 	CFNumberRef wrapper = GetNumberValue(kAttachedPictureTypeKey);
@@ -74,35 +74,35 @@ AttachedPicture::Type AttachedPicture::GetType() const
 	return type;
 }
 
-void AttachedPicture::SetType(Type type)
+void SFB::Audio::AttachedPicture::SetType(Type type)
 {
 	SFB::CFNumber wrapper = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type);
 	SetValue(kAttachedPictureTypeKey, wrapper);
 }
 
-CFStringRef AttachedPicture::GetDescription() const
+CFStringRef SFB::Audio::AttachedPicture::GetDescription() const
 {
 	return GetStringValue(kAttachedPictureDescriptionKey);
 }
 
-void AttachedPicture::SetDescription(CFStringRef description)
+void SFB::Audio::AttachedPicture::SetDescription(CFStringRef description)
 {
 	SetValue(kAttachedPictureDescriptionKey, description);
 }
 
-CFDataRef AttachedPicture::GetData() const
+CFDataRef SFB::Audio::AttachedPicture::GetData() const
 {
 	return GetDataValue(kAttachedPictureDataKey);
 }
 
-void AttachedPicture::SetData(CFDataRef data)
+void SFB::Audio::AttachedPicture::SetData(CFDataRef data)
 {
 	SetValue(kAttachedPictureDataKey, data);
 }
 
 #pragma mark Type-Specific Access
 
-CFStringRef AttachedPicture::GetStringValue(CFStringRef key) const
+CFStringRef SFB::Audio::AttachedPicture::GetStringValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
 
@@ -115,7 +115,7 @@ CFStringRef AttachedPicture::GetStringValue(CFStringRef key) const
 		return (CFStringRef)value;
 }
 
-CFNumberRef AttachedPicture::GetNumberValue(CFStringRef key) const
+CFNumberRef SFB::Audio::AttachedPicture::GetNumberValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
 
@@ -128,7 +128,7 @@ CFNumberRef AttachedPicture::GetNumberValue(CFStringRef key) const
 		return (CFNumberRef)value;
 }
 
-CFDataRef AttachedPicture::GetDataValue(CFStringRef key) const
+CFDataRef SFB::Audio::AttachedPicture::GetDataValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
 
@@ -143,7 +143,7 @@ CFDataRef AttachedPicture::GetDataValue(CFStringRef key) const
 
 #pragma mark Generic Access
 
-CFTypeRef AttachedPicture::GetValue(CFStringRef key) const
+CFTypeRef SFB::Audio::AttachedPicture::GetValue(CFStringRef key) const
 {
 	if(nullptr == key)
 		return nullptr;
@@ -156,7 +156,7 @@ CFTypeRef AttachedPicture::GetValue(CFStringRef key) const
 	return CFDictionaryGetValue(mMetadata, key);
 }
 
-void AttachedPicture::SetValue(CFStringRef key, CFTypeRef value)
+void SFB::Audio::AttachedPicture::SetValue(CFStringRef key, CFTypeRef value)
 {
 	if(nullptr == key)
 		return;
@@ -180,7 +180,7 @@ void AttachedPicture::SetValue(CFStringRef key, CFTypeRef value)
 	}
 }
 
-void AttachedPicture::MergeChangedMetadataIntoMetadata()
+void SFB::Audio::AttachedPicture::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
 

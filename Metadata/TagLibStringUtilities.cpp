@@ -32,8 +32,7 @@
 #include "CFWrapper.h"
 #include "Logger.h"
 
-TagLib::String 
-TagLib::StringFromCFString(CFStringRef s)
+TagLib::String  TagLib::StringFromCFString(CFStringRef s)
 {
 	if(nullptr == s)
 		return String::null;

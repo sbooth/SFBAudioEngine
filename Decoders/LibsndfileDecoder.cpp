@@ -39,7 +39,7 @@ namespace {
 	void RegisterLibsndfileDecoder() __attribute__ ((constructor));
 	void RegisterLibsndfileDecoder()
 	{
-		AudioDecoder::RegisterSubclass<LibsndfileDecoder>(-50);
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::LibsndfileDecoder>(-50);
 	}
 
 #pragma mark Callbacks
@@ -48,7 +48,7 @@ namespace {
 	{
 		assert(nullptr != user_data);
 
-		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
 		return decoder->GetInputSource()->GetLength();
 	}
 
@@ -56,8 +56,8 @@ namespace {
 	{
 		assert(nullptr != user_data);
 
-		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return -1;
@@ -85,7 +85,7 @@ namespace {
 	{
 		assert(nullptr != user_data);
 
-		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
 		return decoder->GetInputSource()->Read(ptr, count);
 	}
 
@@ -93,7 +93,7 @@ namespace {
 	{
 		assert(nullptr != user_data);
 
-		LibsndfileDecoder *decoder = static_cast<LibsndfileDecoder *>(user_data);
+		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
 		return decoder->GetInputSource()->GetOffset();
 	}
 	
@@ -101,7 +101,7 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedFileExtensions()
 {
 	int majorCount = 0;
 	sf_command(nullptr, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
@@ -118,18 +118,18 @@ CFArrayRef LibsndfileDecoder::CreateSupportedFileExtensions()
 				CFArrayAppendValue(supportedExtensions, extension);
 		}
 		else
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
 	}
 
 	return supportedExtensions;
 }
 
-CFArrayRef LibsndfileDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedMIMETypes()
 {
 	return CFArrayCreate(kCFAllocatorDefault, nullptr, 0, &kCFTypeArrayCallBacks);
 }
 
-bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -148,25 +148,25 @@ bool LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
+bool SFB::Audio::LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
 {
 	return false;
 }
 
-AudioDecoder * LibsndfileDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::LibsndfileDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new LibsndfileDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-LibsndfileDecoder::LibsndfileDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
+SFB::Audio::LibsndfileDecoder::LibsndfileDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
 {
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 }
 
-LibsndfileDecoder::~LibsndfileDecoder()
+SFB::Audio::LibsndfileDecoder::~LibsndfileDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -174,10 +174,10 @@ LibsndfileDecoder::~LibsndfileDecoder()
 
 #pragma mark Functionality
 
-bool LibsndfileDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::LibsndfileDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -197,7 +197,7 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 	mFile = sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this);
 
 	if(nullptr == mFile) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
 
 		if(nullptr != error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
@@ -361,17 +361,17 @@ bool LibsndfileDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::LibsndfileDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
 	if(mFile) {
 		int result = sf_close(mFile);
 		if(0 != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_close failed: " << result);
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_close failed: " << result);
 
 		mFile = nullptr;
 	}
@@ -383,7 +383,7 @@ bool LibsndfileDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::LibsndfileDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -392,7 +392,7 @@ CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
 	formatInfo.format = mFileInfo.format;
 
 	if(0 != sf_command(nullptr, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
 		return nullptr;
 	}
 	
@@ -404,7 +404,7 @@ CFStringRef LibsndfileDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 LibsndfileDecoder::GetTotalFrames() const
+SInt64 SFB::Audio::LibsndfileDecoder::GetTotalFrames() const
 {
 	if(!IsOpen())
 		return -1;
@@ -412,7 +412,7 @@ SInt64 LibsndfileDecoder::GetTotalFrames() const
 	return mFileInfo.frames;
 }
 
-SInt64 LibsndfileDecoder::GetCurrentFrame() const
+SInt64 SFB::Audio::LibsndfileDecoder::GetCurrentFrame() const
 {
 	if(!IsOpen())
 		return -1;
@@ -420,7 +420,7 @@ SInt64 LibsndfileDecoder::GetCurrentFrame() const
 	return sf_seek(mFile, 0, SEEK_CUR);
 }
 
-SInt64 LibsndfileDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::LibsndfileDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -428,7 +428,7 @@ SInt64 LibsndfileDecoder::SeekToFrame(SInt64 frame)
 	return sf_seek(mFile, frame, SEEK_SET);
 }
 
-UInt32 LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;

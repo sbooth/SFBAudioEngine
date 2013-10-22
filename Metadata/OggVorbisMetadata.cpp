@@ -45,26 +45,26 @@ namespace {
 	void RegisterOggVorbisMetadata() __attribute__ ((constructor));
 	void RegisterOggVorbisMetadata()
 	{
-		AudioMetadata::RegisterSubclass<OggVorbisMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::OggVorbisMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggVorbisMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggVorbisMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggVorbisMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggVorbisMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg-vorbis") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggVorbisMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggVorbisMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -77,7 +77,7 @@ bool OggVorbisMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggVorbisMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggVorbisMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -88,23 +88,23 @@ bool OggVorbisMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * OggVorbisMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::OggVorbisMetadata::CreateMetadata(CFURLRef url)
 {
 	return new OggVorbisMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
+SFB::Audio::OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-OggVorbisMetadata::~OggVorbisMetadata()
+SFB::Audio::OggVorbisMetadata::~OggVorbisMetadata()
 {}
 
 #pragma mark Functionality
 
-bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -149,7 +149,7 @@ bool OggVorbisMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::OggVorbisMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

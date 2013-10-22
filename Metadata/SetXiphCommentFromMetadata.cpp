@@ -40,76 +40,74 @@
 
 // ========================================
 // Xiph comment utilities
-// ========================================
-static bool
-SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, CFStringRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	// Remove the existing comment with this name
-	tag->removeField(key);
-	
-	// Nothing left to do if value is nullptr
-	if(nullptr == value)
+namespace {
+
+	bool SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, CFStringRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		// Remove the existing comment with this name
+		tag->removeField(key);
+
+		// Nothing left to do if value is nullptr
+		if(nullptr == value)
+			return true;
+
+		tag->addField(key, TagLib::StringFromCFString(value));
+
 		return true;
-	
-	tag->addField(key, TagLib::StringFromCFString(value));
-	
-	return true;
-}
-
-static bool
-SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	SFB::CFString numberString;
-	if(nullptr != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
-	
-	bool result = SetXiphComment(tag, key, numberString);
-
-	return result;
-}
-
-static bool
-SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, CFBooleanRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-
-	if(nullptr == value)
-		return SetXiphComment(tag, key, nullptr);
-	else if(CFBooleanGetValue(value))
-		return SetXiphComment(tag, key, CFSTR("1"));
-	else
-		return SetXiphComment(tag, key, CFSTR("0"));
-}
-
-static bool
-SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	SFB::CFString numberString;
-	if(nullptr != value) {
-		double f;
-		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-			LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
-
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
 	}
-	
-	bool result = SetXiphComment(tag, key, numberString);
 
-	return result;
+	bool SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		SFB::CFString numberString;
+		if(nullptr != value)
+			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
+
+		bool result = SetXiphComment(tag, key, numberString);
+
+		return result;
+	}
+
+	bool SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, CFBooleanRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		if(nullptr == value)
+			return SetXiphComment(tag, key, nullptr);
+		else if(CFBooleanGetValue(value))
+			return SetXiphComment(tag, key, CFSTR("1"));
+		else
+			return SetXiphComment(tag, key, CFSTR("0"));
+	}
+
+	bool SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		SFB::CFString numberString;
+		if(nullptr != value) {
+			double f;
+			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
+				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+
+			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
+		}
+
+		bool result = SetXiphComment(tag, key, numberString);
+		
+		return result;
+	}
+
 }
 
-bool
-SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
+bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
 {
 	if(nullptr == tag)
 		return false;

@@ -37,22 +37,26 @@
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*!
-	 * @brief Allocate an \c AudioBufferList
-	 * @param format The format of the audio which will be stored in the \c AudioBufferList
-	 * @param capacityFrames The desired capacity, in frames, of the \c AudioBufferList
-	 * @return An \c AudioBufferList
-	 */
-	AudioBufferList * AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
+	/*! @brief %Audio functionality */
+	namespace Audio {
 
-	/*!
-	 * @brief Allocate an \c AudioBufferList
-	 * @param channelsPerFrame The number of audio channels
-	 * @param bytesPerFrame The size, in bytes, of a single audio frame
-	 * @param interleaved \c true if the audio will be interleaved in the \c AudioBufferList, \c false otherwise
-	 * @param capacityFrames The desired capacity, in frames, of the \c AudioBufferList
-	 * @return An \c AudioBufferList
-	 */
-	AudioBufferList * AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames);
+		/*!
+		 * @brief Allocate an \c AudioBufferList
+		 * @param format The format of the audio which will be stored in the \c AudioBufferList
+		 * @param capacityFrames The desired capacity, in frames, of the \c AudioBufferList
+		 * @return An \c AudioBufferList
+		 */
+		AudioBufferList * AllocateABL(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
 
+		/*!
+		 * @brief Allocate an \c AudioBufferList
+		 * @param channelsPerFrame The number of audio channels
+		 * @param bytesPerFrame The size, in bytes, of a single audio frame
+		 * @param interleaved \c true if the audio will be interleaved in the \c AudioBufferList, \c false otherwise
+		 * @param capacityFrames The desired capacity, in frames, of the \c AudioBufferList
+		 * @return An \c AudioBufferList
+		 */
+		AudioBufferList * AllocateABL(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames);
+		
+	}
 }

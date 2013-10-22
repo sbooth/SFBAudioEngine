@@ -52,26 +52,26 @@ namespace {
 	void RegisterMP3Metadata() __attribute__ ((constructor));
 	void RegisterMP3Metadata()
 	{
-		AudioMetadata::RegisterSubclass<MP3Metadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MP3Metadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef MP3Metadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MP3Metadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mp3") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MP3Metadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MP3Metadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -82,7 +82,7 @@ bool MP3Metadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -93,23 +93,23 @@ bool MP3Metadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * MP3Metadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::MP3Metadata::CreateMetadata(CFURLRef url)
 {
 	return new MP3Metadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-MP3Metadata::MP3Metadata(CFURLRef url)
+SFB::Audio::MP3Metadata::MP3Metadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-MP3Metadata::~MP3Metadata()
+SFB::Audio::MP3Metadata::~MP3Metadata()
 {}
 
 #pragma mark Functionality
 
-bool MP3Metadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MP3Metadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -192,7 +192,7 @@ bool MP3Metadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool MP3Metadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MP3Metadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

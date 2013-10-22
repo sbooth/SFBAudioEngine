@@ -42,34 +42,34 @@ namespace {
 	void RegisterMP4Metadata() __attribute__ ((constructor));
 	void RegisterMP4Metadata()
 	{
-		AudioMetadata::RegisterSubclass<MP4Metadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MP4Metadata>();
+	}
+
+#pragma mark Initialization
+
+	static void DisableMP4v2Logging() __attribute__ ((constructor));
+	static void DisableMP4v2Logging()
+	{
+		MP4LogSetLevel(MP4_LOG_NONE);
 	}
 
 }
 
-#pragma mark Initialization
-
-static void DisableMP4v2Logging() __attribute__ ((constructor));
-static void DisableMP4v2Logging()
-{
-	MP4LogSetLevel(MP4_LOG_NONE);
-}
-
 #pragma mark Static Methods
 
-CFArrayRef MP4Metadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MP4Metadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("m4a"), CFSTR("mp4") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MP4Metadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MP4Metadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg-4") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -82,7 +82,7 @@ bool MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -93,23 +93,23 @@ bool MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * MP4Metadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::MP4Metadata::CreateMetadata(CFURLRef url)
 {
 	return new MP4Metadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-MP4Metadata::MP4Metadata(CFURLRef url)
+SFB::Audio::MP4Metadata::MP4Metadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-MP4Metadata::~MP4Metadata()
+SFB::Audio::MP4Metadata::~MP4Metadata()
 {}
 
 #pragma mark Functionality
 
-bool MP4Metadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MP4Metadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -474,7 +474,7 @@ bool MP4Metadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool MP4Metadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MP4Metadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

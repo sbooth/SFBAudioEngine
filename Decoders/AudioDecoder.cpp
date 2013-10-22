@@ -42,14 +42,14 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	AudioDecoderErrorDomain					= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioDecoder");
+const CFStringRef	SFB::Audio::AudioDecoderErrorDomain					= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioDecoder");
 
 #pragma mark Static Methods
 
-bool AudioDecoder::sAutomaticallyOpenDecoders = false;
-std::vector<AudioDecoder::SubclassInfo> AudioDecoder::sRegisteredSubclasses;
+bool SFB::Audio::Decoder::sAutomaticallyOpenDecoders = false;
+std::vector<SFB::Audio::Decoder::SubclassInfo> SFB::Audio::Decoder::sRegisteredSubclasses;
 
-CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::Decoder::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedFileExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
@@ -61,7 +61,7 @@ CFArrayRef AudioDecoder::CreateSupportedFileExtensions()
 	return supportedFileExtensions;
 }
 
-CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::Decoder::CreateSupportedMIMETypes()
 {
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
@@ -73,7 +73,7 @@ CFArrayRef AudioDecoder::CreateSupportedMIMETypes()
 	return supportedMIMETypes;
 }
 
-bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::Decoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -86,7 +86,7 @@ bool AudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::Decoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -99,12 +99,12 @@ bool AudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
 	return CreateDecoderForURL(url, nullptr, error);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -115,7 +115,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeT
 	if(nullptr == inputSource)
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, mimeType, error);
+	Decoder *decoder = CreateDecoderForInputSource(inputSource, mimeType, error);
 	
 	if(nullptr == decoder)
 		delete inputSource, inputSource = nullptr;
@@ -124,18 +124,18 @@ AudioDecoder * AudioDecoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeT
 }
 
 // If this returns nullptr, the caller is responsible for deleting inputSource
-// If this returns an AudioDecoder instance, the instance takes ownership of inputSource
-AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
+// If this returns a Decoder instance, the instance takes ownership of inputSource
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
 {
 	return CreateDecoderForInputSource(inputSource, nullptr, error);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error)
 {
 	if(nullptr == inputSource)
 		return nullptr;
 
-	AudioDecoder *decoder = nullptr;
+	Decoder *decoder = nullptr;
 
 	// Open the input source if it isn't already
 	if(AutomaticallyOpenDecoders() && !inputSource->IsOpen() && !inputSource->Open(error))
@@ -216,7 +216,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSource(InputSource *inputSourc
 	return decoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -226,7 +226,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(nullptr == inputSource)
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, error);
+	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, error);
 
 	if(nullptr == decoder)
 		delete inputSource, inputSource = nullptr;
@@ -234,7 +234,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return decoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -244,7 +244,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(nullptr == inputSource)
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, error);
+	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, error);
 
 	if(nullptr == decoder)
 		delete inputSource, inputSource = nullptr;
@@ -252,7 +252,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return decoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -262,7 +262,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	if(nullptr == inputSource)
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, repeatCount, error);
+	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, repeatCount, error);
 
 	if(nullptr == decoder)
 		delete inputSource, inputSource = nullptr;
@@ -270,7 +270,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 star
 	return decoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
 {
 	if(nullptr == inputSource)
 		return nullptr;
@@ -278,7 +278,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	if(!inputSource->SupportsSeeking())
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
+	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
 	if(nullptr == decoder)
 		return nullptr;
@@ -288,7 +288,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 		return nullptr;
 	}
 
-	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, error);
+	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, error);
 
 	if(nullptr == regionDecoder) {
 		delete decoder, decoder = nullptr;
@@ -298,7 +298,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	return regionDecoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
 	if(nullptr == inputSource)
 		return nullptr;
@@ -306,7 +306,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	if(!inputSource->SupportsSeeking())
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
+	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
 	if(nullptr == decoder)
 		return nullptr;
@@ -316,7 +316,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 		return nullptr;
 	}
 
-	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, error);
+	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, error);
 
 	if(nullptr == regionDecoder) {
 		delete decoder, decoder = nullptr;
@@ -326,7 +326,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	return regionDecoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
 	if(nullptr == inputSource)
 		return nullptr;
@@ -334,7 +334,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	if(!inputSource->SupportsSeeking())
 		return nullptr;
 
-	AudioDecoder *decoder = CreateDecoderForInputSource(inputSource, error);
+	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
 
 	if(nullptr == decoder)
 		return nullptr;
@@ -344,7 +344,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 		return nullptr;
 	}
 
-	AudioDecoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, repeatCount, error);
+	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, repeatCount, error);
 
 	if(nullptr == regionDecoder) {
 		delete decoder, decoder = nullptr;
@@ -354,7 +354,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForInputSourceRegion(InputSource *inpu
 	return regionDecoder;
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, CFErrorRef */*error*/)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, CFErrorRef */*error*/)
 {
 	if(nullptr == decoder)
 		return nullptr;
@@ -365,7 +365,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 	return new LoopableRegionDecoder(decoder, startingFrame);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
 {
 	if(nullptr == decoder)
 		return nullptr;
@@ -376,7 +376,7 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
 }
 
-AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
+SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
 {
 	if(nullptr == decoder)
 		return nullptr;
@@ -389,13 +389,13 @@ AudioDecoder * AudioDecoder::CreateDecoderForDecoderRegion(AudioDecoder *decoder
 
 #pragma mark Creation and Destruction
 
-AudioDecoder::AudioDecoder()
+SFB::Audio::Decoder::Decoder()
 	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
-AudioDecoder::AudioDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::Decoder(InputSource *inputSource)
 	: mInputSource(inputSource), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	assert(nullptr != inputSource);
@@ -404,7 +404,7 @@ AudioDecoder::AudioDecoder(InputSource *inputSource)
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
-AudioDecoder::~AudioDecoder()
+SFB::Audio::Decoder::~Decoder()
 {
 	if(mInputSource)
 		delete mInputSource, mInputSource = nullptr;
@@ -415,7 +415,7 @@ AudioDecoder::~AudioDecoder()
 
 #pragma mark Base Functionality
 
-CFStringRef AudioDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -429,12 +429,12 @@ CFStringRef AudioDecoder::CreateSourceFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::CreateFormatDescription() const
+CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -448,12 +448,12 @@ CFStringRef AudioDecoder::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return sourceFormatDescription;
 }
 
-CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
+CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -467,7 +467,7 @@ CFStringRef AudioDecoder::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return channelLayoutDescription;
 }

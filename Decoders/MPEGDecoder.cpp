@@ -49,7 +49,7 @@ namespace {
 	void RegisterMPEGDecoder() __attribute__ ((constructor));
 	void RegisterMPEGDecoder()
 	{
-		AudioDecoder::RegisterSubclass<MPEGDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::MPEGDecoder>();
 	}
 
 #pragma mark Initialization
@@ -60,7 +60,7 @@ namespace {
 		// What happens if this fails?
 		int result = mpg123_init();
 		if(MPG123_OK != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
 	}
 
 	void Teardownmpg123() __attribute__ ((destructor));
@@ -75,7 +75,7 @@ namespace {
 	{
 		assert(nullptr != dataSource);
 
-		MPEGDecoder *decoder = static_cast<MPEGDecoder *>(dataSource);
+		auto decoder = static_cast<SFB::Audio::MPEGDecoder *>(dataSource);
 		return (ssize_t)decoder->GetInputSource()->Read(ptr, (SInt64)size);
 	}
 
@@ -83,8 +83,8 @@ namespace {
 	{
 		assert(nullptr != datasource);
 
-		MPEGDecoder *decoder = static_cast<MPEGDecoder *>(datasource);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::MPEGDecoder *>(datasource);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return -1;
@@ -112,19 +112,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef MPEGDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MPEGDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mp3") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MPEGDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MPEGDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/mpeg") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -135,7 +135,7 @@ bool MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -146,18 +146,18 @@ bool MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * MPEGDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::MPEGDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new MPEGDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-MPEGDecoder::MPEGDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
+SFB::Audio::MPEGDecoder::MPEGDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
 {}
 
-MPEGDecoder::~MPEGDecoder()
+SFB::Audio::MPEGDecoder::~MPEGDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -165,10 +165,10 @@ MPEGDecoder::~MPEGDecoder()
 
 #pragma mark Functionality
 
-bool MPEGDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MPEGDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -262,8 +262,8 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(channels) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
 
 	if(MPG123_OK != mpg123_scan(decoder.get())) {
@@ -279,7 +279,7 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = SFB::AllocateABL(mFormat, framesPerMPEGFrame);
+	mBufferList = AllocateABL(mFormat, framesPerMPEGFrame);
 	
 	if(nullptr == mBufferList) {
 		if(error)
@@ -297,23 +297,23 @@ bool MPEGDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool MPEGDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MPEGDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
 	mDecoder.reset();
 
 	if(mBufferList)
-		mBufferList = SFB::DeallocateABL(mBufferList);
+		mBufferList = DeallocateABL(mBufferList);
 
 	mIsOpen = false;
 	return true;
 }
 
-CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::MPEGDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -350,12 +350,12 @@ CFStringRef MPEGDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 MPEGDecoder::GetTotalFrames() const
+SInt64 SFB::Audio::MPEGDecoder::GetTotalFrames() const
 {
 	return mpg123_length(mDecoder.get());
 }
 
-SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::MPEGDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -367,7 +367,7 @@ SInt64 MPEGDecoder::SeekToFrame(SInt64 frame)
 	return ((0 <= frame) ? mCurrentFrame : -1);
 }
 
-UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -415,7 +415,7 @@ UInt32 MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 		if(MPG123_DONE == result)
 			break;
 		else if(MPG123_OK != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
 			break;
 		}
 

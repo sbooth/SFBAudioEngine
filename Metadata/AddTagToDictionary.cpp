@@ -33,8 +33,7 @@
 #include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
 
-bool
-AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag)
+bool SFB::Audio::AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;

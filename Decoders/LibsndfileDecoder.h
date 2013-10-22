@@ -36,66 +36,73 @@
 
 #include "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting all formats handled by Libsndfile
-// ========================================
-class LibsndfileDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting all formats handled by Libsndfile
+		// ========================================
+		class LibsndfileDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	LibsndfileDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~LibsndfileDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			LibsndfileDecoder(InputSource *inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			// ========================================
+			// Destruction
+			virtual ~LibsndfileDecoder();
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Source audio information
-	virtual SInt64 GetTotalFrames() const;
-	virtual SInt64 GetCurrentFrame() const;
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// ========================================
+			// Source audio information
+			virtual SInt64 GetTotalFrames() const;
+			virtual SInt64 GetCurrentFrame() const;
 
-	enum class ReadMethod {
-		Unknown,
-		Short,
-		Int,
-		Float,
-		Double
-	};
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
 
-	SNDFILE				*mFile;
-	SF_INFO				mFileInfo;
-	ReadMethod			mReadMethod;
-};
+		private:
+
+			enum class ReadMethod {
+				Unknown,
+				Short,
+				Int,
+				Float,
+				Double
+			};
+			
+			SNDFILE				*mFile;
+			SF_INFO				mFileInfo;
+			ReadMethod			mReadMethod;
+		};
+		
+	}
+}

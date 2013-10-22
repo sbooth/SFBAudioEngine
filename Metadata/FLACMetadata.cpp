@@ -56,26 +56,26 @@ namespace {
 	void RegisterFLACMetadata() __attribute__ ((constructor));
 	void RegisterFLACMetadata()
 	{
-		AudioMetadata::RegisterSubclass<FLACMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::FLACMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef FLACMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::FLACMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("flac") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef FLACMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::FLACMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/flac") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -86,7 +86,7 @@ bool FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -97,23 +97,23 @@ bool FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * FLACMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::FLACMetadata::CreateMetadata(CFURLRef url)
 {
 	return new FLACMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-FLACMetadata::FLACMetadata(CFURLRef url)
+SFB::Audio::FLACMetadata::FLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-FLACMetadata::~FLACMetadata()
+SFB::Audio::FLACMetadata::~FLACMetadata()
 {}
 
 #pragma mark Functionality
 
-bool FLACMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::FLACMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -183,7 +183,7 @@ bool FLACMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool FLACMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::FLACMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

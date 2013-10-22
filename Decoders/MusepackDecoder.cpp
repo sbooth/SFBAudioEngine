@@ -46,7 +46,7 @@ namespace {
 	void RegisterMusepackDecoder() __attribute__ ((constructor));
 	void RegisterMusepackDecoder()
 	{
-		AudioDecoder::RegisterSubclass<MusepackDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::MusepackDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -55,7 +55,7 @@ namespace {
 	{
 		assert(nullptr != p_reader);
 
-		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
 		return (mpc_int32_t)decoder->GetInputSource()->Read(ptr, size);
 	}
 
@@ -63,7 +63,7 @@ namespace {
 	{
 		assert(nullptr != p_reader);
 
-		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
 		return decoder->GetInputSource()->SeekToOffset(offset);
 	}
 
@@ -71,7 +71,7 @@ namespace {
 	{
 		assert(nullptr != p_reader);
 
-		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
 		return (mpc_int32_t)decoder->GetInputSource()->GetOffset();
 	}
 
@@ -79,7 +79,7 @@ namespace {
 	{
 		assert(nullptr != p_reader);
 
-		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
 		return (mpc_int32_t)decoder->GetInputSource()->GetLength();
 	}
 
@@ -87,7 +87,7 @@ namespace {
 	{
 		assert(nullptr != p_reader);
 
-		MusepackDecoder *decoder = static_cast<MusepackDecoder *>(p_reader->data);
+		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
 		return decoder->GetInputSource()->SupportsSeeking();
 	}
 
@@ -95,19 +95,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef MusepackDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::MusepackDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef MusepackDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::MusepackDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack"), CFSTR("audio/x-musepack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -118,7 +118,7 @@ bool MusepackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -132,18 +132,18 @@ bool MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * MusepackDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::MusepackDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new MusepackDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-MusepackDecoder::MusepackDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDemux(nullptr), mTotalFrames(0), mCurrentFrame(0)
+SFB::Audio::MusepackDecoder::MusepackDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mDemux(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {}
 
-MusepackDecoder::~MusepackDecoder()
+SFB::Audio::MusepackDecoder::~MusepackDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -153,10 +153,10 @@ MusepackDecoder::~MusepackDecoder()
 #pragma mark Functionality
 
 
-bool MusepackDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MusepackDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -220,13 +220,13 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(streaminfo.channels) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
 	// Allocate the buffer list
-	mBufferList = SFB::AllocateABL(mFormat, MPC_FRAME_LENGTH);
+	mBufferList = AllocateABL(mFormat, MPC_FRAME_LENGTH);
 
 	if(nullptr == mBufferList) {
 		if(error)
@@ -245,10 +245,10 @@ bool MusepackDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool MusepackDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MusepackDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -258,13 +258,13 @@ bool MusepackDecoder::Close(CFErrorRef */*error*/)
     mpc_reader_exit_stdio(&mReader);
 	
 	if(mBufferList)
-		mBufferList = SFB::DeallocateABL(mBufferList);
+		mBufferList = DeallocateABL(mBufferList);
 
 	mIsOpen = false;
 	return true;
 }
 
-CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::MusepackDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -276,7 +276,7 @@ CFStringRef MusepackDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::MusepackDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -288,7 +288,7 @@ SInt64 MusepackDecoder::SeekToFrame(SInt64 frame)
 	return ((MPC_STATUS_OK == result) ? mCurrentFrame : -1);
 }
 
-UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -333,7 +333,7 @@ UInt32 MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount
 
 		mpc_status result = mpc_demux_decode(mDemux, &frame);
 		if(MPC_STATUS_OK != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Musepack", "Musepack decoding error");
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Musepack decoding error");
 			break;
 		}
 

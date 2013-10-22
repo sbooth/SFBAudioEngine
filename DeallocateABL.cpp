@@ -34,7 +34,7 @@
 #include "DeallocateABL.h"
 
 AudioBufferList *
-SFB::DeallocateABL(AudioBufferList *bufferList)
+SFB::Audio::DeallocateABL(AudioBufferList *bufferList)
 {
 	assert(nullptr != bufferList);
 	

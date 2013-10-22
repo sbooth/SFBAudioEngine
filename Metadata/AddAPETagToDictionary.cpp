@@ -36,8 +36,7 @@
 #include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
 
-bool
-AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::APE::Tag *tag)
+bool SFB::Audio::AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::APE::Tag *tag)
 {
 	if(nullptr == dictionary || nullptr == tag)
 		return false;

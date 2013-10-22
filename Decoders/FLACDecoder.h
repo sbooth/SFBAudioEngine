@@ -37,70 +37,77 @@
 
 #import "AudioDecoder.h"
 
-// ========================================
-// An AudioDecoder subclass supporting the Free Lossless Audio Codec (FLAC)
-// ========================================
-class FLACDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// A Decoder subclass supporting the Free Lossless Audio Codec (FLAC)
+		// ========================================
+		class FLACDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	FLACDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~FLACDecoder();
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// ========================================
+			// Creation
+			FLACDecoder(InputSource *inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			// ========================================
+			// Destruction
+			virtual ~FLACDecoder();
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Audio access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return (SInt64)mStreamInfo.total_samples; }
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return (SInt64)mStreamInfo.total_samples; }
+			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
-	FLAC__StreamDecoder					*mFLAC;
-	FLAC__StreamMetadata_StreamInfo		mStreamInfo;
-	SInt64								mCurrentFrame;
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
 
-	// For converting push to pull
-	AudioBufferList						*mBufferList;
+		private:
 
-public:
+			FLAC__StreamDecoder					*mFLAC;
+			FLAC__StreamMetadata_StreamInfo		mStreamInfo;
+			SInt64								mCurrentFrame;
 
-	// ========================================
-	// Callbacks- for internal use only
-	FLAC__StreamDecoderWriteStatus Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[]);
-	void Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata);
-	void Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status);
+			// For converting push to pull
+			AudioBufferList						*mBufferList;
 
-};
+		public:
+
+			// ========================================
+			// Callbacks- for internal use only
+			FLAC__StreamDecoderWriteStatus Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[]);
+			void Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata);
+			void Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status);
+			
+		};
+		
+	}
+}

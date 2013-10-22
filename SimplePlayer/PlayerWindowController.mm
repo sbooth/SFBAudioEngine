@@ -22,9 +22,9 @@ enum {
 @interface PlayerWindowController ()
 {
 @private
-	AudioPlayer		*_player;		// The player instance
-	uint32_t		_playerFlags;
-	NSTimer			*_uiTimer;
+	SFB::Audio::Player	*_player;		// The player instance
+	uint32_t			_playerFlags;
+	NSTimer				*_uiTimer;
 }
 @end
 
@@ -41,17 +41,17 @@ enum {
 - (id) init
 {
 	if((self = [super initWithWindowNibName:@"PlayerWindow"])) {
-		_player = new AudioPlayer();
+		_player = new SFB::Audio::Player();
 
 		_playerFlags = 0;
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingStartedBlock(^(const AudioDecoder */*decoder*/){
+		_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder */*decoder*/){
 			OSAtomicTestAndSetBarrier(7 /* ePlayerFlagRenderingStarted */, &_playerFlags);
 		});
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingFinishedBlock(^(const AudioDecoder */*decoder*/){
+		_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder */*decoder*/){
 			OSAtomicTestAndSetBarrier(6 /* ePlayerFlagRenderingFinished */, &_playerFlags);
 		});
 
@@ -223,7 +223,7 @@ enum {
 
 	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
 	// but for simplicity's sake it is done here.
-	AudioMetadata *metadata = AudioMetadata::CreateMetadataForURL((__bridge CFURLRef)url);
+	auto metadata = SFB::Audio::Metadata::CreateMetadataForURL((__bridge CFURLRef)url);
 	if(metadata) {
 		auto pictures = metadata->GetAttachedPictures();
 		if(!pictures.empty())

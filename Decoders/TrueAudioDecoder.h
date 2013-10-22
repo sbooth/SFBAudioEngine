@@ -37,64 +37,75 @@
 
 #include <tta++/libtta.h>
 
-typedef struct {
-	TTA_io_callback iocb;
-	AudioDecoder *decoder;
-} TTA_io_callback_wrapper;
+namespace {
 
-// ========================================
-// An AudioDecoder subclass supporting TrueAudio files
-// ========================================
-class TrueAudioDecoder : public AudioDecoder
-{
+	struct TTA_io_callback_wrapper {
+		TTA_io_callback iocb;
+		SFB::Audio::Decoder *decoder;
+	};
 
-public:
+}
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+namespace SFB {
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+	namespace Audio {
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+		// ========================================
+		// A Decoder subclass supporting TrueAudio files
+		// ========================================
+		class TrueAudioDecoder : public Decoder
+		{
 
-	// ========================================
-	// Creation
-	TrueAudioDecoder(InputSource *inputSource);
+		public:
 
-	// ========================================
-	// Destruction
-	virtual ~TrueAudioDecoder();
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// File access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+			static Decoder * CreateDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// ========================================
+			// Creation
+			TrueAudioDecoder(InputSource *inputSource);
 
-	// ========================================
-	// Source audio information
-	virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-	virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			// ========================================
+			// Destruction
+			virtual ~TrueAudioDecoder();
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// ========================================
+			// File access
+			virtual bool Open(CFErrorRef *error = nullptr);
+			virtual bool Close(CFErrorRef *error = nullptr);
 
-private:
-	tta::tta_decoder					*mDecoder;
-	TTA_io_callback_wrapper				*mCallbacks;
-	SInt64								mCurrentFrame;
-	SInt64								mTotalFrames;
-	UInt32								mFramesToSkip;
-};
+			// ========================================
+			// The native format of the source audio
+			virtual CFStringRef CreateSourceFormatDescription() const;
+
+			// ========================================
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// ========================================
+			// Source audio information
+			virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
+			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+
+			// ========================================
+			// Seeking support
+			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 SeekToFrame(SInt64 frame);
+
+		private:
+			tta::tta_decoder					*mDecoder;
+			TTA_io_callback_wrapper				*mCallbacks;
+			SInt64								mCurrentFrame;
+			SInt64								mTotalFrames;
+			UInt32								mFramesToSkip;
+		};
+		
+	}
+}

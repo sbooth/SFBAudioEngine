@@ -46,26 +46,26 @@ namespace {
 	void RegisterDSFMetadata() __attribute__ ((constructor));
 	void RegisterDSFMetadata()
 	{
-		AudioMetadata::RegisterSubclass<DSFMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::DSFMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef DSFMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::DSFMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("dsf") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef DSFMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::DSFMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/dsf") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool DSFMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::DSFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -76,7 +76,7 @@ bool DSFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool DSFMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::DSFMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -87,23 +87,23 @@ bool DSFMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * DSFMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::DSFMetadata::CreateMetadata(CFURLRef url)
 {
 	return new DSFMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-DSFMetadata::DSFMetadata(CFURLRef url)
+SFB::Audio::DSFMetadata::DSFMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-DSFMetadata::~DSFMetadata()
+SFB::Audio::DSFMetadata::~DSFMetadata()
 {}
 
 #pragma mark Functionality
 
-bool DSFMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::DSFMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -155,7 +155,7 @@ bool DSFMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool DSFMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::DSFMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

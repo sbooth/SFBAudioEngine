@@ -35,29 +35,33 @@
 // ========================================
 // CFNetwork callbacks
 // ========================================
-static void myCFReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, void *clientCallBackInfo)
-{
-	assert(nullptr != clientCallBackInfo);
-	
-	HTTPInputSource *inputSource = static_cast<HTTPInputSource *>(clientCallBackInfo);
-	inputSource->HandleNetworkEvent(stream, type);
+namespace {
+
+	void myCFReadStreamClientCallBack(CFReadStreamRef stream, CFStreamEventType type, void *clientCallBackInfo)
+	{
+		assert(nullptr != clientCallBackInfo);
+
+		SFB::HTTPInputSource *inputSource = static_cast<SFB::HTTPInputSource *>(clientCallBackInfo);
+		inputSource->HandleNetworkEvent(stream, type);
+	}
+
 }
 
 
 #pragma mark Creation and Destruction
 
 
-HTTPInputSource::HTTPInputSource(CFURLRef url)
+SFB::HTTPInputSource::HTTPInputSource(CFURLRef url)
 	: InputSource(url), mRequest(nullptr), mReadStream(nullptr), mResponseHeaders(nullptr), mEOSReached(false), mOffset(-1), mDesiredOffset(0)
 {}
 
-HTTPInputSource::~HTTPInputSource()
+SFB::HTTPInputSource::~HTTPInputSource()
 {
 	if(IsOpen())
 		Close();
 }
 
-bool HTTPInputSource::Open(CFErrorRef *error)
+bool SFB::HTTPInputSource::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.HTTP", "Open() called on an InputSource that is already open");
@@ -123,7 +127,7 @@ bool HTTPInputSource::Open(CFErrorRef *error)
 	return true;
 }
 
-bool HTTPInputSource::Close(CFErrorRef *error)
+bool SFB::HTTPInputSource::Close(CFErrorRef *error)
 {
 #pragma unused(error)
 	if(!IsOpen()) {
@@ -145,7 +149,7 @@ bool HTTPInputSource::Close(CFErrorRef *error)
 	return true;
 }
 
-SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 {
 	if(!IsOpen())
 		return -1;
@@ -164,7 +168,7 @@ SInt64 HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 	return bytesRead;
 }
 
-SInt64 HTTPInputSource::GetLength() const
+SInt64 SFB::HTTPInputSource::GetLength() const
 {
 	if(!IsOpen() || !mResponseHeaders)
 		return -1;
@@ -179,7 +183,7 @@ SInt64 HTTPInputSource::GetLength() const
 	return contentLength;
 }
 
-bool HTTPInputSource::SeekToOffset(SInt64 offset)
+bool SFB::HTTPInputSource::SeekToOffset(SInt64 offset)
 {
 	if(!IsOpen())
 		return false;
@@ -191,7 +195,7 @@ bool HTTPInputSource::SeekToOffset(SInt64 offset)
 	return Open();
 }
 
-CFStringRef HTTPInputSource::CopyContentMIMEType() const
+CFStringRef SFB::HTTPInputSource::CopyContentMIMEType() const
 {
 	if(!IsOpen() || !mResponseHeaders)
 		return nullptr;
@@ -199,7 +203,7 @@ CFStringRef HTTPInputSource::CopyContentMIMEType() const
 	return reinterpret_cast<CFStringRef>(CFDictionaryGetValue(mResponseHeaders, CFSTR("Content-Type")));
 }
 
-void HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventType type)
+void SFB::HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEventType type)
 {
 	switch(type) {
 		case kCFStreamEventOpenCompleted:

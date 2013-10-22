@@ -45,26 +45,26 @@ namespace {
 	void RegisterOggOpusMetadata() __attribute__ ((constructor));
 	void RegisterOggOpusMetadata()
 	{
-		AudioMetadata::RegisterSubclass<OggOpusMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::OggOpusMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef OggOpusMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggOpusMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("opus") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggOpusMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggOpusMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/opus") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggOpusMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggOpusMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -75,7 +75,7 @@ bool OggOpusMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -86,23 +86,23 @@ bool OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * OggOpusMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::OggOpusMetadata::CreateMetadata(CFURLRef url)
 {
 	return new OggOpusMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-OggOpusMetadata::OggOpusMetadata(CFURLRef url)
+SFB::Audio::OggOpusMetadata::OggOpusMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-OggOpusMetadata::~OggOpusMetadata()
+SFB::Audio::OggOpusMetadata::~OggOpusMetadata()
 {}
 
 #pragma mark Functionality
 
-bool OggOpusMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::OggOpusMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -147,7 +147,7 @@ bool OggOpusMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool OggOpusMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::OggOpusMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

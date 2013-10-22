@@ -31,7 +31,7 @@
 #include "CFDictionaryUtilities.h"
 #include "CFWrapper.h"
 
-void AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int value)
+void SFB::AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int value)
 {
 	if(nullptr == d || nullptr == key)
 		return;
@@ -41,7 +41,7 @@ void AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int value)
 		CFDictionarySetValue(d, key, num);
 }
 
-void AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, int value)
+void SFB::AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, int value)
 {
 	if(nullptr == d || nullptr == key)
 		return;
@@ -51,7 +51,7 @@ void AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, int v
 		CFDictionarySetValue(d, key, str);
 }
 
-void AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, long long value)
+void SFB::AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, long long value)
 {
 	if(nullptr == d || nullptr == key)
 		return;
@@ -61,7 +61,7 @@ void AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, long lon
 		CFDictionarySetValue(d, key, num);
 }
 
-void AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float value)
+void SFB::AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float value)
 {
 	if(nullptr == d || nullptr == key)
 		return;
@@ -71,7 +71,7 @@ void AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float value
 		CFDictionarySetValue(d, key, num);
 }
 
-void AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, double value)
+void SFB::AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, double value)
 {
 	if(nullptr == d || nullptr == key)
 		return;

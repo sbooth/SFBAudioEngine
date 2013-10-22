@@ -43,7 +43,7 @@ namespace {
 	void RegisterOggVorbisDecoder() __attribute__ ((constructor));
 	void RegisterOggVorbisDecoder()
 	{
-		AudioDecoder::RegisterSubclass<OggVorbisDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::OggVorbisDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -52,7 +52,7 @@ namespace {
 	{
 		assert(nullptr != datasource);
 
-		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
 		return (size_t)decoder->GetInputSource()->Read(ptr, (SInt64)(size * nmemb));
 	}
 
@@ -60,8 +60,8 @@ namespace {
 	{
 		assert(nullptr != datasource);
 
-		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return -1;
@@ -86,7 +86,7 @@ namespace {
 	{
 		assert(nullptr != datasource);
 
-		OggVorbisDecoder *decoder = static_cast<OggVorbisDecoder *>(datasource);
+		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
 		return (long)decoder->GetInputSource()->GetOffset();
 	}
 
@@ -94,19 +94,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef OggVorbisDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::OggVorbisDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("ogg"), CFSTR("oga") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef OggVorbisDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::OggVorbisDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/ogg-vorbis") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -119,7 +119,7 @@ bool OggVorbisDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -130,20 +130,20 @@ bool OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * OggVorbisDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::OggVorbisDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new OggVorbisDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource)
+SFB::Audio::OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
+	: Decoder(inputSource)
 {
 	memset(&mVorbisFile, 0, sizeof(mVorbisFile));
 }
 
-OggVorbisDecoder::~OggVorbisDecoder()
+SFB::Audio::OggVorbisDecoder::~OggVorbisDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -151,10 +151,10 @@ OggVorbisDecoder::~OggVorbisDecoder()
 
 #pragma mark Functionality
 
-bool OggVorbisDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggVorbisDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -182,20 +182,20 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	}
 	
 	if(0 != ov_test_open(&mVorbisFile)) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_test_open failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_test_open failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
 		
 		return false;
 	}
 	
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
 	if(nullptr == ovInfo) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_info failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_info failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
 		
 		return false;
 	}
@@ -224,15 +224,15 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 			// Default channel layouts from Vorbis I specification section 4.3.9
 			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
 
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 3:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);	break;
-		case 6:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
+		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);		break;
+		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
 
 		case 7:
-			mChannelLayout = SFB::CreateChannelLayout(7);
+			mChannelLayout = CreateChannelLayout(7);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;
@@ -250,7 +250,7 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 			break;
 
 		case 8:
-			mChannelLayout = SFB::CreateChannelLayout(8);
+			mChannelLayout = CreateChannelLayout(8);
 
 			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 			mChannelLayout->mChannelBitmap = 0;
@@ -273,21 +273,21 @@ bool OggVorbisDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool OggVorbisDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggVorbisDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
 	if(0 != ov_clear(&mVorbisFile))
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "ov_clear failed");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
 
 	mIsOpen = false;
 	return true;
 }
 
-CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::OggVorbisDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -299,7 +299,7 @@ CFStringRef OggVorbisDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::OggVorbisDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -310,7 +310,7 @@ SInt64 OggVorbisDecoder::SeekToFrame(SInt64 frame)
 	return this->GetCurrentFrame();
 }
 
-UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -334,7 +334,7 @@ UInt32 OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 										&currentSection);
 			
 		if(0 > framesRead) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.OggVorbis", "Ogg Vorbis decoding error");
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "Ogg Vorbis decoding error");
 			return 0;
 		}
 		

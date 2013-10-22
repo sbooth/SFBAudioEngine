@@ -41,7 +41,21 @@
 
 #pragma clang diagnostic pop
 
-// ========================================
-// Add the metadata specified in the ID3v1::Tag instance to dictionary
-// ========================================
-bool AddID3v1TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v1::Tag *tag);
+/*! @file AddID3v1TagToDictionary.h @brief Utility method for adding \c TagLib::ID3v1::Tag contents to \c CFDictionary */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		/*!
+		 * @brief Add the metadata specified in the \c TagLib::ID3v1::Tag instance to \c dictionary
+		 * @param dictionary A \c CFMutableDictionaryRef to receive the metadata
+		 * @param attachedPictures A \c std::vector to receive the attached pictures
+		 * @param properties The tag
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool AddID3v1TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v1::Tag *tag);
+		
+	}
+}

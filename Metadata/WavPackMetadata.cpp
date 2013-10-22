@@ -49,26 +49,26 @@ namespace {
 	void RegisterWavPackMetadata() __attribute__ ((constructor));
 	void RegisterWavPackMetadata()
 	{
-		AudioMetadata::RegisterSubclass<WavPackMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::WavPackMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef WavPackMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::WavPackMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("wv") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef WavPackMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::WavPackMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -79,7 +79,7 @@ bool WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -90,23 +90,23 @@ bool WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * WavPackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::WavPackMetadata::CreateMetadata(CFURLRef url)
 {
 	return new WavPackMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-WavPackMetadata::WavPackMetadata(CFURLRef url)
+SFB::Audio::WavPackMetadata::WavPackMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-WavPackMetadata::~WavPackMetadata()
+SFB::Audio::WavPackMetadata::~WavPackMetadata()
 {}
 
 #pragma mark Functionality
 
-bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::WavPackMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -161,7 +161,7 @@ bool WavPackMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool WavPackMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::WavPackMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

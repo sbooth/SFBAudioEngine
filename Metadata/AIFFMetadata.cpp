@@ -46,26 +46,26 @@ namespace {
 	void RegisterAIFFMetadata() __attribute__ ((constructor));
 	void RegisterAIFFMetadata()
 	{
-		AudioMetadata::RegisterSubclass<AIFFMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::AIFFMetadata>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef AIFFMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::AIFFMetadata::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("aiff"), CFSTR("aif") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef AIFFMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::AIFFMetadata::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/aiff") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -78,7 +78,7 @@ bool AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -89,23 +89,23 @@ bool AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioMetadata * AIFFMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata * SFB::Audio::AIFFMetadata::CreateMetadata(CFURLRef url)
 {
 	return new AIFFMetadata(url);
 }
 
 #pragma mark Creation and Destruction
 
-AIFFMetadata::AIFFMetadata(CFURLRef url)
+SFB::Audio::AIFFMetadata::AIFFMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-AIFFMetadata::~AIFFMetadata()
+SFB::Audio::AIFFMetadata::~AIFFMetadata()
 {}
 
 #pragma mark Functionality
 
-bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::AIFFMetadata::ReadMetadata(CFErrorRef *error)
 {
 	ClearAllMetadata();
 
@@ -157,7 +157,7 @@ bool AIFFMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool AIFFMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::AIFFMetadata::WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))

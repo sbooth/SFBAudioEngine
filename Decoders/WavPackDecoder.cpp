@@ -43,7 +43,7 @@ namespace {
 	void RegisterWavPackDecoder() __attribute__ ((constructor));
 	void RegisterWavPackDecoder()
 	{
-		AudioDecoder::RegisterSubclass<WavPackDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::WavPackDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -52,7 +52,7 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
 		return (int32_t)decoder->GetInputSource()->Read(data, bcount);
 	}
 
@@ -60,7 +60,7 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
 		return (uint32_t)decoder->GetInputSource()->GetOffset();
 	}
 
@@ -68,7 +68,7 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
 		return !decoder->GetInputSource()->SeekToOffset(pos);
 	}
 
@@ -76,8 +76,8 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return -1;
@@ -104,8 +104,8 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
-		InputSource *inputSource = decoder->GetInputSource();
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
+		auto inputSource = decoder->GetInputSource();
 
 		if(!inputSource->SupportsSeeking())
 			return EOF;
@@ -120,7 +120,7 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
 		return (uint32_t)decoder->GetInputSource()->GetLength();
 	}
 
@@ -128,7 +128,7 @@ namespace {
 	{
 		assert(nullptr != id);
 
-		WavPackDecoder *decoder = static_cast<WavPackDecoder *>(id);
+		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
 		return (int)decoder->GetInputSource()->SupportsSeeking();
 	}
 
@@ -136,19 +136,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef WavPackDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::WavPackDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("wv") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef WavPackDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::WavPackDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack"), CFSTR("audio/x-wavpack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 2, &kCFTypeArrayCallBacks);
 }
 
-bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -159,7 +159,7 @@ bool WavPackDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -173,20 +173,20 @@ bool WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * WavPackDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::WavPackDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new WavPackDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-WavPackDecoder::WavPackDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
+SFB::Audio::WavPackDecoder::WavPackDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 }
 
-WavPackDecoder::~WavPackDecoder()
+SFB::Audio::WavPackDecoder::~WavPackDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -194,10 +194,10 @@ WavPackDecoder::~WavPackDecoder()
 
 #pragma mark Functionality
 
-bool WavPackDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.WavPack", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 
@@ -275,9 +275,9 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
 	mBuffer = (int32_t *)calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t));
@@ -293,10 +293,10 @@ bool WavPackDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool WavPackDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::WavPackDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.WavPack", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -312,7 +312,7 @@ bool WavPackDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::WavPackDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -324,7 +324,7 @@ CFStringRef WavPackDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::WavPackDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -336,7 +336,7 @@ SInt64 WavPackDecoder::SeekToFrame(SInt64 frame)
 	return (result ? mCurrentFrame : -1);
 }
 
-UInt32 WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;

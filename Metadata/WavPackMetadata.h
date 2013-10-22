@@ -33,34 +33,41 @@
 #include <CoreFoundation/CoreFoundation.h>
 #import "AudioMetadata.h"
 
-// ========================================
-// An AudioMetadata subclass supporting WavPack
-// ========================================
-class WavPackMetadata : public AudioMetadata
-{
-	
-public:
-	
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
-	
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+namespace SFB {
 
-	static AudioMetadata * CreateMetadata(CFURLRef url);
+	namespace Audio {
 
-	// ========================================
-	// Creation
-	WavPackMetadata(CFURLRef url);
-	
-	// ========================================
-	// Destruction
-	virtual ~WavPackMetadata();
-	
-	// ========================================
-	// The core functionality
-	virtual bool ReadMetadata(CFErrorRef *error = nullptr);
-	virtual bool WriteMetadata(CFErrorRef *error = nullptr);
-};
+		// ========================================
+		// A Metadata subclass supporting WavPack
+		// ========================================
+		class WavPackMetadata : public Metadata
+		{
+
+		public:
+
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
+
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
+
+			static Metadata * CreateMetadata(CFURLRef url);
+
+			// ========================================
+			// Creation
+			WavPackMetadata(CFURLRef url);
+
+			// ========================================
+			// Destruction
+			virtual ~WavPackMetadata();
+
+			// ========================================
+			// The core functionality
+			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
+			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
+		};
+		
+	}
+}

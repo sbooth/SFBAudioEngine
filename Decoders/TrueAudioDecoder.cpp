@@ -41,7 +41,7 @@ namespace {
 	void RegisterTrueAudioDecoder() __attribute__ ((constructor));
 	void RegisterTrueAudioDecoder()
 	{
-		AudioDecoder::RegisterSubclass<TrueAudioDecoder>();
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::TrueAudioDecoder>();
 	}
 
 #pragma mark Callbacks
@@ -62,19 +62,19 @@ namespace {
 
 #pragma mark Static Methods
 
-CFArrayRef TrueAudioDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::TrueAudioDecoder::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("tta") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef TrueAudioDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::TrueAudioDecoder::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/x-tta") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -85,7 +85,7 @@ bool TrueAudioDecoder::HandlesFilesWithExtension(CFStringRef extension)
 	return false;
 }
 
-bool TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -96,18 +96,18 @@ bool TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-AudioDecoder * TrueAudioDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder * SFB::Audio::TrueAudioDecoder::CreateDecoder(InputSource *inputSource)
 {
 	return new TrueAudioDecoder(inputSource);
 }
 
 #pragma mark Creation and Destruction
 
-TrueAudioDecoder::TrueAudioDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
+SFB::Audio::TrueAudioDecoder::TrueAudioDecoder(InputSource *inputSource)
+	: Decoder(inputSource), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
 {}
 
-TrueAudioDecoder::~TrueAudioDecoder()
+SFB::Audio::TrueAudioDecoder::~TrueAudioDecoder()
 {
 	if(IsOpen())
 		Close();
@@ -115,10 +115,10 @@ TrueAudioDecoder::~TrueAudioDecoder()
 
 #pragma mark Functionality
 
-bool TrueAudioDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Open() called on an AudioDecoder that is already open");		
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Open() called on a Decoder that is already open");		
 		return true;
 	}
 	
@@ -139,7 +139,7 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 		mDecoder->init_get_info(&streamInfo, 0);
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
 		if(mDecoder)
 			delete mDecoder, mDecoder = nullptr;
 	}
@@ -189,7 +189,7 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 
 		default:
 		{
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
 				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
@@ -215,9 +215,9 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 
 	// Setup the channel layout
 	switch(streamInfo.nch) {
-		case 1:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
-		case 4:		mChannelLayout = SFB::CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 
 	mTotalFrames = streamInfo.samples;
@@ -226,10 +226,10 @@ bool TrueAudioDecoder::Open(CFErrorRef *error)
 	return true;
 }
 
-bool TrueAudioDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::TrueAudioDecoder::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "Close() called on an AudioDecoder that hasn't been opened");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 	
@@ -245,7 +245,7 @@ bool TrueAudioDecoder::Close(CFErrorRef */*error*/)
 	return true;
 }
 
-CFStringRef TrueAudioDecoder::CreateSourceFormatDescription() const
+CFStringRef SFB::Audio::TrueAudioDecoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen())
 		return nullptr;
@@ -257,7 +257,7 @@ CFStringRef TrueAudioDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::TrueAudioDecoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
 		return -1;
@@ -269,7 +269,7 @@ SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
 		mDecoder->set_position(seconds, &frame_start);
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio seek error: " << e.code());
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
 		return -1;
 	}
 
@@ -281,7 +281,7 @@ SInt64 TrueAudioDecoder::SeekToFrame(SInt64 frame)
 	return mCurrentFrame;
 }
 
-UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
 		return 0;
@@ -315,7 +315,7 @@ UInt32 TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCoun
 		}
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.TrueAudio", "True Audio decoding error: " << e.code());
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio decoding error: " << e.code());
 		return 0;
 	}
 

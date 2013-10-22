@@ -35,40 +35,44 @@
 
 #include "InputSource.h"
 
-class FileInputSource : public InputSource
-{
+namespace SFB {
 
-public:
+	class FileInputSource : public InputSource
+	{
 
-	// ========================================
-	// Creation
-	FileInputSource(CFURLRef url);
+	public:
 
-	// ========================================
-	// Destruction
-	virtual ~FileInputSource();
+		// ========================================
+		// Creation
+		FileInputSource(CFURLRef url);
 
-	// ========================================
-	// Bytestream access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+		// ========================================
+		// Destruction
+		virtual ~FileInputSource();
 
-	// ========================================
-	//
-	virtual SInt64 Read(void *buffer, SInt64 byteCount);
-	virtual inline bool AtEOF() const						{ return feof(mFile); }
-	
-	virtual inline SInt64 GetOffset() const					{ return ftello(mFile); }
-	virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
-	
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return true; }
-	virtual bool SeekToOffset(SInt64 offset);
-	
-private:
-	
-	struct stat						mFilestats;
-	FILE							*mFile;
+		// ========================================
+		// Bytestream access
+		virtual bool Open(CFErrorRef *error = nullptr);
+		virtual bool Close(CFErrorRef *error = nullptr);
 
-};
+		// ========================================
+		//
+		virtual SInt64 Read(void *buffer, SInt64 byteCount);
+		virtual inline bool AtEOF() const						{ return feof(mFile); }
+
+		virtual inline SInt64 GetOffset() const					{ return ftello(mFile); }
+		virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
+
+		// ========================================
+		// Seeking support
+		virtual inline bool SupportsSeeking() const				{ return true; }
+		virtual bool SeekToOffset(SInt64 offset);
+
+	private:
+
+		struct stat						mFilestats;
+		FILE							*mFile;
+		
+	};
+
+}

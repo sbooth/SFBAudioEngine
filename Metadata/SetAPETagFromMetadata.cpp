@@ -40,76 +40,74 @@
 
 // ========================================
 // APE tag utilities
-// ========================================
-static bool
-SetAPETag(TagLib::APE::Tag *tag, const char *key, CFStringRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	// Remove the existing comment with this name
-	tag->removeItem(key);
-	
-	// Nothing left to do if value is nullptr
-	if(nullptr == value)
+namespace {
+
+	bool SetAPETag(TagLib::APE::Tag *tag, const char *key, CFStringRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		// Remove the existing comment with this name
+		tag->removeItem(key);
+
+		// Nothing left to do if value is nullptr
+		if(nullptr == value)
+			return true;
+
+		tag->addValue(key, TagLib::StringFromCFString(value));
+
 		return true;
-	
-	tag->addValue(key, TagLib::StringFromCFString(value));
-	
-	return true;
-}
-
-static bool
-SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, CFNumberRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	SFB::CFString numberString;
-	if(nullptr != value)
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
-	
-	bool result = SetAPETag(tag, key, numberString);
-	
-	return result;
-}
-
-static bool
-SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, CFBooleanRef value)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	if(nullptr == value)
-		return SetAPETag(tag, key, nullptr);
-	else if(CFBooleanGetValue(value))
-		return SetAPETag(tag, key, CFSTR("1"));
-	else
-		return SetAPETag(tag, key, CFSTR("0"));
-}
-
-static bool
-SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
-{
-	assert(nullptr != tag);
-	assert(nullptr != key);
-	
-	SFB::CFString numberString;
-	if(nullptr != value) {
-		double f;
-		if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-			LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
-
-		numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
 	}
-	
-	bool result = SetAPETag(tag, key, numberString);
 
-	return result;
+	bool SetAPETagNumber(TagLib::APE::Tag *tag, const char *key, CFNumberRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		SFB::CFString numberString;
+		if(nullptr != value)
+			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
+
+		bool result = SetAPETag(tag, key, numberString);
+
+		return result;
+	}
+
+	bool SetAPETagBoolean(TagLib::APE::Tag *tag, const char *key, CFBooleanRef value)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		if(nullptr == value)
+			return SetAPETag(tag, key, nullptr);
+		else if(CFBooleanGetValue(value))
+			return SetAPETag(tag, key, CFSTR("1"));
+		else
+			return SetAPETag(tag, key, CFSTR("0"));
+	}
+
+	bool SetAPETagDouble(TagLib::APE::Tag *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
+	{
+		assert(nullptr != tag);
+		assert(nullptr != key);
+
+		SFB::CFString numberString;
+		if(nullptr != value) {
+			double f;
+			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
+				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+
+			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
+		}
+
+		bool result = SetAPETag(tag, key, numberString);
+		
+		return result;
+	}
+
 }
 
-bool
-SetAPETagFromMetadata(const AudioMetadata& metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
+bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Tag *tag, bool setAlbumArt)
 {
 	if(nullptr == tag)
 		return false;

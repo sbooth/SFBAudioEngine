@@ -33,9 +33,23 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <taglib/xiphcomment.h>
 
-class AudioMetadata;
+/*! @file SetXiphCommentFromMetadata.h @brief Utility method for setting \c TagLib::Ogg::XiphComment values from \c Metadata */
 
-// ========================================
-// Fill in a Xiph comment from the specified AudioMetadata
-// ========================================
-bool SetXiphCommentFromMetadata(const AudioMetadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
+/*! @brief \c SFBAudioEngine's encompassing namespace */
+namespace SFB {
+
+	namespace Audio {
+
+		class Metadata;
+
+		/*!
+		 * @brief Set the values in a \c TagLib::Ogg::XiphComment from \c Metadata
+		 * @param metadata The metadata
+		 * @param tag A \c TagLib::Ogg::XiphComment to receive the metadata
+		 * @param setAlbumArt Whether to set album art
+		 * @return \c true on success, \c false otherwise
+		 */
+		bool SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
+		
+	}
+}
