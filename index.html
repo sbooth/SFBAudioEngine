@@ -67,7 +67,7 @@
 <p>Playing an audio file is as simple as:</p>
 
 <div class="highlight highlight-objc"><pre><span class="n">NSURL</span> <span class="o">*</span><span class="n">u</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="n">fileURLWithPath</span><span class="o">:</span><span class="s">@"example.flac"</span> <span class="n">isDirectory</span><span class="o">:</span><span class="nb">NO</span><span class="p">];</span>
-<span class="n">AudioPlayer</span> <span class="n">player</span><span class="p">;</span>
+<span class="n">SFB</span><span class="o">::</span><span class="n">Audio</span><span class="o">::</span><span class="n">Player</span> <span class="n">player</span><span class="p">;</span>
 <span class="n">player</span><span class="p">.</span><span class="n">PlayURL</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFURLRef</span><span class="p">)</span><span class="n">u</span><span class="p">);</span>
 </pre></div>
       </section>
