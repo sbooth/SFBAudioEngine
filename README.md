@@ -36,7 +36,7 @@ Playing an audio file is as simple as:
 
 ~~~
 NSURL *u = [NSURL fileURLWithPath:@"example.flac" isDirectory:NO];
-AudioPlayer player;
+SFB::Audio::Player player;
 player.PlayURL((__bridge CFURLRef)u);
 ~~~
 
