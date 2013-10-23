@@ -45,4 +45,4 @@ Documentation
 
 All public headers are documented using doxygen.  If you have doxygen installed, you may create a local copy of the documentation by running `doxygen` in SFBAudioEngine's root.  The HTML files will be saved in `doc/html/`.
 
-The [documentation is also available online](http://sbooth.github.io/SFBAudioEngine/).
+The [documentation is also available online](http://sbooth.github.io/SFBAudioEngine/doc/).
