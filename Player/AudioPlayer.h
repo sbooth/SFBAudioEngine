@@ -781,20 +781,20 @@ namespace SFB {
 			// ========================================
 			/*! @cond */
 			
-			/*! @internal AUGraph render callback */
+			/*! @internal AUNode render callback */
 			OSStatus Render(AudioUnitRenderActionFlags		*ioActionFlags,
 							const AudioTimeStamp			*inTimeStamp,
 							UInt32							inBusNumber,
 							UInt32							inNumberFrames,
 							AudioBufferList					*ioData);
 			
-			/*! @internal AUGraph postrender callback */
-			OSStatus DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
-							   const AudioTimeStamp				*inTimeStamp,
-							   UInt32							inBusNumber,
-							   UInt32							inNumberFrames,
-							   AudioBufferList					*ioData);
-			
+			/*! @internal AUGraph render notification */
+			OSStatus RenderNotify(AudioUnitRenderActionFlags	*ioActionFlags,
+								  const AudioTimeStamp			*inTimeStamp,
+								  UInt32						inBusNumber,
+								  UInt32						inNumberFrames,
+								  AudioBufferList				*ioData);
+
 			// ========================================
 			
 			/*! @internal Decoder thread entry point */

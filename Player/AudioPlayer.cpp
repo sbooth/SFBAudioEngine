@@ -221,18 +221,18 @@ namespace {
 	}
 
 	// ========================================
-	// AUGraph post render callback
-	OSStatus auGraphDidRender(void								*inRefCon,
-							  AudioUnitRenderActionFlags		*ioActionFlags,
-							  const AudioTimeStamp				*inTimeStamp,
-							  UInt32							inBusNumber,
-							  UInt32							inNumberFrames,
-							  AudioBufferList					*ioData)
+	// AUGraph render notify callback
+	OSStatus auGraphRenderNotify(void							*inRefCon,
+								 AudioUnitRenderActionFlags		*ioActionFlags,
+								 const AudioTimeStamp			*inTimeStamp,
+								 UInt32							inBusNumber,
+								 UInt32							inNumberFrames,
+								 AudioBufferList				*ioData)
 	{
 		assert(nullptr != inRefCon);
 
 		auto player = static_cast<SFB::Audio::Player *>(inRefCon);
-		return player->DidRender(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
+		return player->RenderNotify(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, ioData);
 	}
 
 	// ========================================
@@ -1777,14 +1777,6 @@ OSStatus SFB::Audio::Player::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 
 	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
 
-	// Mute ourselves if requested
-	if(eAudioPlayerFlagRequestMute & mFlags) {
-		OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
-		OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
-
-		mSemaphore.Signal();
-	}
-	
 	// Output silence if muted or the ring buffer is empty
 	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
 		*ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
@@ -1805,10 +1797,6 @@ OSStatus SFB::Audio::Player::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
 		return 1;
 	}
-
-	// Call the pre-render block
-	if(mRenderEventBlocks[0])
-		mRenderEventBlocks[0](ioData, framesRead);
 
 	mFramesRenderedLastPass = framesRead;
 	OSAtomicAdd64Barrier(framesRead, &mFramesRendered);
@@ -1834,19 +1822,35 @@ OSStatus SFB::Audio::Player::Render(AudioUnitRenderActionFlags		*ioActionFlags,
 	return noErr;
 }
 
-OSStatus SFB::Audio::Player::DidRender(AudioUnitRenderActionFlags		*ioActionFlags,
-								   const AudioTimeStamp				*inTimeStamp,
-								   UInt32							inBusNumber,
-								   UInt32							inNumberFrames,
-								   AudioBufferList					*ioData)
+OSStatus SFB::Audio::Player::RenderNotify(AudioUnitRenderActionFlags		*ioActionFlags,
+										  const AudioTimeStamp				*inTimeStamp,
+										  UInt32							inBusNumber,
+										  UInt32							inNumberFrames,
+										  AudioBufferList					*ioData)
 {
 	
 #pragma unused(inTimeStamp)
 #pragma unused(inBusNumber)
 #pragma unused(inNumberFrames)
 #pragma unused(ioData)
-	
-	if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
+
+	// Pre-rendering actions
+	if(kAudioUnitRenderAction_PreRender & (*ioActionFlags)) {
+
+		// Call the pre-render block
+		if(mRenderEventBlocks[0])
+			mRenderEventBlocks[0](ioData, inNumberFrames);
+
+		// Mute output if requested
+		if(eAudioPlayerFlagRequestMute & mFlags) {
+			OSAtomicTestAndSetBarrier(7 /* eAudioPlayerFlagMuteOutput */, &mFlags);
+			OSAtomicTestAndClearBarrier(5 /* eAudioPlayerFlagRequestMute */, &mFlags);
+
+			mSemaphore.Signal();
+		}
+	}
+	// Post-rendering actions
+	else if(kAudioUnitRenderAction_PostRender & (*ioActionFlags)) {
 
 		// Call the post-render block
 		if(mRenderEventBlocks[1])
@@ -2444,7 +2448,7 @@ bool SFB::Audio::Player::OpenOutput()
 		mAUGraph = nullptr;
 		return false;
 	}
-	
+
 	result = AudioUnitSetParameter(au, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, 0, 1.f, 0);
 	if(noErr != result)
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Input) failed: " << result);
@@ -2454,7 +2458,7 @@ bool SFB::Audio::Player::OpenOutput()
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitSetParameter (kMultiChannelMixerParam_Volume, kAudioUnitScope_Output) failed: " << result);
 	
 	// Install the render notification
-	result = AUGraphAddRenderNotify(mAUGraph, auGraphDidRender, this);
+	result = AUGraphAddRenderNotify(mAUGraph, auGraphRenderNotify, this);
 	if(noErr != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AUGraphAddRenderNotify failed: " << result);
 
