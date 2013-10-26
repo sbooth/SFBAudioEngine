@@ -830,10 +830,6 @@
 					"-lvorbisfile",
 					"-lwavpack",
 					"-lz",
-					"-lavformat",
-					"-lavcodec",
-					"-lavutil",
-					"-lbz2",
 				);
 				PRODUCT_NAME = SFBAudioEngine;
 				SDKROOT = macosx;
@@ -874,10 +870,6 @@
 					"-lvorbisfile",
 					"-lwavpack",
 					"-lz",
-					"-lavformat",
-					"-lavcodec",
-					"-lavutil",
-					"-lbz2",
 				);
 				PRODUCT_NAME = SFBAudioEngine;
 				SDKROOT = macosx;
