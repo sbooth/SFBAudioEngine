@@ -48,12 +48,10 @@ enum {
 @interface ViewController ()
 {
 @private
-	AudioPlayer		*_player;		// The player instance
-	uint32_t		_playerFlags;
-	NSTimer			*_userInterfaceTimer;
-	BOOL			_playWhenDecodingStarts;
-
-	BOOL			_resume;
+	SFB::Audio::Player	*_player;		// The player instance
+	uint32_t			_playerFlags;
+	NSTimer				*_userInterfaceTimer;
+	BOOL				_resume;
 }
 @end
 
@@ -81,7 +79,7 @@ enum {
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
 
 	try {
-		_player = new AudioPlayer();
+		_player = new SFB::Audio::Player();
 	}
 
 	catch(std::exception& e) {
@@ -90,21 +88,13 @@ enum {
 
 	_playerFlags = 0;
 
-	// Once decoding has started, begin playing the track
-	_player->SetDecodingStartedBlock(^(const AudioDecoder */*decoder*/){
-		if(_playWhenDecodingStarts) {
-			_playWhenDecodingStarts = NO;
-			_player->Play();
-		}
-	});
-
 	// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-	_player->SetRenderingStartedBlock(^(const AudioDecoder */*decoder*/){
+	_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder */*decoder*/){
 		OSAtomicTestAndSetBarrier(7 /* ePlayerFlagRenderingStarted */, &_playerFlags);
 	});
 
 	// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-	_player->SetRenderingFinishedBlock(^(const AudioDecoder */*decoder*/){
+	_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder */*decoder*/){
 		OSAtomicTestAndSetBarrier(6 /* ePlayerFlagRenderingFinished */, &_playerFlags);
 	});
 
@@ -162,20 +152,7 @@ enum {
 	if(nil == url)
 		return NO;
 
-	AudioDecoder *decoder = AudioDecoder::CreateDecoderForURL((__bridge CFURLRef)url);
-	if(nullptr == decoder)
-		return NO;
-
-	_player->Stop();
-
-	_playWhenDecodingStarts = YES;
-	if(!decoder->Open() || !_player->Enqueue(decoder)) {
-		_playWhenDecodingStarts = NO;
-		delete decoder;
-		return NO;
-	}
-
-	return YES;
+	return _player->Play((__bridge CFURLRef)url);
 }
 
 @end
