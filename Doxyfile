@@ -735,8 +735,7 @@ WARN_LOGFILE           =
 
 INPUT                  = README.md \
 			AllocateABL.h DeallocateABL.h CreateChannelLayout.h \
-			Logger.h CFWrapper.h \
-			Guard.h Mutex.h Semaphore.h \
+			Logger.h CFWrapper.h Semaphore.h \
 			Input/InputSource.h \
 			Decoders/AudioDecoder.h \
 			Player/AudioPlayer.h \

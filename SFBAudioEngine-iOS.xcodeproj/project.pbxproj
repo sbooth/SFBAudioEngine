@@ -30,8 +30,6 @@
 		3296824D17B9D31100B3CDB4 /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
 		3296824E17B9D33100B3CDB4 /* Logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32AEB28F1409AF2B001F9A60 /* Logger.cpp */; };
 		3296824F17B9D33100B3CDB4 /* Logger+NSOverloads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */; };
-		3296825017B9D33100B3CDB4 /* Mutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32B79A62138F2EC200EBEF1B /* Mutex.cpp */; };
-		3296825117B9D33100B3CDB4 /* Guard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268C0BF139C06AB00CC5C5C /* Guard.cpp */; };
 		3296825217B9D33100B3CDB4 /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		3296825617B9D47000B3CDB4 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
 		3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
@@ -48,6 +46,8 @@
 		3296833317B9DD0300B3CDB4 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3296833117B9DD0300B3CDB4 /* Main_iPad.storyboard */; };
 		3296833617B9DD0300B3CDB4 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3296833517B9DD0300B3CDB4 /* ViewController.mm */; };
 		3296833817B9DD0300B3CDB4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3296833717B9DD0300B3CDB4 /* Images.xcassets */; };
+		32BA7608182039A700366204 /* AudioConverter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32BA7604182039A700366204 /* AudioConverter.cpp */; };
+		32BA7609182039A700366204 /* ReplayGainAnalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32BA7606182039A700366204 /* ReplayGainAnalyzer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,8 +93,6 @@
 		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
 		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
 		3259C9C717389B850035D749 /* sndfile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = sndfile.framework; path = Frameworks/sndfile.framework; sourceTree = "<group>"; };
-		3268C0BE139C06AB00CC5C5C /* Guard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Guard.h; sourceTree = "<group>"; };
-		3268C0BF139C06AB00CC5C5C /* Guard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Guard.cpp; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
 		326CE06C17E365B8003877AB /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
@@ -125,8 +123,10 @@
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32AEB2D71409BA26001F9A60 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
 		32AEB2D81409BA27001F9A60 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		32B79A62138F2EC200EBEF1B /* Mutex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mutex.cpp; sourceTree = "<group>"; };
-		32B79A63138F2EC200EBEF1B /* Mutex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mutex.h; sourceTree = "<group>"; };
+		32BA7604182039A700366204 /* AudioConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverter.cpp; sourceTree = "<group>"; };
+		32BA7605182039A700366204 /* AudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverter.h; sourceTree = "<group>"; };
+		32BA7606182039A700366204 /* ReplayGainAnalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReplayGainAnalyzer.cpp; sourceTree = "<group>"; };
+		32BA7607182039A700366204 /* ReplayGainAnalyzer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReplayGainAnalyzer.h; sourceTree = "<group>"; };
 		32CB55B817B6EE6C004022E0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		32D429E413E308DB00FA07DE /* AudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioPlayer.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32D429E513E308DB00FA07DE /* AudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
@@ -194,16 +194,16 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				32BA7605182039A700366204 /* AudioConverter.h */,
+				32BA7604182039A700366204 /* AudioConverter.cpp */,
+				32BA7607182039A700366204 /* ReplayGainAnalyzer.h */,
+				32BA7606182039A700366204 /* ReplayGainAnalyzer.cpp */,
 				326CE06C17E365B8003877AB /* CFWrapper.h */,
 				321FCF9717C14FEE00828C3A /* RingBuffer.h */,
 				321FCF9617C14FEE00828C3A /* RingBuffer.cpp */,
 				32AEB2901409AF2B001F9A60 /* Logger.h */,
 				32AEB28F1409AF2B001F9A60 /* Logger.cpp */,
 				32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */,
-				32B79A63138F2EC200EBEF1B /* Mutex.h */,
-				32B79A62138F2EC200EBEF1B /* Mutex.cpp */,
-				3268C0BE139C06AB00CC5C5C /* Guard.h */,
-				3268C0BF139C06AB00CC5C5C /* Guard.cpp */,
 				326A98F61392F38A0061A65F /* Semaphore.h */,
 				326A98F51392F38A0061A65F /* Semaphore.cpp */,
 				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
@@ -428,7 +428,6 @@
 				3240F9F817BB2203002360A3 /* WavPackDecoder.cpp in Sources */,
 				3240F9F617BB2203002360A3 /* OggSpeexDecoder.cpp in Sources */,
 				3296824217B9D2FB00B3CDB4 /* AudioDecoder.cpp in Sources */,
-				3296825117B9D33100B3CDB4 /* Guard.cpp in Sources */,
 				3296825217B9D33100B3CDB4 /* Semaphore.cpp in Sources */,
 				3240F9F517BB2203002360A3 /* MPEGDecoder.cpp in Sources */,
 				3296824E17B9D33100B3CDB4 /* Logger.cpp in Sources */,
@@ -439,6 +438,7 @@
 				3296824417B9D30100B3CDB4 /* CoreAudioDecoder.cpp in Sources */,
 				3296824F17B9D33100B3CDB4 /* Logger+NSOverloads.mm in Sources */,
 				3296825617B9D47000B3CDB4 /* CreateChannelLayout.cpp in Sources */,
+				32BA7608182039A700366204 /* AudioConverter.cpp in Sources */,
 				3296825B17B9D47000B3CDB4 /* CFErrorUtilities.cpp in Sources */,
 				3296824917B9D31100B3CDB4 /* InputSource.cpp in Sources */,
 				3296825A17B9D47000B3CDB4 /* CreateStringForOSType.cpp in Sources */,
@@ -448,7 +448,7 @@
 				3296824A17B9D31100B3CDB4 /* FileInputSource.cpp in Sources */,
 				3240F9F717BB2203002360A3 /* OggVorbisDecoder.cpp in Sources */,
 				3296825817B9D47000B3CDB4 /* AllocateABL.cpp in Sources */,
-				3296825017B9D33100B3CDB4 /* Mutex.cpp in Sources */,
+				32BA7609182039A700366204 /* ReplayGainAnalyzer.cpp in Sources */,
 				3296824D17B9D31100B3CDB4 /* MemoryMappedFileInputSource.cpp in Sources */,
 				3296825917B9D47000B3CDB4 /* DeallocateABL.cpp in Sources */,
 			);

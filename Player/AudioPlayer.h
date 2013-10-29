@@ -33,12 +33,13 @@
 #include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
 
+#include <atomic>
+#include <thread>
 #include <vector>
 #include <map>
 #include <utility>
 
 #include "AudioDecoder.h"
-#include "Mutex.h"
 #include "Semaphore.h"
 
 /*! @file AudioPlayer.h @brief Core playback functionality */
@@ -707,6 +708,11 @@ namespace SFB {
 		private:
 
 			// ========================================
+			// Thread entry points
+			void * DecoderThreadEntry();
+			void * CollectorThreadEntry();
+
+			// ========================================
 			// AUGraph Setup and Control
 			bool OpenOutput();
 			bool CloseOutput();
@@ -747,27 +753,25 @@ namespace SFB {
 			RingBuffer							*mRingBuffer;
 			AudioStreamBasicDescription			mRingBufferFormat;
 			AudioChannelLayout					*mRingBufferChannelLayout;
-			uint32_t							mRingBufferCapacity;
-			uint32_t							mRingBufferWriteChunkSize;
+			std::atomic_uint					mRingBufferCapacity;
+			std::atomic_uint					mRingBufferWriteChunkSize;
 
-			volatile uint32_t					mFlags;
-			
+			std::atomic_uint					mFlags;
+
 			CFMutableArrayRef					mDecoderQueue;
 			DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
-			
-			Mutex								mMutex;
+
+			std::mutex							mMutex;
 			Semaphore							mSemaphore;
-			
-			pthread_t							mDecoderThread;
+
+			std::thread							mDecoderThread;
 			Semaphore							mDecoderSemaphore;
-			bool								mKeepDecoding;
-			
-			pthread_t							mCollectorThread;
+
+			std::thread							mCollectorThread;
 			Semaphore							mCollectorSemaphore;
-			bool								mKeepCollecting;
-			
-			int64_t								mFramesDecoded;
-			int64_t								mFramesRendered;
+
+			std::atomic_llong					mFramesDecoded;
+			std::atomic_llong					mFramesRendered;
 			int64_t								mFramesRenderedLastPass;
 			
 			// ========================================
@@ -795,14 +799,6 @@ namespace SFB {
 								  UInt32						inNumberFrames,
 								  AudioBufferList				*ioData);
 
-			// ========================================
-			
-			/*! @internal Decoder thread entry point */
-			void * DecoderThreadEntry();
-			
-			/*! @internal Collector thread entry point */
-			void * CollectorThreadEntry();
-			
 			/*! @endcond */
 		};
 		
