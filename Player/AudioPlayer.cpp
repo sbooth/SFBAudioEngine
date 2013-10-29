@@ -1704,7 +1704,7 @@ bool SFB::Audio::Player::SkipToNextTrack()
 		};
 
 		// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
-		while(eAudioPlayerFlagRequestMute & mFlags)
+		while(eAudioPlayerFlagRequestMute & mFlags.load(std::memory_order_relaxed))
 			mSemaphore.TimedWait(renderTimeout);
 	}
 	else
