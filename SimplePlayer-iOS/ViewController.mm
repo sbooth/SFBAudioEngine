@@ -30,7 +30,7 @@
 
 #import "ViewController.h"
 
-#include <libkern/OSAtomic.h>
+#include <atomic>
 
 #include "AudioPlayer.h"
 #include "AudioDecoder.h"
