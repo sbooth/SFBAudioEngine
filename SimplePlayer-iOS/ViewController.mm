@@ -40,16 +40,16 @@
 // ========================================
 // Player flags
 // ========================================
-enum {
-	ePlayerFlagRenderingStarted			= 1 << 0,
-	ePlayerFlagRenderingFinished		= 1 << 1
+enum ePlayerFlags : unsigned int {
+	ePlayerFlagRenderingStarted			= 1u << 0,
+	ePlayerFlagRenderingFinished		= 1u << 1
 };
 
 @interface ViewController ()
 {
 @private
 	SFB::Audio::Player	*_player;		// The player instance
-	uint32_t			_playerFlags;
+	std::atomic_uint	_playerFlags;
 	NSTimer				*_userInterfaceTimer;
 	BOOL				_resume;
 }
@@ -90,12 +90,12 @@ enum {
 
 	// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
 	_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder */*decoder*/){
-		OSAtomicTestAndSetBarrier(7 /* ePlayerFlagRenderingStarted */, &_playerFlags);
+		_playerFlags.fetch_or(ePlayerFlagRenderingStarted);
 	});
 
 	// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
 	_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder */*decoder*/){
-		OSAtomicTestAndSetBarrier(6 /* ePlayerFlagRenderingFinished */, &_playerFlags);
+		_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
 	});
 
 	// Set up a UI timer that fires 5 times per second
@@ -184,15 +184,17 @@ enum {
 - (void) userInterfaceTimerFired:(NSTimer *)timer
 {
 	// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
-	if(ePlayerFlagRenderingStarted & _playerFlags) {
-		OSAtomicTestAndClearBarrier(7 /* ePlayerFlagRenderingStarted */, &_playerFlags);
+	auto flags = _playerFlags.load();
+
+	if(ePlayerFlagRenderingStarted & flags) {
+		_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
 
 		[self updateUserInterface];
 
 		return;
 	}
-	else if(ePlayerFlagRenderingFinished & _playerFlags) {
-		OSAtomicTestAndClearBarrier(6 /* ePlayerFlagRenderingFinished */, &_playerFlags);
+	else if(ePlayerFlagRenderingFinished & flags) {
+		_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
 
 		[self updateUserInterface];
 
