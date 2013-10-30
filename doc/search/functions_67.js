@@ -88,6 +88,5 @@ var searchData=
   ['geturl',['GetURL',['../class_s_f_b_1_1_input_source.html#a048befa6affac512f25c7e01d6172428',1,'SFB::InputSource::GetURL()'],['../class_s_f_b_1_1_audio_1_1_decoder.html#a5acd0660bc92836dc72f0e0e1197d458',1,'SFB::Audio::Decoder::GetURL()'],['../class_s_f_b_1_1_audio_1_1_metadata.html#ae19f036b11a0986e31d3e3a01982b62c',1,'SFB::Audio::Metadata::GetURL()']]],
   ['getvalue',['GetValue',['../class_s_f_b_1_1_audio_1_1_metadata.html#a259f5e8bb85242198814700951e21d10',1,'SFB::Audio::Metadata::GetValue()'],['../class_s_f_b_1_1_audio_1_1_attached_picture.html#af659ccfebaf716fc524e207a54ab5f84',1,'SFB::Audio::AttachedPicture::GetValue()']]],
   ['getvolume',['GetVolume',['../class_s_f_b_1_1_audio_1_1_player.html#a457ccd2121c7853f9f50b7f0b6ddb349',1,'SFB::Audio::Player']]],
-  ['getvolumeforchannel',['GetVolumeForChannel',['../class_s_f_b_1_1_audio_1_1_player.html#a532a1880accd62fe9616cdd48b82fb66',1,'SFB::Audio::Player']]],
-  ['guard',['Guard',['../class_s_f_b_1_1_guard.html#af90f66c815e4eafb85ad3442cc1ffadf',1,'SFB::Guard']]]
+  ['getvolumeforchannel',['GetVolumeForChannel',['../class_s_f_b_1_1_audio_1_1_player.html#a532a1880accd62fe9616cdd48b82fb66',1,'SFB::Audio::Player']]]
 ];

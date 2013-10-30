@@ -1,6 +1,5 @@
 <map id="Player/AudioPlayer.h" name="Player/AudioPlayer.h">
-<area shape="rect" id="node7" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="294,83,409,111"/>
-<area shape="rect" id="node11" href="$_mutex_8h.html" title="A pthread_mutex_t wrapper. " alt="" coords="800,83,868,111"/>
-<area shape="rect" id="node13" href="$_semaphore_8h.html" title="A mach semaphore_t wrapper. " alt="" coords="893,83,995,111"/>
-<area shape="rect" id="node10" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="309,161,413,189"/>
+<area shape="rect" id="node9" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="265,83,380,111"/>
+<area shape="rect" id="node13" href="$_semaphore_8h.html" title="A mach semaphore_t wrapper. " alt="" coords="939,83,1040,111"/>
+<area shape="rect" id="node12" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="360,161,464,189"/>
 </map>

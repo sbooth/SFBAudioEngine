@@ -65,7 +65,7 @@ var searchData=
   ['setvalue',['SetValue',['../class_s_f_b_1_1_audio_1_1_metadata.html#a02e81c085f0f45eeaa78c5ee0f8eb5b9',1,'SFB::Audio::Metadata::SetValue()'],['../class_s_f_b_1_1_audio_1_1_attached_picture.html#ad964027f595b041ede183b330aaa6679',1,'SFB::Audio::AttachedPicture::SetValue()']]],
   ['setvolume',['SetVolume',['../class_s_f_b_1_1_audio_1_1_player.html#a609384bb79dae1c7da0280eb23d3f12c',1,'SFB::Audio::Player']]],
   ['setvolumeforchannel',['SetVolumeForChannel',['../class_s_f_b_1_1_audio_1_1_player.html#a0065dd834ada180a2e253b271de117e8',1,'SFB::Audio::Player']]],
-  ['signal',['Signal',['../class_s_f_b_1_1_guard.html#aad0a49608a341adc23f7deb696960992',1,'SFB::Guard::Signal()'],['../class_s_f_b_1_1_guard_1_1_locker.html#a8951a26cccdd65bd8d395b014c494e49',1,'SFB::Guard::Locker::Signal()'],['../class_s_f_b_1_1_semaphore.html#ab6a6b8f5413add5cea4e66df40eef926',1,'SFB::Semaphore::Signal()']]],
+  ['signal',['Signal',['../class_s_f_b_1_1_semaphore.html#ab6a6b8f5413add5cea4e66df40eef926',1,'SFB::Semaphore']]],
   ['signalall',['SignalAll',['../class_s_f_b_1_1_semaphore.html#a6adb279122e4cab4890bcdeb8b45a6d5',1,'SFB::Semaphore']]],
   ['skiptonexttrack',['SkipToNextTrack',['../class_s_f_b_1_1_audio_1_1_player.html#a2311f963e1ad7c50ca1e0ad2f6e73d53',1,'SFB::Audio::Player']]],
   ['starthoggingoutputdevice',['StartHoggingOutputDevice',['../class_s_f_b_1_1_audio_1_1_player.html#aa174a0b11d5e33804ca30d98278c3547',1,'SFB::Audio::Player']]],
