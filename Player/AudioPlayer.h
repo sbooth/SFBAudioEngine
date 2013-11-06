@@ -627,6 +627,7 @@ namespace SFB {
 			/*!
 			 * @brief Start playback of a \c Decoder
 			 * @note This will clear any enqueued decoders
+			 * @note The player will take ownership of the decoder on success
 			 * @param decoder The \c Decoder to play
 			 * @return \c true on success, \c false otherwise
 			 */
@@ -745,40 +746,40 @@ namespace SFB {
 
 			// ========================================
 			// Data Members
-			AUGraph								mAUGraph;
-			AUNode								mMixerNode;
-			AUNode								mOutputNode;
-			UInt32								mDefaultMaximumFramesPerSlice;
+			AUGraph									mAUGraph;
+			AUNode									mMixerNode;
+			AUNode									mOutputNode;
+			UInt32									mDefaultMaximumFramesPerSlice;
 
-			RingBuffer							*mRingBuffer;
-			AudioStreamBasicDescription			mRingBufferFormat;
-			AudioChannelLayout					*mRingBufferChannelLayout;
-			std::atomic_uint					mRingBufferCapacity;
-			std::atomic_uint					mRingBufferWriteChunkSize;
+			RingBuffer								*mRingBuffer;
+			AudioStreamBasicDescription				mRingBufferFormat;
+			AudioChannelLayout						*mRingBufferChannelLayout;
+			std::atomic_uint						mRingBufferCapacity;
+			std::atomic_uint						mRingBufferWriteChunkSize;
 
-			std::atomic_uint					mFlags;
+			std::atomic_uint						mFlags;
 
-			CFMutableArrayRef					mDecoderQueue;
-			DecoderStateData					*mActiveDecoders [kActiveDecoderArraySize];
+			std::vector<std::unique_ptr<Decoder>>	mDecoderQueue;
+			std::atomic<DecoderStateData *>			mActiveDecoders [kActiveDecoderArraySize];
 
-			std::mutex							mMutex;
-			Semaphore							mSemaphore;
+			std::mutex								mMutex;
+			Semaphore								mSemaphore;
 
-			std::thread							mDecoderThread;
-			Semaphore							mDecoderSemaphore;
+			std::thread								mDecoderThread;
+			Semaphore								mDecoderSemaphore;
 
-			std::thread							mCollectorThread;
-			Semaphore							mCollectorSemaphore;
+			std::thread								mCollectorThread;
+			Semaphore								mCollectorSemaphore;
 
-			std::atomic_llong					mFramesDecoded;
-			std::atomic_llong					mFramesRendered;
-			int64_t								mFramesRenderedLastPass;
+			std::atomic_llong						mFramesDecoded;
+			std::atomic_llong						mFramesRendered;
+			int64_t									mFramesRenderedLastPass;
 			
 			// ========================================
 			// Callbacks
-			AudioPlayerDecoderEventBlock		mDecoderEventBlocks [4];
-			AudioPlayerRenderEventBlock			mRenderEventBlocks [2];
-			AudioPlayerFormatMismatchBlock		mFormatMismatchBlock;
+			AudioPlayerDecoderEventBlock			mDecoderEventBlocks [4];
+			AudioPlayerRenderEventBlock				mRenderEventBlocks [2];
+			AudioPlayerFormatMismatchBlock			mFormatMismatchBlock;
 			
 		public:
 			

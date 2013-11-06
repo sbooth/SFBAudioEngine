@@ -28,7 +28,6 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <libkern/OSAtomic.h>
 #include <pthread.h>
 #include <mach/mach_init.h>
 #include <mach/thread_act.h>
@@ -69,6 +68,7 @@ enum eAudioPlayerFlags : unsigned int {
 	eAudioPlayerFlagFormatMismatch			= 1u << 1,
 	eAudioPlayerFlagRequestMute				= 1u << 2,
 	eAudioPlayerFlagRingBufferNeedsReset	= 1u << 3,
+	eAudioPlayerFlagStartPlayback			= 1u << 4,
 
 	eAudioPlayerFlagStopDecoding			= 1u << 10,
 	eAudioPlayerFlagStopCollecting			= 1u << 11
@@ -95,11 +95,12 @@ class SFB::Audio::Player::DecoderStateData
 public:
 
 	// Takes ownership of decoder
-	DecoderStateData(Decoder *decoder)
+	DecoderStateData(std::unique_ptr<Decoder> decoder)
 		: DecoderStateData()
 	{
 		assert(nullptr != decoder);
-		mDecoder = decoder;
+
+		mDecoder = std::move(decoder);
 
 		// NB: The decoder may return an estimate of the total frames
 		mTotalFrames = mDecoder->GetTotalFrames();
@@ -107,10 +108,6 @@ public:
 
 	~DecoderStateData()
 	{
-		// Delete the decoder
-		if(mDecoder)
-			delete mDecoder, mDecoder = nullptr;
-
 		DeallocateBufferList();
 	}
 
@@ -149,19 +146,19 @@ public:
 		return mDecoder->ReadAudio(mBufferList, frameCount);
 	}
 
-	Decoder					*mDecoder;
+	std::unique_ptr<Decoder>	mDecoder;
 
-	AudioBufferList			*mBufferList;
-	UInt32					mBufferCapacityFrames;
+	AudioBufferList				*mBufferList;
+	UInt32						mBufferCapacityFrames;
 
-	SInt64					mTimeStamp;
+	SInt64						mTimeStamp;
 
-	SInt64					mTotalFrames;
+	SInt64						mTotalFrames;
 
-	std::atomic_llong		mFramesRendered;
-	std::atomic_llong		mFrameToSeek;
+	std::atomic_llong			mFramesRendered;
+	std::atomic_llong			mFrameToSeek;
 
-	std::atomic_uint		mFlags;
+	std::atomic_uint			mFlags;
 
 private:
 
@@ -271,22 +268,17 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mDecoderQueue(nullptr), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
-
-	mDecoderQueue = CFArrayCreateMutable(kCFAllocatorDefault, 0, nullptr);
-	
-	if(nullptr == mDecoderQueue)
-		throw std::bad_alloc();
 
 	mRingBuffer = new RingBuffer();
 
 	// ========================================
 	// Initialize the decoder array
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex)
-		mActiveDecoders[bufferIndex] = nullptr;
+		mActiveDecoders[bufferIndex].store(nullptr, std::memory_order_relaxed);
 
 	// ========================================
 	// Launch the decoding thread
@@ -297,7 +289,6 @@ SFB::Audio::Player::Player()
 	catch(const std::exception& e) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create decoder thread: " << e.what());
 
-		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw;
@@ -323,7 +314,6 @@ SFB::Audio::Player::Player()
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
 		}
 
-		CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw;
@@ -387,17 +377,8 @@ SFB::Audio::Player::~Player()
 	// Force any decoders left hanging by the collector to end
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
 		if(nullptr != mActiveDecoders[bufferIndex])
-			delete mActiveDecoders[bufferIndex], mActiveDecoders[bufferIndex] = nullptr;
+			delete mActiveDecoders[bufferIndex].exchange(nullptr, std::memory_order_relaxed);
 	}
-	
-	// Clean up any queued decoders
-	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		Decoder *decoder = static_cast<Decoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
-		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
-		delete decoder;
-	}
-	
-	CFRelease(mDecoderQueue), mDecoderQueue = nullptr;
 
 	// Clean up the ring buffer and associated resources
 	if(mRingBuffer)
@@ -453,8 +434,9 @@ bool SFB::Audio::Player::Stop()
 		StopOutput();
 
 	StopActiveDecoders();
-	
-	ResetOutput();
+
+	if(!ResetOutput())
+		return false;
 
 	// Reset the ring buffer
 	mFramesDecoded.store(0, std::memory_order_relaxed);
@@ -1617,14 +1599,21 @@ bool SFB::Audio::Player::Play(Decoder *decoder)
 	if(nullptr == decoder)
 		return false;
 
-	Stop();
+	if(!ClearQueuedDecoders())
+		return false;
 
-	ClearQueuedDecoders();
+	if(!Stop())
+		return false;
 
 	if(!Enqueue(decoder))
 		return false;
 
-	return Play();
+	// Start playback once decoding has begun
+	mFlags.fetch_or(eAudioPlayerFlagStartPlayback, std::memory_order_relaxed);
+
+	mDecoderSemaphore.Signal();
+
+	return true;
 }
 
 bool SFB::Audio::Player::Enqueue(CFURLRef url)
@@ -1633,15 +1622,15 @@ bool SFB::Audio::Player::Enqueue(CFURLRef url)
 		return false;
 	
 	Decoder *decoder = Decoder::CreateDecoderForURL(url);
-	
+
 	if(nullptr == decoder)
 		return false;
-	
+
 	bool success = Enqueue(decoder);
-	
+
 	if(!success)
 		delete decoder;
-	
+
 	return success;
 }
 
@@ -1670,16 +1659,14 @@ bool SFB::Audio::Player::Enqueue(Decoder *decoder)
 	if(!lock)
 		return false;
 
-	bool queueEmpty = (0 == CFArrayGetCount(mDecoderQueue));		
-
 	// If there are no decoders in the queue, set up for playback
-	if(nullptr == GetCurrentDecoderState() && queueEmpty) {
+	if(nullptr == GetCurrentDecoderState() && !mDecoderQueue.empty()) {
 		if(!SetupAUGraphAndRingBufferForDecoder(decoder))
 			return false;
 	}
 
-	// Add the decoder to the queue
-	CFArrayAppendValue(mDecoderQueue, decoder);
+	// Take ownership of the decoder and add it to the queue
+	mDecoderQueue.push_back(std::unique_ptr<Decoder>(decoder));
 
 	mDecoderSemaphore.Signal();
 	
@@ -1721,7 +1708,7 @@ bool SFB::Audio::Player::SkipToNextTrack()
 		.tv_nsec = NSEC_PER_SEC / 10
 	};
 
-	while(!(eDecoderStateDataFlagDecodingFinished & currentDecoderState->mFlags))
+	while(!(eDecoderStateDataFlagDecodingFinished & currentDecoderState->mFlags.load(std::memory_order_relaxed)))
 		mSemaphore.TimedWait(timeout);
 
 	currentDecoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished, std::memory_order_relaxed);
@@ -1740,13 +1727,9 @@ bool SFB::Audio::Player::ClearQueuedDecoders()
 	if(!lock)
 		return false;
 
-	while(0 < CFArrayGetCount(mDecoderQueue)) {
-		Decoder *decoder = static_cast<Decoder *>((void *)CFArrayGetValueAtIndex(mDecoderQueue, 0));
-		CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
-		delete decoder;
-	}
+	mDecoderQueue.clear();
 
-	return true;	
+	return true;
 }
 
 #pragma mark Ring Buffer Parameters
@@ -1888,19 +1871,19 @@ OSStatus SFB::Audio::Player::RenderNotify(AudioUnitRenderActionFlags		*ioActionF
 			SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? mFramesRenderedLastPass : decoderState->mTotalFrames - decoderState->mFramesRendered);
 			SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, (SInt64)mFramesRenderedLastPass);
 
-			if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags)) {
+			if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags.load(std::memory_order_relaxed))) {
 				// Call the rendering started block
 				if(mDecoderEventBlocks[2])
-					mDecoderEventBlocks[2](decoderState->mDecoder);
+					mDecoderEventBlocks[2](decoderState->mDecoder.get());
 				decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted, std::memory_order_relaxed);
 			}
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder, std::memory_order_relaxed);
 
-			if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)*/) {
+			if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load(std::memory_order_relaxed)) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load(std::memory_order_relaxed))*/) {
 				// Call the rendering finished block
 				if(mDecoderEventBlocks[3])
-					mDecoderEventBlocks[3](decoderState->mDecoder);
+					mDecoderEventBlocks[3](decoderState->mDecoder.get());
 
 				decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished, std::memory_order_relaxed);
 				decoderState = nullptr;
@@ -1956,13 +1939,14 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		{
 			// ========================================
 			// Lock the queue and remove the head element that contains the next decoder to use
-			Decoder *decoder = nullptr;
+			std::unique_ptr<Decoder> decoder;
 			{
 				std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
 
-				if(lock && 0 < CFArrayGetCount(mDecoderQueue)) {
-					decoder = (Decoder *)CFArrayGetValueAtIndex(mDecoderQueue, 0);
-					CFArrayRemoveValueAtIndex(mDecoderQueue, 0);
+				if(lock && !mDecoderQueue.empty()) {
+					auto iter = mDecoderQueue.begin();
+					decoder = std::move(*iter);
+					mDecoderQueue.erase(iter);
 				}
 			}
 
@@ -1977,14 +1961,12 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					}
 
 					// TODO: Perform CouldNotOpenDecoder() callback ??
-
-					delete decoder, decoder = nullptr;
 				}
 			}
 
 			// Create the decoder state
 			if(decoder) {
-				decoderState = new DecoderStateData(decoder);
+				decoderState = new DecoderStateData(std::move(decoder));
 				decoderState->mTimeStamp = decoderCounter++;
 			}
 		}
@@ -2053,7 +2035,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				{
 					std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
 					if(lock)
-						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder);
+						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder.get());
 					else
 						delete decoderState, decoderState = nullptr;
 				}
@@ -2067,20 +2049,22 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		// Append the decoder state to the list of active decoders
 		if(decoderState) {
 			for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-				if(nullptr != mActiveDecoders[bufferIndex])
+				auto current = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
+				if(nullptr != current)
 					continue;
 
-				if(OSAtomicCompareAndSwapPtrBarrier(nullptr, decoderState, (void **)&mActiveDecoders[bufferIndex]))
+				if(mActiveDecoders[bufferIndex].compare_exchange_strong(current, decoderState))
 					break;
 				else
-					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "OSAtomicCompareAndSwapPtrBarrier() failed");
+					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "compare_exchange_strong() failed");
 			}
 		}
 		
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
-			Decoder *decoder = decoderState->mDecoder;
+			auto decoder = decoderState->mDecoder.get();
 
 			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoder->GetURL() << "\"");
 			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoder->GetFormat());
@@ -2121,13 +2105,13 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
-			while(!(eAudioPlayerFlagStopDecoding & mFlags.load(std::memory_order_relaxed)) && decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags)) {
+			while(!(eAudioPlayerFlagStopDecoding & mFlags.load(std::memory_order_relaxed)) && decoderState && !(eDecoderStateDataFlagStopDecoding & decoderState->mFlags.load(std::memory_order_relaxed))) {
 
 				// Fill the ring buffer with as much data as possible
 				for(;;) {
 
 					// Reset the ring buffer if required
-					if(eAudioPlayerFlagRingBufferNeedsReset & mFlags) {
+					if(eAudioPlayerFlagRingBufferNeedsReset & mFlags.load(std::memory_order_relaxed)) {
 
 						mFlags.fetch_and(~eAudioPlayerFlagRingBufferNeedsReset, std::memory_order_relaxed);
 
@@ -2217,12 +2201,12 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
-							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number ");
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number");
 							break;
 						}
 
 						// If this is the first frame, decoding is just starting
-						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags)) {
+						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags.load(std::memory_order_relaxed))) {
 							// Call the decoding started block
 							if(mDecoderEventBlocks[0])
 								mDecoderEventBlocks[0](decoder);
@@ -2246,7 +2230,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						}
 						
 						// If no frames were returned, this is the end of stream
-						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags)*/) {
+						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load(std::memory_order_relaxed))*/) {
 							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
@@ -2269,6 +2253,14 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					// Not enough space remains in the ring buffer to write an entire decoded chunk
 					else
 						break;
+				}
+
+				// Start playback
+				if(eAudioPlayerFlagStartPlayback & mFlags.load(std::memory_order_relaxed)) {
+					mFlags.fetch_and(~eAudioPlayerFlagStartPlayback, std::memory_order_relaxed);
+
+					if(!OutputIsRunning() && !StartOutput())
+						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
 				}
 
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
@@ -2320,8 +2312,8 @@ void * SFB::Audio::Player::CollectorThreadEntry()
 	while(!(eAudioPlayerFlagStopCollecting & mFlags.load(std::memory_order_relaxed))) {
 		
 		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-			DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
-			
+			DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
 			if(nullptr == decoderState)
 				continue;
 
@@ -2330,7 +2322,7 @@ void * SFB::Audio::Player::CollectorThreadEntry()
 			if(!(eDecoderStateDataFlagDecodingFinished & flags) || !(eDecoderStateDataFlagRenderingFinished & flags))
 				continue;
 
-			bool swapSucceeded = OSAtomicCompareAndSwapPtrBarrier(decoderState, nullptr, (void **)&mActiveDecoders[bufferIndex]);
+			bool swapSucceeded = mActiveDecoders[bufferIndex].compare_exchange_strong(decoderState, nullptr);
 
 			if(swapSucceeded) {
 				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
@@ -3216,12 +3208,12 @@ SFB::Audio::Player::DecoderStateData * SFB::Audio::Player::GetCurrentDecoderStat
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
-		
+		DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
 		if(nullptr == decoderState)
 			continue;
 		
-		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
+		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load(std::memory_order_relaxed))
 			continue;
 
 		if(nullptr == result)
@@ -3237,12 +3229,12 @@ SFB::Audio::Player::DecoderStateData * SFB::Audio::Player::GetDecoderStateStarti
 {
 	DecoderStateData *result = nullptr;
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
-		
+		DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
 		if(nullptr == decoderState)
 			continue;
 		
-		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags)
+		if(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load(std::memory_order_relaxed))
 			continue;
 
 		if(nullptr == result && decoderState->mTimeStamp > timeStamp)
@@ -3261,8 +3253,8 @@ void SFB::Audio::Player::StopActiveDecoders()
 
 	// Request that any decoders still actively decoding stop
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
-		
+		DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
 		if(nullptr == decoderState)
 			continue;
 
@@ -3272,11 +3264,11 @@ void SFB::Audio::Player::StopActiveDecoders()
 	mDecoderSemaphore.Signal();
 
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-		DecoderStateData *decoderState = mActiveDecoders[bufferIndex];
-		
+		DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load(std::memory_order_relaxed);
+
 		if(nullptr == decoderState)
 			continue;
-		
+
 		decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished, std::memory_order_relaxed);
 	}
 
