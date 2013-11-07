@@ -31,6 +31,7 @@
 #pragma once
 
 #include <CoreAudio/CoreAudioTypes.h>
+#include <memory>
 
 /*! @file RingBuffer.h @brief An audio ring buffer */
 
@@ -55,6 +56,9 @@ namespace SFB {
 			// ========================================
 			/*! @name Creation and Destruction */
 			//@{
+
+			/*! @brief A \c std::unique_ptr for \c RingBuffer objects */
+			typedef std::unique_ptr<RingBuffer> unique_ptr;
 
 			/*!
 			 * @brief Create a new \c RingBuffer
