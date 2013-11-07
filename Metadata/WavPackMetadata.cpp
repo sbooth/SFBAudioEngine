@@ -90,9 +90,9 @@ bool SFB::Audio::WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::WavPackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::WavPackMetadata::CreateMetadata(CFURLRef url)
 {
-	return new WavPackMetadata(url);
+	return unique_ptr(new WavPackMetadata(url));
 }
 
 #pragma mark Creation and Destruction

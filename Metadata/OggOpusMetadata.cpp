@@ -86,9 +86,9 @@ bool SFB::Audio::OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::OggOpusMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::OggOpusMetadata::CreateMetadata(CFURLRef url)
 {
-	return new OggOpusMetadata(url);
+	return unique_ptr(new OggOpusMetadata(url));
 }
 
 #pragma mark Creation and Destruction

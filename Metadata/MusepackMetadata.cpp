@@ -89,9 +89,9 @@ bool SFB::Audio::MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::MusepackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::MusepackMetadata::CreateMetadata(CFURLRef url)
 {
-	return new MusepackMetadata(url);
+	return unique_ptr(new MusepackMetadata(url));
 }
 
 #pragma mark Creation and Destruction

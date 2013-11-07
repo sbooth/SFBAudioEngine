@@ -89,9 +89,9 @@ bool SFB::Audio::AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::AIFFMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::AIFFMetadata::CreateMetadata(CFURLRef url)
 {
-	return new AIFFMetadata(url);
+	return unique_ptr(new AIFFMetadata(url));
 }
 
 #pragma mark Creation and Destruction

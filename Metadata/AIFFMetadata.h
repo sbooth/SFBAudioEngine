@@ -53,7 +53,7 @@ namespace SFB {
 			static bool HandlesFilesWithExtension(CFStringRef extension);
 			static bool HandlesMIMEType(CFStringRef mimeType);
 
-			static Metadata * CreateMetadata(CFURLRef url);
+			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// ========================================
 			// Creation

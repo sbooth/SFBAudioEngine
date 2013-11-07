@@ -32,6 +32,8 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+#include <memory>
+
 /*! @file AttachedPicture.h @brief Support for attached pictures */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
@@ -84,6 +86,9 @@ namespace SFB {
 				BandLogo			= 0x13,		/*!< Logo of the band or performer */
 				PublisherLogo		= 0x14		/*!< Logo of the publisher (record company) */
 			};
+
+			/*! @brief A \c std::shared_ptr for \c AttachedPicture objects */
+			typedef std::shared_ptr<AttachedPicture> shared_ptr;
 
 
 			// ========================================

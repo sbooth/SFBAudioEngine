@@ -242,8 +242,6 @@ enum ePlayerFlags : unsigned int {
 			[self.artist setStringValue:(__bridge NSString *)metadata->GetArtist()];
 		else
 			[self.artist setStringValue:@""];
-
-		delete metadata;
 	}
 	else {
 		[self.albumArt setImage:[NSImage imageNamed:@"NSApplicationIcon"]];

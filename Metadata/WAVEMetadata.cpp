@@ -91,9 +91,9 @@ bool SFB::Audio::WAVEMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::WAVEMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::WAVEMetadata::CreateMetadata(CFURLRef url)
 {
-	return new WAVEMetadata(url);
+	return unique_ptr(new WAVEMetadata(url));
 }
 
 #pragma mark Creation and Destruction

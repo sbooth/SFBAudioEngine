@@ -145,13 +145,11 @@ bool SFB::Audio::Metadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::Metadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFURLRef url, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
-	
-	Metadata *metadata = nullptr;
-	
+
 	// If this is a file URL, use the extension-based resolvers
 	SFB::CFString scheme = CFURLCopyScheme(url);
 
@@ -176,13 +174,10 @@ SFB::Audio::Metadata * SFB::Audio::Metadata::CreateMetadataForURL(CFURLRef url, 
 
 					for(auto subclassInfo : sRegisteredSubclasses) {
 						if(subclassInfo.mHandlesFilesWithExtension(pathExtension)) {
-							metadata = subclassInfo.mCreateMetadata(url);
-							if(!metadata->ReadMetadata(error))
-								delete metadata, metadata = nullptr;
+							unique_ptr metadata(subclassInfo.mCreateMetadata(url));
+							if(metadata->ReadMetadata(error))
+								return metadata;
 						}
-
-						if(metadata)
-							break;
 					}
 				}
 			}
@@ -202,7 +197,7 @@ SFB::Audio::Metadata * SFB::Audio::Metadata::CreateMetadataForURL(CFURLRef url, 
 			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "CFURLCreatePropertyFromResource failed: " << errorCode);		
 	}
 
-	return metadata;
+	return nullptr;
 }
 
 #pragma mark Creation and Destruction
@@ -260,8 +255,8 @@ void SFB::Audio::Metadata::RevertUnsavedChanges()
 {
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 
-	auto iter = mPictures.begin();
-	while(iter != mPictures.end()) {
+	auto iter = std::begin(mPictures);
+	while(iter != std::end(mPictures)) {
 		auto picture = *iter;
 		if(AttachedPicture::ChangeState::Removed == picture->mState) {
 			picture->mState = AttachedPicture::ChangeState::Saved;
@@ -655,9 +650,9 @@ void SFB::Audio::Metadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 
 const std::vector<std::shared_ptr<SFB::Audio::AttachedPicture>> SFB::Audio::Metadata::GetAttachedPictures() const
 {
-	std::vector<std::shared_ptr<AttachedPicture>> result;
+	picture_vector result;
 
-	std::copy_if(mPictures.begin(), mPictures.end(), std::back_inserter(result), [](const std::shared_ptr<AttachedPicture>& picture) {
+	std::copy_if(std::begin(mPictures), std::end(mPictures), std::back_inserter(result), [](const AttachedPicture::shared_ptr& picture) {
 		return AttachedPicture::ChangeState::Removed != picture->mState;
 	});
 
@@ -666,36 +661,36 @@ const std::vector<std::shared_ptr<SFB::Audio::AttachedPicture>> SFB::Audio::Meta
 
 const std::vector<std::shared_ptr<SFB::Audio::AttachedPicture>> SFB::Audio::Metadata::GetAttachedPicturesOfType(AttachedPicture::Type type) const
 {
-	std::vector<std::shared_ptr<AttachedPicture>> result;
+	picture_vector result;
 
-	std::copy_if(mPictures.begin(), mPictures.end(), std::back_inserter(result), [type](const std::shared_ptr<AttachedPicture>& picture) {
+	std::copy_if(std::begin(mPictures), std::end(mPictures), std::back_inserter(result), [type](const AttachedPicture::shared_ptr& picture) {
 		return AttachedPicture::ChangeState::Removed != picture->mState && type == picture->GetType();
 	});
 
 	return result;
 }
 
-void SFB::Audio::Metadata::AttachPicture(std::shared_ptr<AttachedPicture> picture)
+void SFB::Audio::Metadata::AttachPicture(AttachedPicture::shared_ptr picture)
 {
 	if(picture) {
-		auto match = std::find(mPictures.begin(), mPictures.end(), picture);
-		if(match != mPictures.end()) {
+		auto match = std::find(std::begin(mPictures), std::end(mPictures), picture);
+		if(match != std::end(mPictures)) {
 			if(AttachedPicture::ChangeState::Removed == picture->mState)
 				picture->mState = AttachedPicture::ChangeState::Saved;
 		}
 		// By default a picture is created with mState == ChangeState::Saved
 		else {
 			picture->mState = AttachedPicture::ChangeState::Added;
-			mPictures.push_back(std::shared_ptr<AttachedPicture>(picture));
+			mPictures.push_back(AttachedPicture::shared_ptr(picture));
 		}
 	}
 }
 
-void SFB::Audio::Metadata::RemoveAttachedPicture(std::shared_ptr<AttachedPicture> picture)
+void SFB::Audio::Metadata::RemoveAttachedPicture(AttachedPicture::shared_ptr picture)
 {
 	if(picture) {
-		auto match = std::find(mPictures.begin(), mPictures.end(), picture);
-		if(match != mPictures.end()) {
+		auto match = std::find(std::begin(mPictures), std::end(mPictures), picture);
+		if(match != std::end(mPictures)) {
 			if((*match)->mState == AttachedPicture::ChangeState::Added)
 				mPictures.erase(match);
 			else
@@ -706,7 +701,7 @@ void SFB::Audio::Metadata::RemoveAttachedPicture(std::shared_ptr<AttachedPicture
 
 void SFB::Audio::Metadata::RemoveAttachedPicturesOfType(AttachedPicture::Type type)
 {
-	for(auto iter = mPictures.begin(); iter != mPictures.end(); ++iter) {
+	for(auto iter = std::begin(mPictures); iter != std::end(mPictures); ++iter) {
 		auto picture = *iter;
 		if(type == picture->GetType()) {
 			if(picture->mState == AttachedPicture::ChangeState::Added)
@@ -719,7 +714,7 @@ void SFB::Audio::Metadata::RemoveAttachedPicturesOfType(AttachedPicture::Type ty
 
 void SFB::Audio::Metadata::RemoveAllAttachedPictures()
 {
-	std::for_each(mPictures.begin(), mPictures.end(), [](const std::shared_ptr<AttachedPicture>& picture){
+	std::for_each(std::begin(mPictures), std::end(mPictures), [](const AttachedPicture::shared_ptr& picture){
 		picture->mState = AttachedPicture::ChangeState::Removed;
 	});
 }
@@ -819,8 +814,8 @@ void SFB::Audio::Metadata::MergeChangedMetadataIntoMetadata()
 	
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 
-	auto iter = mPictures.begin();
-	while(iter != mPictures.end()) {
+	auto iter = std::begin(mPictures);
+	while(iter != std::end(mPictures)) {
 		auto picture = *iter;
 		if(AttachedPicture::ChangeState::Removed == picture->mState)
 			iter = mPictures.erase(iter);

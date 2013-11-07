@@ -154,13 +154,19 @@ namespace SFB {
 			/*! @name Factory Methods */
 			//@{
 
+			/*! @brief A \c std::vector of \c AttachedPicture::shared_ptr objects */
+			typedef std::vector<AttachedPicture::shared_ptr> picture_vector;
+
+			/*! @brief A \c std::unique_ptr for \c Metadata objects */
+			typedef std::unique_ptr<Metadata> unique_ptr;
+
 			/*!
 			 * @brief Create a \c Metadata object for the specified URL
 			 * @param url The URL
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return A \c Metadata object, or \c nullptr on failure
 			 */
-			static Metadata * CreateMetadataForURL(CFURLRef url, CFErrorRef *error = nullptr);
+			static unique_ptr CreateMetadataForURL(CFURLRef url, CFErrorRef *error = nullptr);
 
 			//@}
 
@@ -537,17 +543,17 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get all attached pictures */
-			const std::vector<std::shared_ptr<AttachedPicture>> GetAttachedPictures() const;
+			const picture_vector GetAttachedPictures() const;
 
 			/*! @brief Get all attached pictures of the specified type */
-			const std::vector<std::shared_ptr<AttachedPicture>> GetAttachedPicturesOfType(AttachedPicture::Type type) const;
+			const picture_vector GetAttachedPicturesOfType(AttachedPicture::Type type) const;
 
 
 			/*! @brief Attach a picture */
-			void AttachPicture(std::shared_ptr<AttachedPicture> picture);
+			void AttachPicture(AttachedPicture::shared_ptr picture);
 
 			/*! @brief Remove an attached picture */
-			void RemoveAttachedPicture(std::shared_ptr<AttachedPicture> picture);
+			void RemoveAttachedPicture(AttachedPicture::shared_ptr picture);
 
 
 			/*! @brief Remove all attached pictures of the specified type */
@@ -565,7 +571,7 @@ namespace SFB {
 			CFMutableDictionaryRef			mMetadata;			/*!< @brief The metadata information */
 			CFMutableDictionaryRef			mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
 
-			std::vector<std::shared_ptr<AttachedPicture>>	mPictures; /*!< @brief The attached picture information */
+			picture_vector					mPictures;			/*!< @brief The attached picture information */
 
 
 			/*! @brief Create a new \c Metadata and initialize \c Metadata::mURL to \c nullptr */
@@ -634,7 +640,7 @@ namespace SFB {
 				bool (*mHandlesFilesWithExtension)(CFStringRef);
 				bool (*mHandlesMIMEType)(CFStringRef);
 				
-				Metadata * (*mCreateMetadata)(CFURLRef);
+				unique_ptr (*mCreateMetadata)(CFURLRef);
 				
 				int mPriority;
 			};

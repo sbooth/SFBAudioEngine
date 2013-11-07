@@ -97,9 +97,9 @@ bool SFB::Audio::FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::FLACMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::FLACMetadata::CreateMetadata(CFURLRef url)
 {
-	return new FLACMetadata(url);
+	return unique_ptr(new FLACMetadata(url));
 }
 
 #pragma mark Creation and Destruction

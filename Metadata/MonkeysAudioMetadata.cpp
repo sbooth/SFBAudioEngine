@@ -90,9 +90,9 @@ bool SFB::Audio::MonkeysAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata * SFB::Audio::MonkeysAudioMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::MonkeysAudioMetadata::CreateMetadata(CFURLRef url)
 {
-	return new MonkeysAudioMetadata(url);
+	return unique_ptr(new MonkeysAudioMetadata(url));
 }
 
 #pragma mark Creation and Destruction
