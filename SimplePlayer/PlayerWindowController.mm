@@ -46,12 +46,12 @@ enum ePlayerFlags : unsigned int {
 		_playerFlags = 0;
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder */*decoder*/){
+		_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
 			_playerFlags.fetch_or(ePlayerFlagRenderingStarted);
 		});
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder */*decoder*/){
+		_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
 			_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
 		});
 

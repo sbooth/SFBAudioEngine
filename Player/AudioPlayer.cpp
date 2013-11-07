@@ -1845,7 +1845,7 @@ OSStatus SFB::Audio::Player::RenderNotify(AudioUnitRenderActionFlags		*ioActionF
 			if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags.load(std::memory_order_relaxed))) {
 				// Call the rendering started block
 				if(mDecoderEventBlocks[2])
-					mDecoderEventBlocks[2](decoderState->mDecoder.get());
+					mDecoderEventBlocks[2](*decoderState->mDecoder);
 				decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted, std::memory_order_relaxed);
 			}
 
@@ -1854,7 +1854,7 @@ OSStatus SFB::Audio::Player::RenderNotify(AudioUnitRenderActionFlags		*ioActionF
 			if((eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load(std::memory_order_relaxed)) && decoderState->mFramesRendered == decoderState->mTotalFrames/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load(std::memory_order_relaxed))*/) {
 				// Call the rendering finished block
 				if(mDecoderEventBlocks[3])
-					mDecoderEventBlocks[3](decoderState->mDecoder.get());
+					mDecoderEventBlocks[3](*decoderState->mDecoder);
 
 				decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished, std::memory_order_relaxed);
 				decoderState = nullptr;
@@ -2035,13 +2035,11 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
-			auto decoder = decoderState->mDecoder.get();
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoderState->mDecoder->GetURL() << "\"");
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoderState->mDecoder->GetFormat());
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoderState->mDecoder->GetChannelLayout());
 
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoder->GetURL() << "\"");
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoder->GetFormat());
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoder->GetChannelLayout());
-
-			AudioStreamBasicDescription decoderFormat = decoder->GetFormat();
+			AudioStreamBasicDescription decoderFormat = decoderState->mDecoder->GetFormat();
 
 			// ========================================
 			// Create the AudioConverter which will convert from the decoder's format to the graph's format
@@ -2142,7 +2140,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							else
 								mFlags.fetch_or(eAudioPlayerFlagMuteOutput, std::memory_order_relaxed);
 
-							SInt64 newFrame = decoder->SeekToFrame(frameToSeek);
+							SInt64 newFrame = decoderState->mDecoder->SeekToFrame(frameToSeek);
 
 							if(newFrame != frameToSeek)
 								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error seeking to frame  " << frameToSeek);
@@ -2169,7 +2167,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							mFlags.fetch_and(~eAudioPlayerFlagMuteOutput, std::memory_order_relaxed);
 						}
 
-						SInt64 startingFrameNumber = decoder->GetCurrentFrame();
+						SInt64 startingFrameNumber = decoderState->mDecoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
 							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number");
@@ -2180,7 +2178,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(0 == startingFrameNumber && !(eDecoderStateDataFlagDecodingStarted & decoderState->mFlags.load(std::memory_order_relaxed))) {
 							// Call the decoding started block
 							if(mDecoderEventBlocks[0])
-								mDecoderEventBlocks[0](decoder);
+								mDecoderEventBlocks[0](*decoderState->mDecoder);
 							decoderState->mFlags.fetch_or(eDecoderStateDataFlagDecodingStarted, std::memory_order_relaxed);
 						}
 
@@ -2202,7 +2200,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load(std::memory_order_relaxed))*/) {
-							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoder->GetURL() << "\"");
+							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoderState->mDecoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
@@ -2212,7 +2210,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 							// Call the decoding finished block
 							if(mDecoderEventBlocks[1])
-								mDecoderEventBlocks[1](decoder);
+								mDecoderEventBlocks[1](*decoderState->mDecoder);
 							
 							// Decoding is complete
 							decoderState->mFlags.fetch_or(eDecoderStateDataFlagDecodingFinished, std::memory_order_relaxed);

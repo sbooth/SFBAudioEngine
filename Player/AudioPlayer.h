@@ -101,7 +101,7 @@ namespace SFB {
 			 * @brief A block called when an event occurs on a \c Decoder
 			 * @param decoder The \c AudioDecoder on which the event occurred
 			 */
-			typedef void (^AudioPlayerDecoderEventBlock)(const Decoder *decoder);
+			typedef void (^AudioPlayerDecoderEventBlock)(const Decoder& decoder);
 
 			/*!
 			 * @brief A block called when an \c AudioPlayer render event occurs
