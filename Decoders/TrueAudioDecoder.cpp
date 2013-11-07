@@ -49,13 +49,13 @@ namespace {
 	TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 	{
 		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
-		return (TTAint32)iocb->decoder->GetInputSource()->Read(buffer, size);
+		return (TTAint32)iocb->decoder->GetInputSource().Read(buffer, size);
 	}
 
 	TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	{
 		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
-		return iocb->decoder->GetInputSource()->SeekToOffset(offset);
+		return iocb->decoder->GetInputSource().SeekToOffset(offset);
 	}
 	
 }
@@ -96,15 +96,15 @@ bool SFB::Audio::TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::TrueAudioDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::TrueAudioDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new TrueAudioDecoder(inputSource);
+	return unique_ptr(new TrueAudioDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::TrueAudioDecoder::TrueAudioDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
+SFB::Audio::TrueAudioDecoder::TrueAudioDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
 {}
 
 SFB::Audio::TrueAudioDecoder::~TrueAudioDecoder()

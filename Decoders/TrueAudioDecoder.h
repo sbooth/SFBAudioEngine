@@ -66,11 +66,11 @@ namespace SFB {
 			static bool HandlesFilesWithExtension(CFStringRef extension);
 			static bool HandlesMIMEType(CFStringRef mimeType);
 
-			static Decoder * CreateDecoder(InputSource *inputSource);
+			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// ========================================
 			// Creation
-			TrueAudioDecoder(InputSource *inputSource);
+			TrueAudioDecoder(InputSource::unique_ptr inputSource);
 
 			// ========================================
 			// Destruction

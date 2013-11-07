@@ -61,20 +61,20 @@ namespace {
 		assert(nullptr != inClientData);
 
 		auto decoder = static_cast<SFB::Audio::CoreAudioDecoder *>(inClientData);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(inPosition != inputSource->GetOffset()) {
-			if(!inputSource->SupportsSeeking() || !inputSource->SeekToOffset(inPosition))
+		if(inPosition != inputSource.GetOffset()) {
+			if(!inputSource.SupportsSeeking() || !inputSource.SeekToOffset(inPosition))
 				return kAudioFileOperationNotSupportedError;
 		}
 
-		*actualCount = (UInt32)inputSource->Read(buffer, requestCount);
+		*actualCount = (UInt32)inputSource.Read(buffer, requestCount);
 
 		if(0 == *actualCount)
 #if !TARGET_OS_IPHONE
-			return (inputSource->AtEOF() ? eofErr : ioErr);
+			return (inputSource.AtEOF() ? eofErr : ioErr);
 #else
-		return (inputSource->AtEOF() ? kAudioFileEndOfFileError : kAudioFilePositionError);
+		return (inputSource.AtEOF() ? kAudioFileEndOfFileError : kAudioFilePositionError);
 #endif
 
 		return noErr;
@@ -85,7 +85,7 @@ namespace {
 		assert(nullptr != inClientData);
 
 		auto decoder = static_cast<SFB::Audio::CoreAudioDecoder *>(inClientData);
-		return decoder->GetInputSource()->GetLength();
+		return decoder->GetInputSource().GetLength();
 	}
 
 }
@@ -168,15 +168,15 @@ bool SFB::Audio::CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::CoreAudioDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::CoreAudioDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new CoreAudioDecoder(inputSource);
+	return unique_ptr(new CoreAudioDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::CoreAudioDecoder::CoreAudioDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mAudioFile(nullptr), mExtAudioFile(nullptr), mUseM4AWorkarounds(false), mCurrentFrame(0)
+SFB::Audio::CoreAudioDecoder::CoreAudioDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mAudioFile(nullptr), mExtAudioFile(nullptr), mUseM4AWorkarounds(false), mCurrentFrame(0)
 {}
 
 SFB::Audio::CoreAudioDecoder::~CoreAudioDecoder()

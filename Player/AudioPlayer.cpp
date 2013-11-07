@@ -39,7 +39,6 @@
 #include <iomanip>
 
 #include "AudioPlayer.h"
-#include "RingBuffer.h"
 #include "AllocateABL.h"
 #include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
@@ -94,7 +93,6 @@ class SFB::Audio::Player::DecoderStateData
 
 public:
 
-	// Takes ownership of decoder
 	DecoderStateData(std::unique_ptr<Decoder> decoder)
 		: DecoderStateData()
 	{
@@ -268,12 +266,10 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mRingBuffer(nullptr), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(0), mRingBuffer(new RingBuffer()), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
-
-	mRingBuffer = new RingBuffer();
 
 	// ========================================
 	// Initialize the decoder array
@@ -288,8 +284,6 @@ SFB::Audio::Player::Player()
 
 	catch(const std::exception& e) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create decoder thread: " << e.what());
-
-		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw;
 	}
@@ -313,8 +307,6 @@ SFB::Audio::Player::Player()
 		catch(const std::exception& e) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
 		}
-
-		delete mRingBuffer, mRingBuffer = nullptr;
 
 		throw;
 	}
@@ -381,9 +373,6 @@ SFB::Audio::Player::~Player()
 	}
 
 	// Clean up the ring buffer and associated resources
-	if(mRingBuffer)
-		delete mRingBuffer, mRingBuffer = nullptr;
-
 	if(mRingBufferChannelLayout)
 		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
@@ -1581,22 +1570,13 @@ bool SFB::Audio::Player::Play(CFURLRef url)
 	if(nullptr == url)
 		return false;
 
-	Decoder *decoder = Decoder::CreateDecoderForURL(url);
-
-	if(nullptr == decoder)
-		return false;
-
-	bool success = Play(decoder);
-
-	if(!success)
-		delete decoder;
-
-	return success;
+	auto decoder = Decoder::CreateDecoderForURL(url);
+	return Play(decoder);
 }
 
-bool SFB::Audio::Player::Play(Decoder *decoder)
+bool SFB::Audio::Player::Play(Decoder::unique_ptr& decoder)
 {
-	if(nullptr == decoder)
+	if(!decoder)
 		return false;
 
 	if(!ClearQueuedDecoders())
@@ -1620,23 +1600,14 @@ bool SFB::Audio::Player::Enqueue(CFURLRef url)
 {
 	if(nullptr == url)
 		return false;
-	
-	Decoder *decoder = Decoder::CreateDecoderForURL(url);
 
-	if(nullptr == decoder)
-		return false;
-
-	bool success = Enqueue(decoder);
-
-	if(!success)
-		delete decoder;
-
-	return success;
+	auto decoder = Decoder::CreateDecoderForURL(url);
+	return Enqueue(decoder);
 }
 
-bool SFB::Audio::Player::Enqueue(Decoder *decoder)
+bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 {
-	if(nullptr == decoder)
+	if(!decoder)
 		return false;
 
 	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Enqueuing \"" << decoder->GetURL() << "\"");
@@ -1661,12 +1632,12 @@ bool SFB::Audio::Player::Enqueue(Decoder *decoder)
 
 	// If there are no decoders in the queue, set up for playback
 	if(nullptr == GetCurrentDecoderState() && !mDecoderQueue.empty()) {
-		if(!SetupAUGraphAndRingBufferForDecoder(decoder))
+		if(!SetupAUGraphAndRingBufferForDecoder(*decoder))
 			return false;
 	}
 
 	// Take ownership of the decoder and add it to the queue
-	mDecoderQueue.push_back(std::unique_ptr<Decoder>(decoder));
+	mDecoderQueue.push_back(std::move(decoder));
 
 	mDecoderSemaphore.Signal();
 	
@@ -1944,7 +1915,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
 
 				if(lock && !mDecoderQueue.empty()) {
-					auto iter = mDecoderQueue.begin();
+					auto iter = std::begin(mDecoderQueue);
 					decoder = std::move(*iter);
 					mDecoderQueue.erase(iter);
 				}
@@ -2035,7 +2006,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				{
 					std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
 					if(lock)
-						SetupAUGraphAndRingBufferForDecoder(decoderState->mDecoder.get());
+						SetupAUGraphAndRingBufferForDecoder(*decoderState->mDecoder);
 					else
 						delete decoderState, decoderState = nullptr;
 				}
@@ -3275,14 +3246,11 @@ void SFB::Audio::Player::StopActiveDecoders()
 	mCollectorSemaphore.Signal();
 }
 
-bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder *decoder)
+bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder& decoder)
 {
-	if(nullptr == decoder)
-		return false;
-
 	// Open the decoder if necessary
 	CFErrorRef error = nullptr;
-	if(!decoder->IsOpen() && !decoder->Open(&error)) {
+	if(!decoder.IsOpen() && !decoder.Open(&error)) {
 		if(error) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 			CFRelease(error), error = nullptr;
@@ -3291,12 +3259,12 @@ bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder *decoder)
 		return false;
 	}
 
-	AudioStreamBasicDescription format = decoder->GetFormat();
+	AudioStreamBasicDescription format = decoder.GetFormat();
 	if(!SetAUGraphSampleRateAndChannelsPerFrame(format.mSampleRate, format.mChannelsPerFrame))
 		return false;
 
 	// Attempt to set the output audio unit's channel map
-	AudioChannelLayout *channelLayout = decoder->GetChannelLayout();
+	AudioChannelLayout *channelLayout = decoder.GetChannelLayout();
 	if(!SetOutputUnitChannelMap(channelLayout))
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to set output unit channel map");
 

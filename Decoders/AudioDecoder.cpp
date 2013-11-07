@@ -99,43 +99,25 @@ bool SFB::Audio::Decoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
 {
 	return CreateDecoderForURL(url, nullptr, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
 {
-	if(nullptr == url)
-		return nullptr;
-
-	// Create the input source which will feed the decoder
-	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
-	
-	if(nullptr == inputSource)
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSource(inputSource, mimeType, error);
-	
-	if(nullptr == decoder)
-		delete inputSource, inputSource = nullptr;
-	
-	return decoder;
+	return CreateDecoderForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), mimeType, error);
 }
 
-// If this returns nullptr, the caller is responsible for deleting inputSource
-// If this returns a Decoder instance, the instance takes ownership of inputSource
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource *inputSource, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
 {
-	return CreateDecoderForInputSource(inputSource, nullptr, error);
+	return CreateDecoderForInputSource(std::move(inputSource), nullptr, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource *inputSource, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFStringRef mimeType, CFErrorRef *error)
 {
-	if(nullptr == inputSource)
+	if(!inputSource)
 		return nullptr;
-
-	Decoder *decoder = nullptr;
 
 	// Open the input source if it isn't already
 	if(AutomaticallyOpenDecoders() && !inputSource->IsOpen() && !inputSource->Open(error))
@@ -157,24 +139,23 @@ SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSour
 	if(mimeType) {
 		for(auto subclassInfo : sRegisteredSubclasses) {
 			if(subclassInfo.mHandlesMIMEType(mimeType)) {
-				decoder = subclassInfo.mCreateDecoder(inputSource);
-				if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-					decoder->mInputSource = nullptr;
-					delete decoder, decoder = nullptr;
+				unique_ptr decoder(subclassInfo.mCreateDecoder(std::move(inputSource)));
+				if(!AutomaticallyOpenDecoders())
+					return decoder;
+				else {
+					 if(decoder->Open(error))
+						 return decoder;
+					// Take back the input source for reuse if opening fails
+					else
+						 inputSource = std::move(decoder->mInputSource);
 				}
 			}
-
-			if(decoder)
-				break;
 		}
 
 #if 0
 		if(releaseMIMEType)
 			CFRelease(mimeType), mimeType = nullptr;
 #endif
-
-		if(decoder)
-			return decoder;
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
@@ -202,189 +183,83 @@ SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSource(InputSour
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
 		if(subclassInfo.mHandlesFilesWithExtension(pathExtension)) {
-			decoder = subclassInfo.mCreateDecoder(inputSource);
-			if(AutomaticallyOpenDecoders() && !decoder->Open(error)) {
-				decoder->mInputSource = nullptr;
-				delete decoder, decoder = nullptr;
+			unique_ptr decoder(subclassInfo.mCreateDecoder(std::move(inputSource)));
+			if(!AutomaticallyOpenDecoders())
+				return decoder;
+			else {
+				if(decoder->Open(error))
+					return decoder;
+				// Take back the input source for reuse if opening fails
+				else
+					inputSource = std::move(decoder->mInputSource);
 			}
 		}
-
-		if(decoder)
-			break;
 	}
 
-	return decoder;
+	return nullptr;
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	if(nullptr == url)
-		return nullptr;
-
-	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
-
-	if(nullptr == inputSource)
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, error);
-
-	if(nullptr == decoder)
-		delete inputSource, inputSource = nullptr;
-
-	return decoder;
+	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	if(nullptr == url)
-		return nullptr;
-
-	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
-
-	if(nullptr == inputSource)
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, error);
-
-	if(nullptr == decoder)
-		delete inputSource, inputSource = nullptr;
-
-	return decoder;
+	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	if(nullptr == url)
-		return nullptr;
-
-	InputSource *inputSource = InputSource::CreateInputSourceForURL(url, 0, error);
-
-	if(nullptr == inputSource)
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSourceRegion(inputSource, startingFrame, frameCount, repeatCount, error);
-
-	if(nullptr == decoder)
-		delete inputSource, inputSource = nullptr;
-
-	return decoder;
+	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, repeatCount, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error)
 {
-	if(nullptr == inputSource)
+	if(!inputSource || !inputSource->SupportsSeeking())
 		return nullptr;
 
-	if(!inputSource->SupportsSeeking())
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
-
-	if(nullptr == decoder)
-		return nullptr;
-
-	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, error);
-
-	if(nullptr == regionDecoder) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	return regionDecoder;
+	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	if(nullptr == inputSource)
+	if(!inputSource || !inputSource->SupportsSeeking())
 		return nullptr;
 
-	if(!inputSource->SupportsSeeking())
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
-
-	if(nullptr == decoder)
-		return nullptr;
-
-	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, error);
-
-	if(nullptr == regionDecoder) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	return regionDecoder;
+	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	if(nullptr == inputSource)
+	if(!inputSource || !inputSource->SupportsSeeking())
 		return nullptr;
 
-	if(!inputSource->SupportsSeeking())
-		return nullptr;
-
-	Decoder *decoder = CreateDecoderForInputSource(inputSource, error);
-
-	if(nullptr == decoder)
-		return nullptr;
-
-	if(!decoder->SupportsSeeking()) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	Decoder *regionDecoder = CreateDecoderForDecoderRegion(decoder, startingFrame, frameCount, repeatCount, error);
-
-	if(nullptr == regionDecoder) {
-		delete decoder, decoder = nullptr;
-		return nullptr;
-	}
-
-	return regionDecoder;
+	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, repeatCount, error);
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, CFErrorRef */*error*/)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, CFErrorRef */*error*/)
 {
-	if(nullptr == decoder)
+	if(!decoder || !decoder->SupportsSeeking())
 		return nullptr;
 	
-	if(!decoder->SupportsSeeking())
-		return nullptr;
-	
-	return new LoopableRegionDecoder(decoder, startingFrame);
+	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame));
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
 {
-	if(nullptr == decoder)
+	if(!decoder || !decoder->SupportsSeeking())
 		return nullptr;
-	
-	if(!decoder->SupportsSeeking())
-		return nullptr;
-	
-	return new LoopableRegionDecoder(decoder, startingFrame, frameCount);
+
+	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount));
 }
 
-SFB::Audio::Decoder * SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
 {
-	if(nullptr == decoder)
+	if(!decoder || !decoder->SupportsSeeking())
 		return nullptr;
-	
-	if(!decoder->SupportsSeeking())
-		return nullptr;
-	
-	return new LoopableRegionDecoder(decoder, startingFrame, frameCount, repeatCount);
+
+	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount, repeatCount));
 }
 
 #pragma mark Creation and Destruction
@@ -395,10 +270,10 @@ SFB::Audio::Decoder::Decoder()
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
-SFB::Audio::Decoder::Decoder(InputSource *inputSource)
-	: mInputSource(inputSource), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
+SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
+	: mInputSource(std::move(inputSource)), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
-	assert(nullptr != inputSource);
+	assert(nullptr != mInputSource);
 
 	memset(&mFormat, 0, sizeof(mSourceFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
@@ -406,9 +281,6 @@ SFB::Audio::Decoder::Decoder(InputSource *inputSource)
 
 SFB::Audio::Decoder::~Decoder()
 {
-	if(mInputSource)
-		delete mInputSource, mInputSource = nullptr;
-
 	if(mChannelLayout)
 		free(mChannelLayout), mChannelLayout = nullptr;
 }

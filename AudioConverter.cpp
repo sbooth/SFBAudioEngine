@@ -47,14 +47,14 @@ class SFB::Audio::Converter::ConverterStateData
 {	
 public:	
 
-	ConverterStateData(Decoder *decoder)
+	ConverterStateData() = delete;
+
+	ConverterStateData(Decoder& decoder)
 		: mDecoder(decoder), mBufferList(nullptr), mBufferCapacityFrames(0)
 	{}
 
 	~ConverterStateData()
 	{
-		// Only a weak reference is held to mDecoder
-		mDecoder = nullptr;
 		DeallocateBufferList();
 	}
 
@@ -66,7 +66,7 @@ public:
 		DeallocateBufferList();
 
 		mBufferCapacityFrames = capacityFrames;
-		mBufferList = AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
+		mBufferList = AllocateABL(mDecoder.GetFormat(), mBufferCapacityFrames);
 	}
 
 	void DeallocateBufferList()
@@ -79,7 +79,7 @@ public:
 
 	void ResetBufferList()
 	{
-		AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
+		AudioStreamBasicDescription formatDescription = mDecoder.GetFormat();
 
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 			mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
@@ -90,16 +90,12 @@ public:
 		ResetBufferList();
 
 		frameCount = std::min(frameCount, mBufferCapacityFrames);
-		return mDecoder->ReadAudio(mBufferList, frameCount);
+		return mDecoder.ReadAudio(mBufferList, frameCount);
 	}
 
-	Decoder					*mDecoder;
+	Decoder&				mDecoder;
 	AudioBufferList			*mBufferList;
 	UInt32					mBufferCapacityFrames;
-
-private:
-	ConverterStateData()
-	{}
 };
 
 namespace {
@@ -124,8 +120,8 @@ namespace {
 	}
 }
 
-SFB::Audio::Converter::Converter(Decoder *decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout)
-	: mDecoder(decoder), mFormat(format), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
+SFB::Audio::Converter::Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout)
+	: mDecoder(std::move(decoder)), mFormat(format), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
 {
 	mChannelLayout = CopyChannelLayout(channelLayout);
 }
@@ -141,7 +137,7 @@ SFB::Audio::Converter::~Converter()
 
 bool SFB::Audio::Converter::Open(CFErrorRef *error)
 {
-	if(nullptr == mDecoder)
+	if(!mDecoder)
 		return false;
 
 	// Open the decoder if necessary
@@ -160,15 +156,12 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
 
-		delete mConverterState, mConverterState = nullptr;
-		delete mDecoder, mDecoder = nullptr;
-
 		return false;
 	}
 
 	// TODO: Set kAudioConverterPropertyCalculateInputBufferSize
 
-	mConverterState = new ConverterStateData(mDecoder);
+	mConverterState = std::unique_ptr<ConverterStateData>(new ConverterStateData(*mDecoder));
 	mConverterState->AllocateBufferList(BUFFER_SIZE_FRAMES);
 
 	// Create the channel map
@@ -188,9 +181,6 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 			if(error)
 				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
 
-			delete mConverterState, mConverterState = nullptr;
-			delete mDecoder, mDecoder = nullptr;
-			
 			return false;
 		}
 	}
@@ -206,12 +196,9 @@ bool SFB::Audio::Converter::Close(CFErrorRef *error)
 		return true;
 	}
 
-	if(mConverterState)
-		delete mConverterState, mConverterState = nullptr;
-	
-	if(mDecoder)
-		delete mDecoder, mDecoder = nullptr;
-	
+	mConverterState.reset();
+	mDecoder.reset();
+
 	if(mConverter)
 		AudioConverterDispose(mConverter), mConverter = nullptr;
 
@@ -263,7 +250,7 @@ UInt32 SFB::Audio::Converter::ConvertAudio(AudioBufferList *bufferList, UInt32 f
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
-	OSStatus result = AudioConverterFillComplexBuffer(mConverter, myAudioConverterComplexInputDataProc, mConverterState, &frameCount, bufferList, nullptr);
+	OSStatus result = AudioConverterFillComplexBuffer(mConverter, myAudioConverterComplexInputDataProc, mConverterState.get(), &frameCount, bufferList, nullptr);
 	if(noErr != result)
 		return 0;
 

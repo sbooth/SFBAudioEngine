@@ -62,11 +62,11 @@ namespace SFB {
 			static bool HandlesFilesWithExtension(CFStringRef extension);
 			static bool HandlesMIMEType(CFStringRef mimeType);
 
-			static Decoder * CreateDecoder(InputSource *inputSource);
+			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// ========================================
 			// Creation
-			OggVorbisDecoder(InputSource *inputSource);
+			OggVorbisDecoder(InputSource::unique_ptr inputSource);
 
 			// ========================================
 			// Destruction

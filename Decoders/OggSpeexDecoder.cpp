@@ -95,15 +95,15 @@ bool SFB::Audio::OggSpeexDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::OggSpeexDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::OggSpeexDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new OggSpeexDecoder(inputSource);
+	return unique_ptr(new OggSpeexDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::OggSpeexDecoder::OggSpeexDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mSpeexDecoder(nullptr), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
+SFB::Audio::OggSpeexDecoder::OggSpeexDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mSpeexDecoder(nullptr), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
 {}
 
 SFB::Audio::OggSpeexDecoder::~OggSpeexDecoder()
@@ -132,7 +132,7 @@ bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
 	char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
 	
 	// Read bitstream from input file
-	ssize_t bytesRead = (ssize_t)GetInputSource()->Read(data, READ_SIZE_BYTES);
+	ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 	if(-1 == bytesRead) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), "");
@@ -518,7 +518,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt3
 					char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
 					
 					// Read bitstream from input file
-					ssize_t bytesRead = (ssize_t)GetInputSource()->Read(data, READ_SIZE_BYTES);
+					ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
 						LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Unable to read from the input file");
 						break;

@@ -49,7 +49,7 @@ namespace {
 		assert(nullptr != user_data);
 
 		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
-		return decoder->GetInputSource()->GetLength();
+		return decoder->GetInputSource().GetLength();
 	}
 
 	sf_count_t my_sf_vio_seek(sf_count_t offset, int whence, void *user_data)
@@ -57,9 +57,9 @@ namespace {
 		assert(nullptr != user_data);
 
 		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return -1;
 
 		// Adjust offset as required
@@ -68,17 +68,17 @@ namespace {
 				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset += inputSource->GetOffset();
+				offset += inputSource.GetOffset();
 				break;
 			case SEEK_END:
-				offset += inputSource->GetLength();
+				offset += inputSource.GetLength();
 				break;
 		}
 
-		if(!inputSource->SeekToOffset(offset))
+		if(!inputSource.SeekToOffset(offset))
 			return -1;
 
-		return inputSource->GetOffset();
+		return inputSource.GetOffset();
 	}
 
 	sf_count_t my_sf_vio_read(void *ptr, sf_count_t count, void *user_data)
@@ -86,7 +86,7 @@ namespace {
 		assert(nullptr != user_data);
 
 		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
-		return decoder->GetInputSource()->Read(ptr, count);
+		return decoder->GetInputSource().Read(ptr, count);
 	}
 
 	sf_count_t my_sf_vio_tell(void *user_data)
@@ -94,7 +94,7 @@ namespace {
 		assert(nullptr != user_data);
 
 		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
-		return decoder->GetInputSource()->GetOffset();
+		return decoder->GetInputSource().GetOffset();
 	}
 	
 }
@@ -153,15 +153,15 @@ bool SFB::Audio::LibsndfileDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::LibsndfileDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::LibsndfileDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new LibsndfileDecoder(inputSource);
+	return unique_ptr(new LibsndfileDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::LibsndfileDecoder::LibsndfileDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
+SFB::Audio::LibsndfileDecoder::LibsndfileDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
 {
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 }

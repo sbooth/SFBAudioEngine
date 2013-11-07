@@ -55,12 +55,12 @@ namespace {
 		assert(nullptr != client_data);
 
 		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
-		SFB::InputSource *inputSource = flacDecoder->GetInputSource();
+		SFB::InputSource& inputSource = flacDecoder->GetInputSource();
 
-		*bytes = (size_t)inputSource->Read(buffer, (SInt64)*bytes);
+		*bytes = (size_t)inputSource.Read(buffer, (SInt64)*bytes);
 
 		if(0 == *bytes)
-			return (inputSource->AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
+			return (inputSource.AtEOF() ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_ABORT);
 
 		return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 	}
@@ -70,12 +70,12 @@ namespace {
 		assert(nullptr != client_data);
 
 		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
-		SFB::InputSource *inputSource = flacDecoder->GetInputSource();
+		SFB::InputSource& inputSource = flacDecoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
 
-		if(!inputSource->SeekToOffset((SInt64)absolute_byte_offset))
+		if(!inputSource.SeekToOffset((SInt64)absolute_byte_offset))
 			return FLAC__STREAM_DECODER_SEEK_STATUS_ERROR;
 
 		return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -87,7 +87,7 @@ namespace {
 
 		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
 
-		*absolute_byte_offset = (FLAC__uint64)flacDecoder->GetInputSource()->GetOffset();
+		*absolute_byte_offset = (FLAC__uint64)flacDecoder->GetInputSource().GetOffset();
 
 		if(-1ULL == *absolute_byte_offset)
 			return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
@@ -101,7 +101,7 @@ namespace {
 
 		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
 
-		*stream_length = (FLAC__uint64)flacDecoder->GetInputSource()->GetLength();
+		*stream_length = (FLAC__uint64)flacDecoder->GetInputSource().GetLength();
 
 		if(-1ULL == *stream_length)
 			return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
@@ -114,7 +114,7 @@ namespace {
 		assert(nullptr != client_data);
 
 		SFB::Audio::FLACDecoder *flacDecoder = static_cast<SFB::Audio::FLACDecoder *>(client_data);
-		return flacDecoder->GetInputSource()->AtEOF();
+		return flacDecoder->GetInputSource().AtEOF();
 	}
 
 	FLAC__StreamDecoderWriteStatus writeCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
@@ -183,15 +183,15 @@ bool SFB::Audio::FLACDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::FLACDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::FLACDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new FLACDecoder(inputSource);
+	return unique_ptr(new FLACDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::FLACDecoder::FLACDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
+SFB::Audio::FLACDecoder::FLACDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
 {
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 }

@@ -53,7 +53,7 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		return (int32_t)decoder->GetInputSource()->Read(data, bcount);
+		return (int32_t)decoder->GetInputSource().Read(data, bcount);
 	}
 
 	uint32_t get_pos_callback(void *id)
@@ -61,7 +61,7 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		return (uint32_t)decoder->GetInputSource()->GetOffset();
+		return (uint32_t)decoder->GetInputSource().GetOffset();
 	}
 
 	int set_pos_abs_callback(void *id, uint32_t pos)
@@ -69,7 +69,7 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		return !decoder->GetInputSource()->SeekToOffset(pos);
+		return !decoder->GetInputSource().SeekToOffset(pos);
 	}
 
 	int set_pos_rel_callback(void *id, int32_t delta, int mode)
@@ -77,9 +77,9 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return -1;
 
 		// Adjust offset as required
@@ -89,14 +89,14 @@ namespace {
 				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset += inputSource->GetOffset();
+				offset += inputSource.GetOffset();
 				break;
 			case SEEK_END:
-				offset += inputSource->GetLength();
+				offset += inputSource.GetLength();
 				break;
 		}
 
-		return (!inputSource->SeekToOffset(offset));
+		return (!inputSource.SeekToOffset(offset));
 	}
 
 	// FIXME: How does one emulate ungetc when the data is non-seekable?
@@ -105,12 +105,12 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return EOF;
 
-		if(!inputSource->SeekToOffset(inputSource->GetOffset() - 1))
+		if(!inputSource.SeekToOffset(inputSource.GetOffset() - 1))
 			return EOF;
 
 		return c;
@@ -121,7 +121,7 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		return (uint32_t)decoder->GetInputSource()->GetLength();
+		return (uint32_t)decoder->GetInputSource().GetLength();
 	}
 
 	int can_seek_callback(void *id)
@@ -129,7 +129,7 @@ namespace {
 		assert(nullptr != id);
 
 		auto decoder = static_cast<SFB::Audio::WavPackDecoder *>(id);
-		return (int)decoder->GetInputSource()->SupportsSeeking();
+		return (int)decoder->GetInputSource().SupportsSeeking();
 	}
 
 }
@@ -173,15 +173,15 @@ bool SFB::Audio::WavPackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::WavPackDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::WavPackDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new WavPackDecoder(inputSource);
+	return unique_ptr(new WavPackDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::WavPackDecoder::WavPackDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
+SFB::Audio::WavPackDecoder::WavPackDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 }

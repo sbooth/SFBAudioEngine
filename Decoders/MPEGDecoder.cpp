@@ -76,7 +76,7 @@ namespace {
 		assert(nullptr != dataSource);
 
 		auto decoder = static_cast<SFB::Audio::MPEGDecoder *>(dataSource);
-		return (ssize_t)decoder->GetInputSource()->Read(ptr, (SInt64)size);
+		return (ssize_t)decoder->GetInputSource().Read(ptr, (SInt64)size);
 	}
 
 	off_t lseek_callback(void *datasource, off_t offset, int whence)
@@ -84,9 +84,9 @@ namespace {
 		assert(nullptr != datasource);
 
 		auto decoder = static_cast<SFB::Audio::MPEGDecoder *>(datasource);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return -1;
 
 		// Adjust offset as required
@@ -95,14 +95,14 @@ namespace {
 				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset += inputSource->GetOffset();
+				offset += inputSource.GetOffset();
 				break;
 			case SEEK_END:
-				offset += inputSource->GetLength();
+				offset += inputSource.GetLength();
 				break;
 		}
 
-		if(!inputSource->SeekToOffset(offset))
+		if(!inputSource.SeekToOffset(offset))
 			return -1;
 		
 		return offset;
@@ -146,15 +146,15 @@ bool SFB::Audio::MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::MPEGDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::MPEGDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new MPEGDecoder(inputSource);
+	return unique_ptr(new MPEGDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::MPEGDecoder::MPEGDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
+SFB::Audio::MPEGDecoder::MPEGDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
 {}
 
 SFB::Audio::MPEGDecoder::~MPEGDecoder()

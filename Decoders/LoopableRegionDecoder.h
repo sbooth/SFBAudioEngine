@@ -54,6 +54,11 @@ namespace SFB {
 			virtual ~LoopableRegionDecoder();
 
 			// ========================================
+			// Source access
+			inline virtual CFURLRef GetURL() const					{ return mDecoder->GetURL(); }
+			inline virtual InputSource& GetInputSource() const		{ return mDecoder->GetInputSource(); }
+
+			// ========================================
 			// Audio access
 			virtual bool Open(CFErrorRef *error = nullptr);
 			virtual bool Close(CFErrorRef *error = nullptr);
@@ -67,11 +72,11 @@ namespace SFB {
 
 			// ========================================
 			// The type of PCM data provided by this decoder
-			inline AudioStreamBasicDescription GetFormat() const		{ return mDecoder->GetFormat(); }
+			inline AudioStreamBasicDescription GetFormat() const	{ return mDecoder->GetFormat(); }
 
 			// ========================================
 			// The layout of the channels this decoder provides
-			inline AudioChannelLayout * GetChannelLayout() const		{ return mDecoder->GetChannelLayout(); }
+			inline AudioChannelLayout * GetChannelLayout() const	{ return mDecoder->GetChannelLayout(); }
 
 			// ========================================
 			// The starting frame for this audio file region
@@ -112,24 +117,24 @@ namespace SFB {
 
 			// ========================================
 			// For these to work correctly decoder must be open already
-			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame);
-			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount);
-			LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
+			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame);
+			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount);
+			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
 
 		private:
 
 			// Called when mDecoder is open
 			bool SetupDecoder(bool forceReset = true);
 
-			Decoder			*mDecoder;
+			Decoder::unique_ptr		mDecoder;
 
-			SInt64			mStartingFrame;
-			UInt32			mFrameCount;
-			UInt32			mRepeatCount;
+			SInt64					mStartingFrame;
+			UInt32					mFrameCount;
+			UInt32					mRepeatCount;
 			
-			UInt32			mFramesReadInCurrentPass;
-			SInt64			mTotalFramesRead;
-			UInt32			mCompletedPasses;
+			UInt32					mFramesReadInCurrentPass;
+			SInt64					mTotalFramesRead;
+			UInt32					mCompletedPasses;
 		};
 		
 	}

@@ -53,7 +53,7 @@ namespace {
 		assert(nullptr != f);
 
 		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
-		return (decoder->GetInputSource()->SeekToOffset(decoder->GetInputSource()->GetOffset() + n) ? 0 : 1);
+		return (decoder->GetInputSource().SeekToOffset(decoder->GetInputSource().GetOffset() + n) ? 0 : 1);
 	}
 
 	int getc_callback(void *f)
@@ -63,7 +63,7 @@ namespace {
 		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
 
 		uint8_t value;
-		return (1 == decoder->GetInputSource()->Read(&value, 1) ? value : -1);
+		return (1 == decoder->GetInputSource().Read(&value, 1) ? value : -1);
 	}
 
 	long getnc_callback(char *ptr, long n, void *f)
@@ -71,7 +71,7 @@ namespace {
 		assert(nullptr != f);
 
 		auto decoder = static_cast<SFB::Audio::MODDecoder *>(f);
-		return static_cast<long>(decoder->GetInputSource()->Read(ptr, n));
+		return static_cast<long>(decoder->GetInputSource().Read(ptr, n));
 	}
 
 	void close_callback(void */*f*/)
@@ -129,15 +129,15 @@ bool SFB::Audio::MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::MODDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::MODDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new MODDecoder(inputSource);
+	return unique_ptr(new MODDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::MODDecoder::MODDecoder(InputSource *inputSource)
-	: Decoder(inputSource), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
+SFB::Audio::MODDecoder::MODDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
 {}
 
 SFB::Audio::MODDecoder::~MODDecoder()
@@ -284,7 +284,7 @@ SInt64 SFB::Audio::MODDecoder::SeekToFrame(SInt64 frame)
 
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
-		if(!Close(nullptr) || !GetInputSource()->SeekToOffset(0) || !Open(nullptr)) {
+		if(!Close(nullptr) || !GetInputSource().SeekToOffset(0) || !Open(nullptr)) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MOD", "Error reseting DUMB decoder");
 			return -1;
 		}

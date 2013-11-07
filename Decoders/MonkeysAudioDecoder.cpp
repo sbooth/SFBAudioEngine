@@ -56,14 +56,9 @@ namespace {
 	class APEIOInterface : public CIO
 	{
 	public:
-		APEIOInterface(SFB::InputSource *inputSource)
+		APEIOInterface(SFB::InputSource& inputSource)
 			: mInputSource(inputSource)
 		{}
-
-		virtual ~APEIOInterface()
-		{
-			mInputSource = nullptr;
-		};
 
 		virtual int Open(const wchar_t * pName)
 		{
@@ -78,7 +73,7 @@ namespace {
 
 		virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
 		{
-			SInt64 bytesRead = mInputSource->Read(pBuffer, nBytesToRead);
+			SInt64 bytesRead = mInputSource.Read(pBuffer, nBytesToRead);
 			if(-1 == bytesRead)
 				return ERROR_IO_READ;
 
@@ -97,7 +92,7 @@ namespace {
 
 		virtual int Seek(int nDistance, unsigned int nMoveMode)
 		{
-			if(!mInputSource->SupportsSeeking())
+			if(!mInputSource.SupportsSeeking())
 				return ERROR_IO_READ;
 
 			SInt64 offset = nDistance;
@@ -106,14 +101,14 @@ namespace {
 					// offset remains unchanged
 					break;
 				case SEEK_CUR:
-					offset += mInputSource->GetOffset();
+					offset += mInputSource.GetOffset();
 					break;
 				case SEEK_END:
-					offset += mInputSource->GetLength();
+					offset += mInputSource.GetLength();
 					break;
 			}
 
-			return (!mInputSource->SeekToOffset(offset));
+			return (!mInputSource.SeekToOffset(offset));
 		}
 
 		virtual int Create(const wchar_t * pName)
@@ -134,13 +129,13 @@ namespace {
 
 		virtual int GetPosition()
 		{
-			SInt64 offset = mInputSource->GetOffset();
+			SInt64 offset = mInputSource.GetOffset();
 			return (int)offset;
 		}
 
 		virtual int GetSize()
 		{
-			SInt64 length = mInputSource->GetLength();
+			SInt64 length = mInputSource.GetLength();
 			return (int)length;
 		}
 
@@ -151,7 +146,7 @@ namespace {
 		}
 		
 	private:
-		SFB::InputSource *mInputSource;
+		SFB::InputSource& mInputSource;
 	};
 
 }
@@ -195,15 +190,15 @@ bool SFB::Audio::MonkeysAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::MonkeysAudioDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::MonkeysAudioDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new MonkeysAudioDecoder(inputSource);
+	return unique_ptr(new MonkeysAudioDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mDecompressor(nullptr)
+SFB::Audio::MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mDecompressor(nullptr)
 {}
 
 SFB::Audio::MonkeysAudioDecoder::~MonkeysAudioDecoder()

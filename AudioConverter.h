@@ -31,7 +31,6 @@
 #pragma once
 
 #include <AudioToolbox/AudioToolbox.h>
-
 #include "AudioDecoder.h"
 
 /*! @file AudioConverter.h @brief Support for converting audio from one PCM format to another */
@@ -58,7 +57,7 @@ namespace SFB {
 			 * @param format The desired output format
 			 * @param channelLayout The desired output channel layout or \c nullptr if not specified
 			 */
-			Converter(Decoder *decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout = nullptr);
+			Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout = nullptr);
 
 			/*! @brief Destroy this \c Converter */
 			~Converter();
@@ -106,7 +105,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the \c Decoder feeding this converter */
-			inline Decoder * GetDecoder() const							{ return mDecoder; }
+			inline Decoder * GetDecoder() const							{ return mDecoder.get(); }
 
 			//@}
 
@@ -162,9 +161,9 @@ namespace SFB {
 		private:
 			AudioStreamBasicDescription			mFormat;			/*!< The format produced by this converter */
 			AudioChannelLayout					*mChannelLayout;	/*!< The channel layout of the audio produced by this converter */
-			Decoder								*mDecoder;			/*!< The Decoder providing the audio */
+			Decoder::unique_ptr					mDecoder;			/*!< The Decoder providing the audio */
 			AudioConverterRef					mConverter;			/*!< The actual object performing the conversion */
-			ConverterStateData					*mConverterState;	/*!< Internal conversion state */
+			std::unique_ptr<ConverterStateData>	mConverterState;	/*!< Internal conversion state */
 			bool								mIsOpen;			/*!< Flag indicating if the mConverter is open */
 		};
 		

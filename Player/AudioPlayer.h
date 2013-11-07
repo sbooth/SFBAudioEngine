@@ -33,6 +33,7 @@
 #include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
 
+#include <memory>
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -40,6 +41,7 @@
 #include <utility>
 
 #include "AudioDecoder.h"
+#include "RingBuffer.h"
 #include "Semaphore.h"
 
 /*! @file AudioPlayer.h @brief Core playback functionality */
@@ -49,12 +51,6 @@ namespace SFB {
 
 	/*! @brief %Audio functionality */
 	namespace Audio {
-
-		// ========================================
-		// Forward declarations
-		// ========================================
-		class RingBuffer;
-		
 
 		// ========================================
 		// Constants
@@ -627,11 +623,11 @@ namespace SFB {
 			/*!
 			 * @brief Start playback of a \c Decoder
 			 * @note This will clear any enqueued decoders
-			 * @note The player will take ownership of the decoder on success
+			 * @note The player will take ownership of the decoder on success and may take ownership on failure
 			 * @param decoder The \c Decoder to play
 			 * @return \c true on success, \c false otherwise
 			 */
-			bool Play(Decoder *decoder);
+			bool Play(Decoder::unique_ptr& decoder);
 
 
 			/*!
@@ -643,11 +639,11 @@ namespace SFB {
 
 			/*!
 			 * @brief Enqueue a \c Decoder for playback
-			 * @note The player will take ownership of the decoder on success
+			 * @note The player will take ownership of the decoder on success and may take ownership on failure
 			 * @param decoder The \c Decoder to enqueue
 			 * @return \c true on success, \c false otherwise
 			 */
-			bool Enqueue(Decoder *decoder);
+			bool Enqueue(Decoder::unique_ptr& decoder);
 
 
 			/*!
@@ -742,7 +738,7 @@ namespace SFB {
 			DecoderStateData * GetCurrentDecoderState() const;
 			DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
-			bool SetupAUGraphAndRingBufferForDecoder(Decoder *decoder);
+			bool SetupAUGraphAndRingBufferForDecoder(Decoder& decoder);
 
 			// ========================================
 			// Data Members
@@ -751,7 +747,7 @@ namespace SFB {
 			AUNode									mOutputNode;
 			UInt32									mDefaultMaximumFramesPerSlice;
 
-			RingBuffer								*mRingBuffer;
+			RingBuffer::unique_ptr					mRingBuffer;
 			AudioStreamBasicDescription				mRingBufferFormat;
 			AudioChannelLayout						*mRingBufferChannelLayout;
 			std::atomic_uint						mRingBufferCapacity;
@@ -759,7 +755,7 @@ namespace SFB {
 
 			std::atomic_uint						mFlags;
 
-			std::vector<std::unique_ptr<Decoder>>	mDecoderQueue;
+			std::vector<Decoder::unique_ptr>		mDecoderQueue;
 			std::atomic<DecoderStateData *>			mActiveDecoders [kActiveDecoderArraySize];
 
 			std::mutex								mMutex;

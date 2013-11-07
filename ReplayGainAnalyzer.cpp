@@ -405,8 +405,8 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	if(nullptr == url)
 		return false;
 
-	Decoder *decoder = Decoder::CreateDecoderForURL(url, error);
-	if(nullptr == decoder || !decoder->Open(error))
+	auto decoder = Decoder::CreateDecoderForURL(url, error);
+	if(!decoder || !decoder->Open(error))
 		return false;
 	
 	AudioStreamBasicDescription inputFormat = decoder->GetFormat();
@@ -424,8 +424,6 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
 
-		delete decoder, decoder = nullptr;
-
 		return false;
 	}
 
@@ -439,8 +437,6 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 
 			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
-
-		delete decoder, decoder = nullptr;
 
 		return false;
 	}
@@ -466,13 +462,11 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
 
-		delete decoder, decoder = nullptr;
-
 		return false;
 	}
 
 	// Converter takes ownership of decoder
-	Converter converter(decoder, outputFormat);
+	Converter converter(std::move(decoder), outputFormat);
 	if(!converter.Open(error))
 		return false;
 	

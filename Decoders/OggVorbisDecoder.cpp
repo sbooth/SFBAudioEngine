@@ -53,7 +53,7 @@ namespace {
 		assert(nullptr != datasource);
 
 		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
-		return (size_t)decoder->GetInputSource()->Read(ptr, (SInt64)(size * nmemb));
+		return (size_t)decoder->GetInputSource().Read(ptr, (SInt64)(size * nmemb));
 	}
 
 	int seek_func_callback(void *datasource, ogg_int64_t offset, int whence)
@@ -61,9 +61,9 @@ namespace {
 		assert(nullptr != datasource);
 
 		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return -1;
 
 		// Adjust offset as required
@@ -72,14 +72,14 @@ namespace {
 				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset += inputSource->GetOffset();
+				offset += inputSource.GetOffset();
 				break;
 			case SEEK_END:
-				offset += inputSource->GetLength();
+				offset += inputSource.GetLength();
 				break;
 		}
 
-		return (!inputSource->SeekToOffset(offset));
+		return (!inputSource.SeekToOffset(offset));
 	}
 
 	long tell_func_callback(void *datasource)
@@ -87,7 +87,7 @@ namespace {
 		assert(nullptr != datasource);
 
 		auto decoder = static_cast<SFB::Audio::OggVorbisDecoder *>(datasource);
-		return (long)decoder->GetInputSource()->GetOffset();
+		return (long)decoder->GetInputSource().GetOffset();
 	}
 
 }
@@ -130,15 +130,15 @@ bool SFB::Audio::OggVorbisDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::OggVorbisDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::OggVorbisDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new OggVorbisDecoder(inputSource);
+	return unique_ptr(new OggVorbisDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::OggVorbisDecoder::OggVorbisDecoder(InputSource *inputSource)
-	: Decoder(inputSource)
+SFB::Audio::OggVorbisDecoder::OggVorbisDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource))
 {
 	memset(&mVorbisFile, 0, sizeof(mVorbisFile));
 }

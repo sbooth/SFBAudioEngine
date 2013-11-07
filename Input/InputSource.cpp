@@ -42,7 +42,7 @@ const CFStringRef	SFB::InputSourceErrorDomain		= CFSTR("org.sbooth.AudioEngine.E
 
 #pragma mark Static Methods
 
-SFB::InputSource * SFB::InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
+SFB::InputSource::unique_ptr SFB::InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;
@@ -57,14 +57,14 @@ SFB::InputSource * SFB::InputSource::CreateInputSourceForURL(CFURLRef url, int f
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		if(InputSourceFlagMemoryMapFiles & flags)
-			return new MemoryMappedFileInputSource(url);
+			return unique_ptr(new MemoryMappedFileInputSource(url));
 		else if(InputSourceFlagLoadFilesInMemory & flags)
-			return new InMemoryFileInputSource(url);
+			return unique_ptr(new InMemoryFileInputSource(url));
 		else
-			return new FileInputSource(url);
+			return unique_ptr(new FileInputSource(url));
 	}
 	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive))
-		return new HTTPInputSource(url);
+		return unique_ptr(new HTTPInputSource(url));
 
 	return nullptr;
 }

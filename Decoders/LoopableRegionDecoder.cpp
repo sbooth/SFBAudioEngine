@@ -34,40 +34,31 @@
 #include "AudioDecoder.h"
 #include "Logger.h"
 
-SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame)
-	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame)
+	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(nullptr != decoder);
-	assert(decoder->SupportsSeeking());
+	assert(nullptr != mDecoder);
+	assert(mDecoder->SupportsSeeking());
 	
-	mInputSource	= mDecoder->GetInputSource();
-	mIsOpen			= mDecoder->IsOpen();
+	if(mDecoder->IsOpen())
+		SetupDecoder();
+}
+
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount)
+	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
+{
+	assert(nullptr != mDecoder);
+	assert(mDecoder->SupportsSeeking());
 
 	if(mDecoder->IsOpen())
 		SetupDecoder();
 }
 
-SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount)
-	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
+SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
+	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(nullptr != decoder);
-	assert(decoder->SupportsSeeking());
-
-	mInputSource	= mDecoder->GetInputSource();
-	mIsOpen			= mDecoder->IsOpen();
-
-	if(mDecoder->IsOpen())
-		SetupDecoder();
-}
-
-SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
-	: mDecoder(decoder), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
-{
-	assert(nullptr != decoder);
-	assert(decoder->SupportsSeeking());
-	
-	mInputSource	= mDecoder->GetInputSource();
-	mIsOpen			= mDecoder->IsOpen();
+	assert(nullptr != mDecoder);
+	assert(mDecoder->SupportsSeeking());
 
 	if(mDecoder->IsOpen())
 		SetupDecoder();
@@ -79,11 +70,7 @@ SFB::Audio::LoopableRegionDecoder::~LoopableRegionDecoder()
 		Close();
 
 	// Just set our references to nullptr, as mDecoder actually owns the objects and will delete them
-	mInputSource	= nullptr;
 	mChannelLayout	= nullptr;
-
-	if(mDecoder)
-		delete mDecoder, mDecoder = nullptr;
 }
 
 bool SFB::Audio::LoopableRegionDecoder::Open(CFErrorRef *error)

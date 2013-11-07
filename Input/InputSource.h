@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <CoreFoundation/CoreFoundation.h>
 
 /*! @file InputSource.h @brief Support for arbitrary bytestream input to \c AudioDecoder */
@@ -68,6 +70,9 @@ namespace SFB {
 		/*! @name Factory Methods */
 		//@{
 
+		/*! @brief A \c std::unique_ptr for \c InputSource objects */
+		typedef std::unique_ptr<InputSource> unique_ptr;
+
 		/*!
 		 * Create a new \c InputSource for the given URL
 		 * @param url The URL
@@ -76,7 +81,7 @@ namespace SFB {
 		 * @return An \c InputSource for the specified URL, or \c nullptr on failure
 		 * @see InputSourceFlags
 		 */
-		static InputSource * CreateInputSourceForURL(CFURLRef url, int flags = 0, CFErrorRef *error = nullptr);
+		static unique_ptr CreateInputSourceForURL(CFURLRef url, int flags = 0, CFErrorRef *error = nullptr);
 
 		//@}
 
@@ -85,7 +90,7 @@ namespace SFB {
 		/*! @name Creation and Destruction */
 		// @{
 
-		/*! Destroy this \c InputSource */
+		/*! @brief Destroy this \c InputSource */
 		virtual ~InputSource();
 
 		/*! @cond */
@@ -105,10 +110,7 @@ namespace SFB {
 		/*! @name URL access */
 		//@{
 
-		/*!
-		 * Get the URL for this \c InputSource
-		 * @return The URL for this \c InputSource
-		 */
+		/*! @brief Get the URL for this \c InputSource */
 		inline CFURLRef GetURL() const							{ return mURL; }
 
 		//@}
@@ -119,24 +121,21 @@ namespace SFB {
 		//@{
 
 		/*!
-		 * Open the input for reading
+		 * @brief Open the input for reading
 		 * @param error An optional pointer to a \c CFErrorRef to receive error information
 		 * @return \c true on success, \c false otherwise
 		 */
 		virtual bool Open(CFErrorRef *error = nullptr) = 0;
 
 		/*!
-		 * Close the input
+		 * @brief Close the input
 		 * @param error An optional pointer to a \c CFErrorRef to receive error information
 		 * @return \c true on success, \c false otherwise
 		 */
 		virtual bool Close(CFErrorRef *error = nullptr) = 0;
 
 
-		/*!
-		 * Determine if this \c InputSource is open
-		 * @return \c true if the \c InputSource is open, \c false otherwise
-		 */
+		/*! @brief Query whether this \c InputSource is open */
 		inline bool IsOpen() const								{ return mIsOpen; }
 
 
@@ -145,7 +144,7 @@ namespace SFB {
 		//@{
 
 		/*!
-		 * Read bytes from the input
+		 * @brief Read bytes from the input
 		 * @param buffer The destination buffer
 		 * @param byteCount The maximum number of bytes to read
 		 * @return The number of bytes read
@@ -153,30 +152,18 @@ namespace SFB {
 		 */
 		virtual SInt64 Read(void *buffer, SInt64 byteCount) = 0;
 
-		/*!
-		 * Determine if the end of input has been reached
-		 * @return \c true if the end of input has been reached, \c false otherwise
-		 */
+		/*! @brief Determine whether the end of input has been reached */
 		virtual bool AtEOF() const = 0;
 
 
-		/*!
-		 * Get the current offset in the input
-		 * @return The current offset, in bytes
-		 */
+		/*! @brief Get the current offset in the input, in bytes */
 		virtual SInt64 GetOffset() const = 0;
 
-		/*!
-		 * Get the length of the input
-		 * @return The length of the input, in bytes
-		 */
+		/*! @brief Get the length of the input, in bytes */
 		virtual SInt64 GetLength() const = 0;
 
 
-		/*!
-		 * Determine if this \c InputSource is seekable
-		 * @return \c true if this \c InputSource supports seeking, \c false otherwise
-		 */
+		/*! @brief Query whether this \c InputSource is seekable */
 		virtual bool SupportsSeeking() const					{ return false; }
 
 		/*!
@@ -190,20 +177,17 @@ namespace SFB {
 
 	protected:
 
-		/*! The location of the bytes to be read */
+		/*! @brief The location of the bytes to be read */
 		CFURLRef mURL;
 
-		/*! Subclasses should set this to \c true if Open() is successful and \c false if Close() is successful */
+		/*! @brief Subclasses should set this to \c true if Open() is successful and \c false if Close() is successful */
 		bool mIsOpen;
 
 
-		/*! Create a new \c InputSource and initialize \c InputSource::mURL to \c nullptr */
+		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c nullptr */
 		InputSource();
 		
-		/*!
-		 * Create a new \c InputSource
-		 * @param url The URL to which \c InputSource::mURL will be set
-		 */
+		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c url */
 		InputSource(CFURLRef url);
 		
 	};

@@ -51,7 +51,7 @@ namespace {
 		assert(nullptr != stream);
 
 		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
-		return (int)decoder->GetInputSource()->Read(ptr, nbytes);
+		return (int)decoder->GetInputSource().Read(ptr, nbytes);
 	}
 
 
@@ -60,9 +60,9 @@ namespace {
 		assert(nullptr != stream);
 
 		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
-		auto inputSource = decoder->GetInputSource();
+		SFB::InputSource& inputSource = decoder->GetInputSource();
 
-		if(!inputSource->SupportsSeeking())
+		if(!inputSource.SupportsSeeking())
 			return -1;
 
 		// Adjust offset as required
@@ -71,14 +71,14 @@ namespace {
 				// offset remains unchanged
 				break;
 			case SEEK_CUR:
-				offset += inputSource->GetOffset();
+				offset += inputSource.GetOffset();
 				break;
 			case SEEK_END:
-				offset += inputSource->GetLength();
+				offset += inputSource.GetLength();
 				break;
 		}
 
-		return (!inputSource->SeekToOffset(offset));
+		return (!inputSource.SeekToOffset(offset));
 	}
 
 	opus_int64 tell_callback(void *stream)
@@ -86,7 +86,7 @@ namespace {
 		assert(nullptr != stream);
 
 		auto decoder = static_cast<SFB::Audio::OggOpusDecoder *>(stream);
-		return decoder->GetInputSource()->GetOffset();
+		return decoder->GetInputSource().GetOffset();
 	}
 
 }
@@ -129,15 +129,15 @@ bool SFB::Audio::OggOpusDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::OggOpusDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::OggOpusDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new OggOpusDecoder(inputSource);
+	return unique_ptr(new OggOpusDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::OggOpusDecoder::OggOpusDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mOpusFile(nullptr)
+SFB::Audio::OggOpusDecoder::OggOpusDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mOpusFile(nullptr)
 {}
 
 SFB::Audio::OggOpusDecoder::~OggOpusDecoder()

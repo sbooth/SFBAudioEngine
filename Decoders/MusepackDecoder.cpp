@@ -56,7 +56,7 @@ namespace {
 		assert(nullptr != p_reader);
 
 		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
-		return (mpc_int32_t)decoder->GetInputSource()->Read(ptr, size);
+		return (mpc_int32_t)decoder->GetInputSource().Read(ptr, size);
 	}
 
 	mpc_bool_t seek_callback(mpc_reader *p_reader, mpc_int32_t offset)
@@ -64,7 +64,7 @@ namespace {
 		assert(nullptr != p_reader);
 
 		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
-		return decoder->GetInputSource()->SeekToOffset(offset);
+		return decoder->GetInputSource().SeekToOffset(offset);
 	}
 
 	mpc_int32_t tell_callback(mpc_reader *p_reader)
@@ -72,7 +72,7 @@ namespace {
 		assert(nullptr != p_reader);
 
 		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
-		return (mpc_int32_t)decoder->GetInputSource()->GetOffset();
+		return (mpc_int32_t)decoder->GetInputSource().GetOffset();
 	}
 
 	mpc_int32_t get_size_callback(mpc_reader *p_reader)
@@ -80,7 +80,7 @@ namespace {
 		assert(nullptr != p_reader);
 
 		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
-		return (mpc_int32_t)decoder->GetInputSource()->GetLength();
+		return (mpc_int32_t)decoder->GetInputSource().GetLength();
 	}
 
 	mpc_bool_t canseek_callback(mpc_reader *p_reader)
@@ -88,7 +88,7 @@ namespace {
 		assert(nullptr != p_reader);
 
 		auto decoder = static_cast<SFB::Audio::MusepackDecoder *>(p_reader->data);
-		return decoder->GetInputSource()->SupportsSeeking();
+		return decoder->GetInputSource().SupportsSeeking();
 	}
 
 }
@@ -132,15 +132,15 @@ bool SFB::Audio::MusepackDecoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder * SFB::Audio::MusepackDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::MusepackDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new MusepackDecoder(inputSource);
+	return unique_ptr(new MusepackDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::MusepackDecoder::MusepackDecoder(InputSource *inputSource)
-	: Decoder(inputSource), mDemux(nullptr), mTotalFrames(0), mCurrentFrame(0)
+SFB::Audio::MusepackDecoder::MusepackDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mDemux(nullptr), mTotalFrames(0), mCurrentFrame(0)
 {}
 
 SFB::Audio::MusepackDecoder::~MusepackDecoder()
