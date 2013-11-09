@@ -31,8 +31,7 @@
 #include <algorithm>
 
 #include "AudioConverter.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
+#include "AudioBufferList.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
 #include "CFWrapper.h"
@@ -50,52 +49,30 @@ public:
 	ConverterStateData() = delete;
 
 	ConverterStateData(Decoder& decoder)
-		: mDecoder(decoder), mBufferList(nullptr), mBufferCapacityFrames(0)
+		: mDecoder(decoder)
 	{}
 
 	~ConverterStateData()
-	{
-		DeallocateBufferList();
-	}
+	{}
 
 	ConverterStateData(const ConverterStateData& rhs) = delete;
 	ConverterStateData& operator=(const ConverterStateData& rhs) = delete;
 
 	void AllocateBufferList(UInt32 capacityFrames)
 	{
-		DeallocateBufferList();
-
-		mBufferCapacityFrames = capacityFrames;
-		mBufferList = AllocateABL(mDecoder.GetFormat(), mBufferCapacityFrames);
-	}
-
-	void DeallocateBufferList()
-	{
-		if(mBufferList) {
-			mBufferCapacityFrames = 0;
-			mBufferList = DeallocateABL(mBufferList);
-		}
-	}
-
-	void ResetBufferList()
-	{
-		AudioStreamBasicDescription formatDescription = mDecoder.GetFormat();
-
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-			mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
+		mBufferList.Allocate(mDecoder.GetFormat(), capacityFrames);
 	}
 
 	UInt32 ReadAudio(UInt32 frameCount)
 	{
-		ResetBufferList();
+		mBufferList.Reset();
 
-		frameCount = std::min(frameCount, mBufferCapacityFrames);
+		frameCount = std::min(frameCount, mBufferList.GetCapacityFrames());
 		return mDecoder.ReadAudio(mBufferList, frameCount);
 	}
 
-	Decoder&				mDecoder;
-	AudioBufferList			*mBufferList;
-	UInt32					mBufferCapacityFrames;
+	Decoder&		mDecoder;
+	BufferList		mBufferList;
 };
 
 namespace {

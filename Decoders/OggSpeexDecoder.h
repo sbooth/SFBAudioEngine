@@ -30,14 +30,12 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #include <ogg/ogg.h>
 #include <speex/speex_bits.h>
 #include <speex/speex_stereo.h>
 
-#import "AudioDecoder.h"
+#include "AudioDecoder.h"
+#include "AudioBufferList.h"
 
 namespace SFB {
 
@@ -89,7 +87,7 @@ namespace SFB {
 
 		private:
 
-			AudioBufferList		*mBufferList;
+			BufferList			mBufferList;
 			SInt64				mCurrentFrame;
 			SInt64				mTotalFrames;
 

@@ -37,8 +37,6 @@
 #include <Accelerate/Accelerate.h>
 
 #include "MPEGDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
@@ -154,7 +152,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::MPEGDecoder::CreateDecoder(InputSour
 #pragma mark Creation and Destruction
 
 SFB::Audio::MPEGDecoder::MPEGDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mDecoder(nullptr), mBufferList(nullptr), mCurrentFrame(0)
+	: Decoder(std::move(inputSource)), mDecoder(nullptr), mCurrentFrame(0)
 {}
 
 SFB::Audio::MPEGDecoder::~MPEGDecoder()
@@ -279,9 +277,7 @@ bool SFB::Audio::MPEGDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat, framesPerMPEGFrame);
-	
-	if(nullptr == mBufferList) {
+	if(!mBufferList.Allocate(mFormat, framesPerMPEGFrame)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		
@@ -305,9 +301,7 @@ bool SFB::Audio::MPEGDecoder::Close(CFErrorRef */*error*/)
 	}
 
 	mDecoder.reset();
-
-	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+	mBufferList.Deallocate();
 
 	mIsOpen = false;
 	return true;

@@ -128,8 +128,7 @@
 #include "ReplayGainAnalyzer.h"
 #include "AudioConverter.h"
 #include "AudioDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
+#include "AudioBufferList.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 
@@ -467,7 +466,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 		return false;
 	
 	const UInt32 bufferSizeFrames = 512;
-	AudioBufferList *outputBuffer = AllocateABL(outputFormat, bufferSizeFrames);
+	BufferList outputBuffer(outputFormat, bufferSizeFrames);
 
 	bool isStereo = (2 == outputFormat.mChannelsPerFrame);
 
@@ -499,7 +498,6 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 
 	priv->albumPeak = std::max(priv->albumPeak, priv->trackPeak);
 
-	outputBuffer = DeallocateABL(outputBuffer);
 	return true;
 }
 

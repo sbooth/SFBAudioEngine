@@ -39,8 +39,7 @@
 #include <iomanip>
 
 #include "AudioPlayer.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
+#include "AudioBufferList.h"
 #include "CreateChannelLayout.h"
 #include "Logger.h"
 
@@ -105,49 +104,25 @@ public:
 	}
 
 	~DecoderStateData()
-	{
-		DeallocateBufferList();
-	}
+	{}
 
 	DecoderStateData(const DecoderStateData& rhs) = delete;
 	DecoderStateData& operator=(const DecoderStateData& rhs) = delete;
 
 	void AllocateBufferList(UInt32 capacityFrames)
 	{
-		DeallocateBufferList();
-
-		mBufferCapacityFrames = capacityFrames;
-		mBufferList = AllocateABL(mDecoder->GetFormat(), mBufferCapacityFrames);
-	}
-
-	void DeallocateBufferList()
-	{
-		if(mBufferList) {
-			mBufferCapacityFrames = 0;
-			mBufferList = DeallocateABL(mBufferList);
-		}
-	}
-
-	void ResetBufferList()
-	{
-		AudioStreamBasicDescription formatDescription = mDecoder->GetFormat();
-
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-			mBufferList->mBuffers[i].mDataByteSize = mBufferCapacityFrames * formatDescription.mBytesPerFrame;
+		mBufferList.Allocate(mDecoder->GetFormat(), capacityFrames);
 	}
 
 	UInt32 ReadAudio(UInt32 frameCount)
 	{
-		ResetBufferList();
-
-		frameCount = std::min(frameCount, mBufferCapacityFrames);
-		return mDecoder->ReadAudio(mBufferList, frameCount);
+		mBufferList.Reset();
+		return mDecoder->ReadAudio(mBufferList, std::min(frameCount, mBufferList.GetCapacityFrames()));
 	}
 
 	std::unique_ptr<Decoder>	mDecoder;
 
-	AudioBufferList				*mBufferList;
-	UInt32						mBufferCapacityFrames;
+	BufferList					mBufferList;
 
 	SInt64						mTimeStamp;
 
@@ -161,7 +136,7 @@ public:
 private:
 
 	DecoderStateData()
-		: mDecoder(nullptr), mBufferList(nullptr), mBufferCapacityFrames(0), mTimeStamp(0), mTotalFrames(0), mFramesRendered(ATOMIC_VAR_INIT(0)), mFrameToSeek(ATOMIC_VAR_INIT(-1)), mFlags(ATOMIC_VAR_INIT(0))
+		: mDecoder(nullptr), mTimeStamp(0), mTotalFrames(0), mFramesRendered(ATOMIC_VAR_INIT(0)), mFrameToSeek(ATOMIC_VAR_INIT(-1)), mFlags(ATOMIC_VAR_INIT(0))
 	{}
 
 };
@@ -255,7 +230,7 @@ namespace {
 		ioData->mNumberBuffers = decoderStateData->mBufferList->mNumberBuffers;
 		for(UInt32 bufferIndex = 0; bufferIndex < decoderStateData->mBufferList->mNumberBuffers; ++bufferIndex)
 			ioData->mBuffers[bufferIndex] = decoderStateData->mBufferList->mBuffers[bufferIndex];
-		
+
 		*ioNumberDataPackets = framesRead;
 		
 		return noErr;
@@ -2070,7 +2045,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer			
 			decoderState->AllocateBufferList(inputBufferSize / decoderFormat.mBytesPerFrame);
 
-			AudioBufferList *bufferList = AllocateABL(mRingBufferFormat, mRingBufferWriteChunkSize);
+			BufferList bufferList(mRingBufferFormat, mRingBufferWriteChunkSize);
 
 			// ========================================
 			// Decode the audio file in the ring buffer until finished or cancelled
@@ -2248,9 +2223,6 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					mSemaphore.Signal();
 			}
 
-			if(bufferList)
-				bufferList = DeallocateABL(bufferList);
-			
 			if(audioConverter) {
 				result = AudioConverterDispose(audioConverter);
 				if(noErr != result)

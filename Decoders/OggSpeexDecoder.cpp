@@ -36,8 +36,6 @@
 #include <speex/speex_callbacks.h>
 
 #include "OggSpeexDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
@@ -324,8 +322,7 @@ bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
 	spx_int32_t speexFrameSize = 0;
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 	
-	mBufferList = AllocateABL(mFormat, (UInt32)speexFrameSize);
-	if(nullptr == mBufferList) {
+	if(!mBufferList.Allocate(mFormat, (UInt32)speexFrameSize)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
@@ -352,8 +349,7 @@ bool SFB::Audio::OggSpeexDecoder::Close(CFErrorRef */*error*/)
 		return true;
 	}
 
-	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+	mBufferList.Deallocate();
 
 	// Speex cleanup
 	speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = nullptr;

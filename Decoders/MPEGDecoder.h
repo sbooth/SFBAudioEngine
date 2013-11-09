@@ -30,14 +30,10 @@
 
 #pragma once
 
-#include <functional>
-
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
-#import "AudioDecoder.h"
-
 #include <mpg123/mpg123.h>
+
+#include "AudioDecoder.h"
+#include "AudioBufferList.h"
 
 namespace SFB {
 
@@ -95,7 +91,7 @@ namespace SFB {
 		private:
 
 			std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>> mDecoder;
-			AudioBufferList		*mBufferList;
+			BufferList			mBufferList;
 			SInt64				mCurrentFrame;
 		};
 		

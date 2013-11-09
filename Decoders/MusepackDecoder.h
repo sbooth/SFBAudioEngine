@@ -30,12 +30,10 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #include <mpcdec/mpcdec.h>
 
-#import "AudioDecoder.h"
+#include "AudioDecoder.h"
+#include "AudioBufferList.h"
 
 namespace SFB {
 
@@ -95,7 +93,7 @@ namespace SFB {
 			mpc_reader			mReader;
 			mpc_demux			*mDemux;
 			
-			AudioBufferList		*mBufferList;
+			BufferList			mBufferList;
 			
 			SInt64				mTotalFrames;
 			SInt64				mCurrentFrame;

@@ -34,8 +34,6 @@
 #include <algorithm>
 
 #include "MusepackDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
@@ -226,9 +224,7 @@ bool SFB::Audio::MusepackDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list
-	mBufferList = AllocateABL(mFormat, MPC_FRAME_LENGTH);
-
-	if(nullptr == mBufferList) {
+	if(!mBufferList.Allocate(mFormat, MPC_FRAME_LENGTH)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
@@ -256,9 +252,7 @@ bool SFB::Audio::MusepackDecoder::Close(CFErrorRef */*error*/)
 		mpc_demux_exit(mDemux), mDemux = nullptr;
 	
     mpc_reader_exit_stdio(&mReader);
-	
-	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+	mBufferList.Deallocate();
 
 	mIsOpen = false;
 	return true;

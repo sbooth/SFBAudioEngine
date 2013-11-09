@@ -33,8 +33,6 @@
 #include <FLAC/metadata.h>
 
 #include "FLACDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
 #include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
@@ -191,7 +189,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::FLACDecoder::CreateDecoder(InputSour
 #pragma mark Creation and Destruction
 
 SFB::Audio::FLACDecoder::FLACDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mFLAC(nullptr), mCurrentFrame(0), mBufferList(nullptr)
+	: Decoder(std::move(inputSource)), mFLAC(nullptr), mCurrentFrame(0)
 {
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 }
@@ -363,9 +361,7 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	mBufferList = AllocateABL(mFormat, mStreamInfo.max_blocksize);
-	
-	if(nullptr == mBufferList) {
+	if(!mBufferList.Allocate(mFormat, mStreamInfo.max_blocksize)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "Unable to allocate memory")
 
 		if(error)
@@ -400,8 +396,7 @@ bool SFB::Audio::FLACDecoder::Close(CFErrorRef */*error*/)
 		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 	}
 
-	if(mBufferList)
-		mBufferList = DeallocateABL(mBufferList);
+	mBufferList.Deallocate();
 
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 

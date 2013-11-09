@@ -30,12 +30,10 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #include <FLAC/stream_decoder.h>
 
-#import "AudioDecoder.h"
+#include "AudioDecoder.h"
+#include "AudioBufferList.h"
 
 namespace SFB {
 
@@ -97,7 +95,7 @@ namespace SFB {
 			SInt64								mCurrentFrame;
 
 			// For converting push to pull
-			AudioBufferList						*mBufferList;
+			BufferList							mBufferList;
 
 		public:
 
