@@ -157,7 +157,7 @@ namespace SFB {
 			
 			// The replay gain internal state
 			class ReplayGainAnalyzerPrivate;
-			ReplayGainAnalyzerPrivate *priv;
+			std::unique_ptr<ReplayGainAnalyzerPrivate> priv;
 		};
 		
 	}

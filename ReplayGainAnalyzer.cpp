@@ -390,15 +390,11 @@ int32_t SFB::Audio::ReplayGainAnalyzer::GetBestReplayGainSampleRateForSampleRate
 }
 
 SFB::Audio::ReplayGainAnalyzer::ReplayGainAnalyzer()
-{
-	priv = new ReplayGainAnalyzerPrivate;
-}
+	: priv(new ReplayGainAnalyzerPrivate)
+{}
 
 SFB::Audio::ReplayGainAnalyzer::~ReplayGainAnalyzer()
-{
-	if(priv)
-		delete priv, priv = nullptr;
-}
+{}
 
 bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 {
