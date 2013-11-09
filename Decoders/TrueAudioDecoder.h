@@ -30,12 +30,8 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
-#import "AudioDecoder.h"
-
 #include <tta++/libtta.h>
+#import "AudioDecoder.h"
 
 namespace {
 

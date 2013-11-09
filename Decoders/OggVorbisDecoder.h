@@ -30,9 +30,6 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
 

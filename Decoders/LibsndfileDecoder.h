@@ -30,10 +30,7 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-
 #include <sndfile/sndfile.h>
-
 #include "AudioDecoder.h"
 
 namespace SFB {

@@ -30,11 +30,7 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #include <wavpack/wavpack.h>
-
 #import "AudioDecoder.h"
 
 namespace SFB {

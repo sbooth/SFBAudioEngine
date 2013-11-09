@@ -30,9 +30,6 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
 #import "AudioDecoder.h"
 
 namespace { class APEIOInterface; }
