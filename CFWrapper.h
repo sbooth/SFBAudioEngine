@@ -194,7 +194,10 @@ namespace SFB {
 		//@{
 
 		/*! @brief Check whether the wrapped object is \c nullptr */
-		inline operator bool() const							{ return nullptr != mObject; }
+		inline explicit operator bool() const					{ return nullptr != mObject; }
+
+		/*! @brief Check whether the wrapped object is not \c nullptr */
+		inline bool operator!() const							{ return nullptr == mObject; }
 
 		/*! @brief Get the wrapped object */
 		inline operator T() const								{ return mObject; }
