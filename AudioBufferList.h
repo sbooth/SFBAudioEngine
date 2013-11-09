@@ -92,7 +92,7 @@ namespace SFB {
 			 * @brief Create a new \c BufferList
 			 * @param format The format of the audio the \c BufferList will hold
 			 * @param capacityFrames The desired buffer capacity in audio frames
-			 * @return \true on sucess, \c false otherwise
+			 * @return \c true on sucess, \c false otherwise
 			 */
 			bool Allocate(const AudioStreamBasicDescription& format, UInt32 capacityFrames);
 
@@ -102,7 +102,7 @@ namespace SFB {
 			 * @param bytesPerFrame The number of bytes per audio frame
 			 * @param interleaved \c true if the audio channel samples are interleaved, \c false otherwise
 			 * @param capacityFrames The desired buffer capacity in audio frames
-			 * @return \true on sucess, \c false otherwise
+			 * @return \c true on sucess, \c false otherwise
 			 */
 			bool Allocate(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames);
 
