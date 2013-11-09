@@ -31,7 +31,6 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-
 #include <memory>
 
 /*! @file AttachedPicture.h @brief Support for attached pictures */

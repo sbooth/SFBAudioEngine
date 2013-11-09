@@ -31,7 +31,6 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
-
 #include <vector>
 
 #include "AttachedPicture.h"

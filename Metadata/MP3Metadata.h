@@ -30,8 +30,7 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#import "AudioMetadata.h"
+#include "AudioMetadata.h"
 
 namespace SFB {
 
