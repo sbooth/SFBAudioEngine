@@ -61,6 +61,21 @@ AudioChannelLayout * SFB::Audio::CreateChannelLayoutWithTag(AudioChannelLayoutTa
 	return channelLayout;
 }
 
+AudioChannelLayout * SFB::Audio::CreateChannelLayoutWithChannelLabels(std::vector<AudioChannelLabel> channelLabels)
+{
+	AudioChannelLayout *channelLayout = CreateChannelLayout((UInt32)channelLabels.size());
+
+	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+	channelLayout->mChannelBitmap = 0;
+
+	channelLayout->mNumberChannelDescriptions = (UInt32)channelLabels.size();
+
+	for(std::vector<AudioChannelLabel>::size_type i = 0; i != channelLabels.size(); ++i)
+		channelLayout->mChannelDescriptions[i].mChannelLabel = channelLabels[i];
+
+	return channelLayout;
+}
+
 AudioChannelLayout * SFB::Audio::CreateChannelLayoutWithBitmap(UInt32 channelBitmap)
 {
 	AudioChannelLayout *channelLayout = CreateChannelLayout();

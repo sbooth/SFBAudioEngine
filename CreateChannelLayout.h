@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include <vector>
 #include <CoreAudio/CoreAudioTypes.h>
 
 /*! @file CreateChannelLayout.h @brief Utility functions for allocating \c AudioChannelLayout structs */
@@ -60,6 +61,13 @@ namespace SFB {
 		 * @return An \c AudioChannelLayout
 		 */
 		AudioChannelLayout * CreateChannelLayoutWithTag(AudioChannelLayoutTag layoutTag);
+
+		/*!
+		 * @brief Allocate an \c AudioChannelLayout
+		 * @param channelLabels A \c std::vector of the desired channel labels
+		 * @return An \c AudioChannelLayout
+		 */
+		AudioChannelLayout * CreateChannelLayoutWithChannelLabels(std::vector<AudioChannelLabel> channelLabels);
 
 		/*!
 		 * @brief Allocate an \c AudioChannelLayout
