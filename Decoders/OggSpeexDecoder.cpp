@@ -312,7 +312,7 @@ bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
 	
 	switch(header->nb_channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
 		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
 	}
 	

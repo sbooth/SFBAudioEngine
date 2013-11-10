@@ -261,7 +261,7 @@ bool SFB::Audio::MPEGDecoder::Open(CFErrorRef *error)
 	// Setup the channel layout
 	switch(channels) {
 		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
+		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
 	}
 
 	if(MPG123_OK != mpg123_scan(decoder.get())) {

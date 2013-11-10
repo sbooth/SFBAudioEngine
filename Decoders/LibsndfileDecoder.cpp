@@ -29,7 +29,6 @@
  */
 
 #include "LibsndfileDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"

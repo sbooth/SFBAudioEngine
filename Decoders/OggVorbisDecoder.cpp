@@ -232,40 +232,17 @@ bool SFB::Audio::OggVorbisDecoder::Open(CFErrorRef *error)
 		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
 
 		case 7:
-			mChannelLayout = CreateChannelLayout(7);
-
-			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-			mChannelLayout->mChannelBitmap = 0;
-			
-			mChannelLayout->mNumberChannelDescriptions = 7;
-
-			mChannelLayout->mChannelDescriptions[0].mChannelLabel = kAudioChannelLabel_Left;
-			mChannelLayout->mChannelDescriptions[1].mChannelLabel = kAudioChannelLabel_Center;
-			mChannelLayout->mChannelDescriptions[2].mChannelLabel = kAudioChannelLabel_Right;
-			mChannelLayout->mChannelDescriptions[3].mChannelLabel = kAudioChannelLabel_LeftSurround;
-			mChannelLayout->mChannelDescriptions[4].mChannelLabel = kAudioChannelLabel_RightSurround;
-			mChannelLayout->mChannelDescriptions[5].mChannelLabel = kAudioChannelLabel_CenterSurround;
-			mChannelLayout->mChannelDescriptions[6].mChannelLabel = kAudioChannelLabel_LFEScreen;
-
+			mChannelLayout = CreateChannelLayoutWithChannelLabels({
+				kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+				kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_CenterSurround,
+				kAudioChannelLabel_LFEScreen});
 			break;
 
 		case 8:
-			mChannelLayout = CreateChannelLayout(8);
-
-			mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-			mChannelLayout->mChannelBitmap = 0;
-
-			mChannelLayout->mNumberChannelDescriptions = 8;
-
-			mChannelLayout->mChannelDescriptions[0].mChannelLabel = kAudioChannelLabel_Left;
-			mChannelLayout->mChannelDescriptions[1].mChannelLabel = kAudioChannelLabel_Center;
-			mChannelLayout->mChannelDescriptions[2].mChannelLabel = kAudioChannelLabel_Right;
-			mChannelLayout->mChannelDescriptions[3].mChannelLabel = kAudioChannelLabel_LeftSurround;
-			mChannelLayout->mChannelDescriptions[4].mChannelLabel = kAudioChannelLabel_RightSurround;
-			mChannelLayout->mChannelDescriptions[5].mChannelLabel = kAudioChannelLabel_RearSurroundLeft;
-			mChannelLayout->mChannelDescriptions[6].mChannelLabel = kAudioChannelLabel_RearSurroundRight;
-			mChannelLayout->mChannelDescriptions[7].mChannelLabel = kAudioChannelLabel_LFEScreen;
-
+			mChannelLayout = CreateChannelLayoutWithChannelLabels({
+				kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+				kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
+				kAudioChannelLabel_LFEScreen});
 			break;
 	}
 

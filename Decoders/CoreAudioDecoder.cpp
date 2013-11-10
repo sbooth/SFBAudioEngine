@@ -36,7 +36,6 @@
 #include <Accelerate/Accelerate.h>
 
 #include "CoreAudioDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "CreateStringForOSType.h"
