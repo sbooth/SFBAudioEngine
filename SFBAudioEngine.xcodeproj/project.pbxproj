@@ -25,10 +25,12 @@
 		3210AB9117B9C13600743639 /* SFBAudioEngine.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */; };
 		3210AB9217B9C13D00743639 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */; };
 		321FCF9117BF1C3600828C3A /* RingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 321FCF8F17BF1C3600828C3A /* RingBuffer.cpp */; };
-		321FCF9217BF1C3600828C3A /* RingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 321FCF9017BF1C3600828C3A /* RingBuffer.h */; };
+		321FCF9217BF1C3600828C3A /* RingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 321FCF9017BF1C3600828C3A /* RingBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		322D78A9112F971C006676FC /* WavPackMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78A7112F971C006676FC /* WavPackMetadata.cpp */; };
 		322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */; };
 		322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D7A5111304C24006676FC /* MP4Metadata.cpp */; };
+		3230A938182E698900D630CF /* AudioBufferList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3230A936182E698900D630CF /* AudioBufferList.cpp */; };
+		3230A939182E698900D630CF /* AudioBufferList.h in Headers */ = {isa = PBXBuildFile; fileRef = 3230A937182E698900D630CF /* AudioBufferList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32386EF213D2135400D25175 /* HTTPInputSource.cpp */; };
 		324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */; };
 		324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */; };
@@ -73,6 +75,10 @@
 		32B848EC180E395D00A222C5 /* ReplayGainAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B848EA180E395D00A222C5 /* ReplayGainAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32BA760C18203A6200366204 /* OggOpusMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32BA760A18203A6200366204 /* OggOpusMetadata.cpp */; };
 		32BA760D18203A6200366204 /* OggOpusMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA760B18203A6200366204 /* OggOpusMetadata.h */; };
+		32BA761018203AFF00366204 /* OggOpusDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32BA760E18203AFF00366204 /* OggOpusDecoder.cpp */; };
+		32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA760F18203AFF00366204 /* OggOpusDecoder.h */; };
+		32BA761418203B0F00366204 /* DSFMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32BA761218203B0F00366204 /* DSFMetadata.cpp */; };
+		32BA761518203B0F00366204 /* DSFMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA761318203B0F00366204 /* DSFMetadata.h */; };
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
@@ -84,8 +90,6 @@
 		32D6552F115FC58C002B275C /* InputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6552B115FC58C002B275C /* InputSource.cpp */; };
 		32D65530115FC58C002B275C /* InputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552C115FC58C002B275C /* InputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
-		32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA07122C07AF00C25252 /* AllocateABL.cpp */; };
-		32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DEDA13122C095600C25252 /* DeallocateABL.cpp */; };
 		32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */; };
 		32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */; };
 		32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */; };
@@ -94,8 +98,6 @@
 		32E7378F10B9178100094C8A /* WavPackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */; };
 		32E738E010B9A49700094C8A /* MPEGDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */; };
 		32E73B0210B9D8AC00094C8A /* OggVorbisDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */; };
-		32E9E9A61457960000825EBA /* AllocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA06122C07AF00C25252 /* AllocateABL.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32E9E9A71457960000825EBA /* DeallocateABL.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DEDA12122C095600C25252 /* DeallocateABL.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32EA67F9112BC4D9006C26F1 /* AudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */; };
 		32EA6825112CD84B006C26F1 /* FLACMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */; };
@@ -145,7 +147,7 @@
 		3203A6191346E0ED00A7A22E /* MODDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODDecoder.h; sourceTree = "<group>"; };
 		3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MODDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3205E3BD1130787300FD9DAD /* WAVEMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WAVEMetadata.cpp; sourceTree = "<group>"; };
-		3205E3BE1130787300FD9DAD /* WAVEMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WAVEMetadata.h; sourceTree = "<group>"; };
+		3205E3BE1130787300FD9DAD /* WAVEMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = WAVEMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddID3v2TagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddID3v2TagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetID3v2TagFromMetadata.cpp; sourceTree = "<group>"; };
@@ -153,19 +155,19 @@
 		3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AIFFMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3205E4291130847C00FD9DAD /* AIFFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AIFFMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E43C113085AE00FD9DAD /* MP3Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MP3Metadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		3205E43D113085AE00FD9DAD /* MP3Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP3Metadata.h; sourceTree = "<group>"; };
+		3205E43D113085AE00FD9DAD /* MP3Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MP3Metadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E45A11308F8C00FD9DAD /* MusepackMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackMetadata.cpp; sourceTree = "<group>"; };
-		3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackMetadata.h; sourceTree = "<group>"; };
+		3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MusepackMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E4BF11309CA300FD9DAD /* OggFLACMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggFLACMetadata.cpp; sourceTree = "<group>"; };
-		3205E4C011309CA300FD9DAD /* OggFLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggFLACMetadata.h; sourceTree = "<group>"; };
+		3205E4C011309CA300FD9DAD /* OggFLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggFLACMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E4C111309CA300FD9DAD /* OggVorbisMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggVorbisMetadata.cpp; sourceTree = "<group>"; };
-		3205E4C211309CA300FD9DAD /* OggVorbisMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisMetadata.h; sourceTree = "<group>"; };
+		3205E4C211309CA300FD9DAD /* OggVorbisMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggVorbisMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetXiphCommentFromMetadata.cpp; sourceTree = "<group>"; };
 		3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetXiphCommentFromMetadata.h; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		320723C7138D564700007369 /* CreateStringForOSType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateStringForOSType.cpp; sourceTree = "<group>"; };
 		320A32E114DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TrueAudioMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		320A32E214DD5E8F00A5BAA4 /* TrueAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrueAudioMetadata.h; sourceTree = "<group>"; };
+		320A32E214DD5E8F00A5BAA4 /* TrueAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = TrueAudioMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		3210AB8D17B9BF8000743639 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		321FCF8F17BF1C3600828C3A /* RingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RingBuffer.cpp; sourceTree = "<group>"; };
@@ -175,16 +177,18 @@
 		322B5C1D108BC70600CA9BDE /* CoreAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreAudioDecoder.h; sourceTree = "<group>"; };
 		322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = CoreAudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		322D78A7112F971C006676FC /* WavPackMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackMetadata.cpp; sourceTree = "<group>"; };
-		322D78A8112F971C006676FC /* WavPackMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavPackMetadata.h; sourceTree = "<group>"; };
+		322D78A8112F971C006676FC /* WavPackMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = WavPackMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateDisplayNameForURL.cpp; sourceTree = "<group>"; };
 		322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateDisplayNameForURL.h; sourceTree = "<group>"; };
 		322D7A5111304C24006676FC /* MP4Metadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MP4Metadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Metadata.h; sourceTree = "<group>"; };
+		322D7A5211304C24006676FC /* MP4Metadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MP4Metadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		3230A936182E698900D630CF /* AudioBufferList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioBufferList.cpp; sourceTree = "<group>"; };
+		3230A937182E698900D630CF /* AudioBufferList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioBufferList.h; sourceTree = "<group>"; };
 		32386EF213D2135400D25175 /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
 		32386EF313D2135400D25175 /* HTTPInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPInputSource.h; sourceTree = "<group>"; };
 		324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioDecoder.h; sourceTree = "<group>"; };
 		324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MonkeysAudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioMetadata.h; sourceTree = "<group>"; };
+		324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MonkeysAudioMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MonkeysAudioMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimplePlayer-Info.plist"; sourceTree = "<group>"; };
 		3252E85510CC9EFD00F1AA23 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -197,7 +201,7 @@
 		325560291092A38F00580566 /* FLACDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = FLACDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3255602A1092A38F00580566 /* FLACDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACDecoder.h; sourceTree = "<group>"; };
 		3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexDecoder.h; sourceTree = "<group>"; };
-		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; };
+		3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = OggSpeexDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		3259C9C717389B850035D749 /* sndfile.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = sndfile.framework; path = Frameworks/sndfile.framework; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
@@ -224,7 +228,7 @@
 		32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddAudioPropertiesToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32A319FC11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddAudioPropertiesToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32A5A20117DD1BF80064C5DE /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
-		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODMetadata.h; sourceTree = "<group>"; };
+		32A95E4F1347EBC6006B40EF /* MODMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MODMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32A95E501347EBC6006B40EF /* MODMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MODMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32AEB28F1409AF2B001F9A60 /* Logger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Logger.cpp; sourceTree = "<group>"; };
 		32AEB2901409AF2B001F9A60 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
@@ -232,16 +236,20 @@
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32AEB2D71409BA26001F9A60 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
 		32AEB2D81409BA27001F9A60 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrueAudioDecoder.cpp; sourceTree = "<group>"; };
+		32AF1A5E14C8FE3C00750053 /* TrueAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = TrueAudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrueAudioDecoder.h; sourceTree = "<group>"; };
 		32B848E5180E199D00A222C5 /* AudioConverter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioConverter.cpp; sourceTree = "<group>"; };
 		32B848E6180E199D00A222C5 /* AudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioConverter.h; sourceTree = "<group>"; };
 		32B848E9180E395D00A222C5 /* ReplayGainAnalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReplayGainAnalyzer.cpp; sourceTree = "<group>"; };
 		32B848EA180E395D00A222C5 /* ReplayGainAnalyzer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReplayGainAnalyzer.h; sourceTree = "<group>"; };
 		32BA760A18203A6200366204 /* OggOpusMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggOpusMetadata.cpp; sourceTree = "<group>"; };
-		32BA760B18203A6200366204 /* OggOpusMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggOpusMetadata.h; sourceTree = "<group>"; };
+		32BA760B18203A6200366204 /* OggOpusMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggOpusMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		32BA760E18203AFF00366204 /* OggOpusDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = OggOpusDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		32BA760F18203AFF00366204 /* OggOpusDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggOpusDecoder.h; sourceTree = "<group>"; };
+		32BA761218203B0F00366204 /* DSFMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSFMetadata.cpp; sourceTree = "<group>"; };
+		32BA761318203B0F00366204 /* DSFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSFMetadata.h; sourceTree = "<group>"; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggSpeexMetadata.h; sourceTree = "<group>"; };
+		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggSpeexMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexMetadata.cpp; sourceTree = "<group>"; };
 		32CB55B817B6EE6C004022E0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		32D429E413E308DB00FA07DE /* AudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioPlayer.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -254,10 +262,6 @@
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
 		32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetTagFromMetadata.cpp; sourceTree = "<group>"; };
 		32D9017014793DD100DBE73B /* SetTagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetTagFromMetadata.h; sourceTree = "<group>"; };
-		32DEDA06122C07AF00C25252 /* AllocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AllocateABL.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		32DEDA07122C07AF00C25252 /* AllocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AllocateABL.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		32DEDA12122C095600C25252 /* DeallocateABL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeallocateABL.h; sourceTree = "<group>"; };
-		32DEDA13122C095600C25252 /* DeallocateABL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeallocateABL.cpp; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
 		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
 		32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFErrorUtilities.cpp; sourceTree = "<group>"; };
@@ -265,18 +269,18 @@
 		32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "Logger+NSOverloads.mm"; sourceTree = "<group>"; };
 		32E6AB991096C81200DA998D /* LoopableRegionDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LoopableRegionDecoder.cpp; sourceTree = "<group>"; };
 		32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoopableRegionDecoder.h; sourceTree = "<group>"; };
-		32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = WavPackDecoder.cpp; sourceTree = "<group>"; };
+		32E734A110B8C9F900094C8A /* WavPackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = WavPackDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32E734A210B8C9F900094C8A /* WavPackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavPackDecoder.h; sourceTree = "<group>"; };
-		32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MPEGDecoder.cpp; sourceTree = "<group>"; };
+		32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MPEGDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32E7374310B90C9A00094C8A /* MPEGDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPEGDecoder.h; sourceTree = "<group>"; };
-		32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggVorbisDecoder.cpp; sourceTree = "<group>"; };
+		32E7376C10B913AE00094C8A /* OggVorbisDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = OggVorbisDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisDecoder.h; sourceTree = "<group>"; };
-		32E7379510B9978200094C8A /* MusepackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MusepackDecoder.cpp; sourceTree = "<group>"; };
+		32E7379510B9978200094C8A /* MusepackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MusepackDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32E7379610B9978200094C8A /* MusepackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackDecoder.h; sourceTree = "<group>"; };
 		32EA67F6112BC4D9006C26F1 /* AudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioMetadata.h; sourceTree = "<group>"; };
 		32EA67F7112BC4D9006C26F1 /* AudioMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = FLACMetadata.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		32EA6824112CD84B006C26F1 /* FLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FLACMetadata.h; sourceTree = "<group>"; };
+		32EA6824112CD84B006C26F1 /* FLACMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = FLACMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddID3v1TagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddID3v1TagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v1TagFromMetadata.h; sourceTree = "<group>"; };
@@ -285,7 +289,7 @@
 		32EE7D6A12DD408000533884 /* AddAPETagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddAPETagToDictionary.cpp; sourceTree = "<group>"; };
 		32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetAPETagFromMetadata.h; sourceTree = "<group>"; };
 		32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetAPETagFromMetadata.cpp; sourceTree = "<group>"; };
-		32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibsndfileDecoder.cpp; sourceTree = "<group>"; };
+		32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = LibsndfileDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibsndfileDecoder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -329,6 +333,8 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				3230A937182E698900D630CF /* AudioBufferList.h */,
+				3230A936182E698900D630CF /* AudioBufferList.cpp */,
 				32B848E6180E199D00A222C5 /* AudioConverter.h */,
 				32B848E5180E199D00A222C5 /* AudioConverter.cpp */,
 				32B848EA180E395D00A222C5 /* ReplayGainAnalyzer.h */,
@@ -343,10 +349,6 @@
 				326A98F51392F38A0061A65F /* Semaphore.cpp */,
 				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
 				3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */,
-				32DEDA06122C07AF00C25252 /* AllocateABL.h */,
-				32DEDA07122C07AF00C25252 /* AllocateABL.cpp */,
-				32DEDA12122C095600C25252 /* DeallocateABL.h */,
-				32DEDA13122C095600C25252 /* DeallocateABL.cpp */,
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				320723BC138D521A00007369 /* CreateStringForOSType.h */,
@@ -407,6 +409,8 @@
 				32E7374210B90C9A00094C8A /* MPEGDecoder.cpp */,
 				32E7379610B9978200094C8A /* MusepackDecoder.h */,
 				32E7379510B9978200094C8A /* MusepackDecoder.cpp */,
+				32BA760F18203AFF00366204 /* OggOpusDecoder.h */,
+				32BA760E18203AFF00366204 /* OggOpusDecoder.cpp */,
 				3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */,
 				3258AE3212DF8FDF00ADA052 /* OggSpeexDecoder.cpp */,
 				32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */,
@@ -516,6 +520,8 @@
 				3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */,
 				3205E4291130847C00FD9DAD /* AIFFMetadata.h */,
 				3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */,
+				32BA761318203B0F00366204 /* DSFMetadata.h */,
+				32BA761218203B0F00366204 /* DSFMetadata.cpp */,
 				32EA6824112CD84B006C26F1 /* FLACMetadata.h */,
 				32EA6823112CD84B006C26F1 /* FLACMetadata.cpp */,
 				32A95E4F1347EBC6006B40EF /* MODMetadata.h */,
@@ -565,16 +571,17 @@
 				326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */,
 				32AEB2F61409BB23001F9A60 /* Logger.h in Headers */,
 				32B848EC180E395D00A222C5 /* ReplayGainAnalyzer.h in Headers */,
-				32E9E9A61457960000825EBA /* AllocateABL.h in Headers */,
-				32E9E9A71457960000825EBA /* DeallocateABL.h in Headers */,
 				32A5A20317DD1BF80064C5DE /* CFWrapper.h in Headers */,
 				32B848E8180E199D00A222C5 /* AudioConverter.h in Headers */,
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
+				32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */,
 				321FCF9217BF1C3600828C3A /* RingBuffer.h in Headers */,
 				326CE06D17E3B018003877AB /* CreateChannelLayout.h in Headers */,
+				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
 				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
+				3230A939182E698900D630CF /* AudioBufferList.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -710,8 +717,6 @@
 				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
 				32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */,
 				328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */,
-				32DEDA09122C07AF00C25252 /* AllocateABL.cpp in Sources */,
-				32DEDA15122C095600C25252 /* DeallocateABL.cpp in Sources */,
 				3291CC1514F5CB7D00B34DA4 /* Base64Utilities.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
 				324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */,
@@ -723,7 +728,9 @@
 				32EE7D6C12DD408000533884 /* AddAPETagToDictionary.cpp in Sources */,
 				32EE7D7612DD40D200533884 /* SetAPETagFromMetadata.cpp in Sources */,
 				3258AE3412DF8FDF00ADA052 /* OggSpeexDecoder.cpp in Sources */,
+				32BA761418203B0F00366204 /* DSFMetadata.cpp in Sources */,
 				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
+				3230A938182E698900D630CF /* AudioBufferList.cpp in Sources */,
 				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
 				32B848E7180E199D00A222C5 /* AudioConverter.cpp in Sources */,
 				32B848EB180E395D00A222C5 /* ReplayGainAnalyzer.cpp in Sources */,
@@ -742,6 +749,7 @@
 				327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */,
 				32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */,
 				32DFA2F514FA7FD400D1FB58 /* Logger+NSOverloads.mm in Sources */,
+				32BA761018203AFF00366204 /* OggOpusDecoder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -831,6 +839,8 @@
 					"-lmpcdec",
 					"-lmpg123",
 					"-logg",
+					"-lopus",
+					"-lopusfile",
 					"-lspeex",
 					"-ltag",
 					"-ltta++",
@@ -871,6 +881,8 @@
 					"-lmpcdec",
 					"-lmpg123",
 					"-logg",
+					"-lopus",
+					"-lopusfile",
 					"-lspeex",
 					"-ltag",
 					"-ltta++",
