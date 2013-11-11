@@ -33,6 +33,7 @@
 #include <iostream>
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #if !TARGET_OS_IPHONE
 # include <Security/Security.h>
 # include <ImageIO/ImageIO.h>
@@ -242,6 +243,9 @@ namespace SFB {
 	typedef CFWrapper<CFBooleanRef> CFBoolean;									/*!< @brief A wrapped \c CFBooleanRef */
 	typedef CFWrapper<CFErrorRef> CFError;										/*!< @brief A wrapped \c CFErrorRef */
 	typedef CFWrapper<CFDateRef> CFDate;										/*!< @brief A wrapped \c CFDateRef */
+	typedef CFWrapper<CFReadStreamRef> CFReadStream;							/*!< @brief A wrapped \c CFReadStream */
+	typedef CFWrapper<CFWriteStreamRef> CFWriteStream;							/*!< @brief A wrapped \c CFWriteStream */
+	typedef CFWrapper<CFHTTPMessageRef> CFHTTPMessage;							/*!< @brief A wrapped \c CFHTTPMessageRef */
 #if !TARGET_OS_IPHONE
 	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;						/*!< @brief A wrapped \c SecKeychainItemRef */
 	typedef CFWrapper<SecCertificateRef> SecCertificate;						/*!< @brief A wrapped \c SecCertificateRef */
