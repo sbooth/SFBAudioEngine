@@ -95,9 +95,6 @@ namespace SFB {
 			/*! @brief Create a new \c ReplayGainAnalyzer */
 			ReplayGainAnalyzer();
 
-			/*! @brief Destroy this \c ReplayGainAnalyzer */
-			~ReplayGainAnalyzer();
-
 			/*! @cond */
 
 			/*! @internal This class is non-copyable */

@@ -59,10 +59,6 @@ namespace SFB {
 			MonkeysAudioMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~MonkeysAudioMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

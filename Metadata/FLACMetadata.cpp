@@ -108,9 +108,6 @@ SFB::Audio::FLACMetadata::FLACMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::FLACMetadata::~FLACMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::FLACMetadata::ReadMetadata(CFErrorRef *error)

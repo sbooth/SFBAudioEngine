@@ -102,9 +102,6 @@ SFB::Audio::WAVEMetadata::WAVEMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::WAVEMetadata::~WAVEMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::WAVEMetadata::ReadMetadata(CFErrorRef *error)

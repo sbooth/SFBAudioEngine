@@ -282,9 +282,6 @@ public:
 		memset(B, 0, sizeof(B));
 	}
 
-	~ReplayGainAnalyzerPrivate()
-	{}
-
 	/* zero out initial values */
 	void Zero()
 	{
@@ -390,9 +387,6 @@ int32_t SFB::Audio::ReplayGainAnalyzer::GetBestReplayGainSampleRateForSampleRate
 
 SFB::Audio::ReplayGainAnalyzer::ReplayGainAnalyzer()
 	: priv(new ReplayGainAnalyzerPrivate)
-{}
-
-SFB::Audio::ReplayGainAnalyzer::~ReplayGainAnalyzer()
 {}
 
 bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)

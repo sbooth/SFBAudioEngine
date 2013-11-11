@@ -104,9 +104,6 @@ SFB::Audio::MP3Metadata::MP3Metadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::MP3Metadata::~MP3Metadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::MP3Metadata::ReadMetadata(CFErrorRef *error)

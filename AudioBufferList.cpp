@@ -51,9 +51,6 @@ SFB::Audio::BufferList::BufferList(UInt32 channelsPerFrame, UInt32 bytesPerFrame
 		throw std::bad_alloc();
 }
 
-SFB::Audio::BufferList::~BufferList()
-{}
-
 bool SFB::Audio::BufferList::Allocate(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
 {
 	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, !(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags), capacityFrames);

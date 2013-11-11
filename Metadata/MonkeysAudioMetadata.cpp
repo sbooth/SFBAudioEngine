@@ -101,9 +101,6 @@ SFB::Audio::MonkeysAudioMetadata::MonkeysAudioMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::MonkeysAudioMetadata::~MonkeysAudioMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::MonkeysAudioMetadata::ReadMetadata(CFErrorRef *error)

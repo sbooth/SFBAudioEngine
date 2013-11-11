@@ -103,9 +103,6 @@ public:
 		mTotalFrames = mDecoder->GetTotalFrames();
 	}
 
-	~DecoderStateData()
-	{}
-
 	DecoderStateData(const DecoderStateData& rhs) = delete;
 	DecoderStateData& operator=(const DecoderStateData& rhs) = delete;
 

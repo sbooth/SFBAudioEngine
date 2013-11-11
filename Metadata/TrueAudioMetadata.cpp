@@ -102,9 +102,6 @@ SFB::Audio::TrueAudioMetadata::TrueAudioMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::TrueAudioMetadata::~TrueAudioMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::TrueAudioMetadata::ReadMetadata(CFErrorRef *error)

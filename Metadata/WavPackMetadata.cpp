@@ -101,9 +101,6 @@ SFB::Audio::WavPackMetadata::WavPackMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::WavPackMetadata::~WavPackMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::WavPackMetadata::ReadMetadata(CFErrorRef *error)

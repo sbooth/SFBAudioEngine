@@ -114,9 +114,6 @@ SFB::Audio::MODMetadata::MODMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::MODMetadata::~MODMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::MODMetadata::ReadMetadata(CFErrorRef *error)

@@ -97,9 +97,6 @@ SFB::Audio::OggSpeexMetadata::OggSpeexMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::OggSpeexMetadata::~OggSpeexMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::OggSpeexMetadata::ReadMetadata(CFErrorRef *error)

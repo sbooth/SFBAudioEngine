@@ -59,10 +59,6 @@ namespace SFB {
 			MusepackMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~MusepackMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

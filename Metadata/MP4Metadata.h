@@ -59,10 +59,6 @@ namespace SFB {
 			MP4Metadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~MP4Metadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

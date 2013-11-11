@@ -70,9 +70,6 @@ namespace SFB {
 			 */
 			BufferList(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames);
 
-			/*! @brief Destroy this \c BufferList */
-			~BufferList();
-
 			/*! @cond */
 
 			/*! @internal This class is non-copyable */

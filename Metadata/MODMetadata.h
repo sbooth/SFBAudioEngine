@@ -59,10 +59,6 @@ namespace SFB {
 			MODMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~MODMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

@@ -59,10 +59,6 @@ namespace SFB {
 			AIFFMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~AIFFMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

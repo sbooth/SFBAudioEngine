@@ -97,9 +97,6 @@ SFB::Audio::OggOpusMetadata::OggOpusMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::OggOpusMetadata::~OggOpusMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::OggOpusMetadata::ReadMetadata(CFErrorRef *error)

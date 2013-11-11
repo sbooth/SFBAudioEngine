@@ -52,9 +52,6 @@ public:
 		: mDecoder(decoder)
 	{}
 
-	~ConverterStateData()
-	{}
-
 	ConverterStateData(const ConverterStateData& rhs) = delete;
 	ConverterStateData& operator=(const ConverterStateData& rhs) = delete;
 

@@ -99,9 +99,6 @@ SFB::Audio::OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::OggVorbisMetadata::~OggVorbisMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::OggVorbisMetadata::ReadMetadata(CFErrorRef *error)

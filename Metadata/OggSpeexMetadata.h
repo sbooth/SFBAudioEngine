@@ -59,10 +59,6 @@ namespace SFB {
 			OggSpeexMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~OggSpeexMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

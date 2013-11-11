@@ -59,10 +59,6 @@ namespace SFB {
 			FLACMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~FLACMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

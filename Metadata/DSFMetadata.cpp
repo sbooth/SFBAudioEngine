@@ -98,9 +98,6 @@ SFB::Audio::DSFMetadata::DSFMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::DSFMetadata::~DSFMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::DSFMetadata::ReadMetadata(CFErrorRef *error)

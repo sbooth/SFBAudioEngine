@@ -100,9 +100,6 @@ SFB::Audio::MusepackMetadata::MusepackMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::MusepackMetadata::~MusepackMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::MusepackMetadata::ReadMetadata(CFErrorRef *error)

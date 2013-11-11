@@ -100,9 +100,6 @@ SFB::Audio::AIFFMetadata::AIFFMetadata(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
-SFB::Audio::AIFFMetadata::~AIFFMetadata()
-{}
-
 #pragma mark Functionality
 
 bool SFB::Audio::AIFFMetadata::ReadMetadata(CFErrorRef *error)

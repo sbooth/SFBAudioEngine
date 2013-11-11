@@ -59,10 +59,6 @@ namespace SFB {
 			DSFMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~DSFMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);

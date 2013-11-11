@@ -59,10 +59,6 @@ namespace SFB {
 			WAVEMetadata(CFURLRef url);
 
 			// ========================================
-			// Destruction
-			virtual ~WAVEMetadata();
-
-			// ========================================
 			// The core functionality
 			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
 			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
