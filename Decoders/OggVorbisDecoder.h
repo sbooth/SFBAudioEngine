@@ -84,12 +84,12 @@ namespace SFB {
 
 			// ========================================
 			// Source audio information
-			virtual inline SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
-			virtual inline SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
+			inline virtual SInt64 GetTotalFrames() const			{ return ov_pcm_total(const_cast<OggVorbis_File *>(&mVorbisFile), -1); }
+			inline virtual SInt64 GetCurrentFrame() const			{ return ov_pcm_tell(const_cast<OggVorbis_File *>(&mVorbisFile)); }
 
 			// ========================================
 			// Seeking support
-			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 SeekToFrame(SInt64 frame);
 			
 		private:

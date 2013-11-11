@@ -61,12 +61,12 @@ namespace SFB {
 			virtual bool Open(CFErrorRef *error = nullptr);
 			virtual bool Close(CFErrorRef *error = nullptr);
 
-			virtual inline bool IsOpen() const						{ return mDecoder->IsOpen(); }
+			inline virtual bool IsOpen() const						{ return mDecoder->IsOpen(); }
 
 			// ========================================
 			// The native format of the source audio
 			inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mDecoder->GetSourceFormat(); }
-			virtual inline CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
+			inline virtual CFStringRef CreateSourceFormatDescription() const { return mDecoder->CreateSourceFormatDescription(); }
 
 			// ========================================
 			// The type of PCM data provided by this decoder
@@ -103,12 +103,12 @@ namespace SFB {
 
 			// ========================================
 			// Source audio information
-			virtual inline SInt64 GetTotalFrames() const			{ return ((mRepeatCount + 1) * mFrameCount);}
-			virtual inline SInt64 GetCurrentFrame() const			{ return mTotalFramesRead;}
+			inline virtual SInt64 GetTotalFrames() const			{ return ((mRepeatCount + 1) * mFrameCount);}
+			inline virtual SInt64 GetCurrentFrame() const			{ return mTotalFramesRead;}
 
 			// ========================================
 			// Seeking support
-			virtual inline bool SupportsSeeking() const				{ return mDecoder->SupportsSeeking(); }
+			inline virtual bool SupportsSeeking() const				{ return mDecoder->SupportsSeeking(); }
 			virtual SInt64 SeekToFrame(SInt64 frame);
 
 		protected:

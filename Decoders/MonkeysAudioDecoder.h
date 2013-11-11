@@ -80,12 +80,12 @@ namespace SFB {
 
 			// ========================================
 			// Source audio information
-			virtual inline SInt64 GetTotalFrames() const;
-			virtual inline SInt64 GetCurrentFrame() const;
+			inline virtual SInt64 GetTotalFrames() const;
+			inline virtual SInt64 GetCurrentFrame() const;
 
 			// ========================================
 			// Seeking support
-			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 SeekToFrame(SInt64 frame);
 
 		private:

@@ -78,12 +78,12 @@ namespace SFB {
 
 			// ========================================
 			// Source audio information
-			virtual inline SInt64 GetTotalFrames() const			{ return op_pcm_total(mOpusFile, -1); }
-			virtual inline SInt64 GetCurrentFrame() const			{ return op_pcm_tell(mOpusFile); }
+			inline virtual SInt64 GetTotalFrames() const			{ return op_pcm_total(mOpusFile, -1); }
+			inline virtual SInt64 GetCurrentFrame() const			{ return op_pcm_tell(mOpusFile); }
 
 			// ========================================
 			// Seeking support
-			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 SeekToFrame(SInt64 frame);
 			
 		private:

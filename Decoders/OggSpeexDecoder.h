@@ -82,8 +82,8 @@ namespace SFB {
 
 			// ========================================
 			// Source audio information
-			virtual inline SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-			virtual inline SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			inline virtual SInt64 GetTotalFrames() const			{ return mTotalFrames; }
+			inline virtual SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
 
 		private:
 

@@ -83,7 +83,7 @@ namespace SFB {
 
 			// ========================================
 			// Seeking support
-			virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
+			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 SeekToFrame(SInt64 frame);
 
 		private:
