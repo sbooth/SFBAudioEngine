@@ -102,10 +102,8 @@ SFB::Audio::MusepackMetadata::MusepackMetadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::MusepackMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MusepackMetadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
@@ -155,7 +153,7 @@ bool SFB::Audio::MusepackMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::MusepackMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MusepackMetadata::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -205,8 +203,6 @@ bool SFB::Audio::MusepackMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-	
-	MergeChangedMetadataIntoMetadata();
-	
+
 	return true;
 }

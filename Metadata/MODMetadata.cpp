@@ -116,10 +116,8 @@ SFB::Audio::MODMetadata::MODMetadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::MODMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
@@ -249,7 +247,7 @@ bool SFB::Audio::MODMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::MODMetadata::WriteMetadata(CFErrorRef */*error*/)
+bool SFB::Audio::MODMetadata::_WriteMetadata(CFErrorRef */*error*/)
 {
 	LOGGER_NOTICE("org.sbooth.AudioEngine.AudioMetadata.MOD", "Writing of MOD metadata is not supported");
 

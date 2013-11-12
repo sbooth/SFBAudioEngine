@@ -29,7 +29,6 @@
  */
 
 #include "AttachedPicture.h"
-#include "CFWrapper.h"
 #include "CFDictionaryUtilities.h"
 
 // ========================================
@@ -52,15 +51,6 @@ SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Ty
 
 	if(description)
 		CFDictionarySetValue(mMetadata, kAttachedPictureDescriptionKey, description);
-}
-
-SFB::Audio::AttachedPicture::~AttachedPicture()
-{
-	if(mMetadata)
-		CFRelease(mMetadata), mMetadata = nullptr;
-	
-	if(mChangedMetadata)
-		CFRelease(mChangedMetadata), mChangedMetadata = nullptr;
 }
 
 #pragma mark Type-Specific Access

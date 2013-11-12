@@ -33,6 +33,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <vector>
 
+#include "CFWrapper.h"
 #include "AttachedPicture.h"
 
 /*! @file AudioMetadata.h @brief Support for metadata reading and writing */
@@ -119,6 +120,7 @@ namespace SFB {
 		/*! @brief Base class for all audio metadata reader/writer classes */
 		class Metadata
 		{
+			
 		public:
 
 			// ========================================
@@ -175,7 +177,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Destroy this \c Metadata */
-			virtual ~Metadata();
+			inline virtual ~Metadata() = default;
 
 			/*! @cond */
 
@@ -211,14 +213,14 @@ namespace SFB {
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return \c true on success, \c false otherwise
 			 */
-			virtual bool ReadMetadata(CFErrorRef *error = nullptr) = 0;
+			bool ReadMetadata(CFErrorRef *error = nullptr);
 
 			/*!
 			 * @brief Write the metadata
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return \c true on success, \c false otherwise
 			 */
-			virtual bool WriteMetadata(CFErrorRef *error = nullptr) = 0;
+			bool WriteMetadata(CFErrorRef *error = nullptr);
 
 			//@}
 
@@ -565,10 +567,10 @@ namespace SFB {
 
 		protected:
 
-			CFURLRef						mURL;				/*!< @brief The location of the stream to be read/written */
+			SFB::CFURL						mURL;				/*!< @brief The location of the stream to be read/written */
 
-			CFMutableDictionaryRef			mMetadata;			/*!< @brief The metadata information */
-			CFMutableDictionaryRef			mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
+			SFB::CFMutableDictionary		mMetadata;			/*!< @brief The metadata information */
+			SFB::CFMutableDictionary		mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
 
 			picture_vector					mPictures;			/*!< @brief The attached picture information */
 
@@ -578,13 +580,6 @@ namespace SFB {
 
 			/*! @brief Create a new \c Metadata and initialize \c Metadata::mURL to \c url */
 			Metadata(CFURLRef url);
-
-
-			/*! @brief Subclasses should call this from ReadMetadata() to clear Metadata::mMetadata, Metadata::mChangedMetadata, and Metadata::mPictures */
-			void ClearAllMetadata();
-
-			/*! @brief Subclasses should call this after a successful save operation */
-			void MergeChangedMetadataIntoMetadata();
 
 
 			/*! @name Type-specific access */
@@ -628,6 +623,17 @@ namespace SFB {
 
 
 		private:
+
+			// ========================================
+			// Subclasses must implement the following methods
+			virtual bool _ReadMetadata(CFErrorRef *error) = 0;
+			virtual bool _WriteMetadata(CFErrorRef *error) = 0;
+
+			// ========================================
+			// 
+			void ClearAllMetadata();
+			void MergeChangedMetadataIntoMetadata();
+
 
 			// ========================================
 			// Subclass registration support

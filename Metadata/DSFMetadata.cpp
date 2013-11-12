@@ -100,10 +100,8 @@ SFB::Audio::DSFMetadata::DSFMetadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::DSFMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::DSFMetadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
@@ -152,7 +150,7 @@ bool SFB::Audio::DSFMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::DSFMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::DSFMetadata::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -197,8 +195,6 @@ bool SFB::Audio::DSFMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-
-	MergeChangedMetadataIntoMetadata();
 
 	return true;
 }

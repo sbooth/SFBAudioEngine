@@ -110,10 +110,8 @@ SFB::Audio::FLACMetadata::FLACMetadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::FLACMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::FLACMetadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
@@ -180,7 +178,7 @@ bool SFB::Audio::FLACMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::FLACMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -278,8 +276,6 @@ bool SFB::Audio::FLACMetadata::WriteMetadata(CFErrorRef *error)
 
 		return false;
 	}
-
-	MergeChangedMetadataIntoMetadata();
 
 	return true;
 }

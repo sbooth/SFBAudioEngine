@@ -104,10 +104,8 @@ SFB::Audio::WAVEMetadata::WAVEMetadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::WAVEMetadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::WAVEMetadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
@@ -159,7 +157,7 @@ bool SFB::Audio::WAVEMetadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::WAVEMetadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::WAVEMetadata::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -210,8 +208,6 @@ bool SFB::Audio::WAVEMetadata::WriteMetadata(CFErrorRef *error)
 		
 		return false;
 	}
-	
-	MergeChangedMetadataIntoMetadata();
 
 	return true;
 }

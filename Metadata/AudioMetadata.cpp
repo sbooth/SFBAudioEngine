@@ -34,7 +34,6 @@
 #endif
 
 #include "AudioMetadata.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
@@ -215,25 +214,23 @@ SFB::Audio::Metadata::Metadata(CFURLRef url)
 	mURL = (CFURLRef)CFRetain(url);
 }
 
-SFB::Audio::Metadata::~Metadata()
-{
-	if(mURL)
-		CFRelease(mURL), mURL = nullptr;
-
-	if(mMetadata)
-		CFRelease(mMetadata), mMetadata = nullptr;
-
-	if(mChangedMetadata)
-		CFRelease(mChangedMetadata), mChangedMetadata = nullptr;
-}
-
 void SFB::Audio::Metadata::SetURL(CFURLRef URL)
 {
-	if(mURL)
-		CFRelease(mURL), mURL = nullptr;
+	mURL = URL ? (CFURLRef)CFRetain(URL) : nullptr;
+}
 
-	if(URL)
-		mURL = (CFURLRef)CFRetain(URL);
+bool SFB::Audio::Metadata::ReadMetadata(CFErrorRef *error)
+{
+	ClearAllMetadata();
+	return _ReadMetadata(error);
+}
+
+bool SFB::Audio::Metadata::WriteMetadata(CFErrorRef *error)
+{
+	bool result = _WriteMetadata(error);
+	if(result)
+		MergeChangedMetadataIntoMetadata();
+	return result;
 }
 
 #pragma mark Change management

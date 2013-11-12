@@ -106,10 +106,8 @@ SFB::Audio::MP4Metadata::MP4Metadata(CFURLRef url)
 
 #pragma mark Functionality
 
-bool SFB::Audio::MP4Metadata::ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 {
-	ClearAllMetadata();
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
@@ -471,7 +469,7 @@ bool SFB::Audio::MP4Metadata::ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::MP4Metadata::WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -1053,7 +1051,5 @@ bool SFB::Audio::MP4Metadata::WriteMetadata(CFErrorRef *error)
 	// Clean up
 	MP4Close(file), file = nullptr;
 
-	MergeChangedMetadataIntoMetadata();
-	
 	return true;
 }

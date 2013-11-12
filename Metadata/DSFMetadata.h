@@ -44,8 +44,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -54,14 +53,14 @@ namespace SFB {
 
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
-			// ========================================
 			// Creation
 			DSFMetadata(CFURLRef url);
 
-			// ========================================
-			// The core functionality
-			virtual bool ReadMetadata(CFErrorRef *error = nullptr);
-			virtual bool WriteMetadata(CFErrorRef *error = nullptr);
+		private:
+
+			// Functionality
+			virtual bool _ReadMetadata(CFErrorRef *error);
+			virtual bool _WriteMetadata(CFErrorRef *error);
 		};
 		
 	}

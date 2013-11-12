@@ -33,6 +33,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <memory>
 
+#include "CFWrapper.h"
+
 /*! @file AttachedPicture.h @brief Support for attached pictures */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
@@ -60,6 +62,7 @@ namespace SFB {
 			friend class Metadata;
 
 		public:
+			
 			// ========================================
 			/*! @brief The function or content of a picture */
 			enum class Type : unsigned int {
@@ -101,9 +104,6 @@ namespace SFB {
 			 * @param description An optional image description
 			 */
 			AttachedPicture(CFDataRef data = nullptr, AttachedPicture::Type type = Type::Other, CFStringRef description = nullptr);
-
-			/*! @brief Destroy this \c AttachedPicture */
-			~AttachedPicture();
 
 			/*! @cond */
 
@@ -172,8 +172,8 @@ namespace SFB {
 				Removed		/*!< The picture has been removed but not yet saved*/
 			};
 
-			CFMutableDictionaryRef			mMetadata;			/*!< @brief The metadata information */
-			CFMutableDictionaryRef			mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
+			SFB::CFMutableDictionary		mMetadata;			/*!< @brief The metadata information */
+			SFB::CFMutableDictionary		mChangedMetadata;	/*!< @brief The metadata information that has been changed but not saved */
 			ChangeState						mState;				/*!< @brief The state of the picture relative to the saved file */
 
 			/*! @brief Subclasses should call this after a successful save operation */
