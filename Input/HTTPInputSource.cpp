@@ -29,8 +29,6 @@
  */
 
 #include "HTTPInputSource.h"
-#include "CFWrapper.h"
-#include "Logger.h"
 
 // ========================================
 // CFNetwork callbacks
@@ -55,22 +53,11 @@ SFB::HTTPInputSource::HTTPInputSource(CFURLRef url)
 	: InputSource(url), mRequest(nullptr), mReadStream(nullptr), mResponseHeaders(nullptr), mEOSReached(false), mOffset(-1), mDesiredOffset(0)
 {}
 
-SFB::HTTPInputSource::~HTTPInputSource()
+bool SFB::HTTPInputSource::_Open(CFErrorRef *error)
 {
-	if(IsOpen())
-		Close();
-}
-
-bool SFB::HTTPInputSource::Open(CFErrorRef *error)
-{
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.HTTP", "Open() called on an InputSource that is already open");
-		return true;
-	}
-
 	// Set up the HTTP request
-	mRequest = CFHTTPMessageCreateRequest(kCFAllocatorDefault, CFSTR("GET"), mURL, kCFHTTPVersion1_1);
-	if(nullptr == mRequest) {
+	mRequest = CFHTTPMessageCreateRequest(kCFAllocatorDefault, CFSTR("GET"), GetURL(), kCFHTTPVersion1_1);
+	if(!mRequest) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
@@ -85,8 +72,7 @@ bool SFB::HTTPInputSource::Open(CFErrorRef *error)
 	}
 
 	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, nullptr);
-	if(nullptr == mReadStream) {
-		CFRelease(mRequest), mRequest = nullptr;
+	if(!mReadStream) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
@@ -103,8 +89,6 @@ bool SFB::HTTPInputSource::Open(CFErrorRef *error)
 
 	CFOptionFlags clientFlags = kCFStreamEventOpenCompleted | kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered;
     if(!CFReadStreamSetClient(mReadStream, clientFlags, myCFReadStreamClientCallBack, &myContext)) {
-		CFRelease(mRequest), mRequest = nullptr;
-		CFRelease(mReadStream), mReadStream = nullptr;
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
@@ -113,8 +97,6 @@ bool SFB::HTTPInputSource::Open(CFErrorRef *error)
 	CFReadStreamScheduleWithRunLoop(mReadStream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
 	if(!CFReadStreamOpen(mReadStream)) {
-		CFRelease(mRequest), mRequest = nullptr;
-		CFRelease(mReadStream), mReadStream = nullptr;
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		return false;
@@ -123,37 +105,23 @@ bool SFB::HTTPInputSource::Open(CFErrorRef *error)
 	while(nullptr == mResponseHeaders)
 		CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true);
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::HTTPInputSource::Close(CFErrorRef *error)
+bool SFB::HTTPInputSource::_Close(CFErrorRef */*error*/)
 {
-#pragma unused(error)
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.HTTP", "Close() called on an InputSource that hasn't been opened");
-		return true;
-	}
-
-	if(mRequest)
-		CFRelease(mRequest), mRequest = nullptr;
-	if(mReadStream)
-		CFRelease(mReadStream), mReadStream = nullptr;
-	if(mResponseHeaders)
-		CFRelease(mResponseHeaders), mResponseHeaders = nullptr;
+	mRequest = nullptr;
+	mReadStream = nullptr;
+	mResponseHeaders = nullptr;
 
 	mOffset = -1;
 	mDesiredOffset = 0;
-	mIsOpen = false;
 
 	return true;
 }
 
-SInt64 SFB::HTTPInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::HTTPInputSource::_Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen())
-		return -1;
-
 	CFStreamStatus status = CFReadStreamGetStatus(mReadStream);
 		
 	if(kCFStreamStatusAtEnd == status)
@@ -168,9 +136,9 @@ SInt64 SFB::HTTPInputSource::Read(void *buffer, SInt64 byteCount)
 	return bytesRead;
 }
 
-SInt64 SFB::HTTPInputSource::GetLength() const
+SInt64 SFB::HTTPInputSource::_GetLength() const
 {
-	if(!IsOpen() || !mResponseHeaders)
+	if(!mResponseHeaders)
 		return -1;
 
 	SInt64 contentLength = -1;
@@ -183,16 +151,13 @@ SInt64 SFB::HTTPInputSource::GetLength() const
 	return contentLength;
 }
 
-bool SFB::HTTPInputSource::SeekToOffset(SInt64 offset)
+bool SFB::HTTPInputSource::_SeekToOffset(SInt64 offset)
 {
-	if(!IsOpen())
-		return false;
-
-	if(!Close())
+	if(!_Close(nullptr))
 		return false;
 
 	mDesiredOffset = offset;
-	return Open();
+	return _Open(nullptr);
 }
 
 CFStringRef SFB::HTTPInputSource::CopyContentMIMEType() const

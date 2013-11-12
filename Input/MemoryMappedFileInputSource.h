@@ -30,7 +30,9 @@
 
 #pragma once
 
+#include <memory>
 #include <sys/stat.h>
+
 #include "InputSource.h"
 
 namespace SFB {
@@ -43,40 +45,30 @@ namespace SFB {
 
 	public:
 
-		// ========================================
 		// Creation
 		MemoryMappedFileInputSource(CFURLRef url);
 
-		// ========================================
-		// Destruction
-		virtual ~MemoryMappedFileInputSource();
-
-		// ========================================
-		// Bytestream access
-		virtual bool Open(CFErrorRef *error = nullptr);
-		virtual bool Close(CFErrorRef *error = nullptr);
-
-		virtual inline bool IsOpen() const						{ return (nullptr != mMemory);}
-
-		// ========================================
-		//
-		virtual SInt64 Read(void *buffer, SInt64 byteCount);
-		virtual bool AtEOF() const								{ return ((mCurrentPosition - mMemory) == mFilestats.st_size); }
-
-		virtual inline SInt64 GetOffset() const					{ return (mCurrentPosition - mMemory); }
-		virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
-
-		// ========================================
-		// Seeking support
-		virtual inline bool SupportsSeeking() const				{ return true; }
-		virtual bool SeekToOffset(SInt64 offset);
-
 	private:
 
-		struct stat						mFilestats;
-		int8_t							*mMemory;
-		int8_t							*mCurrentPosition;
-		
+		// Bytestream access
+		virtual bool _Open(CFErrorRef *error);
+		virtual bool _Close(CFErrorRef *error);
+
+		// Functionality
+		virtual SInt64 _Read(void *buffer, SInt64 byteCount);
+		virtual bool _AtEOF() const								{ return ((mCurrentPosition - mMemory.get()) == mFilestats.st_size); }
+
+		inline virtual SInt64 _GetOffset() const				{ return (mCurrentPosition - mMemory.get()); }
+		inline virtual SInt64 _GetLength() const				{ return mFilestats.st_size; }
+
+		// Seeking support
+		inline virtual bool _SupportsSeeking() const			{ return true; }
+		virtual bool _SeekToOffset(SInt64 offset);
+
+		// Data members
+		struct stat													mFilestats;
+		std::unique_ptr<int8_t, std::function<int(int8_t *)>>		mMemory;
+		int8_t														*mCurrentPosition;
 	};
 
 }

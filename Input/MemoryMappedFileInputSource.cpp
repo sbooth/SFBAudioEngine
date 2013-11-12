@@ -33,7 +33,6 @@
 #include <sys/mman.h>
 
 #include "MemoryMappedFileInputSource.h"
-#include "Logger.h"
 
 #pragma mark Creation and Destruction
 
@@ -43,119 +42,63 @@ SFB::MemoryMappedFileInputSource::MemoryMappedFileInputSource(CFURLRef url)
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
 
-SFB::MemoryMappedFileInputSource::~MemoryMappedFileInputSource()
+bool SFB::MemoryMappedFileInputSource::_Open(CFErrorRef *error)
 {
-	if(IsOpen())
-		Close();
-}
-
-bool SFB::MemoryMappedFileInputSource::Open(CFErrorRef *error)
-{
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Open() called on an InputSource that is already open");
-		return true;
-	}
-
 	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
+	Boolean success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
-	int fd = open((const char *)buf, O_RDONLY);
-
-	if(-1 == fd) {
+	auto file = std::unique_ptr<std::FILE, int (*)(std::FILE *)>(std::fopen((const char *)buf, "r"), std::fclose);
+	if(!file) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
 	}
 
-	if(-1 == fstat(fd, &mFilestats)) {
+	if(-1 == fstat(::fileno(file.get()), &mFilestats)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
-
 		return false;
 	}
-	
+
 	// Only regular files can be mapped
 	if(!S_ISREG(mFilestats.st_mode)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EBADF, nullptr);
-		
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
-
-		memset(&mFilestats, 0, sizeof(mFilestats));
-
 		return false;
 	}
 
-	mMemory = (int8_t *)mmap(0, (size_t)mFilestats.st_size, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+	// Map the file to memory
+	size_t map_size = (size_t)mFilestats.st_size;
+	mMemory = std::unique_ptr<int8_t, std::function<int(int8_t *)>>((int8_t *)mmap(0, map_size, PROT_READ, MAP_FILE | MAP_SHARED, ::fileno(file.get()), 0), std::bind(munmap, std::placeholders::_1, map_size));
 
-	if(MAP_FAILED == mMemory) {
+	if(MAP_FAILED == mMemory.get()) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Unable to close the file: " << strerror(errno));
-
-		memset(&mFilestats, 0, sizeof(mFilestats));
-
 		return false;
 	}
 
-	if(-1 == close(fd)) {
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
+	mCurrentPosition = mMemory.get();
 
-		memset(&mFilestats, 0, sizeof(mFilestats));
-
-		return false;
-	}
-
-	mCurrentPosition = mMemory;
-
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::MemoryMappedFileInputSource::Close(CFErrorRef *error)
+bool SFB::MemoryMappedFileInputSource::_Close(CFErrorRef *error)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.MemoryMappedFile", "Close() called on an InputSource that hasn't been opened");
-		return true;
-	}
-
 	memset(&mFilestats, 0, sizeof(mFilestats));
+	mMemory.reset();
+	mCurrentPosition = nullptr;
 
-	if(nullptr != mMemory) {
-		int result = munmap(mMemory, (size_t)mFilestats.st_size);
-
-		mMemory = nullptr;
-		mCurrentPosition = nullptr;
-
-		if(-1 == result) {
-			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-			return false; 
-		}
-	}
-
-	mIsOpen = false;
 	return true;
 }
 
-SInt64 SFB::MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::MemoryMappedFileInputSource::_Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen() || nullptr == buffer)
-		return -1;
-
-	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
+	ptrdiff_t remaining = (mMemory.get() + mFilestats.st_size) - mCurrentPosition;
 
 	if(byteCount > remaining)
 		byteCount = remaining;
@@ -165,14 +108,11 @@ SInt64 SFB::MemoryMappedFileInputSource::Read(void *buffer, SInt64 byteCount)
 	return byteCount;
 }
 
-bool SFB::MemoryMappedFileInputSource::SeekToOffset(SInt64 offset)
+bool SFB::MemoryMappedFileInputSource::_SeekToOffset(SInt64 offset)
 {
-	if(!IsOpen())
-		return false;
-
 	if(offset > mFilestats.st_size)
 		return false;
 
-	mCurrentPosition = mMemory + offset;
+	mCurrentPosition = mMemory.get() + offset;
 	return true;
 }

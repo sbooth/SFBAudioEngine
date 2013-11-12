@@ -28,11 +28,9 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <fcntl.h>
-#include <unistd.h>
+#include <cstdio>
 
 #include "InMemoryFileInputSource.h"
-#include "Logger.h"
 
 #pragma mark Creation and Destruction
 
@@ -42,114 +40,64 @@ SFB::InMemoryFileInputSource::InMemoryFileInputSource(CFURLRef url)
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
 
-SFB::InMemoryFileInputSource::~InMemoryFileInputSource()
+bool SFB::InMemoryFileInputSource::_Open(CFErrorRef *error)
 {
-	if(IsOpen())
-		Close();
-}
-
-bool SFB::InMemoryFileInputSource::Open(CFErrorRef *error)
-{
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Open() called on an InputSource that is already open");
-		return true;
-	}
+	typedef std::unique_ptr<std::FILE, int (*)(std::FILE *)> unique_file_ptr;
 
 	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
+	Boolean success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
-	int fd = open((const char *)buf, O_RDONLY);
-	if(-1 == fd) {
+	auto file = unique_file_ptr(std::fopen((const char *)buf, "r"), std::fclose);
+	if(!file) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
 	}
 
-	if(-1 == fstat(fd, &mFilestats)) {
+	if(-1 == fstat(::fileno(file.get()), &mFilestats)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
-
 		return false;
 	}
 
 	// Perform the allocation
-	mMemory = (int8_t *)malloc((size_t)mFilestats.st_size);
-	if(nullptr == mMemory) {
+	mMemory = std::unique_ptr<int8_t []>(new int8_t [mFilestats.st_size]);
+	if(!mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
-
-		memset(&mFilestats, 0, sizeof(mFilestats));
-
 		return false;
 	}
 
 	// Read the file
-	if(-1 == read(fd, mMemory, (size_t)mFilestats.st_size)) {
+	if((size_t)mFilestats.st_size != ::fread(mMemory.get(), 1, (size_t)mFilestats.st_size, file.get())) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		if(-1 == close(fd))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
-
-		memset(&mFilestats, 0, sizeof(mFilestats));
-		free(mMemory), mMemory = nullptr;
 
 		return false;
 	}
 
-	if(-1 == close(fd)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Unable to close the file: " << strerror(errno));
+	mCurrentPosition = mMemory.get();
 
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-
-		memset(&mFilestats, 0, sizeof(mFilestats));
-		free(mMemory), mMemory = nullptr;
-
-		return false;
-	}
-
-	mCurrentPosition = mMemory;
-
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::InMemoryFileInputSource::Close(CFErrorRef */*error*/)
+bool SFB::InMemoryFileInputSource::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.InMemoryFile", "Close() called on an InputSource that hasn't been opened");
-		return true;
-	}
-
 	memset(&mFilestats, 0, sizeof(mFilestats));
-
-	if(mMemory)
-		free(mMemory), mMemory = nullptr;
-
+	mMemory.reset();
 	mCurrentPosition = nullptr;
 
-	mIsOpen = false;
 	return true;
 }
 
-SInt64 SFB::InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
+SInt64 SFB::InMemoryFileInputSource::_Read(void *buffer, SInt64 byteCount)
 {
-	if(!IsOpen() || nullptr == buffer)
-		return -1;
-
-	ptrdiff_t remaining = (mMemory + mFilestats.st_size) - mCurrentPosition;
+	ptrdiff_t remaining = (mMemory.get() + mFilestats.st_size) - mCurrentPosition;
 
 	if(byteCount > remaining)
 		byteCount = remaining;
@@ -159,11 +107,11 @@ SInt64 SFB::InMemoryFileInputSource::Read(void *buffer, SInt64 byteCount)
 	return byteCount;
 }
 
-bool SFB::InMemoryFileInputSource::SeekToOffset(SInt64 offset)
+bool SFB::InMemoryFileInputSource::_SeekToOffset(SInt64 offset)
 {
-	if(!IsOpen() || offset > mFilestats.st_size)
+	if(offset > mFilestats.st_size)
 		return false;
 	
-	mCurrentPosition = mMemory + offset;
+	mCurrentPosition = mMemory.get() + offset;
 	return true;
 }

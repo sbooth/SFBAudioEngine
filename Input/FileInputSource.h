@@ -30,7 +30,8 @@
 
 #pragma once
 
-#include <stdio.h>
+#include <cstdio>
+#include <memory>
 #include <sys/stat.h>
 
 #include "InputSource.h"
@@ -42,37 +43,31 @@ namespace SFB {
 
 	public:
 
-		// ========================================
 		// Creation
 		FileInputSource(CFURLRef url);
 
-		// ========================================
-		// Destruction
-		virtual ~FileInputSource();
-
-		// ========================================
-		// Bytestream access
-		virtual bool Open(CFErrorRef *error = nullptr);
-		virtual bool Close(CFErrorRef *error = nullptr);
-
-		// ========================================
-		//
-		virtual SInt64 Read(void *buffer, SInt64 byteCount);
-		virtual inline bool AtEOF() const						{ return feof(mFile); }
-
-		virtual inline SInt64 GetOffset() const					{ return ftello(mFile); }
-		virtual inline SInt64 GetLength() const					{ return mFilestats.st_size; }
-
-		// ========================================
-		// Seeking support
-		virtual inline bool SupportsSeeking() const				{ return true; }
-		virtual bool SeekToOffset(SInt64 offset);
-
 	private:
 
+		// Bytestream access
+		virtual bool _Open(CFErrorRef *error);
+		virtual bool _Close(CFErrorRef *error);
+
+		// Functionality
+		virtual SInt64 _Read(void *buffer, SInt64 byteCount)	{ return (SInt64)::fread(buffer, 1, (size_t)byteCount, mFile.get()); }
+		inline virtual bool _AtEOF() const						{ return ::feof(mFile.get()); }
+
+		inline virtual SInt64 _GetOffset() const				{ return ::ftello(mFile.get()); }
+		inline virtual SInt64 _GetLength() const				{ return mFilestats.st_size; }
+
+		// Seeking support
+		inline virtual bool _SupportsSeeking() const			{ return true; }
+		virtual bool _SeekToOffset(SInt64 offset)				{ return (0 == ::fseeko(mFile.get(), offset, SEEK_SET)); }
+
+		typedef std::unique_ptr<std::FILE, int (*)(std::FILE *)> unique_file_ptr;
+
+		// Data members
 		struct stat						mFilestats;
-		FILE							*mFile;
-		
+		unique_file_ptr					mFile;
 	};
 
 }

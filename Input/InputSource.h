@@ -34,6 +34,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+#include "CFWrapper.h"
+#include "Logger.h"
+
 /*! @file InputSource.h @brief Support for arbitrary bytestream input to \c AudioDecoder */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
@@ -91,7 +94,7 @@ namespace SFB {
 		// @{
 
 		/*! @brief Destroy this \c InputSource */
-		virtual ~InputSource();
+		inline virtual ~InputSource() = default;
 
 		/*! @cond */
 
@@ -125,14 +128,14 @@ namespace SFB {
 		 * @param error An optional pointer to a \c CFErrorRef to receive error information
 		 * @return \c true on success, \c false otherwise
 		 */
-		virtual bool Open(CFErrorRef *error = nullptr) = 0;
+		bool Open(CFErrorRef *error = nullptr);
 
 		/*!
 		 * @brief Close the input
 		 * @param error An optional pointer to a \c CFErrorRef to receive error information
 		 * @return \c true on success, \c false otherwise
 		 */
-		virtual bool Close(CFErrorRef *error = nullptr) = 0;
+		bool Close(CFErrorRef *error = nullptr);
 
 
 		/*! @brief Query whether this \c InputSource is open */
@@ -150,46 +153,57 @@ namespace SFB {
 		 * @return The number of bytes read
 		 *
 		 */
-		virtual SInt64 Read(void *buffer, SInt64 byteCount) = 0;
+		SInt64 Read(void *buffer, SInt64 byteCount);
 
 		/*! @brief Determine whether the end of input has been reached */
-		virtual bool AtEOF() const = 0;
+		bool AtEOF() const;
 
 
 		/*! @brief Get the current offset in the input, in bytes */
-		virtual SInt64 GetOffset() const = 0;
+		SInt64 GetOffset() const;
 
 		/*! @brief Get the length of the input, in bytes */
-		virtual SInt64 GetLength() const = 0;
+		SInt64 GetLength() const;
 
 
 		/*! @brief Query whether this \c InputSource is seekable */
-		virtual bool SupportsSeeking() const					{ return false; }
+		bool SupportsSeeking() const;
 
 		/*!
 		 * Seek to the specified byte offset
 		 * @param offset The desired byte offset
 		 * @return \c true on success, \c false otherwise
 		 */
-		virtual bool SeekToOffset(SInt64 offset)				{ return false; }
+		bool SeekToOffset(SInt64 offset);
 
 		//@}
 
 	protected:
-
-		/*! @brief The location of the bytes to be read */
-		CFURLRef mURL;
-
-		/*! @brief Subclasses should set this to \c true if Open() is successful and \c false if Close() is successful */
-		bool mIsOpen;
-
 
 		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c nullptr */
 		InputSource();
 		
 		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c url */
 		InputSource(CFURLRef url);
-		
+
+	private:
+
+		// Subclasses must implement the following methods
+		virtual bool _Open(CFErrorRef *error) = 0;
+		virtual bool _Close(CFErrorRef *error) = 0;
+		virtual SInt64 _Read(void *buffer, SInt64 byteCount) = 0;
+		virtual bool _AtEOF() const = 0;
+		virtual SInt64 _GetOffset() const = 0;
+		virtual SInt64 _GetLength() const = 0;
+
+		// Optional seeking support
+		virtual bool _SupportsSeeking() const					{ return false; }
+		virtual bool _SeekToOffset(SInt64 offset)				{ return false; }
+
+		// Data members
+		SFB::CFURL mURL;	/*!< @brief The location of the bytes to be read */
+		bool mIsOpen;		/*!< @brief Indicates if input is open */
+
 	};
 
 }

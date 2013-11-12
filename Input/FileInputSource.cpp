@@ -32,40 +32,27 @@
 #include <unistd.h>
 
 #include "FileInputSource.h"
-#include "Logger.h"
 
 #pragma mark Creation and Destruction
 
 SFB::FileInputSource::FileInputSource(CFURLRef url)
-	: InputSource(url), mFile(nullptr)
+	: InputSource(url), mFile(nullptr, nullptr)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 }
 
-SFB::FileInputSource::~FileInputSource()
+bool SFB::FileInputSource::_Open(CFErrorRef *error)
 {
-	if(IsOpen())
-		Close();
-}
-
-bool SFB::FileInputSource::Open(CFErrorRef *error)
-{
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Open() called on an InputSource that is already open");
-		return true;
-	}
-
 	UInt8 buf [PATH_MAX];
-	Boolean success = CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX);
+	Boolean success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, buf, PATH_MAX);
 	if(!success) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EIO, nullptr);
 		return false;
 	}
 
-	mFile = fopen((const char *)buf, "r");
-
-	if(nullptr == mFile) {
+	mFile = unique_file_ptr(std::fopen((const char *)buf, "r"), std::fclose);
+	if(!mFile) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 		return false;
@@ -75,55 +62,18 @@ bool SFB::FileInputSource::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
 
-		if(0 != fclose(mFile))
-			LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Unable to close the file: " << strerror(errno));
-
-		mFile = nullptr;
+		mFile.reset();
 
 		return false;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::FileInputSource::Close(CFErrorRef *error)
+bool SFB::FileInputSource::_Close(CFErrorRef *error)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource.File", "Close() called on an InputSource that hasn't been opened");
-		return true;
-	}
-
 	memset(&mFilestats, 0, sizeof(mFilestats));
+	mFile.reset();
 
-	if(nullptr != mFile) {
-		int result = fclose(mFile);
-
-		mFile = nullptr;
-
-		if(-1 == result) {
-			if(error)
-				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
-			return false;
-		}
-	}
-
-	mIsOpen = false;
 	return true;
-}
-
-SInt64 SFB::FileInputSource::Read(void *buffer, SInt64 byteCount)
-{
-	if(!IsOpen() || nullptr == buffer)
-		return -1;
-
-	return (SInt64)fread(buffer, 1, (size_t)byteCount, mFile);
-}
-
-bool SFB::FileInputSource::SeekToOffset(SInt64 offset)
-{
-	if(!IsOpen())
-		return false;
-
-	return (0 == fseeko(mFile, offset, SEEK_SET));
 }

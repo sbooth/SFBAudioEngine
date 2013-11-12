@@ -76,15 +76,93 @@ SFB::InputSource::InputSource()
 {}
 
 SFB::InputSource::InputSource(CFURLRef url)
-	: mURL(nullptr), mIsOpen(false)
+	: mURL((CFURLRef)CFRetain(url)), mIsOpen(false)
 {
 	assert(nullptr != url);
-	
-	mURL = (CFURLRef)CFRetain(url);
 }
 
-SFB::InputSource::~InputSource()
+bool SFB::InputSource::Open(CFErrorRef *error)
 {
-	if(mURL)
-		CFRelease(mURL), mURL = nullptr;
+	if(IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "Open() called on an InputSource that is already open");
+		return true;
+	}
+
+	bool result = _Open(error);
+	if(result)
+		mIsOpen = true;
+	return result;
+}
+
+bool SFB::InputSource::Close(CFErrorRef *error)
+{
+	if(!IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "Close() called on an InputSource that hasn't been opened");
+		return true;
+	}
+
+	bool result = _Close(error);
+	if(result)
+		mIsOpen = false;
+	return result;
+}
+
+SInt64 SFB::InputSource::Read(void *buffer, SInt64 byteCount)
+{
+	if(!IsOpen() || nullptr == buffer || 0 > byteCount) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "Read() called on an InputSource that hasn't been opened");
+		return -1;
+	}
+
+	return _Read(buffer, byteCount);
+}
+
+bool SFB::InputSource::AtEOF() const
+{
+	if(!IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "AtEOF() called on an InputSource that hasn't been opened");
+		return true;
+	}
+
+	return _AtEOF();
+}
+
+SInt64 SFB::InputSource::GetOffset() const
+{
+	if(!IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "GetOffset() called on an InputSource that hasn't been opened");
+		return -1;
+	}
+
+	return _GetOffset();
+}
+
+SInt64 SFB::InputSource::GetLength() const
+{
+	if(!IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "GetLength() called on an InputSource that hasn't been opened");
+		return 0;
+	}
+
+	return _GetLength();
+}
+
+bool SFB::InputSource::SupportsSeeking() const
+{
+	if(!IsOpen()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "SupportsSeeking() called on an InputSource that hasn't been opened");
+		return false;
+	}
+
+	return _SupportsSeeking();
+}
+
+bool SFB::InputSource::SeekToOffset(SInt64 offset)
+{
+	if(!IsOpen() || 0 > offset) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.InputSource", "Close() called on an InputSource that hasn't been opened");
+		return false;
+	}
+
+	return _SeekToOffset(offset);
 }
