@@ -51,7 +51,7 @@ bool SFB::FileInputSource::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	mFile = unique_file_ptr(std::fopen((const char *)buf, "r"), std::fclose);
+	mFile = unique_FILE_ptr(std::fopen((const char *)buf, "r"), std::fclose);
 	if(!mFile) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);

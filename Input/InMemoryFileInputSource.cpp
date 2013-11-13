@@ -42,7 +42,7 @@ SFB::InMemoryFileInputSource::InMemoryFileInputSource(CFURLRef url)
 
 bool SFB::InMemoryFileInputSource::_Open(CFErrorRef *error)
 {
-	typedef std::unique_ptr<std::FILE, int (*)(std::FILE *)> unique_file_ptr;
+	typedef std::unique_ptr<std::FILE, std::function<int(std::FILE *)>> unique_FILE_ptr;
 
 	UInt8 buf [PATH_MAX];
 	Boolean success = CFURLGetFileSystemRepresentation(GetURL(), FALSE, buf, PATH_MAX);
@@ -52,7 +52,7 @@ bool SFB::InMemoryFileInputSource::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	auto file = unique_file_ptr(std::fopen((const char *)buf, "r"), std::fclose);
+	auto file = unique_FILE_ptr(std::fopen((const char *)buf, "r"), std::fclose);
 	if(!file) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);

@@ -74,7 +74,7 @@ bool SFB::MemoryMappedFileInputSource::_Open(CFErrorRef *error)
 
 	// Map the file to memory
 	size_t map_size = (size_t)mFilestats.st_size;
-	mMemory = std::unique_ptr<int8_t, std::function<int(int8_t *)>>((int8_t *)mmap(0, map_size, PROT_READ, MAP_FILE | MAP_SHARED, ::fileno(file.get()), 0), std::bind(munmap, std::placeholders::_1, map_size));
+	mMemory = unique_mappedmem_ptr((int8_t *)mmap(0, map_size, PROT_READ, MAP_FILE | MAP_SHARED, ::fileno(file.get()), 0), std::bind(munmap, std::placeholders::_1, map_size));
 
 	if(MAP_FAILED == mMemory.get()) {
 		if(error)

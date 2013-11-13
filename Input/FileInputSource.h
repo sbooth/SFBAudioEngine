@@ -63,11 +63,11 @@ namespace SFB {
 		inline virtual bool _SupportsSeeking() const			{ return true; }
 		virtual bool _SeekToOffset(SInt64 offset)				{ return (0 == ::fseeko(mFile.get(), offset, SEEK_SET)); }
 
-		typedef std::unique_ptr<std::FILE, int (*)(std::FILE *)> unique_file_ptr;
+		typedef std::unique_ptr<std::FILE, std::function<int(std::FILE *)>> unique_FILE_ptr;
 
 		// Data members
 		struct stat						mFilestats;
-		unique_file_ptr					mFile;
+		unique_FILE_ptr					mFile;
 	};
 
 }

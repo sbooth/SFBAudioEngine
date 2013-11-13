@@ -65,10 +65,12 @@ namespace SFB {
 		inline virtual bool _SupportsSeeking() const			{ return true; }
 		virtual bool _SeekToOffset(SInt64 offset);
 
+		typedef std::unique_ptr<int8_t, std::function<int(int8_t *)>> unique_mappedmem_ptr;
+
 		// Data members
-		struct stat													mFilestats;
-		std::unique_ptr<int8_t, std::function<int(int8_t *)>>		mMemory;
-		int8_t														*mCurrentPosition;
+		struct stat						mFilestats;
+		unique_mappedmem_ptr			mMemory;
+		int8_t							*mCurrentPosition;
 	};
 
 }
