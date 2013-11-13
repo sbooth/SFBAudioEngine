@@ -32,12 +32,12 @@
 
 #include "MonkeysAudioDecoder.h"
 #include "CreateChannelLayout.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
 #include <mac/All.h>
 #include <mac/MACLib.h>
+
 #include <mac/IO.h>
 
 namespace {
@@ -48,108 +48,105 @@ namespace {
 		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::MonkeysAudioDecoder>();
 	}
 
+}
+
 #pragma mark IO Interface
 
-	// ========================================
-	// The I/O interface for MAC
-	// ========================================
-	class APEIOInterface : public CIO
+// The I/O interface for MAC
+class SFB::Audio::MonkeysAudioDecoder::APEIOInterface : public CIO
+{
+public:
+	APEIOInterface(SFB::InputSource& inputSource)
+		: mInputSource(inputSource)
+	{}
+
+	inline virtual int Open(const wchar_t * pName)
 	{
-	public:
-		APEIOInterface(SFB::InputSource& inputSource)
-			: mInputSource(inputSource)
-		{}
-
-		virtual int Open(const wchar_t * pName)
-		{
 #pragma unused(pName)
-			return ERROR_INVALID_INPUT_FILE;
-		}
+		return ERROR_INVALID_INPUT_FILE;
+	}
 
-		virtual int Close()
-		{
-			return ERROR_SUCCESS;
-		}
+	inline virtual int Close()
+	{
+		return ERROR_SUCCESS;
+	}
 
-		virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
-		{
-			SInt64 bytesRead = mInputSource.Read(pBuffer, nBytesToRead);
-			if(-1 == bytesRead)
-				return ERROR_IO_READ;
+	virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
+	{
+		SInt64 bytesRead = mInputSource.Read(pBuffer, nBytesToRead);
+		if(-1 == bytesRead)
+			return ERROR_IO_READ;
 
-			*pBytesRead = (unsigned int)bytesRead;
+		*pBytesRead = (unsigned int)bytesRead;
 
-			return ERROR_SUCCESS;
-		}
+		return ERROR_SUCCESS;
+	}
 
-		virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
-		{
+	inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
+	{
 #pragma unused(pBuffer)
 #pragma unused(nBytesToWrite)
 #pragma unused(pBytesWritten)
-			return ERROR_IO_WRITE;
+		return ERROR_IO_WRITE;
+	}
+
+	virtual int Seek(int nDistance, unsigned int nMoveMode)
+	{
+		if(!mInputSource.SupportsSeeking())
+			return ERROR_IO_READ;
+
+		SInt64 offset = nDistance;
+		switch(nMoveMode) {
+			case SEEK_SET:
+				// offset remains unchanged
+				break;
+			case SEEK_CUR:
+				offset += mInputSource.GetOffset();
+				break;
+			case SEEK_END:
+				offset += mInputSource.GetLength();
+				break;
 		}
 
-		virtual int Seek(int nDistance, unsigned int nMoveMode)
-		{
-			if(!mInputSource.SupportsSeeking())
-				return ERROR_IO_READ;
+		return (!mInputSource.SeekToOffset(offset));
+	}
 
-			SInt64 offset = nDistance;
-			switch(nMoveMode) {
-				case SEEK_SET:
-					// offset remains unchanged
-					break;
-				case SEEK_CUR:
-					offset += mInputSource.GetOffset();
-					break;
-				case SEEK_END:
-					offset += mInputSource.GetLength();
-					break;
-			}
-
-			return (!mInputSource.SeekToOffset(offset));
-		}
-
-		virtual int Create(const wchar_t * pName)
-		{
+	inline virtual int Create(const wchar_t * pName)
+	{
 #pragma unused(pName)
-			return ERROR_IO_WRITE;
-		}
+		return ERROR_IO_WRITE;
+	}
 
-		virtual int Delete()
-		{
-			return ERROR_IO_WRITE;
-		}
+	inline virtual int Delete()
+	{
+		return ERROR_IO_WRITE;
+	}
 
-		virtual int SetEOF()
-		{
-			return ERROR_IO_WRITE;
-		}
+	inline virtual int SetEOF()
+	{
+		return ERROR_IO_WRITE;
+	}
 
-		virtual int GetPosition()
-		{
-			SInt64 offset = mInputSource.GetOffset();
-			return (int)offset;
-		}
+	inline virtual int GetPosition()
+	{
+		return (int)mInputSource.GetOffset();
+	}
 
-		virtual int GetSize()
-		{
-			SInt64 length = mInputSource.GetLength();
-			return (int)length;
-		}
+	inline virtual int GetSize()
+	{
+		return (int)mInputSource.GetLength();
+	}
 
-		virtual int GetName(wchar_t * pBuffer)
-		{
+	inline virtual int GetName(wchar_t * pBuffer)
+	{
 #pragma unused(pBuffer)
-			return ERROR_SUCCESS;
-		}
-		
-	private:
-		SFB::InputSource& mInputSource;
-	};
+		return ERROR_SUCCESS;
+	}
 
-}
+private:
+
+	SFB::InputSource& mInputSource;
+};
 
 #pragma mark Static Methods
 
@@ -198,28 +195,13 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::MonkeysAudioDecoder::CreateDecoder(I
 #pragma mark Creation and Destruction
 
 SFB::Audio::MonkeysAudioDecoder::MonkeysAudioDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mDecompressor(nullptr)
+	: Decoder(std::move(inputSource))
 {}
-
-SFB::Audio::MonkeysAudioDecoder::~MonkeysAudioDecoder()
-{
-	if(IsOpen())
-		Close();
-}
 
 #pragma mark Functionality
 
-bool SFB::Audio::MonkeysAudioDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	auto ioInterface = 	std::unique_ptr<APEIOInterface>(new APEIOInterface(GetInputSource()));
 
 	auto decompressor = std::unique_ptr<IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
@@ -264,29 +246,19 @@ bool SFB::Audio::MonkeysAudioDecoder::Open(CFErrorRef *error)
 		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::MonkeysAudioDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MonkeysAudioDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	mIOInterface.reset();
 	mDecompressor.reset();
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::MonkeysAudioDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::MonkeysAudioDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
@@ -294,38 +266,8 @@ CFStringRef SFB::Audio::MonkeysAudioDecoder::CreateSourceFormatDescription() con
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::MonkeysAudioDecoder::GetTotalFrames() const
+UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen())
-		return -1;
-
-	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
-}
-
-SInt64 SFB::Audio::MonkeysAudioDecoder::GetCurrentFrame() const
-{
-	if(!IsOpen())
-		return -1;
-
-	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
-}
-
-SInt64 SFB::Audio::MonkeysAudioDecoder::SeekToFrame(SInt64 frame)
-{
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-	
-	if(ERROR_SUCCESS != mDecompressor->Seek((int)frame))
-		return -1;
-
-	return this->GetCurrentFrame();
-}
-
-UInt32 SFB::Audio::MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
-		return 0;
-
 	int blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int)frameCount, &blocksRead)) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
@@ -336,4 +278,24 @@ UInt32 SFB::Audio::MonkeysAudioDecoder::ReadAudio(AudioBufferList *bufferList, U
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
 	return (UInt32)blocksRead;
+}
+
+SInt64 SFB::Audio::MonkeysAudioDecoder::_GetTotalFrames() const
+{
+	return mDecompressor->GetInfo(APE_DECOMPRESS_TOTAL_BLOCKS);
+}
+
+SInt64 SFB::Audio::MonkeysAudioDecoder::_GetCurrentFrame() const
+{
+	return mDecompressor->GetInfo(APE_DECOMPRESS_CURRENT_BLOCK);
+}
+
+SInt64 SFB::Audio::MonkeysAudioDecoder::_SeekToFrame(SInt64 frame)
+{
+	if(ERROR_SUCCESS != mDecompressor->Seek((int)frame)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "mDecompressor->Seek() failed");
+		return -1;
+	}
+
+	return this->GetCurrentFrame();
 }

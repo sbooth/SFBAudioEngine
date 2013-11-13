@@ -160,30 +160,15 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::LibsndfileDecoder::CreateDecoder(Inp
 #pragma mark Creation and Destruction
 
 SFB::Audio::LibsndfileDecoder::LibsndfileDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mFile(nullptr), mReadMethod(ReadMethod::Unknown)
+	: Decoder(std::move(inputSource)), mFile(nullptr, nullptr), mReadMethod(ReadMethod::Unknown)
 {
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 }
 
-SFB::Audio::LibsndfileDecoder::~LibsndfileDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
 #pragma mark Functionality
 
-bool SFB::Audio::LibsndfileDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	// Set up the virtual IO function pointers
 	SF_VIRTUAL_IO virtualIO;
 	virtualIO.get_filelen	= my_sf_vio_get_filelen;
@@ -193,9 +178,9 @@ bool SFB::Audio::LibsndfileDecoder::Open(CFErrorRef *error)
 	virtualIO.tell			= my_sf_vio_tell;
 
 	// Open the input file
-	mFile = sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this);
+	mFile = unique_SNDFILE_ptr(sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this), sf_close);
 
-	if(nullptr == mFile) {
+	if(!mFile) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
 
 		if(nullptr != error) {
@@ -356,37 +341,20 @@ bool SFB::Audio::LibsndfileDecoder::Open(CFErrorRef *error)
 			break;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::LibsndfileDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::LibsndfileDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
-	if(mFile) {
-		int result = sf_close(mFile);
-		if(0 != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_close failed: " << result);
-
-		mFile = nullptr;
-	}
-
+	mFile.reset();
 	memset(&mFileInfo, 0, sizeof(SF_INFO));
 	mReadMethod = ReadMethod::Unknown;
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::LibsndfileDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::LibsndfileDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	SF_FORMAT_INFO formatInfo;
 	formatInfo.format = mFileInfo.format;
 
@@ -403,42 +371,15 @@ CFStringRef SFB::Audio::LibsndfileDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::LibsndfileDecoder::GetTotalFrames() const
+UInt32 SFB::Audio::LibsndfileDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen())
-		return -1;
-
-	return mFileInfo.frames;
-}
-
-SInt64 SFB::Audio::LibsndfileDecoder::GetCurrentFrame() const
-{
-	if(!IsOpen())
-		return -1;
-
-	return sf_seek(mFile, 0, SEEK_CUR);
-}
-
-SInt64 SFB::Audio::LibsndfileDecoder::SeekToFrame(SInt64 frame)
-{
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
-	return sf_seek(mFile, frame, SEEK_SET);
-}
-
-UInt32 SFB::Audio::LibsndfileDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
-		return 0;
-
 	sf_count_t framesRead = 0;
 	switch(mReadMethod) {
-		case ReadMethod::Unknown:	/* Do nothing */																			break;
-		case ReadMethod::Short:		framesRead = sf_readf_short(mFile, (short *)bufferList->mBuffers[0].mData, frameCount);		break;
-		case ReadMethod::Int:		framesRead = sf_readf_int(mFile, (int *)bufferList->mBuffers[0].mData, frameCount);			break;
-		case ReadMethod::Float:		framesRead = sf_readf_float(mFile, (float *)bufferList->mBuffers[0].mData, frameCount);		break;
-		case ReadMethod::Double:	framesRead = sf_readf_double(mFile, (double *)bufferList->mBuffers[0].mData, frameCount);	break;
+		case ReadMethod::Unknown:	/* Do nothing */																				break;
+		case ReadMethod::Short:		framesRead = sf_readf_short(mFile.get(), (short *)bufferList->mBuffers[0].mData, frameCount);	break;
+		case ReadMethod::Int:		framesRead = sf_readf_int(mFile.get(), (int *)bufferList->mBuffers[0].mData, frameCount);		break;
+		case ReadMethod::Float:		framesRead = sf_readf_float(mFile.get(), (float *)bufferList->mBuffers[0].mData, frameCount);	break;
+		case ReadMethod::Double:	framesRead = sf_readf_double(mFile.get(), (double *)bufferList->mBuffers[0].mData, frameCount);	break;
 	}
 
 	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRead * mFormat.mBytesPerFrame);

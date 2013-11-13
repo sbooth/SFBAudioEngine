@@ -45,8 +45,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -55,39 +54,32 @@ namespace SFB {
 
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
 			// Creation
 			LibsndfileDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
-			// Destruction
-			virtual ~LibsndfileDecoder();
-
-			// ========================================
-			// Audio access
-			virtual bool Open(CFErrorRef *error = nullptr);
-			virtual bool Close(CFErrorRef *error = nullptr);
-
-			// ========================================
-			// The native format of the source audio
-			virtual CFStringRef CreateSourceFormatDescription() const;
-
-			// ========================================
-			// Attempt to read frameCount frames of audio, returning the actual number of frames read
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-
-			// ========================================
-			// Source audio information
-			virtual SInt64 GetTotalFrames() const;
-			virtual SInt64 GetCurrentFrame() const;
-
-			// ========================================
-			// Seeking support
-			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-			virtual SInt64 SeekToFrame(SInt64 frame);
-
 		private:
 
+			// Audio access
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
+
+			// The native format of the source audio
+			virtual SFB::CFString _GetSourceFormatDescription() const;
+
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// Source audio information
+			inline virtual SInt64 _GetTotalFrames() const			{ return mFileInfo.frames; }
+			inline virtual SInt64 _GetCurrentFrame() const			{ return sf_seek(mFile.get(), 0, SEEK_CUR); }
+
+			// Seeking support
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			inline virtual SInt64 _SeekToFrame(SInt64 frame)		{ return sf_seek(mFile.get(), frame, SEEK_SET); }
+
+			typedef std::unique_ptr<SNDFILE, int(*)(SNDFILE *)> unique_SNDFILE_ptr;
+
+			// Data members
 			enum class ReadMethod {
 				Unknown,
 				Short,
@@ -96,7 +88,7 @@ namespace SFB {
 				Double
 			};
 			
-			SNDFILE				*mFile;
+			unique_SNDFILE_ptr	mFile;
 			SF_INFO				mFileInfo;
 			ReadMethod			mReadMethod;
 		};

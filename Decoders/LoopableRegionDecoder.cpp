@@ -32,120 +32,67 @@
 
 #include "LoopableRegionDecoder.h"
 #include "AudioDecoder.h"
+#include "CreateChannelLayout.h"
 #include "Logger.h"
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != mDecoder);
-	assert(mDecoder->SupportsSeeking());
-	
-	if(mDecoder->IsOpen())
-		SetupDecoder();
 }
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != mDecoder);
-	assert(mDecoder->SupportsSeeking());
-
-	if(mDecoder->IsOpen())
-		SetupDecoder();
 }
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
 	assert(nullptr != mDecoder);
-	assert(mDecoder->SupportsSeeking());
-
-	if(mDecoder->IsOpen())
-		SetupDecoder();
 }
 
-SFB::Audio::LoopableRegionDecoder::~LoopableRegionDecoder()
+bool SFB::Audio::LoopableRegionDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen())
-		Close();
-
-	// Just set our references to nullptr, as mDecoder actually owns the objects and will delete them
-	mChannelLayout	= nullptr;
-}
-
-bool SFB::Audio::LoopableRegionDecoder::Open(CFErrorRef *error)
-{
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Open() called on a Decoder that is already open");
-		return true;
-	}
-	
 	if(!mDecoder->IsOpen() && !mDecoder->Open(error))
 		return false;
 
-	if(!SetupDecoder(false)) {
+	if(!mDecoder->SupportsSeeking() || !SetupDecoder(false)) {
 		mDecoder->Close(error);
 		return false;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::LoopableRegionDecoder::Close(CFErrorRef *error)
+bool SFB::Audio::LoopableRegionDecoder::_Close(CFErrorRef *error)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-	
 	if(!mDecoder->Close(error))
 		return false;
 
-	mIsOpen = false;
 	return true;
 }
 
-bool SFB::Audio::LoopableRegionDecoder::Reset()
+SFB::CFString SFB::Audio::LoopableRegionDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return false;
-
-	mFramesReadInCurrentPass	= 0;
-	mTotalFramesRead			= 0;
-	mCompletedPasses			= 0;
-
-	return (mStartingFrame == mDecoder->SeekToFrame(mStartingFrame));
+	return mDecoder->CreateSourceFormatDescription();
 }
 
 #pragma mark Functionality
 
-SInt64 SFB::Audio::LoopableRegionDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::LoopableRegionDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-	
-	mCompletedPasses			= (UInt32)(frame / mFrameCount);
-	mFramesReadInCurrentPass	= (UInt32)(frame % mFrameCount);
-	mTotalFramesRead			= frame;
-	
-	mDecoder->SeekToFrame(mStartingFrame + mFramesReadInCurrentPass);
-	
-	return GetCurrentFrame();
-}
-
-UInt32 SFB::Audio::LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
-		return 0;
-	
 	// If the repeat count is N then (N + 1) passes must be completed to read all the frames
-	if((1 + mRepeatCount) == mCompletedPasses)
+	if((1 + mRepeatCount) == mCompletedPasses) {
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
+			bufferList->mBuffers[bufferIndex].mDataByteSize = 0;
 		return 0;
+	}
 
 	// Allocate an alias to the buffer list, which will contain pointers to the current write position in the output buffer
-	AudioBufferList *bufferListAlias = (AudioBufferList *)calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers));
-	
+	AudioBufferList *bufferListAlias = (AudioBufferList *)alloca(offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers));
+
 	if(nullptr == bufferListAlias) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Unable to allocate memory");
 		return 0;
@@ -207,10 +154,31 @@ UInt32 SFB::Audio::LoopableRegionDecoder::ReadAudio(AudioBufferList *bufferList,
 				mDecoder->SeekToFrame(mStartingFrame);
 		}
 	}
-	
-	free(bufferListAlias), bufferListAlias = nullptr;
-	
+		
 	return totalFramesRead;
+}
+
+SInt64 SFB::Audio::LoopableRegionDecoder::_SeekToFrame(SInt64 frame)
+{
+	mCompletedPasses			= (UInt32)(frame / mFrameCount);
+	mFramesReadInCurrentPass	= (UInt32)(frame % mFrameCount);
+	mTotalFramesRead			= frame;
+
+	mDecoder->SeekToFrame(mStartingFrame + mFramesReadInCurrentPass);
+
+	return _GetCurrentFrame();
+}
+
+bool SFB::Audio::LoopableRegionDecoder::Reset()
+{
+	if(!IsOpen())
+		return false;
+
+	mFramesReadInCurrentPass	= 0;
+	mTotalFramesRead			= 0;
+	mCompletedPasses			= 0;
+
+	return (mStartingFrame == mDecoder->SeekToFrame(mStartingFrame));
 }
 
 bool SFB::Audio::LoopableRegionDecoder::SetupDecoder(bool forceReset)
@@ -219,7 +187,7 @@ bool SFB::Audio::LoopableRegionDecoder::SetupDecoder(bool forceReset)
 	assert(mDecoder->IsOpen());
 
 	mFormat			= mDecoder->GetFormat();
-	mChannelLayout	= mDecoder->GetChannelLayout();
+	mChannelLayout	= CopyChannelLayout(mDecoder->GetChannelLayout());
 	mSourceFormat	= mDecoder->GetSourceFormat();
 	
 	if(0 == mFrameCount)

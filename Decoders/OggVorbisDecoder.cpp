@@ -151,17 +151,8 @@ SFB::Audio::OggVorbisDecoder::~OggVorbisDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::OggVorbisDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	ov_callbacks callbacks = {
 		.read_func = read_func_callback,
 		.seek_func = seek_func_callback,
@@ -246,29 +237,19 @@ bool SFB::Audio::OggVorbisDecoder::Open(CFErrorRef *error)
 			break;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::OggVorbisDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggVorbisDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	if(0 != ov_clear(&mVorbisFile))
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::OggVorbisDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::OggVorbisDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
@@ -276,21 +257,12 @@ CFStringRef SFB::Audio::OggVorbisDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::OggVorbisDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::OggVorbisDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-	
-	if(0 != ov_pcm_seek(&mVorbisFile, frame))
-		return -1;
-	
-	return this->GetCurrentFrame();
-}
-
-UInt32 SFB::Audio::OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	float		**buffer			= nullptr;
 	UInt32		framesRemaining		= frameCount;
@@ -331,4 +303,13 @@ UInt32 SFB::Audio::OggVorbisDecoder::ReadAudio(AudioBufferList *bufferList, UInt
 	}
 	
 	return totalFramesRead;
+}
+
+SInt64 SFB::Audio::OggVorbisDecoder::_SeekToFrame(SInt64 frame)
+{
+	if(0 != ov_pcm_seek(&mVorbisFile, frame)) {
+		return -1;
+	}
+
+	return _GetCurrentFrame();
 }

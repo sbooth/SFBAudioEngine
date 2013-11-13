@@ -112,17 +112,8 @@ SFB::Audio::OggSpeexDecoder::~OggSpeexDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	// Initialize Ogg data struct
 	ogg_sync_init(&mOggSyncState);
 
@@ -338,17 +329,11 @@ bool SFB::Audio::OggSpeexDecoder::Open(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::OggSpeexDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggSpeexDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	mBufferList.Deallocate();
 
 	// Speex cleanup
@@ -360,15 +345,11 @@ bool SFB::Audio::OggSpeexDecoder::Close(CFErrorRef */*error*/)
 	ogg_stream_clear(&mOggStreamState);
 	ogg_sync_clear(&mOggSyncState);
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::OggSpeexDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::OggSpeexDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Ogg Speex, %u channels, %u Hz"), 
@@ -376,10 +357,12 @@ CFStringRef SFB::Audio::OggSpeexDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-UInt32 SFB::Audio::OggSpeexDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	UInt32 framesRead = 0;
 	

@@ -47,8 +47,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -57,39 +56,31 @@ namespace SFB {
 
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
-			// Creation
+			// Creation and destruction
 			MusepackDecoder(InputSource::unique_ptr inputSource);
-
-			// ========================================
-			// Destruction
 			virtual ~MusepackDecoder();
-
-			// ========================================
-			// Audio access
-			virtual bool Open(CFErrorRef *error = nullptr);
-			virtual bool Close(CFErrorRef *error = nullptr);
-
-			// ========================================
-			// The native format of the source audio
-			virtual CFStringRef CreateSourceFormatDescription() const;
-
-			// ========================================
-			// Attempt to read frameCount frames of audio, returning the actual number of frames read
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-
-			// ========================================
-			// Source audio information
-			inline virtual SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-			inline virtual SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
-
-			// ========================================
-			// Seeking support
-			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-			virtual SInt64 SeekToFrame(SInt64 frame);
 
 		private:
 
+			// Audio access
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
+
+			// The native format of the source audio
+			virtual SFB::CFString _GetSourceFormatDescription() const;
+
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// Source audio information
+			inline virtual SInt64 _GetTotalFrames() const			{ return mTotalFrames; }
+			inline virtual SInt64 _GetCurrentFrame() const			{ return mCurrentFrame; }
+
+			// Seeking support
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 _SeekToFrame(SInt64 frame);
+
+			// Data members
 			mpc_reader			mReader;
 			mpc_demux			*mDemux;
 			

@@ -46,7 +46,7 @@ const CFStringRef	SFB::Audio::AudioDecoderErrorDomain					= CFSTR("org.sbooth.Au
 
 #pragma mark Static Methods
 
-bool SFB::Audio::Decoder::sAutomaticallyOpenDecoders = false;
+std::atomic_bool SFB::Audio::Decoder::sAutomaticallyOpenDecoders = ATOMIC_VAR_INIT(false);
 std::vector<SFB::Audio::Decoder::SubclassInfo> SFB::Audio::Decoder::sRegisteredSubclasses;
 
 CFArrayRef SFB::Audio::Decoder::CreateSupportedFileExtensions()
@@ -216,7 +216,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(C
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error)
 {
-	if(!inputSource || !inputSource->SupportsSeeking())
+	if(!inputSource)
 		return nullptr;
 
 	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, error);
@@ -224,7 +224,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	if(!inputSource || !inputSource->SupportsSeeking())
+	if(!inputSource)
 		return nullptr;
 
 	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, error);
@@ -232,7 +232,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	if(!inputSource || !inputSource->SupportsSeeking())
+	if(!inputSource)
 		return nullptr;
 
 	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, repeatCount, error);
@@ -240,7 +240,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, CFErrorRef */*error*/)
 {
-	if(!decoder || !decoder->SupportsSeeking())
+	if(!decoder)
 		return nullptr;
 	
 	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame));
@@ -248,7 +248,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegi
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
 {
-	if(!decoder || !decoder->SupportsSeeking())
+	if(!decoder)
 		return nullptr;
 
 	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount));
@@ -256,7 +256,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegi
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
 {
-	if(!decoder || !decoder->SupportsSeeking())
+	if(!decoder)
 		return nullptr;
 
 	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount, repeatCount));
@@ -267,6 +267,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegi
 SFB::Audio::Decoder::Decoder()
 	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
+	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
@@ -275,7 +276,7 @@ SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
 {
 	assert(nullptr != mInputSource);
 
-	memset(&mFormat, 0, sizeof(mSourceFormat));
+	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
@@ -287,36 +288,55 @@ SFB::Audio::Decoder::~Decoder()
 
 #pragma mark Base Functionality
 
-CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription() const
+bool SFB::Audio::Decoder::Open(CFErrorRef *error)
 {
-	if(!IsOpen())
-		return nullptr;
+	if(IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "Open() called on a Decoder that is already open");
+		return true;
+	}
 
-	CFStringRef		sourceFormatDescription		= nullptr;
-	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
-	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
-																		 sizeof(mSourceFormat), 
-																		 &mSourceFormat, 
-																		 &sourceFormatNameSize, 
-																		 &sourceFormatDescription);
+	// Ensure the input source is open
+	if(!GetInputSource().IsOpen() && !GetInputSource().Open(error))
+		return false;
 
-	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+	bool result = _Open(error);
+	if(result)
+		mIsOpen = true;
+	return result;
+}
 
-	return sourceFormatDescription;
+bool SFB::Audio::Decoder::Close(CFErrorRef *error)
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "Close() called on a Decoder that hasn't been opened");
+		return true;
+	}
+
+	// Close the decoder
+	bool result = _Close(error);
+	if(result)
+		mIsOpen = false;
+
+	// Close the input source
+	if(!GetInputSource().Close(error))
+		return false;
+
+	return result;
 }
 
 CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 {
-	if(!IsOpen())
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateFormatDescription() called on a Decoder that hasn't been opened");
 		return nullptr;
+	}
 
 	CFStringRef		sourceFormatDescription		= nullptr;
 	UInt32			specifierSize				= sizeof(sourceFormatDescription);
-	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName, 
-																		 sizeof(mFormat), 
-																		 &mFormat, 
-																		 &specifierSize, 
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+																		 sizeof(mFormat),
+																		 &mFormat,
+																		 &specifierSize,
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
@@ -325,10 +345,22 @@ CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 	return sourceFormatDescription;
 }
 
+CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription() const
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateSourceFormatDescription() called on a Decoder that hasn't been opened");
+		return nullptr;
+	}
+
+	return _GetSourceFormatDescription().Relinquish();
+}
+
 CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 {
-	if(!IsOpen())
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateChannelLayoutDescription() called on a Decoder that hasn't been opened");
 		return nullptr;
+	}
 
 	CFStringRef		channelLayoutDescription	= nullptr;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);
@@ -342,4 +374,64 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return channelLayoutDescription;
+}
+
+UInt32 SFB::Audio::Decoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "ReadAudio() called on a Decoder that hasn't been opened");
+		return 0;
+	}
+
+	if(nullptr == bufferList || 0 == frameCount) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "ReadAudio() called with invalid parameters");
+		return 0;
+	}
+
+	return _ReadAudio(bufferList, frameCount);
+}
+
+SInt64 SFB::Audio::Decoder::GetTotalFrames() const
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "GetTotalFrames() called on a Decoder that hasn't been opened");
+		return -1;
+	}
+
+	return _GetTotalFrames();
+}
+
+SInt64 SFB::Audio::Decoder::GetCurrentFrame() const
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "GetCurrentFrame() called on a Decoder that hasn't been opened");
+		return -1;
+	}
+
+	return _GetCurrentFrame();
+}
+
+bool SFB::Audio::Decoder::SupportsSeeking() const
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "SupportsSeeking() called on a Decoder that hasn't been opened");
+		return false;
+	}
+
+	return _SupportsSeeking();
+}
+
+SInt64 SFB::Audio::Decoder::SeekToFrame(SInt64 frame)
+{
+	if(!IsOpen()) {
+		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "SeekToFrame() called on a Decoder that hasn't been opened");
+		return -1;
+	}
+
+	if(0 > frame || frame >= GetTotalFrames()) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "SeekToFrame() called with invalid parameters");
+		return -1;
+	}
+
+	return _SeekToFrame(frame);
 }

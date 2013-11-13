@@ -36,6 +36,12 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
+struct SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper
+{
+	TTA_io_callback iocb;
+	SFB::Audio::Decoder *decoder;
+};
+
 namespace {
 
 	void RegisterTrueAudioDecoder() __attribute__ ((constructor));
@@ -44,17 +50,18 @@ namespace {
 		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::TrueAudioDecoder>();
 	}
 
+	
 #pragma mark Callbacks
 
 	TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 	{
-		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
+		SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *iocb = (SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *)io;
 		return (TTAint32)iocb->decoder->GetInputSource().Read(buffer, size);
 	}
 
 	TTAint64 seek_callback(struct _tag_TTA_io_callback *io, TTAint64 offset)
 	{
-		TTA_io_callback_wrapper *iocb = (TTA_io_callback_wrapper *)io;
+		SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *iocb = (SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *)io;
 		return iocb->decoder->GetInputSource().SeekToOffset(offset);
 	}
 	
@@ -107,26 +114,11 @@ SFB::Audio::TrueAudioDecoder::TrueAudioDecoder(InputSource::unique_ptr inputSour
 	: Decoder(std::move(inputSource)), mDecoder(nullptr), mCallbacks(nullptr), mCurrentFrame(0), mTotalFrames(0), mFramesToSkip(0)
 {}
 
-SFB::Audio::TrueAudioDecoder::~TrueAudioDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
 #pragma mark Functionality
 
-bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-	
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
-	mCallbacks				= new TTA_io_callback_wrapper;
+	mCallbacks				= unique_callback_wrapper_ptr(new TTA_io_callback_wrapper);
 	mCallbacks->iocb.read	= read_callback;
 	mCallbacks->iocb.write	= nullptr;
 	mCallbacks->iocb.seek	= seek_callback;
@@ -135,16 +127,14 @@ bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
 	TTA_info streamInfo;
 
 	try {
-		mDecoder = new tta::tta_decoder((TTA_io_callback *)mCallbacks);
+		mDecoder = unique_tta_ptr(new tta::tta_decoder((TTA_io_callback *)mCallbacks.get()));
 		mDecoder->init_get_info(&streamInfo, 0);
 	}
 	catch(tta::tta_exception e) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
-		if(mDecoder)
-			delete mDecoder, mDecoder = nullptr;
 	}
 
-	if(nullptr == mDecoder) {
+	if(!mDecoder) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
@@ -155,7 +145,6 @@ bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
 
 		return false;
 	}
-
 	
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
@@ -199,9 +188,6 @@ bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
 				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
 
-			delete mDecoder, mDecoder = nullptr;
-			delete mCallbacks, mCallbacks = nullptr;
-
 			return false;
 		}
 	}
@@ -222,34 +208,21 @@ bool SFB::Audio::TrueAudioDecoder::Open(CFErrorRef *error)
 
 	mTotalFrames = streamInfo.samples;
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::TrueAudioDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::TrueAudioDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-	
-	if(mDecoder)
-		delete mDecoder, mDecoder = nullptr;
-
-	if(mCallbacks)
-		delete mCallbacks, mCallbacks = nullptr;
+	mDecoder.reset();
+	mCallbacks.reset();
 
 	mTotalFrames = mCurrentFrame = 0;
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::TrueAudioDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::TrueAudioDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-	
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("True Audio, %u channels, %u Hz"), 
@@ -257,34 +230,12 @@ CFStringRef SFB::Audio::TrueAudioDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::TrueAudioDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
-	TTAuint32 seconds = (TTAuint32)(frame / mSourceFormat.mSampleRate);
-	TTAuint32 frame_start = 0;
-
-	try {
-		mDecoder->set_position(seconds, &frame_start);
-	}
-	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
-		return -1;
-	}
-
-	mCurrentFrame = frame;
-
-	// We need to skip some samples from start of the frame if required
-	mFramesToSkip = UInt32((seconds - frame_start) * mSourceFormat.mSampleRate + 0.5);
-
-	return mCurrentFrame;
-}
-
-UInt32 SFB::Audio::TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
@@ -327,4 +278,25 @@ UInt32 SFB::Audio::TrueAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt
 
 	mCurrentFrame += framesRead;
 	return framesRead;
+}
+
+SInt64 SFB::Audio::TrueAudioDecoder::_SeekToFrame(SInt64 frame)
+{
+	TTAuint32 seconds = (TTAuint32)(frame / mSourceFormat.mSampleRate);
+	TTAuint32 frame_start = 0;
+
+	try {
+		mDecoder->set_position(seconds, &frame_start);
+	}
+	catch(tta::tta_exception e) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
+		return -1;
+	}
+
+	mCurrentFrame = frame;
+
+	// We need to skip some samples from start of the frame if required
+	mFramesToSkip = UInt32((seconds - frame_start) * mSourceFormat.mSampleRate + 0.5);
+
+	return mCurrentFrame;
 }

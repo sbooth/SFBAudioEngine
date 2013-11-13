@@ -186,17 +186,8 @@ SFB::Audio::CoreAudioDecoder::~CoreAudioDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::CoreAudioDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	// Open the input file
 	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, nullptr, myAudioFile_GetSizeProc, nullptr, 0, &mAudioFile);
 
@@ -426,17 +417,11 @@ bool SFB::Audio::CoreAudioDecoder::Open(CFErrorRef *error)
 		mUseM4AWorkarounds = true;
 #endif
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::CoreAudioDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::CoreAudioDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	// Close the output file
 	if(mExtAudioFile) {
 		OSStatus result = ExtAudioFileDispose(mExtAudioFile);
@@ -454,15 +439,41 @@ bool SFB::Audio::CoreAudioDecoder::Close(CFErrorRef */*error*/)
 		mAudioFile = nullptr;
 	}
 
-	mIsOpen = false;
 	return true;
 }
 
-SInt64 SFB::Audio::CoreAudioDecoder::GetTotalFrames() const
+SFB::CFString SFB::Audio::CoreAudioDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return -1;
+	CFStringRef		sourceFormatDescription		= nullptr;
+	UInt32			sourceFormatNameSize		= sizeof(sourceFormatDescription);
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_FormatName,
+																		 sizeof(mSourceFormat),
+																		 &mSourceFormat,
+																		 &sourceFormatNameSize,
+																		 &sourceFormatDescription);
 
+	if(noErr != result)
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+
+	return sourceFormatDescription;
+}
+
+UInt32 SFB::Audio::CoreAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+{
+	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
+	if(noErr != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileRead failed: " << result);
+		return 0;
+	}
+
+	if(mUseM4AWorkarounds)
+		mCurrentFrame += frameCount;
+
+	return frameCount;
+}
+
+SInt64 SFB::Audio::CoreAudioDecoder::_GetTotalFrames() const
+{
 	SInt64 totalFrames = -1;
 	UInt32 dataSize = sizeof(totalFrames);
 	
@@ -473,11 +484,8 @@ SInt64 SFB::Audio::CoreAudioDecoder::GetTotalFrames() const
 	return totalFrames;
 }
 
-SInt64 SFB::Audio::CoreAudioDecoder::GetCurrentFrame() const
+SInt64 SFB::Audio::CoreAudioDecoder::_GetCurrentFrame() const
 {
-	if(!IsOpen())
-		return -1;
-
 	if(mUseM4AWorkarounds)
 		return mCurrentFrame;
 	
@@ -492,36 +500,16 @@ SInt64 SFB::Audio::CoreAudioDecoder::GetCurrentFrame() const
 	return currentFrame;
 }
 
-SInt64 SFB::Audio::CoreAudioDecoder::SeekToFrame(SInt64 frame)
+SInt64 SFB::Audio::CoreAudioDecoder::_SeekToFrame(SInt64 frame)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSeek failed: " << result);
 		return -1;
 	}
-	
+
 	if(mUseM4AWorkarounds)
 		mCurrentFrame = frame;
-	
-	return GetCurrentFrame();
-}
 
-UInt32 SFB::Audio::CoreAudioDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
-		return 0;
-
-	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
-	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileRead failed: " << result);
-		return 0;
-	}
-
-	if(mUseM4AWorkarounds)
-		mCurrentFrame += frameCount;
-	
-	return frameCount;
+	return _GetCurrentFrame();
 }

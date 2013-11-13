@@ -47,8 +47,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -57,40 +56,33 @@ namespace SFB {
 
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
 			// Creation
 			FLACDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
-			// Destruction
-			virtual ~FLACDecoder();
-
-			// ========================================
-			// Audio access
-			virtual bool Open(CFErrorRef *error = nullptr);
-			virtual bool Close(CFErrorRef *error = nullptr);
-
-			// ========================================
-			// The native format of the source audio
-			virtual CFStringRef CreateSourceFormatDescription() const;
-
-			// ========================================
-			// Attempt to read frameCount frames of audio, returning the actual number of frames read
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-
-			// ========================================
-			// Source audio information
-			inline virtual SInt64 GetTotalFrames() const			{ return (SInt64)mStreamInfo.total_samples; }
-			inline virtual SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
-
-			// ========================================
-			// Seeking support
-			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-			virtual SInt64 SeekToFrame(SInt64 frame);
-
 		private:
 
-			FLAC__StreamDecoder					*mFLAC;
+			// Audio access
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
+
+			// The native format of the source audio
+			virtual SFB::CFString _GetSourceFormatDescription() const;
+
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// Source audio information
+			inline virtual SInt64 _GetTotalFrames() const			{ return (SInt64)mStreamInfo.total_samples; }
+			inline virtual SInt64 _GetCurrentFrame() const			{ return mCurrentFrame; }
+
+			// Seeking support
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 _SeekToFrame(SInt64 frame);
+
+			typedef std::unique_ptr<FLAC__StreamDecoder, void(*)(FLAC__StreamDecoder *)> unique_FLAC_ptr;
+
+			// Data members
+			unique_FLAC_ptr						mFLAC;
 			FLAC__StreamMetadata_StreamInfo		mStreamInfo;
 			SInt64								mCurrentFrame;
 
@@ -99,7 +91,6 @@ namespace SFB {
 
 		public:
 
-			// ========================================
 			// Callbacks- for internal use only
 			FLAC__StreamDecoderWriteStatus Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[]);
 			void Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata);

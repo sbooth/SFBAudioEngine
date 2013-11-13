@@ -248,10 +248,10 @@ namespace SFB {
 			//@{
 
 			/*! @brief Query whether decoders should be automatically opened */
-			static inline bool AutomaticallyOpenDecoders()				{ return sAutomaticallyOpenDecoders; }
+			static inline bool AutomaticallyOpenDecoders()				{ return sAutomaticallyOpenDecoders.load(); }
 
 			/*! @brief Set whether decoders should be automatically opened */
-			static inline void SetAutomaticallyOpenDecoders(bool flag)	{ sAutomaticallyOpenDecoders = flag; }
+			static inline void SetAutomaticallyOpenDecoders(bool flag)	{ sAutomaticallyOpenDecoders.store(flag); }
 
 			//@}
 
@@ -297,10 +297,10 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the URL associated with this decoder's \c InputSource */
-			inline virtual CFURLRef GetURL() const						{ return mInputSource->GetURL(); }
+			inline CFURLRef GetURL() const								{ return _GetURL(); }
 
 			/*! @brief Get the \c InputSource feeding this decoder */
-			inline virtual InputSource& GetInputSource() const			{ return *mInputSource; }
+			inline InputSource& GetInputSource() const					{ return _GetInputSource(); }
 
 			//@}
 
@@ -315,7 +315,7 @@ namespace SFB {
 			 * @return \c true on success, \c false otherwise
 			 * @see InputSource::Open()
 			 */
-			virtual bool Open(CFErrorRef *error = nullptr) = 0;
+			bool Open(CFErrorRef *error = nullptr);
 
 			/*!
 			 * @brief Close the decoder's \c InputSource
@@ -323,10 +323,10 @@ namespace SFB {
 			 * @return \c true on success, \c false otherwise
 			 * @see InputSource::Close()
 			 */
-			virtual bool Close(CFErrorRef *error = nullptr) = 0;
+			bool Close(CFErrorRef *error = nullptr);
 
 			/*! @brief Query the decoder's \c InputSource to determine if it is open */
-			inline virtual bool IsOpen() const							{ return mIsOpen; }
+			inline bool IsOpen() const									{ return mIsOpen; }
 
 			//@}
 
@@ -343,7 +343,7 @@ namespace SFB {
 			 * @note The returned string must be released by the caller
 			 * @return A description of the source audio's native format
 			 */
-			virtual CFStringRef CreateSourceFormatDescription() const;
+			CFStringRef CreateSourceFormatDescription() const;
 
 
 			/*! @brief Get the type of PCM data provided by this decoder */
@@ -374,28 +374,28 @@ namespace SFB {
 			 * @param frameCount The requested number of audio frames
 			 * @return The actual number of frames read, or \c 0 on error
 			 */
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount) = 0;
+			UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
 
 			/*! @brief Get the total number of audio frames */
-			virtual SInt64 GetTotalFrames() const = 0;
+			SInt64 GetTotalFrames() const ;
 
 			/*! @brief Get the current audio frame */
-			virtual SInt64 GetCurrentFrame() const = 0;
+			SInt64 GetCurrentFrame() const;
 
 			/*! @brief Get the number of audio frames remaining */
 			inline SInt64 GetFramesRemaining() const					{ return GetTotalFrames() - GetCurrentFrame(); }
 
 
 			/*! @brief Query whether the audio format and input source support seeking */
-			virtual bool SupportsSeeking() const						{ return false; }
+			bool SupportsSeeking() const;
 
 			/*!
 			 * @brief Seek to the specified audio frame
 			 * @param frame The desired audio frame
 			 * @return The current frame after seeking
 			 */
-			virtual SInt64 SeekToFrame(SInt64 frame)					{ return -1; }
+			SInt64 SeekToFrame(SInt64 frame);
 
 			//@}
 
@@ -408,8 +408,6 @@ namespace SFB {
 
 			AudioStreamBasicDescription		mSourceFormat;		/*!< @brief The native format of the source file */
 
-			bool							mIsOpen;			/*!< @brief Subclasses should set this to \c true if Open() is successful and \c false if Close() is successful */
-
 
 			/*! @brief Create a new \c Decoder and initialize \c Decoder::mInputSource to \c nullptr */
 			Decoder();
@@ -419,11 +417,32 @@ namespace SFB {
 
 		private:
 
+			// Override these carefully
+			inline virtual CFURLRef _GetURL() const						{ return mInputSource->GetURL(); }
+			inline virtual InputSource& _GetInputSource() const			{ return *mInputSource; }
+
+			// Subclasses must implement these methods
+			virtual SFB::CFString _GetSourceFormatDescription() const = 0;
+
+			virtual bool _Open(CFErrorRef *error) = 0;
+			virtual bool _Close(CFErrorRef *error) = 0;
+
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount) = 0;
+
+			virtual SInt64 _GetTotalFrames() const = 0;
+			virtual SInt64 _GetCurrentFrame() const = 0;
+
+			// Optional seeking support
+			virtual bool _SupportsSeeking() const						{ return false; }
+			virtual SInt64 _SeekToFrame(SInt64 frame)					{ return -1; }
+
+			// Data members
 			void							*mRepresentedObject;
+			bool							mIsOpen;
 
 			// ========================================
 			// Controls whether Open() is called for decoders created in the factory methods
-			static bool						sAutomaticallyOpenDecoders;
+			static std::atomic_bool			sAutomaticallyOpenDecoders;
 
 			// ========================================
 			// Subclass registration support

@@ -137,36 +137,21 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::MODDecoder::CreateDecoder(InputSourc
 #pragma mark Creation and Destruction
 
 SFB::Audio::MODDecoder::MODDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), df(nullptr), duh(nullptr), dsr(nullptr), mCurrentFrame(0), mTotalFrames(0)
+	: Decoder(std::move(inputSource)), df(nullptr, nullptr), duh(nullptr, nullptr), dsr(nullptr, nullptr), mCurrentFrame(0), mTotalFrames(0)
 {}
-
-SFB::Audio::MODDecoder::~MODDecoder()
-{
-	if(IsOpen())
-		Close();
-}
 
 #pragma mark Functionality
 
-bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	dfs.open = nullptr;
 	dfs.skip = skip_callback;
 	dfs.getc = getc_callback;
 	dfs.getnc = getnc_callback;
 	dfs.close = close_callback;
 
-	df = dumbfile_open_ex(this, &dfs);
-	if(nullptr == df) {
+	df = unique_DUMBFILE_ptr(dumbfile_open_ex(this, &dfs), dumbfile_close);
+	if(!df) {
 		return false;
 	}
 
@@ -176,15 +161,15 @@ bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
 
 	// Attempt to create the appropriate decoder based on the file's extension
 	if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("it"), kCFCompareCaseInsensitive))
-		duh = dumb_read_it(df);
+		duh = unique_DUH_ptr(dumb_read_it(df.get()), unload_duh);
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("xm"), kCFCompareCaseInsensitive))
-		duh = dumb_read_xm(df);
+		duh = unique_DUH_ptr(dumb_read_xm(df.get()), unload_duh);
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("s3m"), kCFCompareCaseInsensitive))
-		duh = dumb_read_s3m(df);
+		duh = unique_DUH_ptr(dumb_read_s3m(df.get()), unload_duh);
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive))
-		duh = dumb_read_mod(df);
+		duh = unique_DUH_ptr(dumb_read_mod(df.get()), unload_duh);
 	
-	if(nullptr == duh) {
+	if(!duh) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
@@ -193,17 +178,14 @@ bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 		
-		if(df)
-			dumbfile_close(df), df = nullptr;
-
 		return false;
 	}
 
 	// NB: This must change if the sample rate changes because it is based on 65536 Hz
-	mTotalFrames = duh_get_length(duh);
+	mTotalFrames = duh_get_length(duh.get());
 
-	dsr = duh_start_sigrenderer(duh, 0, 2, 0);
-	if(nullptr == dsr) {
+	dsr = unique_DUH_SIGRENDERER_ptr(duh_start_sigrenderer(duh.get(), 0, 2, 0), duh_end_sigrenderer);
+	if(!dsr) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
@@ -211,11 +193,6 @@ bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
 			
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-
-		if(df)
-			dumbfile_close(df), df = nullptr;
-		if(duh)
-			unload_duh(duh), duh = nullptr;
 
 		return false;
 	}
@@ -243,33 +220,20 @@ bool SFB::Audio::MODDecoder::Open(CFErrorRef *error)
 	// Setup the channel layout
 	mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::MODDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MODDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
+	dsr.reset();
+	duh.reset();
+	df.reset();
 
-	if(dsr)
-		duh_end_sigrenderer(dsr), dsr = nullptr;
-	if(duh)
-		unload_duh(duh), duh = nullptr;
-	if(df)
-		dumbfile_close(df), df = nullptr;
-
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::MODDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::MODDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("MOD, %u channels, %u Hz"), 
@@ -277,14 +241,34 @@ CFStringRef SFB::Audio::MODDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::MODDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::MODDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
+	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "_ReadAudio() called with invalid parameters");
+		return 0;
+	}
 
+	// EOF reached
+	if(duh_sigrenderer_get_position(dsr.get()) > mTotalFrames) {
+		bufferList->mBuffers[0].mDataByteSize = 0;
+		return 0;
+	}
+
+	long framesRendered = duh_render(dsr.get(), DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, frameCount, bufferList->mBuffers[0].mData);
+
+	mCurrentFrame += framesRendered;
+
+	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRendered * mFormat.mBytesPerFrame);
+	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
+
+	return (UInt32)framesRendered;
+}
+
+SInt64 SFB::Audio::MODDecoder::_SeekToFrame(SInt64 frame)
+{
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
-		if(!Close(nullptr) || !GetInputSource().SeekToOffset(0) || !Open(nullptr)) {
+		if(!_Close(nullptr) || !mInputSource->SeekToOffset(0) || !_Open(nullptr)) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MOD", "Error reseting DUMB decoder");
 			return -1;
 		}
@@ -293,29 +277,8 @@ SInt64 SFB::Audio::MODDecoder::SeekToFrame(SInt64 frame)
 	}
 
 	long framesToSkip = frame - mCurrentFrame;
-	duh_sigrenderer_generate_samples(dsr, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, nullptr);
+	duh_sigrenderer_generate_samples(dsr.get(), 1, 65536.0f / DUMB_SAMPLE_RATE, framesToSkip, nullptr);
 	mCurrentFrame += framesToSkip;
-	
+
 	return mCurrentFrame;
-}
-
-UInt32 SFB::Audio::MODDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
-		return 0;
-
-	// EOF reached
-	if(duh_sigrenderer_get_position(dsr) > mTotalFrames) {
-		bufferList->mBuffers[0].mDataByteSize = 0;
-		return 0;
-	}
-
-	long framesRendered = duh_render(dsr, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, frameCount, bufferList->mBuffers[0].mData);
-
-	mCurrentFrame += framesRendered;
-
-	bufferList->mBuffers[0].mDataByteSize = (UInt32)(framesRendered * mFormat.mBytesPerFrame);
-	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
-
-	return (UInt32)framesRendered;
 }

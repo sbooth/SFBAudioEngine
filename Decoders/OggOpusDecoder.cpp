@@ -137,29 +137,13 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::OggOpusDecoder::CreateDecoder(InputS
 #pragma mark Creation and Destruction
 
 SFB::Audio::OggOpusDecoder::OggOpusDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mOpusFile(nullptr)
+	: Decoder(std::move(inputSource)), mOpusFile(nullptr, nullptr)
 {}
-
-SFB::Audio::OggOpusDecoder::~OggOpusDecoder()
-{
-	if(IsOpen())
-		Close();
-}
 
 #pragma mark Functionality
 
-bool SFB::Audio::OggOpusDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::OggOpusDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Open() called on a Decoder that is already open");
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
-
 	OpusFileCallbacks callbacks = {
 		.read = read_callback,
 		.seek = seek_callback,
@@ -167,9 +151,9 @@ bool SFB::Audio::OggOpusDecoder::Open(CFErrorRef *error)
 		.close = nullptr
 	};
 
-	mOpusFile = op_test_callbacks(this, &callbacks, nullptr, 0, nullptr);
+	mOpusFile = unique_op_ptr(op_test_callbacks(this, &callbacks, nullptr, 0, nullptr), op_free);
 
-	if(nullptr == mOpusFile) {
+	if(!mOpusFile) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
@@ -181,15 +165,12 @@ bool SFB::Audio::OggOpusDecoder::Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(0 != op_test_open(mOpusFile)) {
+	if(0 != op_test_open(mOpusFile.get())) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "op_test_open failed");
-
-		op_free(mOpusFile), mOpusFile = nullptr;
-
 		return false;
 	}
 
-	const OpusHead *header = op_head(mOpusFile, 0);
+	const OpusHead *header = op_head(mOpusFile.get(), 0);
 
 	// Output interleaved floating point data
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
@@ -237,28 +218,17 @@ bool SFB::Audio::OggOpusDecoder::Open(CFErrorRef *error)
 			break;
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::OggOpusDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::OggOpusDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
-	op_free(mOpusFile), mOpusFile = nullptr;
-
-	mIsOpen = false;
+	mOpusFile.reset();
 	return true;
 }
 
-CFStringRef SFB::Audio::OggOpusDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::OggOpusDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault,
 									nullptr,
 									CFSTR("Ogg Opus, %u channels, %u Hz"),
@@ -266,28 +236,19 @@ CFStringRef SFB::Audio::OggOpusDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::OggOpusDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
-	if(0 != op_pcm_seek(mOpusFile, frame))
-		return -1;
-
-	return this->GetCurrentFrame();
-}
-
-UInt32 SFB::Audio::OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	float		*buffer				= (float *)bufferList->mBuffers[0].mData;
 	UInt32		framesRemaining		= frameCount;
 	UInt32		totalFramesRead		= 0;
 
 	while(0 < framesRemaining) {
-		int framesRead = op_read_float(mOpusFile, buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
+		int framesRead = op_read_float(mOpusFile.get(), buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
 
 		if(0 > framesRead) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
@@ -308,4 +269,14 @@ UInt32 SFB::Audio::OggOpusDecoder::ReadAudio(AudioBufferList *bufferList, UInt32
 	bufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
 
 	return totalFramesRead;
+}
+
+SInt64 SFB::Audio::OggOpusDecoder::_SeekToFrame(SInt64 frame)
+{
+	if(0 != op_pcm_seek(mOpusFile.get(), frame)) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "op_pcm_seek() failed");
+		return -1;
+	}
+
+	return this->GetCurrentFrame();
 }

@@ -155,26 +155,11 @@ SFB::Audio::MPEGDecoder::MPEGDecoder(InputSource::unique_ptr inputSource)
 	: Decoder(std::move(inputSource)), mDecoder(nullptr), mCurrentFrame(0)
 {}
 
-SFB::Audio::MPEGDecoder::~MPEGDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
 #pragma mark Functionality
 
-bool SFB::Audio::MPEGDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
-	auto decoder = std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>>(mpg123_new(nullptr, nullptr), [](mpg123_handle *mh) {
+	auto decoder = unique_mpg123_ptr(mpg123_new(nullptr, nullptr), [](mpg123_handle *mh) {
 		mpg123_close(mh);
 		mpg123_delete(mh);
 	});
@@ -289,29 +274,19 @@ bool SFB::Audio::MPEGDecoder::Open(CFErrorRef *error)
 
 	mDecoder = std::move(decoder);
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::MPEGDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MPEGDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	mDecoder.reset();
 	mBufferList.Deallocate();
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::MPEGDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::MPEGDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	mpg123_frameinfo mi;
 	if(MPG123_OK != mpg123_info(mDecoder.get(), &mi)) {
 		return CFStringCreateWithFormat(kCFAllocatorDefault, 
@@ -344,27 +319,12 @@ CFStringRef SFB::Audio::MPEGDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::MPEGDecoder::GetTotalFrames() const
+UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	return mpg123_length(mDecoder.get());
-}
-
-SInt64 SFB::Audio::MPEGDecoder::SeekToFrame(SInt64 frame)
-{
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-	
-	frame = mpg123_seek(mDecoder.get(), frame, SEEK_SET);
-	if(0 <= frame)
-		mCurrentFrame = frame;
-	
-	return ((0 <= frame) ? mCurrentFrame : -1);
-}
-
-UInt32 SFB::Audio::MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	UInt32 framesRead = 0;
 
@@ -433,4 +393,18 @@ UInt32 SFB::Audio::MPEGDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 fr
 	mCurrentFrame += framesRead;
 
 	return framesRead;
+}
+
+SInt64 SFB::Audio::MPEGDecoder::_GetTotalFrames() const
+{
+	return mpg123_length(mDecoder.get());
+}
+
+SInt64 SFB::Audio::MPEGDecoder::_SeekToFrame(SInt64 frame)
+{
+	frame = mpg123_seek(mDecoder.get(), frame, SEEK_SET);
+	if(0 <= frame)
+		mCurrentFrame = frame;
+
+	return ((0 <= frame) ? mCurrentFrame : -1);
 }

@@ -33,15 +33,6 @@
 #include <tta++/libtta.h>
 #import "AudioDecoder.h"
 
-namespace {
-
-	struct TTA_io_callback_wrapper {
-		TTA_io_callback iocb;
-		SFB::Audio::Decoder *decoder;
-	};
-
-}
-
 namespace SFB {
 
 	namespace Audio {
@@ -54,8 +45,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -64,40 +54,41 @@ namespace SFB {
 
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
 			// Creation
 			TrueAudioDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
-			// Destruction
-			virtual ~TrueAudioDecoder();
+		private:
 
-			// ========================================
 			// File access
-			virtual bool Open(CFErrorRef *error = nullptr);
-			virtual bool Close(CFErrorRef *error = nullptr);
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
 
-			// ========================================
 			// The native format of the source audio
-			virtual CFStringRef CreateSourceFormatDescription() const;
+			virtual SFB::CFString _GetSourceFormatDescription() const;
 
-			// ========================================
 			// Attempt to read frameCount frames of audio, returning the actual number of frames read
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-			// ========================================
 			// Source audio information
-			inline virtual SInt64 GetTotalFrames() const			{ return mTotalFrames; }
-			inline virtual SInt64 GetCurrentFrame() const			{ return mCurrentFrame; }
+			inline virtual SInt64 _GetTotalFrames() const			{ return mTotalFrames; }
+			inline virtual SInt64 _GetCurrentFrame() const			{ return mCurrentFrame; }
 
-			// ========================================
 			// Seeking support
-			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-			virtual SInt64 SeekToFrame(SInt64 frame);
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 _SeekToFrame(SInt64 frame);
+
+		public:
+
+			struct TTA_io_callback_wrapper;
 
 		private:
-			tta::tta_decoder					*mDecoder;
-			TTA_io_callback_wrapper				*mCallbacks;
+			
+			typedef std::unique_ptr<tta::tta_decoder> unique_tta_ptr;
+			typedef std::unique_ptr<TTA_io_callback_wrapper> unique_callback_wrapper_ptr;
+
+			// Data members
+			unique_tta_ptr						mDecoder;
+			unique_callback_wrapper_ptr			mCallbacks;
 			SInt64								mCurrentFrame;
 			SInt64								mTotalFrames;
 			UInt32								mFramesToSkip;

@@ -189,41 +189,32 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::FLACDecoder::CreateDecoder(InputSour
 #pragma mark Creation and Destruction
 
 SFB::Audio::FLACDecoder::FLACDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mFLAC(nullptr), mCurrentFrame(0)
+	: Decoder(std::move(inputSource)), mFLAC(nullptr, nullptr), mCurrentFrame(0)
 {
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 }
 
-SFB::Audio::FLACDecoder::~FLACDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
 #pragma mark Functionality
 
-bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
+	SFB::CFString extension = CFURLCopyPathExtension(GetURL());
+	if(!extension)
 		return false;
 
 	// Create FLAC decoder
-	mFLAC = FLAC__stream_decoder_new();
-	if(nullptr == mFLAC) {
+	mFLAC = unique_FLAC_ptr(FLAC__stream_decoder_new(), [](FLAC__StreamDecoder *decoder){
+		if(decoder) {
+			if(!FLAC__stream_decoder_finish(decoder))
+				LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(decoder));
+
+			FLAC__stream_decoder_delete(decoder);
+		}
+	});
+
+	if(!mFLAC) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
-		return false;
-	}
-	
-	SFB::CFString extension = CFURLCopyPathExtension(GetURL());
-	if(!extension) {
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
 		return false;
 	}
 	
@@ -232,7 +223,7 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 	
 	// Attempt to create a stream decoder based on the file's extension
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
-		status = FLAC__stream_decoder_init_stream(mFLAC,
+		status = FLAC__stream_decoder_init_stream(mFLAC.get(),
 												  readCallback,
 												  seekCallback,
 												  tellCallback,
@@ -243,7 +234,7 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 												  errorCallback,
 												  this);
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
-		status = FLAC__stream_decoder_init_ogg_stream(mFLAC,
+		status = FLAC__stream_decoder_init_ogg_stream(mFLAC.get(),
 													  readCallback,
 													  seekCallback,
 													  tellCallback,
@@ -263,14 +254,12 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
-		
 		return false;
 	}
 	
 	// Process metadata
-	if(!FLAC__stream_decoder_process_until_end_of_metadata(mFLAC)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
+	if(!FLAC__stream_decoder_process_until_end_of_metadata(mFLAC.get())) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
 
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
@@ -280,11 +269,6 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
-		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-		
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
-		
 		return false;
 	}
 	
@@ -331,11 +315,6 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
 			
-			if(!FLAC__stream_decoder_finish(mFLAC))
-				LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-			
-			FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
-			
 			return false;
 		}
 	}
@@ -367,65 +346,95 @@ bool SFB::Audio::FLACDecoder::Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-		
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
-		
 		return false;
 	}
 
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::FLACDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::FLACDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
-	if(mFLAC) {
-		if(!FLAC__stream_decoder_finish(mFLAC))
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-		
-		FLAC__stream_decoder_delete(mFLAC), mFLAC = nullptr;
-	}
-
+	mFLAC.reset();
 	mBufferList.Deallocate();
-
 	memset(&mStreamInfo, 0, sizeof(mStreamInfo));
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::FLACDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::FLACDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("FLAC, %u channels, %u Hz"), 
+	return CFStringCreateWithFormat(kCFAllocatorDefault,
+									nullptr,
+									CFSTR("FLAC, %u channels, %u Hz"),
 									(unsigned int)mSourceFormat.mChannelsPerFrame,
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::FLACDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::FLACDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "_ReadAudio() called with invalid parameters");
+		return 0;
+	}
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(mFLAC, (FLAC__uint64)frame);
+	UInt32 framesRead = 0;
+
+	// Reset output buffer data size
+	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
+		bufferList->mBuffers[i].mDataByteSize = 0;
+
+	for(;;) {
+		UInt32	framesRemaining	= frameCount - framesRead;
+		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
+		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
+		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
+
+		// Copy data from the buffer to output
+		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
+			unsigned char *pullBuffer = (unsigned char *)bufferList->mBuffers[i].mData;
+			memcpy(pullBuffer + (framesToSkip * mFormat.mBytesPerFrame), mBufferList->mBuffers[i].mData, framesToCopy * mFormat.mBytesPerFrame);
+			bufferList->mBuffers[i].mDataByteSize += framesToCopy * mFormat.mBytesPerFrame;
+
+			// Move remaining data in buffer to beginning
+			if(framesToCopy != framesInBuffer) {
+				pullBuffer = (unsigned char *)mBufferList->mBuffers[i].mData;
+				memmove(pullBuffer, pullBuffer + (framesToCopy * mFormat.mBytesPerFrame), (framesInBuffer - framesToCopy) * mFormat.mBytesPerFrame);
+			}
+
+			mBufferList->mBuffers[i].mDataByteSize -= (UInt32)(framesToCopy * mFormat.mBytesPerFrame);
+		}
+
+		framesRead += framesToCopy;
+
+		// All requested frames were read
+		if(framesRead == frameCount)
+			break;
+
+		// EOS?
+		if(FLAC__STREAM_DECODER_END_OF_STREAM == FLAC__stream_decoder_get_state(mFLAC.get()))
+			break;
+
+		// Grab the next frame
+		FLAC__bool result = FLAC__stream_decoder_process_single(mFLAC.get());
+		if(!result)
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
+	}
+
+	mCurrentFrame += framesRead;
+
+	return framesRead;
+}
+
+SInt64 SFB::Audio::FLACDecoder::_SeekToFrame(SInt64 frame)
+{
+	FLAC__bool result = FLAC__stream_decoder_seek_absolute(mFLAC.get(), (FLAC__uint64)frame);
 	
 	// Attempt to re-sync the stream if necessary
-	if(FLAC__STREAM_DECODER_SEEK_ERROR == FLAC__stream_decoder_get_state(mFLAC))
-		result = FLAC__stream_decoder_flush(mFLAC);
+	if(FLAC__STREAM_DECODER_SEEK_ERROR == FLAC__stream_decoder_get_state(mFLAC.get()))
+		result = FLAC__stream_decoder_flush(mFLAC.get());
 	
 	if(result) {
 		mCurrentFrame = frame;
@@ -434,59 +443,6 @@ SInt64 SFB::Audio::FLACDecoder::SeekToFrame(SInt64 frame)
 	}
 	
 	return (result ? frame : -1);
-}
-
-UInt32 SFB::Audio::FLACDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
-		return 0;
-
-	UInt32 framesRead = 0;
-	
-	// Reset output buffer data size
-	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
-		bufferList->mBuffers[i].mDataByteSize = 0;
-	
-	for(;;) {
-		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
-		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / mFormat.mBytesPerFrame);
-		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
-		
-		// Copy data from the buffer to output
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			unsigned char *pullBuffer = (unsigned char *)bufferList->mBuffers[i].mData;
-			memcpy(pullBuffer + (framesToSkip * mFormat.mBytesPerFrame), mBufferList->mBuffers[i].mData, framesToCopy * mFormat.mBytesPerFrame);
-			bufferList->mBuffers[i].mDataByteSize += framesToCopy * mFormat.mBytesPerFrame;
-			
-			// Move remaining data in buffer to beginning
-			if(framesToCopy != framesInBuffer) {
-				pullBuffer = (unsigned char *)mBufferList->mBuffers[i].mData;
-				memmove(pullBuffer, pullBuffer + (framesToCopy * mFormat.mBytesPerFrame), (framesInBuffer - framesToCopy) * mFormat.mBytesPerFrame);
-			}
-			
-			mBufferList->mBuffers[i].mDataByteSize -= (UInt32)(framesToCopy * mFormat.mBytesPerFrame);
-		}
-		
-		framesRead += framesToCopy;
-		
-		// All requested frames were read
-		if(framesRead == frameCount)
-			break;
-		
-		// EOS?
-		if(FLAC__STREAM_DECODER_END_OF_STREAM == FLAC__stream_decoder_get_state(mFLAC))
-			break;
-		
-		// Grab the next frame
-		FLAC__bool result = FLAC__stream_decoder_process_single(mFLAC);
-		if(!result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC));
-	}
-	
-	mCurrentFrame += framesRead;
-	
-	return framesRead;
 }
 
 #pragma mark Callbacks

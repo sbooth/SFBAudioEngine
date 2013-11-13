@@ -181,30 +181,15 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::WavPackDecoder::CreateDecoder(InputS
 #pragma mark Creation and Destruction
 
 SFB::Audio::WavPackDecoder::WavPackDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mWPC(nullptr), mTotalFrames(0), mCurrentFrame(0)
+	: Decoder(std::move(inputSource)), mWPC(nullptr, nullptr), mTotalFrames(0), mCurrentFrame(0)
 {
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 }
 
-SFB::Audio::WavPackDecoder::~WavPackDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
 #pragma mark Functionality
 
-bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	mStreamReader.read_bytes = read_bytes_callback;
 	mStreamReader.get_pos = get_pos_callback;
 	mStreamReader.set_pos_abs = set_pos_abs_callback;
@@ -216,8 +201,8 @@ bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 	char errorBuf [80];
 	
 	// Setup converter
-	mWPC = WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0);
-	if(nullptr == mWPC) {
+	mWPC = unique_WavpackContext_ptr(WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0), WavpackCloseFile);
+	if(!mWPC) {
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), "");
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a WavPack file"), "");
@@ -230,14 +215,14 @@ bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 	}
 	
 	// Floating-point and lossy files will be handed off in the canonical Core Audio format
-	int mode = WavpackGetMode(mWPC);
+	int mode = WavpackGetMode(mWPC.get());
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
 		// Canonical Core Audio format
 		mFormat.mFormatID			= kAudioFormatLinearPCM;
 		mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
 		
-		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC);
+		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC.get());
+		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC.get());
 		mFormat.mBitsPerChannel		= 8 * sizeof(float);
 		
 		mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
@@ -251,11 +236,11 @@ bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
 		// Don't set kAudioFormatFlagIsAlignedHigh for 32-bit integer files
-		mFormat.mFormatFlags		|= (32 == WavpackGetBitsPerSample(mWPC) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh);
+		mFormat.mFormatFlags		|= (32 == WavpackGetBitsPerSample(mWPC.get()) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh);
 
-		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC);
-		mFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC);
+		mFormat.mSampleRate			= WavpackGetSampleRate(mWPC.get());
+		mFormat.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(mWPC.get());
+		mFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC.get());
 		
 		mFormat.mBytesPerPacket		= sizeof(int32_t);
 		mFormat.mFramesPerPacket	= 1;
@@ -264,14 +249,14 @@ bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 		mFormat.mReserved			= 0;
 	}
 	
-	mTotalFrames						= WavpackGetNumSamples(mWPC);
+	mTotalFrames						= WavpackGetNumSamples(mWPC.get());
 	
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'WVPK';
 	
-	mSourceFormat.mSampleRate			= WavpackGetSampleRate(mWPC);
-	mSourceFormat.mChannelsPerFrame		= (UInt32)WavpackGetNumChannels(mWPC);
-	mSourceFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC);
+	mSourceFormat.mSampleRate			= WavpackGetSampleRate(mWPC.get());
+	mSourceFormat.mChannelsPerFrame		= (UInt32)WavpackGetNumChannels(mWPC.get());
+	mSourceFormat.mBitsPerChannel		= (UInt32)WavpackGetBitsPerSample(mWPC.get());
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
@@ -280,66 +265,42 @@ bool SFB::Audio::WavPackDecoder::Open(CFErrorRef *error)
 		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
-	mBuffer = (int32_t *)calloc(BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame, sizeof(int32_t));
-
-	if(nullptr == mBuffer) {
+	mBuffer = std::unique_ptr<int32_t []>(new int32_t [BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame]);
+	if(!mBuffer) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 		
 		return false;		
 	}
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::WavPackDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::WavPackDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	memset(&mStreamReader, 0, sizeof(mStreamReader));
 
-	if(mWPC)
-		WavpackCloseFile(mWPC), mWPC = nullptr;
-	
-	if(mBuffer)
-		free(mBuffer), mBuffer = nullptr;
+	mBuffer.reset();
+	mWPC.reset();
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::WavPackDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::WavPackDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-	
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
+	return CFStringCreateWithFormat(kCFAllocatorDefault,
 									nullptr, 
 									CFSTR("WavPack, %u channels, %u Hz"), 
 									(unsigned int)mSourceFormat.mChannelsPerFrame, 
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::WavPackDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::WavPackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-	
-	int result = WavpackSeekSample(mWPC, (uint32_t)frame);
-	if(result)
-		mCurrentFrame = frame;
-	
-	return (result ? mCurrentFrame : -1);
-}
-
-UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
@@ -352,17 +313,17 @@ UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32
 		UInt32 framesToRead = std::min(framesRemaining, (UInt32)BUFFER_SIZE_FRAMES);
 		
 		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
-		uint32_t samplesRead = WavpackUnpackSamples(mWPC, mBuffer, framesToRead);
+		uint32_t samplesRead = WavpackUnpackSamples(mWPC.get(), mBuffer.get(), framesToRead);
 		
 		if(0 == samplesRead)
 			break;
 		
 		// The samples returned are handled differently based on the file's mode
-		int mode = WavpackGetMode(mWPC);
+		int mode = WavpackGetMode(mWPC.get());
 		
 		// Floating point files require no special handling other than deinterleaving
 		if(MODE_FLOAT & mode) {
-			float *inputBuffer = (float *)mBuffer;
+			float *inputBuffer = (float *)mBuffer.get();
 			
 			// Deinterleave the samples
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
@@ -378,7 +339,7 @@ UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32
 		// Lossless files will be handed off as integers
 		else if(MODE_LOSSLESS & mode) {
 			// WavPack hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
-			UInt32 shift = (UInt32)(8 * (sizeof(int32_t) - (size_t)WavpackGetBytesPerSample(mWPC)));
+			UInt32 shift = (UInt32)(8 * (sizeof(int32_t) - (size_t)WavpackGetBytesPerSample(mWPC.get())));
 			
 			// Deinterleave the 32-bit samples and shift to high-alignment
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
@@ -393,7 +354,7 @@ UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32
 		}
 		// Convert lossy files to float
 		else {
-			float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC) * 8) - 1));
+			float scaleFactor = (1 << ((WavpackGetBytesPerSample(mWPC.get()) * 8) - 1));
 			
 			// Deinterleave the 32-bit samples and convert to float
 			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
@@ -414,4 +375,13 @@ UInt32 SFB::Audio::WavPackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32
 	mCurrentFrame += totalFramesRead;
 	
 	return totalFramesRead;
+}
+
+SInt64 SFB::Audio::WavPackDecoder::_SeekToFrame(SInt64 frame)
+{
+	int result = WavpackSeekSample(mWPC.get(), (uint32_t)frame);
+	if(result)
+		mCurrentFrame = frame;
+
+	return (result ? mCurrentFrame : -1);
 }

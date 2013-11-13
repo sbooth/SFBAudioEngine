@@ -151,17 +151,8 @@ SFB::Audio::MusepackDecoder::~MusepackDecoder()
 #pragma mark Functionality
 
 
-bool SFB::Audio::MusepackDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Open() called on a Decoder that is already open");		
-		return true;
-	}
-
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mInputSource->GetURL(), FALSE, buf, PATH_MAX))
 		return false;
@@ -237,32 +228,22 @@ bool SFB::Audio::MusepackDecoder::Open(CFErrorRef *error)
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
-	mIsOpen = true;
 	return true;
 }
 
-bool SFB::Audio::MusepackDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::MusepackDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Close() called on a Decoder that hasn't been opened");
-		return true;
-	}
-
 	if(mDemux)
 		mpc_demux_exit(mDemux), mDemux = nullptr;
 	
     mpc_reader_exit_stdio(&mReader);
 	mBufferList.Deallocate();
 
-	mIsOpen = false;
 	return true;
 }
 
-CFStringRef SFB::Audio::MusepackDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::MusepackDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
-
 	return CFStringCreateWithFormat(kCFAllocatorDefault, 
 									nullptr, 
 									CFSTR("Musepack, %u channels, %u Hz"), 
@@ -270,22 +251,12 @@ CFStringRef SFB::Audio::MusepackDecoder::CreateSourceFormatDescription() const
 									(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 SFB::Audio::MusepackDecoder::SeekToFrame(SInt64 frame)
+UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
-	mpc_status result = mpc_demux_seek_sample(mDemux, (mpc_uint64_t)frame);
-	if(MPC_STATUS_OK == result)
-		mCurrentFrame = frame;
-	
-	return ((MPC_STATUS_OK == result) ? mCurrentFrame : -1);
-}
-
-UInt32 SFB::Audio::MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 == frameCount)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "_ReadAudio() called with invalid parameters");
 		return 0;
+	}
 
 	MPC_SAMPLE_FORMAT	buffer			[MPC_DECODER_BUFFER_LENGTH];
 	UInt32				framesRead		= 0;
@@ -362,4 +333,13 @@ UInt32 SFB::Audio::MusepackDecoder::ReadAudio(AudioBufferList *bufferList, UInt3
 	mCurrentFrame += framesRead;
 	
 	return framesRead;
+}
+
+SInt64 SFB::Audio::MusepackDecoder::_SeekToFrame(SInt64 frame)
+{
+	mpc_status result = mpc_demux_seek_sample(mDemux, (mpc_uint64_t)frame);
+	if(MPC_STATUS_OK == result)
+		mCurrentFrame = frame;
+
+	return ((MPC_STATUS_OK == result) ? mCurrentFrame : -1);
 }

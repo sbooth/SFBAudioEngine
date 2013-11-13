@@ -45,8 +45,7 @@ namespace SFB {
 
 		public:
 
-			// ========================================
-			// The data types handled by this class
+			// Data types handled by this class
 			static CFArrayRef CreateSupportedFileExtensions();
 			static CFArrayRef CreateSupportedMIMETypes();
 
@@ -55,40 +54,33 @@ namespace SFB {
 
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
 			// Creation
 			OggOpusDecoder(InputSource::unique_ptr inputSource);
 
-			// ========================================
-			// Destruction
-			virtual ~OggOpusDecoder();
-
-			// ========================================
-			// Audio access
-			virtual bool Open(CFErrorRef *error = nullptr);
-			virtual bool Close(CFErrorRef *error = nullptr);
-
-			// ========================================
-			// The native format of the source audio
-			virtual CFStringRef CreateSourceFormatDescription() const;
-
-			// ========================================
-			// Attempt to read frameCount frames of audio, returning the actual number of frames read
-			virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
-
-			// ========================================
-			// Source audio information
-			inline virtual SInt64 GetTotalFrames() const			{ return op_pcm_total(mOpusFile, -1); }
-			inline virtual SInt64 GetCurrentFrame() const			{ return op_pcm_tell(mOpusFile); }
-
-			// ========================================
-			// Seeking support
-			inline virtual bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-			virtual SInt64 SeekToFrame(SInt64 frame);
-			
 		private:
-			
-			OggOpusFile			*mOpusFile;
+
+			// Audio access
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
+
+			// The native format of the source audio
+			virtual SFB::CFString _GetSourceFormatDescription() const;
+
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			// Source audio information
+			inline virtual SInt64 _GetTotalFrames() const			{ return op_pcm_total(mOpusFile.get(), -1); }
+			inline virtual SInt64 _GetCurrentFrame() const			{ return op_pcm_tell(mOpusFile.get()); }
+
+			// Seeking support
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 _SeekToFrame(SInt64 frame);
+
+			typedef std::unique_ptr<OggOpusFile, std::function<void(OggOpusFile *)>> unique_op_ptr;
+
+			// Data members
+			unique_op_ptr		mOpusFile;
 		};
 		
 	}
