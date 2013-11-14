@@ -90,7 +90,7 @@ namespace SFB {
 			 */
 			ChannelLayout(UInt32 numberChannelDescriptions);
 
-			/*! @brief Create a new \c ChannelLayout */
+			/*! @brief Create a new \c ChannelLayout by performing a deep copy of \c channelLayout */
 			ChannelLayout(const AudioChannelLayout *channelLayout);
 
 			/*! @cond */
@@ -101,13 +101,13 @@ namespace SFB {
 			/*! @internal Move assignment operator */
 			ChannelLayout& operator=(ChannelLayout&& rhs);
 
-			/*! @internal This class is non-copyable */
+			/*! @internal Copy constructor */
 			ChannelLayout(const ChannelLayout& rhs);
 
-			/*! @internal This class is non-assignable */
+			/*! @internal Assignment operator */
 			ChannelLayout& operator=(const ChannelLayout& rhs);
 
-			/*! @brief Makes a copy of rhs */
+			/*! @brief Makes a deep copy of rhs */
 			ChannelLayout& operator=(const AudioChannelLayout *rhs);
 
 			/*! @endcond */
@@ -118,11 +118,9 @@ namespace SFB {
 			/*! @name AudioChannelLayout access */
 			//@{
 
-			/*! @brief Retrieve a pointer to this object's internal \c AudioChannelLayout */
-//			inline AudioChannelLayout * GetACL()					{ return mChannelLayout.get(); }
-
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
 			inline const AudioChannelLayout * GetACL() const		{ return mChannelLayout.get(); }
+
 
 			/*! @brief Query whether this \c ChannelLayout is empty */
 			inline explicit operator bool() const					{ return (bool)mChannelLayout; }
@@ -130,17 +128,13 @@ namespace SFB {
 			/*! @brief Query whether this \c ChannelLayout is not empty */
 			inline bool operator!() const							{ return !mChannelLayout; }
 
-			/*! @brief Retrieve a pointer to this object's internal \c AudioChannelLayout */
-//			inline AudioChannelLayout * operator->()				{ return mChannelLayout.get(); }
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
 			inline const AudioChannelLayout * operator->() const	{ return mChannelLayout.get(); }
 
-			/*! @brief Retrieve a pointer to this object's internal \c AudioChannelLayout */
-//			inline operator AudioChannelLayout *()					{ return mChannelLayout.get(); }
-
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
 			inline operator const AudioChannelLayout *() const		{ return mChannelLayout.get(); }
+
 
 			/*! @brief Compare two \c ChannelLayout objects for equality*/
 			bool operator==(const ChannelLayout& rhs) const;
