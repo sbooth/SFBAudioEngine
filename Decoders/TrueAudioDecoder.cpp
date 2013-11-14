@@ -30,7 +30,6 @@
 
 #include "TrueAudioDecoder.h"
 #include "CFWrapper.h"
-#include "CreateChannelLayout.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
@@ -201,9 +200,9 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 
 	// Setup the channel layout
 	switch(streamInfo.nch) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 
 	mTotalFrames = streamInfo.samples;

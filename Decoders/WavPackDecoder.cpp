@@ -31,7 +31,6 @@
 #include <AudioToolbox/AudioFormat.h>
 
 #include "WavPackDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -260,9 +259,9 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(mFormat.mChannelsPerFrame) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 	
 	mBuffer = std::unique_ptr<int32_t []>(new int32_t [BUFFER_SIZE_FRAMES * mFormat.mChannelsPerFrame]);

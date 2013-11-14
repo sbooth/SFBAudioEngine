@@ -317,9 +317,9 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 //	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
 	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, nullptr);
 	if(noErr == result) {
-		mChannelLayout = (AudioChannelLayout *)malloc(dataSize);
+		auto channelLayout = (AudioChannelLayout *)malloc(dataSize);
 //		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
-		result = AudioFileGetProperty(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, mChannelLayout);
+		result = AudioFileGetProperty(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, channelLayout);
 
 		if(noErr != result) {
 //			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
@@ -338,6 +338,10 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 			
 			return false;
 		}
+
+		mChannelLayout = channelLayout;
+
+		free(channelLayout);
 	}
 	else
 //		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: " << result);

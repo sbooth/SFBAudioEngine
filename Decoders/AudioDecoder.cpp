@@ -265,25 +265,19 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegi
 #pragma mark Creation and Destruction
 
 SFB::Audio::Decoder::Decoder()
-	: mInputSource(nullptr), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
+	: mInputSource(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
-	: mInputSource(std::move(inputSource)), mChannelLayout(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
+	: mInputSource(std::move(inputSource)), mIsOpen(false), mRepresentedObject(nullptr)
 {
 	assert(nullptr != mInputSource);
 
 	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
-}
-
-SFB::Audio::Decoder::~Decoder()
-{
-	if(mChannelLayout)
-		free(mChannelLayout), mChannelLayout = nullptr;
 }
 
 #pragma mark Base Functionality
@@ -365,8 +359,8 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 	CFStringRef		channelLayoutDescription	= nullptr;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);
 	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
-																		 sizeof(mChannelLayout), 
-																		 mChannelLayout, 
+																		 sizeof(mChannelLayout.GetACL()),
+																		 mChannelLayout.GetACL(),
 																		 &specifierSize, 
 																		 &channelLayoutDescription);
 

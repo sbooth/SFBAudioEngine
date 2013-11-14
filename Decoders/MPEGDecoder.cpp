@@ -37,7 +37,6 @@
 #include <Accelerate/Accelerate.h>
 
 #include "MPEGDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -245,8 +244,8 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 	
 	// Setup the channel layout
 	switch(channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
 
 	if(MPG123_OK != mpg123_scan(decoder.get())) {

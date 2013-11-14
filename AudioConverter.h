@@ -57,7 +57,7 @@ namespace SFB {
 			 * @param format The desired output format
 			 * @param channelLayout The desired output channel layout or \c nullptr if not specified
 			 */
-			Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout = nullptr);
+			Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, ChannelLayout channelLayout = nullptr);
 
 			/*! @brief Destroy this \c Converter */
 			~Converter();
@@ -105,7 +105,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the \c Decoder feeding this converter */
-			inline Decoder * GetDecoder() const							{ return mDecoder.get(); }
+			inline const Decoder& GetDecoder() const					{ return *mDecoder; }
 
 			//@}
 
@@ -126,7 +126,7 @@ namespace SFB {
 
 
 			/*! @brief Get the layout of the converter's audio channels, or \c nullptr if not specified */
-			inline AudioChannelLayout * GetChannelLayout() const		{ return mChannelLayout; }
+			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
 			/*!
 			 * @brief Create a description of the layout of the converter's audio channels
@@ -160,7 +160,7 @@ namespace SFB {
 
 		private:
 			AudioStreamBasicDescription			mFormat;			/*!< The format produced by this converter */
-			AudioChannelLayout					*mChannelLayout;	/*!< The channel layout of the audio produced by this converter */
+			ChannelLayout						mChannelLayout;		/*!< The channel layout of the audio produced by this converter */
 			Decoder::unique_ptr					mDecoder;			/*!< The Decoder providing the audio */
 			AudioConverterRef					mConverter;			/*!< The actual object performing the conversion */
 			std::unique_ptr<ConverterStateData>	mConverterState;	/*!< Internal conversion state */

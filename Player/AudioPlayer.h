@@ -42,6 +42,7 @@
 
 #include "AudioDecoder.h"
 #include "RingBuffer.h"
+#include "AudioChannelLayout.h"
 #include "Semaphore.h"
 
 /*! @file AudioPlayer.h @brief Core playback functionality */
@@ -729,7 +730,7 @@ namespace SFB {
 
 			bool SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
 
-			bool SetOutputUnitChannelMap(AudioChannelLayout *channelLayout);
+			bool SetOutputUnitChannelMap(const ChannelLayout& channelLayout);
 
 			// ========================================
 			// Other Utilities
@@ -749,7 +750,7 @@ namespace SFB {
 
 			RingBuffer::unique_ptr					mRingBuffer;
 			AudioStreamBasicDescription				mRingBufferFormat;
-			AudioChannelLayout						*mRingBufferChannelLayout;
+			ChannelLayout							mRingBufferChannelLayout;
 			std::atomic_uint						mRingBufferCapacity;
 			std::atomic_uint						mRingBufferWriteChunkSize;
 

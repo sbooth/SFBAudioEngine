@@ -31,7 +31,6 @@
 #include <AudioToolbox/AudioFormat.h>
 
 #include "MonkeysAudioDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
@@ -241,9 +240,9 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
 	
 	switch(mFormat.mChannelsPerFrame) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 4:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
 	}
 
 	return true;

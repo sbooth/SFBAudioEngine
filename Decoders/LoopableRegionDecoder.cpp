@@ -32,7 +32,6 @@
 
 #include "LoopableRegionDecoder.h"
 #include "AudioDecoder.h"
-#include "CreateChannelLayout.h"
 #include "Logger.h"
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame)
@@ -187,7 +186,7 @@ bool SFB::Audio::LoopableRegionDecoder::SetupDecoder(bool forceReset)
 	assert(mDecoder->IsOpen());
 
 	mFormat			= mDecoder->GetFormat();
-	mChannelLayout	= CopyChannelLayout(mDecoder->GetChannelLayout());
+	mChannelLayout	= mDecoder->GetChannelLayout();
 	mSourceFormat	= mDecoder->GetSourceFormat();
 	
 	if(0 == mFrameCount)

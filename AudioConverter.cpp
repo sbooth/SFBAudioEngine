@@ -32,7 +32,6 @@
 
 #include "AudioConverter.h"
 #include "AudioBufferList.h"
-#include "CreateChannelLayout.h"
 #include "Logger.h"
 #include "CFWrapper.h"
 #include "CreateStringForOSType.h"
@@ -94,19 +93,14 @@ namespace {
 	}
 }
 
-SFB::Audio::Converter::Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, AudioChannelLayout *channelLayout)
-	: mDecoder(std::move(decoder)), mFormat(format), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
-{
-	mChannelLayout = CopyChannelLayout(channelLayout);
-}
+SFB::Audio::Converter::Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, ChannelLayout channelLayout)
+	: mDecoder(std::move(decoder)), mFormat(format), mChannelLayout(std::move(channelLayout)), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
+{}
 
 SFB::Audio::Converter::~Converter()
 {
 	if(IsOpen())
 		Close();
-
-	if(mChannelLayout)
-		free(mChannelLayout), mChannelLayout = nullptr;
 }
 
 bool SFB::Audio::Converter::Open(CFErrorRef *error)
@@ -143,7 +137,7 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 		SInt32 channelMap [ mFormat.mChannelsPerFrame ];
 		UInt32 dataSize = (UInt32)sizeof(channelMap);
 
-		AudioChannelLayout *channelLayouts [] = {
+		const AudioChannelLayout *channelLayouts [] = {
 			mDecoder->GetChannelLayout(),
 			mChannelLayout
 		};

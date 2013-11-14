@@ -29,7 +29,6 @@
  */
 
 #include "MODDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -218,7 +217,7 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= DUMB_CHANNELS;
 	
 	// Setup the channel layout
-	mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
+	mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 
 	return true;
 }

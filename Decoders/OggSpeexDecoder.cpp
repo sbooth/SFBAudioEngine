@@ -36,7 +36,6 @@
 #include <speex/speex_callbacks.h>
 
 #include "OggSpeexDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -303,8 +302,8 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
 	
 	switch(header->nb_channels) {
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
 	
 	speex_header_free(header), header = nullptr;

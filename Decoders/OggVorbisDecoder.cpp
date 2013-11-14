@@ -31,7 +31,6 @@
 #include <AudioToolbox/AudioFormat.h>
 
 #include "OggVorbisDecoder.h"
-#include "CreateChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -215,22 +214,22 @@ bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 			// Default channel layouts from Vorbis I specification section 4.3.9
 			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
 
-		case 1:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
-		case 2:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);			break;
-		case 3:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
-		case 4:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
-		case 5:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);		break;
-		case 6:		mChannelLayout = CreateChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);		break;
+		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
+		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
+		case 3:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_AC3_3_0);		break;
+		case 4:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Quadraphonic);	break;
+		case 5:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_C);	break;
+		case 6:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_C);	break;
 
 		case 7:
-			mChannelLayout = CreateChannelLayoutWithChannelLabels({
+			mChannelLayout = ChannelLayout::ChannelLayoutWithChannelLabels({
 				kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
 				kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_CenterSurround,
 				kAudioChannelLabel_LFEScreen});
 			break;
 
 		case 8:
-			mChannelLayout = CreateChannelLayoutWithChannelLabels({
+			mChannelLayout = ChannelLayout::ChannelLayoutWithChannelLabels({
 				kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
 				kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
 				kAudioChannelLabel_LFEScreen});

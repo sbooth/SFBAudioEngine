@@ -38,6 +38,7 @@
 #include <algorithm>
 
 #include "InputSource.h"
+#include "AudioChannelLayout.h"
 
 /*! @file AudioDecoder.h @brief Support for decoding audio to PCM */
 
@@ -261,7 +262,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Destroy this \c Decoder */
-			virtual ~Decoder();
+			virtual ~Decoder() = default;
 
 			/*! @cond */
 
@@ -358,7 +359,7 @@ namespace SFB {
 
 
 			/*! @brief Get the layout of the decoder's audio channels, or \c nullptr if not specified */
-			inline AudioChannelLayout * GetChannelLayout() const		{ return mChannelLayout; }
+			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
 			/*!
 			 * @brief Create a description of the layout of the decoder's audio channels
@@ -404,7 +405,7 @@ namespace SFB {
 			InputSource::unique_ptr			mInputSource;		/*!< @brief The input source feeding this decoder */
 
 			AudioStreamBasicDescription		mFormat;			/*!< @brief The type of PCM data provided by this decoder */
-			AudioChannelLayout				*mChannelLayout;	/*!< @brief The channel layout for the PCM data, or \c nullptr if unknown or unspecified */
+			ChannelLayout					mChannelLayout;		/*!< @brief The channel layout for the PCM data, or \c nullptr if unknown or unspecified */
 
 			AudioStreamBasicDescription		mSourceFormat;		/*!< @brief The native format of the source file */
 

@@ -40,7 +40,6 @@
 
 #include "AudioPlayer.h"
 #include "AudioBufferList.h"
-#include "CreateChannelLayout.h"
 #include "Logger.h"
 
 // ========================================
@@ -238,7 +237,7 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer()), mRingBufferChannelLayout(nullptr), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
+	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0), mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer()), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFramesRenderedLastPass(0), mFormatMismatchBlock(nullptr)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -343,10 +342,6 @@ SFB::Audio::Player::~Player()
 		if(nullptr != mActiveDecoders[bufferIndex])
 			delete mActiveDecoders[bufferIndex].exchange(nullptr, std::memory_order_relaxed);
 	}
-
-	// Clean up the ring buffer and associated resources
-	if(mRingBufferChannelLayout)
-		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
 
 	// Free the block callbacks
 	if(mDecoderEventBlocks[0])
@@ -1918,7 +1913,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		// Ensure the decoder's format is compatible with the ring buffer
 		if(decoderState) {
 			AudioStreamBasicDescription		nextFormat			= decoderState->mDecoder->GetFormat();
-			AudioChannelLayout				*nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
+			const ChannelLayout&			nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
 
 			// The two files can be joined seamlessly only if they have the same sample rates and channel counts
 			bool formatsMatch = true;
@@ -1933,26 +1928,10 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			}
 
 			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output AU will remain valid)
-			if(nextChannelLayout && mRingBufferChannelLayout) {
-				AudioChannelLayout *layouts [] = {
-					nextChannelLayout,
-					mRingBufferChannelLayout
-				};
-
-				UInt32 layoutsEqual = false;
-				UInt32 propertySize = sizeof(layoutsEqual);
-				OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &layoutsEqual);
-
-				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
-
-				if(!layoutsEqual) {
-					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
-					formatsMatch = false;
-				}
-			}
-			else if((nullptr == nextChannelLayout || nullptr == mRingBufferChannelLayout) && nextChannelLayout != mRingBufferChannelLayout)
+			if(nextChannelLayout != mRingBufferChannelLayout) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 				formatsMatch = false;
+			}
 
 			// If the formats don't match, the decoder can't be used with the current ring buffer format
 			if(!formatsMatch) {
@@ -2996,7 +2975,7 @@ bool SFB::Audio::Player::SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleR
 	return true;
 }
 
-bool SFB::Audio::Player::SetOutputUnitChannelMap(AudioChannelLayout *channelLayout)
+bool SFB::Audio::Player::SetOutputUnitChannelMap(const ChannelLayout& channelLayout)
 {
 #if !TARGET_OS_IPHONE
 	AudioUnit outputUnit = nullptr;
@@ -3016,24 +2995,8 @@ bool SFB::Audio::Player::SetOutputUnitChannelMap(AudioChannelLayout *channelLayo
 	if(nullptr == channelLayout)
 		return true;
 
-	AudioChannelLayout stereoChannelLayout = {
-		.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo
-	};
-
-	AudioChannelLayout *layouts [] = {
-		channelLayout,
-		&stereoChannelLayout
-	};
-
-	UInt32 channelLayoutIsStereo = false;
-	UInt32 propertySize = sizeof(channelLayoutIsStereo);
-	result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &channelLayoutIsStereo);
-
-	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
-
 	// Stereo
-	if(channelLayoutIsStereo) {
+	if(channelLayout == ChannelLayout::Stereo) {
 		UInt32 preferredChannelsForStereo [2];
 		UInt32 preferredChannelsForStereoSize = sizeof(preferredChannelsForStereo);
 		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelsForStereo, kAudioUnitScope_Output, 0, preferredChannelsForStereo, &preferredChannelsForStereoSize);
@@ -3044,7 +3007,7 @@ bool SFB::Audio::Player::SetOutputUnitChannelMap(AudioChannelLayout *channelLayo
 
 		// Build a channel map using the preferred stereo channels
 		AudioStreamBasicDescription outputFormat;
-		propertySize = sizeof(outputFormat);
+		UInt32 propertySize = sizeof(outputFormat);
 		result = AudioUnitGetProperty(outputUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &outputFormat, &propertySize);
 		if(noErr != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output) failed: " << result);
@@ -3109,7 +3072,7 @@ bool SFB::Audio::Player::SetOutputUnitChannelMap(AudioChannelLayout *channelLayo
 		SInt32 channelMap [ channelCount ];
 		dataSize = (UInt32)sizeof(channelMap);
 
-		AudioChannelLayout *channelLayouts [] = {
+		const AudioChannelLayout *channelLayouts [] = {
 			channelLayout,
 			devicePreferredChannelLayout
 		};
@@ -3231,15 +3194,12 @@ bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder& decoder)
 		return false;
 
 	// Attempt to set the output audio unit's channel map
-	AudioChannelLayout *channelLayout = decoder.GetChannelLayout();
+	const ChannelLayout& channelLayout = decoder.GetChannelLayout();
 	if(!SetOutputUnitChannelMap(channelLayout))
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to set output unit channel map");
 
 	// The decoder's channel layout becomes the ring buffer's channel layout
-	if(mRingBufferChannelLayout)
-		free(mRingBufferChannelLayout), mRingBufferChannelLayout = nullptr;
-
-	mRingBufferChannelLayout = CopyChannelLayout(channelLayout);
+	mRingBufferChannelLayout = channelLayout;
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {
