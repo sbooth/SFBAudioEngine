@@ -48,6 +48,12 @@ namespace SFB {
 		{
 		public:
 
+			/*! @brief Mono layout */
+			static const ChannelLayout Mono;
+
+			/*! @brief Stereo layout */
+			static const ChannelLayout Stereo;
+
 			// ========================================
 			/*! @name Factory Methods */
 			//@{
