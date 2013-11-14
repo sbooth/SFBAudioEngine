@@ -1,0 +1,180 @@
+/*
+ *  Copyright (C) 2013 Stephen F. Booth <me@sbooth.org>
+ *  All Rights Reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are
+ *  met:
+ *
+ *    - Redistributions of source code must retain the above copyright
+ *      notice, this list of conditions and the following disclaimer.
+ *    - Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *    - Neither the name of Stephen F. Booth nor the names of its
+ *      contributors may be used to endorse or promote products derived
+ *      from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <cstdlib>
+#include <stdexcept>
+#include <functional>
+
+#include "AudioChannelLayout.h"
+
+namespace {
+
+	/*! @brief Get the size in bytes of an \c AudioChannelLayout with the specified number of channel descriptions */
+	size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
+	{
+		return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));
+	}
+
+	/*!
+	 * @brief Allocate an \c AudioChannelLayout
+	 * @param numberChannelDescriptions The number of channel descriptions that will be stored in the channel layout
+	 * @return An \c AudioChannelLayout
+	 * @throws std::bad_alloc
+	 */
+	AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions)
+	{
+		size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
+		if(nullptr == channelLayout)
+			throw std::bad_alloc();
+
+		memset(channelLayout, 0, layoutSize);
+
+		return channelLayout;
+	}
+
+	/*! @brief Create a copy of \c rhs */
+	AudioChannelLayout * CopyChannelLayout(const AudioChannelLayout *rhs)
+	{
+		if(nullptr == rhs)
+			return nullptr;
+
+		size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
+		if(nullptr == channelLayout)
+			throw std::bad_alloc();
+
+		memcpy(channelLayout, rhs, layoutSize);
+
+		return channelLayout;
+	}
+
+}
+
+SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
+{
+	auto channelLayout = ChannelLayout((UInt32)0);
+	channelLayout.mChannelLayout->mChannelLayoutTag = layoutTag;
+	return channelLayout;
+}
+
+SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithChannelLabels(std::vector<AudioChannelLabel> channelLabels)
+{
+	auto channelLayout = ChannelLayout((UInt32)channelLabels.size());
+
+	channelLayout.mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+	channelLayout.mChannelLayout->mChannelBitmap = 0;
+
+	channelLayout.mChannelLayout->mNumberChannelDescriptions = (UInt32)channelLabels.size();
+
+	for(std::vector<AudioChannelLabel>::size_type i = 0; i != channelLabels.size(); ++i)
+		channelLayout.mChannelLayout->mChannelDescriptions[i].mChannelLabel = channelLabels[i];
+
+	return channelLayout;
+}
+
+SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithBitmap(UInt32 channelBitmap)
+{
+	auto channelLayout = ChannelLayout((UInt32)0);
+	channelLayout.mChannelLayout->mChannelBitmap = channelBitmap;
+	return channelLayout;
+}
+
+SFB::Audio::ChannelLayout::ChannelLayout()
+	: mChannelLayout(nullptr, nullptr)
+{}
+
+SFB::Audio::ChannelLayout::ChannelLayout(UInt32 numberChannelDescriptions)
+	: mChannelLayout(CreateChannelLayout(numberChannelDescriptions), ::free)
+{}
+
+SFB::Audio::ChannelLayout::ChannelLayout(const AudioChannelLayout *channelLayout)
+	: mChannelLayout(CopyChannelLayout(channelLayout), ::free)
+{}
+
+SFB::Audio::ChannelLayout::ChannelLayout(ChannelLayout&& rhs)
+	: mChannelLayout(std::move(rhs.mChannelLayout))
+{}
+
+SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(ChannelLayout&& rhs)
+{
+	if(this != &rhs)
+		mChannelLayout = std::move(rhs.mChannelLayout);
+	return *this;
+}
+
+SFB::Audio::ChannelLayout::ChannelLayout(const ChannelLayout& rhs)
+	: ChannelLayout()
+{
+	*this = rhs;
+}
+
+SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const ChannelLayout& rhs)
+{
+	if(this != &rhs) {
+		if(!rhs)
+			mChannelLayout.reset();
+		else
+			mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs.mChannelLayout.get()), ::free);
+	}
+
+	return *this;
+}
+
+SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const AudioChannelLayout *rhs)
+{
+	if(nullptr == rhs)
+		mChannelLayout.reset();
+	else
+		mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs), ::free);
+
+	return *this;
+}
+
+bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
+{
+	if(!mChannelLayout || !rhs.mChannelLayout)
+		return false;
+
+	const AudioChannelLayout *layouts [] = {
+		rhs.GetACL(),
+		GetACL()
+	};
+
+	UInt32 layoutsEqual = false;
+	UInt32 propertySize = sizeof(layoutsEqual);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_AreChannelLayoutsEquivalent, sizeof(layouts), (void *)layouts, &propertySize, &layoutsEqual);
+
+	if(noErr != result)
+		return false;
+		//LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+
+	return layoutsEqual;
+}
