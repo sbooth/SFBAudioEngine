@@ -164,6 +164,10 @@ SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const AudioChann
 
 bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
 {
+	// Two empty channel layouts are considered equivalent
+	if(!mChannelLayout && !rhs.mChannelLayout)
+		return true;
+
 	if(!mChannelLayout || !rhs.mChannelLayout)
 		return false;
 
