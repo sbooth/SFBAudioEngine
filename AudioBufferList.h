@@ -129,19 +129,30 @@ namespace SFB {
 			//@{
 
 			/*! @brief Retrieve a pointer to this object's internal \c AudioBufferList */
-			inline AudioBufferList * GetABL() const			{ return mBufferList.get(); }
+			inline AudioBufferList * GetABL()					{ return mBufferList.get(); }
+
+			/*! @brief Retrieve a const pointer to this object's internal \c AudioBufferList */
+			inline const AudioBufferList * GetABL() const		{ return mBufferList.get(); }
+
 
 			/*! @brief Query whether this \c BufferList is empty */
-			inline explicit operator bool() const			{ return (bool)mBufferList; }
+			inline explicit operator bool() const				{ return (bool)mBufferList; }
 
 			/*! @brief Query whether this \c BufferList is not empty */
-			inline bool operator!() const					{ return !mBufferList; }
+			inline bool operator!() const						{ return !mBufferList; }
+
 
 			/*! @brief Retrieve a pointer to this object's internal \c AudioBufferList */
-			inline AudioBufferList * operator->() const		{ return mBufferList.get(); }
+			inline AudioBufferList * operator->()				{ return mBufferList.get(); }
+
+			/*! @brief Retrieve a const pointer to this object's internal \c AudioBufferList */
+			inline const AudioBufferList * operator->() const	{ return mBufferList.get(); }
 
 			/*! @brief Retrieve a pointer to this object's internal \c AudioBufferList */
-			inline operator AudioBufferList *()				{ return mBufferList.get(); }
+			inline operator AudioBufferList *()					{ return mBufferList.get(); }
+
+			/*! @brief Retrieve a const pointer to this object's internal \c AudioBufferList */
+			inline operator const AudioBufferList *() const		{ return mBufferList.get(); }
 
 			//@}
 
