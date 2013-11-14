@@ -45,14 +45,12 @@
 		3259C9C917389B9E0035D749 /* sndfile.framework in Copy Embedded Frameworks */ = {isa = PBXBuildFile; fileRef = 3259C9C717389B850035D749 /* sndfile.framework */; };
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		326CE06D17E3B018003877AB /* CreateChannelLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */; };
 		326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */; };
 		326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* CreateStringForOSType.h */; };
 		327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */; };
 		327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */; };
 		327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */; };
 		327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */; };
-		3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */; };
 		328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */; };
 		3291CC1514F5CB7D00B34DA4 /* Base64Utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 329AB8A1148B185300180506 /* Base64Utilities.cpp */; };
 		3291CC1614F5CB8100B34DA4 /* SetTagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */; };
@@ -83,6 +81,8 @@
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
 		32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */; };
+		32C99D2118305387004388CF /* AudioChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C99D1F18305387004388CF /* AudioChannelLayout.cpp */; };
+		32C99D2218305387004388CF /* AudioChannelLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C99D2018305387004388CF /* AudioChannelLayout.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32CA910410B9E525005A85DA /* MusepackDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32E7379510B9978200094C8A /* MusepackDecoder.cpp */; };
 		32D429E613E308DB00FA07DE /* AudioPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D429E413E308DB00FA07DE /* AudioPlayer.cpp */; };
 		32D429E713E308DB00FA07DE /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D429E513E308DB00FA07DE /* AudioPlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -209,8 +209,6 @@
 		327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
 		327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFDictionaryUtilities.cpp; sourceTree = "<group>"; };
 		327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFDictionaryUtilities.h; sourceTree = "<group>"; };
-		3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CreateChannelLayout.cpp; sourceTree = "<group>"; };
-		3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateChannelLayout.h; sourceTree = "<group>"; };
 		328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddTagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		328E230E1476EE9E00C34178 /* AddTagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddTagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddXiphCommentToDictionary.cpp; sourceTree = "<group>"; };
@@ -251,6 +249,8 @@
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggSpeexMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		32C613A612E7E28D00F714C9 /* OggSpeexMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OggSpeexMetadata.cpp; sourceTree = "<group>"; };
+		32C99D1F18305387004388CF /* AudioChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioChannelLayout.cpp; sourceTree = "<group>"; };
+		32C99D2018305387004388CF /* AudioChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioChannelLayout.h; sourceTree = "<group>"; };
 		32CB55B817B6EE6C004022E0 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		32D429E413E308DB00FA07DE /* AudioPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AudioPlayer.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32D429E513E308DB00FA07DE /* AudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
@@ -335,6 +335,8 @@
 			children = (
 				3230A937182E698900D630CF /* AudioBufferList.h */,
 				3230A936182E698900D630CF /* AudioBufferList.cpp */,
+				32C99D2018305387004388CF /* AudioChannelLayout.h */,
+				32C99D1F18305387004388CF /* AudioChannelLayout.cpp */,
 				32B848E6180E199D00A222C5 /* AudioConverter.h */,
 				32B848E5180E199D00A222C5 /* AudioConverter.cpp */,
 				32B848EA180E395D00A222C5 /* ReplayGainAnalyzer.h */,
@@ -347,8 +349,6 @@
 				32DFA2F214FA7FD400D1FB58 /* Logger+NSOverloads.mm */,
 				326A98F61392F38A0061A65F /* Semaphore.h */,
 				326A98F51392F38A0061A65F /* Semaphore.cpp */,
-				3285714B12ED5C5D0001AF20 /* CreateChannelLayout.h */,
-				3285714A12ED5C5D0001AF20 /* CreateChannelLayout.cpp */,
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
 				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				320723BC138D521A00007369 /* CreateStringForOSType.h */,
@@ -572,11 +572,11 @@
 				32AEB2F61409BB23001F9A60 /* Logger.h in Headers */,
 				32B848EC180E395D00A222C5 /* ReplayGainAnalyzer.h in Headers */,
 				32A5A20317DD1BF80064C5DE /* CFWrapper.h in Headers */,
+				32C99D2218305387004388CF /* AudioChannelLayout.h in Headers */,
 				32B848E8180E199D00A222C5 /* AudioConverter.h in Headers */,
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
 				32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */,
 				321FCF9217BF1C3600828C3A /* RingBuffer.h in Headers */,
-				326CE06D17E3B018003877AB /* CreateChannelLayout.h in Headers */,
 				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
@@ -702,6 +702,7 @@
 				322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */,
 				321FCF9117BF1C3600828C3A /* RingBuffer.cpp in Sources */,
 				322D7A5311304C24006676FC /* MP4Metadata.cpp in Sources */,
+				32C99D2118305387004388CF /* AudioChannelLayout.cpp in Sources */,
 				3205E3BF1130787300FD9DAD /* WAVEMetadata.cpp in Sources */,
 				3205E3CD11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp in Sources */,
 				3205E4191130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp in Sources */,
@@ -731,7 +732,6 @@
 				32BA761418203B0F00366204 /* DSFMetadata.cpp in Sources */,
 				32C613A812E7E28D00F714C9 /* OggSpeexMetadata.cpp in Sources */,
 				3230A938182E698900D630CF /* AudioBufferList.cpp in Sources */,
-				3285714C12ED5C5D0001AF20 /* CreateChannelLayout.cpp in Sources */,
 				32B848E7180E199D00A222C5 /* AudioConverter.cpp in Sources */,
 				32B848EB180E395D00A222C5 /* ReplayGainAnalyzer.cpp in Sources */,
 				3203A61C1346E0ED00A7A22E /* MODDecoder.cpp in Sources */,
