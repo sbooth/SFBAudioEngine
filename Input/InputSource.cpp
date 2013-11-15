@@ -34,6 +34,7 @@
 #include "InMemoryFileInputSource.h"
 #include "HTTPInputSource.h"
 #include "CFWrapper.h"
+#include "Logger.h"
 
 // ========================================
 // Error Codes

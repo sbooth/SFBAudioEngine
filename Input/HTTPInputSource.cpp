@@ -29,6 +29,7 @@
  */
 
 #include "HTTPInputSource.h"
+#include "Logger.h"
 
 // ========================================
 // CFNetwork callbacks
