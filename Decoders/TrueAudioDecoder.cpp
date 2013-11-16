@@ -130,7 +130,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 		mDecoder->init_get_info(&streamInfo, 0);
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
 	}
 
 	if(!mDecoder) {
@@ -177,7 +177,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 
 		default:
 		{
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
 				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
@@ -265,7 +265,7 @@ UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 		}
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio decoding error: " << e.code());
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio decoding error: " << e.code());
 		return 0;
 	}
 
@@ -288,7 +288,7 @@ SInt64 SFB::Audio::TrueAudioDecoder::_SeekToFrame(SInt64 frame)
 		mDecoder->set_position(seconds, &frame_start);
 	}
 	catch(tta::tta_exception e) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
 		return -1;
 	}
 

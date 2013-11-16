@@ -334,7 +334,7 @@ CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return sourceFormatDescription;
 }
@@ -365,7 +365,7 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return channelLayoutDescription;
 }

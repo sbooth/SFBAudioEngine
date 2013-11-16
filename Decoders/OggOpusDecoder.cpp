@@ -250,7 +250,7 @@ UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt3
 		int framesRead = op_read_float(mOpusFile.get(), buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
 
 		if(0 > framesRead) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
 			return 0;
 		}
 

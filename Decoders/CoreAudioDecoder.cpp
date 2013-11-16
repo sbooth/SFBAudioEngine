@@ -102,7 +102,7 @@ CFArrayRef SFB::Audio::CoreAudioDecoder::CreateSupportedFileExtensions()
 																		 &supportedExtensions);
 	
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 		return nullptr;
 	}
@@ -121,7 +121,7 @@ CFArrayRef SFB::Audio::CoreAudioDecoder::CreateSupportedMIMETypes()
 																		 &supportedMIMETypes);
 	
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 		return nullptr;
 	}
@@ -192,7 +192,7 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 	OSStatus result = AudioFileOpenWithCallbacks(this, myAudioFile_ReadProc, nullptr, myAudioFile_GetSizeProc, nullptr, 0, &mAudioFile);
 
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
 		
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
@@ -208,7 +208,7 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 	result = ExtAudioFileWrapAudioFileID(mAudioFile, false, &mExtAudioFile);
 
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
 		
 		if(error) {
 			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
@@ -220,7 +220,7 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;
 		
@@ -232,15 +232,15 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 	result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileDataFormat, &dataSize, &mSourceFormat);
 
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: " << result);
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: " << result);
 		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;		
 		mExtAudioFile = nullptr;
@@ -296,15 +296,15 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 	result = ExtAudioFileSetProperty(mExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(mFormat), &mFormat);
 
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: " << result);
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: " << result);
 		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;		
 		mExtAudioFile = nullptr;
@@ -327,11 +327,11 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 			
 			result = ExtAudioFileDispose(mExtAudioFile);
 			if(noErr != result)
-				LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+				LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 			
 			result = AudioFileClose(mAudioFile);
 			if(noErr != result)
-				LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+				LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 			
 			mAudioFile = nullptr;		
 			mExtAudioFile = nullptr;
@@ -358,11 +358,11 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;		
 		mExtAudioFile = nullptr;
@@ -379,11 +379,11 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;		
 		mExtAudioFile = nullptr;
@@ -405,11 +405,11 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		
 		result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;		
 		mExtAudioFile = nullptr;
@@ -430,7 +430,7 @@ bool SFB::Audio::CoreAudioDecoder::_Close(CFErrorRef */*error*/)
 	if(mExtAudioFile) {
 		OSStatus result = ExtAudioFileDispose(mExtAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
 		
 		mExtAudioFile = nullptr;
 	}
@@ -438,7 +438,7 @@ bool SFB::Audio::CoreAudioDecoder::_Close(CFErrorRef */*error*/)
 	if(mAudioFile) {
 		OSStatus result = AudioFileClose(mAudioFile);
 		if(noErr != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
+			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
 		
 		mAudioFile = nullptr;
 	}
@@ -457,7 +457,7 @@ SFB::CFString SFB::Audio::CoreAudioDecoder::_GetSourceFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
 	return sourceFormatDescription;
 }
@@ -466,7 +466,7 @@ UInt32 SFB::Audio::CoreAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 {
 	OSStatus result = ExtAudioFileRead(mExtAudioFile, &frameCount, bufferList);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileRead failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileRead failed: " << result);
 		return 0;
 	}
 
@@ -483,7 +483,7 @@ SInt64 SFB::Audio::CoreAudioDecoder::_GetTotalFrames() const
 	
 	OSStatus result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileLengthFrames, &dataSize, &totalFrames);
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: " << result);
 	
 	return totalFrames;
 }
@@ -497,7 +497,7 @@ SInt64 SFB::Audio::CoreAudioDecoder::_GetCurrentFrame() const
 	
 	OSStatus result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileTell failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileTell failed: " << result);
 		return -1;
 	}
 	
@@ -508,7 +508,7 @@ SInt64 SFB::Audio::CoreAudioDecoder::_SeekToFrame(SInt64 frame)
 {
 	OSStatus result = ExtAudioFileSeek(mExtAudioFile, frame);
 	if(noErr != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSeek failed: " << result);
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSeek failed: " << result);
 		return -1;
 	}
 

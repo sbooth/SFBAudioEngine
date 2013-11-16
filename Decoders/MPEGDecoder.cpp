@@ -368,7 +368,7 @@ UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 		if(MPG123_DONE == result)
 			break;
 		else if(MPG123_OK != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
 			break;
 		}
 

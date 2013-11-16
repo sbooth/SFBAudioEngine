@@ -269,7 +269,7 @@ UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, 
 {
 	int blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int)frameCount, &blocksRead)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
 		return 0;
 	}
 
@@ -292,7 +292,7 @@ SInt64 SFB::Audio::MonkeysAudioDecoder::_GetCurrentFrame() const
 SInt64 SFB::Audio::MonkeysAudioDecoder::_SeekToFrame(SInt64 frame)
 {
 	if(ERROR_SUCCESS != mDecompressor->Seek((int)frame)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "mDecompressor->Seek() failed");
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "mDecompressor->Seek() failed");
 		return -1;
 	}
 

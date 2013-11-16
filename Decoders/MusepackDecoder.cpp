@@ -297,7 +297,7 @@ UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 
 		mpc_status result = mpc_demux_decode(mDemux, &frame);
 		if(MPC_STATUS_OK != result) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "Musepack decoding error");
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Musepack", "Musepack decoding error");
 			break;
 		}
 
