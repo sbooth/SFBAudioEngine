@@ -135,7 +135,7 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	SFB::Audio::ReplayGainAnalyzerErrorDomain		= CFSTR("org.sbooth.AudioEngine.ErrorDomain.ReplayGainAnalyzer");
+const CFStringRef SFB::Audio::ReplayGainAnalyzer::ErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.ReplayGainAnalyzer");
 
 // ========================================
 // RG constants
@@ -410,7 +410,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 
-			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -424,7 +424,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only mono or stereo files supported"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 
-			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -448,7 +448,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 
-			*error = CreateErrorForURL(ReplayGainAnalyzerErrorDomain, ReplayGainAnalyzerFileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
 
 		return false;

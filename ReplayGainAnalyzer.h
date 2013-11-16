@@ -41,17 +41,6 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @brief The \c CFErrorRef error domain used by \c ReplayGainAnalyzer */
-		extern const CFStringRef		ReplayGainAnalyzerErrorDomain;
-
-		/*! @brief Possible \c CFErrorRef error codes used by \c ReplayGainAnalyzer */
-		enum {
-			ReplayGainAnalyzerFileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
-			ReplayGainAnalyzerFileFormatNotSupportedError		= 1,	/*!< File format not supported */
-			ReplayGainAnalyzerInputOutputError					= 2		/*!< Input/output error */
-		};
-
-
 		/*!
 		 * @brief A class that calculates replay gain
 		 * @see http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification
@@ -62,6 +51,15 @@ namespace SFB {
 		class ReplayGainAnalyzer
 		{
 		public:
+
+			/*! @brief The \c CFErrorRef error domain used by \c ReplayGainAnalyzer */
+			static const CFStringRef ErrorDomain;
+
+			/*! @brief Possible \c CFErrorRef error codes used by \c ReplayGainAnalyzer */
+			enum ErrorCode {
+				FileFormatNotSupportedError			= 0,	/*!< File format not supported */
+			};
+			
 
 			/*! @brief Get the reference loudness in dB SPL, defined as 89.0 dB */
 			static float GetReferenceLoudness();
