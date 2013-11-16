@@ -38,16 +38,16 @@ bool SFB::Audio::AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionar
 		return false;
 	
 	if(properties->length())
-		AddIntToDictionary(dictionary, kPropertiesDurationKey, properties->length());
+		AddIntToDictionary(dictionary, Metadata::kDurationKey, properties->length());
 
 	if(properties->channels())
-		AddIntToDictionary(dictionary, kPropertiesChannelsPerFrameKey, properties->channels());
+		AddIntToDictionary(dictionary, Metadata::kChannelsPerFrameKey, properties->channels());
 
 	if(properties->sampleRate())
-		AddIntToDictionary(dictionary, kPropertiesSampleRateKey, properties->sampleRate());
+		AddIntToDictionary(dictionary, Metadata::kSampleRateKey, properties->sampleRate());
 
 	if(properties->bitrate())
-		AddIntToDictionary(dictionary, kPropertiesBitrateKey, properties->bitrate());
+		AddIntToDictionary(dictionary, Metadata::kBitrateKey, properties->bitrate());
 	
 	return true;
 }

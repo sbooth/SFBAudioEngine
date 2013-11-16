@@ -66,18 +66,18 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		 definition.
 		 */
 
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataReleaseDateKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kReleaseDateKey, frameList.front()->toString());
 	}
 
 	// Extract composer if present
 	frameList = tag->frameListMap()["TCOM"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataComposerKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kComposerKey, frameList.front()->toString());
 	
 	// Extract album artist
 	frameList = tag->frameListMap()["TPE2"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumArtistKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumArtistKey, frameList.front()->toString());
 	
 	// BPM
 	frameList = tag->frameListMap()["TBPM"];
@@ -85,14 +85,14 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		bool ok = false;
 		int BPM = frameList.front()->toString().toInt(&ok);
 		if(ok)
-			AddIntToDictionary(dictionary, kMetadataBPMKey, BPM);
+			AddIntToDictionary(dictionary, Metadata::kBPMKey, BPM);
 	}
 
 	// Rating
 	TagLib::ID3v2::PopularimeterFrame *popularimeter = nullptr;
 	frameList = tag->frameListMap()["POPM"];
 	if(!frameList.isEmpty() && nullptr != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front())))
-		AddIntToDictionary(dictionary, kMetadataRatingKey, popularimeter->rating());
+		AddIntToDictionary(dictionary, Metadata::kRatingKey, popularimeter->rating());
 
 	// Extract total tracks if present
 	frameList = tag->frameListMap()["TRCK"];
@@ -105,16 +105,16 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		if(TagLib::String::npos != pos) {
 			int trackNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataTrackNumberKey, trackNum);
+				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
 
 			int trackTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataTrackTotalKey, trackTotal);
+				AddIntToDictionary(dictionary, Metadata::kTrackTotalKey, trackTotal);
 		}
 		else if(s.length()) {
 			int trackNum = s.toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataTrackNumberKey, trackNum);
+				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
 		}
 	}
 	
@@ -129,67 +129,67 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		if(TagLib::String::npos != pos) {
 			int discNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataDiscNumberKey, discNum);
+				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
 
 			int discTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataDiscTotalKey, discTotal);
+				AddIntToDictionary(dictionary, Metadata::kDiscTotalKey, discTotal);
 		}
 		else if(s.length()) {
 			int discNum = s.toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, kMetadataDiscNumberKey, discNum);
+				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
 		}
 	}
 
 	// Lyrics
 	frameList = tag->frameListMap()["USLT"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataLyricsKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kLyricsKey, frameList.front()->toString());
 
 	// Extract compilation if present (iTunes TCMP tag)
 	frameList = tag->frameListMap()["TCMP"];
 	if(!frameList.isEmpty())
 		// It seems that the presence of this frame indicates a compilation
-		CFDictionarySetValue(dictionary, kMetadataCompilationKey, kCFBooleanTrue);
+		CFDictionarySetValue(dictionary, Metadata::kCompilationKey, kCFBooleanTrue);
 
 	frameList = tag->frameListMap()["TSRC"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataISRCKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kISRCKey, frameList.front()->toString());
 
 	// MusicBrainz
 	auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
 	if(musicBrainzReleaseIDFrame)
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataMusicBrainzReleaseIDKey, musicBrainzReleaseIDFrame->fieldList().back());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kMusicBrainzReleaseIDKey, musicBrainzReleaseIDFrame->fieldList().back());
 
 	auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
 	if(musicBrainzRecordingIDFrame)
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataMusicBrainzRecordingIDKey, musicBrainzRecordingIDFrame->fieldList().back());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kMusicBrainzRecordingIDKey, musicBrainzRecordingIDFrame->fieldList().back());
 
 	// Sorting and grouping
 	frameList = tag->frameListMap()["TSOT"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataTitleSortOrderKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kTitleSortOrderKey, frameList.front()->toString());
 
 	frameList = tag->frameListMap()["TSOA"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumTitleSortOrderKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumTitleSortOrderKey, frameList.front()->toString());
 
 	frameList = tag->frameListMap()["TSOP"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataArtistSortOrderKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kArtistSortOrderKey, frameList.front()->toString());
 
 	frameList = tag->frameListMap()["TSO2"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumArtistSortOrderKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumArtistSortOrderKey, frameList.front()->toString());
 
 	frameList = tag->frameListMap()["TSOC"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataComposerSortOrderKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kComposerSortOrderKey, frameList.front()->toString());
 
 	frameList = tag->frameListMap()["TIT1"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, kMetadataGroupingKey, frameList.front()->toString());
+		TagLib::AddStringToCFDictionary(dictionary, Metadata::kGroupingKey, frameList.front()->toString());
 
 	// ReplayGain
 	bool foundReplayGain = false;
@@ -206,8 +206,8 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
-		AddDoubleToDictionary(dictionary, kReplayGainTrackGainKey, num);
-		AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, 89.0);
+		AddDoubleToDictionary(dictionary, Metadata::kTrackGainKey, num);
+		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
 		
 		foundReplayGain = true;
 	}
@@ -218,7 +218,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
-		AddDoubleToDictionary(dictionary, kReplayGainTrackPeakKey, num);
+		AddDoubleToDictionary(dictionary, Metadata::kTrackPeakKey, num);
 	}
 	
 	if(!albumGainFrame)
@@ -227,8 +227,8 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
-		AddDoubleToDictionary(dictionary, kReplayGainAlbumGainKey, num);
-		AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, 89.0);
+		AddDoubleToDictionary(dictionary, Metadata::kAlbumGainKey, num);
+		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
 		
 		foundReplayGain = true;
 	}
@@ -239,7 +239,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
-		AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, num);
+		AddDoubleToDictionary(dictionary, Metadata::kAlbumPeakKey, num);
 	}
 	
 	// If nothing found check for RVA2 frame
@@ -263,7 +263,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, kReplayGainTrackGainKey, volumeAdjustment);
+					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
 				// Attempt to use the master volume if present
@@ -277,7 +277,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
+					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
 			}
 			// Fall back to track gain if identification is not specified
 			else {
@@ -292,7 +292,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 				
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, kReplayGainAlbumGainKey, volumeAdjustment);
+					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
 			}
 		}			
 	}

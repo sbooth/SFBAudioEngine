@@ -45,29 +45,29 @@
 
 namespace {
 
-	void RegisterMusepackMetadata() __attribute__ ((constructor));
-	void RegisterMusepackMetadata()
+	void RegisterMusepack() __attribute__ ((constructor));
+	void RegisterMusepack()
 	{
-		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::MusepackMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::Musepack>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef SFB::Audio::MusepackMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::Musepack::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("mpc") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef SFB::Audio::MusepackMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::Musepack::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/musepack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool SFB::Audio::MusepackMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::Musepack::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -78,7 +78,7 @@ bool SFB::Audio::MusepackMetadata::HandlesFilesWithExtension(CFStringRef extensi
 	return false;
 }
 
-bool SFB::Audio::MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::Musepack::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -89,20 +89,20 @@ bool SFB::Audio::MusepackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata::unique_ptr SFB::Audio::MusepackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::Musepack::CreateMetadata(CFURLRef url)
 {
-	return unique_ptr(new MusepackMetadata(url));
+	return unique_ptr(new Musepack(url));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::MusepackMetadata::MusepackMetadata(CFURLRef url)
+SFB::Audio::Musepack::Musepack(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
 #pragma mark Functionality
 
-bool SFB::Audio::MusepackMetadata::_ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::Musepack::_ReadMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -115,7 +115,7 @@ bool SFB::Audio::MusepackMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -128,20 +128,20 @@ bool SFB::Audio::MusepackMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
 	}
 
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Musepack"));
+	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("Musepack"));
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 
 		if(properties->sampleFrames())
-			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, (int)properties->sampleFrames());
+			AddIntToDictionary(mMetadata, kTotalFramesKey, (int)properties->sampleFrames());
 	}
 
 	if(file.ID3v1Tag())
@@ -153,7 +153,7 @@ bool SFB::Audio::MusepackMetadata::_ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::MusepackMetadata::_WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::Musepack::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -166,7 +166,7 @@ bool SFB::Audio::MusepackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -179,7 +179,7 @@ bool SFB::Audio::MusepackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
@@ -198,7 +198,7 @@ bool SFB::Audio::MusepackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;

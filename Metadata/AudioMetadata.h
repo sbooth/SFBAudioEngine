@@ -44,84 +44,86 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		extern const CFStringRef		AudioMetadataErrorDomain;	/*!< @brief The \c CFErrorRef error domain used by \c AudioMetadata */
-
-		/*! @brief Possible \c CFErrorRef error codes used by \c Metadata */
-		enum {
-			AudioMetadataFileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
-			AudioMetadataFileFormatNotSupportedError		= 1,	/*!< File format not supported */
-			AudioMetadataInputOutputError					= 2		/*!< Input/output error */
-		};
-
-		/*! @name Audio property dictionary keys */
-		//@{
-		extern const CFStringRef		kPropertiesFormatNameKey;			/*!< @brief The name of the audio format */
-		extern const CFStringRef		kPropertiesTotalFramesKey;			/*!< @brief The total number of audio frames (\c CFNumber) */
-		extern const CFStringRef		kPropertiesChannelsPerFrameKey;		/*!< @brief The number of channels (\c CFNumber) */
-		extern const CFStringRef		kPropertiesBitsPerChannelKey;		/*!< @brief The number of bits per channel (\c CFNumber) */
-		extern const CFStringRef		kPropertiesSampleRateKey;			/*!< @brief The sample rate (\c CFNumber) */
-		extern const CFStringRef		kPropertiesDurationKey;				/*!< @brief The duration (\c CFNumber) */
-		extern const CFStringRef		kPropertiesBitrateKey;				/*!< @brief The audio bitrate (\c CFNumber) */
-		//@}
-
-		/*! @name Metadata dictionary keys */
-		//@{
-		extern const CFStringRef		kMetadataTitleKey;					/*!< @brief Title (\c CFString) */
-		extern const CFStringRef		kMetadataAlbumTitleKey;				/*!< @brief Album title (\c CFString) */
-		extern const CFStringRef		kMetadataArtistKey;					/*!< @brief Artist (\c CFString) */
-		extern const CFStringRef		kMetadataAlbumArtistKey;			/*!< @brief Album artist (\c CFString) */
-		extern const CFStringRef		kMetadataGenreKey;					/*!< @brief Genre (\c CFString) */
-		extern const CFStringRef		kMetadataComposerKey;				/*!< @brief Composer (\c CFString) */
-		extern const CFStringRef		kMetadataReleaseDateKey;			/*!< @brief Release date (\c CFString) */
-		extern const CFStringRef		kMetadataCompilationKey;			/*!< @brief Compilation flag (\c CFBoolean) */
-		extern const CFStringRef		kMetadataTrackNumberKey;			/*!< @brief Track number (\c CFNumber) */
-		extern const CFStringRef		kMetadataTrackTotalKey;				/*!< @brief Track total (\c CFNumber) */
-		extern const CFStringRef		kMetadataDiscNumberKey;				/*!< @brief Disc number (\c CFNumber) */
-		extern const CFStringRef		kMetadataDiscTotalKey;				/*!< @brief Disc total (\c CFNumber) */
-		extern const CFStringRef		kMetadataLyricsKey;					/*!< @brief Lyrics (\c CFString) */
-		extern const CFStringRef		kMetadataBPMKey;					/*!< @brief Beats per minute (BPM) (\c CFNumber) */
-		extern const CFStringRef		kMetadataRatingKey;					/*!< @brief Rating (\c CFNumber) */
-		extern const CFStringRef		kMetadataCommentKey;				/*!< @brief Comment (\c CFString) */
-		extern const CFStringRef		kMetadataISRCKey;					/*!< @brief International Standard Recording Code (ISRC) (\c CFString) */
-		extern const CFStringRef		kMetadataMCNKey;					/*!< @brief Media Catalog Number (MCN) (\c CFString) */
-		extern const CFStringRef		kMetadataMusicBrainzReleaseIDKey;	/*!< @brief MusicBrainz release ID (\c CFString) */
-		extern const CFStringRef		kMetadataMusicBrainzRecordingIDKey;	/*!< @brief MusicBrainz recording ID (\c CFString) */
-		//@}
-
-		/*! @name Sorting dictionary keys */
-		//@{
-		extern const CFStringRef		kMetadataTitleSortOrderKey;			/*!< @brief Title sort order (\c CFString) */
-		extern const CFStringRef		kMetadataAlbumTitleSortOrderKey;	/*!< @brief Album title sort order (\c CFString) */
-		extern const CFStringRef		kMetadataArtistSortOrderKey;		/*!< @brief Artist sort order (\c CFString) */
-		extern const CFStringRef		kMetadataAlbumArtistSortOrderKey;	/*!< @brief Album artist sort order (\c CFString) */
-		extern const CFStringRef		kMetadataComposerSortOrderKey;		/*!< @brief Composer sort order (\c CFString) */
-		//@}
-
-		/*! @name Grouping dictionary keys */
-		//@{
-		extern const CFStringRef		kMetadataGroupingKey;				/*!< @brief Grouping (\c CFString) */
-		//@}
-
-		/*! @name Additional metadata dictionary keys */
-		//@{
-		extern const CFStringRef		kMetadataAdditionalMetadataKey;		/*!< @brief Additional metadata (\c CFDictionary) */
-		//@}
-
-		/*! @name Replay gain dictionary keys */
-		//@{
-		extern const CFStringRef		kReplayGainReferenceLoudnessKey;	/*!< @brief Replay gain reference loudness (\c CFNumber) */
-		extern const CFStringRef		kReplayGainTrackGainKey;			/*!< @brief Replay gain track gain (\c CFNumber) */
-		extern const CFStringRef		kReplayGainTrackPeakKey;			/*!< @brief Replay gain track peak (\c CFNumber) */
-		extern const CFStringRef		kReplayGainAlbumGainKey;			/*!< @brief Replay gain album gain (\c CFNumber) */
-		extern const CFStringRef		kReplayGainAlbumPeakKey;			/*!< @brief Replay gain album peak (\c CFNumber) */
-		//@}
-
-
 		/*! @brief Base class for all audio metadata reader/writer classes */
 		class Metadata
 		{
 			
 		public:
+
+			/*! @brief The \c CFErrorRef error domain used by \c Metadata and subclasses */
+			static const CFStringRef ErrorDomain;
+
+			/*! Possible \c CFErrorRef error codes used by \c Metadata */
+			enum ErrorCode {
+				FileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
+				FileFormatNotSupportedError			= 1,	/*!< File format not supported */
+				InputOutputError					= 2		/*!< Input/output error */
+			};
+
+
+			/*! @name Audio property dictionary keys */
+			//@{
+			static const CFStringRef kFormatNameKey;				/*!< @brief The name of the audio format */
+			static const CFStringRef kTotalFramesKey;				/*!< @brief The total number of audio frames (\c CFNumber) */
+			static const CFStringRef kChannelsPerFrameKey;			/*!< @brief The number of channels (\c CFNumber) */
+			static const CFStringRef kBitsPerChannelKey;			/*!< @brief The number of bits per channel (\c CFNumber) */
+			static const CFStringRef kSampleRateKey;				/*!< @brief The sample rate (\c CFNumber) */
+			static const CFStringRef kDurationKey;					/*!< @brief The duration (\c CFNumber) */
+			static const CFStringRef kBitrateKey;					/*!< @brief The audio bitrate (\c CFNumber) */
+			//@}
+
+			/*! @name Metadata dictionary keys */
+			//@{
+			static const CFStringRef kTitleKey;						/*!< @brief Title (\c CFString) */
+			static const CFStringRef kAlbumTitleKey;				/*!< @brief Album title (\c CFString) */
+			static const CFStringRef kArtistKey;					/*!< @brief Artist (\c CFString) */
+			static const CFStringRef kAlbumArtistKey;				/*!< @brief Album artist (\c CFString) */
+			static const CFStringRef kGenreKey;						/*!< @brief Genre (\c CFString) */
+			static const CFStringRef kComposerKey;					/*!< @brief Composer (\c CFString) */
+			static const CFStringRef kReleaseDateKey;				/*!< @brief Release date (\c CFString) */
+			static const CFStringRef kCompilationKey;				/*!< @brief Compilation flag (\c CFBoolean) */
+			static const CFStringRef kTrackNumberKey;				/*!< @brief Track number (\c CFNumber) */
+			static const CFStringRef kTrackTotalKey;				/*!< @brief Track total (\c CFNumber) */
+			static const CFStringRef kDiscNumberKey;				/*!< @brief Disc number (\c CFNumber) */
+			static const CFStringRef kDiscTotalKey;					/*!< @brief Disc total (\c CFNumber) */
+			static const CFStringRef kLyricsKey;					/*!< @brief Lyrics (\c CFString) */
+			static const CFStringRef kBPMKey;						/*!< @brief Beats per minute (BPM) (\c CFNumber) */
+			static const CFStringRef kRatingKey;					/*!< @brief Rating (\c CFNumber) */
+			static const CFStringRef kCommentKey;					/*!< @brief Comment (\c CFString) */
+			static const CFStringRef kISRCKey;						/*!< @brief International Standard Recording Code (ISRC) (\c CFString) */
+			static const CFStringRef kMCNKey;						/*!< @brief Media Catalog Number (MCN) (\c CFString) */
+			static const CFStringRef kMusicBrainzReleaseIDKey;		/*!< @brief MusicBrainz release ID (\c CFString) */
+			static const CFStringRef kMusicBrainzRecordingIDKey;	/*!< @brief MusicBrainz recording ID (\c CFString) */
+			//@}
+
+			/*! @name Sorting dictionary keys */
+			//@{
+			static const CFStringRef kTitleSortOrderKey;			/*!< @brief Title sort order (\c CFString) */
+			static const CFStringRef kAlbumTitleSortOrderKey;		/*!< @brief Album title sort order (\c CFString) */
+			static const CFStringRef kArtistSortOrderKey;			/*!< @brief Artist sort order (\c CFString) */
+			static const CFStringRef kAlbumArtistSortOrderKey;		/*!< @brief Album artist sort order (\c CFString) */
+			static const CFStringRef kComposerSortOrderKey;			/*!< @brief Composer sort order (\c CFString) */
+			//@}
+
+			/*! @name Grouping dictionary keys */
+			//@{
+			static const CFStringRef kGroupingKey;					/*!< @brief Grouping (\c CFString) */
+			//@}
+
+			/*! @name Additional metadata dictionary keys */
+			//@{
+			static const CFStringRef kAdditionalMetadataKey;		/*!< @brief Additional metadata (\c CFDictionary) */
+			//@}
+
+			/*! @name Replay gain dictionary keys */
+			//@{
+			static const CFStringRef kReferenceLoudnessKey;			/*!< @brief Replay gain reference loudness (\c CFNumber) */
+			static const CFStringRef kTrackGainKey;					/*!< @brief Replay gain track gain (\c CFNumber) */
+			static const CFStringRef kTrackPeakKey;					/*!< @brief Replay gain track peak (\c CFNumber) */
+			static const CFStringRef kAlbumGainKey;					/*!< @brief Replay gain album gain (\c CFNumber) */
+			static const CFStringRef kAlbumPeakKey;					/*!< @brief Replay gain album peak (\c CFNumber) */
+			//@}
+
 
 			// ========================================
 			/*! @name Supported file formats */

@@ -119,7 +119,7 @@ bool SFB::Audio::MP3Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -132,13 +132,13 @@ bool SFB::Audio::MP3Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
 	}
 	
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MP3"));
+	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MP3"));
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
@@ -149,30 +149,30 @@ bool SFB::Audio::MP3Metadata::_ReadMetadata(CFErrorRef *error)
 		switch(properties->version()) {
 			case TagLib::MPEG::Header::Version1:
 				switch(properties->layer()) {
-					case 1:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-1 Layer I"));		break;
-					case 2:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-1 Layer II"));	break;
-					case 3:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-1 Layer III"));	break;
+					case 1:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-1 Layer I"));		break;
+					case 2:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-1 Layer II"));	break;
+					case 3:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-1 Layer III"));	break;
 				}
 				break;
 			case TagLib::MPEG::Header::Version2:
 				switch(properties->layer()) {
-					case 1:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2 Layer I"));		break;
-					case 2:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2 Layer II"));	break;
-					case 3:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2 Layer III"));	break;
+					case 1:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2 Layer I"));		break;
+					case 2:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2 Layer II"));	break;
+					case 3:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2 Layer III"));	break;
 				}
 				break;
 			case TagLib::MPEG::Header::Version2_5:
 				switch(properties->layer()) {
-					case 1:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2.5 Layer I"));	break;
-					case 2:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2.5 Layer II"));	break;
-					case 3:		CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MPEG-2.5 Layer III"));	break;
+					case 1:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2.5 Layer I"));	break;
+					case 2:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2.5 Layer II"));	break;
+					case 3:		CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MPEG-2.5 Layer III"));	break;
 				}
 				break;
 		}
 #endif
 
 		if(properties->xingHeader() && properties->xingHeader()->totalFrames())
-			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, (int)properties->xingHeader()->totalFrames());
+			AddIntToDictionary(mMetadata, kTotalFramesKey, (int)properties->xingHeader()->totalFrames());
 	}
 
 	if(file.APETag())
@@ -200,7 +200,7 @@ bool SFB::Audio::MP3Metadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -213,7 +213,7 @@ bool SFB::Audio::MP3Metadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
@@ -237,7 +237,7 @@ bool SFB::Audio::MP3Metadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;

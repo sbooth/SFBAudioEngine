@@ -116,7 +116,7 @@ bool SFB::Audio::MonkeysAudioMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -129,22 +129,22 @@ bool SFB::Audio::MonkeysAudioMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
 	}
 	
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("Monkey's Audio"));
+	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("Monkey's Audio"));
 	
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 		
 		if(properties->bitsPerSample())
-			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->bitsPerSample());
+			AddIntToDictionary(mMetadata, kBitsPerChannelKey, properties->bitsPerSample());
 		if(properties->sampleFrames())
-			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, (int)properties->sampleFrames());
+			AddIntToDictionary(mMetadata, kTotalFramesKey, (int)properties->sampleFrames());
 	}
 
 	if(file.ID3v1Tag())
@@ -169,7 +169,7 @@ bool SFB::Audio::MonkeysAudioMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -182,7 +182,7 @@ bool SFB::Audio::MonkeysAudioMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
@@ -201,7 +201,7 @@ bool SFB::Audio::MonkeysAudioMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;

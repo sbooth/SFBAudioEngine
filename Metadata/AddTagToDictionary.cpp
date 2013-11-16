@@ -38,18 +38,18 @@ bool SFB::Audio::AddTagToDictionary(CFMutableDictionaryRef dictionary, const Tag
 	if(nullptr == dictionary || nullptr == tag)
 		return false;
 
-	TagLib::AddStringToCFDictionary(dictionary, kMetadataTitleKey, tag->title());
-	TagLib::AddStringToCFDictionary(dictionary, kMetadataAlbumTitleKey, tag->album());
-	TagLib::AddStringToCFDictionary(dictionary, kMetadataArtistKey, tag->artist());
-	TagLib::AddStringToCFDictionary(dictionary, kMetadataGenreKey, tag->genre());
+	TagLib::AddStringToCFDictionary(dictionary, Metadata::kTitleKey, tag->title());
+	TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumTitleKey, tag->album());
+	TagLib::AddStringToCFDictionary(dictionary, Metadata::kArtistKey, tag->artist());
+	TagLib::AddStringToCFDictionary(dictionary, Metadata::kGenreKey, tag->genre());
 
 	if(tag->year())
-		AddIntToDictionaryAsString(dictionary, kMetadataReleaseDateKey, (int)tag->year());
+		AddIntToDictionaryAsString(dictionary, Metadata::kReleaseDateKey, (int)tag->year());
 
 	if(tag->track())
-		AddIntToDictionary(dictionary, kMetadataTrackNumberKey, (int)tag->track());
+		AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, (int)tag->track());
 
-	TagLib::AddStringToCFDictionary(dictionary, kMetadataCommentKey, tag->comment());
+	TagLib::AddStringToCFDictionary(dictionary, Metadata::kCommentKey, tag->comment());
 
 	return true;
 }

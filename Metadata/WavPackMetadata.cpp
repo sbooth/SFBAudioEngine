@@ -46,29 +46,29 @@
 
 namespace {
 
-	void RegisterWavPackMetadata() __attribute__ ((constructor));
-	void RegisterWavPackMetadata()
+	void RegisterWavPack() __attribute__ ((constructor));
+	void RegisterWavPack()
 	{
-		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::WavPackMetadata>();
+		SFB::Audio::Metadata::RegisterSubclass<SFB::Audio::WavPack>();
 	}
 
 }
 
 #pragma mark Static Methods
 
-CFArrayRef SFB::Audio::WavPackMetadata::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::WavPack::CreateSupportedFileExtensions()
 {
 	CFStringRef supportedExtensions [] = { CFSTR("wv") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
 }
 
-CFArrayRef SFB::Audio::WavPackMetadata::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::WavPack::CreateSupportedMIMETypes()
 {
 	CFStringRef supportedMIMETypes [] = { CFSTR("audio/wavpack") };
 	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
 }
 
-bool SFB::Audio::WavPackMetadata::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::WavPack::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -79,7 +79,7 @@ bool SFB::Audio::WavPackMetadata::HandlesFilesWithExtension(CFStringRef extensio
 	return false;
 }
 
-bool SFB::Audio::WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
+bool SFB::Audio::WavPack::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
@@ -90,20 +90,20 @@ bool SFB::Audio::WavPackMetadata::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Metadata::unique_ptr SFB::Audio::WavPackMetadata::CreateMetadata(CFURLRef url)
+SFB::Audio::Metadata::unique_ptr SFB::Audio::WavPack::CreateMetadata(CFURLRef url)
 {
-	return unique_ptr(new WavPackMetadata(url));
+	return unique_ptr(new WavPack(url));
 }
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::WavPackMetadata::WavPackMetadata(CFURLRef url)
+SFB::Audio::WavPack::WavPack(CFURLRef url)
 	: AudioMetadata(url)
 {}
 
 #pragma mark Functionality
 
-bool SFB::Audio::WavPackMetadata::_ReadMetadata(CFErrorRef *error)
+bool SFB::Audio::WavPack::_ReadMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
@@ -116,7 +116,7 @@ bool SFB::Audio::WavPackMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -129,22 +129,22 @@ bool SFB::Audio::WavPackMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a WavPack file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
 	
-	CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("WavPack"));
+	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("WavPack"));
 	
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
 		
 		if(properties->bitsPerSample())
-			AddIntToDictionary(mMetadata, kPropertiesBitsPerChannelKey, properties->bitsPerSample());
+			AddIntToDictionary(mMetadata, kBitsPerChannelKey, properties->bitsPerSample());
 		if(properties->sampleFrames())
-			AddIntToDictionary(mMetadata, kPropertiesTotalFramesKey, (int)properties->sampleFrames());
+			AddIntToDictionary(mMetadata, kTotalFramesKey, (int)properties->sampleFrames());
 	}
 	
 	if(file.ID3v1Tag())
@@ -156,7 +156,7 @@ bool SFB::Audio::WavPackMetadata::_ReadMetadata(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::WavPackMetadata::_WriteMetadata(CFErrorRef *error)
+bool SFB::Audio::WavPack::_WriteMetadata(CFErrorRef *error)
 {
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
@@ -169,7 +169,7 @@ bool SFB::Audio::WavPackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -182,7 +182,7 @@ bool SFB::Audio::WavPackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a WavPack file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;
@@ -201,7 +201,7 @@ bool SFB::Audio::WavPackMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;

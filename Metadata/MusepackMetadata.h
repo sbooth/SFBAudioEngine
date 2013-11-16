@@ -39,7 +39,7 @@ namespace SFB {
 		// ========================================
 		// A Metadata subclass supporting Musepack files
 		// ========================================
-		class MusepackMetadata : public Metadata
+		class Musepack : public Metadata
 		{
 
 		public:
@@ -54,7 +54,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			MusepackMetadata(CFURLRef url);
+			Musepack(CFURLRef url);
 
 		private:
 

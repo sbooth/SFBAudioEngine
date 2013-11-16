@@ -135,7 +135,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
 
 			return false;
@@ -144,7 +144,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		TagLib::IT::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
-			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Impulse Tracker)"));
+			CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MOD (Impulse Tracker)"));
 
 			if(file.audioProperties())
 				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
@@ -161,7 +161,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
 
 			return false;
@@ -170,7 +170,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		TagLib::XM::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
-			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Extended Module)"));
+			CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MOD (Extended Module)"));
 
 			if(file.audioProperties())
 				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
@@ -187,7 +187,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
 
 			return false;
@@ -196,7 +196,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		TagLib::S3M::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
-			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (ScreamTracker III)"));
+			CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MOD (ScreamTracker III)"));
 
 			if(file.audioProperties())
 				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
@@ -213,7 +213,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
 				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
 
-				*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
 
 			return false;
@@ -222,7 +222,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		TagLib::Mod::File file(stream.get());
 		if(file.isValid()) {
 			fileIsValid = true;
-			CFDictionarySetValue(mMetadata, kPropertiesFormatNameKey, CFSTR("MOD (Protracker)"));
+			CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("MOD (Protracker)"));
 
 			if(file.audioProperties())
 				AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
@@ -238,7 +238,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, mURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 		
 		return false;

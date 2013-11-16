@@ -39,7 +39,7 @@ namespace SFB {
 		// ========================================
 		// A Metadata subclass supporting WavPack
 		// ========================================
-		class WavPackMetadata : public Metadata
+		class WavPack : public Metadata
 		{
 
 		public:
@@ -54,7 +54,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			WavPackMetadata(CFURLRef url);
+			WavPack(CFURLRef url);
 
 		private:
 

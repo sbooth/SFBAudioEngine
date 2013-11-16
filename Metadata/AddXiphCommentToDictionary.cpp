@@ -51,67 +51,67 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 		SFB::CFString value = CFStringCreateWithCString(kCFAllocatorDefault, it.second.front().toCString(true), kCFStringEncodingUTF8);
 		
 		if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataAlbumTitleKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kAlbumTitleKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTIST"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataArtistKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kArtistKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTIST"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataAlbumArtistKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kAlbumArtistKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSER"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataComposerKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kComposerKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GENRE"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataGenreKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kGenreKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DATE"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataReleaseDateKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kReleaseDateKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DESCRIPTION"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataCommentKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kCommentKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLE"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataTitleKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kTitleKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKNUMBER"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataTrackNumberKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TRACKTOTAL"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataTrackTotalKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kTrackTotalKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPILATION"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataCompilationKey, CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
+			CFDictionarySetValue(dictionary, Metadata::kCompilationKey, CFStringGetIntValue(value) ? kCFBooleanTrue : kCFBooleanFalse);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCNUMBER"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataDiscNumberKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("DISCTOTAL"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataDiscTotalKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kDiscTotalKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("LYRICS"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataLyricsKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kLyricsKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("BPM"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataBPMKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kBPMKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("RATING"), kCFCompareCaseInsensitive))
-			AddIntToDictionary(dictionary, kMetadataRatingKey, CFStringGetIntValue(value));
+			AddIntToDictionary(dictionary, Metadata::kRatingKey, CFStringGetIntValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ISRC"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataISRCKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kISRCKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MCN"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataMCNKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kMCNKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MUSICBRAINZ_ALBUMID"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataMusicBrainzReleaseIDKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kMusicBrainzReleaseIDKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("MUSICBRAINZ_TRACKID"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataMusicBrainzRecordingIDKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kMusicBrainzRecordingIDKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("TITLESORT"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataTitleSortOrderKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kTitleSortOrderKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMTITLESORT"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataAlbumTitleSortOrderKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kAlbumTitleSortOrderKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTISTSORT"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataArtistSortOrderKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kArtistSortOrderKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUMARTISTSORT"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataAlbumArtistSortOrderKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kAlbumArtistSortOrderKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("COMPOSERSORT"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataComposerSortOrderKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kComposerSortOrderKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("GROUPING"), kCFCompareCaseInsensitive))
-			CFDictionarySetValue(dictionary, kMetadataGroupingKey, value);
+			CFDictionarySetValue(dictionary, Metadata::kGroupingKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_REFERENCE_LOUDNESS"), kCFCompareCaseInsensitive))
-			AddDoubleToDictionary(dictionary, kReplayGainReferenceLoudnessKey, CFStringGetDoubleValue(value));
+			AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_GAIN"), kCFCompareCaseInsensitive))
-			AddDoubleToDictionary(dictionary, kReplayGainTrackGainKey, CFStringGetDoubleValue(value));
+			AddDoubleToDictionary(dictionary, Metadata::kTrackGainKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_TRACK_PEAK"), kCFCompareCaseInsensitive))
-			AddDoubleToDictionary(dictionary, kReplayGainTrackPeakKey, CFStringGetDoubleValue(value));
+			AddDoubleToDictionary(dictionary, Metadata::kTrackPeakKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_GAIN"), kCFCompareCaseInsensitive))
-			AddDoubleToDictionary(dictionary, kReplayGainAlbumGainKey, CFStringGetDoubleValue(value));
+			AddDoubleToDictionary(dictionary, Metadata::kAlbumGainKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("REPLAYGAIN_ALBUM_PEAK"), kCFCompareCaseInsensitive))
-			AddDoubleToDictionary(dictionary, kReplayGainAlbumPeakKey, CFStringGetDoubleValue(value));
+			AddDoubleToDictionary(dictionary, Metadata::kAlbumPeakKey, CFStringGetDoubleValue(value));
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("METADATA_BLOCK_PICTURE"), kCFCompareCaseInsensitive)) {
 			// Handle embedded pictures
 			for(auto blockIterator : it.second) {
@@ -139,7 +139,7 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 	}
 	
 	if(CFDictionaryGetCount(additionalMetadata))
-		CFDictionarySetValue(dictionary, kMetadataAdditionalMetadataKey, additionalMetadata);
+		CFDictionarySetValue(dictionary, Metadata::kAdditionalMetadataKey, additionalMetadata);
 
 	return true;
 }

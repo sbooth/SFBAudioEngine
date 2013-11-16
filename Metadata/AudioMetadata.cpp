@@ -40,55 +40,55 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	SFB::Audio::AudioMetadataErrorDomain				= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioMetadata");
+const CFStringRef SFB::Audio::Metadata::ErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioMetadata");
 
 // ========================================
 // Key names for the metadata dictionary
 // ========================================
-const CFStringRef	SFB::Audio::kPropertiesFormatNameKey				= CFSTR("Format Name");
-const CFStringRef	SFB::Audio::kPropertiesTotalFramesKey				= CFSTR("Total Frames");
-const CFStringRef	SFB::Audio::kPropertiesChannelsPerFrameKey			= CFSTR("Channels Per Frame");
-const CFStringRef	SFB::Audio::kPropertiesBitsPerChannelKey			= CFSTR("Bits per Channel");
-const CFStringRef	SFB::Audio::kPropertiesSampleRateKey				= CFSTR("Sample Rate");
-const CFStringRef	SFB::Audio::kPropertiesDurationKey					= CFSTR("Duration");
-const CFStringRef	SFB::Audio::kPropertiesBitrateKey					= CFSTR("Bitrate");
+const CFStringRef SFB::Audio::Metadata::kFormatNameKey					= CFSTR("Format Name");
+const CFStringRef SFB::Audio::Metadata::kTotalFramesKey					= CFSTR("Total Frames");
+const CFStringRef SFB::Audio::Metadata::kChannelsPerFrameKey			= CFSTR("Channels Per Frame");
+const CFStringRef SFB::Audio::Metadata::kBitsPerChannelKey				= CFSTR("Bits per Channel");
+const CFStringRef SFB::Audio::Metadata::kSampleRateKey					= CFSTR("Sample Rate");
+const CFStringRef SFB::Audio::Metadata::kDurationKey					= CFSTR("Duration");
+const CFStringRef SFB::Audio::Metadata::kBitrateKey						= CFSTR("Bitrate");
 
-const CFStringRef	SFB::Audio::kMetadataTitleKey						= CFSTR("Title");
-const CFStringRef	SFB::Audio::kMetadataAlbumTitleKey					= CFSTR("Album Title");
-const CFStringRef	SFB::Audio::kMetadataArtistKey						= CFSTR("Artist");
-const CFStringRef	SFB::Audio::kMetadataAlbumArtistKey					= CFSTR("Album Artist");
-const CFStringRef	SFB::Audio::kMetadataGenreKey						= CFSTR("Genre");
-const CFStringRef	SFB::Audio::kMetadataComposerKey					= CFSTR("Composer");
-const CFStringRef	SFB::Audio::kMetadataReleaseDateKey					= CFSTR("Date");
-const CFStringRef	SFB::Audio::kMetadataCompilationKey					= CFSTR("Compilation");
-const CFStringRef	SFB::Audio::kMetadataTrackNumberKey					= CFSTR("Track Number");
-const CFStringRef	SFB::Audio::kMetadataTrackTotalKey					= CFSTR("Track Total");
-const CFStringRef	SFB::Audio::kMetadataDiscNumberKey					= CFSTR("Disc Number");
-const CFStringRef	SFB::Audio::kMetadataDiscTotalKey					= CFSTR("Disc Total");
-const CFStringRef	SFB::Audio::kMetadataLyricsKey						= CFSTR("Lyrics");
-const CFStringRef	SFB::Audio::kMetadataBPMKey							= CFSTR("BPM");
-const CFStringRef	SFB::Audio::kMetadataRatingKey						= CFSTR("Rating");
-const CFStringRef	SFB::Audio::kMetadataCommentKey						= CFSTR("Comment");
-const CFStringRef	SFB::Audio::kMetadataISRCKey						= CFSTR("ISRC");
-const CFStringRef	SFB::Audio::kMetadataMCNKey							= CFSTR("MCN");
-const CFStringRef	SFB::Audio::kMetadataMusicBrainzReleaseIDKey		= CFSTR("MusicBrainz Release ID");
-const CFStringRef	SFB::Audio::kMetadataMusicBrainzRecordingIDKey		= CFSTR("MusicBrainz Recording ID");
+const CFStringRef SFB::Audio::Metadata::kTitleKey						= CFSTR("Title");
+const CFStringRef SFB::Audio::Metadata::kAlbumTitleKey					= CFSTR("Album Title");
+const CFStringRef SFB::Audio::Metadata::kArtistKey						= CFSTR("Artist");
+const CFStringRef SFB::Audio::Metadata::kAlbumArtistKey					= CFSTR("Album Artist");
+const CFStringRef SFB::Audio::Metadata::kGenreKey						= CFSTR("Genre");
+const CFStringRef SFB::Audio::Metadata::kComposerKey					= CFSTR("Composer");
+const CFStringRef SFB::Audio::Metadata::kReleaseDateKey					= CFSTR("Date");
+const CFStringRef SFB::Audio::Metadata::kCompilationKey					= CFSTR("Compilation");
+const CFStringRef SFB::Audio::Metadata::kTrackNumberKey					= CFSTR("Track Number");
+const CFStringRef SFB::Audio::Metadata::kTrackTotalKey					= CFSTR("Track Total");
+const CFStringRef SFB::Audio::Metadata::kDiscNumberKey					= CFSTR("Disc Number");
+const CFStringRef SFB::Audio::Metadata::kDiscTotalKey					= CFSTR("Disc Total");
+const CFStringRef SFB::Audio::Metadata::kLyricsKey						= CFSTR("Lyrics");
+const CFStringRef SFB::Audio::Metadata::kBPMKey							= CFSTR("BPM");
+const CFStringRef SFB::Audio::Metadata::kRatingKey						= CFSTR("Rating");
+const CFStringRef SFB::Audio::Metadata::kCommentKey						= CFSTR("Comment");
+const CFStringRef SFB::Audio::Metadata::kISRCKey						= CFSTR("ISRC");
+const CFStringRef SFB::Audio::Metadata::kMCNKey							= CFSTR("MCN");
+const CFStringRef SFB::Audio::Metadata::kMusicBrainzReleaseIDKey		= CFSTR("MusicBrainz Release ID");
+const CFStringRef SFB::Audio::Metadata::kMusicBrainzRecordingIDKey		= CFSTR("MusicBrainz Recording ID");
 
-const CFStringRef	SFB::Audio::kMetadataTitleSortOrderKey				= CFSTR("Title Sort Order");
-const CFStringRef	SFB::Audio::kMetadataAlbumTitleSortOrderKey			= CFSTR("Album Title Sort Order");
-const CFStringRef	SFB::Audio::kMetadataArtistSortOrderKey				= CFSTR("Artist Sort Order");
-const CFStringRef	SFB::Audio::kMetadataAlbumArtistSortOrderKey		= CFSTR("Album Artist Sort Order");
-const CFStringRef	SFB::Audio::kMetadataComposerSortOrderKey			= CFSTR("Composer Sort Order");
+const CFStringRef SFB::Audio::Metadata::kTitleSortOrderKey				= CFSTR("Title Sort Order");
+const CFStringRef SFB::Audio::Metadata::kAlbumTitleSortOrderKey			= CFSTR("Album Title Sort Order");
+const CFStringRef SFB::Audio::Metadata::kArtistSortOrderKey				= CFSTR("Artist Sort Order");
+const CFStringRef SFB::Audio::Metadata::kAlbumArtistSortOrderKey		= CFSTR("Album Artist Sort Order");
+const CFStringRef SFB::Audio::Metadata::kComposerSortOrderKey			= CFSTR("Composer Sort Order");
 
-const CFStringRef	SFB::Audio::kMetadataGroupingKey					= CFSTR("Grouping");
+const CFStringRef SFB::Audio::Metadata::kGroupingKey					= CFSTR("Grouping");
 
-const CFStringRef	SFB::Audio::kMetadataAdditionalMetadataKey			= CFSTR("Additional Metadata");
+const CFStringRef SFB::Audio::Metadata::kAdditionalMetadataKey			= CFSTR("Additional Metadata");
 
-const CFStringRef	SFB::Audio::kReplayGainReferenceLoudnessKey			= CFSTR("Replay Gain Reference Loudness");
-const CFStringRef	SFB::Audio::kReplayGainTrackGainKey					= CFSTR("Replay Gain Track Gain");
-const CFStringRef	SFB::Audio::kReplayGainTrackPeakKey					= CFSTR("Replay Gain Track Peak");
-const CFStringRef	SFB::Audio::kReplayGainAlbumGainKey					= CFSTR("Replay Gain Album Gain");
-const CFStringRef	SFB::Audio::kReplayGainAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
+const CFStringRef SFB::Audio::Metadata::kReferenceLoudnessKey			= CFSTR("Replay Gain Reference Loudness");
+const CFStringRef SFB::Audio::Metadata::kTrackGainKey					= CFSTR("Replay Gain Track Gain");
+const CFStringRef SFB::Audio::Metadata::kTrackPeakKey					= CFSTR("Replay Gain Track Peak");
+const CFStringRef SFB::Audio::Metadata::kAlbumGainKey					= CFSTR("Replay Gain Album Gain");
+const CFStringRef SFB::Audio::Metadata::kAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
 
 #pragma mark Static Methods
 
@@ -188,7 +188,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 					SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File not found"), "");
 					SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), "");
 					
-					*error = CreateErrorForURL(AudioMetadataErrorDomain, AudioMetadataInputOutputError, description, url, failureReason, recoverySuggestion);
+					*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, url, failureReason, recoverySuggestion);
 				}
 			}
 		}
@@ -268,114 +268,114 @@ void SFB::Audio::Metadata::RevertUnsavedChanges()
 
 CFStringRef SFB::Audio::Metadata::GetFormatName() const
 {
-	return GetStringValue(kPropertiesFormatNameKey);
+	return GetStringValue(kFormatNameKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetTotalFrames() const
 {
-	return GetNumberValue(kPropertiesTotalFramesKey);
+	return GetNumberValue(kTotalFramesKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetChannelsPerFrame() const
 {
-	return GetNumberValue(kPropertiesChannelsPerFrameKey);
+	return GetNumberValue(kChannelsPerFrameKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetBitsPerChannel() const
 {
-	return GetNumberValue(kPropertiesBitsPerChannelKey);
+	return GetNumberValue(kBitsPerChannelKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetSampleRate() const
 {
-	return GetNumberValue(kPropertiesSampleRateKey);
+	return GetNumberValue(kSampleRateKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetDuration() const
 {
-	return GetNumberValue(kPropertiesDurationKey);
+	return GetNumberValue(kDurationKey);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetBitrate() const
 {
-	return GetNumberValue(kPropertiesBitrateKey);
+	return GetNumberValue(kBitrateKey);
 }
 
 #pragma mark Metadata Access
 
 CFStringRef SFB::Audio::Metadata::GetTitle() const
 {
-	return GetStringValue(kMetadataTitleKey);
+	return GetStringValue(kTitleKey);
 }
 
 void SFB::Audio::Metadata::SetTitle(CFStringRef title)
 {
-	SetValue(kMetadataTitleKey, title);
+	SetValue(kTitleKey, title);
 }
 
 CFStringRef SFB::Audio::Metadata::GetAlbumTitle() const
 {
-	return GetStringValue(kMetadataAlbumTitleKey);
+	return GetStringValue(kAlbumTitleKey);
 }
 
 void SFB::Audio::Metadata::SetAlbumTitle(CFStringRef albumTitle)
 {
-	SetValue(kMetadataAlbumTitleKey, albumTitle);
+	SetValue(kAlbumTitleKey, albumTitle);
 }
 
 CFStringRef SFB::Audio::Metadata::GetArtist() const
 {
-	return GetStringValue(kMetadataArtistKey);
+	return GetStringValue(kArtistKey);
 }
 
 void SFB::Audio::Metadata::SetArtist(CFStringRef artist)
 {
-	SetValue(kMetadataArtistKey, artist);
+	SetValue(kArtistKey, artist);
 }
 
 CFStringRef SFB::Audio::Metadata::GetAlbumArtist() const
 {
-	return GetStringValue(kMetadataAlbumArtistKey);
+	return GetStringValue(kAlbumArtistKey);
 }
 
 void SFB::Audio::Metadata::SetAlbumArtist(CFStringRef albumArtist)
 {
-	SetValue(kMetadataAlbumArtistKey, albumArtist);
+	SetValue(kAlbumArtistKey, albumArtist);
 }
 
 CFStringRef SFB::Audio::Metadata::GetGenre() const
 {
-	return GetStringValue(kMetadataGenreKey);
+	return GetStringValue(kGenreKey);
 }
 
 void SFB::Audio::Metadata::SetGenre(CFStringRef genre)
 {
-	SetValue(kMetadataGenreKey, genre);
+	SetValue(kGenreKey, genre);
 }
 
 CFStringRef SFB::Audio::Metadata::GetComposer() const
 {
-	return GetStringValue(kMetadataComposerKey);
+	return GetStringValue(kComposerKey);
 }
 
 void SFB::Audio::Metadata::SetComposer(CFStringRef composer)
 {
-	SetValue(kMetadataComposerKey, composer);
+	SetValue(kComposerKey, composer);
 }
 
 CFStringRef SFB::Audio::Metadata::GetReleaseDate() const
 {
-	return GetStringValue(kMetadataReleaseDateKey);
+	return GetStringValue(kReleaseDateKey);
 }
 
 void SFB::Audio::Metadata::SetReleaseDate(CFStringRef releaseDate)
 {
-	SetValue(kMetadataReleaseDateKey, releaseDate);
+	SetValue(kReleaseDateKey, releaseDate);
 }
 
 CFBooleanRef SFB::Audio::Metadata::GetCompilation() const
 {
-	CFTypeRef value = GetValue(kMetadataCompilationKey);
+	CFTypeRef value = GetValue(kCompilationKey);
 	
 	if(nullptr == value)
 		return nullptr;
@@ -388,194 +388,194 @@ CFBooleanRef SFB::Audio::Metadata::GetCompilation() const
 
 void SFB::Audio::Metadata::SetCompilation(CFBooleanRef compilation)
 {
-	SetValue(kMetadataCompilationKey, compilation);
+	SetValue(kCompilationKey, compilation);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetTrackNumber() const
 {
-	return GetNumberValue(kMetadataTrackNumberKey);
+	return GetNumberValue(kTrackNumberKey);
 }
 
 void SFB::Audio::Metadata::SetTrackNumber(CFNumberRef trackNumber)
 {
-	SetValue(kMetadataTrackNumberKey, trackNumber);
+	SetValue(kTrackNumberKey, trackNumber);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetTrackTotal() const
 {
-	return GetNumberValue(kMetadataTrackTotalKey);
+	return GetNumberValue(kTrackTotalKey);
 }
 
 void SFB::Audio::Metadata::SetTrackTotal(CFNumberRef trackTotal)
 {
-	SetValue(kMetadataTrackTotalKey, trackTotal);
+	SetValue(kTrackTotalKey, trackTotal);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetDiscNumber() const
 {
-	return GetNumberValue(kMetadataDiscNumberKey);
+	return GetNumberValue(kDiscNumberKey);
 }
 
 void SFB::Audio::Metadata::SetDiscNumber(CFNumberRef discNumber)
 {
-	SetValue(kMetadataDiscNumberKey, discNumber);
+	SetValue(kDiscNumberKey, discNumber);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetDiscTotal() const
 {
-	return GetNumberValue(kMetadataDiscTotalKey);
+	return GetNumberValue(kDiscTotalKey);
 }
 
 void SFB::Audio::Metadata::SetDiscTotal(CFNumberRef discTotal)
 {
-	SetValue(kMetadataDiscTotalKey, discTotal);
+	SetValue(kDiscTotalKey, discTotal);
 }
 
 CFStringRef SFB::Audio::Metadata::GetLyrics() const
 {
-	return GetStringValue(kMetadataLyricsKey);
+	return GetStringValue(kLyricsKey);
 }
 
 void SFB::Audio::Metadata::SetLyrics(CFStringRef lyrics)
 {
-	SetValue(kMetadataLyricsKey, lyrics);
+	SetValue(kLyricsKey, lyrics);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetBPM() const
 {
-	return GetNumberValue(kMetadataBPMKey);
+	return GetNumberValue(kBPMKey);
 }
 
 void SFB::Audio::Metadata::SetBPM(CFNumberRef BPM)
 {
-	SetValue(kMetadataBPMKey, BPM);
+	SetValue(kBPMKey, BPM);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetRating() const
 {
-	return GetNumberValue(kMetadataRatingKey);
+	return GetNumberValue(kRatingKey);
 }
 
 void SFB::Audio::Metadata::SetRating(CFNumberRef rating)
 {
-	SetValue(kMetadataRatingKey, rating);
+	SetValue(kRatingKey, rating);
 }
 
 CFStringRef SFB::Audio::Metadata::GetComment() const
 {
-	return GetStringValue(kMetadataCommentKey);
+	return GetStringValue(kCommentKey);
 }
 
 void SFB::Audio::Metadata::SetComment(CFStringRef comment)
 {
-	SetValue(kMetadataCommentKey, comment);
+	SetValue(kCommentKey, comment);
 }
 
 CFStringRef SFB::Audio::Metadata::GetMCN() const
 {
-	return GetStringValue(kMetadataMCNKey);
+	return GetStringValue(kMCNKey);
 }
 
 void SFB::Audio::Metadata::SetMCN(CFStringRef mcn)
 {
-	SetValue(kMetadataMCNKey, mcn);
+	SetValue(kMCNKey, mcn);
 }
 
 CFStringRef SFB::Audio::Metadata::GetISRC() const
 {
-	return GetStringValue(kMetadataISRCKey);
+	return GetStringValue(kISRCKey);
 }
 
 void SFB::Audio::Metadata::SetISRC(CFStringRef isrc)
 {
-	SetValue(kMetadataISRCKey, isrc);
+	SetValue(kISRCKey, isrc);
 }
 
 CFStringRef SFB::Audio::Metadata::GetMusicBrainzReleaseID() const
 {
-	return GetStringValue(kMetadataMusicBrainzReleaseIDKey);
+	return GetStringValue(kMusicBrainzReleaseIDKey);
 }
 
 void SFB::Audio::Metadata::SetMusicBrainzReleaseID(CFStringRef releaseID)
 {
-	SetValue(kMetadataMusicBrainzReleaseIDKey, releaseID);
+	SetValue(kMusicBrainzReleaseIDKey, releaseID);
 }
 
 CFStringRef SFB::Audio::Metadata::GetMusicBrainzRecordingID() const
 {
-	return GetStringValue(kMetadataMusicBrainzRecordingIDKey);
+	return GetStringValue(kMusicBrainzRecordingIDKey);
 }
 
 void SFB::Audio::Metadata::SetMusicBrainzRecordingID(CFStringRef recordingID)
 {
-	SetValue(kMetadataMusicBrainzRecordingIDKey, recordingID);
+	SetValue(kMusicBrainzRecordingIDKey, recordingID);
 }
 
 CFStringRef SFB::Audio::Metadata::GetTitleSortOrder() const
 {
-	return GetStringValue(kMetadataTitleSortOrderKey);
+	return GetStringValue(kTitleSortOrderKey);
 }
 
 void SFB::Audio::Metadata::SetTitleSortOrder(CFStringRef titleSortOrder)
 {
-	SetValue(kMetadataTitleSortOrderKey, titleSortOrder);
+	SetValue(kTitleSortOrderKey, titleSortOrder);
 }
 
 CFStringRef SFB::Audio::Metadata::GetAlbumTitleSortOrder() const
 {
-	return GetStringValue(kMetadataAlbumTitleSortOrderKey);
+	return GetStringValue(kAlbumTitleSortOrderKey);
 }
 
 void SFB::Audio::Metadata::SetAlbumTitleSortOrder(CFStringRef albumTitleSortOrder)
 {
-	SetValue(kMetadataAlbumTitleSortOrderKey, albumTitleSortOrder);
+	SetValue(kAlbumTitleSortOrderKey, albumTitleSortOrder);
 }
 
 CFStringRef SFB::Audio::Metadata::GetArtistSortOrder() const
 {
-	return GetStringValue(kMetadataArtistSortOrderKey);
+	return GetStringValue(kArtistSortOrderKey);
 }
 
 void SFB::Audio::Metadata::SetArtistSortOrder(CFStringRef artistSortOrder)
 {
-	SetValue(kMetadataArtistSortOrderKey, artistSortOrder);
+	SetValue(kArtistSortOrderKey, artistSortOrder);
 }
 
 CFStringRef SFB::Audio::Metadata::GetAlbumArtistSortOrder() const
 {
-	return GetStringValue(kMetadataAlbumArtistSortOrderKey);
+	return GetStringValue(kAlbumArtistSortOrderKey);
 }
 
 void SFB::Audio::Metadata::SetAlbumArtistSortOrder(CFStringRef albumArtistSortOrder)
 {
-	SetValue(kMetadataAlbumArtistSortOrderKey, albumArtistSortOrder);
+	SetValue(kAlbumArtistSortOrderKey, albumArtistSortOrder);
 }
 
 CFStringRef SFB::Audio::Metadata::GetComposerSortOrder() const
 {
-	return GetStringValue(kMetadataComposerSortOrderKey);
+	return GetStringValue(kComposerSortOrderKey);
 }
 
 void SFB::Audio::Metadata::SetComposerSortOrder(CFStringRef composerSortOrder)
 {
-	SetValue(kMetadataComposerSortOrderKey, composerSortOrder);
+	SetValue(kComposerSortOrderKey, composerSortOrder);
 }
 
 CFStringRef SFB::Audio::Metadata::GetGrouping() const
 {
-	return GetStringValue(kMetadataGroupingKey);
+	return GetStringValue(kGroupingKey);
 }
 
 void SFB::Audio::Metadata::SetGrouping(CFStringRef grouping)
 {
-	SetValue(kMetadataGroupingKey, grouping);
+	SetValue(kGroupingKey, grouping);
 }
 
 #pragma mark Additional Metadata
 
 CFDictionaryRef SFB::Audio::Metadata::GetAdditionalMetadata() const
 {
-	CFTypeRef value = GetValue(kMetadataAdditionalMetadataKey);
+	CFTypeRef value = GetValue(kAdditionalMetadataKey);
 	
 	if(nullptr == value)
 		return nullptr;
@@ -588,59 +588,59 @@ CFDictionaryRef SFB::Audio::Metadata::GetAdditionalMetadata() const
 
 void SFB::Audio::Metadata::SetAdditionalMetadata(CFDictionaryRef additionalMetadata)
 {
-	SetValue(kMetadataAdditionalMetadataKey, additionalMetadata);
+	SetValue(kAdditionalMetadataKey, additionalMetadata);
 }
 
 #pragma mark Replay Gain Information
 
 CFNumberRef SFB::Audio::Metadata::GetReplayGainReferenceLoudness() const
 {
-	return GetNumberValue(kReplayGainReferenceLoudnessKey);
+	return GetNumberValue(kReferenceLoudnessKey);
 }
 
 void SFB::Audio::Metadata::SetReplayGainReferenceLoudness(CFNumberRef referenceLoudness)
 {
-	SetValue(kReplayGainReferenceLoudnessKey, referenceLoudness);
+	SetValue(kReferenceLoudnessKey, referenceLoudness);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetReplayGainTrackGain() const
 {
-	return GetNumberValue(kReplayGainTrackGainKey);
+	return GetNumberValue(kTrackGainKey);
 }
 
 void SFB::Audio::Metadata::SetReplayGainTrackGain(CFNumberRef trackGain)
 {
-	SetValue(kReplayGainTrackGainKey, trackGain);
+	SetValue(kTrackGainKey, trackGain);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetReplayGainTrackPeak() const
 {
-	return GetNumberValue(kReplayGainTrackPeakKey);
+	return GetNumberValue(kTrackPeakKey);
 }
 
 void SFB::Audio::Metadata::SetReplayGainTrackPeak(CFNumberRef trackPeak)
 {
-	SetValue(kReplayGainTrackPeakKey, trackPeak);
+	SetValue(kTrackPeakKey, trackPeak);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetReplayGainAlbumGain() const
 {
-	return GetNumberValue(kReplayGainAlbumGainKey);
+	return GetNumberValue(kAlbumGainKey);
 }
 
 void SFB::Audio::Metadata::SetReplayGainAlbumGain(CFNumberRef albumGain)
 {
-	SetValue(kReplayGainAlbumGainKey, albumGain);
+	SetValue(kAlbumGainKey, albumGain);
 }
 
 CFNumberRef SFB::Audio::Metadata::GetReplayGainAlbumPeak() const
 {
-	return GetNumberValue(kReplayGainAlbumPeakKey);
+	return GetNumberValue(kAlbumPeakKey);
 }
 
 void SFB::Audio::Metadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 {
-	SetValue(kReplayGainAlbumPeakKey, albumPeak);
+	SetValue(kAlbumPeakKey, albumPeak);
 }
 
 #pragma mark Album Artwork
