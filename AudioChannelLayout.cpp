@@ -51,7 +51,7 @@ namespace {
 	AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions)
 	{
 		size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
-		AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
 		if(nullptr == channelLayout)
 			throw std::bad_alloc();
 
@@ -67,7 +67,7 @@ namespace {
 			return nullptr;
 
 		size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
-		AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
+		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
 		if(nullptr == channelLayout)
 			throw std::bad_alloc();
 
@@ -116,11 +116,11 @@ SFB::Audio::ChannelLayout::ChannelLayout()
 {}
 
 SFB::Audio::ChannelLayout::ChannelLayout(UInt32 numberChannelDescriptions)
-	: mChannelLayout(CreateChannelLayout(numberChannelDescriptions), ::free)
+	: mChannelLayout(CreateChannelLayout(numberChannelDescriptions), std::free)
 {}
 
 SFB::Audio::ChannelLayout::ChannelLayout(const AudioChannelLayout *channelLayout)
-	: mChannelLayout(CopyChannelLayout(channelLayout), ::free)
+	: mChannelLayout(CopyChannelLayout(channelLayout), std::free)
 {}
 
 SFB::Audio::ChannelLayout::ChannelLayout(ChannelLayout&& rhs)
@@ -146,7 +146,7 @@ SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const ChannelLay
 		if(!rhs)
 			mChannelLayout.reset();
 		else
-			mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs.mChannelLayout.get()), ::free);
+			mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs.mChannelLayout.get()), std::free);
 	}
 
 	return *this;
@@ -157,7 +157,7 @@ SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const AudioChann
 	if(nullptr == rhs)
 		mChannelLayout.reset();
 	else
-		mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs), ::free);
+		mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs), std::free);
 
 	return *this;
 }
@@ -182,7 +182,7 @@ bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
 
 	if(noErr != result)
 		return false;
-		//LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
+		//LOGGER_ERR("org.sbooth.AudioEngine.ChannelLayout", "AudioFormatGetProperty (kAudioFormatProperty_AreChannelLayoutsEquivalent) failed: " << result);
 
 	return layoutsEqual;
 }
