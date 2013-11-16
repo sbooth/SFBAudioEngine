@@ -30,8 +30,8 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <memory>
 
 /*! @file ReplayGainAnalyzer.h @brief Support for replay gain calculation */
 
@@ -81,7 +81,6 @@ namespace SFB {
 			/*! @brief Query whether an even multiple of a sample rate is supported */
 			static bool EvenMultipleSampleRateIsSupported(int32_t sampleRate);
 
-
 			/*! @brief Returns the best sample rate to use for replay gain calculation for the given sample rate */
 			static int32_t GetBestReplayGainSampleRateForSampleRate(int32_t sampleRate);
 
@@ -92,6 +91,9 @@ namespace SFB {
 
 			/*! @brief Create a new \c ReplayGainAnalyzer */
 			ReplayGainAnalyzer();
+
+			/*! @brief Destroy this \c ReplayGainAnalyzer */
+			~ReplayGainAnalyzer();
 
 			/*! @cond */
 

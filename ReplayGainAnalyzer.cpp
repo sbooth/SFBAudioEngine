@@ -389,6 +389,11 @@ SFB::Audio::ReplayGainAnalyzer::ReplayGainAnalyzer()
 	: priv(new ReplayGainAnalyzerPrivate)
 {}
 
+// Empty destructor is required for unique_ptr with an incomplete type
+// See http://stackoverflow.com/questions/9954518/stdunique-ptr-with-an-incomplete-type-wont-compile and  http://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t/6089065#6089065
+SFB::Audio::ReplayGainAnalyzer::~ReplayGainAnalyzer()
+{}
+
 bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 {
 	if(nullptr == url)
