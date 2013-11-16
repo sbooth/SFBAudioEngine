@@ -30,10 +30,10 @@
 
 #pragma once
 
+#include <AudioToolbox/AudioToolbox.h>
+
 #include <vector>
 #include <memory>
-
-#include <AudioToolbox/AudioToolbox.h>
 
 /*! @file AudioChannelLayout.h @brief A Core %Audio \c AudioChannelLayout wrapper  */
 

@@ -30,8 +30,8 @@
 
 #pragma once
 
-#include <memory>
 #include <AudioToolbox/AudioToolbox.h>
+#include <memory>
 
 /*! @file AudioBufferList.h @brief A Core Audio \c AudioBufferList wrapper  */
 
