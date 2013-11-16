@@ -34,9 +34,9 @@
 // ========================================
 // Key names for the metadata dictionary
 // ========================================
-const CFStringRef	SFB::Audio::kAttachedPictureTypeKey					= CFSTR("Picture Type");
-const CFStringRef	SFB::Audio::kAttachedPictureDescriptionKey			= CFSTR("Picture Description");
-const CFStringRef	SFB::Audio::kAttachedPictureDataKey					= CFSTR("Picture Data");
+const CFStringRef SFB::Audio::AttachedPicture::kTypeKey					= CFSTR("Picture Type");
+const CFStringRef SFB::Audio::AttachedPicture::kDescriptionKey			= CFSTR("Picture Description");
+const CFStringRef SFB::Audio::AttachedPicture::kDataKey					= CFSTR("Picture Data");
 
 SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFStringRef description)
 	: mState(ChangeState::Saved)
@@ -45,12 +45,12 @@ SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Ty
 	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
 	if(data)
-		CFDictionarySetValue(mMetadata, kAttachedPictureDataKey, data);
+		CFDictionarySetValue(mMetadata, kDataKey, data);
 
-	AddIntToDictionary(mMetadata, kAttachedPictureTypeKey, (int)type);
+	AddIntToDictionary(mMetadata, kTypeKey, (int)type);
 
 	if(description)
-		CFDictionarySetValue(mMetadata, kAttachedPictureDescriptionKey, description);
+		CFDictionarySetValue(mMetadata, kDescriptionKey, description);
 }
 
 #pragma mark Type-Specific Access
@@ -58,7 +58,7 @@ SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Ty
 SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const
 {
 	AttachedPicture::Type type = Type::Other;
-	CFNumberRef wrapper = GetNumberValue(kAttachedPictureTypeKey);
+	CFNumberRef wrapper = GetNumberValue(kTypeKey);
 	if(wrapper)
 		CFNumberGetValue(wrapper, kCFNumberIntType, &type);
 	return type;
@@ -67,27 +67,27 @@ SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const
 void SFB::Audio::AttachedPicture::SetType(Type type)
 {
 	SFB::CFNumber wrapper = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type);
-	SetValue(kAttachedPictureTypeKey, wrapper);
+	SetValue(kTypeKey, wrapper);
 }
 
 CFStringRef SFB::Audio::AttachedPicture::GetDescription() const
 {
-	return GetStringValue(kAttachedPictureDescriptionKey);
+	return GetStringValue(kDescriptionKey);
 }
 
 void SFB::Audio::AttachedPicture::SetDescription(CFStringRef description)
 {
-	SetValue(kAttachedPictureDescriptionKey, description);
+	SetValue(kDescriptionKey, description);
 }
 
 CFDataRef SFB::Audio::AttachedPicture::GetData() const
 {
-	return GetDataValue(kAttachedPictureDataKey);
+	return GetDataValue(kDataKey);
 }
 
 void SFB::Audio::AttachedPicture::SetData(CFDataRef data)
 {
-	SetValue(kAttachedPictureDataKey, data);
+	SetValue(kDataKey, data);
 }
 
 #pragma mark Type-Specific Access

@@ -43,14 +43,6 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @name Metadata Dictionary Keys */
-		//@{
-		extern const CFStringRef		kAttachedPictureTypeKey;			/*!< @brief Picture type (\c CFNumber) */
-		extern const CFStringRef		kAttachedPictureDescriptionKey;		/*!< @brief Picture description (\c CFString) */
-		extern const CFStringRef		kAttachedPictureDataKey;			/*!< @brief Picture data (\c CFData) */
-		//@}
-
-
 		/*!
 		 * @brief A class encapsulating a single attached picture.
 		 *
@@ -62,7 +54,14 @@ namespace SFB {
 			friend class Metadata;
 
 		public:
-			
+
+			/*! @name Metadata Dictionary Keys */
+			//@{
+			static const CFStringRef kTypeKey;			/*!< @brief Picture type (\c CFNumber) */
+			static const CFStringRef kDescriptionKey;	/*!< @brief Picture description (\c CFString) */
+			static const CFStringRef kDataKey;			/*!< @brief Picture data (\c CFData) */
+			//@}
+
 			// ========================================
 			/*! @brief The function or content of a picture */
 			enum class Type : unsigned int {
