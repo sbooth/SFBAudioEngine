@@ -62,7 +62,7 @@ namespace SFB {
 			/*! @brief The \c CFErrorRef error domain used by \c Decoder and subclasses */
 			static const CFStringRef ErrorDomain;
 
-			/*! Possible \c CFErrorRef error codes used by \c Decoder */
+			/*! @brief Possible \c CFErrorRef error codes used by \c Decoder */
 			enum ErrorCode {
 				FileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
 				FileFormatNotSupportedError			= 1,	/*!< File format not supported */

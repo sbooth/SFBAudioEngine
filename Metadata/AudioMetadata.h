@@ -53,7 +53,7 @@ namespace SFB {
 			/*! @brief The \c CFErrorRef error domain used by \c Metadata and subclasses */
 			static const CFStringRef ErrorDomain;
 
-			/*! Possible \c CFErrorRef error codes used by \c Metadata */
+			/*! @brief Possible \c CFErrorRef error codes used by \c Metadata */
 			enum ErrorCode {
 				FileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
 				FileFormatNotSupportedError			= 1,	/*!< File format not supported */

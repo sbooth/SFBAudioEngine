@@ -50,7 +50,7 @@ namespace SFB {
 		/*! @brief The \c CFErrorRef error domain used by \c InputSource and subclasses */
 		static const CFStringRef ErrorDomain;
 
-		/*! Possible \c CFErrorRef error codes used by \c InputSource */
+		/*! @brief Possible \c CFErrorRef error codes used by \c InputSource */
 		enum ErrorCode {
 			FileNotFoundError		= 0,		/*!< File not found */
 			InputOutputError		= 1			/*!< Input/output error */
