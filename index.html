@@ -50,7 +50,7 @@
 <li>All other formats supported natively by Core Audio</li>
 </ul><p>In addition to playback, SFBAudioEngine supports reading and writing of metadata for most supported formats.</p>
 
-<p>SFBAudioEngine uses C++11 language features such as delegated constructors and range-based for, and C++11 STL features such as <code>std::unique_ptr</code>.  For this reason clang must be used to compile SFBAudioEngine and its dependencies, and clang's libc++ must be used as the C++ standard library.  Any application using SFBAudioEngine must also be compiled with clang and libc++.</p>
+<p>SFBAudioEngine uses C++11 language and standard library features.  For this reason clang must be used to compile SFBAudioEngine and its dependencies, and clang's libc++ must be used as the C++ standard library.  Any application using SFBAudioEngine must also be compiled with clang and libc++.</p>
 
 <h1>
 <a name="building-sfbaudioengine" class="anchor" href="#building-sfbaudioengine"><span class="octicon octicon-link"></span></a>Building SFBAudioEngine</h1>
@@ -66,15 +66,17 @@
 
 <p>Playing an audio file is as simple as:</p>
 
-<div class="highlight highlight-objc"><pre><span class="n">NSURL</span> <span class="o">*</span><span class="n">u</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="n">fileURLWithPath</span><span class="o">:</span><span class="s">@"example.flac"</span> <span class="n">isDirectory</span><span class="o">:</span><span class="nb">NO</span><span class="p">];</span>
-<span class="n">SFB</span><span class="o">::</span><span class="n">Audio</span><span class="o">::</span><span class="n">Player</span> <span class="n">player</span><span class="p">;</span>
-<span class="n">player</span><span class="p">.</span><span class="n">PlayURL</span><span class="p">((</span><span class="n">__bridge</span> <span class="n">CFURLRef</span><span class="p">)</span><span class="n">u</span><span class="p">);</span>
-</pre></div>
+<pre><code>NSURL *u = [NSURL fileURLWithPath:@"example.flac" isDirectory:NO];
+SFB::Audio::Player player;
+player.PlayURL((__bridge CFURLRef)u);
+</code></pre>
 
 <h1>
-<a name="api-documentation" class="anchor" href="#api-documentation"><span class="octicon octicon-link"></span></a>API Documentation</h1>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h1>
 
-<p>All public interfaces are documented using doxygen and are available using Xcode's Quick Help.  The API documentation may also be <a href="doc/">browsed online</a>.</p>
+<p>All public headers are documented using doxygen.  If you have doxygen installed, you may create a local copy of the documentation by running <code>doxygen</code> in SFBAudioEngine's root.  The HTML files will be saved in <code>doc/html/</code>.</p>
+
+<p>The <a href="http://sbooth.github.io/SFBAudioEngine/doc/">documentation is also available online</a>.</p>
       </section>
     </div>
 
