@@ -87,7 +87,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">SFB::Audio::ReplayGainAnalyzer Class Reference</div>  </div>
@@ -99,6 +101,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p><code>#include &lt;<a class="el" href="_replay_gain_analyzer_8h_source.html">ReplayGainAnalyzer.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:ab7c34f47ec9643aaa387a363dfbae51e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#ab7c34f47ec9643aaa387a363dfbae51e">ErrorCode</a> { <a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#ab7c34f47ec9643aaa387a363dfbae51ea6f4783234e0f74269e1b0e07553fe98f">FileFormatNotSupportedError</a> = 0
+ }</td></tr>
+<tr class="memdesc:ab7c34f47ec9643aaa387a363dfbae51e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code>.  <a href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#ab7c34f47ec9643aaa387a363dfbae51e">More...</a><br/></td></tr>
+<tr class="separator:ab7c34f47ec9643aaa387a363dfbae51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Creation/Destruction</div></td></tr>
@@ -106,10 +115,6 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#a655874ed50d6e88eaff172e2a3f4fce4">ReplayGainAnalyzer</a> ()</td></tr>
 <tr class="memdesc:a655874ed50d6e88eaff172e2a3f4fce4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code>. <br/></td></tr>
 <tr class="separator:a655874ed50d6e88eaff172e2a3f4fce4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a452f1b7903a2680d2b1fa6a4c7109498"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a452f1b7903a2680d2b1fa6a4c7109498"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#a452f1b7903a2680d2b1fa6a4c7109498">~ReplayGainAnalyzer</a> ()</td></tr>
-<tr class="memdesc:a452f1b7903a2680d2b1fa6a4c7109498"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code>. <br/></td></tr>
-<tr class="separator:a452f1b7903a2680d2b1fa6a4c7109498"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Audio analysis</div></td></tr>
 <tr class="memitem:aa3d0d052988b9b8da90852010f3e9f1c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#aa3d0d052988b9b8da90852010f3e9f1c">AnalyzeURL</a> (CFURLRef url, CFErrorRef *error=nullptr)</td></tr>
 <tr class="memdesc:aa3d0d052988b9b8da90852010f3e9f1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Analyze the given URL's replay gain.  <a href="#aa3d0d052988b9b8da90852010f3e9f1c">More...</a><br/></td></tr>
@@ -159,12 +164,39 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 static int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#ae92dd9df1d2d9362d2706eef74d2e3bc">GetBestReplayGainSampleRateForSampleRate</a> (int32_t sampleRate)</td></tr>
 <tr class="memdesc:ae92dd9df1d2d9362d2706eef74d2e3bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the best sample rate to use for replay gain calculation for the given sample rate. <br/></td></tr>
 <tr class="separator:ae92dd9df1d2d9362d2706eef74d2e3bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a22091309c2b3448ac5424803527e715d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22091309c2b3448ac5424803527e715d"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#a22091309c2b3448ac5424803527e715d">ErrorDomain</a></td></tr>
+<tr class="memdesc:a22091309c2b3448ac5424803527e715d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code>. <br/></td></tr>
+<tr class="separator:a22091309c2b3448ac5424803527e715d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A class that calculates replay gain. </p>
 <dl class="section see"><dt>See Also</dt><dd><a href="http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification">http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification</a></dd></dl>
 <p>To calculate an album's replay gain, create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code> and all <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#aa3d0d052988b9b8da90852010f3e9f1c" title="Analyze the given URL&#39;s replay gain. ">ReplayGainAnalyzer::AnalyzeURL()</a></code> </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a class="anchor" id="ab7c34f47ec9643aaa387a363dfbae51e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#ab7c34f47ec9643aaa387a363dfbae51e">SFB::Audio::ReplayGainAnalyzer::ErrorCode</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html" title="A class that calculates replay gain. ">ReplayGainAnalyzer</a></code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ab7c34f47ec9643aaa387a363dfbae51ea6f4783234e0f74269e1b0e07553fe98f"></a>FileFormatNotSupportedError</em>&nbsp;</td><td class="fielddoc">
+<p>File format not supported </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="aa3d0d052988b9b8da90852010f3e9f1c"></a>
 <div class="memitem">
 <div class="memproto">
@@ -235,7 +267,7 @@ static int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

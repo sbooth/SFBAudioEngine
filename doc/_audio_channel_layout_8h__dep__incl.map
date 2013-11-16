@@ -1,0 +1,5 @@
+<map id="AudioChannelLayout.h" name="AudioChannelLayout.h">
+<area shape="rect" id="node2" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="114,83,291,111"/>
+<area shape="rect" id="node3" href="$_audio_player_8h.html" title="Core playback functionality. " alt="" coords="5,161,149,189"/>
+<area shape="rect" id="node4" href="$_audio_converter_8h.html" title="Support for converting audio from one PCM format to another. " alt="" coords="174,161,297,189"/>
+</map>

@@ -88,9 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#typedef-members">Typedefs</a>  </div>
   <div class="headertitle">
 <div class="title">AudioDecoder.h File Reference</div>  </div>
 </div><!--header-->
@@ -100,15 +98,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;CoreFoundation/CoreFoundation.h&gt;</code><br/>
 <code>#include &lt;CoreAudio/CoreAudioTypes.h&gt;</code><br/>
+<code>#include &lt;memory&gt;</code><br/>
 <code>#include &lt;vector&gt;</code><br/>
 <code>#include &lt;algorithm&gt;</code><br/>
 <code>#include &quot;<a class="el" href="_input_source_8h_source.html">InputSource.h</a>&quot;</code><br/>
+<code>#include &quot;<a class="el" href="_audio_channel_layout_8h_source.html">AudioChannelLayout.h</a>&quot;</code><br/>
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for AudioDecoder.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_audio_decoder_8h__incl.png" border="0" usemap="#_decoders_2_audio_decoder_8h" alt=""/></div>
 <map name="_decoders_2_audio_decoder_8h" id="_decoders_2_audio_decoder_8h">
-<area shape="rect" id="node6" href="_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="431,83,536,111"/></map>
+<area shape="rect" id="node7" href="_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="637,83,741,111"/><area shape="rect" id="node13" href="_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="306,83,461,111"/><area shape="rect" id="node8" href="_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="698,161,797,189"/></map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -142,29 +142,13 @@ typedef <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">SFB::Audio::
 AudioDecoder&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_audio_decoder_8h.html#aa9f4f164e712b83782573f0fc261784a">__attribute__</a> ((deprecated))</td></tr>
 <tr class="memdesc:aa9f4f164e712b83782573f0fc261784a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compatibility typedef. <br/></td></tr>
 <tr class="separator:aa9f4f164e712b83782573f0fc261784a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:ab80f47fa99274b8c728eb6ff00883c5f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom">{ <a class="el" href="namespace_s_f_b_1_1_audio.html#ab80f47fa99274b8c728eb6ff00883c5fae5aaadd2c5b822abcded78266b629c08">SFB::Audio::AudioDecoderFileFormatNotRecognizedError</a> = 0, 
-<a class="el" href="namespace_s_f_b_1_1_audio.html#ab80f47fa99274b8c728eb6ff00883c5fa5db11db87ab332ed3dc569dc82b2b296">SFB::Audio::AudioDecoderFileFormatNotSupportedError</a> = 1, 
-<a class="el" href="namespace_s_f_b_1_1_audio.html#ab80f47fa99274b8c728eb6ff00883c5fa9e04e91d0a0093b7e0b44d81f87f7b8e">SFB::Audio::AudioDecoderInputOutputError</a> = 2
- }</td></tr>
-<tr class="memdesc:ab80f47fa99274b8c728eb6ff00883c5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible <code>CFErrorRef</code> error codes used by <code>AudioDecoder</code>.  <a href="namespace_s_f_b_1_1_audio.html#ab80f47fa99274b8c728eb6ff00883c5f">More...</a><br/></td></tr>
-<tr class="separator:ab80f47fa99274b8c728eb6ff00883c5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:ae6615ccdf6f7cc0ac2c8193e72474e2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6615ccdf6f7cc0ac2c8193e72474e2c"></a>
-const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b_1_1_audio.html#ae6615ccdf6f7cc0ac2c8193e72474e2c">SFB::Audio::AudioDecoderErrorDomain</a></td></tr>
-<tr class="memdesc:ae6615ccdf6f7cc0ac2c8193e72474e2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code>AudioDecoder</code>. <br/></td></tr>
-<tr class="separator:ae6615ccdf6f7cc0ac2c8193e72474e2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Support for decoding audio to PCM. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

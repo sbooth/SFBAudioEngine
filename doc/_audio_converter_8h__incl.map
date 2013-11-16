@@ -1,4 +1,6 @@
 <map id="AudioConverter.h" name="AudioConverter.h">
-<area shape="rect" id="node3" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="225,83,340,111"/>
-<area shape="rect" id="node8" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="436,161,540,189"/>
+<area shape="rect" id="node3" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="505,83,620,111"/>
+<area shape="rect" id="node9" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="205,161,309,189"/>
+<area shape="rect" id="node15" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="385,161,540,189"/>
+<area shape="rect" id="node10" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="242,238,341,266"/>
 </map>

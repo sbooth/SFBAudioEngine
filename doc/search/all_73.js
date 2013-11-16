@@ -9,8 +9,8 @@ var searchData=
   ['sectransform',['SecTransform',['../namespace_s_f_b.html#a1b437983a18e6a5d75763d84d927b26c',1,'SFB']]],
   ['seekbackward',['SeekBackward',['../class_s_f_b_1_1_audio_1_1_player.html#a639e4e061c012548c71cb7c3c773e603',1,'SFB::Audio::Player']]],
   ['seekforward',['SeekForward',['../class_s_f_b_1_1_audio_1_1_player.html#a61170bbf714305ee8712d96c0b44f695',1,'SFB::Audio::Player']]],
-  ['seektoframe',['SeekToFrame',['../class_s_f_b_1_1_audio_1_1_decoder.html#a55ed1c771bde5f42f5015881d9d43626',1,'SFB::Audio::Decoder::SeekToFrame()'],['../class_s_f_b_1_1_audio_1_1_player.html#a3afabeb2664b920426e6e18c686877fe',1,'SFB::Audio::Player::SeekToFrame()']]],
-  ['seektooffset',['SeekToOffset',['../class_s_f_b_1_1_input_source.html#a8db8b1947dddfd2dd56cbf17651936b4',1,'SFB::InputSource']]],
+  ['seektoframe',['SeekToFrame',['../class_s_f_b_1_1_audio_1_1_decoder.html#aabb5c363b52aff1c04c4a5718406c5b7',1,'SFB::Audio::Decoder::SeekToFrame()'],['../class_s_f_b_1_1_audio_1_1_player.html#a3afabeb2664b920426e6e18c686877fe',1,'SFB::Audio::Player::SeekToFrame()']]],
+  ['seektooffset',['SeekToOffset',['../class_s_f_b_1_1_input_source.html#a17addcef9b27bb11b31bb5a000b4d994',1,'SFB::InputSource']]],
   ['seektotime',['SeekToTime',['../class_s_f_b_1_1_audio_1_1_player.html#afef351928086e782e1bd4eb4383f1ddf',1,'SFB::Audio::Player']]],
   ['semaphore',['Semaphore',['../class_s_f_b_1_1_semaphore.html',1,'SFB']]],
   ['semaphore',['Semaphore',['../class_s_f_b_1_1_semaphore.html#aec7188565ee17155372f9cae6c5fac1e',1,'SFB::Semaphore']]],
@@ -74,12 +74,14 @@ var searchData=
   ['setvolume',['SetVolume',['../class_s_f_b_1_1_audio_1_1_player.html#a609384bb79dae1c7da0280eb23d3f12c',1,'SFB::Audio::Player']]],
   ['setvolumeforchannel',['SetVolumeForChannel',['../class_s_f_b_1_1_audio_1_1_player.html#a0065dd834ada180a2e253b271de117e8',1,'SFB::Audio::Player']]],
   ['sfb',['SFB',['../namespace_s_f_b.html',1,'']]],
+  ['shared_5fptr',['shared_ptr',['../class_s_f_b_1_1_audio_1_1_attached_picture.html#af0baea50e19edd976711ef4dbf9eeb8c',1,'SFB::Audio::AttachedPicture']]],
   ['signal',['Signal',['../class_s_f_b_1_1_semaphore.html#ab6a6b8f5413add5cea4e66df40eef926',1,'SFB::Semaphore']]],
   ['signalall',['SignalAll',['../class_s_f_b_1_1_semaphore.html#a6adb279122e4cab4890bcdeb8b45a6d5',1,'SFB::Semaphore']]],
   ['skiptonexttrack',['SkipToNextTrack',['../class_s_f_b_1_1_audio_1_1_player.html#a2311f963e1ad7c50ca1e0ad2f6e73d53',1,'SFB::Audio::Player']]],
   ['starthoggingoutputdevice',['StartHoggingOutputDevice',['../class_s_f_b_1_1_audio_1_1_player.html#aa174a0b11d5e33804ca30d98278c3547',1,'SFB::Audio::Player']]],
+  ['stereo',['Stereo',['../class_s_f_b_1_1_audio_1_1_channel_layout.html#a8b7b5101bdaaee7334a1be5364b08b56',1,'SFB::Audio::ChannelLayout']]],
   ['stop',['Stop',['../class_s_f_b_1_1_audio_1_1_player.html#a29e510f9545a40bca9c80a230908be9c',1,'SFB::Audio::Player']]],
   ['stophoggingoutputdevice',['StopHoggingOutputDevice',['../class_s_f_b_1_1_audio_1_1_player.html#ad63cdd7350e37ef482fec9f43bfc27a8',1,'SFB::Audio::Player']]],
   ['stopped',['Stopped',['../class_s_f_b_1_1_audio_1_1_player.html#aa3b03335d9c08c81d5f0617202bc1f3fac23e2b09ebe6bf4cb5e2a9abe85c0be2',1,'SFB::Audio::Player']]],
-  ['supportsseeking',['SupportsSeeking',['../class_s_f_b_1_1_input_source.html#a84dd258ac5f0acd8ec02d6502a2f47f7',1,'SFB::InputSource::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_decoder.html#ac25298b97f6b92e009367093902a5d3e',1,'SFB::Audio::Decoder::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_player.html#a42bd5012d5a2acf21162219e79fc11d4',1,'SFB::Audio::Player::SupportsSeeking()']]]
+  ['supportsseeking',['SupportsSeeking',['../class_s_f_b_1_1_input_source.html#a4c8bcd7038726838e268f26fffee2d73',1,'SFB::InputSource::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_decoder.html#a46c302c0e4ce3010df7fc24cba8496d5',1,'SFB::Audio::Decoder::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_player.html#a42bd5012d5a2acf21162219e79fc11d4',1,'SFB::Audio::Player::SupportsSeeking()']]]
 ];

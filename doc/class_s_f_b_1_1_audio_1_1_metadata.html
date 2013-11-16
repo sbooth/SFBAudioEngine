@@ -88,7 +88,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_s_f_b_1_1_audio_1_1_metadata-members.html">List of all members</a>  </div>
@@ -101,14 +103,30 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <a href="class_s_f_b_1_1_audio_1_1_metadata.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_audio_metadata_8h_source.html">AudioMetadata.h</a>&gt;</code></p>
+<div class="dynheader">
+Collaboration diagram for SFB::Audio::Metadata:</div>
+<div class="dyncontent">
+<div class="center"><img src="class_s_f_b_1_1_audio_1_1_metadata__coll__graph.png" border="0" usemap="#_s_f_b_1_1_audio_1_1_metadata_coll__map" alt="Collaboration graph"/></div>
+<map name="_s_f_b_1_1_audio_1_1_metadata_coll__map" id="_s_f_b_1_1_audio_1_1_metadata_coll__map">
+<area shape="rect" id="node2" href="class_s_f_b_1_1_c_f_wrapper.html" title="SFB::CFWrapper\&lt; CFMutable\lDictionaryRef \&gt;" alt="" coords="5,6,205,50"/><area shape="rect" id="node3" href="class_s_f_b_1_1_c_f_wrapper.html" title="SFB::CFWrapper\&lt; CFURLRef \&gt;" alt="" coords="229,14,440,42"/></map>
+<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:afc957c1b613e9319c197d4ee29a74fe4"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4">ErrorCode</a> { <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4a32f11ad41c8bdcf16e76c5e6da161f30">FileFormatNotRecognizedError</a> = 0, 
+<a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4a35cead02a01b7bf31701bba2173ef43f">FileFormatNotSupportedError</a> = 1, 
+<a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4a7e56cb37ab5aa98e6fd7b0d11373d73b">InputOutputError</a> = 2
+ }</td></tr>
+<tr class="memdesc:afc957c1b613e9319c197d4ee29a74fe4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code>.  <a href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4">More...</a><br/></td></tr>
+<tr class="separator:afc957c1b613e9319c197d4ee29a74fe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Creation and Destruction</div></td></tr>
-<tr class="memitem:a66f6dc755dbb4b3c05071d0d522ff989"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66f6dc755dbb4b3c05071d0d522ff989"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a66f6dc755dbb4b3c05071d0d522ff989">~Metadata</a> ()</td></tr>
-<tr class="memdesc:a66f6dc755dbb4b3c05071d0d522ff989"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code>. <br/></td></tr>
-<tr class="separator:a66f6dc755dbb4b3c05071d0d522ff989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03c1d87e551aac250599fd394e9896ad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03c1d87e551aac250599fd394e9896ad"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a03c1d87e551aac250599fd394e9896ad">~Metadata</a> ()=default</td></tr>
+<tr class="memdesc:a03c1d87e551aac250599fd394e9896ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code>. <br/></td></tr>
+<tr class="separator:a03c1d87e551aac250599fd394e9896ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">URL access</div></td></tr>
 <tr class="memitem:ae19f036b11a0986e31d3e3a01982b62c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae19f036b11a0986e31d3e3a01982b62c"></a>
 CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ae19f036b11a0986e31d3e3a01982b62c">GetURL</a> () const </td></tr>
@@ -119,12 +137,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a98e0a17104f7f78705c3a2f7ee186d7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the URL containing this metadata. <br/></td></tr>
 <tr class="separator:a98e0a17104f7f78705c3a2f7ee186d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">File access</div></td></tr>
-<tr class="memitem:a62939385506240d45875fb5fa9de0801"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a62939385506240d45875fb5fa9de0801">ReadMetadata</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="memdesc:a62939385506240d45875fb5fa9de0801"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the metadata.  <a href="#a62939385506240d45875fb5fa9de0801">More...</a><br/></td></tr>
-<tr class="separator:a62939385506240d45875fb5fa9de0801"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d02c7c086b2a29cf5d0f1baf02d5d94"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a6d02c7c086b2a29cf5d0f1baf02d5d94">WriteMetadata</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="memdesc:a6d02c7c086b2a29cf5d0f1baf02d5d94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the metadata.  <a href="#a6d02c7c086b2a29cf5d0f1baf02d5d94">More...</a><br/></td></tr>
-<tr class="separator:a6d02c7c086b2a29cf5d0f1baf02d5d94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0efc0ebb67c7e33ac5c5b9f4fa89f43"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#af0efc0ebb67c7e33ac5c5b9f4fa89f43">ReadMetadata</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:af0efc0ebb67c7e33ac5c5b9f4fa89f43"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the metadata.  <a href="#af0efc0ebb67c7e33ac5c5b9f4fa89f43">More...</a><br/></td></tr>
+<tr class="separator:af0efc0ebb67c7e33ac5c5b9f4fa89f43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cd8b77d05106d06f848c5c5c556163d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a5cd8b77d05106d06f848c5c5c556163d">WriteMetadata</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a5cd8b77d05106d06f848c5c5c556163d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the metadata.  <a href="#a5cd8b77d05106d06f848c5c5c556163d">More...</a><br/></td></tr>
+<tr class="separator:a5cd8b77d05106d06f848c5c5c556163d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Change management</div></td></tr>
 <tr class="memitem:a544237f7153ce5aeb70b2727ecfec949"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a544237f7153ce5aeb70b2727ecfec949"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a544237f7153ce5aeb70b2727ecfec949">HasUnsavedChanges</a> () const </td></tr>
@@ -439,26 +457,22 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a23b45d4a3f504efdc2e6e6d531906ce9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the replay gain album peak. <br/></td></tr>
 <tr class="separator:a23b45d4a3f504efdc2e6e6d531906ce9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Album artwork</div></td></tr>
-<tr class="memitem:a7ea8733f50975e320d5b3c187624d2da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ea8733f50975e320d5b3c187624d2da"></a>
-const std::vector<br class="typebreak"/>
-&lt; std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html">AttachedPicture</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a7ea8733f50975e320d5b3c187624d2da">GetAttachedPictures</a> () const </td></tr>
-<tr class="memdesc:a7ea8733f50975e320d5b3c187624d2da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all attached pictures. <br/></td></tr>
-<tr class="separator:a7ea8733f50975e320d5b3c187624d2da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c79d83001e4668e76ae9ec2ec5680cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c79d83001e4668e76ae9ec2ec5680cd"></a>
-const std::vector<br class="typebreak"/>
-&lt; std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html">AttachedPicture</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0c79d83001e4668e76ae9ec2ec5680cd">GetAttachedPicturesOfType</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#ac364fadea4b03ca56f9fd8cc10dc76fe">AttachedPicture::Type</a> type) const </td></tr>
-<tr class="memdesc:a0c79d83001e4668e76ae9ec2ec5680cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all attached pictures of the specified type. <br/></td></tr>
-<tr class="separator:a0c79d83001e4668e76ae9ec2ec5680cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adcb93dcbe561a6aac5bb9196a58e0c84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adcb93dcbe561a6aac5bb9196a58e0c84"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#adcb93dcbe561a6aac5bb9196a58e0c84">AttachPicture</a> (std::shared_ptr&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html">AttachedPicture</a> &gt; picture)</td></tr>
-<tr class="memdesc:adcb93dcbe561a6aac5bb9196a58e0c84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attach a picture. <br/></td></tr>
-<tr class="separator:adcb93dcbe561a6aac5bb9196a58e0c84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6ba826544c652088e1c511fb2a32040"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6ba826544c652088e1c511fb2a32040"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ab6ba826544c652088e1c511fb2a32040">RemoveAttachedPicture</a> (std::shared_ptr&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html">AttachedPicture</a> &gt; picture)</td></tr>
-<tr class="memdesc:ab6ba826544c652088e1c511fb2a32040"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an attached picture. <br/></td></tr>
-<tr class="separator:ab6ba826544c652088e1c511fb2a32040"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a976afa09545f99a317a3ff409e2874d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a976afa09545f99a317a3ff409e2874d2"></a>
+const <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0e8b1e64b8e3123421819df27affa98f">picture_vector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a976afa09545f99a317a3ff409e2874d2">GetAttachedPictures</a> () const </td></tr>
+<tr class="memdesc:a976afa09545f99a317a3ff409e2874d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all attached pictures. <br/></td></tr>
+<tr class="separator:a976afa09545f99a317a3ff409e2874d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a949adc910221402eff860521285d1dd3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a949adc910221402eff860521285d1dd3"></a>
+const <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0e8b1e64b8e3123421819df27affa98f">picture_vector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a949adc910221402eff860521285d1dd3">GetAttachedPicturesOfType</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#ac364fadea4b03ca56f9fd8cc10dc76fe">AttachedPicture::Type</a> type) const </td></tr>
+<tr class="memdesc:a949adc910221402eff860521285d1dd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all attached pictures of the specified type. <br/></td></tr>
+<tr class="separator:a949adc910221402eff860521285d1dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d35cd70428bc8e15f9fcc9d95211dd3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d35cd70428bc8e15f9fcc9d95211dd3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9d35cd70428bc8e15f9fcc9d95211dd3">AttachPicture</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#af0baea50e19edd976711ef4dbf9eeb8c">AttachedPicture::shared_ptr</a> picture)</td></tr>
+<tr class="memdesc:a9d35cd70428bc8e15f9fcc9d95211dd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attach a picture. <br/></td></tr>
+<tr class="separator:a9d35cd70428bc8e15f9fcc9d95211dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35c41dd88f79b4522ce44a26ebfb2195"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35c41dd88f79b4522ce44a26ebfb2195"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a35c41dd88f79b4522ce44a26ebfb2195">RemoveAttachedPicture</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#af0baea50e19edd976711ef4dbf9eeb8c">AttachedPicture::shared_ptr</a> picture)</td></tr>
+<tr class="memdesc:a35c41dd88f79b4522ce44a26ebfb2195"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an attached picture. <br/></td></tr>
+<tr class="separator:a35c41dd88f79b4522ce44a26ebfb2195"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a765b94bcae9ff6c4b4906edfb4ed4ee6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a765b94bcae9ff6c4b4906edfb4ed4ee6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a765b94bcae9ff6c4b4906edfb4ed4ee6">RemoveAttachedPicturesOfType</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#ac364fadea4b03ca56f9fd8cc10dc76fe">AttachedPicture::Type</a> type)</td></tr>
 <tr class="memdesc:a765b94bcae9ff6c4b4906edfb4ed4ee6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all attached pictures of the specified type. <br/></td></tr>
@@ -489,29 +503,186 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a24ba3417c7eb32ada64c1dc5b57a761a">HandlesMIMEType</a> (CFStringRef mimeType)</td></tr>
 <tr class="memdesc:a24ba3417c7eb32ada64c1dc5b57a761a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test whether a MIME type is supported. <br/></td></tr>
 <tr class="separator:a24ba3417c7eb32ada64c1dc5b57a761a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Factory Methods</div></td></tr>
-<tr class="memitem:abcf1ba2fbf0728424c214ee303c8576e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html">Metadata</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#abcf1ba2fbf0728424c214ee303c8576e">CreateMetadataForURL</a> (CFURLRef url, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:abcf1ba2fbf0728424c214ee303c8576e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> object for the specified URL.  <a href="#abcf1ba2fbf0728424c214ee303c8576e">More...</a><br/></td></tr>
-<tr class="separator:abcf1ba2fbf0728424c214ee303c8576e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a9f8f24407edd127963c89324baeb1033"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f8f24407edd127963c89324baeb1033"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9f8f24407edd127963c89324baeb1033">ErrorDomain</a></td></tr>
+<tr class="memdesc:a9f8f24407edd127963c89324baeb1033"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> and subclasses. <br/></td></tr>
+<tr class="separator:a9f8f24407edd127963c89324baeb1033"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Audio property dictionary keys</div></td></tr>
+<tr class="memitem:a6c773e012a5b29ff8c842e5c9cd8f488"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c773e012a5b29ff8c842e5c9cd8f488"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a6c773e012a5b29ff8c842e5c9cd8f488">kFormatNameKey</a></td></tr>
+<tr class="memdesc:a6c773e012a5b29ff8c842e5c9cd8f488"><td class="mdescLeft">&#160;</td><td class="mdescRight">The name of the audio format. <br/></td></tr>
+<tr class="separator:a6c773e012a5b29ff8c842e5c9cd8f488"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa08bd8c533e305aac68c5841bc3ed757"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa08bd8c533e305aac68c5841bc3ed757"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aa08bd8c533e305aac68c5841bc3ed757">kTotalFramesKey</a></td></tr>
+<tr class="memdesc:aa08bd8c533e305aac68c5841bc3ed757"><td class="mdescLeft">&#160;</td><td class="mdescRight">The total number of audio frames (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:aa08bd8c533e305aac68c5841bc3ed757"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a092cdb4f57151b144cf1d3f6147e9942"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a092cdb4f57151b144cf1d3f6147e9942"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a092cdb4f57151b144cf1d3f6147e9942">kChannelsPerFrameKey</a></td></tr>
+<tr class="memdesc:a092cdb4f57151b144cf1d3f6147e9942"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of channels (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a092cdb4f57151b144cf1d3f6147e9942"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a635543c00526e160f0d63ade5ef26bea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a635543c00526e160f0d63ade5ef26bea"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a635543c00526e160f0d63ade5ef26bea">kBitsPerChannelKey</a></td></tr>
+<tr class="memdesc:a635543c00526e160f0d63ade5ef26bea"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of bits per channel (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a635543c00526e160f0d63ade5ef26bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ff87222dbcbbff35dfea643380be421"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ff87222dbcbbff35dfea643380be421"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a2ff87222dbcbbff35dfea643380be421">kSampleRateKey</a></td></tr>
+<tr class="memdesc:a2ff87222dbcbbff35dfea643380be421"><td class="mdescLeft">&#160;</td><td class="mdescRight">The sample rate (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a2ff87222dbcbbff35dfea643380be421"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5eab23a20b2f0ea2ac4a7aaa2662766c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5eab23a20b2f0ea2ac4a7aaa2662766c"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a5eab23a20b2f0ea2ac4a7aaa2662766c">kDurationKey</a></td></tr>
+<tr class="memdesc:a5eab23a20b2f0ea2ac4a7aaa2662766c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The duration (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a5eab23a20b2f0ea2ac4a7aaa2662766c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a044b27b98ddd486d0363bca74c291038"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a044b27b98ddd486d0363bca74c291038"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a044b27b98ddd486d0363bca74c291038">kBitrateKey</a></td></tr>
+<tr class="memdesc:a044b27b98ddd486d0363bca74c291038"><td class="mdescLeft">&#160;</td><td class="mdescRight">The audio bitrate (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a044b27b98ddd486d0363bca74c291038"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Metadata dictionary keys</div></td></tr>
+<tr class="memitem:aa4ba610fe4f4ea14e23a010d43c5171d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4ba610fe4f4ea14e23a010d43c5171d"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aa4ba610fe4f4ea14e23a010d43c5171d">kTitleKey</a></td></tr>
+<tr class="memdesc:aa4ba610fe4f4ea14e23a010d43c5171d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Title (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:aa4ba610fe4f4ea14e23a010d43c5171d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a47d24cc50e094544c7dae08b3b0d09"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a47d24cc50e094544c7dae08b3b0d09"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a4a47d24cc50e094544c7dae08b3b0d09">kAlbumTitleKey</a></td></tr>
+<tr class="memdesc:a4a47d24cc50e094544c7dae08b3b0d09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Album title (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a4a47d24cc50e094544c7dae08b3b0d09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3afbbc0f2abda855d3206bb00ba372da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3afbbc0f2abda855d3206bb00ba372da"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a3afbbc0f2abda855d3206bb00ba372da">kArtistKey</a></td></tr>
+<tr class="memdesc:a3afbbc0f2abda855d3206bb00ba372da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Artist (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a3afbbc0f2abda855d3206bb00ba372da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa396696fc00674f19f0dbd4c59f5212e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa396696fc00674f19f0dbd4c59f5212e"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aa396696fc00674f19f0dbd4c59f5212e">kAlbumArtistKey</a></td></tr>
+<tr class="memdesc:aa396696fc00674f19f0dbd4c59f5212e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Album artist (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:aa396696fc00674f19f0dbd4c59f5212e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ec3fc1858058a5a47a44b1f0069737c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ec3fc1858058a5a47a44b1f0069737c"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9ec3fc1858058a5a47a44b1f0069737c">kGenreKey</a></td></tr>
+<tr class="memdesc:a9ec3fc1858058a5a47a44b1f0069737c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Genre (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a9ec3fc1858058a5a47a44b1f0069737c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6772b34b86da1939258fcff7234f1d20"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6772b34b86da1939258fcff7234f1d20"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a6772b34b86da1939258fcff7234f1d20">kComposerKey</a></td></tr>
+<tr class="memdesc:a6772b34b86da1939258fcff7234f1d20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Composer (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a6772b34b86da1939258fcff7234f1d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0406be93e9f7242506652b3ff42cdbbc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0406be93e9f7242506652b3ff42cdbbc"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0406be93e9f7242506652b3ff42cdbbc">kReleaseDateKey</a></td></tr>
+<tr class="memdesc:a0406be93e9f7242506652b3ff42cdbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release date (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a0406be93e9f7242506652b3ff42cdbbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10ba1cdef9a1cc37405823a7712f735e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10ba1cdef9a1cc37405823a7712f735e"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a10ba1cdef9a1cc37405823a7712f735e">kCompilationKey</a></td></tr>
+<tr class="memdesc:a10ba1cdef9a1cc37405823a7712f735e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compilation flag (<code>CFBoolean</code>) <br/></td></tr>
+<tr class="separator:a10ba1cdef9a1cc37405823a7712f735e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fb92fd8ca77718fdeba2c282e6828f0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0fb92fd8ca77718fdeba2c282e6828f0"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0fb92fd8ca77718fdeba2c282e6828f0">kTrackNumberKey</a></td></tr>
+<tr class="memdesc:a0fb92fd8ca77718fdeba2c282e6828f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track number (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a0fb92fd8ca77718fdeba2c282e6828f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab210b69a95a5fecae52592c040ba034e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab210b69a95a5fecae52592c040ba034e"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ab210b69a95a5fecae52592c040ba034e">kTrackTotalKey</a></td></tr>
+<tr class="memdesc:ab210b69a95a5fecae52592c040ba034e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track total (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:ab210b69a95a5fecae52592c040ba034e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30464bd2ae19014246ba118422cd49db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a30464bd2ae19014246ba118422cd49db"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a30464bd2ae19014246ba118422cd49db">kDiscNumberKey</a></td></tr>
+<tr class="memdesc:a30464bd2ae19014246ba118422cd49db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disc number (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a30464bd2ae19014246ba118422cd49db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e991d50c091146a42df342d3e6fa290"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e991d50c091146a42df342d3e6fa290"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a8e991d50c091146a42df342d3e6fa290">kDiscTotalKey</a></td></tr>
+<tr class="memdesc:a8e991d50c091146a42df342d3e6fa290"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disc total (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a8e991d50c091146a42df342d3e6fa290"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae711622189dfb6a72057f6b669deb6e3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae711622189dfb6a72057f6b669deb6e3"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ae711622189dfb6a72057f6b669deb6e3">kLyricsKey</a></td></tr>
+<tr class="memdesc:ae711622189dfb6a72057f6b669deb6e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lyrics (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:ae711622189dfb6a72057f6b669deb6e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf7dd13c5a48c976c8aa9ad221cefd29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf7dd13c5a48c976c8aa9ad221cefd29"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aaf7dd13c5a48c976c8aa9ad221cefd29">kBPMKey</a></td></tr>
+<tr class="memdesc:aaf7dd13c5a48c976c8aa9ad221cefd29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Beats per minute (BPM) (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:aaf7dd13c5a48c976c8aa9ad221cefd29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc0de805027656b5ac36159f6bd24281"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc0de805027656b5ac36159f6bd24281"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#adc0de805027656b5ac36159f6bd24281">kRatingKey</a></td></tr>
+<tr class="memdesc:adc0de805027656b5ac36159f6bd24281"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rating (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:adc0de805027656b5ac36159f6bd24281"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ee7de516f2510b0d20f7e4d1fdff647"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ee7de516f2510b0d20f7e4d1fdff647"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9ee7de516f2510b0d20f7e4d1fdff647">kCommentKey</a></td></tr>
+<tr class="memdesc:a9ee7de516f2510b0d20f7e4d1fdff647"><td class="mdescLeft">&#160;</td><td class="mdescRight">Comment (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a9ee7de516f2510b0d20f7e4d1fdff647"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3717b6291b0263f4cf08574de738a47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3717b6291b0263f4cf08574de738a47"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ac3717b6291b0263f4cf08574de738a47">kISRCKey</a></td></tr>
+<tr class="memdesc:ac3717b6291b0263f4cf08574de738a47"><td class="mdescLeft">&#160;</td><td class="mdescRight">International Standard Recording Code (ISRC) (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:ac3717b6291b0263f4cf08574de738a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1737348410f2f17617fe9465e846558"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa1737348410f2f17617fe9465e846558"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aa1737348410f2f17617fe9465e846558">kMCNKey</a></td></tr>
+<tr class="memdesc:aa1737348410f2f17617fe9465e846558"><td class="mdescLeft">&#160;</td><td class="mdescRight">Media Catalog Number (MCN) (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:aa1737348410f2f17617fe9465e846558"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1f253c89b98a756cd1248022334aac3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1f253c89b98a756cd1248022334aac3"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ae1f253c89b98a756cd1248022334aac3">kMusicBrainzReleaseIDKey</a></td></tr>
+<tr class="memdesc:ae1f253c89b98a756cd1248022334aac3"><td class="mdescLeft">&#160;</td><td class="mdescRight">MusicBrainz release ID (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:ae1f253c89b98a756cd1248022334aac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac424c0eed5c6bfadf35fcb4cc46c714e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac424c0eed5c6bfadf35fcb4cc46c714e"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ac424c0eed5c6bfadf35fcb4cc46c714e">kMusicBrainzRecordingIDKey</a></td></tr>
+<tr class="memdesc:ac424c0eed5c6bfadf35fcb4cc46c714e"><td class="mdescLeft">&#160;</td><td class="mdescRight">MusicBrainz recording ID (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:ac424c0eed5c6bfadf35fcb4cc46c714e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Sorting dictionary keys</div></td></tr>
+<tr class="memitem:a1576b8492b5e5110be5df444fed2f481"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1576b8492b5e5110be5df444fed2f481"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a1576b8492b5e5110be5df444fed2f481">kTitleSortOrderKey</a></td></tr>
+<tr class="memdesc:a1576b8492b5e5110be5df444fed2f481"><td class="mdescLeft">&#160;</td><td class="mdescRight">Title sort order (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a1576b8492b5e5110be5df444fed2f481"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c7d9fd99c8dd7d5fa42b332eabe8810"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4c7d9fd99c8dd7d5fa42b332eabe8810"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a4c7d9fd99c8dd7d5fa42b332eabe8810">kAlbumTitleSortOrderKey</a></td></tr>
+<tr class="memdesc:a4c7d9fd99c8dd7d5fa42b332eabe8810"><td class="mdescLeft">&#160;</td><td class="mdescRight">Album title sort order (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a4c7d9fd99c8dd7d5fa42b332eabe8810"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09f820f348af32e3299108aa19424656"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09f820f348af32e3299108aa19424656"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a09f820f348af32e3299108aa19424656">kArtistSortOrderKey</a></td></tr>
+<tr class="memdesc:a09f820f348af32e3299108aa19424656"><td class="mdescLeft">&#160;</td><td class="mdescRight">Artist sort order (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a09f820f348af32e3299108aa19424656"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac59600ba82cb03847bd7fa0cdef97c9d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac59600ba82cb03847bd7fa0cdef97c9d"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ac59600ba82cb03847bd7fa0cdef97c9d">kAlbumArtistSortOrderKey</a></td></tr>
+<tr class="memdesc:ac59600ba82cb03847bd7fa0cdef97c9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Album artist sort order (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:ac59600ba82cb03847bd7fa0cdef97c9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a24c7075ef1a5de99b27f3be5927172"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a24c7075ef1a5de99b27f3be5927172"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a6a24c7075ef1a5de99b27f3be5927172">kComposerSortOrderKey</a></td></tr>
+<tr class="memdesc:a6a24c7075ef1a5de99b27f3be5927172"><td class="mdescLeft">&#160;</td><td class="mdescRight">Composer sort order (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a6a24c7075ef1a5de99b27f3be5927172"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Grouping dictionary keys</div></td></tr>
+<tr class="memitem:a73f90fbaf32a5c172bdc0b7937c3b293"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73f90fbaf32a5c172bdc0b7937c3b293"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a73f90fbaf32a5c172bdc0b7937c3b293">kGroupingKey</a></td></tr>
+<tr class="memdesc:a73f90fbaf32a5c172bdc0b7937c3b293"><td class="mdescLeft">&#160;</td><td class="mdescRight">Grouping (<code>CFString</code>) <br/></td></tr>
+<tr class="separator:a73f90fbaf32a5c172bdc0b7937c3b293"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Additional metadata dictionary keys</div></td></tr>
+<tr class="memitem:a56b37b5ba01798b519851e7f68a987f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56b37b5ba01798b519851e7f68a987f6"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a56b37b5ba01798b519851e7f68a987f6">kAdditionalMetadataKey</a></td></tr>
+<tr class="memdesc:a56b37b5ba01798b519851e7f68a987f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional metadata (<code>CFDictionary</code>) <br/></td></tr>
+<tr class="separator:a56b37b5ba01798b519851e7f68a987f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr><td colspan="2"><div class="groupHeader">Replay gain dictionary keys</div></td></tr>
+<tr class="memitem:a0070eb3261ae6eab39ba40c473a2b78f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0070eb3261ae6eab39ba40c473a2b78f"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0070eb3261ae6eab39ba40c473a2b78f">kReferenceLoudnessKey</a></td></tr>
+<tr class="memdesc:a0070eb3261ae6eab39ba40c473a2b78f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replay gain reference loudness (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a0070eb3261ae6eab39ba40c473a2b78f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae97f939af4bba6427d945cd81c15e8a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae97f939af4bba6427d945cd81c15e8a6"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ae97f939af4bba6427d945cd81c15e8a6">kTrackGainKey</a></td></tr>
+<tr class="memdesc:ae97f939af4bba6427d945cd81c15e8a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replay gain track gain (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:ae97f939af4bba6427d945cd81c15e8a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab97af65e2993204e5364166959e6d323"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab97af65e2993204e5364166959e6d323"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ab97af65e2993204e5364166959e6d323">kTrackPeakKey</a></td></tr>
+<tr class="memdesc:ab97af65e2993204e5364166959e6d323"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replay gain track peak (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:ab97af65e2993204e5364166959e6d323"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a614f73bb0379a2eaace93fdab22cb7bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a614f73bb0379a2eaace93fdab22cb7bf"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a614f73bb0379a2eaace93fdab22cb7bf">kAlbumGainKey</a></td></tr>
+<tr class="memdesc:a614f73bb0379a2eaace93fdab22cb7bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replay gain album gain (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:a614f73bb0379a2eaace93fdab22cb7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad14b7144a851aedb3a12578500fa0cec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad14b7144a851aedb3a12578500fa0cec"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ad14b7144a851aedb3a12578500fa0cec">kAlbumPeakKey</a></td></tr>
+<tr class="memdesc:ad14b7144a851aedb3a12578500fa0cec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replay gain album peak (<code>CFNumber</code>) <br/></td></tr>
+<tr class="separator:ad14b7144a851aedb3a12578500fa0cec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a3888e51680a138fba80e72c13984b4fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3888e51680a138fba80e72c13984b4fe"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a3888e51680a138fba80e72c13984b4fe">Metadata</a> ()</td></tr>
-<tr class="memdesc:a3888e51680a138fba80e72c13984b4fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a090f5d14d0b7f2c8a98df4aaca43a58f" title="The location of the stream to be read/written. ">Metadata::mURL</a></code> to <code>nullptr</code>. <br/></td></tr>
+<tr class="memdesc:a3888e51680a138fba80e72c13984b4fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a03f7d7af9a708e9bc7be6da722eb06e5" title="The location of the stream to be read/written. ">Metadata::mURL</a></code> to <code>nullptr</code>. <br/></td></tr>
 <tr class="separator:a3888e51680a138fba80e72c13984b4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf4fe44fed1bc47a0b69e09476d54313"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf4fe44fed1bc47a0b69e09476d54313"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#acf4fe44fed1bc47a0b69e09476d54313">Metadata</a> (CFURLRef url)</td></tr>
-<tr class="memdesc:acf4fe44fed1bc47a0b69e09476d54313"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a090f5d14d0b7f2c8a98df4aaca43a58f" title="The location of the stream to be read/written. ">Metadata::mURL</a></code> to <code>url</code>. <br/></td></tr>
+<tr class="memdesc:acf4fe44fed1bc47a0b69e09476d54313"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a03f7d7af9a708e9bc7be6da722eb06e5" title="The location of the stream to be read/written. ">Metadata::mURL</a></code> to <code>url</code>. <br/></td></tr>
 <tr class="separator:acf4fe44fed1bc47a0b69e09476d54313"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae133774d0ce8a7221c67781a0b96a7f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae133774d0ce8a7221c67781a0b96a7f1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#ae133774d0ce8a7221c67781a0b96a7f1">ClearAllMetadata</a> ()</td></tr>
-<tr class="memdesc:ae133774d0ce8a7221c67781a0b96a7f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subclasses should call this from <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a62939385506240d45875fb5fa9de0801" title="Read the metadata. ">ReadMetadata()</a> to clear <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aae474c647cd456a8cbd75c3ec69986cd" title="The metadata information. ">Metadata::mMetadata</a>, <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a618cca4ec2d22e77c35b1b3c0169cfe0" title="The metadata information that has been changed but not saved. ">Metadata::mChangedMetadata</a>, and <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a8f5f0600ec5d2b69997dac15b71c431f" title="The attached picture information. ">Metadata::mPictures</a>. <br/></td></tr>
-<tr class="separator:ae133774d0ce8a7221c67781a0b96a7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2b27c8c9dea86f0c22f5c766210dd7b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2b27c8c9dea86f0c22f5c766210dd7b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aa2b27c8c9dea86f0c22f5c766210dd7b">MergeChangedMetadataIntoMetadata</a> ()</td></tr>
-<tr class="memdesc:aa2b27c8c9dea86f0c22f5c766210dd7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subclasses should call this after a successful save operation. <br/></td></tr>
-<tr class="separator:aa2b27c8c9dea86f0c22f5c766210dd7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Type-specific access</div></td></tr>
 <tr class="memitem:a96a1917fb36365614359f8386ed6d2f1"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a96a1917fb36365614359f8386ed6d2f1">GetStringValue</a> (CFStringRef key) const </td></tr>
 <tr class="memdesc:a96a1917fb36365614359f8386ed6d2f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve a string from the metadata dictionary.  <a href="#a96a1917fb36365614359f8386ed6d2f1">More...</a><br/></td></tr>
@@ -529,28 +700,68 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a090f5d14d0b7f2c8a98df4aaca43a58f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a090f5d14d0b7f2c8a98df4aaca43a58f"></a>
-CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a090f5d14d0b7f2c8a98df4aaca43a58f">mURL</a></td></tr>
-<tr class="memdesc:a090f5d14d0b7f2c8a98df4aaca43a58f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The location of the stream to be read/written. <br/></td></tr>
-<tr class="separator:a090f5d14d0b7f2c8a98df4aaca43a58f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae474c647cd456a8cbd75c3ec69986cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae474c647cd456a8cbd75c3ec69986cd"></a>
-CFMutableDictionaryRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#aae474c647cd456a8cbd75c3ec69986cd">mMetadata</a></td></tr>
-<tr class="memdesc:aae474c647cd456a8cbd75c3ec69986cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The metadata information. <br/></td></tr>
-<tr class="separator:aae474c647cd456a8cbd75c3ec69986cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a618cca4ec2d22e77c35b1b3c0169cfe0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a618cca4ec2d22e77c35b1b3c0169cfe0"></a>
-CFMutableDictionaryRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a618cca4ec2d22e77c35b1b3c0169cfe0">mChangedMetadata</a></td></tr>
-<tr class="memdesc:a618cca4ec2d22e77c35b1b3c0169cfe0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The metadata information that has been changed but not saved. <br/></td></tr>
-<tr class="separator:a618cca4ec2d22e77c35b1b3c0169cfe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f5f0600ec5d2b69997dac15b71c431f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f5f0600ec5d2b69997dac15b71c431f"></a>
-std::vector&lt; std::shared_ptr<br class="typebreak"/>
-&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html">AttachedPicture</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a8f5f0600ec5d2b69997dac15b71c431f">mPictures</a></td></tr>
-<tr class="memdesc:a8f5f0600ec5d2b69997dac15b71c431f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The attached picture information. <br/></td></tr>
-<tr class="separator:a8f5f0600ec5d2b69997dac15b71c431f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03f7d7af9a708e9bc7be6da722eb06e5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03f7d7af9a708e9bc7be6da722eb06e5"></a>
+<a class="el" href="namespace_s_f_b.html#aa2b56757198dfaaa1b581f29730c81f6">SFB::CFURL</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a03f7d7af9a708e9bc7be6da722eb06e5">mURL</a></td></tr>
+<tr class="memdesc:a03f7d7af9a708e9bc7be6da722eb06e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The location of the stream to be read/written. <br/></td></tr>
+<tr class="separator:a03f7d7af9a708e9bc7be6da722eb06e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a482c416b8fbb810ed664cea1146b4152"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a482c416b8fbb810ed664cea1146b4152"></a>
+<a class="el" href="namespace_s_f_b.html#ae00482da059561cc5923d8fc43e653ea">SFB::CFMutableDictionary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a482c416b8fbb810ed664cea1146b4152">mMetadata</a></td></tr>
+<tr class="memdesc:a482c416b8fbb810ed664cea1146b4152"><td class="mdescLeft">&#160;</td><td class="mdescRight">The metadata information. <br/></td></tr>
+<tr class="separator:a482c416b8fbb810ed664cea1146b4152"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27780b5a679747ce05bc6357c0733282"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27780b5a679747ce05bc6357c0733282"></a>
+<a class="el" href="namespace_s_f_b.html#ae00482da059561cc5923d8fc43e653ea">SFB::CFMutableDictionary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a27780b5a679747ce05bc6357c0733282">mChangedMetadata</a></td></tr>
+<tr class="memdesc:a27780b5a679747ce05bc6357c0733282"><td class="mdescLeft">&#160;</td><td class="mdescRight">The metadata information that has been changed but not saved. <br/></td></tr>
+<tr class="separator:a27780b5a679747ce05bc6357c0733282"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7053a15379bd401753c993a2a2e6f47f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7053a15379bd401753c993a2a2e6f47f"></a>
+<a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0e8b1e64b8e3123421819df27affa98f">picture_vector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a7053a15379bd401753c993a2a2e6f47f">mPictures</a></td></tr>
+<tr class="memdesc:a7053a15379bd401753c993a2a2e6f47f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The attached picture information. <br/></td></tr>
+<tr class="separator:a7053a15379bd401753c993a2a2e6f47f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
+Factory Methods</h2></td></tr>
+<tr class="memitem:a0e8b1e64b8e3123421819df27affa98f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e8b1e64b8e3123421819df27affa98f"></a>
+typedef std::vector<br class="typebreak"/>
+&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#af0baea50e19edd976711ef4dbf9eeb8c">AttachedPicture::shared_ptr</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a0e8b1e64b8e3123421819df27affa98f">picture_vector</a></td></tr>
+<tr class="memdesc:a0e8b1e64b8e3123421819df27affa98f"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <code>std::vector</code> of <code><a class="el" href="class_s_f_b_1_1_audio_1_1_attached_picture.html#af0baea50e19edd976711ef4dbf9eeb8c" title="A std::shared_ptr for AttachedPicture objects. ">AttachedPicture::shared_ptr</a></code> objects. <br/></td></tr>
+<tr class="separator:a0e8b1e64b8e3123421819df27affa98f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f812d7384e4a36c2ba9c0c9974c8ec0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f812d7384e4a36c2ba9c0c9974c8ec0"></a>
+typedef std::unique_ptr&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html">Metadata</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9f812d7384e4a36c2ba9c0c9974c8ec0">unique_ptr</a></td></tr>
+<tr class="memdesc:a9f812d7384e4a36c2ba9c0c9974c8ec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <code>std::unique_ptr</code> for <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> objects. <br/></td></tr>
+<tr class="separator:a9f812d7384e4a36c2ba9c0c9974c8ec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af17649dec8a3cc8eefa96a32213a68db"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9f812d7384e4a36c2ba9c0c9974c8ec0">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#af17649dec8a3cc8eefa96a32213a68db">CreateMetadataForURL</a> (CFURLRef url, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:af17649dec8a3cc8eefa96a32213a68db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code> object for the specified URL.  <a href="#af17649dec8a3cc8eefa96a32213a68db">More...</a><br/></td></tr>
+<tr class="separator:af17649dec8a3cc8eefa96a32213a68db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for all audio metadata reader/writer classes. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="abcf1ba2fbf0728424c214ee303c8576e"></a>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a class="anchor" id="afc957c1b613e9319c197d4ee29a74fe4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#afc957c1b613e9319c197d4ee29a74fe4">SFB::Audio::Metadata::ErrorCode</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html" title="Base class for all audio metadata reader/writer classes. ">Metadata</a></code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="afc957c1b613e9319c197d4ee29a74fe4a32f11ad41c8bdcf16e76c5e6da161f30"></a>FileFormatNotRecognizedError</em>&nbsp;</td><td class="fielddoc">
+<p>File format not recognized </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="afc957c1b613e9319c197d4ee29a74fe4a35cead02a01b7bf31701bba2173ef43f"></a>FileFormatNotSupportedError</em>&nbsp;</td><td class="fielddoc">
+<p>File format not supported </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="afc957c1b613e9319c197d4ee29a74fe4a7e56cb37ab5aa98e6fd7b0d11373d73b"></a>InputOutputError</em>&nbsp;</td><td class="fielddoc">
+<p>Input/output error </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="af17649dec8a3cc8eefa96a32213a68db"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -558,7 +769,7 @@ std::vector&lt; std::shared_ptr<br class="typebreak"/>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html">Metadata</a>* SFB::Audio::Metadata::CreateMetadataForURL </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_metadata.html#a9f812d7384e4a36c2ba9c0c9974c8ec0">unique_ptr</a> SFB::Audio::Metadata::CreateMetadataForURL </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -747,26 +958,18 @@ std::vector&lt; std::shared_ptr<br class="typebreak"/>
 
 </div>
 </div>
-<a class="anchor" id="a62939385506240d45875fb5fa9de0801"></a>
+<a class="anchor" id="af0efc0ebb67c7e33ac5c5b9f4fa89f43"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::Audio::Metadata::ReadMetadata </td>
+          <td class="memname">bool SFB::Audio::Metadata::ReadMetadata </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Read the metadata. </p>
@@ -863,26 +1066,18 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a6d02c7c086b2a29cf5d0f1baf02d5d94"></a>
+<a class="anchor" id="a5cd8b77d05106d06f848c5c5c556163d"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::Audio::Metadata::WriteMetadata </td>
+          <td class="memname">bool SFB::Audio::Metadata::WriteMetadata </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Write the metadata. </p>
@@ -902,7 +1097,7 @@ template&lt;typename T &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

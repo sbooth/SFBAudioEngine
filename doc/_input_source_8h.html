@@ -88,9 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#typedef-members">Typedefs</a>  </div>
   <div class="headertitle">
 <div class="title">InputSource.h File Reference</div>  </div>
 </div><!--header-->
@@ -98,13 +96,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p>Support for arbitrary bytestream input to <code>AudioDecoder</code>.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;CoreFoundation/CoreFoundation.h&gt;</code><br/>
+<div class="textblock"><code>#include &lt;memory&gt;</code><br/>
+<code>#include &lt;CoreFoundation/CoreFoundation.h&gt;</code><br/>
+<code>#include &quot;<a class="el" href="_c_f_wrapper_8h_source.html">CFWrapper.h</a>&quot;</code><br/>
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for InputSource.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_input_source_8h__incl.png" border="0" usemap="#_input_2_input_source_8h" alt=""/></div>
 <map name="_input_2_input_source_8h" id="_input_2_input_source_8h">
-</map>
+<area shape="rect" id="node4" href="_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="320,83,420,111"/></map>
 </div>
 </div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
@@ -135,31 +135,13 @@ typedef <a class="el" href="class_s_f_b_1_1_input_source.html">SFB::InputSource<
 InputSource&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_input_source_8h.html#aba91374c29dd0522f0c1bb3bcf6c8305">__attribute__</a> ((deprecated))</td></tr>
 <tr class="memdesc:aba91374c29dd0522f0c1bb3bcf6c8305"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compatibility typedef. <br/></td></tr>
 <tr class="separator:aba91374c29dd0522f0c1bb3bcf6c8305"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:ae44c1252f746f3582ac28bac770939d4"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#ae44c1252f746f3582ac28bac770939d4">SFB::InputSourceErrorCodes</a> { <a class="el" href="namespace_s_f_b.html#ae44c1252f746f3582ac28bac770939d4a756c3f968725ef38bb5a2559e80cc897">SFB::InputSourceFileNotFoundError</a> = 0, 
-<a class="el" href="namespace_s_f_b.html#ae44c1252f746f3582ac28bac770939d4ab821285e6a11b1e3bf0485cae40866ea">SFB::InputSourceInputOutputError</a> = 1
- }</td></tr>
-<tr class="separator:ae44c1252f746f3582ac28bac770939d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12698e26bc4722f45de7d051e27d9e7a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a12698e26bc4722f45de7d051e27d9e7a">SFB::InputSourceFlags</a> { <a class="el" href="namespace_s_f_b.html#a12698e26bc4722f45de7d051e27d9e7aadb165dc55105159e6b282e62b837781a">SFB::InputSourceFlagMemoryMapFiles</a> = 1 &lt;&lt; 0, 
-<a class="el" href="namespace_s_f_b.html#a12698e26bc4722f45de7d051e27d9e7aa0d27550de8d8de09c7f5d6c0312d8088">SFB::InputSourceFlagLoadFilesInMemory</a> = 1 &lt;&lt; 1
- }</td></tr>
-<tr class="separator:a12698e26bc4722f45de7d051e27d9e7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a3d204aa081eaa1a2fa0107ea68c259e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d204aa081eaa1a2fa0107ea68c259e7"></a>
-const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a3d204aa081eaa1a2fa0107ea68c259e7">SFB::InputSourceErrorDomain</a></td></tr>
-<tr class="memdesc:a3d204aa081eaa1a2fa0107ea68c259e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. <br/></td></tr>
-<tr class="separator:a3d204aa081eaa1a2fa0107ea68c259e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Support for arbitrary bytestream input to <code>AudioDecoder</code>. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

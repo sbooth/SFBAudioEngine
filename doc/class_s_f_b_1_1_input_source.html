@@ -87,8 +87,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_s_f_b_1_1_input_source-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">SFB::InputSource Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
@@ -100,185 +101,154 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p><code>#include &lt;<a class="el" href="_input_source_8h_source.html">InputSource.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a5bb2e896a3d6e918e454502008e4229b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a5bb2e896a3d6e918e454502008e4229b">ErrorCode</a> { <a class="el" href="class_s_f_b_1_1_input_source.html#a5bb2e896a3d6e918e454502008e4229badbd2198317daabb252f78db3029dd407">FileNotFoundError</a> = 0, 
+<a class="el" href="class_s_f_b_1_1_input_source.html#a5bb2e896a3d6e918e454502008e4229ba7388071c99de272272eed208731ea76c">InputOutputError</a> = 1
+ }</td></tr>
+<tr class="memdesc:a5bb2e896a3d6e918e454502008e4229b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="class_s_f_b_1_1_input_source.html#a5bb2e896a3d6e918e454502008e4229b">More...</a><br/></td></tr>
+<tr class="separator:a5bb2e896a3d6e918e454502008e4229b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacdadbab552ef425d3e2a0e7e84c8098"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098">InputSourceFlags</a> { <a class="el" href="class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098a364be6d24fe78d463da3e597edeeb0c5">MemoryMapFiles</a> = 1 &lt;&lt; 0, 
+<a class="el" href="class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098a83595265ba9eb9a06dbf9343298ad7bf">LoadFilesInMemory</a> = 1 &lt;&lt; 1
+ }</td></tr>
+<tr class="separator:aacdadbab552ef425d3e2a0e7e84c8098"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Creation and Destruction</div></td></tr>
-<tr class="memitem:a7e52ebd8bd62f8542f9a87c247c6e2de"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a7e52ebd8bd62f8542f9a87c247c6e2de">~InputSource</a> ()</td></tr>
-<tr class="separator:a7e52ebd8bd62f8542f9a87c247c6e2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fafa6aaf9132b7d979a18b8f2658196"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0fafa6aaf9132b7d979a18b8f2658196"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a0fafa6aaf9132b7d979a18b8f2658196">~InputSource</a> ()=default</td></tr>
+<tr class="memdesc:a0fafa6aaf9132b7d979a18b8f2658196"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. <br/></td></tr>
+<tr class="separator:a0fafa6aaf9132b7d979a18b8f2658196"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">URL access</div></td></tr>
-<tr class="memitem:a048befa6affac512f25c7e01d6172428"><td class="memItemLeft" align="right" valign="top">CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a048befa6affac512f25c7e01d6172428">GetURL</a> () const </td></tr>
+<tr class="memitem:a048befa6affac512f25c7e01d6172428"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a048befa6affac512f25c7e01d6172428"></a>
+CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a048befa6affac512f25c7e01d6172428">GetURL</a> () const </td></tr>
+<tr class="memdesc:a048befa6affac512f25c7e01d6172428"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the URL for this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. <br/></td></tr>
 <tr class="separator:a048befa6affac512f25c7e01d6172428"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Opening and Closing</div></td></tr>
-<tr class="memitem:ab88fdc531d60bd5d4aa9ff31d209764d"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#ab88fdc531d60bd5d4aa9ff31d209764d">Open</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="separator:ab88fdc531d60bd5d4aa9ff31d209764d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5004d38ae91e9fb58d05ddb9d4a74791"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a5004d38ae91e9fb58d05ddb9d4a74791">Close</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="separator:a5004d38ae91e9fb58d05ddb9d4a74791"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c8e46b6500074ea61969a8193611c8d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a6c8e46b6500074ea61969a8193611c8d">IsOpen</a> () const </td></tr>
+<tr class="memitem:a82f5157a112b5f20a989df620cdd3c74"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a82f5157a112b5f20a989df620cdd3c74">Open</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a82f5157a112b5f20a989df620cdd3c74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open the input for reading.  <a href="#a82f5157a112b5f20a989df620cdd3c74">More...</a><br/></td></tr>
+<tr class="separator:a82f5157a112b5f20a989df620cdd3c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7be54eefb224af0a646cd097e4b56230"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a7be54eefb224af0a646cd097e4b56230">Close</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a7be54eefb224af0a646cd097e4b56230"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the input.  <a href="#a7be54eefb224af0a646cd097e4b56230">More...</a><br/></td></tr>
+<tr class="separator:a7be54eefb224af0a646cd097e4b56230"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c8e46b6500074ea61969a8193611c8d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c8e46b6500074ea61969a8193611c8d"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a6c8e46b6500074ea61969a8193611c8d">IsOpen</a> () const </td></tr>
+<tr class="memdesc:a6c8e46b6500074ea61969a8193611c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query whether this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> is open. <br/></td></tr>
 <tr class="separator:a6c8e46b6500074ea61969a8193611c8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Bytestream access</div></td></tr>
-<tr class="memitem:a602836d76545582614c0ab0af209994c"><td class="memItemLeft" align="right" valign="top">virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a602836d76545582614c0ab0af209994c">Read</a> (void *buffer, SInt64 byteCount)=0</td></tr>
-<tr class="separator:a602836d76545582614c0ab0af209994c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e170e383338da69e9db0904876142a1"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a1e170e383338da69e9db0904876142a1">AtEOF</a> () const =0</td></tr>
-<tr class="separator:a1e170e383338da69e9db0904876142a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0af49968a88ceebd3b9e17a8d266b4fe"><td class="memItemLeft" align="right" valign="top">virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a0af49968a88ceebd3b9e17a8d266b4fe">GetOffset</a> () const =0</td></tr>
-<tr class="separator:a0af49968a88ceebd3b9e17a8d266b4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8dac1a995db31b7d80a7f6f570c5088d"><td class="memItemLeft" align="right" valign="top">virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a8dac1a995db31b7d80a7f6f570c5088d">GetLength</a> () const =0</td></tr>
-<tr class="separator:a8dac1a995db31b7d80a7f6f570c5088d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84dd258ac5f0acd8ec02d6502a2f47f7"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a84dd258ac5f0acd8ec02d6502a2f47f7">SupportsSeeking</a> () const </td></tr>
-<tr class="separator:a84dd258ac5f0acd8ec02d6502a2f47f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8db8b1947dddfd2dd56cbf17651936b4"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a8db8b1947dddfd2dd56cbf17651936b4">SeekToOffset</a> (SInt64 offset)</td></tr>
-<tr class="separator:a8db8b1947dddfd2dd56cbf17651936b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75ee06c78e9a6ae7cd08f44291b767d6"><td class="memItemLeft" align="right" valign="top">SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a75ee06c78e9a6ae7cd08f44291b767d6">Read</a> (void *buffer, SInt64 byteCount)</td></tr>
+<tr class="memdesc:a75ee06c78e9a6ae7cd08f44291b767d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read bytes from the input.  <a href="#a75ee06c78e9a6ae7cd08f44291b767d6">More...</a><br/></td></tr>
+<tr class="separator:a75ee06c78e9a6ae7cd08f44291b767d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9526617ecd9cdcd1d43c12c1a717cd8e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9526617ecd9cdcd1d43c12c1a717cd8e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a9526617ecd9cdcd1d43c12c1a717cd8e">AtEOF</a> () const </td></tr>
+<tr class="memdesc:a9526617ecd9cdcd1d43c12c1a717cd8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine whether the end of input has been reached. <br/></td></tr>
+<tr class="separator:a9526617ecd9cdcd1d43c12c1a717cd8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab118f224196d375d4cadf3ead2bda7b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab118f224196d375d4cadf3ead2bda7b"></a>
+SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#aab118f224196d375d4cadf3ead2bda7b">GetOffset</a> () const </td></tr>
+<tr class="memdesc:aab118f224196d375d4cadf3ead2bda7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current offset in the input, in bytes. <br/></td></tr>
+<tr class="separator:aab118f224196d375d4cadf3ead2bda7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8233ef44ae608e4f75078ee1453acc76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8233ef44ae608e4f75078ee1453acc76"></a>
+SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a8233ef44ae608e4f75078ee1453acc76">GetLength</a> () const </td></tr>
+<tr class="memdesc:a8233ef44ae608e4f75078ee1453acc76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the length of the input, in bytes. <br/></td></tr>
+<tr class="separator:a8233ef44ae608e4f75078ee1453acc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c8bcd7038726838e268f26fffee2d73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4c8bcd7038726838e268f26fffee2d73"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a4c8bcd7038726838e268f26fffee2d73">SupportsSeeking</a> () const </td></tr>
+<tr class="memdesc:a4c8bcd7038726838e268f26fffee2d73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query whether this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> is seekable. <br/></td></tr>
+<tr class="separator:a4c8bcd7038726838e268f26fffee2d73"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17addcef9b27bb11b31bb5a000b4d994"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a17addcef9b27bb11b31bb5a000b4d994">SeekToOffset</a> (SInt64 offset)</td></tr>
+<tr class="separator:a17addcef9b27bb11b31bb5a000b4d994"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr><td colspan="2"><div class="groupHeader">Factory Methods</div></td></tr>
-<tr class="memitem:ac92de6ef03308ebddfee2c7e05b1963a"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#ac92de6ef03308ebddfee2c7e05b1963a">CreateInputSourceForURL</a> (CFURLRef url, int flags=0, CFErrorRef *error=nullptr)</td></tr>
-<tr class="separator:ac92de6ef03308ebddfee2c7e05b1963a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:af4b0e7e14f73d5d8ce37a697d07d3a69"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4b0e7e14f73d5d8ce37a697d07d3a69"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#af4b0e7e14f73d5d8ce37a697d07d3a69">ErrorDomain</a></td></tr>
+<tr class="memdesc:af4b0e7e14f73d5d8ce37a697d07d3a69"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> and subclasses. <br/></td></tr>
+<tr class="separator:af4b0e7e14f73d5d8ce37a697d07d3a69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a249826b3c700a89d049695d930cbed85"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a249826b3c700a89d049695d930cbed85">InputSource</a> ()</td></tr>
+<tr class="memitem:a249826b3c700a89d049695d930cbed85"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a249826b3c700a89d049695d930cbed85"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a249826b3c700a89d049695d930cbed85">InputSource</a> ()</td></tr>
+<tr class="memdesc:a249826b3c700a89d049695d930cbed85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> and initialize <code>InputSource::mURL</code> to <code>nullptr</code>. <br/></td></tr>
 <tr class="separator:a249826b3c700a89d049695d930cbed85"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53970e5a4f511f4145e59395796ea0c5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a53970e5a4f511f4145e59395796ea0c5">InputSource</a> (CFURLRef url)</td></tr>
+<tr class="memitem:a53970e5a4f511f4145e59395796ea0c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a53970e5a4f511f4145e59395796ea0c5"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a53970e5a4f511f4145e59395796ea0c5">InputSource</a> (CFURLRef url)</td></tr>
+<tr class="memdesc:a53970e5a4f511f4145e59395796ea0c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> and initialize <code>InputSource::mURL</code> to <code>url</code>. <br/></td></tr>
 <tr class="separator:a53970e5a4f511f4145e59395796ea0c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
-Protected Attributes</h2></td></tr>
-<tr class="memitem:ad7268dd9411c650b0ecaf81564967888"><td class="memItemLeft" align="right" valign="top">CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#ad7268dd9411c650b0ecaf81564967888">mURL</a></td></tr>
-<tr class="separator:ad7268dd9411c650b0ecaf81564967888"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad668ccabd294a471bbac603eee62e04"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#aad668ccabd294a471bbac603eee62e04">mIsOpen</a></td></tr>
-<tr class="separator:aad668ccabd294a471bbac603eee62e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
+Factory Methods</h2></td></tr>
+<tr class="memitem:ad8b2e4926336c3b02faa02a1bd36a9e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8b2e4926336c3b02faa02a1bd36a9e2"></a>
+typedef std::unique_ptr<br class="typebreak"/>
+&lt; <a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">unique_ptr</a></td></tr>
+<tr class="memdesc:ad8b2e4926336c3b02faa02a1bd36a9e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <code>std::unique_ptr</code> for <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> objects. <br/></td></tr>
+<tr class="separator:ad8b2e4926336c3b02faa02a1bd36a9e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a711e7c9ae043fe766815cca7ff8788be"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_input_source.html#a711e7c9ae043fe766815cca7ff8788be">CreateInputSourceForURL</a> (CFURLRef url, int flags=0, CFErrorRef *error=nullptr)</td></tr>
+<tr class="separator:a711e7c9ae043fe766815cca7ff8788be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An abstract class allowing access to a stream of bytes. </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a7e52ebd8bd62f8542f9a87c247c6e2de"></a>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a class="anchor" id="a5bb2e896a3d6e918e454502008e4229b"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual SFB::InputSource::~InputSource </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td class="memname">enum <a class="el" href="class_s_f_b_1_1_input_source.html#a5bb2e896a3d6e918e454502008e4229b">SFB::InputSource::ErrorCode</a></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Destroy this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> </p>
+
+<p>Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="a5bb2e896a3d6e918e454502008e4229badbd2198317daabb252f78db3029dd407"></a>FileNotFoundError</em>&nbsp;</td><td class="fielddoc">
+<p>File not found </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="a5bb2e896a3d6e918e454502008e4229ba7388071c99de272272eed208731ea76c"></a>InputOutputError</em>&nbsp;</td><td class="fielddoc">
+<p>Input/output error </p>
+</td></tr>
+</table>
 
 </div>
 </div>
-<a class="anchor" id="a249826b3c700a89d049695d930cbed85"></a>
+<a class="anchor" id="aacdadbab552ef425d3e2a0e7e84c8098"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">SFB::InputSource::InputSource </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td class="memname">enum <a class="el" href="class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098">SFB::InputSource::InputSourceFlags</a></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Create a new <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_input_source.html#ad7268dd9411c650b0ecaf81564967888">InputSource::mURL</a></code> to <code>nullptr</code> </p>
-
-</div>
-</div>
-<a class="anchor" id="a53970e5a4f511f4145e59395796ea0c5"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">SFB::InputSource::InputSource </td>
-          <td>(</td>
-          <td class="paramtype">CFURLRef&#160;</td>
-          <td class="paramname"><em>url</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
+<p>Flags used in <code><a class="el" href="class_s_f_b_1_1_input_source.html#a711e7c9ae043fe766815cca7ff8788be">InputSource::CreateInputSourceForURL</a></code> </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="aacdadbab552ef425d3e2a0e7e84c8098a364be6d24fe78d463da3e597edeeb0c5"></a>MemoryMapFiles</em>&nbsp;</td><td class="fielddoc">
+<p>Files should be mapped in memory using <code>mmap()</code> </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="aacdadbab552ef425d3e2a0e7e84c8098a83595265ba9eb9a06dbf9343298ad7bf"></a>LoadFilesInMemory</em>&nbsp;</td><td class="fielddoc">
+<p>Files should be fully loaded in memory </p>
+</td></tr>
 </table>
-</div><div class="memdoc">
-<p>Create a new <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">url</td><td>The URL to which <code><a class="el" href="class_s_f_b_1_1_input_source.html#ad7268dd9411c650b0ecaf81564967888">InputSource::mURL</a></code> will be set </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a1e170e383338da69e9db0904876142a1"></a>
+<a class="anchor" id="a7be54eefb224af0a646cd097e4b56230"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::InputSource::AtEOF </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Determine if the end of input has been reached </p>
-<dl class="section return"><dt>Returns</dt><dd><code>true</code> if the end of input has been reached, <code>false</code> otherwise </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a5004d38ae91e9fb58d05ddb9d4a74791"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool SFB::InputSource::Close </td>
+          <td class="memname">bool SFB::InputSource::Close </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Close the input </p>
+
+<p>Close the input. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">error</td><td>An optional pointer to a <code>CFErrorRef</code> to receive error information </td></tr>
@@ -289,7 +259,7 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ac92de6ef03308ebddfee2c7e05b1963a"></a>
+<a class="anchor" id="a711e7c9ae043fe766815cca7ff8788be"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -297,7 +267,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a>* SFB::InputSource::CreateInputSourceForURL </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">unique_ptr</a> SFB::InputSource::CreateInputSourceForURL </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -336,132 +306,25 @@ Protected Attributes</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> for the specified URL, or <code>nullptr</code> on failure </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="namespace_s_f_b.html#a12698e26bc4722f45de7d051e27d9e7a">InputSourceFlags</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098">InputSourceFlags</a> </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a8dac1a995db31b7d80a7f6f570c5088d"></a>
+<a class="anchor" id="a82f5157a112b5f20a989df620cdd3c74"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual SInt64 SFB::InputSource::GetLength </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Get the length of the input </p>
-<dl class="section return"><dt>Returns</dt><dd>The length of the input, in bytes </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a0af49968a88ceebd3b9e17a8d266b4fe"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual SInt64 SFB::InputSource::GetOffset </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Get the current offset in the input </p>
-<dl class="section return"><dt>Returns</dt><dd>The current offset, in bytes </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a048befa6affac512f25c7e01d6172428"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">CFURLRef SFB::InputSource::GetURL </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Get the URL for this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> </p>
-<dl class="section return"><dt>Returns</dt><dd>The URL for this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a6c8e46b6500074ea61969a8193611c8d"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SFB::InputSource::IsOpen </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Determine if this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> is open </p>
-<dl class="section return"><dt>Returns</dt><dd><code>true</code> if the <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> is open, <code>false</code> otherwise </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ab88fdc531d60bd5d4aa9ff31d209764d"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool SFB::InputSource::Open </td>
+          <td class="memname">bool SFB::InputSource::Open </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Open the input for reading </p>
+
+<p>Open the input for reading. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">error</td><td>An optional pointer to a <code>CFErrorRef</code> to receive error information </td></tr>
@@ -472,15 +335,12 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a602836d76545582614c0ab0af209994c"></a>
+<a class="anchor" id="a75ee06c78e9a6ae7cd08f44291b767d6"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual SInt64 SFB::InputSource::Read </td>
+          <td class="memname">SInt64 SFB::InputSource::Read </td>
           <td>(</td>
           <td class="paramtype">void *&#160;</td>
           <td class="paramname"><em>buffer</em>, </td>
@@ -497,13 +357,9 @@ Protected Attributes</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Read bytes from the input </p>
+
+<p>Read bytes from the input. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">buffer</td><td>The destination buffer </td></tr>
@@ -515,26 +371,18 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a8db8b1947dddfd2dd56cbf17651936b4"></a>
+<a class="anchor" id="a17addcef9b27bb11b31bb5a000b4d994"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::InputSource::SeekToOffset </td>
+          <td class="memname">bool SFB::InputSource::SeekToOffset </td>
           <td>(</td>
           <td class="paramtype">SInt64&#160;</td>
           <td class="paramname"><em>offset</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 <p>Seek to the specified byte offset </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -547,81 +395,13 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a84dd258ac5f0acd8ec02d6502a2f47f7"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool SFB::InputSource::SupportsSeeking </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Determine if this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> is seekable </p>
-<dl class="section return"><dt>Returns</dt><dd><code>true</code> if this <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> supports seeking, <code>false</code> otherwise </dd></dl>
-
-</div>
-</div>
-<h2 class="groupheader">Member Data Documentation</h2>
-<a class="anchor" id="aad668ccabd294a471bbac603eee62e04"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool SFB::InputSource::mIsOpen</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Subclasses should set this to <code>true</code> if <a class="el" href="class_s_f_b_1_1_input_source.html#ab88fdc531d60bd5d4aa9ff31d209764d">Open()</a> is successful and <code>false</code> if <a class="el" href="class_s_f_b_1_1_input_source.html#a5004d38ae91e9fb58d05ddb9d4a74791">Close()</a> is successful </p>
-
-</div>
-</div>
-<a class="anchor" id="ad7268dd9411c650b0ecaf81564967888"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">CFURLRef SFB::InputSource::mURL</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>The location of the bytes to be read </p>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>Input/<a class="el" href="_input_source_8h_source.html">InputSource.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -88,7 +88,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_s_f_b_1_1_audio_1_1_decoder-members.html">List of all members</a>  </div>
@@ -106,16 +108,25 @@ Collaboration diagram for SFB::Audio::Decoder:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_s_f_b_1_1_audio_1_1_decoder__coll__graph.png" border="0" usemap="#_s_f_b_1_1_audio_1_1_decoder_coll__map" alt="Collaboration graph"/></div>
 <map name="_s_f_b_1_1_audio_1_1_decoder_coll__map" id="_s_f_b_1_1_audio_1_1_decoder_coll__map">
-<area shape="rect" id="node2" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. " alt="" coords="14,6,140,34"/></map>
+<area shape="rect" id="node2" href="class_s_f_b_1_1_audio_1_1_channel_layout.html" title="A class wrapping a Core Audio AudioChannelLayout. " alt="" coords="4,7,189,35"/></map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:ab85301adc5a4b0638b5c89e2dd64e641"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641">ErrorCode</a> { <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641a5f86cf2784e9e3a53e65314be49090c9">FileFormatNotRecognizedError</a> = 0, 
+<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641a2cca2995ebed23307af77d96537cc9fe">FileFormatNotSupportedError</a> = 1, 
+<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641a4e9ab5f4c0ca180cba7678171ea62e67">InputOutputError</a> = 2
+ }</td></tr>
+<tr class="memdesc:ab85301adc5a4b0638b5c89e2dd64e641"><td class="mdescLeft">&#160;</td><td class="mdescRight">Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641">More...</a><br/></td></tr>
+<tr class="separator:ab85301adc5a4b0638b5c89e2dd64e641"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Creation and Destruction</div></td></tr>
-<tr class="memitem:a432b6befbb07132612ca53ae9b56d519"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a432b6befbb07132612ca53ae9b56d519"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a432b6befbb07132612ca53ae9b56d519">~Decoder</a> ()</td></tr>
-<tr class="memdesc:a432b6befbb07132612ca53ae9b56d519"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>. <br/></td></tr>
-<tr class="separator:a432b6befbb07132612ca53ae9b56d519"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f5590c96e8c93d200834789836cbacc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f5590c96e8c93d200834789836cbacc"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a9f5590c96e8c93d200834789836cbacc">~Decoder</a> ()=default</td></tr>
+<tr class="memdesc:a9f5590c96e8c93d200834789836cbacc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>. <br/></td></tr>
+<tr class="separator:a9f5590c96e8c93d200834789836cbacc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Represented object association</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>A represented object allows a decoder to be associated with a model object such as a playlist or track </p>
 </div></td></tr>
@@ -132,17 +143,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 CFURLRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a5acd0660bc92836dc72f0e0e1197d458">GetURL</a> () const </td></tr>
 <tr class="memdesc:a5acd0660bc92836dc72f0e0e1197d458"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the URL associated with this decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. <br/></td></tr>
 <tr class="separator:a5acd0660bc92836dc72f0e0e1197d458"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25503cdaf787a6309700dbc18e93d965"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a25503cdaf787a6309700dbc18e93d965"></a>
-<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a25503cdaf787a6309700dbc18e93d965">GetInputSource</a> () const </td></tr>
-<tr class="memdesc:a25503cdaf787a6309700dbc18e93d965"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> feeding this decoder. <br/></td></tr>
-<tr class="separator:a25503cdaf787a6309700dbc18e93d965"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d261fde3f9c7bbb4f0b153a8c2173dd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d261fde3f9c7bbb4f0b153a8c2173dd"></a>
+<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a7d261fde3f9c7bbb4f0b153a8c2173dd">GetInputSource</a> () const </td></tr>
+<tr class="memdesc:a7d261fde3f9c7bbb4f0b153a8c2173dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> feeding this decoder. <br/></td></tr>
+<tr class="separator:a7d261fde3f9c7bbb4f0b153a8c2173dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">File access</div></td></tr>
-<tr class="memitem:abbe7f6c3d0213f6664dc2bfcadc5f820"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#abbe7f6c3d0213f6664dc2bfcadc5f820">Open</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="memdesc:abbe7f6c3d0213f6664dc2bfcadc5f820"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#abbe7f6c3d0213f6664dc2bfcadc5f820">More...</a><br/></td></tr>
-<tr class="separator:abbe7f6c3d0213f6664dc2bfcadc5f820"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada2fdc823aa89bb76f9228d5be360db5"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ada2fdc823aa89bb76f9228d5be360db5">Close</a> (CFErrorRef *error=nullptr)=0</td></tr>
-<tr class="memdesc:ada2fdc823aa89bb76f9228d5be360db5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#ada2fdc823aa89bb76f9228d5be360db5">More...</a><br/></td></tr>
-<tr class="separator:ada2fdc823aa89bb76f9228d5be360db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe">Open</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe">More...</a><br/></td></tr>
+<tr class="separator:a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac548314c24638bd21cf81f133847963d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac548314c24638bd21cf81f133847963d">Close</a> (CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:ac548314c24638bd21cf81f133847963d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#ac548314c24638bd21cf81f133847963d">More...</a><br/></td></tr>
+<tr class="separator:ac548314c24638bd21cf81f133847963d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6afabd948e8b0f3f98c9d6b776f55189"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6afabd948e8b0f3f98c9d6b776f55189"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a6afabd948e8b0f3f98c9d6b776f55189">IsOpen</a> () const </td></tr>
 <tr class="memdesc:a6afabd948e8b0f3f98c9d6b776f55189"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> to determine if it is open. <br/></td></tr>
@@ -152,9 +163,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ad0f6495a11653a40a09d89f167569da1">GetSourceFormat</a> () const </td></tr>
 <tr class="memdesc:ad0f6495a11653a40a09d89f167569da1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the native format of the source audio. <br/></td></tr>
 <tr class="separator:ad0f6495a11653a40a09d89f167569da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac996714aad12e383d1b4d9137963bc0e"><td class="memItemLeft" align="right" valign="top">virtual CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac996714aad12e383d1b4d9137963bc0e">CreateSourceFormatDescription</a> () const </td></tr>
-<tr class="memdesc:ac996714aad12e383d1b4d9137963bc0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the source audio's native format.  <a href="#ac996714aad12e383d1b4d9137963bc0e">More...</a><br/></td></tr>
-<tr class="separator:ac996714aad12e383d1b4d9137963bc0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a530d312afeb33d9552741769a0224e00"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a530d312afeb33d9552741769a0224e00">CreateSourceFormatDescription</a> () const </td></tr>
+<tr class="memdesc:a530d312afeb33d9552741769a0224e00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the source audio's native format.  <a href="#a530d312afeb33d9552741769a0224e00">More...</a><br/></td></tr>
+<tr class="separator:a530d312afeb33d9552741769a0224e00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ff28618cf57c6ed6ff67402dd820f59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ff28618cf57c6ed6ff67402dd820f59"></a>
 AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a4ff28618cf57c6ed6ff67402dd820f59">GetFormat</a> () const </td></tr>
 <tr class="memdesc:a4ff28618cf57c6ed6ff67402dd820f59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the type of PCM data provided by this decoder. <br/></td></tr>
@@ -162,35 +173,35 @@ AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><
 <tr class="memitem:afb14d31787c44c7a5bdad10f9d41617f"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#afb14d31787c44c7a5bdad10f9d41617f">CreateFormatDescription</a> () const </td></tr>
 <tr class="memdesc:afb14d31787c44c7a5bdad10f9d41617f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the type of PCM data provided by this decoder.  <a href="#afb14d31787c44c7a5bdad10f9d41617f">More...</a><br/></td></tr>
 <tr class="separator:afb14d31787c44c7a5bdad10f9d41617f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a112baf538d42bb840012b481cff9e667"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a112baf538d42bb840012b481cff9e667"></a>
-AudioChannelLayout *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a112baf538d42bb840012b481cff9e667">GetChannelLayout</a> () const </td></tr>
-<tr class="memdesc:a112baf538d42bb840012b481cff9e667"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the layout of the decoder's audio channels, or <code>nullptr</code> if not specified. <br/></td></tr>
-<tr class="separator:a112baf538d42bb840012b481cff9e667"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdee2eedfd0b33558741e3fcd6bcd2a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdee2eedfd0b33558741e3fcd6bcd2a2"></a>
+const <a class="el" href="class_s_f_b_1_1_audio_1_1_channel_layout.html">ChannelLayout</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#acdee2eedfd0b33558741e3fcd6bcd2a2">GetChannelLayout</a> () const </td></tr>
+<tr class="memdesc:acdee2eedfd0b33558741e3fcd6bcd2a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the layout of the decoder's audio channels, or <code>nullptr</code> if not specified. <br/></td></tr>
+<tr class="separator:acdee2eedfd0b33558741e3fcd6bcd2a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbe5b50ac840f6e2d9b07c77aa7c39cd"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#adbe5b50ac840f6e2d9b07c77aa7c39cd">CreateChannelLayoutDescription</a> () const </td></tr>
 <tr class="memdesc:adbe5b50ac840f6e2d9b07c77aa7c39cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the layout of the decoder's audio channels.  <a href="#adbe5b50ac840f6e2d9b07c77aa7c39cd">More...</a><br/></td></tr>
 <tr class="separator:adbe5b50ac840f6e2d9b07c77aa7c39cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac147c092c9a78cef8f8738cdf5bccebe"><td class="memItemLeft" align="right" valign="top">virtual UInt32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac147c092c9a78cef8f8738cdf5bccebe">ReadAudio</a> (AudioBufferList *bufferList, UInt32 frameCount)=0</td></tr>
-<tr class="memdesc:ac147c092c9a78cef8f8738cdf5bccebe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode audio into the specified buffer.  <a href="#ac147c092c9a78cef8f8738cdf5bccebe">More...</a><br/></td></tr>
-<tr class="separator:ac147c092c9a78cef8f8738cdf5bccebe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4441b80ca9dee7ac7111af25e3beef6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4441b80ca9dee7ac7111af25e3beef6"></a>
-virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ad4441b80ca9dee7ac7111af25e3beef6">GetTotalFrames</a> () const =0</td></tr>
-<tr class="memdesc:ad4441b80ca9dee7ac7111af25e3beef6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the total number of audio frames. <br/></td></tr>
-<tr class="separator:ad4441b80ca9dee7ac7111af25e3beef6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34463e668a67ac4dfc47b824a8079c96"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34463e668a67ac4dfc47b824a8079c96"></a>
-virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a34463e668a67ac4dfc47b824a8079c96">GetCurrentFrame</a> () const =0</td></tr>
-<tr class="memdesc:a34463e668a67ac4dfc47b824a8079c96"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current audio frame. <br/></td></tr>
-<tr class="separator:a34463e668a67ac4dfc47b824a8079c96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa43ee8f58274c0e8e7c3085327b35165"><td class="memItemLeft" align="right" valign="top">UInt32&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa43ee8f58274c0e8e7c3085327b35165">ReadAudio</a> (AudioBufferList *bufferList, UInt32 frameCount)</td></tr>
+<tr class="memdesc:aa43ee8f58274c0e8e7c3085327b35165"><td class="mdescLeft">&#160;</td><td class="mdescRight">Decode audio into the specified buffer.  <a href="#aa43ee8f58274c0e8e7c3085327b35165">More...</a><br/></td></tr>
+<tr class="separator:aa43ee8f58274c0e8e7c3085327b35165"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a0f24fd93b849ea0527053dea59d4b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a0f24fd93b849ea0527053dea59d4b9"></a>
+SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a3a0f24fd93b849ea0527053dea59d4b9">GetTotalFrames</a> () const </td></tr>
+<tr class="memdesc:a3a0f24fd93b849ea0527053dea59d4b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the total number of audio frames. <br/></td></tr>
+<tr class="separator:a3a0f24fd93b849ea0527053dea59d4b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7eb9e74bf9df24fa2ad9e4a1c9a8d75"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7eb9e74bf9df24fa2ad9e4a1c9a8d75"></a>
+SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ad7eb9e74bf9df24fa2ad9e4a1c9a8d75">GetCurrentFrame</a> () const </td></tr>
+<tr class="memdesc:ad7eb9e74bf9df24fa2ad9e4a1c9a8d75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current audio frame. <br/></td></tr>
+<tr class="separator:ad7eb9e74bf9df24fa2ad9e4a1c9a8d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10fda09bd0bcaf074e2141e04b64cecf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10fda09bd0bcaf074e2141e04b64cecf"></a>
 SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a10fda09bd0bcaf074e2141e04b64cecf">GetFramesRemaining</a> () const </td></tr>
 <tr class="memdesc:a10fda09bd0bcaf074e2141e04b64cecf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of audio frames remaining. <br/></td></tr>
 <tr class="separator:a10fda09bd0bcaf074e2141e04b64cecf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac25298b97f6b92e009367093902a5d3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac25298b97f6b92e009367093902a5d3e"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac25298b97f6b92e009367093902a5d3e">SupportsSeeking</a> () const </td></tr>
-<tr class="memdesc:ac25298b97f6b92e009367093902a5d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query whether the audio format and input source support seeking. <br/></td></tr>
-<tr class="separator:ac25298b97f6b92e009367093902a5d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55ed1c771bde5f42f5015881d9d43626"><td class="memItemLeft" align="right" valign="top">virtual SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a55ed1c771bde5f42f5015881d9d43626">SeekToFrame</a> (SInt64 frame)</td></tr>
-<tr class="memdesc:a55ed1c771bde5f42f5015881d9d43626"><td class="mdescLeft">&#160;</td><td class="mdescRight">Seek to the specified audio frame.  <a href="#a55ed1c771bde5f42f5015881d9d43626">More...</a><br/></td></tr>
-<tr class="separator:a55ed1c771bde5f42f5015881d9d43626"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46c302c0e4ce3010df7fc24cba8496d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a46c302c0e4ce3010df7fc24cba8496d5"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a46c302c0e4ce3010df7fc24cba8496d5">SupportsSeeking</a> () const </td></tr>
+<tr class="memdesc:a46c302c0e4ce3010df7fc24cba8496d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query whether the audio format and input source support seeking. <br/></td></tr>
+<tr class="separator:a46c302c0e4ce3010df7fc24cba8496d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabb5c363b52aff1c04c4a5718406c5b7"><td class="memItemLeft" align="right" valign="top">SInt64&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aabb5c363b52aff1c04c4a5718406c5b7">SeekToFrame</a> (SInt64 frame)</td></tr>
+<tr class="memdesc:aabb5c363b52aff1c04c4a5718406c5b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Seek to the specified audio frame.  <a href="#aabb5c363b52aff1c04c4a5718406c5b7">More...</a><br/></td></tr>
+<tr class="separator:aabb5c363b52aff1c04c4a5718406c5b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -213,46 +224,6 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ade59b1c424e24ba95f2981b4d85212ce">HandlesMIMEType</a> (CFStringRef mimeType)</td></tr>
 <tr class="memdesc:ade59b1c424e24ba95f2981b4d85212ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test whether a MIME type is supported. <br/></td></tr>
 <tr class="separator:ade59b1c424e24ba95f2981b4d85212ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Factory Methods</div></td></tr>
-<tr class="memitem:a939bdb7e4b62607abb0a8a37d66cd8fc"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a939bdb7e4b62607abb0a8a37d66cd8fc">CreateDecoderForURL</a> (CFURLRef url, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a939bdb7e4b62607abb0a8a37d66cd8fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified URL.  <a href="#a939bdb7e4b62607abb0a8a37d66cd8fc">More...</a><br/></td></tr>
-<tr class="separator:a939bdb7e4b62607abb0a8a37d66cd8fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a37f49e7357ca0a0d66b4827efd6f0d50"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a37f49e7357ca0a0d66b4827efd6f0d50">CreateDecoderForURL</a> (CFURLRef url, CFStringRef mimeType, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a37f49e7357ca0a0d66b4827efd6f0d50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified URL.  <a href="#a37f49e7357ca0a0d66b4827efd6f0d50">More...</a><br/></td></tr>
-<tr class="separator:a37f49e7357ca0a0d66b4827efd6f0d50"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69e6ae849a74b3c61fa7218d3caa5708"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a69e6ae849a74b3c61fa7218d3caa5708">CreateDecoderForInputSource</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a69e6ae849a74b3c61fa7218d3caa5708"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a69e6ae849a74b3c61fa7218d3caa5708">More...</a><br/></td></tr>
-<tr class="separator:a69e6ae849a74b3c61fa7218d3caa5708"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1f25bbdd90ed65bd1caa59c1a23f38b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac1f25bbdd90ed65bd1caa59c1a23f38b">CreateDecoderForInputSource</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource, CFStringRef mimeType, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:ac1f25bbdd90ed65bd1caa59c1a23f38b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#ac1f25bbdd90ed65bd1caa59c1a23f38b">More...</a><br/></td></tr>
-<tr class="separator:ac1f25bbdd90ed65bd1caa59c1a23f38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63b057278b4fc9b2fcadba49052491b6"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a63b057278b4fc9b2fcadba49052491b6">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a63b057278b4fc9b2fcadba49052491b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#a63b057278b4fc9b2fcadba49052491b6">More...</a><br/></td></tr>
-<tr class="separator:a63b057278b4fc9b2fcadba49052491b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a488233cbac31c736132264b554245f49"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a488233cbac31c736132264b554245f49">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a488233cbac31c736132264b554245f49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#a488233cbac31c736132264b554245f49">More...</a><br/></td></tr>
-<tr class="separator:a488233cbac31c736132264b554245f49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f5477c543728e4eeb52dd8f25eeba37"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a3f5477c543728e4eeb52dd8f25eeba37">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a3f5477c543728e4eeb52dd8f25eeba37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#a3f5477c543728e4eeb52dd8f25eeba37">More...</a><br/></td></tr>
-<tr class="separator:a3f5477c543728e4eeb52dd8f25eeba37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a528fa5a8fbb4f9effeb046291723a5bc"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a528fa5a8fbb4f9effeb046291723a5bc">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a528fa5a8fbb4f9effeb046291723a5bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a528fa5a8fbb4f9effeb046291723a5bc">More...</a><br/></td></tr>
-<tr class="separator:a528fa5a8fbb4f9effeb046291723a5bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a154e4838a6e2a939eb824fcb739f996d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a154e4838a6e2a939eb824fcb739f996d">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a154e4838a6e2a939eb824fcb739f996d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a154e4838a6e2a939eb824fcb739f996d">More...</a><br/></td></tr>
-<tr class="separator:a154e4838a6e2a939eb824fcb739f996d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a965b5318303808710c2dd4849040db58"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a965b5318303808710c2dd4849040db58">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a965b5318303808710c2dd4849040db58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a965b5318303808710c2dd4849040db58">More...</a><br/></td></tr>
-<tr class="separator:a965b5318303808710c2dd4849040db58"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac22a4e9a849087b7bee6a315956cc53a"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac22a4e9a849087b7bee6a315956cc53a">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *decoder, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:ac22a4e9a849087b7bee6a315956cc53a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#ac22a4e9a849087b7bee6a315956cc53a">More...</a><br/></td></tr>
-<tr class="separator:ac22a4e9a849087b7bee6a315956cc53a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b2a8e0a7139e66018ecd3f183e774ee"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a9b2a8e0a7139e66018ecd3f183e774ee">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:a9b2a8e0a7139e66018ecd3f183e774ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#a9b2a8e0a7139e66018ecd3f183e774ee">More...</a><br/></td></tr>
-<tr class="separator:a9b2a8e0a7139e66018ecd3f183e774ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af01cb111097cdb956026fd9855550ccc"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#af01cb111097cdb956026fd9855550ccc">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
-<tr class="memdesc:af01cb111097cdb956026fd9855550ccc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#af01cb111097cdb956026fd9855550ccc">More...</a><br/></td></tr>
-<tr class="separator:af01cb111097cdb956026fd9855550ccc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Automatic opening behavior</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>If <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#af12f0a2d91384c4ef46ec22c0791d320" title="Query whether decoders should be automatically opened. ">AutomaticallyOpenDecoders()</a></code> returns <code>true</code> then the factory methods will attempt to open the <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code> </p>
 </div></td></tr>
@@ -265,64 +236,131 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 <tr class="memdesc:abae3a905c2b1b3864e82e1992a9530d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set whether decoders should be automatically opened. <br/></td></tr>
 <tr class="separator:abae3a905c2b1b3864e82e1992a9530d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a410ab9ce2b22754ae2840252a10b0fa0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a410ab9ce2b22754ae2840252a10b0fa0"></a>
+static const CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a410ab9ce2b22754ae2840252a10b0fa0">ErrorDomain</a></td></tr>
+<tr class="memdesc:a410ab9ce2b22754ae2840252a10b0fa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <code>CFErrorRef</code> error domain used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> and subclasses. <br/></td></tr>
+<tr class="separator:a410ab9ce2b22754ae2840252a10b0fa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a150f8950f4788f9e09080cff1e877e71"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a150f8950f4788f9e09080cff1e877e71"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a150f8950f4788f9e09080cff1e877e71">Decoder</a> ()</td></tr>
-<tr class="memdesc:a150f8950f4788f9e09080cff1e877e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a57e572c55ac9db35e8cddf4716129c14" title="The input source feeding this decoder. ">Decoder::mInputSource</a></code> to <code>nullptr</code>. <br/></td></tr>
+<tr class="memdesc:a150f8950f4788f9e09080cff1e877e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab9e7c2e2f410f35e0086930e4fab1845" title="The input source feeding this decoder. ">Decoder::mInputSource</a></code> to <code>nullptr</code>. <br/></td></tr>
 <tr class="separator:a150f8950f4788f9e09080cff1e877e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84bd67316a51530a8bd33fb38cb30172"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84bd67316a51530a8bd33fb38cb30172"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a84bd67316a51530a8bd33fb38cb30172">Decoder</a> (<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *inputSource)</td></tr>
-<tr class="memdesc:a84bd67316a51530a8bd33fb38cb30172"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a57e572c55ac9db35e8cddf4716129c14" title="The input source feeding this decoder. ">Decoder::mInputSource</a></code> to <code>inputSource</code>. <br/></td></tr>
-<tr class="separator:a84bd67316a51530a8bd33fb38cb30172"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdb71572ec9c59f6dec58ff9aa38d251"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abdb71572ec9c59f6dec58ff9aa38d251"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#abdb71572ec9c59f6dec58ff9aa38d251">Decoder</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource)</td></tr>
+<tr class="memdesc:abdb71572ec9c59f6dec58ff9aa38d251"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> and initialize <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab9e7c2e2f410f35e0086930e4fab1845" title="The input source feeding this decoder. ">Decoder::mInputSource</a></code> to <code>inputSource</code>. <br/></td></tr>
+<tr class="separator:abdb71572ec9c59f6dec58ff9aa38d251"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a57e572c55ac9db35e8cddf4716129c14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a57e572c55ac9db35e8cddf4716129c14"></a>
-<a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a57e572c55ac9db35e8cddf4716129c14">mInputSource</a></td></tr>
-<tr class="memdesc:a57e572c55ac9db35e8cddf4716129c14"><td class="mdescLeft">&#160;</td><td class="mdescRight">The input source feeding this decoder. <br/></td></tr>
-<tr class="separator:a57e572c55ac9db35e8cddf4716129c14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9e7c2e2f410f35e0086930e4fab1845"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e7c2e2f410f35e0086930e4fab1845"></a>
+<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab9e7c2e2f410f35e0086930e4fab1845">mInputSource</a></td></tr>
+<tr class="memdesc:ab9e7c2e2f410f35e0086930e4fab1845"><td class="mdescLeft">&#160;</td><td class="mdescRight">The input source feeding this decoder. <br/></td></tr>
+<tr class="separator:ab9e7c2e2f410f35e0086930e4fab1845"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a390c171708959610d2eeb7117c71ea45"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a390c171708959610d2eeb7117c71ea45"></a>
 AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a390c171708959610d2eeb7117c71ea45">mFormat</a></td></tr>
 <tr class="memdesc:a390c171708959610d2eeb7117c71ea45"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of PCM data provided by this decoder. <br/></td></tr>
 <tr class="separator:a390c171708959610d2eeb7117c71ea45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4ea6d259af01515f6771a3187113e13"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4ea6d259af01515f6771a3187113e13"></a>
-AudioChannelLayout *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ae4ea6d259af01515f6771a3187113e13">mChannelLayout</a></td></tr>
-<tr class="memdesc:ae4ea6d259af01515f6771a3187113e13"><td class="mdescLeft">&#160;</td><td class="mdescRight">The channel layout for the PCM data, or <code>nullptr</code> if unknown or unspecified. <br/></td></tr>
-<tr class="separator:ae4ea6d259af01515f6771a3187113e13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3f539f251e72186eda25aa495448007"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab3f539f251e72186eda25aa495448007"></a>
+<a class="el" href="class_s_f_b_1_1_audio_1_1_channel_layout.html">ChannelLayout</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab3f539f251e72186eda25aa495448007">mChannelLayout</a></td></tr>
+<tr class="memdesc:ab3f539f251e72186eda25aa495448007"><td class="mdescLeft">&#160;</td><td class="mdescRight">The channel layout for the PCM data, or <code>nullptr</code> if unknown or unspecified. <br/></td></tr>
+<tr class="separator:ab3f539f251e72186eda25aa495448007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58186cc486b182e28c17da1c49fa2f45"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58186cc486b182e28c17da1c49fa2f45"></a>
 AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a58186cc486b182e28c17da1c49fa2f45">mSourceFormat</a></td></tr>
 <tr class="memdesc:a58186cc486b182e28c17da1c49fa2f45"><td class="mdescLeft">&#160;</td><td class="mdescRight">The native format of the source file. <br/></td></tr>
 <tr class="separator:a58186cc486b182e28c17da1c49fa2f45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4af849f2265e6e9de3d491bc26547129"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4af849f2265e6e9de3d491bc26547129"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a4af849f2265e6e9de3d491bc26547129">mIsOpen</a></td></tr>
-<tr class="memdesc:a4af849f2265e6e9de3d491bc26547129"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subclasses should set this to <code>true</code> if <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#abbe7f6c3d0213f6664dc2bfcadc5f820" title="Open the decoder&#39;s InputSource. ">Open()</a> is successful and <code>false</code> if <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ada2fdc823aa89bb76f9228d5be360db5" title="Close the decoder&#39;s InputSource. ">Close()</a> is successful. <br/></td></tr>
-<tr class="separator:a4af849f2265e6e9de3d491bc26547129"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="member-group"></a>
+Factory Methods</h2></td></tr>
+<tr class="memitem:aa092f2940b367e63265e7c1d10b17eaa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa092f2940b367e63265e7c1d10b17eaa"></a>
+typedef std::unique_ptr&lt; <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a></td></tr>
+<tr class="memdesc:aa092f2940b367e63265e7c1d10b17eaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <code>std::unique_ptr</code> for <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> objects. <br/></td></tr>
+<tr class="separator:aa092f2940b367e63265e7c1d10b17eaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e90820549b767e0d00d429a400d2faf"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a0e90820549b767e0d00d429a400d2faf">CreateDecoderForURL</a> (CFURLRef url, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a0e90820549b767e0d00d429a400d2faf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified URL.  <a href="#a0e90820549b767e0d00d429a400d2faf">More...</a><br/></td></tr>
+<tr class="separator:a0e90820549b767e0d00d429a400d2faf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a020e415b12b600f0126687d6647dcb77"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a020e415b12b600f0126687d6647dcb77">CreateDecoderForURL</a> (CFURLRef url, CFStringRef mimeType, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a020e415b12b600f0126687d6647dcb77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified URL.  <a href="#a020e415b12b600f0126687d6647dcb77">More...</a><br/></td></tr>
+<tr class="separator:a020e415b12b600f0126687d6647dcb77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05c700989bb1eacf863e59473c92f157"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a05c700989bb1eacf863e59473c92f157">CreateDecoderForInputSource</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a05c700989bb1eacf863e59473c92f157"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a05c700989bb1eacf863e59473c92f157">More...</a><br/></td></tr>
+<tr class="separator:a05c700989bb1eacf863e59473c92f157"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac58f89a2368cbdbc694d48bffebfeb4d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac58f89a2368cbdbc694d48bffebfeb4d">CreateDecoderForInputSource</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource, CFStringRef mimeType, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:ac58f89a2368cbdbc694d48bffebfeb4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#ac58f89a2368cbdbc694d48bffebfeb4d">More...</a><br/></td></tr>
+<tr class="separator:ac58f89a2368cbdbc694d48bffebfeb4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f5c9f726719561c5c0b04058efe040e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a0f5c9f726719561c5c0b04058efe040e">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a0f5c9f726719561c5c0b04058efe040e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#a0f5c9f726719561c5c0b04058efe040e">More...</a><br/></td></tr>
+<tr class="separator:a0f5c9f726719561c5c0b04058efe040e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a621cf2ebcf17444b6b364825ab3bb422"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a621cf2ebcf17444b6b364825ab3bb422">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a621cf2ebcf17444b6b364825ab3bb422"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#a621cf2ebcf17444b6b364825ab3bb422">More...</a><br/></td></tr>
+<tr class="separator:a621cf2ebcf17444b6b364825ab3bb422"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac090dd3a5328fabe4ffb83190eef5f5d"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac090dd3a5328fabe4ffb83190eef5f5d">CreateDecoderForURLRegion</a> (CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:ac090dd3a5328fabe4ffb83190eef5f5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified URL.  <a href="#ac090dd3a5328fabe4ffb83190eef5f5d">More...</a><br/></td></tr>
+<tr class="separator:ac090dd3a5328fabe4ffb83190eef5f5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace6f82fbbc1ceb6a1ef36520cfd13f6c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ace6f82fbbc1ceb6a1ef36520cfd13f6c">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:ace6f82fbbc1ceb6a1ef36520cfd13f6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#ace6f82fbbc1ceb6a1ef36520cfd13f6c">More...</a><br/></td></tr>
+<tr class="separator:ace6f82fbbc1ceb6a1ef36520cfd13f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef689a420dc70f146141755ae61cf44e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aef689a420dc70f146141755ae61cf44e">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:aef689a420dc70f146141755ae61cf44e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#aef689a420dc70f146141755ae61cf44e">More...</a><br/></td></tr>
+<tr class="separator:aef689a420dc70f146141755ae61cf44e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a830dd0b7f610b0499298e782dc01dac3"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a830dd0b7f610b0499298e782dc01dac3">CreateDecoderForInputSourceRegion</a> (<a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a> inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a830dd0b7f610b0499298e782dc01dac3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>.  <a href="#a830dd0b7f610b0499298e782dc01dac3">More...</a><br/></td></tr>
+<tr class="separator:a830dd0b7f610b0499298e782dc01dac3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57a2660f82c86e874ddd258792dbd161"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a57a2660f82c86e874ddd258792dbd161">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> decoder, SInt64 startingFrame, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a57a2660f82c86e874ddd258792dbd161"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#a57a2660f82c86e874ddd258792dbd161">More...</a><br/></td></tr>
+<tr class="separator:a57a2660f82c86e874ddd258792dbd161"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07f6e161b0e44c03a15354a5f65096bb"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a07f6e161b0e44c03a15354a5f65096bb">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a07f6e161b0e44c03a15354a5f65096bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#a07f6e161b0e44c03a15354a5f65096bb">More...</a><br/></td></tr>
+<tr class="separator:a07f6e161b0e44c03a15354a5f65096bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a017cd0b2cd7511bc7a31b7e7fdf9d998"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a017cd0b2cd7511bc7a31b7e7fdf9d998">CreateDecoderForDecoderRegion</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error=nullptr)</td></tr>
+<tr class="memdesc:a017cd0b2cd7511bc7a31b7e7fdf9d998"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> object for a region of the specified <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>.  <a href="#a017cd0b2cd7511bc7a31b7e7fdf9d998">More...</a><br/></td></tr>
+<tr class="separator:a017cd0b2cd7511bc7a31b7e7fdf9d998"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for all audio decoder classes. </p>
 <p>An AudioDecoder is responsible for reading audio data in some format and providing it in a PCM format that is handled by an <code>AudioConverter</code> </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="ada2fdc823aa89bb76f9228d5be360db5"></a>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a class="anchor" id="ab85301adc5a4b0638b5c89e2dd64e641"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::Audio::Decoder::Close </td>
+          <td class="memname">enum <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ab85301adc5a4b0638b5c89e2dd64e641">SFB::Audio::Decoder::ErrorCode</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Possible <code>CFErrorRef</code> error codes used by <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ab85301adc5a4b0638b5c89e2dd64e641a5f86cf2784e9e3a53e65314be49090c9"></a>FileFormatNotRecognizedError</em>&nbsp;</td><td class="fielddoc">
+<p>File format not recognized </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ab85301adc5a4b0638b5c89e2dd64e641a2cca2995ebed23307af77d96537cc9fe"></a>FileFormatNotSupportedError</em>&nbsp;</td><td class="fielddoc">
+<p>File format not supported </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ab85301adc5a4b0638b5c89e2dd64e641a4e9ab5f4c0ca180cba7678171ea62e67"></a>InputOutputError</em>&nbsp;</td><td class="fielddoc">
+<p>Input/output error </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="ac548314c24638bd21cf81f133847963d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool SFB::Audio::Decoder::Close </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Close the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. </p>
@@ -333,7 +371,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> on success, <code>false</code> otherwise </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_input_source.html#a5004d38ae91e9fb58d05ddb9d4a74791">InputSource::Close()</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_input_source.html#a7be54eefb224af0a646cd097e4b56230" title="Close the input. ">InputSource::Close()</a> </dd></dl>
 
 </div>
 </div>
@@ -356,7 +394,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="ac22a4e9a849087b7bee6a315956cc53a"></a>
+<a class="anchor" id="a57a2660f82c86e874ddd258792dbd161"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -364,9 +402,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td>
           <td class="paramname"><em>decoder</em>, </td>
         </tr>
         <tr>
@@ -407,7 +445,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="a9b2a8e0a7139e66018ecd3f183e774ee"></a>
+<a class="anchor" id="a07f6e161b0e44c03a15354a5f65096bb"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -415,9 +453,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td>
           <td class="paramname"><em>decoder</em>, </td>
         </tr>
         <tr>
@@ -465,7 +503,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="af01cb111097cdb956026fd9855550ccc"></a>
+<a class="anchor" id="a017cd0b2cd7511bc7a31b7e7fdf9d998"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -473,9 +511,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForDecoderRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a>&#160;</td>
           <td class="paramname"><em>decoder</em>, </td>
         </tr>
         <tr>
@@ -530,7 +568,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="a69e6ae849a74b3c61fa7218d3caa5708"></a>
+<a class="anchor" id="a05c700989bb1eacf863e59473c92f157"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -538,9 +576,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForInputSource </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForInputSource </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>inputSource</em>, </td>
         </tr>
         <tr>
@@ -575,7 +613,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="ac1f25bbdd90ed65bd1caa59c1a23f38b"></a>
+<a class="anchor" id="ac58f89a2368cbdbc694d48bffebfeb4d"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -583,9 +621,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForInputSource </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForInputSource </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>inputSource</em>, </td>
         </tr>
         <tr>
@@ -629,7 +667,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a528fa5a8fbb4f9effeb046291723a5bc"></a>
+<a class="anchor" id="ace6f82fbbc1ceb6a1ef36520cfd13f6c"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -637,9 +675,9 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>inputSource</em>, </td>
         </tr>
         <tr>
@@ -680,7 +718,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a154e4838a6e2a939eb824fcb739f996d"></a>
+<a class="anchor" id="aef689a420dc70f146141755ae61cf44e"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -688,9 +726,9 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>inputSource</em>, </td>
         </tr>
         <tr>
@@ -738,7 +776,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a965b5318303808710c2dd4849040db58"></a>
+<a class="anchor" id="a830dd0b7f610b0499298e782dc01dac3"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -746,9 +784,9 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForInputSourceRegion </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html">InputSource</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_input_source.html#ad8b2e4926336c3b02faa02a1bd36a9e2">InputSource::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>inputSource</em>, </td>
         </tr>
         <tr>
@@ -803,7 +841,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a939bdb7e4b62607abb0a8a37d66cd8fc"></a>
+<a class="anchor" id="a0e90820549b767e0d00d429a400d2faf"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -811,7 +849,7 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForURL </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForURL </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -847,7 +885,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a37f49e7357ca0a0d66b4827efd6f0d50"></a>
+<a class="anchor" id="a020e415b12b600f0126687d6647dcb77"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -855,7 +893,7 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForURL </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForURL </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -899,7 +937,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a63b057278b4fc9b2fcadba49052491b6"></a>
+<a class="anchor" id="a0f5c9f726719561c5c0b04058efe040e"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -907,7 +945,7 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -950,7 +988,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a488233cbac31c736132264b554245f49"></a>
+<a class="anchor" id="a621cf2ebcf17444b6b364825ab3bb422"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -958,7 +996,7 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -1008,7 +1046,7 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a3f5477c543728e4eeb52dd8f25eeba37"></a>
+<a class="anchor" id="ac090dd3a5328fabe4ffb83190eef5f5d"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -1016,7 +1054,7 @@ The decoder will take ownership of the input source on success </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a>* SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
+          <td class="memname">static <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">unique_ptr</a> SFB::Audio::Decoder::CreateDecoderForURLRegion </td>
           <td>(</td>
           <td class="paramtype">CFURLRef&#160;</td>
           <td class="paramname"><em>url</em>, </td>
@@ -1092,25 +1130,17 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ac996714aad12e383d1b4d9137963bc0e"></a>
+<a class="anchor" id="a530d312afeb33d9552741769a0224e00"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription </td>
+          <td class="memname">CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a description of the source audio's native format. </p>
@@ -1173,26 +1203,18 @@ The decoder will take ownership of the input source on success </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="abbe7f6c3d0213f6664dc2bfcadc5f820"></a>
+<a class="anchor" id="a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool SFB::Audio::Decoder::Open </td>
+          <td class="memname">bool SFB::Audio::Decoder::Open </td>
           <td>(</td>
           <td class="paramtype">CFErrorRef *&#160;</td>
           <td class="paramname"><em>error</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Open the decoder's <code><a class="el" href="class_s_f_b_1_1_input_source.html" title="An abstract class allowing access to a stream of bytes. ">InputSource</a></code>. </p>
@@ -1203,19 +1225,16 @@ The decoder will take ownership of the input source on success </dd></dl>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> on success, <code>false</code> otherwise </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_input_source.html#ab88fdc531d60bd5d4aa9ff31d209764d">InputSource::Open()</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_input_source.html#a82f5157a112b5f20a989df620cdd3c74" title="Open the input for reading. ">InputSource::Open()</a> </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ac147c092c9a78cef8f8738cdf5bccebe"></a>
+<a class="anchor" id="aa43ee8f58274c0e8e7c3085327b35165"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual UInt32 SFB::Audio::Decoder::ReadAudio </td>
+          <td class="memname">UInt32 SFB::Audio::Decoder::ReadAudio </td>
           <td>(</td>
           <td class="paramtype">AudioBufferList *&#160;</td>
           <td class="paramname"><em>bufferList</em>, </td>
@@ -1232,11 +1251,6 @@ The decoder will take ownership of the input source on success </dd></dl>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Decode audio into the specified buffer. </p>
@@ -1291,26 +1305,18 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a55ed1c771bde5f42f5015881d9d43626"></a>
+<a class="anchor" id="aabb5c363b52aff1c04c4a5718406c5b7"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual SInt64 SFB::Audio::Decoder::SeekToFrame </td>
+          <td class="memname">SInt64 SFB::Audio::Decoder::SeekToFrame </td>
           <td>(</td>
           <td class="paramtype">SInt64&#160;</td>
           <td class="paramname"><em>frame</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Seek to the specified audio frame. </p>
@@ -1330,7 +1336,7 @@ template&lt;typename T &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

@@ -3,8 +3,8 @@ var searchData=
   ['samplerateissupported',['SampleRateIsSupported',['../class_s_f_b_1_1_audio_1_1_replay_gain_analyzer.html#a70344390d9afdbd21ee6f093dc326bdc',1,'SFB::Audio::ReplayGainAnalyzer']]],
   ['seekbackward',['SeekBackward',['../class_s_f_b_1_1_audio_1_1_player.html#a639e4e061c012548c71cb7c3c773e603',1,'SFB::Audio::Player']]],
   ['seekforward',['SeekForward',['../class_s_f_b_1_1_audio_1_1_player.html#a61170bbf714305ee8712d96c0b44f695',1,'SFB::Audio::Player']]],
-  ['seektoframe',['SeekToFrame',['../class_s_f_b_1_1_audio_1_1_decoder.html#a55ed1c771bde5f42f5015881d9d43626',1,'SFB::Audio::Decoder::SeekToFrame()'],['../class_s_f_b_1_1_audio_1_1_player.html#a3afabeb2664b920426e6e18c686877fe',1,'SFB::Audio::Player::SeekToFrame()']]],
-  ['seektooffset',['SeekToOffset',['../class_s_f_b_1_1_input_source.html#a8db8b1947dddfd2dd56cbf17651936b4',1,'SFB::InputSource']]],
+  ['seektoframe',['SeekToFrame',['../class_s_f_b_1_1_audio_1_1_decoder.html#aabb5c363b52aff1c04c4a5718406c5b7',1,'SFB::Audio::Decoder::SeekToFrame()'],['../class_s_f_b_1_1_audio_1_1_player.html#a3afabeb2664b920426e6e18c686877fe',1,'SFB::Audio::Player::SeekToFrame()']]],
+  ['seektooffset',['SeekToOffset',['../class_s_f_b_1_1_input_source.html#a17addcef9b27bb11b31bb5a000b4d994',1,'SFB::InputSource']]],
   ['seektotime',['SeekToTime',['../class_s_f_b_1_1_audio_1_1_player.html#afef351928086e782e1bd4eb4383f1ddf',1,'SFB::Audio::Player']]],
   ['semaphore',['Semaphore',['../class_s_f_b_1_1_semaphore.html#aec7188565ee17155372f9cae6c5fac1e',1,'SFB::Semaphore']]],
   ['setadditionalmetadata',['SetAdditionalMetadata',['../class_s_f_b_1_1_audio_1_1_metadata.html#a0376a363a82f3cad4d50b9c4f1c1ec07',1,'SFB::Audio::Metadata']]],
@@ -71,5 +71,5 @@ var searchData=
   ['starthoggingoutputdevice',['StartHoggingOutputDevice',['../class_s_f_b_1_1_audio_1_1_player.html#aa174a0b11d5e33804ca30d98278c3547',1,'SFB::Audio::Player']]],
   ['stop',['Stop',['../class_s_f_b_1_1_audio_1_1_player.html#a29e510f9545a40bca9c80a230908be9c',1,'SFB::Audio::Player']]],
   ['stophoggingoutputdevice',['StopHoggingOutputDevice',['../class_s_f_b_1_1_audio_1_1_player.html#ad63cdd7350e37ef482fec9f43bfc27a8',1,'SFB::Audio::Player']]],
-  ['supportsseeking',['SupportsSeeking',['../class_s_f_b_1_1_input_source.html#a84dd258ac5f0acd8ec02d6502a2f47f7',1,'SFB::InputSource::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_decoder.html#ac25298b97f6b92e009367093902a5d3e',1,'SFB::Audio::Decoder::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_player.html#a42bd5012d5a2acf21162219e79fc11d4',1,'SFB::Audio::Player::SupportsSeeking()']]]
+  ['supportsseeking',['SupportsSeeking',['../class_s_f_b_1_1_input_source.html#a4c8bcd7038726838e268f26fffee2d73',1,'SFB::InputSource::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_decoder.html#a46c302c0e4ce3010df7fc24cba8496d5',1,'SFB::Audio::Decoder::SupportsSeeking()'],['../class_s_f_b_1_1_audio_1_1_player.html#a42bd5012d5a2acf21162219e79fc11d4',1,'SFB::Audio::Player::SupportsSeeking()']]]
 ];

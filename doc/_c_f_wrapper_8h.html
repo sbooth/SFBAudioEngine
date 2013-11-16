@@ -94,6 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;iostream&gt;</code><br/>
 <code>#include &lt;CoreFoundation/CoreFoundation.h&gt;</code><br/>
+<code>#include &lt;CoreServices/CoreServices.h&gt;</code><br/>
 <code>#include &lt;Security/Security.h&gt;</code><br/>
 <code>#include &lt;ImageIO/ImageIO.h&gt;</code><br/>
 </div><div class="textblock"><div class="dynheader">
@@ -102,6 +103,13 @@ Include dependency graph for CFWrapper.h:</div>
 <div class="center"><img src="_c_f_wrapper_8h__incl.png" border="0" usemap="#_c_f_wrapper_8h" alt=""/></div>
 <map name="_c_f_wrapper_8h" id="_c_f_wrapper_8h">
 </map>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><img src="_c_f_wrapper_8h__dep__incl.png" border="0" usemap="#_c_f_wrapper_8hdep" alt=""/></div>
+<map name="_c_f_wrapper_8hdep" id="_c_f_wrapper_8hdep">
+<area shape="rect" id="node2" href="_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="87,83,224,111"/><area shape="rect" id="node6" href="_audio_metadata_8h.html" title="Support for metadata reading and writing. " alt="" coords="285,161,467,189"/><area shape="rect" id="node7" href="_attached_picture_8h.html" title="Support for attached pictures. " alt="" coords="300,83,485,111"/><area shape="rect" id="node3" href="_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="68,161,244,189"/><area shape="rect" id="node4" href="_audio_player_8h.html" title="Core playback functionality. " alt="" coords="5,238,149,266"/><area shape="rect" id="node5" href="_audio_converter_8h.html" title="Support for converting audio from one PCM format to another. " alt="" coords="174,238,297,266"/></map>
 </div>
 </div>
 <p><a href="_c_f_wrapper_8h_source.html">Go to the source code of this file.</a></p>
@@ -237,6 +245,21 @@ typedef CFWrapper&lt; CFErrorRef &gt;&#160;</td><td class="memItemRight" valign=
 typedef CFWrapper&lt; CFDateRef &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a8f1c93dc9791fca56f7eafb545278b8f">SFB::CFDate</a></td></tr>
 <tr class="memdesc:a8f1c93dc9791fca56f7eafb545278b8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapped <code>CFDateRef</code>. <br/></td></tr>
 <tr class="separator:a8f1c93dc9791fca56f7eafb545278b8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaae4a2520a7d5670fa24e4ca6520c4ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaae4a2520a7d5670fa24e4ca6520c4ce"></a>
+typedef CFWrapper<br class="typebreak"/>
+&lt; CFReadStreamRef &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#aaae4a2520a7d5670fa24e4ca6520c4ce">SFB::CFReadStream</a></td></tr>
+<tr class="memdesc:aaae4a2520a7d5670fa24e4ca6520c4ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapped <code>CFReadStream</code>. <br/></td></tr>
+<tr class="separator:aaae4a2520a7d5670fa24e4ca6520c4ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a607e499a0fd8583e51e58fbb76af1d44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a607e499a0fd8583e51e58fbb76af1d44"></a>
+typedef CFWrapper<br class="typebreak"/>
+&lt; CFWriteStreamRef &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a607e499a0fd8583e51e58fbb76af1d44">SFB::CFWriteStream</a></td></tr>
+<tr class="memdesc:a607e499a0fd8583e51e58fbb76af1d44"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapped <code>CFWriteStream</code>. <br/></td></tr>
+<tr class="separator:a607e499a0fd8583e51e58fbb76af1d44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a883c59f629d8e86577dc5d7623bb2763"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a883c59f629d8e86577dc5d7623bb2763"></a>
+typedef CFWrapper<br class="typebreak"/>
+&lt; CFHTTPMessageRef &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a883c59f629d8e86577dc5d7623bb2763">SFB::CFHTTPMessage</a></td></tr>
+<tr class="memdesc:a883c59f629d8e86577dc5d7623bb2763"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapped <code>CFHTTPMessageRef</code>. <br/></td></tr>
+<tr class="separator:a883c59f629d8e86577dc5d7623bb2763"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02e55fd1b5e081ce09ac703f6355aeb4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02e55fd1b5e081ce09ac703f6355aeb4"></a>
 typedef CFWrapper<br class="typebreak"/>
 &lt; SecKeychainItemRef &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_f_b.html#a02e55fd1b5e081ce09ac703f6355aeb4">SFB::SecKeychainItem</a></td></tr>
@@ -263,7 +286,7 @@ typedef CFWrapper<br class="typebreak"/>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

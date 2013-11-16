@@ -1,0 +1,8 @@
+<map id="CFWrapper.h" name="CFWrapper.h">
+<area shape="rect" id="node2" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="87,83,224,111"/>
+<area shape="rect" id="node6" href="$_audio_metadata_8h.html" title="Support for metadata reading and writing. " alt="" coords="285,161,467,189"/>
+<area shape="rect" id="node7" href="$_attached_picture_8h.html" title="Support for attached pictures. " alt="" coords="300,83,485,111"/>
+<area shape="rect" id="node3" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="68,161,244,189"/>
+<area shape="rect" id="node4" href="$_audio_player_8h.html" title="Core playback functionality. " alt="" coords="5,238,149,266"/>
+<area shape="rect" id="node5" href="$_audio_converter_8h.html" title="Support for converting audio from one PCM format to another. " alt="" coords="174,238,297,266"/>
+</map>

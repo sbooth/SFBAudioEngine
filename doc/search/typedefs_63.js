@@ -10,6 +10,7 @@ var searchData=
   ['cfdate',['CFDate',['../namespace_s_f_b.html#a8f1c93dc9791fca56f7eafb545278b8f',1,'SFB']]],
   ['cfdictionary',['CFDictionary',['../namespace_s_f_b.html#a8a0d15603414fd0d55c5b4800774817d',1,'SFB']]],
   ['cferror',['CFError',['../namespace_s_f_b.html#aec9ad78243acda79f12f09dd290e6319',1,'SFB']]],
+  ['cfhttpmessage',['CFHTTPMessage',['../namespace_s_f_b.html#a883c59f629d8e86577dc5d7623bb2763',1,'SFB']]],
   ['cfmutablearray',['CFMutableArray',['../namespace_s_f_b.html#adf680c6cafdc5910d759a6f3af1596fc',1,'SFB']]],
   ['cfmutableattributedstring',['CFMutableAttributedString',['../namespace_s_f_b.html#a5b2651f8bdd56bc38a1f5df14ddcd2ac',1,'SFB']]],
   ['cfmutablebag',['CFMutableBag',['../namespace_s_f_b.html#af8d72512642852f2c7f4588fc38e0e41',1,'SFB']]],
@@ -21,10 +22,12 @@ var searchData=
   ['cfmutablestring',['CFMutableString',['../namespace_s_f_b.html#a654ba8ac3e209120f8375d888f57ce0a',1,'SFB']]],
   ['cfnumber',['CFNumber',['../namespace_s_f_b.html#a55b5ac955a058abaf8b92baecdf98848',1,'SFB']]],
   ['cfpropertylist',['CFPropertyList',['../namespace_s_f_b.html#afad61c95652600fd6a870fa32c820adb',1,'SFB']]],
+  ['cfreadstream',['CFReadStream',['../namespace_s_f_b.html#aaae4a2520a7d5670fa24e4ca6520c4ce',1,'SFB']]],
   ['cfset',['CFSet',['../namespace_s_f_b.html#a9f35ef405bb164dd609d5e69144b93b4',1,'SFB']]],
   ['cfstring',['CFString',['../namespace_s_f_b.html#a1b37e89a83b5ac2f3e2ffb437ee31246',1,'SFB']]],
   ['cftype',['CFType',['../namespace_s_f_b.html#a4fb552018c3d12ea7b81ee3621614684',1,'SFB']]],
   ['cfurl',['CFURL',['../namespace_s_f_b.html#aa2b56757198dfaaa1b581f29730c81f6',1,'SFB']]],
   ['cfuuid',['CFUUID',['../namespace_s_f_b.html#ac1b13c6775e192336378ed48d643ae37',1,'SFB']]],
+  ['cfwritestream',['CFWriteStream',['../namespace_s_f_b.html#a607e499a0fd8583e51e58fbb76af1d44',1,'SFB']]],
   ['cgimagesource',['CGImageSource',['../namespace_s_f_b.html#a214146c9520bf97505a49f6399588793',1,'SFB']]]
 ];

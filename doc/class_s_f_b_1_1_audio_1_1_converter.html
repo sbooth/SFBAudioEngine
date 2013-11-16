@@ -101,9 +101,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Creation and Destruction</div></td></tr>
-<tr class="memitem:abdd270b2f8bb707a9b7668ed5df339b8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#abdd270b2f8bb707a9b7668ed5df339b8">Converter</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *decoder, const AudioStreamBasicDescription &amp;format, AudioChannelLayout *channelLayout=nullptr)</td></tr>
-<tr class="memdesc:abdd270b2f8bb707a9b7668ed5df339b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html" title="A Converter converts the output of a Decoder to a different PCM format. ">Converter</a></code>.  <a href="#abdd270b2f8bb707a9b7668ed5df339b8">More...</a><br/></td></tr>
-<tr class="separator:abdd270b2f8bb707a9b7668ed5df339b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9de798832780e13194833256814fc1d2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#a9de798832780e13194833256814fc1d2">Converter</a> (<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">Decoder::unique_ptr</a> decoder, const AudioStreamBasicDescription &amp;format, <a class="el" href="class_s_f_b_1_1_audio_1_1_channel_layout.html">ChannelLayout</a> channelLayout=nullptr)</td></tr>
+<tr class="memdesc:a9de798832780e13194833256814fc1d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new <code><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html" title="A Converter converts the output of a Decoder to a different PCM format. ">Converter</a></code>.  <a href="#a9de798832780e13194833256814fc1d2">More...</a><br/></td></tr>
+<tr class="separator:a9de798832780e13194833256814fc1d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc149c0d39e6c1546eff4ba4a4fa95f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc149c0d39e6c1546eff4ba4a4fa95f1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#afc149c0d39e6c1546eff4ba4a4fa95f1">~Converter</a> ()</td></tr>
 <tr class="memdesc:afc149c0d39e6c1546eff4ba4a4fa95f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy this <code><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html" title="A Converter converts the output of a Decoder to a different PCM format. ">Converter</a></code>. <br/></td></tr>
@@ -120,10 +120,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:abe7222be05bb95eb3b9d8bfb7cfeb27b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query whether this converter is open. <br/></td></tr>
 <tr class="separator:abe7222be05bb95eb3b9d8bfb7cfeb27b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Internals</div></td></tr>
-<tr class="memitem:ada70cd8395119bcb65ee94ecd0f2c2fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada70cd8395119bcb65ee94ecd0f2c2fe"></a>
-<a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#ada70cd8395119bcb65ee94ecd0f2c2fe">GetDecoder</a> () const </td></tr>
-<tr class="memdesc:ada70cd8395119bcb65ee94ecd0f2c2fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> feeding this converter. <br/></td></tr>
-<tr class="separator:ada70cd8395119bcb65ee94ecd0f2c2fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1f5bd7968bf7b3017e4b162e4b9e54e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad1f5bd7968bf7b3017e4b162e4b9e54e"></a>
+const <a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#ad1f5bd7968bf7b3017e4b162e4b9e54e">GetDecoder</a> () const </td></tr>
+<tr class="memdesc:ad1f5bd7968bf7b3017e4b162e4b9e54e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> feeding this converter. <br/></td></tr>
+<tr class="separator:ad1f5bd7968bf7b3017e4b162e4b9e54e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Audio access</div></td></tr>
 <tr class="memitem:adcfa7eea6824940344fc5fccaee8098e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adcfa7eea6824940344fc5fccaee8098e"></a>
 AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#adcfa7eea6824940344fc5fccaee8098e">GetFormat</a> () const </td></tr>
@@ -132,10 +132,10 @@ AudioStreamBasicDescription&#160;</td><td class="memItemRight" valign="bottom"><
 <tr class="memitem:a9e6e6fc504ac222e24e3faaa8e92c886"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#a9e6e6fc504ac222e24e3faaa8e92c886">CreateFormatDescription</a> () const </td></tr>
 <tr class="memdesc:a9e6e6fc504ac222e24e3faaa8e92c886"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the type of PCM data provided by this converter.  <a href="#a9e6e6fc504ac222e24e3faaa8e92c886">More...</a><br/></td></tr>
 <tr class="separator:a9e6e6fc504ac222e24e3faaa8e92c886"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad19a39cace5f799e8ec8ecfb5a9b9d84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad19a39cace5f799e8ec8ecfb5a9b9d84"></a>
-AudioChannelLayout *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#ad19a39cace5f799e8ec8ecfb5a9b9d84">GetChannelLayout</a> () const </td></tr>
-<tr class="memdesc:ad19a39cace5f799e8ec8ecfb5a9b9d84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the layout of the converter's audio channels, or <code>nullptr</code> if not specified. <br/></td></tr>
-<tr class="separator:ad19a39cace5f799e8ec8ecfb5a9b9d84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4b96c127328b788e7f5fdd6a88c949d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4b96c127328b788e7f5fdd6a88c949d"></a>
+const <a class="el" href="class_s_f_b_1_1_audio_1_1_channel_layout.html">ChannelLayout</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#ac4b96c127328b788e7f5fdd6a88c949d">GetChannelLayout</a> () const </td></tr>
+<tr class="memdesc:ac4b96c127328b788e7f5fdd6a88c949d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the layout of the converter's audio channels, or <code>nullptr</code> if not specified. <br/></td></tr>
+<tr class="separator:ac4b96c127328b788e7f5fdd6a88c949d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af107d3c8d97d4cfdd69b868a4bb2c4a1"><td class="memItemLeft" align="right" valign="top">CFStringRef&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html#af107d3c8d97d4cfdd69b868a4bb2c4a1">CreateChannelLayoutDescription</a> () const </td></tr>
 <tr class="memdesc:af107d3c8d97d4cfdd69b868a4bb2c4a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a description of the layout of the converter's audio channels.  <a href="#af107d3c8d97d4cfdd69b868a4bb2c4a1">More...</a><br/></td></tr>
 <tr class="separator:af107d3c8d97d4cfdd69b868a4bb2c4a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,14 +150,14 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A <code><a class="el" href="class_s_f_b_1_1_audio_1_1_converter.html" title="A Converter converts the output of a Decoder to a different PCM format. ">Converter</a></code> converts the output of a <code><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. ">Decoder</a></code> to a different PCM format. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="abdd270b2f8bb707a9b7668ed5df339b8"></a>
+<a class="anchor" id="a9de798832780e13194833256814fc1d2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">SFB::Audio::Converter::Converter </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html">Decoder</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#aa092f2940b367e63265e7c1d10b17eaa">Decoder::unique_ptr</a>&#160;</td>
           <td class="paramname"><em>decoder</em>, </td>
         </tr>
         <tr>
@@ -169,7 +169,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">AudioChannelLayout *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_s_f_b_1_1_audio_1_1_channel_layout.html">ChannelLayout</a>&#160;</td>
           <td class="paramname"><em>channelLayout</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
@@ -216,7 +216,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> on success, <code>false</code> otherwise </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ada2fdc823aa89bb76f9228d5be360db5" title="Close the decoder&#39;s InputSource. ">SFB::Audio::Decoder::Close()</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#ac548314c24638bd21cf81f133847963d" title="Close the decoder&#39;s InputSource. ">SFB::Audio::Decoder::Close()</a> </dd></dl>
 
 </div>
 </div>
@@ -316,7 +316,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><code>true</code> on success, <code>false</code> otherwise </dd></dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#abbe7f6c3d0213f6664dc2bfcadc5f820" title="Open the decoder&#39;s InputSource. ">SFB::Audio::Decoder::Open()</a> </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="class_s_f_b_1_1_audio_1_1_decoder.html#a3d81c7f50d1e1e4cec9e5e0a2c5d6dfe" title="Open the decoder&#39;s InputSource. ">SFB::Audio::Decoder::Open()</a> </dd></dl>
 
 </div>
 </div>
@@ -326,7 +326,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 29 2013 21:07:01 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Nov 16 2013 09:47:42 for SFBAudioEngine by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.5
 </small></address>

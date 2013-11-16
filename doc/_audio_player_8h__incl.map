@@ -1,5 +1,7 @@
 <map id="Player/AudioPlayer.h" name="Player/AudioPlayer.h">
-<area shape="rect" id="node9" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="265,83,380,111"/>
-<area shape="rect" id="node13" href="$_semaphore_8h.html" title="A mach semaphore_t wrapper. " alt="" coords="939,83,1040,111"/>
-<area shape="rect" id="node12" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="360,161,464,189"/>
+<area shape="rect" id="node10" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="418,83,533,111"/>
+<area shape="rect" id="node19" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="659,161,815,189"/>
+<area shape="rect" id="node21" href="$_semaphore_8h.html" title="A mach semaphore_t wrapper. " alt="" coords="1375,83,1476,111"/>
+<area shape="rect" id="node13" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="378,161,483,189"/>
+<area shape="rect" id="node14" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="435,238,535,266"/>
 </map>

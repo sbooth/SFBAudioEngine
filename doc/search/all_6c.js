@@ -3,6 +3,7 @@ var searchData=
   ['leadartist',['LeadArtist',['../class_s_f_b_1_1_audio_1_1_attached_picture.html#ac364fadea4b03ca56f9fd8cc10dc76feab182985c873176c613499e259d3cefee',1,'SFB::Audio::AttachedPicture']]],
   ['leafletpage',['LeafletPage',['../class_s_f_b_1_1_audio_1_1_attached_picture.html#ac364fadea4b03ca56f9fd8cc10dc76fea0e5d34a71b13718fa1c3b89025f7a6da',1,'SFB::Audio::AttachedPicture']]],
   ['levels',['levels',['../namespace_s_f_b_1_1_logger.html#ab5a9db3bc856bd389d4e31557a4a1466',1,'SFB::Logger']]],
+  ['loadfilesinmemory',['LoadFilesInMemory',['../class_s_f_b_1_1_input_source.html#aacdadbab552ef425d3e2a0e7e84c8098a83595265ba9eb9a06dbf9343298ad7bf',1,'SFB::InputSource']]],
   ['log',['Log',['../namespace_s_f_b_1_1_logger.html#a7480a595ff6ff19c941b3edae2bef1af',1,'SFB::Logger']]],
   ['logger_2eh',['Logger.h',['../_logger_8h.html',1,'']]],
   ['logger_5falert',['LOGGER_ALERT',['../_logger_8h.html#ae948910c73f7a3b8a668af5a77097930',1,'Logger.h']]],
