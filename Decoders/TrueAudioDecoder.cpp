@@ -139,7 +139,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -184,7 +184,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
 				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
 				
-				*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderFileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+				*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
 
 			return false;

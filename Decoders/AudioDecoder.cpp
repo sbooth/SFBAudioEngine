@@ -42,7 +42,7 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	SFB::Audio::AudioDecoderErrorDomain					= CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioDecoder");
+const CFStringRef SFB::Audio::Decoder::ErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.AudioDecoder");
 
 #pragma mark Static Methods
 
@@ -171,7 +171,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unknown file type"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(InputSourceErrorDomain, InputSourceFileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(InputSource::ErrorDomain, InputSource::FileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
 		}
 
 		return nullptr;

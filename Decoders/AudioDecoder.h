@@ -48,18 +48,6 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-
-		/*! @brief The \c CFErrorRef error domain used by \c AudioDecoder */
-		extern const CFStringRef		AudioDecoderErrorDomain;
-
-		/*! @brief Possible \c CFErrorRef error codes used by \c AudioDecoder */
-		enum {
-			AudioDecoderFileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
-			AudioDecoderFileFormatNotSupportedError			= 1,	/*!< File format not supported */
-			AudioDecoderInputOutputError					= 2		/*!< Input/output error */
-		};
-
-
 		/*!
 		 * @brief Base class for all audio decoder classes
 		 *
@@ -70,6 +58,16 @@ namespace SFB {
 		{
 
 		public:
+			
+			/*! @brief The \c CFErrorRef error domain used by \c Decoder and subclasses */
+			static const CFStringRef ErrorDomain;
+
+			/*! Possible \c CFErrorRef error codes used by \c Decoder */
+			enum ErrorCode {
+				FileFormatNotRecognizedError		= 0,	/*!< File format not recognized */
+				FileFormatNotSupportedError			= 1,	/*!< File format not supported */
+				InputOutputError					= 2		/*!< Input/output error */
+			};
 
 			// ========================================
 			/*! @name Supported file formats */

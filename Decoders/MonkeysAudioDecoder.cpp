@@ -210,7 +210,7 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 		
 		return false;

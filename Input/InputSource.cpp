@@ -39,7 +39,7 @@
 // ========================================
 // Error Codes
 // ========================================
-const CFStringRef	SFB::InputSourceErrorDomain		= CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
+const CFStringRef SFB::InputSource::ErrorDomain = CFSTR("org.sbooth.AudioEngine.ErrorDomain.InputSource");
 
 #pragma mark Static Methods
 
@@ -57,9 +57,9 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateInputSourceForURL(CFURLRef 
 	}
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
-		if(InputSourceFlagMemoryMapFiles & flags)
+		if(InputSource::MemoryMapFiles & flags)
 			return unique_ptr(new MemoryMappedFileInputSource(url));
-		else if(InputSourceFlagLoadFilesInMemory & flags)
+		else if(InputSource::LoadFilesInMemory & flags)
 			return unique_ptr(new InMemoryFileInputSource(url));
 		else
 			return unique_ptr(new FileInputSource(url));

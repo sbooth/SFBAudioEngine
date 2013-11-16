@@ -41,32 +41,27 @@
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*! @brief The \c CFErrorRef error domain used by \c InputSource */
-	extern const CFStringRef		InputSourceErrorDomain;
-
-	/*! Possible \c CFErrorRef error codes used by \c InputSource */
-	enum InputSourceErrorCodes {
-		/*! File not found */
-		InputSourceFileNotFoundError			= 0,
-		/*! Input/output error */
-		InputSourceInputOutputError				= 1
-	};
-
-
-	/*! Flags used in \c InputSource::CreateInputSourceForURL */
-	enum InputSourceFlags {
-		/*! Files should be mapped in memory using \c mmap() */
-		InputSourceFlagMemoryMapFiles			= 1 << 0,
-		/*! Files should be fully loaded in memory */
-		InputSourceFlagLoadFilesInMemory		= 1 << 1
-	};
-
-
 	/*! @brief An abstract class allowing access to a stream of bytes */
 	class InputSource
 	{
 
 	public:
+
+		/*! @brief The \c CFErrorRef error domain used by \c InputSource and subclasses */
+		static const CFStringRef ErrorDomain;
+
+		/*! Possible \c CFErrorRef error codes used by \c InputSource */
+		enum ErrorCode {
+			FileNotFoundError		= 0,		/*!< File not found */
+			InputOutputError		= 1			/*!< Input/output error */
+		};
+
+		/*! Flags used in \c InputSource::CreateInputSourceForURL */
+		enum InputSourceFlags {
+			MemoryMapFiles			= 1 << 0,	/*!< Files should be mapped in memory using \c mmap() */
+			LoadFilesInMemory		= 1 << 1	/*!< Files should be fully loaded in memory */
+		};
+		
 
 		// ========================================
 		/*! @name Factory Methods */

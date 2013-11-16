@@ -170,7 +170,7 @@ bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
 			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
 			
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		mpc_reader_exit_stdio(&mReader);
