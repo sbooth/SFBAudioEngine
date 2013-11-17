@@ -771,14 +771,14 @@ void SFB::Audio::Metadata::SetValue(CFStringRef key, CFTypeRef value)
 			CFDictionaryRemoveValue(mChangedMetadata, key);
 	}
 	else {
+		CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
 		if(CFDictionaryContainsKey(mChangedMetadata, key)) {
-			CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
 			if(savedValue && CFEqual(savedValue, value))
 				CFDictionaryRemoveValue(mChangedMetadata, key);
 			else
 				CFDictionarySetValue(mChangedMetadata, key, value);
 		}
-		else
+		else if(savedValue && !CFEqual(savedValue, value))
 			CFDictionarySetValue(mChangedMetadata, key, value);
 	}
 }
