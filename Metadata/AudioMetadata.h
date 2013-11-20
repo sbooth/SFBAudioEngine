@@ -278,6 +278,13 @@ namespace SFB {
 			 */
 			//@{
 
+			/*! 
+			 * @brief Sets all metadata to \c nullptr
+			 * @note Leaves album art intact
+			 * @see RemoveAllAttachedPictures
+			 */
+			void RemoveAllMetadata();
+
 
 			/*! @brief Get the title */
 			CFStringRef GetTitle() const;

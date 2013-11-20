@@ -303,6 +303,46 @@ CFNumberRef SFB::Audio::Metadata::GetBitrate() const
 
 #pragma mark Metadata Access
 
+void SFB::Audio::Metadata::RemoveAllMetadata()
+{
+	SetValue(kTitleKey, nullptr);
+	SetValue(kAlbumTitleKey, nullptr);
+	SetValue(kArtistKey, nullptr);
+	SetValue(kAlbumArtistKey, nullptr);
+	SetValue(kGenreKey, nullptr);
+	SetValue(kComposerKey, nullptr);
+	SetValue(kReleaseDateKey, nullptr);
+	SetValue(kCompilationKey, nullptr);
+	SetValue(kTrackNumberKey, nullptr);
+	SetValue(kTrackTotalKey, nullptr);
+	SetValue(kDiscNumberKey, nullptr);
+	SetValue(kDiscTotalKey, nullptr);
+	SetValue(kLyricsKey, nullptr);
+	SetValue(kBPMKey, nullptr);
+	SetValue(kRatingKey, nullptr);
+	SetValue(kCommentKey, nullptr);
+	SetValue(kISRCKey, nullptr);
+	SetValue(kMCNKey, nullptr);
+	SetValue(kMusicBrainzReleaseIDKey, nullptr);
+	SetValue(kMusicBrainzRecordingIDKey, nullptr);
+
+	SetValue(kTitleSortOrderKey, nullptr);
+	SetValue(kAlbumTitleSortOrderKey, nullptr);
+	SetValue(kArtistSortOrderKey, nullptr);
+	SetValue(kAlbumArtistSortOrderKey, nullptr);
+	SetValue(kComposerSortOrderKey, nullptr);
+
+	SetValue(kGroupingKey, nullptr);
+
+	SetValue(kAdditionalMetadataKey, nullptr);
+
+	SetValue(kReferenceLoudnessKey, nullptr);
+	SetValue(kTrackGainKey, nullptr);
+	SetValue(kTrackPeakKey, nullptr);
+	SetValue(kAlbumGainKey, nullptr);
+	SetValue(kAlbumPeakKey, nullptr);
+}
+
 CFStringRef SFB::Audio::Metadata::GetTitle() const
 {
 	return GetStringValue(kTitleKey);
