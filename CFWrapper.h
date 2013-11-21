@@ -194,10 +194,10 @@ namespace SFB {
 		/*! @name CoreFoundation object access */
 		//@{
 
-		/*! @brief Check whether the wrapped object is \c nullptr */
+		/*! @brief Check whether the wrapped object is not \c nullptr */
 		inline explicit operator bool() const					{ return nullptr != mObject; }
 
-		/*! @brief Check whether the wrapped object is not \c nullptr */
+		/*! @brief Check whether the wrapped object is \c nullptr */
 		inline bool operator!() const							{ return nullptr == mObject; }
 
 		/*! @brief Get the wrapped object */
