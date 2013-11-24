@@ -182,7 +182,17 @@ namespace SFB {
 		//@{
 
 		/*! @brief Test two \c CFWrapper objects for equality using \c CFEqual() */
-		inline bool operator==(const CFWrapper& rhs) const		{ return CFEqual(mObject, rhs.mObject); }
+		inline bool operator==(const CFWrapper& rhs) const
+		{
+			if(mObject == rhs.mObject)
+				return true;
+
+			// CFEqual doesn't handle nullptr
+			if(!mObject || !rhs.mObject)
+				return false;
+
+			return CFEqual(mObject, rhs.mObject);
+		}
 
 		/*! @brief Test two \c CFWrapper objects for inequality */
 		inline bool operator!=(const CFWrapper& rhs) const		{ return !operator==(rhs); }
