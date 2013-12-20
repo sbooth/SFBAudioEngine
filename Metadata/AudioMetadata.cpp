@@ -812,13 +812,18 @@ void SFB::Audio::Metadata::SetValue(CFStringRef key, CFTypeRef value)
 	}
 	else {
 		CFTypeRef savedValue = CFDictionaryGetValue(mMetadata, key);
+		// Revert the change if the new value is the save as the saved value
 		if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 			if(savedValue && CFEqual(savedValue, value))
 				CFDictionaryRemoveValue(mChangedMetadata, key);
 			else
 				CFDictionarySetValue(mChangedMetadata, key, value);
 		}
+		// If a saved value exists only register the change if the new value is different
 		else if(savedValue && !CFEqual(savedValue, value))
+			CFDictionarySetValue(mChangedMetadata, key, value);
+		// If no saved value exists for the key register the change
+		else if(nullptr == savedValue)
 			CFDictionarySetValue(mChangedMetadata, key, value);
 	}
 }
