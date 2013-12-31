@@ -443,6 +443,7 @@ namespace SFB {
 
 			/*!
 			 * @brief Add a DSP effect to the audio processing graph
+             * @param componentType The \c AudioComponent type
 			 * @param subType The \c AudioComponent subtype
 			 * @param manufacturer The \c AudioComponent manufacturer
 			 * @param flags The \c AudioComponent flags
@@ -451,7 +452,7 @@ namespace SFB {
 			 * @return \c true on success, \c false otherwise
 			 * @see AudioComponentDescription
 			 */
-			bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
+			bool AddEffect(OSType componentType, OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
 
 			/*!
 			 * @brief Remove the specified DSP effect
