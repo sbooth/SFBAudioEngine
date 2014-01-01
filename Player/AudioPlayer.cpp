@@ -823,6 +823,11 @@ bool SFB::Audio::Player::SetSampleRateConverterComplexity(UInt32 complexity)
 
 #pragma mark DSP Effects
 
+inline bool SFB::Audio::Player::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit)
+{
+    return AddEffect(kAudioUnitType_Effect, subType, manufacturer, flags, mask, effectUnit);
+}
+
 bool SFB::Audio::Player::AddEffect(OSType componentType, OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
 	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Adding DSP effect: " << subType << " " << manufacturer);
