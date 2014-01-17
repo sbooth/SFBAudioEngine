@@ -823,7 +823,12 @@ bool SFB::Audio::Player::SetSampleRateConverterComplexity(UInt32 complexity)
 
 #pragma mark DSP Effects
 
-bool SFB::Audio::Player::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
+inline bool SFB::Audio::Player::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit)
+{
+    return AddEffect(kAudioUnitType_Effect, subType, manufacturer, flags, mask, effectUnit);
+}
+
+bool SFB::Audio::Player::AddEffect(OSType componentType, OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
 	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Adding DSP effect: " << subType << " " << manufacturer);
 
@@ -861,7 +866,7 @@ bool SFB::Audio::Player::AddEffect(OSType subType, OSType manufacturer, UInt32 f
 
 	// Create the effect node and set its format
 	AudioComponentDescription componentDescription = {
-		.componentType = kAudioUnitType_Effect,
+		.componentType = componentType,
 		.componentSubType = subType,
 		.componentManufacturer = manufacturer,
 		.componentFlags = flags,

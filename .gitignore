@@ -1,6 +1,7 @@
 doc/
 build/
 Frameworks/
+Libraries/
 
 *.pbxuser
 *.mode1v3
