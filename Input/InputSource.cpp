@@ -33,7 +33,6 @@
 #include "MemoryMappedFileInputSource.h"
 #include "InMemoryFileInputSource.h"
 #include "HTTPInputSource.h"
-#include "CFWrapper.h"
 #include "Logger.h"
 
 // ========================================
