@@ -33,7 +33,7 @@
 #include <iostream>
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreServices/CoreServices.h>
+#include <CFNetwork/CFNetwork.h>
 #if !TARGET_OS_IPHONE
 # include <Security/Security.h>
 # include <ImageIO/ImageIO.h>
