@@ -238,7 +238,8 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 	
 	mSourceFormat.mSampleRate			= mFormat.mSampleRate;
 	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
-	
+	mSourceFormat.mBitsPerChannel		= mFormat.mBitsPerChannel;
+
 	switch(mFormat.mChannelsPerFrame) {
 		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);			break;
 		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);		break;
