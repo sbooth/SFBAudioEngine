@@ -244,6 +244,57 @@ namespace SFB {
 
 
 			// ========================================
+			/*! @name Metadata manipulation */
+			//@{
+
+			/*! @brief Metadata kind bitmask values used in CopyMetadata() and RemoveMetadata() */
+			enum MetadataKind : unsigned {
+				Basic			= (1u << 0),	/*!< Basic metadata */
+				Sorting			= (1u << 1),	/*!< Sorting metadata */
+				Grouping		= (1u << 2),	/*!< Grouping metadata */
+				Additional		= (1u << 3),	/*!< Additional metadata */
+				ReplayGain		= (1u << 4)		/*!< Replay gain metadata */
+			};
+
+			/*!
+			 * @brief Copies the values contained in the specified metadata kinds from \c metadata
+			 * @note Does not copy album artwork
+			 * @param metadata A \c Metadata object containing the metadata to copy
+			 * @see CopyAllMetadata
+			 * @see CopyAttachedPictures
+			 */
+			void CopyMetadata(const Metadata& metadata, unsigned kind);
+
+			/*!
+			 * @brief Copies all metadata from \c metadata
+			 * @note Does not copy album artwork
+			 * @param metadata A \c Metadata object containing the metadata to copy
+			 * @see CopyMetadata
+			 * @see CopyAttachedPictures
+			 */
+			void CopyAllMetadata(const Metadata& metadata);
+
+
+			/*!
+			 * @brief Sets the values contained in specified metadata kinds to \c nullptr
+			 * @param kind A bitmask specifying the kinds of metadata to remove
+			 * @see RemoveAllMetadata
+			 * @see RemoveAllAttachedPictures
+			 */
+			void RemoveMetadata(unsigned kind);
+
+			/*!
+			 * @brief Sets all metadata to \c nullptr
+			 * @note Leaves album art intact
+			 * @see RemoveMetadata
+			 * @see RemoveAllAttachedPictures
+			 */
+			void RemoveAllMetadata();
+
+			//@}
+
+
+			// ========================================
 			/*! @name Properties access */
 			//@{
 
@@ -273,18 +324,10 @@ namespace SFB {
 
 			// ========================================
 			/*!
-			 * @name Metadata
+			 * @name Basic metadata
 			 * To remove an existing value call the appropriate \c Set() function with \c nullptr
 			 */
 			//@{
-
-			/*! 
-			 * @brief Sets all metadata to \c nullptr
-			 * @note Leaves album art intact
-			 * @see RemoveAllAttachedPictures
-			 */
-			void RemoveAllMetadata();
-
 
 			/*! @brief Get the title */
 			CFStringRef GetTitle() const;
@@ -430,7 +473,7 @@ namespace SFB {
 
 			// ========================================
 			/*!
-			 * @name Sorting
+			 * @name Sorting metadata
 			 * To remove an existing value call the appropriate \c Set() function with \c nullptr
 			 */
 			//@{
@@ -474,7 +517,7 @@ namespace SFB {
 
 			// ========================================
 			/*!
-			 * @name Grouping
+			 * @name Grouping metadata
 			 * To remove an existing value call the appropriate \c Set() function with \c nullptr
 			 */
 			//@{
@@ -506,7 +549,7 @@ namespace SFB {
 
 			// ========================================
 			/*!
-			 * @name Replay gain
+			 * @name Replay gain metadata
 			 * To remove an existing value call the appropriate \c Set() function with \c nullptr
 			 */
 			//@{
@@ -552,6 +595,16 @@ namespace SFB {
 			/*! @name Album artwork */
 			//@{
 
+			/*!
+			 * @brief Copies album artwork from \c metadata
+			 * @note This clears existing album artwork
+			 * @note Does not copy metadata
+			 * @param metadata A \c Metadata object containing the artwork to copy
+			 * @see CopyMetadata
+			 */
+			void CopyAttachedPictures(const Metadata& metadata);
+
+			
 			/*! @brief Get all attached pictures */
 			const picture_vector GetAttachedPictures() const;
 

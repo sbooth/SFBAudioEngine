@@ -264,6 +264,114 @@ void SFB::Audio::Metadata::RevertUnsavedChanges()
 	}
 }
 
+#pragma mark Metadata manipulation
+
+void SFB::Audio::Metadata::CopyMetadata(const Metadata& metadata, unsigned kind)
+{
+	if(Basic & kind) {
+		SetValue(kTitleKey, metadata.GetTitle());
+		SetValue(kAlbumTitleKey, metadata.GetAlbumTitle());
+		SetValue(kArtistKey, metadata.GetArtist());
+		SetValue(kAlbumArtistKey, metadata.GetAlbumArtist());
+		SetValue(kGenreKey, metadata.GetGenre());
+		SetValue(kComposerKey, metadata.GetComposer());
+		SetValue(kReleaseDateKey, metadata.GetReleaseDate());
+		SetValue(kCompilationKey, metadata.GetCompilation());
+		SetValue(kTrackNumberKey, metadata.GetTrackNumber());
+		SetValue(kTrackTotalKey, metadata.GetTrackTotal());
+		SetValue(kDiscNumberKey, metadata.GetDiscNumber());
+		SetValue(kDiscTotalKey, metadata.GetDiscTotal());
+		SetValue(kLyricsKey, metadata.GetLyrics());
+		SetValue(kBPMKey, metadata.GetBPM());
+		SetValue(kRatingKey, metadata.GetRating());
+		SetValue(kCommentKey, metadata.GetComment());
+		SetValue(kISRCKey, metadata.GetISRC());
+		SetValue(kMCNKey, metadata.GetMCN());
+		SetValue(kMusicBrainzReleaseIDKey, metadata.GetMusicBrainzReleaseID());
+		SetValue(kMusicBrainzRecordingIDKey, metadata.GetMusicBrainzRecordingID());
+	}
+
+	if(Sorting & kind) {
+		SetValue(kTitleSortOrderKey, metadata.GetTitleSortOrder());
+		SetValue(kAlbumTitleSortOrderKey, metadata.GetAlbumTitleSortOrder());
+		SetValue(kArtistSortOrderKey, metadata.GetArtistSortOrder());
+		SetValue(kAlbumArtistSortOrderKey, metadata.GetAlbumArtistSortOrder());
+		SetValue(kComposerSortOrderKey, metadata.GetComposer());
+	}
+
+	if(Grouping & kind)
+		SetValue(kGroupingKey, metadata.GetGrouping());
+
+	if(Additional & kind)
+		SetValue(kAdditionalMetadataKey, metadata.GetAdditionalMetadata());
+
+	if(ReplayGain & kind) {
+		SetValue(kReferenceLoudnessKey, metadata.GetReplayGainReferenceLoudness());
+		SetValue(kTrackGainKey, metadata.GetReplayGainTrackGain());
+		SetValue(kTrackPeakKey, metadata.GetReplayGainTrackPeak());
+		SetValue(kAlbumGainKey, metadata.GetReplayGainAlbumGain());
+		SetValue(kAlbumPeakKey, metadata.GetReplayGainAlbumPeak());
+	}
+}
+
+void SFB::Audio::Metadata::CopyAllMetadata(const Metadata& metadata)
+{
+	CopyMetadata(metadata, Basic | Sorting | Grouping | Additional | ReplayGain);
+}
+
+void SFB::Audio::Metadata::RemoveMetadata(unsigned kind)
+{
+	if(Basic & kind) {
+		SetValue(kTitleKey, nullptr);
+		SetValue(kAlbumTitleKey, nullptr);
+		SetValue(kArtistKey, nullptr);
+		SetValue(kAlbumArtistKey, nullptr);
+		SetValue(kGenreKey, nullptr);
+		SetValue(kComposerKey, nullptr);
+		SetValue(kReleaseDateKey, nullptr);
+		SetValue(kCompilationKey, nullptr);
+		SetValue(kTrackNumberKey, nullptr);
+		SetValue(kTrackTotalKey, nullptr);
+		SetValue(kDiscNumberKey, nullptr);
+		SetValue(kDiscTotalKey, nullptr);
+		SetValue(kLyricsKey, nullptr);
+		SetValue(kBPMKey, nullptr);
+		SetValue(kRatingKey, nullptr);
+		SetValue(kCommentKey, nullptr);
+		SetValue(kISRCKey, nullptr);
+		SetValue(kMCNKey, nullptr);
+		SetValue(kMusicBrainzReleaseIDKey, nullptr);
+		SetValue(kMusicBrainzRecordingIDKey, nullptr);
+	}
+
+	if(Sorting & kind) {
+		SetValue(kTitleSortOrderKey, nullptr);
+		SetValue(kAlbumTitleSortOrderKey, nullptr);
+		SetValue(kArtistSortOrderKey, nullptr);
+		SetValue(kAlbumArtistSortOrderKey, nullptr);
+		SetValue(kComposerSortOrderKey, nullptr);
+	}
+
+	if(Grouping & kind)
+		SetValue(kGroupingKey, nullptr);
+
+	if(Additional & kind)
+		SetValue(kAdditionalMetadataKey, nullptr);
+
+	if(ReplayGain & kind) {
+		SetValue(kReferenceLoudnessKey, nullptr);
+		SetValue(kTrackGainKey, nullptr);
+		SetValue(kTrackPeakKey, nullptr);
+		SetValue(kAlbumGainKey, nullptr);
+		SetValue(kAlbumPeakKey, nullptr);
+	}
+}
+
+void SFB::Audio::Metadata::RemoveAllMetadata()
+{
+	RemoveMetadata(Basic | Sorting | Grouping | Additional | ReplayGain);
+}
+
 #pragma mark Properties Access
 
 CFStringRef SFB::Audio::Metadata::GetFormatName() const
@@ -302,46 +410,6 @@ CFNumberRef SFB::Audio::Metadata::GetBitrate() const
 }
 
 #pragma mark Metadata Access
-
-void SFB::Audio::Metadata::RemoveAllMetadata()
-{
-	SetValue(kTitleKey, nullptr);
-	SetValue(kAlbumTitleKey, nullptr);
-	SetValue(kArtistKey, nullptr);
-	SetValue(kAlbumArtistKey, nullptr);
-	SetValue(kGenreKey, nullptr);
-	SetValue(kComposerKey, nullptr);
-	SetValue(kReleaseDateKey, nullptr);
-	SetValue(kCompilationKey, nullptr);
-	SetValue(kTrackNumberKey, nullptr);
-	SetValue(kTrackTotalKey, nullptr);
-	SetValue(kDiscNumberKey, nullptr);
-	SetValue(kDiscTotalKey, nullptr);
-	SetValue(kLyricsKey, nullptr);
-	SetValue(kBPMKey, nullptr);
-	SetValue(kRatingKey, nullptr);
-	SetValue(kCommentKey, nullptr);
-	SetValue(kISRCKey, nullptr);
-	SetValue(kMCNKey, nullptr);
-	SetValue(kMusicBrainzReleaseIDKey, nullptr);
-	SetValue(kMusicBrainzRecordingIDKey, nullptr);
-
-	SetValue(kTitleSortOrderKey, nullptr);
-	SetValue(kAlbumTitleSortOrderKey, nullptr);
-	SetValue(kArtistSortOrderKey, nullptr);
-	SetValue(kAlbumArtistSortOrderKey, nullptr);
-	SetValue(kComposerSortOrderKey, nullptr);
-
-	SetValue(kGroupingKey, nullptr);
-
-	SetValue(kAdditionalMetadataKey, nullptr);
-
-	SetValue(kReferenceLoudnessKey, nullptr);
-	SetValue(kTrackGainKey, nullptr);
-	SetValue(kTrackPeakKey, nullptr);
-	SetValue(kAlbumGainKey, nullptr);
-	SetValue(kAlbumPeakKey, nullptr);
-}
 
 CFStringRef SFB::Audio::Metadata::GetTitle() const
 {
@@ -684,6 +752,13 @@ void SFB::Audio::Metadata::SetReplayGainAlbumPeak(CFNumberRef albumPeak)
 }
 
 #pragma mark Album Artwork
+
+void SFB::Audio::Metadata::CopyAttachedPictures(const Metadata& metadata)
+{
+	RemoveAllAttachedPictures();
+	for(auto picture : metadata.GetAttachedPictures())
+		AttachPicture(std::make_shared<AttachedPicture>(picture->GetData(), picture->GetType(), picture->GetDescription()));
+}
 
 const std::vector<std::shared_ptr<SFB::Audio::AttachedPicture>> SFB::Audio::Metadata::GetAttachedPictures() const
 {
