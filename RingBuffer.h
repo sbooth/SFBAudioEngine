@@ -33,6 +33,8 @@
 #include <CoreAudio/CoreAudioTypes.h>
 #include <memory>
 
+#include "AudioFormat.h"
+
 /*! @file RingBuffer.h @brief An audio ring buffer */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
@@ -94,17 +96,7 @@ namespace SFB {
 			 * @param capacityFrames The desired capacity, in frames
 			 * @return \c true on success, \c false on error
 			 */
-			bool Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames);
-
-			/*!
-			 * @brief Allocate space for audio data.
-			 * @note This method is not thread safe.
-			 * @param channelCount The number of interleaved channels
-			 * @param bytesPerFrame The number of bytes per audio frame
-			 * @param capacityFrames The desired capacity, in frames
-			 * @return \c true on success, \c false on error
-			 */
-			bool Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames);
+			bool Allocate(const AudioFormat& format, size_t capacityFrames);
 
 			/*!
 			 * @brief Free the resources used by this \c RingBuffer
@@ -112,14 +104,19 @@ namespace SFB {
 			 */
 			void Deallocate();
 
+
 			/*!
 			 * @brief Reset this \c RingBuffer to its default state.
 			 * @note This method is not thread safe.
 			 */
 			void Reset();
 
+
 			/*! @brief Get the capacity of this RingBuffer in frames */
 			inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
+
+			/*! @brief Get the format of this \c BufferList */
+			inline const AudioFormat& GetFormat() const					{ return mFormat; }
 
 			/*! @brief  Get the number of frames available for reading */
 			size_t GetFramesAvailableToRead() const;
@@ -154,15 +151,12 @@ namespace SFB {
 
 		private:
 
-			UInt32				mNumberChannels;		// The number of interleaved channels
-			UInt32				mBytesPerFrame;			// The number of bytes per audio frames
+			AudioFormat			mFormat;				// The format of the audio
 
 			unsigned char		**mBuffers;				// The channel pointers and buffers, allocated in one chunk of memory
 
 			size_t				mCapacityFrames;		// Frame capacity per channel
 			size_t				mCapacityFramesMask;
-			
-			size_t				mCapacityBytes;			// Byte capacity per frame
 			
 			volatile size_t		mWritePointer;			// In frames
 			volatile size_t		mReadPointer;

@@ -84,7 +84,7 @@ namespace {
 #pragma mark Creation and Destruction
 
 SFB::Audio::RingBuffer::RingBuffer()
-	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
+	: mBuffers(nullptr), mCapacityFrames(0), mReadPointer(0), mWritePointer(0)
 {}
 
 SFB::Audio::RingBuffer::~RingBuffer()
@@ -94,30 +94,26 @@ SFB::Audio::RingBuffer::~RingBuffer()
 
 #pragma mark Buffer Management
 
-bool SFB::Audio::RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
+bool SFB::Audio::RingBuffer::Allocate(const AudioFormat& format, size_t capacityFrames)
 {
-	if(!(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags))
+	// Only non-interleaved formats are supported
+	if(format.IsInterleaved())
 		return false;
-	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, capacityFrames);
-}
 
-bool SFB::Audio::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
-{
 	Deallocate();
 
 	// Round up to the next power of two
 	capacityFrames = NextPowerOfTwo((uint32_t)capacityFrames);
 
-	mNumberChannels = channelCount;
-	mBytesPerFrame = bytesPerFrame;
+	mFormat = format;
 
 	mCapacityFrames = capacityFrames;
 	mCapacityFramesMask = capacityFrames - 1;
 
-	mCapacityBytes = bytesPerFrame * capacityFrames;
+	size_t capacityBytes = format.FrameCountToByteCount(capacityFrames);
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
-	size_t allocationSize = (mCapacityBytes + sizeof(unsigned char *)) * channelCount;
+	size_t allocationSize = (capacityBytes + sizeof(unsigned char *)) * format.mChannelsPerFrame;
 	unsigned char *memoryChunk = (unsigned char *)malloc(allocationSize);
 	if(nullptr == memoryChunk)
 		return false;
@@ -127,10 +123,10 @@ bool SFB::Audio::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame,
 
 	// Assign the pointers and channel buffers
 	mBuffers = (unsigned char **)memoryChunk;
-	memoryChunk += channelCount * sizeof(unsigned char *);
-	for(UInt32 i = 0; i < channelCount; ++i) {
+	memoryChunk += format.mChannelsPerFrame * sizeof(unsigned char *);
+	for(UInt32 i = 0; i < format.mChannelsPerFrame; ++i) {
 		mBuffers[i] = memoryChunk;
-		memoryChunk += mCapacityBytes;
+		memoryChunk += capacityBytes;
 	}
 
 	mReadPointer = 0;
@@ -151,8 +147,8 @@ void SFB::Audio::RingBuffer::Reset()
 	mReadPointer = 0;
 	mWritePointer = 0;
 
-	for(UInt32 i = 0; i < mNumberChannels; ++i)
-		memset(mBuffers[i], 0, mCapacityBytes);
+	for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i)
+		memset(mBuffers[i], 0, mFormat.FrameCountToByteCount(mCapacityFrames));
 }
 
 size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
@@ -201,17 +197,17 @@ size_t SFB::Audio::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t fra
 		n2 = 0;
 	}
 
-	FetchABL(bufferList, 0, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n1 * mBytesPerFrame);
+	FetchABL(bufferList, 0, (const unsigned char **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n1));
 	mReadPointer = (mReadPointer + n1) & mCapacityFramesMask;
 
 	if(n2) {
-		FetchABL(bufferList, n1 * mBytesPerFrame, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n2 * mBytesPerFrame);
+		FetchABL(bufferList, mFormat.FrameCountToByteCount(n1), (const unsigned char **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n2));
 		mReadPointer = (mReadPointer + n2) & mCapacityFramesMask;
 	}
 
 	// Set the buffer sizes
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)(framesToRead * mBytesPerFrame);
+		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(framesToRead);
 
 	return framesToRead;
 }
@@ -238,11 +234,11 @@ size_t SFB::Audio::RingBuffer::WriteAudio(const AudioBufferList *bufferList, siz
 		n2 = 0;
 	}
 
-	StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, 0, n1 * mBytesPerFrame);
+	StoreABL(mBuffers, mFormat.FrameCountToByteCount(mWritePointer), bufferList, 0, mFormat.FrameCountToByteCount(n1));
 	mWritePointer = (mWritePointer + n1) & mCapacityFramesMask;
 
 	if(n2) {
-		StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, n1 * mBytesPerFrame, n2 * mBytesPerFrame);
+		StoreABL(mBuffers, mFormat.FrameCountToByteCount(mWritePointer), bufferList, mFormat.FrameCountToByteCount(n1), mFormat.FrameCountToByteCount(n2));
 		mWritePointer = (mWritePointer + n2) & mCapacityFramesMask;
 	}
 
