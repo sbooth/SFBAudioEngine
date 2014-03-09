@@ -105,9 +105,9 @@ public:
 	DecoderStateData(const DecoderStateData& rhs) = delete;
 	DecoderStateData& operator=(const DecoderStateData& rhs) = delete;
 
-	void AllocateBufferList(UInt32 capacityFrames)
+	bool AllocateBufferList(UInt32 capacityFrames)
 	{
-		mBufferList.Allocate(mDecoder->GetFormat(), capacityFrames);
+		return mBufferList.Allocate(mDecoder->GetFormat(), capacityFrames);
 	}
 
 	UInt32 ReadAudio(UInt32 frameCount)
@@ -3207,7 +3207,7 @@ bool SFB::Audio::Player::SetupAUGraphAndRingBufferForDecoder(Decoder& decoder)
 	mRingBufferChannelLayout = channelLayout;
 
 	// Allocate enough space in the ring buffer for the new format
-	if(!mRingBuffer->Allocate(mRingBufferFormat.mChannelsPerFrame, mRingBufferFormat.mBytesPerFrame, mRingBufferCapacity)) {
+	if(!mRingBuffer->Allocate(mRingBufferFormat, mRingBufferCapacity)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to allocate ring buffer");
 		return false;
 	}
