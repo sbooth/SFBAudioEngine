@@ -145,9 +145,90 @@ namespace SFB {
 		 * @param buffer The destination buffer
 		 * @param byteCount The maximum number of bytes to read
 		 * @return The number of bytes read
-		 *
 		 */
 		SInt64 Read(void *buffer, SInt64 byteCount);
+
+		/*!
+		 * @brief Read an integral type from the input
+		 * @tparam The integral type to read
+		 * @param value The destination value
+		 * @return \c true on success, \c false otherwise
+		 */
+		template <typename T> typename std::enable_if<std::is_integral<T>::value, bool>::type Read(T& value)
+		{
+			auto valueSize = sizeof(value);
+			auto bytesRead = Read(&value, (SInt64)valueSize);
+			if((SInt64)valueSize != bytesRead)
+				return false;
+			return true;
+		}
+
+		/*!
+		 * @brief Read an unsigned little endian integral type from the input and convert to host byte ordering
+		 * @tparam The unsigned integral type to read
+		 * @param value The destination value
+		 * @return \c true on success, \c false otherwise
+		 */
+		template <typename T> typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadLE(T& value)
+		{
+			auto valueSize = sizeof(value);
+			auto bytesRead = Read(&value, (SInt64)valueSize);
+			if((SInt64)valueSize != bytesRead)
+				return false;
+
+			switch(valueSize) {
+				case 2:	value = (T)OSSwapLittleToHostInt16(value);	break;
+				case 4:	value = (T)OSSwapLittleToHostInt32(value);	break;
+				case 8:	value = (T)OSSwapLittleToHostInt64(value);	break;
+			}
+
+			return true;
+		}
+
+		/*!
+		 * @brief Read an unsigned big endian integral type from the input and convert to host byte ordering
+		 * @tparam The unsigned integral type to read
+		 * @param value The destination value
+		 * @return \c true on success, \c false otherwise
+		 */
+		template <typename T> typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadBE(T& value)
+		{
+			auto valueSize = sizeof(value);
+			auto bytesRead = Read(&value, (SInt64)valueSize);
+			if((SInt64)valueSize != bytesRead)
+				return false;
+
+			switch(valueSize) {
+				case 2:	value = (T)OSSwapBigToHostInt16(value); break;
+				case 4:	value = (T)OSSwapBigToHostInt32(value); break;
+				case 8:	value = (T)OSSwapBigToHostInt64(value); break;
+			}
+
+			return true;
+		}
+
+		/*!
+		 * @brief Read an unsigned integral type from the input and swap its byte ordering
+		 * @tparam The unsigned integral type to read
+		 * @param value The destination value
+		 * @return \c true on success, \c false otherwise
+		 */
+		template <typename T> typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadSwapped(T& value)
+		{
+			auto valueSize = sizeof(value);
+			auto bytesRead = Read(&value, (SInt64)valueSize);
+			if((SInt64)valueSize != bytesRead)
+				return false;
+
+			switch(valueSize) {
+				case 2: value = (T)OSSwapInt16(value); break;
+				case 4: value = (T)OSSwapInt32(value); break;
+				case 8: value = (T)OSSwapInt64(value); break;
+			}
+
+			return true;
+		}
+
 
 		/*! @brief Determine whether the end of input has been reached */
 		bool AtEOF() const;
