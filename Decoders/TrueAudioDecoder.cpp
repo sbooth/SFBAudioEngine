@@ -33,8 +33,6 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-#define BUFFER_SIZE_FRAMES 2048
-
 struct SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper
 {
 	TTA_io_callback iocb;
