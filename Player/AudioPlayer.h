@@ -41,7 +41,7 @@
 #include <utility>
 
 #include "AudioDecoder.h"
-#include "RingBuffer.h"
+#include "AudioRingBuffer.h"
 #include "AudioChannelLayout.h"
 #include "Semaphore.h"
 

@@ -28,7 +28,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "RingBuffer.h"
+#include "AudioRingBuffer.h"
 
 #include <stdlib.h>
 #include <algorithm>
