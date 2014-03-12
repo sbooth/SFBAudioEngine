@@ -35,7 +35,7 @@
 
 #include "AudioFormat.h"
 
-/*! @file RingBuffer.h @brief An audio ring buffer */
+/*! @file AudioRingBuffer.h @brief An audio ring buffer */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
