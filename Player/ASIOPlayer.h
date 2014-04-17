@@ -539,6 +539,7 @@ namespace SFB {
 				Semaphore								mSemaphore;
 
 				SFB::RingBuffer::unique_ptr				mEventQueue;
+				dispatch_source_t						mEventQueueTimer;
 
 				std::thread								mDecoderThread;
 				Semaphore								mDecoderSemaphore;

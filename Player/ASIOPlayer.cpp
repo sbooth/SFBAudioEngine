@@ -344,50 +344,6 @@ namespace {
 		return result;
 	}
 
-	size_t FrameCountToByteCount(size_t sampleCount, ASIOSampleType sampleType)
-	{
-		switch (sampleType) {
-				// 16 bit samples
-			case ASIOSTInt16MSB:
-			case ASIOSTInt16LSB:		return sampleCount * 2;
-
-				// 24 bit samples
-			case ASIOSTInt24MSB:
-			case ASIOSTInt24LSB:		return sampleCount * 3;
-
-				// 32 bit samples
-			case ASIOSTInt32MSB:
-			case ASIOSTInt32LSB:		return sampleCount * 4;
-
-				// 32 bit float (float) samples
-			case ASIOSTFloat32MSB:
-			case ASIOSTFloat32LSB:		return sampleCount * 4;
-
-				// 64 bit float (double) samples
-			case ASIOSTFloat64MSB:
-			case ASIOSTFloat64LSB:		return sampleCount * 8;
-
-				// other bit depths aligned in 32 bits
-			case ASIOSTInt32MSB16:
-			case ASIOSTInt32LSB16:
-			case ASIOSTInt32MSB18:
-			case ASIOSTInt32LSB18:
-			case ASIOSTInt32MSB20:
-			case ASIOSTInt32LSB20:
-			case ASIOSTInt32MSB24:
-			case ASIOSTInt32LSB24:		return sampleCount * 4;
-
-				// DSD
-			case ASIOSTDSDInt8LSB1:
-			case ASIOSTDSDInt8MSB1:		return sampleCount / 8;
-
-			case ASIOSTDSDInt8NER8:		return sampleCount;
-
-				// Unknown format
-			default:					return 0;
-		}
-	}
-
 	// ========================================
 	// Information about an ASIO driver
 	struct DriverInfo
@@ -479,7 +435,6 @@ namespace {
 	{
 		if(sPlayer)
 			sPlayer->FillASIOBuffer(doubleBufferIndex);
-
 		return nullptr;
 	}
 
@@ -526,7 +481,7 @@ namespace {
 //}
 
 SFB::Audio::ASIO::Player::Player()
-: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFormatMismatchBlock(nullptr), mEventQueue(new SFB::RingBuffer)
+: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFormatMismatchBlock(nullptr), mEventQueueTimer(), mEventQueue(new SFB::RingBuffer)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -576,10 +531,10 @@ SFB::Audio::ASIO::Player::Player()
 
 	mEventQueue->Allocate(1024);
 
-	dispatch_source_t ds = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
-	dispatch_source_set_timer(ds, DISPATCH_TIME_NOW, NSEC_PER_SEC / 5, NSEC_PER_SEC / 3);
+	mEventQueueTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
+	dispatch_source_set_timer(mEventQueueTimer, DISPATCH_TIME_NOW, NSEC_PER_SEC / 5, NSEC_PER_SEC / 3);
 
-	dispatch_source_set_event_handler(ds, ^{
+	dispatch_source_set_event_handler(mEventQueueTimer, ^{
 
 		// Process player events
 		while(mEventQueue->GetBytesAvailableToRead()) {
@@ -609,7 +564,7 @@ SFB::Audio::ASIO::Player::Player()
 	});
 
 	// Start the timer
-	dispatch_resume(ds);
+	dispatch_resume(mEventQueueTimer);
 
 	// ========================================
 	// Set up output
@@ -674,6 +629,8 @@ SFB::Audio::ASIO::Player::~Player()
 
 	if(mFormatMismatchBlock)
 		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
+
+	dispatch_release(mEventQueueTimer);
 }
 
 #pragma mark Playback Control
@@ -1828,7 +1785,7 @@ bool SFB::Audio::ASIO::Player::OpenOutput()
 
 	// FIXME: Select the appropriate driver
 	// Only 0 or 2 seems to work
-	unsigned int libIndex = 2;
+	unsigned int libIndex = 0;
 
 	if(!AsioLibWrapper::LoadLib(buffer[libIndex])) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.ASIOPlayer", "Unable to load ASIO library");
@@ -2108,7 +2065,7 @@ bool SFB::Audio::ASIO::Player::SetupOutputAndRingBufferForDecoder(Decoder& decod
 	// Prepare ASIO buffers
 
 	sDriverInfo.mInputBufferCount = std::min(sDriverInfo.mInputChannelCount, 0L);
-	sDriverInfo.mOutputBufferCount = std::min(sDriverInfo.mOutputChannelCount, 2L);
+	sDriverInfo.mOutputBufferCount = std::min(sDriverInfo.mOutputChannelCount, (long)format.mChannelsPerFrame);
 
 	sDriverInfo.mBufferInfo = new ASIOBufferInfo [sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount];
 	sDriverInfo.mChannelInfo = new ASIOChannelInfo [sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount];
@@ -2251,18 +2208,18 @@ void SFB::Audio::ASIO::Player::FillASIOBuffer(long doubleBufferIndex)
 
 	// Output silence if muted or the ring buffer is empty
 	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
-		for(size_t bufferIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
+		for(long bufferIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
 			if(!sDriverInfo.mBufferInfo[bufferIndex].isInput)
-				memset(sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex], 0, FrameCountToByteCount(frameCount, sDriverInfo.mChannelInfo[bufferIndex].type));
+				memset(sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex], 0, mRingBufferFormat.FrameCountToByteCount(frameCount));
 		}
 
 		return;
 	}
 
-	for(size_t bufferIndex = 0, ablIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
+	for(long bufferIndex = 0, ablIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
 		if(!sDriverInfo.mBufferInfo[bufferIndex].isInput) {
 			sDriverInfo.mBufferList->mBuffers[ablIndex].mData = sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex];
-			sDriverInfo.mBufferList->mBuffers[ablIndex].mDataByteSize = FrameCountToByteCount(frameCount, sDriverInfo.mChannelInfo[bufferIndex].type);
+			sDriverInfo.mBufferList->mBuffers[ablIndex].mDataByteSize = (UInt32)mRingBufferFormat.FrameCountToByteCount(frameCount);
 			sDriverInfo.mBufferList->mBuffers[ablIndex].mNumberChannels = 1;
 			++ablIndex;
 		}
@@ -2283,10 +2240,10 @@ void SFB::Audio::ASIO::Player::FillASIOBuffer(long doubleBufferIndex)
 		LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
 
 		size_t framesOfSilence = frameCount - framesRead;
-		for(size_t bufferIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
+		for(long bufferIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
 			if(!sDriverInfo.mBufferInfo[bufferIndex].isInput) {
-				size_t byteCountToSkip = FrameCountToByteCount(framesRead, sDriverInfo.mChannelInfo[bufferIndex].type);
-				size_t byteCountToZero = FrameCountToByteCount(framesOfSilence, sDriverInfo.mChannelInfo[bufferIndex].type);
+				size_t byteCountToSkip = mRingBufferFormat.FrameCountToByteCount(framesRead);
+				size_t byteCountToZero = mRingBufferFormat.FrameCountToByteCount(framesOfSilence);
 				memset((int8_t *)sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex] + byteCountToSkip, 0, byteCountToZero);
 			}
 		}
