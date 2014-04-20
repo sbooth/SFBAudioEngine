@@ -403,6 +403,26 @@ bool SFB::Audio::ASIOOutput::SetDeviceIOFormat(const DeviceIOFormat& deviceIOFor
 	return true;
 }
 
+bool SFB::Audio::ASIOOutput::OpenStereo()
+{
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Output.ASIO", "OpenStereo");
+
+	if(_IsOpen() || _IsRunning())
+		return false;
+
+	return _OpenOutput(0);
+}
+
+bool SFB::Audio::ASIOOutput::OpenMultichannel()
+{
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Output.ASIO", "OpenMultichannel");
+
+	if(_IsOpen() || _IsRunning())
+		return false;
+
+	return _OpenOutput(2);
+}
+
 #pragma mark -
 
 bool SFB::Audio::ASIOOutput::_GetDeviceSampleRate(Float64& sampleRate) const
@@ -439,9 +459,7 @@ size_t SFB::Audio::ASIOOutput::_GetPreferredBufferSize() const
 	return (size_t)sDriverInfo.mPreferredBufferSize;
 }
 
-#pragma mark -
-
-bool SFB::Audio::ASIOOutput::_Open()
+bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 {
 	int count = AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
 	if(0 == count) {
@@ -456,16 +474,12 @@ bool SFB::Audio::ASIOOutput::_Open()
 		return false;
 	}
 
-	// FIXME: Select the appropriate driver
-	// Only 0 or 2 seems to work
-	unsigned int libIndex = 0;
-
-	if(!AsioLibWrapper::LoadLib(buffer[libIndex])) {
+	if(!AsioLibWrapper::LoadLib(buffer[index])) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library");
 		return false;
 	}
 
-	if(AsioLibWrapper::CreateInstance(buffer[libIndex].Number, &sASIO)) {
+	if(AsioLibWrapper::CreateInstance(buffer[index].Number, &sASIO)) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to instantiate ASIO driver");
 		return false;
 	}
@@ -487,11 +501,16 @@ bool SFB::Audio::ASIOOutput::_Open()
 	return true;
 }
 
+#pragma mark -
+
+bool SFB::Audio::ASIOOutput::_Open()
+{
+	// Default is stereo
+	return _OpenOutput(0);
+}
+
 bool SFB::Audio::ASIOOutput::_Close()
 {
-	if(nullptr == sASIO)
-		return false;
-
 	sASIO->disposeBuffers();
 	delete sASIO, sASIO = nullptr;
 	sDriverInfo = {{0}};
@@ -501,9 +520,6 @@ bool SFB::Audio::ASIOOutput::_Close()
 
 bool SFB::Audio::ASIOOutput::_Start()
 {
-	if(nullptr == sASIO || nullptr != sOutput)
-		return false;
-
 	auto result = sASIO->start();
 	if(ASE_OK != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "start() failed: " << result);
@@ -517,9 +533,6 @@ bool SFB::Audio::ASIOOutput::_Start()
 
 bool SFB::Audio::ASIOOutput::_Stop()
 {
-	if(nullptr == sASIO)
-		return false;
-
 	auto result = sASIO->stop();
 	if(ASE_OK != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "stop() failed: " << result);
@@ -538,6 +551,11 @@ bool SFB::Audio::ASIOOutput::_RequestStop()
 	return true;
 }
 
+bool SFB::Audio::ASIOOutput::_IsOpen() const
+{
+	return nullptr != sASIO;
+}
+
 bool SFB::Audio::ASIOOutput::_IsRunning() const
 {
 	return nullptr != sOutput;
@@ -546,9 +564,6 @@ bool SFB::Audio::ASIOOutput::_IsRunning() const
 bool SFB::Audio::ASIOOutput::_Reset()
 {
 	if(!_Stop())
-		return false;
-
-	if(nullptr == sASIO)
 		return false;
 
 	sASIO->disposeBuffers();

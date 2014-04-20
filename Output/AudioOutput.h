@@ -129,7 +129,9 @@ namespace SFB {
 			bool Stop();
 			bool RequestStop();
 
+			inline bool IsOpen() const								{ return _IsOpen(); }
 			inline bool IsRunning() const							{ return _IsRunning(); }
+
 			bool Reset();
 
 			// FIXME: This should probably be passed in the ctor
@@ -153,7 +155,9 @@ namespace SFB {
 			virtual bool _Stop() = 0;
 			virtual bool _RequestStop() = 0;
 
+			virtual bool _IsOpen() const = 0;
 			virtual bool _IsRunning() const = 0;
+
 			virtual bool _Reset() = 0;
 
 			virtual bool _SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout) = 0;

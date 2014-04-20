@@ -42,12 +42,26 @@ SFB::Audio::Output::Output()
 bool SFB::Audio::Output::Open()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Open");
+
+	if(_IsOpen())
+		return true;
+
+	if(_IsRunning())
+		return false;
+
 	return _Open();
 }
 
 bool SFB::Audio::Output::Close()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Close");
+
+	if(!_IsOpen())
+		return true;
+
+	if(_IsRunning())
+		return false;
+
 	return _Close();
 }
 
@@ -55,6 +69,9 @@ bool SFB::Audio::Output::Close()
 bool SFB::Audio::Output::Start()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Start");
+
+	if(!_IsOpen())
+		return false;
 
 	if(_IsRunning())
 		return true;
@@ -71,6 +88,9 @@ bool SFB::Audio::Output::Stop()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Stop");
 
+	if(!_IsOpen())
+		return false;
+
 	if(!_IsRunning())
 		return true;
 
@@ -80,6 +100,9 @@ bool SFB::Audio::Output::Stop()
 bool SFB::Audio::Output::RequestStop()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "RequestStop");
+
+	if(!_IsOpen())
+		return false;
 
 	if(!_IsRunning())
 		return true;
@@ -97,6 +120,12 @@ bool SFB::Audio::Output::RequestStop()
 bool SFB::Audio::Output::Reset()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Reset");
+
+	if(!_IsOpen())
+		return false;
+
+	// Some outputs may be able to reset while running
+
 	return _Reset();
 }
 

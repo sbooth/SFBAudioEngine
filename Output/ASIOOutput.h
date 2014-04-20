@@ -61,8 +61,8 @@ namespace SFB {
 			bool GetDeviceIOFormat(DeviceIOFormat& deviceIOFormat) const;
 			bool SetDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
 
-			bool SelectStereoOutput();
-			bool SelectMultichannelOutput();
+			bool OpenStereo();
+			bool OpenMultichannel();
 
 //		protected:
 //			ASIOOutput();
@@ -76,7 +76,9 @@ namespace SFB {
 			virtual bool _Stop();
 			virtual bool _RequestStop();
 
+			virtual bool _IsOpen() const;
 			virtual bool _IsRunning() const;
+
 			virtual bool _Reset();
 
 			virtual bool _SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout);
@@ -88,6 +90,8 @@ namespace SFB {
 			virtual bool _SetDeviceSampleRate(Float64 sampleRate);
 
 			virtual size_t _GetPreferredBufferSize() const;
+
+			bool _OpenOutput(uint32_t index);
 
 			// ASIO event queue
 			SFB::RingBuffer::unique_ptr				mEventQueue;
