@@ -40,6 +40,7 @@
 #include <map>
 #include <utility>
 
+#include "AudioOutput.h"
 #include "AudioDecoder.h"
 #include "AudioRingBuffer.h"
 #include "AudioChannelLayout.h"
@@ -60,6 +61,10 @@ namespace SFB {
 
 			/*! @brief An audio player for ASIO interfaces */
 			class Player {
+
+				// For access to mMutex
+				// FIXME: Is this a good idea?
+				friend class SFB::Audio::Output;
 
 			public:
 				// ========================================
@@ -315,91 +320,6 @@ namespace SFB {
 
 				//@}
 
-				// ========================================
-				/*! @name Device parameters */
-				//@{
-
-//				/*!
-//				 * @brief Get the number of output channels on the device
-//				 * @param channelCount A \c UInt32 to receive the channel count
-//				 * @return \c true on success, \c false otherwise
-//				 */
-//				bool GetDeviceChannelCount(UInt32& channelCount) const;
-//
-//				/*!
-//				 * @brief Get the device's preferred stereo channel
-//				 * @param preferredStereoChannels A \c std::pair to receive the channels
-//				 * @return \c true on success, \c false otherwise
-//				 */
-//				bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
-
-				//@}
-
-
-				// ========================================
-				/*! @name Device Management */
-				//@{
-
-//				/*!
-//				 * @brief Create the UID of the output device
-//				 * @note The returned string must be released by the caller
-//				 * @param deviceUID A \c CFStringRef to receive the UID
-//				 * @return \c true on success, \c false otherwise
-//				 * @see GetOutputDeviceID()
-//				 */
-//				bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
-//
-//				/*!
-//				 * @brief Set the output device to the device matching the provided UID
-//				 * @param deviceUID The UID of the desired device
-//				 * @return \c true on success, \c false otherwise
-//				 * @see SetOutputDeviceID()
-//				 */
-//				bool SetOutputDeviceUID(CFStringRef deviceUID);
-//
-//
-//				/*!
-//				 * @brief Get the device ID of the output device
-//				 * @param deviceID An \c AudioDeviceID to receive the device ID
-//				 * @return \c true on success, \c false otherwise
-//				 * @see CreateOutputDeviceUID()
-//				 */
-//				bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
-//
-//				/*!
-//				 * @brief Set the output device to the device matching the provided ID
-//				 * @param deviceID The ID of the desired device
-//				 * @return \c true on success, \c false otherwise
-//				 * @see SetOutputDeviceUID()
-//				 */
-//				bool SetOutputDeviceID(AudioDeviceID deviceID);
-//
-//
-
-				enum class DeviceIOFormat {
-					eDeviceIOFormatPCM,
-					eDeviceIOFormatDSD
-				};
-
-				bool GetOutputDeviceIOFormat(DeviceIOFormat& deviceIOFormat) const;
-				bool SetOutputDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
-
-				/*!
-				 * @brief Get the sample rate of the output device
-				 * @param sampleRate A \c Float64 to receive the sample rate
-				 * @return \c true on success, \c false otherwise
-				 */
-				bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
-
-				/*!
-				 * @brief Set the sample rate of the output device
-				 * @param sampleRate The desired sample rate
-				 * @return \c true on success, \c false otherwise
-				 */
-				bool SetOutputDeviceSampleRate(Float64 sampleRate);
-				
-				//@}
-
 
 				// ========================================
 				/*! @name Playlist Management */
@@ -459,6 +379,13 @@ namespace SFB {
 				/*! @name Ring Buffer Parameters */
 				//@{
 
+				/*! @brief Get the audio format  the player's internal ring buffer */
+				inline const AudioFormat& GetRingBufferFormat() const { return mRingBufferFormat; }
+
+				/*! @brief Get the channel layout of the player's internal ring buffer */
+				inline const ChannelLayout& GetRingBufferChannelLayout() const	{ return mRingBufferChannelLayout; }
+
+				
 				/*! @brief Get the capacity, in frames, of the player's internal ring buffer */
 				inline uint32_t GetRingBufferCapacity() const	{ return mRingBufferCapacity; }
 
@@ -495,23 +422,20 @@ namespace SFB {
 
 				/*! @endcond */
 
+				/*!
+				 * @brief Decode audio into the specified buffer
+				 * @param bufferList A buffer to receive the decoded audio
+				 * @param frameCount The requested number of audio frames
+				 * @return The actual number of frames read, or \c 0 on error
+				 */
+				UInt32 ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
 			private:
 
 				// ========================================
 				// Thread entry points
 				void * DecoderThreadEntry();
 				void * CollectorThreadEntry();
-
-				// ========================================
-				// ASIO Setup and Control
-				bool OpenOutput();
-				bool CloseOutput();
-
-				bool StartOutput();
-				bool StopOutput();
-
-				bool OutputIsRunning() const;
-				bool ResetOutput();
 
 				// ========================================
 				// Other Utilities
@@ -538,9 +462,6 @@ namespace SFB {
 				std::mutex								mMutex;
 				Semaphore								mSemaphore;
 
-				SFB::RingBuffer::unique_ptr				mEventQueue;
-				dispatch_source_t						mEventQueueTimer;
-
 				std::thread								mDecoderThread;
 				Semaphore								mDecoderSemaphore;
 				
@@ -549,24 +470,14 @@ namespace SFB {
 				
 				std::atomic_llong						mFramesDecoded;
 				std::atomic_llong						mFramesRendered;
+
+				Output::unique_ptr						mOutput;
 				
 				// ========================================
 				// Callbacks
 				AudioPlayerDecoderEventBlock			mDecoderEventBlocks [4];
 				AudioPlayerRenderEventBlock				mRenderEventBlocks [2];
 				AudioPlayerFormatMismatchBlock			mFormatMismatchBlock;
-
-			public:
-				// ========================================
-				/*! @cond */
-
-				/*! @internal AUNode render callback */
-
-				long HandleASIOMessage(long selector, long value, void *message, double *opt);
-				void FillASIOBuffer(long doubleBufferIndex);
-
-				/*! @endcond */
-
 			};
 
 		}
