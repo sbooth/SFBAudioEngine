@@ -543,7 +543,7 @@ namespace {
 		result->mDataOffset = inputSource.GetOffset();
 
 		// Skip the data
-		inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)chunkDataSize - 12 /* to account for mChunkID and mDataSize */);
+		inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)chunkDataSize);
 
 		return result;
 	}
