@@ -532,7 +532,7 @@ namespace {
 	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('DSD ' != chunkID) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Invalid chunk ID for 'LSCO' chunk");
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Invalid chunk ID for 'DSD ' chunk");
 			return nullptr;
 		}
 
@@ -543,7 +543,7 @@ namespace {
 		result->mDataOffset = inputSource.GetOffset();
 
 		// Skip the data
-		inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)chunkDataSize);
+		inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)chunkDataSize - 12 /* to account for mChunkID and mDataSize */);
 
 		return result;
 	}
@@ -677,7 +677,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDIFFDecoder::CreateDecoder(InputSo
 #pragma mark Creation and Destruction
 
 SFB::Audio::DSDIFFDecoder::DSDIFFDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mTotalFrames(-1), mCurrentFrame(0)
+	: Decoder(std::move(inputSource)), mTotalFrames(-1), mCurrentFrame(0), mAudioOffset(0)
 {}
 
 SFB::Audio::DSDIFFDecoder::~DSDIFFDecoder()
@@ -748,7 +748,7 @@ bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 	}
 
 	mAudioOffset = soundDataChunk->mDataOffset;
-	mTotalFrames = (SInt64)mFormat.ByteCountToFrameCount(soundDataChunk->mDataSize) / mFormat.mChannelsPerFrame;
+	mTotalFrames = (SInt64)mFormat.ByteCountToFrameCount(soundDataChunk->mDataSize - 12) / mFormat.mChannelsPerFrame;
 
 	GetInputSource().SeekToOffset(mAudioOffset);
 
@@ -792,6 +792,15 @@ UInt32 SFB::Audio::DSDIFFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32
 		uint8_t buffer [BUFFER_SIZE_BYTES];
 		UInt32 bytesToRead = std::min(BUFFER_SIZE_BYTES, (framesToRead / 8) * mFormat.mChannelsPerFrame);
 		auto bytesRead = GetInputSource().Read(buffer, bytesToRead);
+
+		if(bytesRead != bytesToRead) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DSDIFF", "Error reading audio: requested " << bytesToRead << " bytes, got " << bytesRead);
+			break;
+		}
+
+		// Decoding is finished
+		if(0 == bytesRead)
+			break;
 
 		// Deinterleave the clustered frames and copy to output
 		for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
