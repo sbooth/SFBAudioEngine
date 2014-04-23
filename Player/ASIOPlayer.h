@@ -422,8 +422,11 @@ namespace SFB {
 
 				/*! @endcond */
 
+				/*! Get the Output used by this Player */
+				Output& GetOutput() const;
+
 				/*!
-				 * @brief Decode audio into the specified buffer
+				 * @brief Copy decoded audio into the specified buffer
 				 * @param bufferList A buffer to receive the decoded audio
 				 * @param frameCount The requested number of audio frames
 				 * @return The actual number of frames read, or \c 0 on error

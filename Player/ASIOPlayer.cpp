@@ -361,8 +361,8 @@ bool SFB::Audio::ASIO::Player::Play()
 
 bool SFB::Audio::ASIO::Player::Pause()
 {
-	if(!mOutput->IsRunning())
-		mOutput->Stop();
+	if(mOutput->IsRunning())
+		return mOutput->Stop();
 
 	return true;
 }
@@ -378,8 +378,8 @@ bool SFB::Audio::ASIO::Player::Stop()
 
 	StopActiveDecoders();
 
-	if(!mOutput->Reset())
-		return false;
+//	if(!mOutput->Reset())
+//		return false;
 
 	// Reset the ring buffer
 	mFramesDecoded.store(0, std::memory_order_relaxed);
@@ -1515,6 +1515,11 @@ bool SFB::Audio::ASIO::Player::SetupOutputAndRingBufferForDecoder(Decoder& decod
 	return true;
 }
 
+SFB::Audio::Output& SFB::Audio::ASIO::Player::GetOutput() const
+{
+	return *mOutput;
+}
+
 UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	// Pre-rendering actions
@@ -1538,7 +1543,7 @@ UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt3
 	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
 		size_t byteCountToZero = mRingBufferFormat.FrameCountToByteCount(frameCount);
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-			memset(bufferList->mBuffers[bufferIndex].mData, 0, byteCountToZero);
+			memset(bufferList->mBuffers[bufferIndex].mData, mRingBufferFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 			bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
 
@@ -1563,7 +1568,7 @@ UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt3
 		size_t byteCountToSkip = mRingBufferFormat.FrameCountToByteCount(framesRead);
 		size_t byteCountToZero = mRingBufferFormat.FrameCountToByteCount(framesOfSilence);
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, 0, byteCountToZero);
+			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, mRingBufferFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 		}
 	}
 
