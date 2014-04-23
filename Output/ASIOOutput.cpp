@@ -299,12 +299,6 @@ namespace {
 		return nullptr;
 	}
 
-	// ========================================
-
-	void foo()
-	{
-		
-	}
 }
 
 //SFB::Audio::ASIOOutput * SFB::Audio::ASIOOutput::GetInstance()
@@ -461,19 +455,26 @@ size_t SFB::Audio::ASIOOutput::_GetPreferredBufferSize() const
 
 bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 {
-	int count = AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
+	unsigned int count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
 	if(0 == count) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
+		return false;
+	}
+
+	if(index >= count) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Invalid index requested in ASIO library list");
 		return false;
 	}
 
 	AsioLibInfo buffer [count];
-	count = AsioLibWrapper::GetAsioLibraryList(buffer, (unsigned int)count);
+	count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(buffer, (unsigned int)count);
 	if(0 == count) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
 		return false;
 	}
 
+	AsioLibWrapper::UnloadLib();
+	
 	if(!AsioLibWrapper::LoadLib(buffer[index])) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library");
 		return false;
@@ -513,6 +514,19 @@ bool SFB::Audio::ASIOOutput::_Close()
 {
 	sASIO->disposeBuffers();
 	delete sASIO, sASIO = nullptr;
+
+	sDriverInfo.mInputBufferCount = 0;
+	sDriverInfo.mOutputBufferCount = 0;
+
+	if(sDriverInfo.mBufferInfo)
+		delete [] sDriverInfo.mBufferInfo, sDriverInfo.mBufferInfo = nullptr;
+
+	if(sDriverInfo.mChannelInfo)
+		delete [] sDriverInfo.mChannelInfo, sDriverInfo.mChannelInfo = nullptr;
+
+	if(sDriverInfo.mBufferList)
+		free(sDriverInfo.mBufferList), sDriverInfo.mBufferList = nullptr;
+
 	sDriverInfo = {{0}};
 
 	return true;
@@ -563,11 +577,13 @@ bool SFB::Audio::ASIOOutput::_IsRunning() const
 
 bool SFB::Audio::ASIOOutput::_Reset()
 {
-	if(!_Stop())
+	if(_IsRunning() && !_Stop())
 		return false;
 
+	// Clean up
 	sASIO->disposeBuffers();
 
+	// Re-initialize the driver
 	if(!sASIO->init(&sDriverInfo.mDriverInfo)){
 		LOGGER_CRIT("org.sbooth.AudioEngine.ASIOPlayer", "Unable to init ASIO driver: " << sDriverInfo.mDriverInfo.errorMessage);
 		return false;
@@ -586,6 +602,10 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "ASIO driver unsupported format: " << format);
 		return false;
 	}
+
+	bool running = _IsRunning();
+	if(running && !_Stop())
+		return false;
 
 	// Clean up existing state
 	sASIO->disposeBuffers();
@@ -731,8 +751,11 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 	channelLayout1 = channelLayout;
 
 	// Ensure the ring buffer is large enough
-	if(4 * sDriverInfo.mPreferredBufferSize > mPlayer->GetRingBufferCapacity())
-		mPlayer->SetRingBufferCapacity((uint32_t)(4 * sDriverInfo.mPreferredBufferSize));
+	if(8 * sDriverInfo.mPreferredBufferSize > mPlayer->GetRingBufferCapacity())
+		mPlayer->SetRingBufferCapacity((uint32_t)(8 * sDriverInfo.mPreferredBufferSize));
+
+	if(running && !_Start())
+		return false;
 
 	return true;
 }
@@ -751,6 +774,8 @@ bool SFB::Audio::ASIOOutput::_SetDeviceUID(CFStringRef deviceUID)
 
 long SFB::Audio::ASIOOutput::HandleASIOMessage(long selector, long value, void *message, double *opt)
 {
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.ASIO", "HandleASIOMessage: selector = " << selector << ", value = " << value);
+
 	switch(selector) {
 		case kAsioSelectorSupported:
 			if(value == kAsioResetRequest || value == kAsioEngineVersion || value == kAsioResyncRequest || value == kAsioLatenciesChanged || value == kAsioSupportsTimeInfo || value == kAsioSupportsTimeCode || value == kAsioSupportsInputMonitor)
