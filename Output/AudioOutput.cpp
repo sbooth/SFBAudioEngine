@@ -34,7 +34,7 @@
 #include "Logger.h"
 
 SFB::Audio::Output::Output()
-	: mPlayer(nullptr)
+	: mPlayer(nullptr), mStateChangedBlock(nullptr)
 {}
 
 #pragma mark -
@@ -81,7 +81,13 @@ bool SFB::Audio::Output::Start()
 	if(!lock)
 		return false;
 
-	return _Start();
+	if(!_Start())
+		return false;
+
+	if(mStateChangedBlock)
+		mStateChangedBlock();
+
+	return true;
 }
 
 bool SFB::Audio::Output::Stop()
@@ -94,7 +100,13 @@ bool SFB::Audio::Output::Stop()
 	if(!_IsRunning())
 		return true;
 
-	return _Stop();
+	if(!_Stop())
+		return false;
+
+	if(mStateChangedBlock)
+		mStateChangedBlock();
+
+	return true;
 }
 
 bool SFB::Audio::Output::RequestStop()
@@ -109,13 +121,6 @@ bool SFB::Audio::Output::RequestStop()
 
 	return _RequestStop();
 }
-
-
-//bool SFB::Audio::Output::IsRunning() const
-//{
-//	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "IsRunning");
-//	return _IsRunning();
-//}
 
 bool SFB::Audio::Output::Reset()
 {
@@ -133,6 +138,13 @@ bool SFB::Audio::Output::SetupForDecoder(const Decoder& decoder, AudioFormat& fo
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "SetupForDecoder");
 	return _SetupForDecoder(decoder, format, channelLayout);
+}
+
+void SFB::Audio::Output::SetStateChangedBlock(dispatch_block_t block)
+{
+	if(mStateChangedBlock)
+		Block_release(mStateChangedBlock), mStateChangedBlock = nullptr;
+	mStateChangedBlock = Block_copy(block);
 }
 
 #pragma mark -

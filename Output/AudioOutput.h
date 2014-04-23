@@ -118,6 +118,8 @@ namespace SFB {
 
 			bool SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout);
 
+			void SetStateChangedBlock(dispatch_block_t block);
+
 			size_t GetPreferredBufferSize() const;
 
 			// ========================================
@@ -143,7 +145,8 @@ namespace SFB {
 			/*! @brief Create a new \c Output and initialize \c Output::mPlayer to \c nullptr */
 			Output();
 
-			ASIO::Player *mPlayer;
+			ASIO::Player		*mPlayer;
+			dispatch_block_t	mStateChangedBlock;
 
 		private:
 
