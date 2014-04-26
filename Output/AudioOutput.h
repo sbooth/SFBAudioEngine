@@ -67,7 +67,7 @@ namespace SFB {
 			// @{
 
 			/*! @brief Destroy this \c Output */
-			inline virtual ~Output() = default;
+			virtual ~Output();
 
 			/*! @cond */
 
@@ -116,11 +116,12 @@ namespace SFB {
 			
 			//@}
 
-			bool SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout);
+			/*! @brief Get the audio format this output requires */
+			inline const AudioFormat& GetFormat() const					{ return mFormat; }
 
-			void SetStateChangedBlock(dispatch_block_t block);
+			/*! @brief Get the channel layout used by this output*/
+			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
-			size_t GetPreferredBufferSize() const;
 
 			// ========================================
 			// Output setup and Control
@@ -145,11 +146,14 @@ namespace SFB {
 			/*! @brief Create a new \c Output and initialize \c Output::mPlayer to \c nullptr */
 			Output();
 
+			AudioFormat			mFormat;			/*!< The required format for audio passed to this \c Output */
+			ChannelLayout		mChannelLayout;		/*!< The required channel layout for audio passed to this \c Output */
+
 			ASIO::Player		*mPlayer;
-			dispatch_block_t	mStateChangedBlock;
 
 		private:
 
+			// ========================================
 			// Subclasses must implement the following methods
 			virtual bool _Open() = 0;
 			virtual bool _Close() = 0;
@@ -163,8 +167,9 @@ namespace SFB {
 
 			virtual bool _Reset() = 0;
 
-			virtual bool _SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout) = 0;
+			virtual bool _SetupForDecoder(const Decoder& decoder) = 0;
 
+			// ========================================
 			// Optional methods
 			virtual bool _CreateDeviceUID(CFStringRef& deviceUID) const		{ return false; }
 			virtual bool _SetDeviceUID(CFStringRef deviceUID)				{ return false; }
@@ -174,6 +179,18 @@ namespace SFB {
 
 			virtual size_t _GetPreferredBufferSize() const					{ return 0; }
 
+		public:
+			
+			// ========================================
+			/*! @cond */
+
+			/*! @internal */
+			bool SetupForDecoder(const Decoder& decoder);
+
+			/*! @internal */
+			size_t GetPreferredBufferSize() const;
+
+			/*! @endcond */
 		};
 	}
 }

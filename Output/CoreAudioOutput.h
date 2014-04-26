@@ -190,7 +190,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Query whether the output device hogged */
-			bool OutputDeviceIsHogged() const;
+			bool DeviceIsHogged() const;
 
 			/*!
 			 * @brief Start hogging the output device
@@ -198,7 +198,7 @@ namespace SFB {
 			 * This will attempt to set the property \c kAudioDevicePropertyHogMode
 			 * @return \c true on success, \c false otherwise
 			 */
-			bool StartHoggingOutputDevice();
+			bool StartHoggingDevice();
 
 			/*!
 			 * @brief Stop hogging the output device
@@ -206,7 +206,7 @@ namespace SFB {
 			 * This will attempt to clear the property \c kAudioDevicePropertyHogMode
 			 * @return \c true on success, \c false otherwise
 			 */
-			bool StopHoggingOutputDevice();
+			bool StopHoggingDevice();
 
 			//@}
 
@@ -278,53 +278,20 @@ namespace SFB {
 			//@{
 
 			/*!
-			 * @brief Create the UID of the output device
-			 * @note The returned string must be released by the caller
-			 * @param deviceUID A \c CFStringRef to receive the UID
-			 * @return \c true on success, \c false otherwise
-			 * @see GetOutputDeviceID()
-			 */
-			bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
-
-			/*!
-			 * @brief Set the output device to the device matching the provided UID
-			 * @param deviceUID The UID of the desired device
-			 * @return \c true on success, \c false otherwise
-			 * @see SetOutputDeviceID()
-			 */
-			bool SetOutputDeviceUID(CFStringRef deviceUID);
-
-
-			/*!
 			 * @brief Get the device ID of the output device
 			 * @param deviceID An \c AudioDeviceID to receive the device ID
 			 * @return \c true on success, \c false otherwise
-			 * @see CreateOutputDeviceUID()
+			 * @see CreateDeviceUID()
 			 */
-			bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
+			bool GetDeviceID(AudioDeviceID& deviceID) const;
 
 			/*!
 			 * @brief Set the output device to the device matching the provided ID
 			 * @param deviceID The ID of the desired device
 			 * @return \c true on success, \c false otherwise
-			 * @see SetOutputDeviceUID()
+			 * @see SetDeviceUID()
 			 */
-			bool SetOutputDeviceID(AudioDeviceID deviceID);
-
-
-			/*!
-			 * @brief Get the sample rate of the output device
-			 * @param sampleRate A \c Float64 to receive the sample rate
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
-
-			/*!
-			 * @brief Set the sample rate of the output device
-			 * @param sampleRate The desired sample rate
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetOutputDeviceSampleRate(Float64 sampleRate);
+			bool SetDeviceID(AudioDeviceID deviceID);
 			
 			//@}
 			
@@ -346,11 +313,13 @@ namespace SFB {
 
 			virtual bool _SetupForDecoder(const Decoder& decoder);
 
+#if !TARGET_OS_IPHONE
 			virtual bool _CreateDeviceUID(CFStringRef& deviceUID) const;
 			virtual bool _SetDeviceUID(CFStringRef deviceUID);
 
 			virtual bool _GetDeviceSampleRate(Float64& sampleRate) const;
 			virtual bool _SetDeviceSampleRate(Float64 sampleRate);
+#endif
 
 			virtual size_t _GetPreferredBufferSize() const;
 

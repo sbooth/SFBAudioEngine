@@ -497,7 +497,7 @@ bool SFB::Audio::CoreAudioOutput::RemoveEffect(AudioUnit effectUnit)
 
 #pragma mark Hog Mode
 
-bool SFB::Audio::CoreAudioOutput::OutputDeviceIsHogged() const
+bool SFB::Audio::CoreAudioOutput::DeviceIsHogged() const
 {
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = {
@@ -510,7 +510,7 @@ bool SFB::Audio::CoreAudioOutput::OutputDeviceIsHogged() const
 	UInt32 dataSize = sizeof(hogPID);
 
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &hogPID);
@@ -522,10 +522,10 @@ bool SFB::Audio::CoreAudioOutput::OutputDeviceIsHogged() const
 	return (hogPID == getpid() ? true : false);
 }
 
-bool SFB::Audio::CoreAudioOutput::StartHoggingOutputDevice()
+bool SFB::Audio::CoreAudioOutput::StartHoggingDevice()
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Taking hog mode for device 0x" << std::hex << deviceID);
@@ -571,10 +571,10 @@ bool SFB::Audio::CoreAudioOutput::StartHoggingOutputDevice()
 	return true;
 }
 
-bool SFB::Audio::CoreAudioOutput::StopHoggingOutputDevice()
+bool SFB::Audio::CoreAudioOutput::StopHoggingDevice()
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Releasing hog mode for device 0x" << std::hex << deviceID);
@@ -633,7 +633,7 @@ bool SFB::Audio::CoreAudioOutput::SetDeviceMasterVolume(Float32 volume)
 bool SFB::Audio::CoreAudioOutput::GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -661,7 +661,7 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceVolumeForChannel(UInt32 channel, Floa
 bool SFB::Audio::CoreAudioOutput::SetDeviceVolumeForChannel(UInt32 channel, Float32 volume)
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting output device 0x" << std::hex << deviceID << " channel " << channel << " volume to " << volume);
@@ -690,7 +690,7 @@ bool SFB::Audio::CoreAudioOutput::SetDeviceVolumeForChannel(UInt32 channel, Floa
 bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) const
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -738,7 +738,7 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 bool SFB::Audio::CoreAudioOutput::GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -769,77 +769,7 @@ bool SFB::Audio::CoreAudioOutput::GetDevicePreferredStereoChannels(std::pair<UIn
 
 #pragma mark Device Management
 
-bool SFB::Audio::CoreAudioOutput::CreateOutputDeviceUID(CFStringRef& deviceUID) const
-{
-	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
-		return false;
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDeviceUID,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize = sizeof(deviceUID);
-	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
-	if(kAudioHardwareNoError != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
-		return nullptr;
-	}
-
-	return true;
-}
-
-bool SFB::Audio::CoreAudioOutput::SetOutputDeviceUID(CFStringRef deviceUID)
-{
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-
-	// If nullptr was passed as the device UID, use the default output device
-	if(nullptr == deviceUID) {
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
-			.mScope		= kAudioObjectPropertyScopeGlobal,
-			.mElement	= kAudioObjectPropertyElementMaster
-		};
-
-		UInt32 specifierSize = sizeof(deviceID);
-
-		auto result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &deviceID);
-		if(kAudioHardwareNoError != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
-			return false;
-		}
-	}
-	else {
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector	= kAudioHardwarePropertyDeviceForUID,
-			.mScope		= kAudioObjectPropertyScopeGlobal,
-			.mElement	= kAudioObjectPropertyElementMaster
-		};
-
-		AudioValueTranslation translation = {
-			&deviceUID, sizeof(deviceUID),
-			&deviceID, sizeof(deviceID)
-		};
-
-		UInt32 specifierSize = sizeof(translation);
-
-		auto result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &translation);
-		if(kAudioHardwareNoError != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
-			return false;
-		}
-	}
-
-	// The device isn't connected or doesn't exist
-	if(kAudioDeviceUnknown == deviceID)
-		return false;
-
-	return SetOutputDeviceID(deviceID);
-}
-
-bool SFB::Audio::CoreAudioOutput::GetOutputDeviceID(AudioDeviceID& deviceID) const
+bool SFB::Audio::CoreAudioOutput::GetDeviceID(AudioDeviceID& deviceID) const
 {
 	AudioUnit au = nullptr;
 	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
@@ -859,7 +789,7 @@ bool SFB::Audio::CoreAudioOutput::GetOutputDeviceID(AudioDeviceID& deviceID) con
 	return true;
 }
 
-bool SFB::Audio::CoreAudioOutput::SetOutputDeviceID(AudioDeviceID deviceID)
+bool SFB::Audio::CoreAudioOutput::SetDeviceID(AudioDeviceID deviceID)
 {
 	if(kAudioDeviceUnknown == deviceID)
 		return false;
@@ -881,10 +811,14 @@ bool SFB::Audio::CoreAudioOutput::SetOutputDeviceID(AudioDeviceID deviceID)
 	return true;
 }
 
-bool SFB::Audio::CoreAudioOutput::GetOutputDeviceSampleRate(Float64& sampleRate) const
+#endif
+
+#pragma mark Device Management
+
+bool SFB::Audio::CoreAudioOutput::_GetDeviceSampleRate(Float64& sampleRate) const
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -903,10 +837,10 @@ bool SFB::Audio::CoreAudioOutput::GetOutputDeviceSampleRate(Float64& sampleRate)
 	return true;
 }
 
-bool SFB::Audio::CoreAudioOutput::SetOutputDeviceSampleRate(Float64 sampleRate)
+bool SFB::Audio::CoreAudioOutput::_SetDeviceSampleRate(Float64 sampleRate)
 {
 	AudioDeviceID deviceID;
-	if(!GetOutputDeviceID(deviceID))
+	if(!GetDeviceID(deviceID))
 		return false;
 
 	// Determine if this will actually be a change
@@ -936,22 +870,8 @@ bool SFB::Audio::CoreAudioOutput::SetOutputDeviceSampleRate(Float64 sampleRate)
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: " << result);
 		return false;
 	}
-	
+
 	return true;
-}
-
-#endif
-
-#pragma mark Device Management
-
-bool SFB::Audio::CoreAudioOutput::_GetDeviceSampleRate(Float64& sampleRate) const
-{
-	return false;
-}
-
-bool SFB::Audio::CoreAudioOutput::_SetDeviceSampleRate(Float64 sampleRate)
-{
-	return false;
 }
 
 size_t SFB::Audio::CoreAudioOutput::_GetPreferredBufferSize() const
@@ -1503,19 +1423,91 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 			return false;
 		}
 	}
-	
+
+	// Attempt to set the output audio unit's channel map
+	const ChannelLayout& decoderChannelLayout = decoder.GetChannelLayout();
+	if(!SetOutputUnitChannelMap(decoderChannelLayout))
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Unable to set output unit channel map");
+
+	// The decoder's channel layout becomes our channel layout
+	mChannelLayout = decoderChannelLayout;
+
 	return true;
 }
 
+#if !TARGET_OS_IPHONE
+
 bool SFB::Audio::CoreAudioOutput::_CreateDeviceUID(CFStringRef& deviceUID) const
 {
-	return false;
+	AudioDeviceID deviceID;
+	if(!GetDeviceID(deviceID))
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDeviceUID,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = sizeof(deviceUID);
+	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
+		return nullptr;
+	}
+
+	return true;
 }
 
 bool SFB::Audio::CoreAudioOutput::_SetDeviceUID(CFStringRef deviceUID)
 {
-	return false;
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+
+	// If nullptr was passed as the device UID, use the default output device
+	if(nullptr == deviceUID) {
+		AudioObjectPropertyAddress propertyAddress = {
+			.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster
+		};
+
+		UInt32 specifierSize = sizeof(deviceID);
+
+		auto result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &deviceID);
+		if(kAudioHardwareNoError != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: " << result);
+			return false;
+		}
+	}
+	else {
+		AudioObjectPropertyAddress propertyAddress = {
+			.mSelector	= kAudioHardwarePropertyDeviceForUID,
+			.mScope		= kAudioObjectPropertyScopeGlobal,
+			.mElement	= kAudioObjectPropertyElementMaster
+		};
+
+		AudioValueTranslation translation = {
+			&deviceUID, sizeof(deviceUID),
+			&deviceID, sizeof(deviceID)
+		};
+
+		UInt32 specifierSize = sizeof(translation);
+
+		auto result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, nullptr, &specifierSize, &translation);
+		if(kAudioHardwareNoError != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: " << result);
+			return false;
+		}
+	}
+
+	// The device isn't connected or doesn't exist
+	if(kAudioDeviceUnknown == deviceID)
+		return false;
+
+	return SetDeviceID(deviceID);
 }
+
+#endif
 
 #pragma mark AUGraph Utilities
 

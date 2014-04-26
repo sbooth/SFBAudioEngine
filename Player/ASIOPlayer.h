@@ -376,16 +376,21 @@ namespace SFB {
 
 
 				// ========================================
+				/*! @name Output Management */
+				//@{
+
+				/*! Get the Output used by this Player */
+				Output& GetOutput() const;
+
+				bool SetOutput(Output::unique_ptr output);
+
+				//@}
+
+
+				// ========================================
 				/*! @name Ring Buffer Parameters */
 				//@{
 
-				/*! @brief Get the audio format  the player's internal ring buffer */
-				inline const AudioFormat& GetRingBufferFormat() const { return mRingBufferFormat; }
-
-				/*! @brief Get the channel layout of the player's internal ring buffer */
-				inline const ChannelLayout& GetRingBufferChannelLayout() const	{ return mRingBufferChannelLayout; }
-
-				
 				/*! @brief Get the capacity, in frames, of the player's internal ring buffer */
 				inline uint32_t GetRingBufferCapacity() const	{ return mRingBufferCapacity; }
 
@@ -422,10 +427,8 @@ namespace SFB {
 
 				/*! @endcond */
 
-				/*! Get the Output used by this Player */
-				Output& GetOutput() const;
-
 				/*!
+				 * @internal
 				 * @brief Copy decoded audio into the specified buffer
 				 * @param bufferList A buffer to receive the decoded audio
 				 * @param frameCount The requested number of audio frames
@@ -452,8 +455,6 @@ namespace SFB {
 				// ========================================
 				// Data Members
 				RingBuffer::unique_ptr					mRingBuffer;
-				AudioFormat								mRingBufferFormat;
-				ChannelLayout							mRingBufferChannelLayout;
 				std::atomic_uint						mRingBufferCapacity;
 				std::atomic_uint						mRingBufferWriteChunkSize;
 

@@ -64,6 +64,9 @@ namespace SFB {
 			bool OpenStereo();
 			bool OpenMultichannel();
 
+			/*! @brief Set a block to be invoked when the playing state changes */
+			void SetStateChangedBlock(dispatch_block_t block);
+
 //		protected:
 //			ASIOOutput();
 
@@ -81,7 +84,7 @@ namespace SFB {
 
 			virtual bool _Reset();
 
-			virtual bool _SetupForDecoder(const Decoder& decoder, AudioFormat& format, ChannelLayout& channelLayout);
+			virtual bool _SetupForDecoder(const Decoder& decoder);
 
 			virtual bool _CreateDeviceUID(CFStringRef& deviceUID) const;
 			virtual bool _SetDeviceUID(CFStringRef deviceUID);
@@ -97,17 +100,20 @@ namespace SFB {
 			SFB::RingBuffer::unique_ptr				mEventQueue;
 			dispatch_source_t						mEventQueueTimer;
 
+			dispatch_block_t						mStateChangedBlock;
+
 		public:
+
 			// ========================================
 			/*! @cond */
 
-			/*! @internal ASIO callbacks */
-
+			/*! @internal ASIO message callback */
 			long HandleASIOMessage(long selector, long value, void *message, double *opt);
+
+			/*! @internal ASIO render callback */
 			void FillASIOBuffer(long doubleBufferIndex);
 
 			/*! @endcond */
-
 		};
 	}
 }

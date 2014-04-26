@@ -38,10 +38,9 @@
 #include <algorithm>
 #include <iomanip>
 
-#include "AsioLibWrapper.h"
-
 #include "ASIOPlayer.h"
 #include "ASIOOutput.h"
+#include "CoreAudioOutput.h"
 #include "AudioBufferList.h"
 #include "Logger.h"
 
@@ -93,11 +92,6 @@ namespace {
 		eAudioPlayerFlagStopCollecting			= 1u << 11
 	};
 	
-	enum eMessageQueueEvents : uint32_t {
-		eMessageQueueEventStopPlayback			= 'stop',
-		eMessageQueueEventASIOResetNeeded		= 'rest',
-		eMessageQueueEventASIOOverload			= 'ovld'
-	};
 }
 
 
@@ -238,7 +232,7 @@ namespace {
 //}
 
 SFB::Audio::ASIO::Player::Player()
-: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFormatMismatchBlock(nullptr), mOutput(new ASIOOutput)
+	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFormatMismatchBlock(nullptr), mOutput(new CoreAudioOutput)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -1043,22 +1037,22 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 			// The two files can be joined seamlessly only if they have the same formats, sample rates, and channel counts
 			bool formatsMatch = true;
 
-			if(nextFormat.mFormatID != mRingBufferFormat.mFormatID) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Ring buffer format (" << mRingBufferFormat.mFormatID << ") and decoder format (" << nextFormat.mFormatID << ") don't match");
+			if(nextFormat.mFormatID != mOutput->GetFormat().mFormatID) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output format (" << mOutput->GetFormat().mFormatID << ") and decoder format (" << nextFormat.mFormatID << ") don't match");
 				formatsMatch = false;
 			}
-			else if(nextFormat.mSampleRate != mRingBufferFormat.mSampleRate) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Ring buffer sample rate (" << mRingBufferFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+			else if(nextFormat.mSampleRate != mOutput->GetFormat().mSampleRate) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output sample rate (" << mOutput->GetFormat().mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 				formatsMatch = false;
 			}
-			else if(nextFormat.mChannelsPerFrame != mRingBufferFormat.mChannelsPerFrame) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Ring buffer channel count (" << mRingBufferFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+			else if(nextFormat.mChannelsPerFrame != mOutput->GetFormat().mChannelsPerFrame) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output channel count (" << mOutput->GetFormat().mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 				formatsMatch = false;
 			}
 
 			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output AU will remain valid)
-			if(nextChannelLayout != mRingBufferChannelLayout) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Ring buffer channel layout (" << mRingBufferChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+			if(nextChannelLayout != mOutput->GetChannelLayout()) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output channel layout (" << mOutput->GetChannelLayout() << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 				formatsMatch = false;
 			}
 
@@ -1080,14 +1074,12 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 				}
 
 				if(mFormatMismatchBlock)
-					mFormatMismatchBlock(mRingBufferFormat, nextFormat);
+					mFormatMismatchBlock(mOutput->GetFormat(), nextFormat);
 
 				// Adjust the formats
 				{
 					std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-					if(lock)
-						SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder);
-					else
+					if(!lock || !SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder))
 						delete decoderState, decoderState = nullptr;
 				}
 
@@ -1122,11 +1114,12 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 			const AudioFormat& decoderFormat = decoderState->mDecoder->GetFormat();
 
 			// ========================================
-			// Create the AudioConverter which will convert from the decoder's format to the ring buffer format (for PCM output)
+			// Create the AudioConverter which will convert from the decoder's format to the output format (for PCM output)
 			AudioConverterRef audioConverter = nullptr;
 			BufferList bufferList;
-			if(mRingBufferFormat.IsPCM()) {
-				OSStatus result = AudioConverterNew(&decoderFormat, &mRingBufferFormat, &audioConverter);
+			if(mOutput->GetFormat().IsPCM()) {
+				auto outputFormat = mOutput->GetFormat();
+				OSStatus result = AudioConverterNew(&decoderFormat, &outputFormat, &audioConverter);
 				if(noErr != result) {
 					LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterNew failed: " << result);
 
@@ -1142,7 +1135,7 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 
 				// ========================================
 				// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
-				UInt32 inputBufferSize = mRingBufferWriteChunkSize * mRingBufferFormat.mBytesPerFrame;
+				UInt32 inputBufferSize = mRingBufferWriteChunkSize * mOutput->GetFormat().mBytesPerFrame;
 				UInt32 dataSize = sizeof(inputBufferSize);
 				result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
 				if(noErr != result)
@@ -1151,9 +1144,9 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 				// ========================================
 				// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
 				decoderState->AllocateBufferList((UInt32)decoderFormat.ByteCountToFrameCount(inputBufferSize));
-				bufferList.Allocate(mRingBufferFormat, mRingBufferWriteChunkSize);
+				bufferList.Allocate(mOutput->GetFormat(), mRingBufferWriteChunkSize);
 			}
-			else if(mRingBufferFormat.IsDSD()) {
+			else if(mOutput->GetFormat().IsDSD()) {
 				UInt32 preferredSize = (UInt32)mOutput->GetPreferredBufferSize();
 				decoderState->AllocateBufferList(preferredSize ?: 512);
 			}
@@ -1285,7 +1278,8 @@ void * SFB::Audio::ASIO::Player::DecoderThreadEntry()
 							framesDecoded = decoderState->ReadAudio(framesDecoded);
 
 							// Bit swap if required
-							if(mRingBufferFormat.IsDSD() && (kAudioFormatFlagIsBigEndian & mRingBufferFormat.mFormatFlags) != (kAudioFormatFlagIsBigEndian & decoderState->mDecoder->GetFormat().mFormatFlags)) {
+							auto outputFormat = mOutput->GetFormat();
+							if(outputFormat.IsDSD() && (kAudioFormatFlagIsBigEndian & outputFormat.mFormatFlags) != (kAudioFormatFlagIsBigEndian & decoderState->mDecoder->GetFormat().mFormatFlags)) {
 								for(UInt32 i = 0; i < decoderState->mBufferList->mNumberBuffers; ++i) {
 									uint8_t *buf = (uint8_t *)decoderState->mBufferList->mBuffers[i].mData;
 									auto bufsize = decoderState->mBufferList->mBuffers[i].mDataByteSize;
@@ -1500,14 +1494,12 @@ bool SFB::Audio::ASIO::Player::SetupOutputAndRingBufferForDecoder(Decoder& decod
 		return false;
 	}
 
-	// Configure the output for decoder and retrieve the format and channel layout to be used in the ring buffer
-	if(!mOutput->SetupForDecoder(decoder, mRingBufferFormat, mRingBufferChannelLayout)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "ASIO driver unsupported format: " << decoder.GetFormat());
+	// Configure the output for decoder
+	if(!mOutput->SetupForDecoder(decoder))
 		return false;
-	}
 
 	// Allocate enough space in the ring buffer for the new format
-	if(!mRingBuffer->Allocate(mRingBufferFormat, mRingBufferCapacity)) {
+	if(!mRingBuffer->Allocate(mOutput->GetFormat(), mRingBufferCapacity)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to allocate ring buffer");
 		return false;
 	}
@@ -1518,6 +1510,22 @@ bool SFB::Audio::ASIO::Player::SetupOutputAndRingBufferForDecoder(Decoder& decod
 SFB::Audio::Output& SFB::Audio::ASIO::Player::GetOutput() const
 {
 	return *mOutput;
+}
+
+bool SFB::Audio::ASIO::Player::SetOutput(Output::unique_ptr output)
+{
+	if(!output)
+		return false;
+
+	mOutput = std::move(output);
+
+	mOutput->SetPlayer(this);
+	if(!mOutput->Open()) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.ASIO.Player", "OpenOutput() failed");
+		return false;
+	}
+
+	return true;
 }
 
 UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount)
@@ -1540,10 +1548,11 @@ UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt3
 	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
 
 	// Output silence if muted or the ring buffer is empty
+	auto outputFormat = mOutput->GetFormat();
 	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
-		size_t byteCountToZero = mRingBufferFormat.FrameCountToByteCount(frameCount);
+		size_t byteCountToZero = outputFormat.FrameCountToByteCount(frameCount);
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-			memset(bufferList->mBuffers[bufferIndex].mData, mRingBufferFormat.IsDSD() ? 0xF : 0, byteCountToZero);
+			memset(bufferList->mBuffers[bufferIndex].mData, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 			bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
 
@@ -1565,10 +1574,10 @@ UInt32 SFB::Audio::ASIO::Player::ProvideAudio(AudioBufferList *bufferList, UInt3
 		LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
 
 		size_t framesOfSilence = frameCount - framesRead;
-		size_t byteCountToSkip = mRingBufferFormat.FrameCountToByteCount(framesRead);
-		size_t byteCountToZero = mRingBufferFormat.FrameCountToByteCount(framesOfSilence);
+		size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
+		size_t byteCountToZero = outputFormat.FrameCountToByteCount(framesOfSilence);
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, mRingBufferFormat.IsDSD() ? 0xF : 0, byteCountToZero);
+			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 		}
 	}
 

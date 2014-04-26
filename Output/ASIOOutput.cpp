@@ -205,11 +205,14 @@ namespace {
 		return result;
 	}
 
+	const size_t kUIDLength = 1024;
+
 	// ========================================
 	// Information about an ASIO driver
 	struct DriverInfo
 	{
 		ASIODriverInfo	mDriverInfo;
+		char			mUID [kUIDLength];
 
 		long			mInputChannelCount;
 		long			mOutputChannelCount;
@@ -301,6 +304,8 @@ namespace {
 
 }
 
+#pragma mark Creation and Destruction
+
 //SFB::Audio::ASIOOutput * SFB::Audio::ASIOOutput::GetInstance()
 //{
 //	static ASIOOutput *sOutput = nullptr;
@@ -312,9 +317,9 @@ namespace {
 //}
 
 SFB::Audio::ASIOOutput::ASIOOutput()
-	: mEventQueue(new SFB::RingBuffer)
+	: mEventQueue(new SFB::RingBuffer), mStateChangedBlock(nullptr)
 {
-	mEventQueue->Allocate(1024);
+	mEventQueue->Allocate(512);
 
 	// Setup the event dispatch timer
 	mEventQueueTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
@@ -417,6 +422,13 @@ bool SFB::Audio::ASIOOutput::OpenMultichannel()
 	return _OpenOutput(2);
 }
 
+void SFB::Audio::ASIOOutput::SetStateChangedBlock(dispatch_block_t block)
+{
+	if(mStateChangedBlock)
+		Block_release(mStateChangedBlock), mStateChangedBlock = nullptr;
+	mStateChangedBlock = Block_copy(block);
+}
+
 #pragma mark -
 
 bool SFB::Audio::ASIOOutput::_GetDeviceSampleRate(Float64& sampleRate) const
@@ -485,6 +497,9 @@ bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 		return false;
 	}
 
+	if(!buffer[index].ToCString(sDriverInfo.mUID, kUIDLength, '|'))
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to get ASIO driver UID");
+
 	sDriverInfo.mDriverInfo = {
 		.asioVersion = 2,
 		.sysRef = nullptr
@@ -542,6 +557,9 @@ bool SFB::Audio::ASIOOutput::_Start()
 
 	sOutput = this;
 
+	if(mStateChangedBlock)
+		mStateChangedBlock();
+
 	return true;
 }
 
@@ -554,6 +572,9 @@ bool SFB::Audio::ASIOOutput::_Stop()
 	}
 
 	sOutput = nullptr;
+
+	if(mStateChangedBlock)
+		mStateChangedBlock();
 
 	return true;
 }
@@ -595,11 +616,11 @@ bool SFB::Audio::ASIOOutput::_Reset()
 	return true;
 }
 
-bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioFormat& format1, ChannelLayout& channelLayout1)
+bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 {
-	const AudioFormat& format = decoder.GetFormat();
-	if(!format.IsPCM() && !format.IsDSD()) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "ASIO driver unsupported format: " << format);
+	const AudioFormat& decoderFormat = decoder.GetFormat();
+	if(!decoderFormat.IsPCM() && !decoderFormat.IsDSD()) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "ASIO driver unsupported format: " << decoderFormat);
 		return false;
 	}
 
@@ -624,7 +645,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 
 	// Configure the ASIO driver with the decoder's format
 	ASIOIoFormat asioFormat = {
-		.FormatType		= format.IsPCM() ? kASIOPCMFormat : format.IsDSD() ? kASIODSDFormat : kASIOFormatInvalid,
+		.FormatType		= decoderFormat.IsPCM() ? kASIOPCMFormat : decoderFormat.IsDSD() ? kASIODSDFormat : kASIOFormatInvalid,
 		.future			= {0}
 	};
 
@@ -635,7 +656,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 	}
 
 	// Set the sample rate if supported
-	SetDeviceSampleRate(format.mSampleRate);
+	SetDeviceSampleRate(decoderFormat.mSampleRate);
 
 
 	// Store the ASIO driver format
@@ -677,7 +698,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 	// Prepare ASIO buffers
 
 	sDriverInfo.mInputBufferCount = std::min(sDriverInfo.mInputChannelCount, 0L);
-	sDriverInfo.mOutputBufferCount = std::min(sDriverInfo.mOutputChannelCount, (long)format.mChannelsPerFrame);
+	sDriverInfo.mOutputBufferCount = std::min(sDriverInfo.mOutputChannelCount, (long)decoderFormat.mChannelsPerFrame);
 
 	sDriverInfo.mBufferInfo = new ASIOBufferInfo [sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount];
 	sDriverInfo.mChannelInfo = new ASIOChannelInfo [sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount];
@@ -729,26 +750,27 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 	}
 
 
-	// Set the ring buffer format to the first output channel
+	// Set the format to the first output channel
 	// FIXME: Can each channel have a separate format?
 	for(long i = 0; i < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++i) {
 		if(!sDriverInfo.mChannelInfo[i].isInput) {
-			format1 = AudioFormatForASIOSampleType(sDriverInfo.mChannelInfo[i].type);
-			format1.mSampleRate = sDriverInfo.mSampleRate;
-			format1.mChannelsPerFrame = (UInt32)sDriverInfo.mOutputBufferCount;
+			AudioFormat format = AudioFormatForASIOSampleType(sDriverInfo.mChannelInfo[i].type);
+			format.mSampleRate = sDriverInfo.mSampleRate;
+			format.mChannelsPerFrame = (UInt32)sDriverInfo.mOutputBufferCount;
 
-			LOGGER_INFO("org.sbooth.AudioEngine.Output.ASIO", "Ring buffer format: " << format);
+			mFormat = format;
+
 			break;
 		}
 	}
 
 	// Attempt to set the output audio unit's channel map
-	const ChannelLayout& channelLayout = decoder.GetChannelLayout();
-	//	if(!SetOutputUnitChannelMap(channelLayout))
-	//		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to set output unit channel map");
+	const ChannelLayout& decoderChannelLayout = decoder.GetChannelLayout();
+//	if(!SetOutputUnitChannelMap(channelLayout))
+//		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to set output unit channel map");
 
-	// The decoder's channel layout becomes the ring buffer's channel layout
-	channelLayout1 = channelLayout;
+	// The decoder's channel layout becomes our channel layout
+	mChannelLayout = decoderChannelLayout;
 
 	// Ensure the ring buffer is large enough
 	if(8 * sDriverInfo.mPreferredBufferSize > mPlayer->GetRingBufferCapacity())
@@ -762,12 +784,51 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder, AudioForma
 
 bool SFB::Audio::ASIOOutput::_CreateDeviceUID(CFStringRef& deviceUID) const
 {
-	return false;
+	deviceUID = CFStringCreateWithCString(kCFAllocatorDefault, sDriverInfo.mUID, kCFStringEncodingUTF8);
+	if(nullptr == deviceUID)
+		return false;
+
+	return true;
 }
 
 bool SFB::Audio::ASIOOutput::_SetDeviceUID(CFStringRef deviceUID)
 {
-	return false;
+	if(!CFStringGetCString(deviceUID, sDriverInfo.mUID, kUIDLength, kCFStringEncodingUTF8))
+		return false;
+
+	if(!_Stop() || !_Close())
+		return false;
+
+	AsioLibInfo libInfo;
+	AsioLibInfo::FromCString(libInfo, sDriverInfo.mUID, '|');
+
+	AsioLibWrapper::UnloadLib();
+
+	if(!AsioLibWrapper::LoadLib(libInfo)) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library");
+		return false;
+	}
+
+	if(AsioLibWrapper::CreateInstance(libInfo.Number, &sASIO)) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to instantiate ASIO driver");
+		return false;
+	}
+
+	sDriverInfo.mDriverInfo = {
+		.asioVersion = 2,
+		.sysRef = nullptr
+	};
+
+	if(!sASIO->init(&sDriverInfo.mDriverInfo)){
+		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to init ASIO driver: " << sDriverInfo.mDriverInfo.errorMessage);
+		return false;
+	}
+
+	// Determine whether to post output notifications
+	if(ASE_OK == sASIO->outputReady())
+		sDriverInfo.mPostOutput = true;
+
+	return true;
 }
 
 #pragma mark Callbacks
@@ -817,7 +878,7 @@ void SFB::Audio::ASIOOutput::FillASIOBuffer(long doubleBufferIndex)
 	for(long bufferIndex = 0, ablIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
 		if(!sDriverInfo.mBufferInfo[bufferIndex].isInput) {
 			sDriverInfo.mBufferList->mBuffers[ablIndex].mData = sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex];
-			sDriverInfo.mBufferList->mBuffers[ablIndex].mDataByteSize = (UInt32)mPlayer->GetRingBufferFormat().FrameCountToByteCount(frameCount);
+			sDriverInfo.mBufferList->mBuffers[ablIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(frameCount);
 			sDriverInfo.mBufferList->mBuffers[ablIndex].mNumberChannels = 1;
 			++ablIndex;
 		}
