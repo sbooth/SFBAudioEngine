@@ -61,7 +61,7 @@ namespace SFB {
 
 			// For access to mMutex
 			// FIXME: Is this a good idea?
-			friend class SFB::Audio::Output;
+			friend class Output;
 
 		public:
 			// ========================================
@@ -370,9 +370,14 @@ namespace SFB {
 			/*! @name Output Management */
 			//@{
 
-			/*! Get the Output used by this Player */
+			/*! @brief Get the Output used by this Player */
 			Output& GetOutput() const;
 
+			/*!
+			 * @brief Set the Output used by this player
+			 * @param output The desired output device
+			 * @return \c true on success, \c false otherwise
+			 */
 			bool SetOutput(Output::unique_ptr output);
 
 			//@}

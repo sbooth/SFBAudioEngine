@@ -164,7 +164,7 @@ namespace {
 												THREAD_EXTENDED_POLICY_COUNT);
 
 		if(KERN_SUCCESS != error) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Couldn't set thread's extended policy: " << mach_error_string(error));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's extended policy: " << mach_error_string(error));
 			return false;
 		}
 
@@ -178,7 +178,7 @@ namespace {
 								  THREAD_PRECEDENCE_POLICY_COUNT);
 
 		if (error != KERN_SUCCESS) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Couldn't set thread's precedence policy: " << mach_error_string(error));
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's precedence policy: " << mach_error_string(error));
 			return false;
 		}
 
@@ -238,7 +238,7 @@ SFB::Audio::Player::Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.ASIO.Player", "Unable to create decoder thread: " << e.what());
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create decoder thread: " << e.what());
 
 		throw;
 	}
@@ -250,7 +250,7 @@ SFB::Audio::Player::Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.ASIO.Player", "Unable to create collector thread: " << e.what());
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create collector thread: " << e.what());
 
 		mFlags.fetch_or(eAudioPlayerFlagStopDecoding, std::memory_order_relaxed);
 		mDecoderSemaphore.Signal();
@@ -260,7 +260,7 @@ SFB::Audio::Player::Player()
 		}
 
 		catch(const std::exception& e) {
-			LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to join decoder thread: " << e.what());
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
 		}
 
 		throw;
@@ -270,7 +270,7 @@ SFB::Audio::Player::Player()
 	// Set up output
 	mOutput->SetPlayer(this);
 	if(!mOutput->Open()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.ASIO.Player", "OpenOutput() failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "OpenOutput() failed");
 		throw std::runtime_error("OpenOutput() failed");
 	}
 }
@@ -281,7 +281,7 @@ SFB::Audio::Player::~Player()
 
 	// Stop the processing graph and reclaim its resources
 	if(!mOutput->Close())
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "CloseOutput() failed");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "CloseOutput() failed");
 
 	// End the decoding thread
 	mFlags.fetch_or(eAudioPlayerFlagStopDecoding, std::memory_order_relaxed);
@@ -292,7 +292,7 @@ SFB::Audio::Player::~Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to join decoder thread: " << e.what());
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
 	}
 
 	// End the collector thread
@@ -304,7 +304,7 @@ SFB::Audio::Player::~Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to join collector thread: " << e.what());
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join collector thread: " << e.what());
 	}
 
 	// Force any decoders left hanging by the collector to end
@@ -685,7 +685,7 @@ bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 	if(!decoder)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Enqueuing \"" << decoder->GetURL() << "\"");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Enqueuing \"" << decoder->GetURL() << "\"");
 
 	// The lock is held for the entire method, because enqueuing a track is an inherently
 	// sequential operation.  Without the lock, if Enqueue() is called from multiple
@@ -726,7 +726,7 @@ bool SFB::Audio::Player::SkipToNextTrack()
 	if(nullptr == currentDecoderState)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
 
 	if(mOutput->IsRunning()) {
 		mFlags.fetch_or(eAudioPlayerFlagRequestMute, std::memory_order_relaxed);
@@ -785,7 +785,7 @@ bool SFB::Audio::Player::SetRingBufferCapacity(uint32_t bufferCapacity)
 	if(0 == bufferCapacity || mRingBufferWriteChunkSize > bufferCapacity)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Setting ring buffer capacity to " << bufferCapacity);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer capacity to " << bufferCapacity);
 
 	mRingBufferCapacity.store(bufferCapacity, std::memory_order_relaxed);
 	return true;
@@ -796,7 +796,7 @@ bool SFB::Audio::Player::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 	if(0 == chunkSize || mRingBufferCapacity < chunkSize)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Setting ring buffer write chunk size to " << chunkSize);
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer write chunk size to " << chunkSize);
 
 	mRingBufferWriteChunkSize.store(chunkSize, std::memory_order_relaxed);
 	return true;
@@ -836,7 +836,7 @@ bool SFB::Audio::Player::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 //	UInt32 framesToRead = std::min((UInt32)framesAvailableToRead, inNumberFrames);
 //	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(ioData, framesToRead);
 //	if(framesRead != framesToRead) {
-//		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+//		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
 //		return 1;
 //	}
 //
@@ -845,7 +845,7 @@ bool SFB::Audio::Player::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 //
 //	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 //	if(framesRead != inNumberFrames) {
-//		LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << inNumberFrames << " requested");
+//		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << inNumberFrames << " requested");
 //
 //		UInt32 framesOfSilence = inNumberFrames - framesRead;
 //		size_t byteCountToZero = framesOfSilence * sizeof(AudioUnitSampleType);
@@ -970,7 +970,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 	// ========================================
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
-		LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Couldn't set decoder thread importance");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set decoder thread importance");
 
 	mach_timespec_t timeout = {
 		.tv_sec = 5,
@@ -1002,7 +1002,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				CFErrorRef error = nullptr;
 				if(!decoder->Open(&error))  {
 					if(error) {
-						LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Error opening decoder: " << error);
+						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 						CFRelease(error), error = nullptr;
 					}
 
@@ -1027,21 +1027,21 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			bool formatsMatch = true;
 
 			if(nextFormat.mFormatID != mOutput->GetFormat().mFormatID) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output format (" << mOutput->GetFormat().mFormatID << ") and decoder format (" << nextFormat.mFormatID << ") don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output format (" << mOutput->GetFormat().mFormatID << ") and decoder format (" << nextFormat.mFormatID << ") don't match");
 				formatsMatch = false;
 			}
 			else if(nextFormat.mSampleRate != mOutput->GetFormat().mSampleRate) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output sample rate (" << mOutput->GetFormat().mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output sample rate (" << mOutput->GetFormat().mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 				formatsMatch = false;
 			}
 			else if(nextFormat.mChannelsPerFrame != mOutput->GetFormat().mChannelsPerFrame) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output channel count (" << mOutput->GetFormat().mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel count (" << mOutput->GetFormat().mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 				formatsMatch = false;
 			}
 
 			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output AU will remain valid)
 			if(nextChannelLayout != mOutput->GetChannelLayout()) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Gapless join failed: Output channel layout (" << mOutput->GetChannelLayout() << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel layout (" << mOutput->GetChannelLayout() << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 				formatsMatch = false;
 			}
 
@@ -1089,16 +1089,16 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				if(mActiveDecoders[bufferIndex].compare_exchange_strong(current, decoderState))
 					break;
 				else
-					LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "compare_exchange_strong() failed");
+					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "compare_exchange_strong() failed");
 			}
 		}
 
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
-			LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Decoding starting for \"" << decoderState->mDecoder->GetURL() << "\"");
-			LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Decoder format: " << decoderState->mDecoder->GetFormat());
-			LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Decoder channel layout: " << decoderState->mDecoder->GetChannelLayout());
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoderState->mDecoder->GetURL() << "\"");
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoderState->mDecoder->GetFormat());
+			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoderState->mDecoder->GetChannelLayout());
 
 			const AudioFormat& decoderFormat = decoderState->mDecoder->GetFormat();
 
@@ -1110,7 +1110,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				auto outputFormat = mOutput->GetFormat();
 				OSStatus result = AudioConverterNew(&decoderFormat, &outputFormat, &audioConverter);
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterNew failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
 
 					decoderState->mFlags.fetch_or(eDecoderStateDataFlagDecodingFinished | eDecoderStateDataFlagRenderingFinished, std::memory_order_relaxed);
 
@@ -1128,7 +1128,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				UInt32 dataSize = sizeof(inputBufferSize);
 				result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
 
 				// ========================================
 				// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
@@ -1173,7 +1173,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(audioConverter) {
 							auto result = AudioConverterReset(audioConverter);
 							if(noErr != result)
-								LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterReset failed: " << result);
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
 						}
 
 						// Reset() is not thread safe but the rendering thread is outputting silence
@@ -1193,7 +1193,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 						// Seek to the specified frame
 						if(-1 != frameToSeek) {
-							LOGGER_DEBUG("org.sbooth.AudioEngine.ASIO.Player", "Seeking to frame " << frameToSeek);
+							LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Seeking to frame " << frameToSeek);
 
 							// Ensure output is muted before performing operations that aren't thread safe
 							if(mOutput->IsRunning()) {
@@ -1214,7 +1214,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							SInt64 newFrame = decoderState->mDecoder->SeekToFrame(frameToSeek);
 
 							if(newFrame != frameToSeek)
-								LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Error seeking to frame  " << frameToSeek);
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error seeking to frame  " << frameToSeek);
 
 							// Update the seek request
 							decoderState->mFrameToSeek.store(-1, std::memory_order_relaxed);
@@ -1229,7 +1229,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 								if(audioConverter) {
 									auto result = AudioConverterReset(audioConverter);
 									if(noErr != result)
-										LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterReset failed: " << result);
+										LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
 								}
 
 								// Reset the ring buffer
@@ -1243,7 +1243,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						SInt64 startingFrameNumber = decoderState->mDecoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
-							LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to determine starting frame number");
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number");
 							break;
 						}
 
@@ -1261,7 +1261,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(audioConverter) {
 							auto result = AudioConverterFillComplexBuffer(audioConverter, myAudioConverterComplexInputDataProc, decoderState, &framesDecoded, bufferList, nullptr);
 							if(noErr != result)
-								LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterFillComplexBuffer failed: " << result);
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterFillComplexBuffer failed: " << result);
 						}
 						else {
 							framesDecoded = decoderState->ReadAudio(framesDecoded);
@@ -1285,14 +1285,14 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(0 != framesDecoded) {
 							UInt32 framesWritten = (UInt32)mRingBuffer->WriteAudio(audioConverter ? bufferList : decoderState->mBufferList, framesDecoded);
 							if(framesWritten != framesDecoded)
-								LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "RingBuffer::Store failed");
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::Store failed");
 
 							mFramesDecoded.fetch_add(framesWritten, std::memory_order_relaxed);
 						}
 
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load(std::memory_order_relaxed))*/) {
-							LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Decoding finished for \"" << decoderState->mDecoder->GetURL() << "\"");
+							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoderState->mDecoder->GetURL() << "\"");
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
@@ -1321,7 +1321,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					mFlags.fetch_and(~eAudioPlayerFlagStartPlayback, std::memory_order_relaxed);
 
 					if(!mOutput->IsRunning() && !mOutput->Start())
-						LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to start output");
+						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
 				}
 
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
@@ -1343,7 +1343,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			if(audioConverter) {
 				auto result = AudioConverterDispose(audioConverter);
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "AudioConverterDispose failed: " << result);
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterDispose failed: " << result);
 				audioConverter = nullptr;
 			}
 		}
@@ -1352,7 +1352,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		mDecoderSemaphore.TimedWait(timeout);
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Decoding thread terminating");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding thread terminating");
 
 	return nullptr;
 }
@@ -1383,7 +1383,7 @@ void * SFB::Audio::Player::CollectorThreadEntry()
 			bool swapSucceeded = mActiveDecoders[bufferIndex].compare_exchange_strong(decoderState, nullptr);
 
 			if(swapSucceeded) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.ASIO.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
+				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
 				delete decoderState, decoderState = nullptr;
 			}
 		}
@@ -1392,7 +1392,7 @@ void * SFB::Audio::Player::CollectorThreadEntry()
 		mCollectorSemaphore.TimedWait(timeout);
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.ASIO.Player", "Collecting thread terminating");
+	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Collecting thread terminating");
 
 	return nullptr;
 }
@@ -1476,7 +1476,7 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 	CFErrorRef error = nullptr;
 	if(!decoder.IsOpen() && !decoder.Open(&error)) {
 		if(error) {
-			LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Error opening decoder: " << error);
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 			CFRelease(error), error = nullptr;
 		}
 		
@@ -1489,7 +1489,7 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mOutput->GetFormat(), mRingBufferCapacity)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "Unable to allocate ring buffer");
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to allocate ring buffer");
 		return false;
 	}
 
@@ -1506,11 +1506,16 @@ bool SFB::Audio::Player::SetOutput(Output::unique_ptr output)
 	if(!output)
 		return false;
 
+	Stop();
+
+	if(!mOutput->Close())
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to close output");
+
 	mOutput = std::move(output);
 
 	mOutput->SetPlayer(this);
 	if(!mOutput->Open()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.ASIO.Player", "OpenOutput() failed");
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "OpenOutput() failed");
 		return false;
 	}
 
@@ -1552,7 +1557,7 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
 	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
 	if(framesRead != framesToRead) {
-		LOGGER_ERR("org.sbooth.AudioEngine.ASIO.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
 		return framesRead;
 	}
 
@@ -1560,7 +1565,7 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesRead != frameCount) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.ASIO.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
 
 		size_t framesOfSilence = frameCount - framesRead;
 		size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
