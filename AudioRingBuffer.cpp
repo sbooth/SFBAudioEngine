@@ -43,10 +43,10 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void StoreABL(unsigned char **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
+	inline void StoreABL(uint8_t **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
+			memcpy(buffers[bufferIndex] + destOffset, (uint8_t *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
 	}
 
 	/*!
@@ -57,10 +57,10 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void FetchABL(AudioBufferList *bufferList, size_t destOffset, const unsigned char **buffers, size_t srcOffset, size_t byteCount)
+	inline void FetchABL(AudioBufferList *bufferList, size_t destOffset, const uint8_t **buffers, size_t srcOffset, size_t byteCount)
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
+			memcpy((uint8_t *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
 	}
 
 	/*!
@@ -113,8 +113,8 @@ bool SFB::Audio::RingBuffer::Allocate(const AudioFormat& format, size_t capacity
 	size_t capacityBytes = format.FrameCountToByteCount(capacityFrames);
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
-	size_t allocationSize = (capacityBytes + sizeof(unsigned char *)) * format.mChannelsPerFrame;
-	unsigned char *memoryChunk = (unsigned char *)malloc(allocationSize);
+	size_t allocationSize = (capacityBytes + sizeof(uint8_t *)) * format.mChannelsPerFrame;
+	uint8_t *memoryChunk = (uint8_t *)malloc(allocationSize);
 	if(nullptr == memoryChunk)
 		return false;
 
@@ -122,8 +122,8 @@ bool SFB::Audio::RingBuffer::Allocate(const AudioFormat& format, size_t capacity
 	memset(memoryChunk, 0, allocationSize);
 
 	// Assign the pointers and channel buffers
-	mBuffers = (unsigned char **)memoryChunk;
-	memoryChunk += format.mChannelsPerFrame * sizeof(unsigned char *);
+	mBuffers = (uint8_t **)memoryChunk;
+	memoryChunk += format.mChannelsPerFrame * sizeof(uint8_t *);
 	for(UInt32 i = 0; i < format.mChannelsPerFrame; ++i) {
 		mBuffers[i] = memoryChunk;
 		memoryChunk += capacityBytes;
@@ -197,11 +197,11 @@ size_t SFB::Audio::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t fra
 		n2 = 0;
 	}
 
-	FetchABL(bufferList, 0, (const unsigned char **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n1));
+	FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n1));
 	mReadPointer = (mReadPointer + n1) & mCapacityFramesMask;
 
 	if(n2) {
-		FetchABL(bufferList, mFormat.FrameCountToByteCount(n1), (const unsigned char **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n2));
+		FetchABL(bufferList, mFormat.FrameCountToByteCount(n1), (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n2));
 		mReadPointer = (mReadPointer + n2) & mCapacityFramesMask;
 	}
 
