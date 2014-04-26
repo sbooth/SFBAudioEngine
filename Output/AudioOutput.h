@@ -44,9 +44,7 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		namespace ASIO {
-			class Player;
-		}
+		class Player;
 
 		/*!
 		 * @brief Base class for an audio output device
@@ -138,8 +136,8 @@ namespace SFB {
 			bool Reset();
 
 			// FIXME: This should probably be passed in the ctor
-			inline void SetPlayer(ASIO::Player * player)			{ mPlayer = player; }
-			inline ASIO::Player * GetPlayer() const					{ return mPlayer; }
+			inline void SetPlayer(Player * player)					{ mPlayer = player; }
+			inline Player * GetPlayer() const						{ return mPlayer; }
 
 		protected:
 
@@ -149,7 +147,7 @@ namespace SFB {
 			AudioFormat			mFormat;			/*!< The required format for audio passed to this \c Output */
 			ChannelLayout		mChannelLayout;		/*!< The required channel layout for audio passed to this \c Output */
 
-			ASIO::Player		*mPlayer;
+			Player				*mPlayer;
 
 		private:
 

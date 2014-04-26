@@ -29,7 +29,7 @@
  */
 
 #include "CoreAudioOutput.h"
-#include "ASIOPlayer.h"
+#include "AudioPlayer.h"
 #include "AudioFormat.h"
 #include "Logger.h"
 

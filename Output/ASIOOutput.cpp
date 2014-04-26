@@ -31,7 +31,7 @@
 #include "AsioLibWrapper.h"
 
 #include "ASIOOutput.h"
-#include "ASIOPlayer.h"
+#include "AudioPlayer.h"
 #include "AudioFormat.h"
 #include "Logger.h"
 
