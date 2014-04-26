@@ -128,6 +128,14 @@ namespace SFB {
 		size_t Read(void *destinationBuffer, size_t byteCount);
 
 		/*!
+		 * @brief Read data from the \c RingBuffer without advancing the read pointer.
+		 * @param destinationBuffer An address to receive the data
+		 * @param byteCount The desired number of bytes to read
+		 * @return The number of bytes actually read
+		 */
+		size_t Peek(void *destinationBuffer, size_t byteCount) const;
+
+		/*!
 		 * @brief Write data to the \c RingBuffer, advancing the write pointer.
 		 * @param bufferList An address containing the data to copy
 		 * @param byteCount The desired number of frames to write
@@ -135,17 +143,52 @@ namespace SFB {
 		 */
 		size_t Write(const void *sourceBuffer, size_t byteCount);
 
+
+		/*! @brief Advance the read pointer by the specified number of bytes */
+		void ReadAdvance(size_t byteCount);
+
+		/*! @brief Advance the write pointer by the specified number of bytes */
+		void WriteAdvance(size_t byteCount);
+
+		
+		/*! @brief A struct wrapping a memory buffer location and capacity */
+		struct Buffer {
+			uint8_t	*mBuffer;			/*!< The memory buffer location */
+			size_t	mBufferCapacity;	/*!< The capacity of \c mBuffer in bytes */
+
+			/*! @brief Construct an empty Buffer */
+			Buffer()
+				: Buffer(nullptr, 0) {}
+			
+			/*! 
+			 * @brief Construct a Buffer for the specified location and capacity 
+			 * @param buffer The memory buffer location
+			 * @param bufferCapacity The capacity of \c buffer in bytes
+			 */
+			Buffer(uint8_t *buffer, size_t bufferCapacity)
+				: mBuffer(buffer), mBufferCapacity(bufferCapacity) {}
+		};
+
+		/*! @brief A pair of \c Buffer objects */
+		typedef std::pair<Buffer, Buffer> BufferPair;
+
+		/*! @brief Retrieve the read vector containing the current readable data */
+		BufferPair GetReadVector() const;
+
+		/*! @brief Retrieve the write vector containing the current writeable data */
+		BufferPair GetWriteVector() const;
+
 		//@}
 
 	private:
 
-		int8_t				*mBuffer;
+		uint8_t				*mBuffer;				/*!< The memory buffer holding the data */
 
-		size_t				mCapacityBytes;
-		size_t				mCapacityBytesMask;
+		size_t				mCapacityBytes;			/*!< The capacity of \c mBuffer in bytes */
+		size_t				mCapacityBytesMask;		/*!< The capacity of \c mBuffer in bytes minus one */
 
-		volatile size_t		mWritePointer;
-		volatile size_t		mReadPointer;
+		volatile size_t		mWritePointer;			/*!< The offset into \c mBuffer of the read location */
+		volatile size_t		mReadPointer;			/*!< The offset into \c mBuffer of the write location */
 	};
 
 }
