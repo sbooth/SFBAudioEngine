@@ -36,12 +36,6 @@ SFB::Audio::Output::Output()
 	: mPlayer(nullptr)
 {}
 
-SFB::Audio::Output::~Output()
-{
-	Stop();
-	Close();
-}
-
 #pragma mark -
 
 bool SFB::Audio::Output::Open()

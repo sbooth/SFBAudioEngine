@@ -65,7 +65,7 @@ namespace SFB {
 			// @{
 
 			/*! @brief Destroy this \c Output */
-			virtual ~Output();
+			virtual ~Output() = default;
 
 			/*! @cond */
 

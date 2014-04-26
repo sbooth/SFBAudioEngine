@@ -74,7 +74,6 @@ SFB::Audio::CoreAudioOutput::CoreAudioOutput()
 SFB::Audio::CoreAudioOutput::~CoreAudioOutput()
 {}
 
-
 #pragma mark Player Parameters
 
 bool SFB::Audio::CoreAudioOutput::GetVolume(Float32& volume) const
