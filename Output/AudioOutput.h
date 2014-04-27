@@ -55,6 +55,9 @@ namespace SFB {
 		 */
 		class Output
 		{
+
+			friend class Player;
+
 		public:
 
 			/*! @brief A \c std::unique_ptr for \c Output objects */
@@ -80,7 +83,7 @@ namespace SFB {
 			//@}
 
 			// ========================================
-			/*! @name Device Management */
+			/*! @name Device Information */
 			//@{
 
 			/*!
@@ -98,6 +101,7 @@ namespace SFB {
 			 */
 			bool SetDeviceUID(CFStringRef deviceUID);
 
+
 			/*!
 			 * @brief Get the sample rate of the output device
 			 * @param sampleRate A \c Float64 to receive the sample rate
@@ -114,32 +118,64 @@ namespace SFB {
 			
 			//@}
 
+
+			// ========================================
+			/*! @name I/O Information */
+			//@{
+
 			/*! @brief Get the audio format this output requires */
 			inline const AudioFormat& GetFormat() const					{ return mFormat; }
 
 			/*! @brief Get the channel layout used by this output*/
 			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
+			//@}
+
+		protected:
 
 			// ========================================
-			// Output setup and Control
+			/*! @name I/O Information */
+			//@{
+
+			/*! @brief Open the output */
 			bool Open();
+
+			/*! @brief Close the output */
 			bool Close();
 
+
+			/*! @brief Start the output */
 			bool Start();
+
+			/*! @brief Stop the output */
 			bool Stop();
+
+			/*! @brief Request a stop */
 			bool RequestStop();
 
-			inline bool IsOpen() const								{ return _IsOpen(); }
-			inline bool IsRunning() const							{ return _IsRunning(); }
 
+			/*! @brief Reset the output to the initial state */
 			bool Reset();
+
+
+			/*! @brief Determine if the output is open */
+			inline bool IsOpen() const									{ return _IsOpen(); }
+
+			/*! @brief Determine if the output is running */
+			inline bool IsRunning() const								{ return _IsRunning(); }
+
+
+			/*! @brief Set up the output for use with decoder, adjusting format and channel layout accordingly */
+			bool SetupForDecoder(const Decoder& decoder);
+
+			/*! @brief Get the preferred buffer size, or 0 if none */
+			size_t GetPreferredBufferSize() const;
+
 
 			// FIXME: This should probably be passed in the ctor
 			inline void SetPlayer(Player * player)					{ mPlayer = player; }
 			inline Player * GetPlayer() const						{ return mPlayer; }
 
-		protected:
 
 			/*! @brief Create a new \c Output and initialize \c Output::mPlayer to \c nullptr */
 			Output();
@@ -147,7 +183,7 @@ namespace SFB {
 			AudioFormat			mFormat;			/*!< The required format for audio passed to this \c Output */
 			ChannelLayout		mChannelLayout;		/*!< The required channel layout for audio passed to this \c Output */
 
-			Player				*mPlayer;
+			Player				*mPlayer;			/*!< Weak reference to owning player */
 
 		private:
 
@@ -176,19 +212,6 @@ namespace SFB {
 			virtual bool _SetDeviceSampleRate(Float64 sampleRate)			{ return false; }
 
 			virtual size_t _GetPreferredBufferSize() const					{ return 0; }
-
-		public:
-			
-			// ========================================
-			/*! @cond */
-
-			/*! @internal */
-			bool SetupForDecoder(const Decoder& decoder);
-
-			/*! @internal */
-			size_t GetPreferredBufferSize() const;
-
-			/*! @endcond */
 		};
 	}
 }

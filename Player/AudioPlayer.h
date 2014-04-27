@@ -88,10 +88,6 @@ namespace SFB {
 			/*! @brief The length of the array containing active audio decoders */
 			static const size_t kActiveDecoderArraySize = 8;
 
-			// For Output access to mMutex
-			// FIXME: Is this a good idea?
-			friend class Output;
-
 		public:
 			// ========================================
 			/*! @name Block callback types */

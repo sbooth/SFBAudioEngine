@@ -1218,7 +1218,7 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 {
 	const AudioFormat& decoderFormat = decoder.GetFormat();
 	if(!decoderFormat.IsPCM()) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Core Audio output unsupported format: " << decoderFormat);
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Core Audio unsupported format: " << decoderFormat);
 		return false;
 	}
 

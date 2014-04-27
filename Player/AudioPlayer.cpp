@@ -336,10 +336,15 @@ SFB::Audio::Player::~Player()
 
 bool SFB::Audio::Player::Play()
 {
-	if(!mOutput->IsRunning())
-		return mOutput->Start();
+	if(mOutput->IsRunning())
+		return true;
 
-	return true;
+	// We don't want to start output in the middle of a buffer modification
+	std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
+	if(!lock)
+		return false;
+
+	return mOutput->Start();
 }
 
 bool SFB::Audio::Player::Pause()
@@ -361,8 +366,8 @@ bool SFB::Audio::Player::Stop()
 
 	StopActiveDecoders();
 
-//	if(!mOutput->Reset())
-//		return false;
+	if(!mOutput->Reset())
+		return false;
 
 	// Reset the ring buffer
 	mFramesDecoded.store(0, std::memory_order_relaxed);
@@ -1214,7 +1219,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							SInt64 newFrame = decoderState->mDecoder->SeekToFrame(frameToSeek);
 
 							if(newFrame != frameToSeek)
-								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error seeking to frame  " << frameToSeek);
+								LOGGER_NOTICE("org.sbooth.AudioEngine.Player", "Inaccurate seek to frame  " << frameToSeek << ", got frame " << newFrame);
 
 							// Update the seek request
 							decoderState->mFrameToSeek.store(-1, std::memory_order_relaxed);
@@ -1320,8 +1325,12 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				if(eAudioPlayerFlagStartPlayback & mFlags.load(std::memory_order_relaxed)) {
 					mFlags.fetch_and(~eAudioPlayerFlagStartPlayback, std::memory_order_relaxed);
 
-					if(!mOutput->IsRunning() && !mOutput->Start())
-						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
+					if(!mOutput->IsRunning()) {
+						// We don't want to start output in the middle of a buffer modification
+						std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
+						if(lock && !mOutput->Start())
+							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
+					}
 				}
 
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen

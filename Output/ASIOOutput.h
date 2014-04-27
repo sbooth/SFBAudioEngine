@@ -59,16 +59,21 @@ namespace SFB {
 			};
 
 			bool GetDeviceIOFormat(DeviceIOFormat& deviceIOFormat) const;
+
+		protected:
+			
 			bool SetDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
 
+		public:
+
+			/*! @brief Open the stereo ASIO driver */
 			bool OpenStereo();
+
+			/*! @brief Open the multichannel ASIO driver */
 			bool OpenMultichannel();
 
-			/*! @brief Set a block to be invoked when the playing state changes */
+			/*! @brief Set a block to be invoked when the running state changes */
 			void SetStateChangedBlock(dispatch_block_t block);
-
-//		protected:
-//			ASIOOutput();
 
 		private:
 
@@ -96,11 +101,10 @@ namespace SFB {
 
 			bool _OpenOutput(uint32_t index);
 
-			// ASIO event queue
-			SFB::RingBuffer::unique_ptr				mEventQueue;
-			dispatch_source_t						mEventQueueTimer;
+			SFB::RingBuffer::unique_ptr				mEventQueue;			/*!< ASIO event queue */
+			dispatch_source_t						mEventQueueTimer;		/*!< ASIO event queue timer */
 
-			dispatch_block_t						mStateChangedBlock;
+			dispatch_block_t						mStateChangedBlock;		/*!< Block called when running state changes */
 
 		public:
 

@@ -29,7 +29,6 @@
  */
 
 #include "AudioOutput.h"
-#include "AudioPlayer.h"
 #include "Logger.h"
 
 SFB::Audio::Output::Output()
@@ -75,11 +74,6 @@ bool SFB::Audio::Output::Start()
 	if(_IsRunning())
 		return true;
 
-	// We don't want to start output in the middle of a buffer modification
-	std::unique_lock<std::mutex> lock(mPlayer->mMutex, std::try_to_lock);
-	if(!lock)
-		return false;
-
 	return _Start();
 }
 
@@ -123,7 +117,6 @@ bool SFB::Audio::Output::Reset()
 
 bool SFB::Audio::Output::SetupForDecoder(const Decoder& decoder)
 {
-	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "SetupForDecoder");
 	return _SetupForDecoder(decoder);
 }
 
