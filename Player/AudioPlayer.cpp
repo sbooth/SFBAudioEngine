@@ -1511,23 +1511,25 @@ bool SFB::Audio::Player::SetOutput(Output::unique_ptr output)
 	if(!mOutput->Close())
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to close output");
 
-	mOutput = std::move(output);
-
-	mOutput->SetPlayer(this);
-	if(!mOutput->Open()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "OpenOutput() failed");
+	if(!output->Open()) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to open output");
 		return false;
 	}
+
+	output->SetPlayer(this);
+	mOutput = std::move(output);
 
 	return true;
 }
 
 UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
+	// ========================================
 	// Pre-rendering actions
+
 	// Call the pre-render block
-//	if(mRenderEventBlocks[0])
-//		mRenderEventBlocks[0](ioData, inNumberFrames);
+	if(mRenderEventBlocks[0])
+		mRenderEventBlocks[0](bufferList, frameCount);
 
 	// Mute output if requested
 	if(eAudioPlayerFlagRequestMute & mFlags.load(std::memory_order_relaxed)) {
@@ -1538,6 +1540,7 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 	}
 
 
+	// ========================================
 	// Rendering
 	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
 
@@ -1581,16 +1584,18 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 		mDecoderSemaphore.Signal();
 
 
+	// ========================================
 	// Post-rendering actions
+
 	// Call the post-render block
-//	if(mRenderEventBlocks[1])
-//		mRenderEventBlocks[1](ioData, inNumberFrames);
+	if(mRenderEventBlocks[1])
+		mRenderEventBlocks[1](bufferList, frameCount);
 
 	// There is nothing more to do if no frames were rendered
 	if(0 == framesRead)
 		return 0;
 
-	// mFramesRenderedLastPass contains the number of valid frames that were rendered
+	// framesRead contains the number of valid frames that were rendered
 	// However, these could have come from any number of decoders depending on the buffer sizes
 	// So it is necessary to split them up here
 

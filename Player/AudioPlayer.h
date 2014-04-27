@@ -31,13 +31,11 @@
 #pragma once
 
 #include <CoreAudio/CoreAudioTypes.h>
-#include <AudioToolbox/AudioToolbox.h>
 
 #include <memory>
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <map>
 #include <utility>
 
 #include "AudioOutput.h"
@@ -50,16 +48,47 @@ namespace SFB {
 
 	namespace Audio {
 
-		// ========================================
-		// Constants
-		// ========================================
-		/*! @brief The length of the array containing active audio decoders */
-#define kActiveDecoderArraySize 8
-
-		/*! @brief An audio player for ASIO interfaces */
+		/*!
+		 * @brief The audio player class
+		 *
+		 * A player decodes audio into a ring buffer and passes it to the selected Output on demand.
+		 * The player supports seeking and playback control for all Decoder subclasses supported by the current Output.
+		 *
+		 * Decoding occurs in a high priority (non-realtime) thread which reads audio via a Decoder instance and stores it in the ring buffer.
+		 * For the common case using CoreAudioOutput the audio is stored in the canonical Core Audio format (kAudioFormatFlagsAudioUnitCanonical)-
+		 * deinterleaved, normalized [-1, 1) native floating point data in 32 bits (AKA floats) on Mac OS X and 8.24 fixed point on iOS.
+		 * For ASIOOutput (on exaSound devices) the audio may be stored in either DSD or PCM format.
+		 *
+		 * Rendering occurs in a realtime thread when ProvideAudio() is called by the output.
+		 *
+		 * Since decoding and rendering are distinct operations performed in separate threads, there is an additional thread
+		 * used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
+		 * rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
+		 * method would be hazard pointers.
+		 *
+		 * The player supports block-based callbacks for the following events:
+		 *  1. Decoding started
+		 *  2. Decoding finished
+		 *  3. Rendering started
+		 *  4. Rendering finished
+		 *  5. Pre- and post- audio rendering
+		 *  6. Audio format mismatches preventing gapless playback
+		 *
+		 * The decoding callbacks will be performed from the decoding thread.  Although not a real time thread,
+		 * lengthy operations should be avoided to prevent audio glitching resulting from gaps in the ring buffer.
+		 *
+		 * The rendering callbacks will be performed from the realtime rendering thread.  Execution of this thread must not be blocked!
+		 * Examples of prohibited actions that could cause problems:
+		 *  - Memory allocation
+		 *  - Objective-C messaging
+		 *  - File IO
+		 */
 		class Player {
 
-			// For access to mMutex
+			/*! @brief The length of the array containing active audio decoders */
+			static const size_t kActiveDecoderArraySize = 8;
+
+			// For Output access to mMutex
 			// FIXME: Is this a good idea?
 			friend class Output;
 
@@ -254,6 +283,7 @@ namespace SFB {
 
 			//@}
 
+
 			// ========================================
 			/*!
 			 * @name Playback Properties
@@ -375,7 +405,7 @@ namespace SFB {
 
 			/*!
 			 * @brief Set the Output used by this player
-			 * @param output The desired output device
+			 * @param output The desired output
 			 * @return \c true on success, \c false otherwise
 			 */
 			bool SetOutput(Output::unique_ptr output);
@@ -421,8 +451,6 @@ namespace SFB {
 			/*! @internal This class is exposed so it can be used inside C callbacks */
 			class DecoderStateData;
 
-			/*! @endcond */
-
 			/*!
 			 * @internal
 			 * @brief Copy decoded audio into the specified buffer
@@ -431,6 +459,8 @@ namespace SFB {
 			 * @return The actual number of frames read, or \c 0 on error
 			 */
 			UInt32 ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
+			/*! @endcond */
 
 		private:
 
