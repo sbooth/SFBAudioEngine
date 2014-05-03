@@ -32,7 +32,7 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
-/*! @file AudioFormat @brief A Core Audio \c AudioStreamBasicDescription wrapper  */
+/*! @file AudioFormat.h @brief A Core %Audio \c AudioStreamBasicDescription wrapper */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
