@@ -302,22 +302,30 @@ namespace {
 		return nullptr;
 	}
 
+	// exaSound driver library indexes for x86_64
+	const uint32_t sStereoLibraryIndex			= 0;
+	const uint32_t sMultichannelLibraryIndex	= 2;
+
 }
 
 #pragma mark Creation and Destruction
 
-//SFB::Audio::ASIOOutput * SFB::Audio::ASIOOutput::GetInstance()
-//{
-//	static ASIOOutput *sOutput = nullptr;
-//	static dispatch_once_t onceToken;
-//	dispatch_once(&onceToken, ^{
-//		sOutput = new ASIOOutput;
-//	});
-//	return sOutput;
-//}
+SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateStereoInstance()
+{
+	// Stereo is the default
+	return unique_ptr(new ASIOOutput);
+}
+
+SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateMultichannelInstance()
+{
+	auto result = unique_ptr(new ASIOOutput);
+	((ASIOOutput *)result.get())->mLibraryIndex = sMultichannelLibraryIndex;
+
+	return result;
+}
 
 SFB::Audio::ASIOOutput::ASIOOutput()
-	: mEventQueue(new SFB::RingBuffer), mStateChangedBlock(nullptr)
+	: mLibraryIndex(sStereoLibraryIndex), mEventQueue(new SFB::RingBuffer), mStateChangedBlock(nullptr)
 {
 	mEventQueue->Allocate(512);
 
@@ -402,26 +410,6 @@ bool SFB::Audio::ASIOOutput::SetDeviceIOFormat(const DeviceIOFormat& deviceIOFor
 	return true;
 }
 
-bool SFB::Audio::ASIOOutput::OpenStereo()
-{
-	LOGGER_DEBUG("org.sbooth.AudioEngine.Output.ASIO", "OpenStereo");
-
-	if(_IsOpen() || _IsRunning())
-		return false;
-
-	return _OpenOutput(0);
-}
-
-bool SFB::Audio::ASIOOutput::OpenMultichannel()
-{
-	LOGGER_DEBUG("org.sbooth.AudioEngine.Output.ASIO", "OpenMultichannel");
-
-	if(_IsOpen() || _IsRunning())
-		return false;
-
-	return _OpenOutput(2);
-}
-
 void SFB::Audio::ASIOOutput::SetStateChangedBlock(dispatch_block_t block)
 {
 	if(mStateChangedBlock)
@@ -465,7 +453,9 @@ size_t SFB::Audio::ASIOOutput::_GetPreferredBufferSize() const
 	return (size_t)sDriverInfo.mPreferredBufferSize;
 }
 
-bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
+#pragma mark -
+
+bool SFB::Audio::ASIOOutput::_Open()
 {
 	unsigned int count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
 	if(0 == count) {
@@ -473,7 +463,7 @@ bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 		return false;
 	}
 
-	if(index >= count) {
+	if(mLibraryIndex >= count) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Invalid index requested in ASIO library list");
 		return false;
 	}
@@ -486,18 +476,18 @@ bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 	}
 
 	AsioLibWrapper::UnloadLib();
-	
-	if(!AsioLibWrapper::LoadLib(buffer[index])) {
+
+	if(!AsioLibWrapper::LoadLib(buffer[mLibraryIndex])) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library");
 		return false;
 	}
 
-	if(AsioLibWrapper::CreateInstance(buffer[index].Number, &sASIO)) {
+	if(AsioLibWrapper::CreateInstance(buffer[mLibraryIndex].Number, &sASIO)) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to instantiate ASIO driver");
 		return false;
 	}
 
-	if(!buffer[index].ToCString(sDriverInfo.mUID, kUIDLength, '|'))
+	if(!buffer[mLibraryIndex].ToCString(sDriverInfo.mUID, kUIDLength, '|'))
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to get ASIO driver UID");
 
 	sDriverInfo.mDriverInfo = {
@@ -515,14 +505,6 @@ bool SFB::Audio::ASIOOutput::_OpenOutput(uint32_t index)
 		sDriverInfo.mPostOutput = true;
 
 	return true;
-}
-
-#pragma mark -
-
-bool SFB::Audio::ASIOOutput::_Open()
-{
-	// Default is stereo
-	return _OpenOutput(0);
 }
 
 bool SFB::Audio::ASIOOutput::_Close()

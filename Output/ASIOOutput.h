@@ -46,8 +46,11 @@ namespace SFB {
 		{
 		public:
 
-			// ASIO only supports a single instance
-//			static ASIOOutput * GetInstance();
+			/*! @brief Create the stereo ASIO driver */
+			static unique_ptr CreateStereoInstance();
+
+			/*! @brief Open the multichannel ASIO driver */
+			static unique_ptr CreateMultichannelInstance();
 
 			ASIOOutput();
 			virtual ~ASIOOutput();
@@ -65,12 +68,6 @@ namespace SFB {
 			bool SetDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
 
 		public:
-
-			/*! @brief Open the stereo ASIO driver */
-			bool OpenStereo();
-
-			/*! @brief Open the multichannel ASIO driver */
-			bool OpenMultichannel();
 
 			/*! @brief Set a block to be invoked when the running state changes */
 			void SetStateChangedBlock(dispatch_block_t block);
@@ -99,7 +96,7 @@ namespace SFB {
 
 			virtual size_t _GetPreferredBufferSize() const;
 
-			bool _OpenOutput(uint32_t index);
+			uint32_t								mLibraryIndex;			/*!< ASIO driver index */
 
 			SFB::RingBuffer::unique_ptr				mEventQueue;			/*!< ASIO event queue */
 			dispatch_source_t						mEventQueueTimer;		/*!< ASIO event queue timer */
