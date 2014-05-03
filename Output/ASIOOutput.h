@@ -33,7 +33,7 @@
 #include "AudioOutput.h"
 #include "RingBuffer.h"
 
-/*! @file ASIOOutput.h @brief ASIO output functionality */
+/*! @file ASIOOutput.h @brief ASIO output functionality for exaSound devices */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
@@ -46,10 +46,10 @@ namespace SFB {
 		{
 		public:
 
-			/*! @brief Create the stereo ASIO driver */
+			/*! @brief Create an ASIOOutput for the stereo driver */
 			static unique_ptr CreateStereoInstance();
 
-			/*! @brief Open the multichannel ASIO driver */
+			/*! @brief Create an ASIOOutput for the multichannel driver */
 			static unique_ptr CreateMultichannelInstance();
 
 			ASIOOutput();
@@ -61,10 +61,12 @@ namespace SFB {
 				eDeviceIOFormatDSD		/*!< Direct stream digital (DSD) */
 			};
 
+			/*! @brief Get the format in use by the device for IO transactions */
 			bool GetDeviceIOFormat(DeviceIOFormat& deviceIOFormat) const;
 
 		protected:
 			
+			/*! @brief Set the format the device should use for IO transactions */
 			bool SetDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
 
 		public:

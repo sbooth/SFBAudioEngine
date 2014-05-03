@@ -33,7 +33,7 @@
 #include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
 
-/*! @file CoreAudioOutput.h @brief Core \w Audio output functionality */
+/*! @file CoreAudioOutput.h @brief Core %Audio output functionality */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
@@ -41,7 +41,7 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @brief Output subclass supporting Apple's Core Audio */
+		/*! @brief Output subclass supporting Apple's Core %Audio */
 		class CoreAudioOutput : public Output
 		{
 		public:

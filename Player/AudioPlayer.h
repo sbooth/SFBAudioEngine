@@ -44,8 +44,12 @@
 #include "AudioChannelLayout.h"
 #include "Semaphore.h"
 
+/*! @file AudioPlayer.h @brief Audio playback functionality */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
+	/*! @brief %Audio functionality */
 	namespace Audio {
 
 		/*!
@@ -72,7 +76,7 @@ namespace SFB {
 		 *  3. Rendering started
 		 *  4. Rendering finished
 		 *  5. Pre- and post- audio rendering
-		 *  6. Audio format mismatches preventing gapless playback
+		 *  6. %Audio format mismatches preventing gapless playback
 		 *
 		 * The decoding callbacks will be performed from the decoding thread.  Although not a real time thread,
 		 * lengthy operations should be avoided to prevent audio glitching resulting from gaps in the ring buffer.
@@ -121,7 +125,7 @@ namespace SFB {
 			//@{
 
 			/*!
-			 * @brief Create a new \c Player for the default output device
+			 * @brief Create a new \c Player for the default CoreAudioOutput device
 			 * @throws std::bad_alloc
 			 * @throws std::runtime_error
 			 */
@@ -401,6 +405,7 @@ namespace SFB {
 
 			/*!
 			 * @brief Set the Output used by this player
+			 * @note The player will take ownership of the output on success and may take ownership on failure
 			 * @param output The desired output
 			 * @return \c true on success, \c false otherwise
 			 */

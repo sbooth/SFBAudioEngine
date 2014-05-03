@@ -49,13 +49,14 @@ namespace SFB {
 		/*!
 		 * @brief Base class for an audio output device
 		 *
-		 * An Output is responsible for accepting data from an AudioPlayer and
+		 * An Output is responsible for accepting data from a Player and
 		 * sending it to an output device, in addition to handling device setup
-		 * and parameter
+		 * and parameter management.
 		 */
 		class Output
 		{
 
+			/*! @brief For access to Open(), Close(), Start(), Stop(), etc.*/
 			friend class Player;
 
 		public:
@@ -120,7 +121,7 @@ namespace SFB {
 
 
 			// ========================================
-			/*! @name I/O Information */
+			/*! @name Format Information */
 			//@{
 
 			/*! @brief Get the audio format this output requires */
@@ -171,19 +172,23 @@ namespace SFB {
 			/*! @brief Get the preferred buffer size, or 0 if none */
 			size_t GetPreferredBufferSize() const;
 
+			//@}
 
-			// FIXME: This should probably be passed in the ctor
+
+			/*! @brief Get the player owning this Output */
 			inline void SetPlayer(Player * player)					{ mPlayer = player; }
+
+			/*! @brief Set the player owning this Output */
 			inline Player * GetPlayer() const						{ return mPlayer; }
 
 
 			/*! @brief Create a new \c Output and initialize \c Output::mPlayer to \c nullptr */
 			Output();
 
-			AudioFormat			mFormat;			/*!< The required format for audio passed to this \c Output */
-			ChannelLayout		mChannelLayout;		/*!< The required channel layout for audio passed to this \c Output */
+			AudioFormat			mFormat;			/*!< @brief The required format for audio passed to this \c Output */
+			ChannelLayout		mChannelLayout;		/*!< @brief The required channel layout for audio passed to this \c Output */
 
-			Player				*mPlayer;			/*!< Weak reference to owning player */
+			Player				*mPlayer;			/*!< @brief Weak reference to owning player */
 
 		private:
 
