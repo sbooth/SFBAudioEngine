@@ -308,6 +308,12 @@ namespace {
 
 }
 
+bool SFB::Audio::ASIOOutput::IsAvailable()
+{
+	auto count = AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
+	return 0 < count;
+}
+
 #pragma mark Creation and Destruction
 
 SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateStereoInstance()

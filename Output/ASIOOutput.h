@@ -46,6 +46,9 @@ namespace SFB {
 		{
 		public:
 
+			/*! @brief Query whether an ASIO driver is available */
+			static bool IsAvailable();
+
 			/*! @brief Create an ASIOOutput for the stereo driver */
 			static unique_ptr CreateStereoInstance();
 
