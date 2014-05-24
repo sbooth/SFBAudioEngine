@@ -66,6 +66,11 @@ bool SFB::Audio::AudioFormat::IsDSD() const
 	return kAudioFormatDirectStreamDigital == mFormatID;
 }
 
+bool SFB::Audio::AudioFormat::IsNativeEndian() const
+{
+	return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags);
+}
+
 size_t SFB::Audio::AudioFormat::FrameCountToByteCount(size_t frameCount) const
 {
 	switch(mFormatID) {

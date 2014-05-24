@@ -81,6 +81,9 @@ namespace SFB {
 			/*! @brief Query whether this format represents DSD audio data */
 			bool IsDSD() const;
 
+			/*! @brief Query whether this format represents native-endian ordered daa */
+			bool IsNativeEndian() const;
+
 			/*! @brief Convert a frame count to byte count */
 			size_t FrameCountToByteCount(size_t frameCount) const;
 
