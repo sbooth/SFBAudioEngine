@@ -36,7 +36,6 @@
 #include <stdexcept>
 #include <new>
 #include <algorithm>
-#include <iomanip>
 
 #include "AudioPlayer.h"
 #include "CoreAudioOutput.h"
