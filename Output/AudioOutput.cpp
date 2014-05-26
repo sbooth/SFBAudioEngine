@@ -122,6 +122,16 @@ bool SFB::Audio::Output::SetupForDecoder(const Decoder& decoder)
 
 #pragma mark -
 
+bool SFB::Audio::Output::CreateDeviceUID(CFStringRef& deviceUID) const
+{
+	return _CreateDeviceUID(deviceUID);
+}
+
+bool SFB::Audio::Output::SetDeviceUID(CFStringRef deviceUID)
+{
+	return _SetDeviceUID(deviceUID);
+}
+
 bool SFB::Audio::Output::GetDeviceSampleRate(Float64& sampleRate) const
 {
 	return _GetDeviceSampleRate(sampleRate);
