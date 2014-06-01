@@ -1048,7 +1048,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder->GetFormat());
 
 					if(mErrorBlock) {
-						SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported by the selected output device."), "");
+						SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), "");
 						SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Format not supported"), "");
 						SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), "");
 
@@ -1571,7 +1571,8 @@ bool SFB::Audio::Player::SetOutput(Output::unique_ptr output)
 	if(!output)
 		return false;
 
-	Stop();
+	if(!Stop())
+		return false;
 
 	if(!mOutput->Close())
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to close output");
