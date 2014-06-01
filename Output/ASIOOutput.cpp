@@ -769,11 +769,6 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 	if(!mChannelLayout.MapToLayout(mDriverChannelLayout, mChannelMap))
 		mChannelMap.clear();
 
-	LOGGER_DEBUG("fnord", "CHANNEL MAP: ");
-	for(auto i : mChannelMap) {
-		LOGGER_DEBUG("fnord", " " << i);
-	}
-
 	// Ensure the ring buffer is large enough
 	if(8 * sDriverInfo.mPreferredBufferSize > mPlayer->GetRingBufferCapacity())
 		mPlayer->SetRingBufferCapacity((uint32_t)(8 * sDriverInfo.mPreferredBufferSize));
