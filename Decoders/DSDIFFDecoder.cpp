@@ -40,7 +40,7 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
-#define BUFFER_SIZE_BYTES 4096u
+#define BUFFER_CHANNEL_SIZE_BYTES 512u
 
 namespace {
 
@@ -789,8 +789,8 @@ UInt32 SFB::Audio::DSDIFFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
 		// a clustered frame (one channel byte per channel)
 		// From a bit perspective for stereo: LLLLLLLLRRRRRRRRLLLLLLLLRRRRRRRR
-		uint8_t buffer [BUFFER_SIZE_BYTES];
-		UInt32 bytesToRead = std::min(BUFFER_SIZE_BYTES, (framesToRead / 8) * mFormat.mChannelsPerFrame);
+		uint8_t buffer [BUFFER_CHANNEL_SIZE_BYTES * mFormat.mChannelsPerFrame];
+		UInt32 bytesToRead = std::min(BUFFER_CHANNEL_SIZE_BYTES * mFormat.mChannelsPerFrame, (framesToRead / 8) * mFormat.mChannelsPerFrame);
 		auto bytesRead = GetInputSource().Read(buffer, bytesToRead);
 
 		if(bytesRead != bytesToRead) {
