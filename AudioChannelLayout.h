@@ -125,7 +125,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the number of channels contained in this channel layout */
-			size_t ChannelCount() const;
+			size_t GetChannelCount() const;
 
 			/*!
 			 * @brief Create a channel map for converting audio from this channel layout
@@ -144,6 +144,9 @@ namespace SFB {
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
 			inline const AudioChannelLayout * GetACL() const		{ return mChannelLayout.get(); }
+
+			/*! @brief Retrieve the size of this object's internal \c AudioChannelLayout */
+			size_t GetACLSize() const;
 
 
 			/*! @brief Query whether this \c ChannelLayout is empty */
