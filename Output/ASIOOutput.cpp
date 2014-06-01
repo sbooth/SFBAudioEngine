@@ -33,6 +33,7 @@
 #include "ASIOOutput.h"
 #include "AudioPlayer.h"
 #include "AudioFormat.h"
+#include "AudioBufferList.h"
 #include "Logger.h"
 
 namespace {
@@ -237,7 +238,7 @@ namespace {
 		ASIOChannelInfo	*mChannelInfo;
 		// The above two arrays share the same indexing, as the data in them are linked together
 
-		AudioBufferList *mBufferList;
+		SFB::Audio::BufferList mBufferList;
 
 		// Information from ASIOGetSamplePosition()
 		// data is converted to double floats for easier use, however 64 bit integer can be used, too
@@ -527,10 +528,7 @@ bool SFB::Audio::ASIOOutput::_Close()
 	if(sDriverInfo.mChannelInfo)
 		delete [] sDriverInfo.mChannelInfo, sDriverInfo.mChannelInfo = nullptr;
 
-	if(sDriverInfo.mBufferList)
-		free(sDriverInfo.mBufferList), sDriverInfo.mBufferList = nullptr;
-
-	sDriverInfo = {{0}};
+	sDriverInfo.mBufferList.Deallocate();
 
 	return true;
 }
@@ -586,6 +584,7 @@ bool SFB::Audio::ASIOOutput::_IsRunning() const
 
 bool SFB::Audio::ASIOOutput::_Reset()
 {
+#if 0
 	if(_IsRunning() && !_Stop())
 		return false;
 
@@ -600,8 +599,13 @@ bool SFB::Audio::ASIOOutput::_Reset()
 
 	if(ASE_OK == sASIO->outputReady())
 		sDriverInfo.mPostOutput = true;
-	
+#endif
 	return true;
+}
+
+bool SFB::Audio::ASIOOutput::_SupportsFormat(const AudioFormat& format) const
+{
+	return format.IsPCM() || format.IsDSD();
 }
 
 bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
@@ -628,8 +632,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 	if(sDriverInfo.mChannelInfo)
 		delete [] sDriverInfo.mChannelInfo, sDriverInfo.mChannelInfo = nullptr;
 
-	if(sDriverInfo.mBufferList)
-		free(sDriverInfo.mBufferList), sDriverInfo.mBufferList = nullptr;
+	sDriverInfo.mBufferList.Deallocate();
 
 	// Configure the ASIO driver with the decoder's format
 	ASIOIoFormat asioFormat = {
@@ -675,6 +678,18 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 //		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "No available output channels");
 //		return false;
 //	}
+
+	// FIXME: Is there a way to dynamically query the channel layout?
+	switch(sDriverInfo.mOutputChannelCount) {
+			// exaSound's ASIO drivers support stereo and 8 channel
+		case 2:		mDriverChannelLayout = ChannelLayout::Stereo;														break;
+//		case 8:		mDriverChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_7_1_A);		break;
+
+		default:
+			LOGGER_INFO("org.sbooth.AudioEngine.Output.ASIO", "Unknown driver channel layout");
+			mDriverChannelLayout = nullptr;
+			break;
+	}
 
 	// Get the preferred buffer size
 	result = sASIO->getBufferSize(&sDriverInfo.mMinimumBufferSize, &sDriverInfo.mMaximumBufferSize, &sDriverInfo.mPreferredBufferSize, &sDriverInfo.mBufferGranularity);
@@ -722,11 +737,6 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 		}
 	}
 
-	// Allocate a shell ABL to point to the ASIO buffers
-	sDriverInfo.mBufferList = (AudioBufferList *)malloc(offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * (size_t)sDriverInfo.mOutputBufferCount));
-	sDriverInfo.mBufferList->mNumberBuffers = (UInt32)sDriverInfo.mOutputBufferCount;
-
-
 	// Get input and output latencies
 	if(ASE_OK == result) {
 		// Latencies often are only valid after ASIOCreateBuffers()
@@ -744,7 +754,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 		if(!sDriverInfo.mChannelInfo[i].isInput) {
 			AudioFormat format = AudioFormatForASIOSampleType(sDriverInfo.mChannelInfo[i].type);
 			format.mSampleRate = sDriverInfo.mSampleRate;
-			format.mChannelsPerFrame = (UInt32)sDriverInfo.mOutputBufferCount;
+			format.mChannelsPerFrame = decoderFormat.mChannelsPerFrame;
 
 			mFormat = format;
 
@@ -752,13 +762,17 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 		}
 	}
 
-	// Attempt to set the output audio unit's channel map
-	const ChannelLayout& decoderChannelLayout = decoder.GetChannelLayout();
-//	if(!SetOutputUnitChannelMap(channelLayout))
-//		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to set output unit channel map");
+	sDriverInfo.mBufferList.Allocate(mFormat, (UInt32)sDriverInfo.mPreferredBufferSize);
 
-	// The decoder's channel layout becomes our channel layout
-	mChannelLayout = decoderChannelLayout;
+	// Set up the channel map
+	mChannelLayout = decoder.GetChannelLayout();
+	if(!mChannelLayout.MapToLayout(mDriverChannelLayout, mChannelMap))
+		mChannelMap.clear();
+
+	LOGGER_DEBUG("fnord", "CHANNEL MAP: ");
+	for(auto i : mChannelMap) {
+		LOGGER_DEBUG("fnord", " " << i);
+	}
 
 	// Ensure the ring buffer is large enough
 	if(8 * sDriverInfo.mPreferredBufferSize > mPlayer->GetRingBufferCapacity())
@@ -860,20 +874,27 @@ long SFB::Audio::ASIOOutput::HandleASIOMessage(long selector, long value, void *
 
 void SFB::Audio::ASIOOutput::FillASIOBuffer(long doubleBufferIndex)
 {
-	UInt32 frameCount = (UInt32)sDriverInfo.mPreferredBufferSize;
+	// Get audio from the player
+	sDriverInfo.mBufferList.Reset();
+	mPlayer->ProvideAudio(sDriverInfo.mBufferList, sDriverInfo.mBufferList.GetCapacityFrames());
 
-	// Point the shell ABL at the correct double buffer
+	// Copy the audio, channel mapping as required
 	for(long bufferIndex = 0, ablIndex = 0; bufferIndex < sDriverInfo.mInputBufferCount + sDriverInfo.mOutputBufferCount; ++bufferIndex) {
 		if(!sDriverInfo.mBufferInfo[bufferIndex].isInput) {
-			sDriverInfo.mBufferList->mBuffers[ablIndex].mData = sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex];
-			sDriverInfo.mBufferList->mBuffers[ablIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(frameCount);
-			sDriverInfo.mBufferList->mBuffers[ablIndex].mNumberChannels = 1;
+			auto bufIndex = -1;
+			if(!mChannelMap.empty())
+				bufIndex = mChannelMap[(std::vector<SInt32>::size_type)ablIndex];
+			else if(ablIndex < sDriverInfo.mBufferList->mNumberBuffers)
+				bufIndex = (SInt32)ablIndex;
+
+			if(-1 != bufIndex) {
+				const AudioBuffer buf = sDriverInfo.mBufferList->mBuffers[bufIndex];
+				memcpy(sDriverInfo.mBufferInfo[bufferIndex].buffers[doubleBufferIndex], buf.mData, buf.mDataByteSize);
+			}
+
 			++ablIndex;
 		}
 	}
-
-	// Get audio from the player
-	mPlayer->ProvideAudio(sDriverInfo.mBufferList, frameCount);
 
 	// If the driver supports the ASIOOutputReady() optimization, do it here, all data are in place
 	if(sDriverInfo.mPostOutput)

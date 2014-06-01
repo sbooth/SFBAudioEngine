@@ -130,6 +130,8 @@ namespace SFB {
 			/*! @brief Get the channel layout used by this output*/
 			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
+			bool SupportsFormat(const AudioFormat& format) const;
+
 			//@}
 
 		protected:
@@ -207,6 +209,8 @@ namespace SFB {
 			virtual bool _Reset() = 0;
 
 			virtual bool _SetupForDecoder(const Decoder& decoder) = 0;
+
+			virtual bool _SupportsFormat(const AudioFormat& format) const = 0;
 
 			// ========================================
 			// Optional methods

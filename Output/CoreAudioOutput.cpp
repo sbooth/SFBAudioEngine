@@ -810,6 +810,191 @@ bool SFB::Audio::CoreAudioOutput::SetDeviceID(AudioDeviceID deviceID)
 	return true;
 }
 
+#pragma mark Stream Management
+
+bool SFB::Audio::CoreAudioOutput::GetOutputStreams(std::vector<AudioStreamID>& streams) const
+{
+	streams.clear();
+
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyStreams,
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(deviceID,
+													 &propertyAddress,
+													 0,
+													 nullptr,
+													 &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreams) failed: " << result);
+		return false;
+	}
+
+	auto streamCount = dataSize / sizeof(AudioStreamID);
+	AudioStreamID audioStreamIDs [streamCount];
+
+	result = AudioObjectGetPropertyData(deviceID,
+										&propertyAddress,
+										0,
+										nullptr,
+										&dataSize,
+										audioStreamIDs);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyStreams) failed: " << result);
+		return false;
+	}
+
+	streams.reserve(streamCount);
+	streams.assign(audioStreamIDs, audioStreamIDs + streamCount);
+
+	return true;
+}
+
+//bool SFB::Audio::CoreAudioOutput::GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const
+//{
+//	std::vector<AudioStreamID> streams;
+//	if(!GetOutputStreams(streams))
+//		return false;
+//
+//	if(std::end(streams) == std::find(std::begin(streams), std::end(streams), streamID)) {
+//		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "Unknown AudioStreamID: " << std::hex << streamID);
+//		return false;
+//	}
+//
+//	AudioObjectPropertyAddress propertyAddress = {
+//		.mSelector	= kAudioStreamPropertyVirtualFormat,
+//		.mScope		= kAudioObjectPropertyScopeGlobal,
+//		.mElement	= kAudioObjectPropertyElementMaster
+//	};
+//
+//	UInt32 dataSize = sizeof(virtualFormat);
+//
+//	OSStatus result = AudioObjectGetPropertyData(streamID,
+//												 &propertyAddress,
+//												 0,
+//												 nullptr,
+//												 &dataSize,
+//												 &virtualFormat);
+//
+//	if(kAudioHardwareNoError != result) {
+//		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
+//		return false;
+//	}
+//
+//	return true;
+//}
+//
+//bool SFB::Audio::CoreAudioOutput::SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat)
+//{
+//	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting stream 0x" << std::hex << streamID << " virtual format to: " << virtualFormat);
+//
+//	std::vector<AudioStreamID> streams;
+//	if(!GetOutputStreams(streams))
+//		return false;
+//
+//	if(std::end(streams) == std::find(std::begin(streams), std::end(streams), streamID)) {
+//		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "Unknown AudioStreamID: " << std::hex << streamID);
+//		return false;
+//	}
+//
+//	AudioObjectPropertyAddress propertyAddress = {
+//		.mSelector	= kAudioStreamPropertyVirtualFormat,
+//		.mScope		= kAudioObjectPropertyScopeGlobal,
+//		.mElement	= kAudioObjectPropertyElementMaster
+//	};
+//
+//	OSStatus result = AudioObjectSetPropertyData(streamID,
+//												 &propertyAddress,
+//												 0,
+//												 nullptr,
+//												 sizeof(virtualFormat),
+//												 &virtualFormat);
+//
+//	if(kAudioHardwareNoError != result) {
+//		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioStreamPropertyVirtualFormat) failed: " << result);
+//		return false;
+//	}
+//
+//	return true;
+//}
+
+bool SFB::Audio::CoreAudioOutput::GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const
+{
+	std::vector<AudioStreamID> streams;
+	if(!GetOutputStreams(streams))
+		return false;
+
+	if(std::end(streams) == std::find(std::begin(streams), std::end(streams), streamID)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "Unknown AudioStreamID: " << std::hex << streamID);
+		return false;
+	}
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioStreamPropertyPhysicalFormat,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = sizeof(physicalFormat);
+
+	OSStatus result = AudioObjectGetPropertyData(streamID,
+												 &propertyAddress,
+												 0,
+												 nullptr,
+												 &dataSize,
+												 &physicalFormat);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat)
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting stream 0x" << std::hex << streamID << " physical format to: " << physicalFormat);
+
+	std::vector<AudioStreamID> streams;
+	if(!GetOutputStreams(streams))
+		return false;
+
+	if(std::end(streams) == std::find(std::begin(streams), std::end(streams), streamID)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "Unknown AudioStreamID: " << std::hex << streamID);
+		return false;
+	}
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioStreamPropertyPhysicalFormat,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	OSStatus result = AudioObjectSetPropertyData(streamID,
+												 &propertyAddress,
+												 0,
+												 nullptr,
+												 sizeof(physicalFormat),
+												 &physicalFormat);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
 #endif
 
 #pragma mark Device Management
@@ -1179,9 +1364,6 @@ bool SFB::Audio::CoreAudioOutput::_IsRunning() const
 
 bool SFB::Audio::CoreAudioOutput::_Reset()
 {
-	if(_IsRunning() && !_Stop())
-		return false;
-
 	UInt32 nodeCount = 0;
 	auto result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
 	if(noErr != result) {
@@ -1212,6 +1394,11 @@ bool SFB::Audio::CoreAudioOutput::_Reset()
 	}
 
 	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::_SupportsFormat(const AudioFormat& format) const
+{
+	return format.IsPCM();
 }
 
 bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)

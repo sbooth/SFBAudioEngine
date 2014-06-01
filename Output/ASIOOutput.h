@@ -91,6 +91,8 @@ namespace SFB {
 
 			virtual bool _Reset();
 
+			virtual bool _SupportsFormat(const AudioFormat& format) const;
+
 			virtual bool _SetupForDecoder(const Decoder& decoder);
 
 			virtual bool _CreateDeviceUID(CFStringRef& deviceUID) const;
@@ -107,6 +109,10 @@ namespace SFB {
 			dispatch_source_t						mEventQueueTimer;		/*!< ASIO event queue timer */
 
 			dispatch_block_t						mStateChangedBlock;		/*!< Block called when running state changes */
+
+//			AudioFormat								mDriverFormat;			/*!< Audio format for ASIO driver transactions */
+			ChannelLayout							mDriverChannelLayout;	/*!< Channel layout for ASIO driver transactions */
+			std::vector<SInt32>						mChannelMap;			/*!< The channel map */
 
 		public:
 

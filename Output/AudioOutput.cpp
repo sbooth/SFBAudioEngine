@@ -37,6 +37,12 @@ SFB::Audio::Output::Output()
 
 #pragma mark -
 
+bool SFB::Audio::Output::SupportsFormat(const AudioFormat& format) const
+{
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Supports format: " << format);
+	return _SupportsFormat(format);
+}
+
 bool SFB::Audio::Output::Open()
 {
 	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Opening output");

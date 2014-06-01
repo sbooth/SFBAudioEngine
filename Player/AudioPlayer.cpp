@@ -40,6 +40,7 @@
 #include "AudioPlayer.h"
 #include "CoreAudioOutput.h"
 #include "AudioBufferList.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 // ========================================
@@ -220,7 +221,7 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mFormatMismatchBlock(nullptr), mOutput(new CoreAudioOutput)
+	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mDecoderErrorBlock(nullptr), mFormatMismatchBlock(nullptr), mErrorBlock(nullptr), mOutput(new CoreAudioOutput)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -322,6 +323,9 @@ SFB::Audio::Player::~Player()
 	if(mDecoderEventBlocks[3])
 		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
 
+	if(mDecoderErrorBlock)
+		Block_release(mDecoderErrorBlock), mDecoderErrorBlock = nullptr;
+
 	if(mRenderEventBlocks[0])
 		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
 	if(mRenderEventBlocks[1])
@@ -329,6 +333,9 @@ SFB::Audio::Player::~Player()
 
 	if(mFormatMismatchBlock)
 		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
+
+	if(mErrorBlock)
+		Block_release(mErrorBlock), mErrorBlock = nullptr;
 }
 
 #pragma mark Playback Control
@@ -452,6 +459,14 @@ void SFB::Audio::Player::SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock 
 		mDecoderEventBlocks[3] = Block_copy(block);
 }
 
+void SFB::Audio::Player::SetOpenDecoderErrorBlock(AudioPlayerDecoderErrorBlock block)
+{
+	if(mDecoderErrorBlock)
+		Block_release(mDecoderErrorBlock), mDecoderErrorBlock = nullptr;
+	if(block)
+		mDecoderErrorBlock = Block_copy(block);
+}
+
 void SFB::Audio::Player::SetPreRenderBlock(AudioPlayerRenderEventBlock block)
 {
 	if(mRenderEventBlocks[0])
@@ -474,6 +489,14 @@ void SFB::Audio::Player::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock b
 		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
 	if(block)
 		mFormatMismatchBlock = Block_copy(block);
+}
+
+void SFB::Audio::Player::SetUnsupportedFormatBlock(AudioPlayerErrorBlock block)
+{
+	if(mErrorBlock)
+		Block_release(mErrorBlock), mErrorBlock = nullptr;
+	if(block)
+		mErrorBlock = Block_copy(block);
 }
 
 #pragma mark Playback Properties
@@ -1005,19 +1028,35 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			if(decoder && !decoder->IsOpen()) {
 				CFErrorRef error = nullptr;
 				if(!decoder->Open(&error))  {
+					if(mDecoderErrorBlock)
+						mDecoderErrorBlock(*decoder, error);
+
 					if(error) {
 						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 						CFRelease(error), error = nullptr;
 					}
-
-					// TODO: Perform CouldNotOpenDecoder() callback ??
 				}
 			}
 
 			// Create the decoder state
 			if(decoder) {
-				decoderState = new DecoderStateData(std::move(decoder));
-				decoderState->mTimeStamp = decoderCounter++;
+				if(mOutput->SupportsFormat(decoder->GetFormat())) {
+					decoderState = new DecoderStateData(std::move(decoder));
+					decoderState->mTimeStamp = decoderCounter++;
+				}
+				else {
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder->GetFormat());
+
+					if(mErrorBlock) {
+						SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported by the selected output device."), "");
+						SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Format not supported"), "");
+						SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), "");
+
+						SFB::CFError error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, decoder->GetInputSource().GetURL(), failureReason, recoverySuggestion);
+
+						mErrorBlock(error);
+					}
+				}
 			}
 		}
 
@@ -1043,7 +1082,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				formatsMatch = false;
 			}
 
-			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output AU will remain valid)
+			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output will remain valid)
 			if(nextChannelLayout != mOutput->GetChannelLayout()) {
 				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel layout (" << mOutput->GetChannelLayout() << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 				formatsMatch = false;
@@ -1125,6 +1164,23 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					
 					continue;
 				}
+
+				// Handle channel mapping
+//				auto& decoderChannelLayout = decoderState->mDecoder->GetChannelLayout();
+//				if(decoderChannelLayout) {
+//					auto decoderACL = decoderChannelLayout.GetACL();
+//					result = AudioConverterSetProperty(audioConverter, kAudioConverterInputChannelLayout, sizeof(*decoderACL), decoderACL);
+//					if(noErr != result)
+//						LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterSetProperty (kAudioConverterInputChannelLayout) failed: " << result);
+//				}
+//
+//				auto& outputChannelLayout = mOutput->GetChannelLayout();
+//				if(outputChannelLayout) {
+//					auto outputACL = outputChannelLayout.GetACL();
+//					result = AudioConverterSetProperty(audioConverter, kAudioConverterOutputChannelLayout, sizeof(*outputACL), outputACL);
+//					if(noErr != result)
+//						LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterSetProperty (kAudioConverterOutputChannelLayout) failed: " << result);
+//				}
 
 				// ========================================
 				// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
@@ -1236,8 +1292,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 										LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
 								}
 
-								// Reset the ring buffer
+								// Reset the ring buffer and output
 								mRingBuffer->Reset();
+								mOutput->Reset();
 							}
 
 							// Clear the mute flag

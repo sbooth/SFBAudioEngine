@@ -296,7 +296,22 @@ namespace SFB {
 			bool SetDeviceID(AudioDeviceID deviceID);
 			
 			//@}
-			
+
+
+			// ========================================
+			/*! Stream Management */
+			//@{
+
+			bool GetOutputStreams(std::vector<AudioStreamID>& streams) const;
+
+//			bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const;
+//			bool SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat);
+
+			bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const;
+			bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
+
+			//@}
+
 #endif
 
 		private:
@@ -312,6 +327,8 @@ namespace SFB {
 			virtual bool _IsRunning() const;
 
 			virtual bool _Reset();
+
+			virtual bool _SupportsFormat(const AudioFormat& format) const;
 
 			virtual bool _SetupForDecoder(const Decoder& decoder);
 
