@@ -162,6 +162,49 @@ SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const AudioChann
 	return *this;
 }
 
+size_t SFB::Audio::ChannelLayout::ChannelCount() const
+{
+	if(!mChannelLayout)
+		return 0;
+
+	const AudioChannelLayout *layout = GetACL();
+
+	UInt32 channelCount = 0;
+	UInt32 propertySize = sizeof(channelCount);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, sizeof(layout), (void *)layout, &propertySize, &channelCount);
+
+	if(noErr != result)
+		return 0;
+	//LOGGER_ERR("org.sbooth.AudioEngine.ChannelLayout", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
+
+	return channelCount;
+}
+
+bool SFB::Audio::ChannelLayout::MapToLayout(const ChannelLayout& outputLayout, std::vector<SInt32>& channelMap) const
+{
+	// No valid map exists for empty/unknown layouts
+	if(!mChannelLayout || !outputLayout.mChannelLayout)
+		return false;
+
+	const AudioChannelLayout *layouts [] = {
+		GetACL(),
+		outputLayout.GetACL()
+	};
+
+	SInt32 rawChannelMap [outputLayout.ChannelCount()];
+	UInt32 propertySize = sizeof(rawChannelMap);
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(layouts), (void *)layouts, &propertySize, &rawChannelMap);
+
+	if(noErr != result)
+		return false;
+	//LOGGER_ERR("org.sbooth.AudioEngine.ChannelLayout", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+
+	auto start = (SInt32 *)rawChannelMap;
+	channelMap.assign(start, start + outputLayout.ChannelCount());
+
+	return true;
+}
+
 bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
 {
 	// Two empty channel layouts are considered equivalent
