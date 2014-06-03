@@ -31,7 +31,6 @@
 #include <algorithm>
 
 #include "LoopableRegionDecoder.h"
-#include "AudioDecoder.h"
 #include "Logger.h"
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame)
