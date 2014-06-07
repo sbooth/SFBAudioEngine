@@ -672,7 +672,7 @@ bool SFB::Audio::Player::Play(CFURLRef url)
 	if(nullptr == url)
 		return false;
 
-	auto decoder = Decoder::CreateDecoderForURL(url);
+	auto decoder = Decoder::CreateForURL(url);
 	return Play(decoder);
 }
 
@@ -703,7 +703,7 @@ bool SFB::Audio::Player::Enqueue(CFURLRef url)
 	if(nullptr == url)
 		return false;
 
-	auto decoder = Decoder::CreateDecoderForURL(url);
+	auto decoder = Decoder::CreateForURL(url);
 	return Enqueue(decoder);
 }
 

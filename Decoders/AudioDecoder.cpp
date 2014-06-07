@@ -99,22 +99,22 @@ bool SFB::Audio::Decoder::HandlesMIMEType(CFStringRef mimeType)
 	return false;
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForURL(CFURLRef url, CFErrorRef *error)
 {
-	return CreateDecoderForURL(url, nullptr, error);
+	return CreateForURL(url, nullptr, error);
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
 {
-	return CreateDecoderForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), mimeType, error);
+	return CreateForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), mimeType, error);
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
 {
-	return CreateDecoderForInputSource(std::move(inputSource), nullptr, error);
+	return CreateForInputSource(std::move(inputSource), nullptr, error);
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFStringRef mimeType, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFStringRef mimeType, CFErrorRef *error)
 {
 	if(!inputSource)
 		return nullptr;
@@ -197,69 +197,6 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSource
 	}
 
 	return nullptr;
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
-{
-	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
-{
-	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
-{
-	return CreateDecoderForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, repeatCount, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error)
-{
-	if(!inputSource)
-		return nullptr;
-
-	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
-{
-	if(!inputSource)
-		return nullptr;
-
-	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
-{
-	if(!inputSource)
-		return nullptr;
-
-	return CreateDecoderForDecoderRegion(CreateDecoderForInputSource(std::move(inputSource), error), startingFrame, frameCount, repeatCount, error);
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, CFErrorRef */*error*/)
-{
-	if(!decoder)
-		return nullptr;
-	
-	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame));
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef */*error*/)
-{
-	if(!decoder)
-		return nullptr;
-
-	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount));
-}
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateDecoderForDecoderRegion(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *)
-{
-	if(!decoder)
-		return nullptr;
-
-	return unique_ptr(new LoopableRegionDecoder(std::move(decoder), startingFrame, frameCount, repeatCount));
 }
 
 #pragma mark Creation and Destruction

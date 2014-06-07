@@ -751,6 +751,3 @@ namespace SFB {
 		
 	}
 }
-
-/*! @brief Compatibility typedef */
-typedef SFB::Audio::Metadata AudioMetadata __attribute__((deprecated));

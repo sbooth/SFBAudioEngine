@@ -282,6 +282,3 @@ namespace SFB {
 	};
 
 }
-
-/*! @brief Compatibility typedef */
-typedef SFB::InputSource InputSource __attribute__((deprecated));
