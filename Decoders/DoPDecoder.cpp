@@ -34,6 +34,29 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
+#pragma mark Factory Methods
+
+SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForURL(CFURLRef url, CFErrorRef *error)
+{
+	return CreateForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), error);
+}
+
+SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
+{
+	if(!inputSource)
+		return nullptr;
+
+	return CreateForDecoder(Decoder::CreateForInputSource(std::move(inputSource), error), error);
+}
+
+SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForDecoder(unique_ptr decoder, CFErrorRef *error)
+{
+	if(!decoder)
+		return nullptr;
+
+	return unique_ptr(new DoPDecoder(std::move(decoder)));
+}
+
 SFB::Audio::DoPDecoder::DoPDecoder(Decoder::unique_ptr decoder)
 	: mDecoder(std::move(decoder)), mMarkerFlag(false)
 {

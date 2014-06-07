@@ -33,23 +33,77 @@
 #include "AudioDecoder.h"
 #include "AudioBufferList.h"
 
+/*! @file DoPDecoder.h @brief Support for DoP decoding */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
+	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		// ========================================
-		// A wrapper around a Decoder supporting DoP (DSD over PCM)
-		//  See http://dsd-guide.com/sites/default/files/white-papers/DoP_openStandard_1v1.pdf
-		// ========================================
+		/*!
+		 * @brief A wrapper around a Decoder supporting DoP (DSD over PCM)
+		 * See http://dsd-guide.com/sites/default/files/white-papers/DoP_openStandard_1v1.pdf
+		 */
 		class DoPDecoder : public Decoder
 		{
 
 		public:
 
+			// ========================================
+			/*! @name Factory Methods */
+			//@{
+
+			/*!
+			 * @brief Create a \c DoPDecoder object for the specified URL
+			 * @param url The URL
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c DoPDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForURL(CFURLRef url, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c DoPDecoder object for the specified \c InputSource
+			 * @param inputSource The input source
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c DoPDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c DoPDecoder object for the specified \c Decoder
+			 * @param decoder The decoder
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c DoPDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForDecoder(unique_ptr decoder, CFErrorRef *error = nullptr);
+			
+			//@}
+
+
+			// ========================================
+			/*! @name Creation and Destruction */
+			//@{
+
+			/*! @brief Destroy this \c DoPDecoder */
+			virtual ~DoPDecoder() = default;
+
+			/*! @cond */
+
+			/*! @internal This class is non-copyable */
+			DoPDecoder(const DoPDecoder& rhs) = delete;
+
+			/*! @internal This class is non-assignable */
+			DoPDecoder& operator=(const DoPDecoder& rhs) = delete;
+
+			/*! @endcond */
+			//@}
+
+			
+		private:
+
 			DoPDecoder() = delete;
 			DoPDecoder(Decoder::unique_ptr decoder);
-
-		private:
 
 			// Source access
 			inline virtual CFURLRef _GetURL() const					{ return mDecoder->GetURL(); }
