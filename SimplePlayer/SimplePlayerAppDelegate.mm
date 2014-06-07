@@ -31,7 +31,7 @@
 - (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
 #pragma unused(theApplication)
-	NSArray *supportedTypes = (__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions();
+	NSArray *supportedTypes = (__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions();
 	if(![supportedTypes containsObject:[filename pathExtension]])
 		return NO;
 	
@@ -45,7 +45,7 @@
 	
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
-	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions()];
+	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions()];
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
 		NSArray *URLs = [openPanel URLs];
@@ -66,7 +66,7 @@
 
 	[openPanel setAllowsMultipleSelection:YES];
 	[openPanel setCanChooseDirectories:NO];
-	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)AudioDecoder::CreateSupportedFileExtensions()];
+	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions()];
 
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
 		for(NSURL *url in [openPanel URLs])
