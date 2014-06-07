@@ -44,10 +44,9 @@ namespace SFB {
 		class DoPDecoder : public Decoder
 		{
 
-			friend class Decoder;
+		public:
 
-		protected:
-
+			DoPDecoder() = delete;
 			DoPDecoder(Decoder::unique_ptr decoder);
 
 		private:
@@ -78,6 +77,7 @@ namespace SFB {
 			// Data members
 			Decoder::unique_ptr		mDecoder;
 			BufferList				mBufferList;
+			bool					mMarkerFlag;
 		};
 		
 	}

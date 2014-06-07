@@ -31,11 +31,11 @@
 #include <algorithm>
 
 #include "DoPDecoder.h"
-//#include "CFErrorUtilities.h"
+#include "CFErrorUtilities.h"
 #include "Logger.h"
 
 SFB::Audio::DoPDecoder::DoPDecoder(Decoder::unique_ptr decoder)
-	: mDecoder(std::move(decoder))
+	: mDecoder(std::move(decoder)), mMarkerFlag(false)
 {
 	assert(nullptr != mDecoder);
 }
@@ -47,11 +47,29 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 
 	const auto& decoderFormat = mDecoder->GetFormat();
 
-	if(!decoderFormat.IsDSD())
+	if(!decoderFormat.IsDSD()) {
+		if(error) {
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSD file."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a DSD file"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
+		}
+		
 		return false;
+	}
 
 	if(28224000 != decoderFormat.mSampleRate) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
+
+		if(error) {
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unsupported DSD sample rate"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD over PCM."), "");
+
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
+		}
+
 		return false;
 	}
 
@@ -106,15 +124,26 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 		bufferList->mBuffers[i].mDataByteSize = 0;
 
 	for(;;) {
-		// Grab the DSD frames
+		// Grab the DSD audio
 		UInt32 framesDecoded = mDecoder->ReadAudio(mBufferList, std::min(mBufferList.GetCapacityFrames(), frameCount - framesRead));
 		if(0 == framesDecoded)
 			break;
 
-		// Convert to DOP
+		// Convert to DoP
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 			const unsigned char *src = (const unsigned char *)mBufferList->mBuffers[i].mData;
 			unsigned char *dst = (unsigned char *)bufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize;
+
+			for(UInt32 j = 0; j < framesDecoded; ++j) {
+				// Insert the DSD marker
+				*dst++ = mMarkerFlag ? 0xfa : 0x05;
+
+				// Copy the DSD bits
+				*dst++ = *src++;
+				*dst++ = *src++;
+
+				mMarkerFlag = !mMarkerFlag;
+			}
 
 			bufferList->mBuffers[i].mDataByteSize += mFormat.FrameCountToByteCount(framesDecoded);
 		}
@@ -123,42 +152,6 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 
 		// All requested frames were read
 		if(framesRead == frameCount)
-			break;
-
-		UInt32	framesConverted	= (UInt32)(mFormat.ByteCountToFrameCount(bufferList->mBuffers[0].mDataByteSize));
-	}
-
-	for(;;) {
-		UInt32	framesRemaining	= frameCount - framesRead;
-		UInt32	framesToSkip	= (UInt32)(mFormat.ByteCountToFrameCount(bufferList->mBuffers[0].mDataByteSize));
-
-		UInt32	framesInBuffer	= (UInt32)(mBufferList.GetFormat().ByteCountToFrameCount(mBufferList->mBuffers[0].mDataByteSize));
-		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
-
-		// Copy data from the buffer to output
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			unsigned char *pullBuffer = (unsigned char *)bufferList->mBuffers[i].mData;
-			memcpy(pullBuffer + (framesToSkip * mFormat.mBytesPerFrame), mBufferList->mBuffers[i].mData, framesToCopy * mFormat.mBytesPerFrame);
-			bufferList->mBuffers[i].mDataByteSize += framesToCopy * mFormat.mBytesPerFrame;
-
-			// Move remaining data in buffer to beginning
-			if(framesToCopy != framesInBuffer) {
-				pullBuffer = (unsigned char *)mBufferList->mBuffers[i].mData;
-				memmove(pullBuffer, pullBuffer + (framesToCopy * mFormat.mBytesPerFrame), (framesInBuffer - framesToCopy) * mFormat.mBytesPerFrame);
-			}
-
-			mBufferList->mBuffers[i].mDataByteSize -= (UInt32)(framesToCopy * mFormat.mBytesPerFrame);
-		}
-
-		framesRead += framesToCopy;
-
-		// All requested frames were read
-		if(framesRead == frameCount)
-			break;
-
-		// Grab the next DSD frames
-		UInt32 framesDecoded = mDecoder->ReadAudio(mBufferList, mBufferList.GetCapacityFrames());
-		if(0 == framesDecoded)
 			break;
 	}
 
