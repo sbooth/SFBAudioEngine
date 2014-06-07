@@ -42,10 +42,8 @@ namespace SFB {
 		class LoopableRegionDecoder : public Decoder
 		{
 
-			friend class Decoder;
-
-		protected:
-
+		public:
+			LoopableRegionDecoder() = delete;
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame);
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount);
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
