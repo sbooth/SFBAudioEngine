@@ -92,7 +92,7 @@ namespace SFB {
 
 			/*!
 			 * @brief Reset the \c BufferList to the default state in preparation for reading
-			 * This will set the \c mDataByteSize of each \c AudioBuffer to GetCapacityFrames() * GetBytesPerFrame()
+			 * This will set the \c mDataByteSize of each \c AudioBuffer to GetFormat().FrameCountToByteCount(GetCapacityFrames())
 			 */
 			bool Reset();
 
