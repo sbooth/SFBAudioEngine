@@ -94,7 +94,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::OggSpeexMetadata::CreateMetadata(CF
 #pragma mark Creation and Destruction
 
 SFB::Audio::OggSpeexMetadata::OggSpeexMetadata(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

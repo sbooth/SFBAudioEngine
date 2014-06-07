@@ -96,7 +96,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::OggVorbisMetadata::CreateMetadata(C
 #pragma mark Creation and Destruction
 
 SFB::Audio::OggVorbisMetadata::OggVorbisMetadata(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

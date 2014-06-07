@@ -97,7 +97,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Musepack::CreateMetadata(CFURLRef u
 #pragma mark Creation and Destruction
 
 SFB::Audio::Musepack::Musepack(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

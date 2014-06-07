@@ -98,7 +98,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::WavPack::CreateMetadata(CFURLRef ur
 #pragma mark Creation and Destruction
 
 SFB::Audio::WavPack::WavPack(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

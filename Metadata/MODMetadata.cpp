@@ -111,7 +111,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::MODMetadata::CreateMetadata(CFURLRe
 #pragma mark Creation and Destruction
 
 SFB::Audio::MODMetadata::MODMetadata(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

@@ -97,7 +97,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::AIFFMetadata::CreateMetadata(CFURLR
 #pragma mark Creation and Destruction
 
 SFB::Audio::AIFFMetadata::AIFFMetadata(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality
