@@ -229,7 +229,7 @@ bool SFB::Audio::CoreAudioOutput::SetSampleRateConverterComplexity(UInt32 comple
 
 #pragma mark DSP Effects
 
-inline bool SFB::Audio::CoreAudioOutput::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit)
+bool SFB::Audio::CoreAudioOutput::AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit)
 {
     return AddEffect(kAudioUnitType_Effect, subType, manufacturer, flags, mask, effectUnit);
 }
