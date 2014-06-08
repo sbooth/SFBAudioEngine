@@ -1012,7 +1012,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		{
 			// ========================================
 			// Lock the queue and remove the head element that contains the next decoder to use
-			std::unique_ptr<Decoder> decoder;
+			Decoder::unique_ptr decoder;
 			{
 				std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
 
