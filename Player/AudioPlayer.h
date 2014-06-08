@@ -304,8 +304,8 @@ namespace SFB {
 
 			/*!
 			 * @brief Set the block to be invoked when a \c Decoder with an unsupported format
-			 * @note The block is invoked from the decoding thread after the last audio frame has been decoded
-			 * @param block The block to invoke when decoding finishes
+			 * @note The block is invoked from the decoding thread
+			 * @param block The block to invoke when an error occurs
 			 */
 			void SetUnsupportedFormatBlock(AudioPlayerErrorBlock block);
 

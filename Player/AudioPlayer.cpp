@@ -1161,7 +1161,10 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 					// If this happens, output will be impossible
 					mCollectorSemaphore.Signal();
-					
+
+					if(mErrorBlock)
+						mErrorBlock(nullptr);
+
 					continue;
 				}
 
