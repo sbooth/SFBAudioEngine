@@ -82,7 +82,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(28224000 != decoderFormat.mSampleRate) {
+	if(2822400 != decoderFormat.mSampleRate) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
 
 		if(error) {
@@ -98,7 +98,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 
 	mBufferList.Allocate(decoderFormat, 1024);
 
-	// Generate interleaved 24 bit output
+	// Generate non-interleaved 24 bit output
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
 
@@ -106,7 +106,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	mFormat.mChannelsPerFrame	= decoderFormat.mChannelsPerFrame;
 	mFormat.mBitsPerChannel		= 24;
 
-	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
+	mFormat.mBytesPerPacket		= mFormat.mBitsPerChannel / 8;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
