@@ -214,13 +214,13 @@ namespace SFB {
 
 			// ========================================
 			// Optional methods
-			virtual bool _CreateDeviceUID(CFStringRef& deviceUID) const		{ return false; }
-			virtual bool _SetDeviceUID(CFStringRef deviceUID)				{ return false; }
+			virtual bool _CreateDeviceUID(CFStringRef& /*deviceUID*/) const		{ return false; }
+			virtual bool _SetDeviceUID(CFStringRef /*deviceUID*/)				{ return false; }
 
-			virtual bool _GetDeviceSampleRate(Float64& sampleRate) const	{ return false; }
-			virtual bool _SetDeviceSampleRate(Float64 sampleRate)			{ return false; }
+			virtual bool _GetDeviceSampleRate(Float64& /*sampleRate*/) const	{ return false; }
+			virtual bool _SetDeviceSampleRate(Float64 /*sampleRate*/)			{ return false; }
 
-			virtual size_t _GetPreferredBufferSize() const					{ return 0; }
+			virtual size_t _GetPreferredBufferSize() const						{ return 0; }
 		};
 	}
 }

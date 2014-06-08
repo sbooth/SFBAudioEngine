@@ -273,7 +273,7 @@ namespace SFB {
 
 		// Optional seeking support
 		virtual bool _SupportsSeeking() const					{ return false; }
-		virtual bool _SeekToOffset(SInt64 offset)				{ return false; }
+		virtual bool _SeekToOffset(SInt64 /*offset*/)			{ return false; }
 
 		// Data members
 		SFB::CFURL mURL;	/*!< @brief The location of the bytes to be read */

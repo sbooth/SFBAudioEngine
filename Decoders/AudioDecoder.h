@@ -341,7 +341,7 @@ namespace SFB {
 
 			// Optional seeking support
 			virtual bool _SupportsSeeking() const						{ return false; }
-			virtual SInt64 _SeekToFrame(SInt64 frame)					{ return -1; }
+			virtual SInt64 _SeekToFrame(SInt64 /*frame*/)				{ return -1; }
 
 			// Data members
 			void							*mRepresentedObject;
