@@ -54,22 +54,7 @@ namespace {
 
 SFB::Audio::CoreAudioOutput::CoreAudioOutput()
 	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0)
-{
-	// ========================================
-	// The AUGraph will always receive audio in the canonical Core Audio format
-	mFormat.mFormatID				= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags			= kAudioFormatFlagsAudioUnitCanonical;
-
-	mFormat.mSampleRate				= 0;
-	mFormat.mChannelsPerFrame		= 0;
-	mFormat.mBitsPerChannel			= 8 * sizeof(AudioUnitSampleType);
-
-	mFormat.mBytesPerPacket			= (mFormat.mBitsPerChannel / 8);
-	mFormat.mFramesPerPacket		= 1;
-	mFormat.mBytesPerFrame			= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-
-	mFormat.mReserved				= 0;
-}
+{}
 
 SFB::Audio::CoreAudioOutput::~CoreAudioOutput()
 {}
@@ -1263,7 +1248,33 @@ bool SFB::Audio::CoreAudioOutput::_Open()
 		mAUGraph = nullptr;
 		return false;
 	}
-	
+
+	// Store the graph's format
+	result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+
+	UInt32 propertySize = sizeof(mFormat);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &mFormat, &propertySize);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input) failed: " << result);
+
+		result = DisposeAUGraph(mAUGraph);
+		if(noErr != result)
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "DisposeAUGraph failed: " << result);
+
+		mAUGraph = nullptr;
+		return false;
+	}
+
 	return true;
 }
 
