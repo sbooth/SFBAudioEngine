@@ -733,7 +733,7 @@ bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 		return false;
 
 	// If there are no decoders in the queue, set up for playback
-	if(nullptr == GetCurrentDecoderState() && !mDecoderQueue.empty()) {
+	if(nullptr == GetCurrentDecoderState() && mDecoderQueue.empty()) {
 		if(!SetupOutputAndRingBufferForDecoder(*decoder))
 			return false;
 	}
