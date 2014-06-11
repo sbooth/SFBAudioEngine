@@ -135,6 +135,7 @@ bool SFB::Audio::Output::CreateDeviceUID(CFStringRef& deviceUID) const
 
 bool SFB::Audio::Output::SetDeviceUID(CFStringRef deviceUID)
 {
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Setting device UID to " << deviceUID);
 	return _SetDeviceUID(deviceUID);
 }
 
@@ -145,6 +146,7 @@ bool SFB::Audio::Output::GetDeviceSampleRate(Float64& sampleRate) const
 
 bool SFB::Audio::Output::SetDeviceSampleRate(Float64 sampleRate)
 {
+	LOGGER_DEBUG("org.sbooth.AudioEngine.Output", "Setting device sample rate to " << sampleRate);
 	return _SetDeviceSampleRate(sampleRate);
 }
 
