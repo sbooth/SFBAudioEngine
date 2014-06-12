@@ -32,6 +32,7 @@
 #include "AudioPlayer.h"
 #include "AudioFormat.h"
 #include "Logger.h"
+#include "CreateStringForOSType.h"
 
 namespace {
 
@@ -221,7 +222,7 @@ bool SFB::Audio::CoreAudioOutput::AddEffect(OSType subType, OSType manufacturer,
 
 bool SFB::Audio::CoreAudioOutput::AddEffect(OSType componentType, OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit1)
 {
-	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Adding DSP effect: " << subType << " " << manufacturer);
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Adding DSP: '" << SFB::StringForOSType(componentType) << "''" << SFB::StringForOSType(subType) << "' '" << SFB::StringForOSType(manufacturer) << "'");
 
 	// Get the source node for the graph's output node
 	UInt32 numInteractions = 0;
