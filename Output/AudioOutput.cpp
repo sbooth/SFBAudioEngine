@@ -50,9 +50,6 @@ bool SFB::Audio::Output::Open()
 	if(_IsOpen())
 		return true;
 
-	if(_IsRunning())
-		return false;
-
 	return _Open();
 }
 
@@ -62,9 +59,6 @@ bool SFB::Audio::Output::Close()
 
 	if(!_IsOpen())
 		return true;
-
-	if(_IsRunning())
-		return false;
 
 	return _Close();
 }
