@@ -34,6 +34,19 @@
 #include "CFErrorUtilities.h"
 #include "Logger.h"
 
+#define DSD_FRAMES_PER_DOP_FRAME 16
+
+namespace {
+	// Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
+	static const uint8_t sBitReverseTable256 [256] =
+	{
+#   define R2(n)     n,     n + 2*64,     n + 1*64,     n + 3*64
+#   define R4(n) R2(n), R2(n + 2*16), R2(n + 1*16), R2(n + 3*16)
+#   define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
+		R6(0), R6(2), R6(1), R6(3)
+	};
+}
+
 #pragma mark Factory Methods
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForURL(CFURLRef url, CFErrorRef *error)
@@ -58,7 +71,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForDecoder(unique_
 }
 
 SFB::Audio::DoPDecoder::DoPDecoder(Decoder::unique_ptr decoder)
-	: mDecoder(std::move(decoder)), mMarkerFlag(false)
+	: mDecoder(std::move(decoder)), mMarker(0x05), mReverseBits(false)
 {
 	assert(nullptr != mDecoder);
 }
@@ -96,11 +109,11 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	mBufferList.Allocate(decoderFormat, 1024);
+	mBufferList.Allocate(decoderFormat, 4096);
 
-	// Generate non-interleaved 24 bit output
+	// Generate non-interleaved 24-bit big endian output
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
+	mFormat.mFormatFlags		= kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
 	mFormat.mSampleRate			= 176400;
 	mFormat.mChannelsPerFrame	= decoderFormat.mChannelsPerFrame;
@@ -111,6 +124,8 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
 
 	mFormat.mReserved			= 0;
+
+	mReverseBits = !(kAudioFormatFlagIsBigEndian & decoderFormat.mFormatFlags);
 
 	return true;
 }
@@ -134,8 +149,8 @@ SFB::CFString SFB::Audio::DoPDecoder::_GetSourceFormatDescription() const
 
 UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	// Only multiples of 8 frames can be read (8 frames equals one byte)
-	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 8) {
+	// Only multiples of 16 frames can be read (16 frames equals two bytes)
+	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 16) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DOP", "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
@@ -148,9 +163,13 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 
 	for(;;) {
 		// Grab the DSD audio
-		UInt32 framesDecoded = mDecoder->ReadAudio(mBufferList, std::min(mBufferList.GetCapacityFrames(), frameCount - framesRead));
-		if(0 == framesDecoded)
+		UInt32 framesRemaining = frameCount - framesRead;
+		UInt32 dsdFramesRemaining = DSD_FRAMES_PER_DOP_FRAME * framesRemaining;
+		UInt32 dsdFramesDecoded = mDecoder->ReadAudio(mBufferList, std::min(mBufferList.GetCapacityFrames(), dsdFramesRemaining));
+		if(0 == dsdFramesDecoded)
 			break;
+
+		UInt32 framesDecoded = dsdFramesDecoded / DSD_FRAMES_PER_DOP_FRAME;
 
 		// Convert to DoP
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
@@ -159,13 +178,19 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 
 			for(UInt32 j = 0; j < framesDecoded; ++j) {
 				// Insert the DSD marker
-				*dst++ = mMarkerFlag ? 0xfa : 0x05;
+				*dst++ = mMarker;
 
 				// Copy the DSD bits
-				*dst++ = *src++;
-				*dst++ = *src++;
+				if(mReverseBits) {
+					*dst++ = sBitReverseTable256[*src++];
+					*dst++ = sBitReverseTable256[*src++];
+				}
+				else {
+					*dst++ = *src++;
+					*dst++ = *src++;
+				}
 
-				mMarkerFlag = !mMarkerFlag;
+				mMarker = (uint8_t)0x05 == mMarker ? (uint8_t)0xfa : (uint8_t)0x05;
 			}
 
 			bufferList->mBuffers[i].mDataByteSize += mFormat.FrameCountToByteCount(framesDecoded);
@@ -181,9 +206,19 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 	return framesRead;
 }
 
+SInt64 SFB::Audio::DoPDecoder::_GetTotalFrames() const
+{
+	return mDecoder->GetTotalFrames() / DSD_FRAMES_PER_DOP_FRAME;
+}
+
+SInt64 SFB::Audio::DoPDecoder::_GetCurrentFrame() const
+{
+	return mDecoder->GetCurrentFrame() / DSD_FRAMES_PER_DOP_FRAME;
+}
+
 SInt64 SFB::Audio::DoPDecoder::_SeekToFrame(SInt64 frame)
 {
-	if(-1 == mDecoder->SeekToFrame(frame))
+	if(-1 == mDecoder->SeekToFrame(DSD_FRAMES_PER_DOP_FRAME * frame))
 		return -1;
 
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)

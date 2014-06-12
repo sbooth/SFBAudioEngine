@@ -120,8 +120,8 @@ namespace SFB {
 			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
 			// Source audio information
-			inline virtual SInt64 _GetTotalFrames() const			{ return mDecoder->GetTotalFrames();}
-			inline virtual SInt64 _GetCurrentFrame() const			{ return mDecoder->GetCurrentFrame();}
+			virtual SInt64 _GetTotalFrames() const;
+			virtual SInt64 _GetCurrentFrame() const;
 
 			// Seeking support
 			inline virtual bool _SupportsSeeking() const			{ return mDecoder->SupportsSeeking(); }
@@ -131,7 +131,8 @@ namespace SFB {
 			// Data members
 			Decoder::unique_ptr		mDecoder;
 			BufferList				mBufferList;
-			bool					mMarkerFlag;
+			uint8_t					mMarker;
+			bool					mReverseBits;
 		};
 		
 	}
