@@ -95,7 +95,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(2822400 != decoderFormat.mSampleRate) {
+	if(2822400 != decoderFormat.mSampleRate && 5644800 != decoderFormat.mSampleRate) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
 
 		if(error) {
@@ -115,7 +115,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
-	mFormat.mSampleRate			= 176400;
+	mFormat.mSampleRate			= decoderFormat.mSampleRate / DSD_FRAMES_PER_DOP_FRAME;
 	mFormat.mChannelsPerFrame	= decoderFormat.mChannelsPerFrame;
 	mFormat.mBitsPerChannel		= 24;
 
