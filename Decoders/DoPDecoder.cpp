@@ -29,6 +29,7 @@
  */
 
 #include <algorithm>
+#include <array>
 
 #include "DoPDecoder.h"
 #include "CFErrorUtilities.h"
@@ -45,6 +46,10 @@ namespace {
 #   define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
 		R6(0), R6(2), R6(1), R6(3)
 	};
+
+	// Support DSD64, DSD128, and DSD256 (64x, 128x, and 256x the CD sample rate of 44.1 KHz)
+	// as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
+	static const std::array<Float64, 5> sSupportedSampleRates = { {2822400, 5644800, 11289600, 6144000, 12288000} };
 }
 
 #pragma mark Factory Methods
@@ -95,7 +100,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(2822400 != decoderFormat.mSampleRate && 5644800 != decoderFormat.mSampleRate) {
+	if(std::end(sSupportedSampleRates) == std::find(std::begin(sSupportedSampleRates), std::end(sSupportedSampleRates), decoderFormat.mSampleRate)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
 
 		if(error) {
