@@ -485,9 +485,9 @@ namespace SFB {
 			 * @brief Copy decoded audio into the specified buffer
 			 * @param bufferList A buffer to receive the decoded audio
 			 * @param frameCount The requested number of audio frames
-			 * @return The actual number of frames read, or \c 0 on error
+			 * @return \c true on success, \c false otherwise
 			 */
-			UInt32 ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			bool ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
 			/*! @endcond */
 

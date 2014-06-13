@@ -1004,9 +1004,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		.tv_nsec = 0
 	};
 
-	while(!(eAudioPlayerFlagStopDecoding & mFlags.load(std::memory_order_relaxed))) {
+	int64_t decoderCounter = 0;
 
-		int64_t decoderCounter = 0;
+	while(!(eAudioPlayerFlagStopDecoding & mFlags.load(std::memory_order_relaxed))) {
 
 		DecoderStateData *decoderState = nullptr;
 		{
@@ -1100,7 +1100,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						.tv_nsec = NSEC_PER_SEC / 100
 					};
 
-					// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
+					// The rendering thread will clear eAudioPlayerFlagFormatMismatch when the current render cycle completes
 					while(eAudioPlayerFlagFormatMismatch & mFlags.load(std::memory_order_relaxed))
 						mSemaphore.TimedWait(renderTimeout);
 				}
@@ -1591,7 +1591,7 @@ bool SFB::Audio::Player::SetOutput(Output::unique_ptr output)
 	return true;
 }
 
-UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount)
+bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	// ========================================
 	// Pre-rendering actions
@@ -1612,6 +1612,8 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 	// ========================================
 	// Rendering
 	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
+	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
+	UInt32 framesRead = 0;
 
 	// Output silence if muted or the ring buffer is empty
 	auto outputFormat = mOutput->GetFormat();
@@ -1621,36 +1623,34 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 			memset(bufferList->mBuffers[bufferIndex].mData, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 			bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
-
-		return frameCount;
 	}
-
-	// Restrict reads to valid decoded audio
-	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
-	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
-	if(framesRead != framesToRead) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
-		return framesRead;
-	}
-
-	mFramesRendered.fetch_add(framesRead, std::memory_order_relaxed);
-
-	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
-	if(framesRead != frameCount) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
-
-		size_t framesOfSilence = frameCount - framesRead;
-		size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
-		size_t byteCountToZero = outputFormat.FrameCountToByteCount(framesOfSilence);
-		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
+	else {
+		// Restrict reads to valid decoded audio
+		framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
+		if(framesRead != framesToRead) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+			return false;
 		}
-	}
 
-	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
-	size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
-	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
-		mDecoderSemaphore.Signal();
+		mFramesRendered.fetch_add(framesRead, std::memory_order_relaxed);
+
+		// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
+		if(framesRead != frameCount) {
+			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
+
+			size_t framesOfSilence = frameCount - framesRead;
+			size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
+			size_t byteCountToZero = outputFormat.FrameCountToByteCount(framesOfSilence);
+			for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+				memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
+			}
+		}
+
+		// If there is adequate space in the ring buffer for another chunk, signal the reader thread
+		size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
+		if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
+			mDecoderSemaphore.Signal();
+	}
 
 
 	// ========================================
@@ -1662,7 +1662,7 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 
 	// There is nothing more to do if no frames were rendered
 	if(0 == framesRead)
-		return 0;
+		return true;
 
 	// framesRead contains the number of valid frames that were rendered
 	// However, these could have come from any number of decoders depending on the buffer sizes
@@ -1720,5 +1720,5 @@ UInt32 SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 fram
 			mOutput->RequestStop();
 	}
 
-	return framesRead;
+	return true;
 }
