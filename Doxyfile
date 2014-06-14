@@ -734,10 +734,14 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = README.md \
-			AudioBufferList.h CreateChannelLayout.h \
+			AudioBufferList.h AudioChannelLayout.h \
+			AudioFormat.h AudioRingBuffer.h RingBuffer.h \
 			Logger.h CFWrapper.h Semaphore.h \
 			Input/InputSource.h \
-			Decoders/AudioDecoder.h \
+			Decoders/AudioDecoder.h Decoders/DoPDecoder.h \
+			Decoders/LoopableRegionDecoder.h \
+			Output/AudioOutput.h \
+			Output/ASIOOutput.h Output/CoreAudioOutput.h \
 			Player/AudioPlayer.h \
 			Metadata/AudioMetadata.h Metadata/AttachedPicture.h \
 			AudioConverter.h ReplayGainAnalyzer.h
