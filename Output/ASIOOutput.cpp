@@ -611,7 +611,7 @@ bool SFB::Audio::ASIOOutput::_SupportsFormat(const AudioFormat& format) const
 bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 {
 	const AudioFormat& decoderFormat = decoder.GetFormat();
-	if(!decoderFormat.IsPCM() && !decoderFormat.IsDSD()) {
+	if(!_SupportsFormat(decoderFormat)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "ASIO unsupported format: " << decoderFormat);
 		return false;
 	}
