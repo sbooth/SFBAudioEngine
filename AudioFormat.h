@@ -42,7 +42,8 @@ namespace SFB {
 
 		/*! @brief Additional audio format IDs */
 		enum {
-			kAudioFormatDirectStreamDigital = 'DSD '		/*!< Direct Stream Digital (DSD) */
+			kAudioFormatDirectStreamDigital = 'DSD ',		/*!< Direct Stream Digital (DSD) */
+			kAudioFormatDoP = 'DoP '						/*!< DSD over PCM (DoP) */
 		};
 
 		/*! @brief A class extending the functionality of a Core %Audio \c AudioStreamBasicDescription for DSD */
@@ -80,6 +81,9 @@ namespace SFB {
 
 			/*! @brief Query whether this format represents DSD audio data */
 			bool IsDSD() const;
+
+			/*! @brief Query whether this format represents DoP audio data */
+			bool IsDoP() const;
 
 			/*! @brief Query whether this format represents native-endian ordered daa */
 			bool IsNativeEndian() const;

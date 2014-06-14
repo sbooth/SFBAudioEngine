@@ -117,7 +117,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	mBufferList.Allocate(decoderFormat, 4096);
 
 	// Generate non-interleaved 24-bit big endian output
-	mFormat.mFormatID			= kAudioFormatLinearPCM;
+	mFormat.mFormatID			= kAudioFormatDoP;
 	mFormat.mFormatFlags		= kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
 
 	mFormat.mSampleRate			= decoderFormat.mSampleRate / DSD_FRAMES_PER_DOP_FRAME;

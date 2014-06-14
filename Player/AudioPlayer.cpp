@@ -42,6 +42,7 @@
 #include "AudioBufferList.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
+#include "CreateStringForOSType.h"
 
 // ========================================
 // Macros
@@ -1063,28 +1064,30 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		// ========================================
 		// Ensure the decoder's format is compatible with the ring buffer
 		if(decoderState) {
+			const AudioFormat&		outputFormat		= mOutput->GetFormat();
+			const ChannelLayout&	outputChannelLayout	= mOutput->GetChannelLayout();
 			const AudioFormat&		nextFormat			= decoderState->mDecoder->GetFormat();
 			const ChannelLayout&	nextChannelLayout	= decoderState->mDecoder->GetChannelLayout();
 
 			// The two files can be joined seamlessly only if they have the same formats, sample rates, and channel counts
 			bool formatsMatch = true;
 
-			if(nextFormat.mFormatID != mOutput->GetFormat().mFormatID) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output format (" << mOutput->GetFormat().mFormatID << ") and decoder format (" << nextFormat.mFormatID << ") don't match");
+			if(nextFormat.mFormatID != outputFormat.mFormatID) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output format ('" << StringForOSType(outputFormat.mFormatID) << "') and decoder format ('" << StringForOSType(nextFormat.mFormatID) << "') don't match");
 				formatsMatch = false;
 			}
-			else if(nextFormat.mSampleRate != mOutput->GetFormat().mSampleRate) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output sample rate (" << mOutput->GetFormat().mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+			else if(nextFormat.mSampleRate != outputFormat.mSampleRate) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output sample rate (" << outputFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
 				formatsMatch = false;
 			}
-			else if(nextFormat.mChannelsPerFrame != mOutput->GetFormat().mChannelsPerFrame) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel count (" << mOutput->GetFormat().mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+			else if(nextFormat.mChannelsPerFrame != outputFormat.mChannelsPerFrame) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel count (" << outputFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
 				formatsMatch = false;
 			}
 
 			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output will remain valid)
-			if(nextChannelLayout != mOutput->GetChannelLayout()) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel layout (" << mOutput->GetChannelLayout() << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+			if(nextChannelLayout != outputChannelLayout) {
+				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel layout (" << outputChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
 				formatsMatch = false;
 			}
 
@@ -1106,7 +1109,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				}
 
 				if(mFormatMismatchBlock)
-					mFormatMismatchBlock(mOutput->GetFormat(), nextFormat);
+					mFormatMismatchBlock(outputFormat, nextFormat);
 
 				// Adjust the formats
 				{
@@ -1143,14 +1146,26 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoderState->mDecoder->GetFormat());
 			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoderState->mDecoder->GetChannelLayout());
 
-			const AudioFormat& decoderFormat = decoderState->mDecoder->GetFormat();
+//			const AudioFormat& decoderFormat = decoderState->mDecoder->GetFormat();
+			AudioFormat decoderFormat = decoderState->mDecoder->GetFormat();
 
 			// ========================================
-			// Create the AudioConverter which will convert from the decoder's format to the output format (for PCM output)
+			// Create the AudioConverter which will convert from the decoder's format to the output format (for PCM and DoP output)
 			AudioConverterRef audioConverter = nullptr;
 			BufferList bufferList;
-			if(mOutput->GetFormat().IsPCM()) {
+			if(mOutput->GetFormat().IsPCM() || mOutput->GetFormat().IsDoP()) {
 				auto outputFormat = mOutput->GetFormat();
+
+				// DoP masquerades as PCM
+				bool decoderIsDoP = decoderFormat.IsDoP();
+				bool outputIsDoP = outputFormat.IsDoP();
+
+				if(decoderIsDoP)
+					decoderFormat.mFormatID = kAudioFormatLinearPCM;
+
+				if(outputIsDoP)
+					outputFormat.mFormatID = kAudioFormatLinearPCM;
+
 				OSStatus result = AudioConverterNew(&decoderFormat, &outputFormat, &audioConverter);
 				if(noErr != result) {
 					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
@@ -1167,6 +1182,12 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 					continue;
 				}
+
+				if(decoderIsDoP)
+					decoderFormat.mFormatID = kAudioFormatDoP;
+
+				if(outputIsDoP)
+					outputFormat.mFormatID = kAudioFormatDoP;
 
 				// Handle channel mapping
 //				auto& decoderChannelLayout = decoderState->mDecoder->GetChannelLayout();
@@ -1551,6 +1572,23 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 		return false;
 	}
 
+	if(!mOutput->SupportsFormat(decoder.GetFormat())) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder.GetFormat());
+
+		if(mErrorBlock) {
+			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), "");
+			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Format not supported"), "");
+			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), "");
+
+			SFB::CFError formatError = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, decoder.GetInputSource().GetURL(), failureReason, recoverySuggestion);
+
+			mErrorBlock(formatError);
+		}
+
+		return false;
+	}
+
+
 	// Configure the output for decoder
 	if(!mOutput->SetupForDecoder(decoder))
 		return false;
@@ -1612,8 +1650,6 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 	// ========================================
 	// Rendering
 	size_t framesAvailableToRead = mRingBuffer->GetFramesAvailableToRead();
-	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
-	UInt32 framesRead = 0;
 
 	// Output silence if muted or the ring buffer is empty
 	auto outputFormat = mOutput->GetFormat();
@@ -1623,34 +1659,36 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 			memset(bufferList->mBuffers[bufferIndex].mData, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
 			bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 		}
+
+		return true;
 	}
-	else {
-		// Restrict reads to valid decoded audio
-		framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
-		if(framesRead != framesToRead) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
-			return false;
-		}
 
-		mFramesRendered.fetch_add(framesRead, std::memory_order_relaxed);
-
-		// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
-		if(framesRead != frameCount) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
-
-			size_t framesOfSilence = frameCount - framesRead;
-			size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
-			size_t byteCountToZero = outputFormat.FrameCountToByteCount(framesOfSilence);
-			for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
-				memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
-			}
-		}
-
-		// If there is adequate space in the ring buffer for another chunk, signal the reader thread
-		size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
-		if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
-			mDecoderSemaphore.Signal();
+	// Restrict reads to valid decoded audio
+	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
+	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
+	if(framesRead != framesToRead) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+		return false;
 	}
+
+	mFramesRendered.fetch_add(framesRead, std::memory_order_relaxed);
+
+	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
+	if(framesRead != frameCount) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
+
+		size_t framesOfSilence = frameCount - framesRead;
+		size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);
+		size_t byteCountToZero = outputFormat.FrameCountToByteCount(framesOfSilence);
+		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
+			memset((int8_t *)bufferList->mBuffers[bufferIndex].mData + byteCountToSkip, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
+		}
+	}
+
+	// If there is adequate space in the ring buffer for another chunk, signal the reader thread
+	size_t framesAvailableToWrite = mRingBuffer->GetFramesAvailableToWrite();
+	if(mRingBufferWriteChunkSize <= framesAvailableToWrite)
+		mDecoderSemaphore.Signal();
 
 
 	// ========================================

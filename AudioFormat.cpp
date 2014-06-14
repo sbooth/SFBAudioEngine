@@ -66,6 +66,11 @@ bool SFB::Audio::AudioFormat::IsDSD() const
 	return kAudioFormatDirectStreamDigital == mFormatID;
 }
 
+bool SFB::Audio::AudioFormat::IsDoP() const
+{
+	return kAudioFormatDoP == mFormatID;
+}
+
 bool SFB::Audio::AudioFormat::IsNativeEndian() const
 {
 	return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags);
@@ -74,17 +79,29 @@ bool SFB::Audio::AudioFormat::IsNativeEndian() const
 size_t SFB::Audio::AudioFormat::FrameCountToByteCount(size_t frameCount) const
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:		return frameCount / 8;
-		case kAudioFormatLinearPCM:					return frameCount * mBytesPerFrame;
-		default:									return 0;
+		case kAudioFormatDirectStreamDigital:
+			return frameCount / 8;
+
+		case kAudioFormatDoP:
+		case kAudioFormatLinearPCM:
+			return frameCount * mBytesPerFrame;
+
+		default:
+			return 0;
 	}
 }
 
 size_t SFB::Audio::AudioFormat::ByteCountToFrameCount(size_t byteCount) const
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:		return byteCount * 8;
-		case kAudioFormatLinearPCM:					return byteCount / mBytesPerFrame;
-		default:									return 0;
+		case kAudioFormatDirectStreamDigital:
+			return byteCount * 8;
+
+		case kAudioFormatDoP:
+		case kAudioFormatLinearPCM:
+			return byteCount / mBytesPerFrame;
+
+		default:
+			return 0;
 	}
 }

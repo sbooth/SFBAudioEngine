@@ -272,6 +272,14 @@ namespace SFB {
 			 */
 			bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
 
+
+			/*!
+			 * @brief Get the device's nominal sample rates
+			 * @param nominalSampleRates A \c std::vector to receive the sample rates
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetDeviceAvailableNominalSampleRates(std::vector<AudioValueRange>& nominalSampleRates) const;
+
 			//@}
 
 

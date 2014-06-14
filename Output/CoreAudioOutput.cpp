@@ -623,12 +623,12 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceVolumeForChannel(UInt32 channel, Floa
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalar,
-		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= channel
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 
@@ -636,7 +636,7 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceVolumeForChannel(UInt32 channel, Floa
 	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &volume);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 
@@ -653,19 +653,19 @@ bool SFB::Audio::CoreAudioOutput::SetDeviceVolumeForChannel(UInt32 channel, Floa
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalar,
-		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= channel
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, " << channel << ") is false");
 		return false;
 	}
 
 	auto result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(volume), &volume);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput, " << channel << ") failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, " << channel << ") failed: " << result);
 		return false;
 	}
 
@@ -680,12 +680,12 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyStreamConfiguration,
-		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput) is false");
 		return false;
 	}
 
@@ -693,7 +693,7 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 	auto result = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, nullptr, &dataSize);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput) failed: " << result);
 		return false;
 	}
 
@@ -707,7 +707,7 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, bufferList);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput) failed: " << result);
 		free(bufferList), bufferList = nullptr;
 		return false;
 	}
@@ -728,12 +728,12 @@ bool SFB::Audio::CoreAudioOutput::GetDevicePreferredStereoChannels(std::pair<UIn
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo,
-		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed is false");
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) failed is false");
 		return false;
 	}
 
@@ -742,12 +742,48 @@ bool SFB::Audio::CoreAudioOutput::GetDevicePreferredStereoChannels(std::pair<UIn
 	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &preferredChannels);
 
 	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioDevicePropertyScopeOutput) failed: " << result);
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) failed: " << result);
 		return false;
 	}
 
 	preferredStereoChannels.first = preferredChannels[0];
 	preferredStereoChannels.second = preferredChannels[1];
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetDeviceAvailableNominalSampleRates(std::vector<AudioValueRange>& nominalSampleRates) const
+{
+	AudioDeviceID deviceID;
+	if(!GetDeviceID(deviceID))
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyAvailableNominalSampleRates,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(deviceID, &propertyAddress)) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectHasProperty (kAudioDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeOutput) failed is false");
+		return false;
+	}
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, nullptr, &dataSize);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeOutput) failed is false");
+		return false;
+	}
+
+	size_t numberNominalSampleRates = dataSize / sizeof(AudioValueRange);
+	nominalSampleRates.resize(numberNominalSampleRates);
+
+	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &nominalSampleRates[0]);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeOutput) failed is false");
+		return false;
+	}
 
 	return true;
 }
@@ -808,7 +844,7 @@ bool SFB::Audio::CoreAudioOutput::GetOutputStreams(std::vector<AudioStreamID>& s
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyStreams,
-		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
@@ -1410,13 +1446,13 @@ bool SFB::Audio::CoreAudioOutput::_Reset()
 
 bool SFB::Audio::CoreAudioOutput::_SupportsFormat(const AudioFormat& format) const
 {
-	return format.IsPCM();
+	return format.IsPCM() || format.IsDoP();
 }
 
 bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 {
 	const AudioFormat& decoderFormat = decoder.GetFormat();
-	if(!decoderFormat.IsPCM()) {
+	if(!_SupportsFormat(decoderFormat)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Core Audio unsupported format: " << decoderFormat);
 		return false;
 	}
@@ -1489,14 +1525,25 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 	// Attempt to set the new stream format
 	if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &format, sizeof(format))) {
 		// If the new format could not be set, restore the old format to ensure a working graph
+
+		// DoP masquerades as PCM
+		bool isDoP = mFormat.IsDoP();
+		if(isDoP)
+			mFormat.mFormatID = kAudioFormatLinearPCM;
+
 		if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mFormat, sizeof(mFormat))) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Unable to restore AUGraph format: " << result);
 		}
 
+		if(isDoP)
+			mFormat.mFormatID = kAudioFormatDoP;
+
 		// Do not free connections here, so graph can be rebuilt
 	}
-	else
+	else {
+		format.mFormatID = decoderFormat.mFormatID;
 		mFormat = format;
+	}
 
 	// ========================================
 	// Restore the graph's connections and input callbacks
