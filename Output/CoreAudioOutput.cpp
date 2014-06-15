@@ -1518,6 +1518,8 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 
 	AudioFormat format = mFormat;
 
+	// Even if the format is DoP, treat it as PCM from the AUGraph's perspective
+	format.mFormatID			= kAudioFormatLinearPCM;
 	format.mChannelsPerFrame	= decoderFormat.mChannelsPerFrame;
 	format.mSampleRate			= decoderFormat.mSampleRate;
 
@@ -1527,20 +1529,21 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 		// If the new format could not be set, restore the old format to ensure a working graph
 
 		// DoP masquerades as PCM
-		bool isDoP = mFormat.IsDoP();
-		if(isDoP)
+		bool wasDoP = mFormat.IsDoP();
+		if(wasDoP)
 			mFormat.mFormatID = kAudioFormatLinearPCM;
 
 		if(!SetPropertyOnAUGraphNodes(kAudioUnitProperty_StreamFormat, &mFormat, sizeof(mFormat))) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "Unable to restore AUGraph format: " << result);
 		}
 
-		if(isDoP)
+		if(wasDoP)
 			mFormat.mFormatID = kAudioFormatDoP;
 
 		// Do not free connections here, so graph can be rebuilt
 	}
 	else {
+		// Store the correct format ID
 		format.mFormatID = decoderFormat.mFormatID;
 		mFormat = format;
 	}
