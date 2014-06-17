@@ -1425,7 +1425,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				decoderState = nullptr;
 
 				// If eAudioPlayerFlagMuteOutput is set SkipToNextTrack() is waiting for this decoder to finish
-				if(eAudioPlayerFlagMuteOutput & mFlags)
+				if(eAudioPlayerFlagMuteOutput & mFlags.load(std::memory_order_relaxed))
 					mSemaphore.Signal();
 			}
 
@@ -1653,7 +1653,7 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 
 	// Output silence if muted or the ring buffer is empty
 	auto outputFormat = mOutput->GetFormat();
-	if(eAudioPlayerFlagMuteOutput & mFlags || 0 == framesAvailableToRead) {
+	if(eAudioPlayerFlagMuteOutput & mFlags.load(std::memory_order_relaxed) || 0 == framesAvailableToRead) {
 		size_t byteCountToZero = outputFormat.FrameCountToByteCount(frameCount);
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex) {
 			memset(bufferList->mBuffers[bufferIndex].mData, outputFormat.IsDSD() ? 0xF : 0, byteCountToZero);
@@ -1748,7 +1748,7 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 
 	if(mFramesDecoded == mFramesRendered && nullptr == GetCurrentDecoderState()) {
 		// Signal the decoding thread that it is safe to manipulate the ring buffer
-		if(eAudioPlayerFlagFormatMismatch & mFlags) {
+		if(eAudioPlayerFlagFormatMismatch & mFlags.load(std::memory_order_relaxed)) {
 			mFlags.fetch_or(eAudioPlayerFlagMuteOutput, std::memory_order_relaxed);
 			mFlags.fetch_and(~eAudioPlayerFlagFormatMismatch, std::memory_order_relaxed);
 			mSemaphore.Signal();
