@@ -347,9 +347,7 @@ bool SFB::Audio::Player::Play()
 		return true;
 
 	// We don't want to start output in the middle of a buffer modification
-	std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-	if(!lock)
-		return false;
+	std::lock_guard<std::mutex> guard(mMutex);
 
 	return mOutput->Start();
 }
@@ -364,9 +362,7 @@ bool SFB::Audio::Player::Pause()
 
 bool SFB::Audio::Player::Stop()
 {
-	std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-	if(!lock)
-		return false;
+	std::lock_guard<std::mutex> guard(mMutex);
 
 	if(mOutput->IsRunning())
 		mOutput->Stop();
@@ -729,9 +725,7 @@ bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 	//     from underneath them
 	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-	if(!lock)
-		return false;
+	std::lock_guard<std::mutex> guard(mMutex);
 
 	// If there are no decoders in the queue, set up for playback
 	if(nullptr == GetCurrentDecoderState() && mDecoderQueue.empty()) {
@@ -797,9 +791,7 @@ bool SFB::Audio::Player::SkipToNextTrack()
 
 bool SFB::Audio::Player::ClearQueuedDecoders()
 {
-	std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-	if(!lock)
-		return false;
+	std::lock_guard<std::mutex> guard(mMutex);
 
 	mDecoderQueue.clear();
 
@@ -856,9 +848,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			// Lock the queue and remove the head element that contains the next decoder to use
 			Decoder::unique_ptr decoder;
 			{
-				std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
+				std::lock_guard<std::mutex> guard(mMutex);
 
-				if(lock && !mDecoderQueue.empty()) {
+				if(!mDecoderQueue.empty()) {
 					auto iter = std::begin(mDecoderQueue);
 					decoder = std::move(*iter);
 					mDecoderQueue.erase(iter);
@@ -954,8 +946,8 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 				// Adjust the formats
 				{
-					std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-					if(!lock || !SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder))
+					std::lock_guard<std::mutex> guard(mMutex);
+					if(!SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder))
 						delete decoderState, decoderState = nullptr;
 				}
 
@@ -1248,8 +1240,8 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 					if(!mOutput->IsRunning()) {
 						// We don't want to start output in the middle of a buffer modification
-						std::unique_lock<std::mutex> lock(mMutex, std::try_to_lock);
-						if(lock && !mOutput->Start())
+						std::lock_guard<std::mutex> guard(mMutex);
+						if(!mOutput->Start())
 							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
 					}
 				}
