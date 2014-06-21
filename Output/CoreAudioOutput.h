@@ -303,6 +303,12 @@ namespace SFB {
 			 */
 			bool SetDeviceID(AudioDeviceID deviceID);
 			
+
+			bool GetAvailableDataSources(std::vector<UInt32>& dataSources) const;
+
+			bool GetActiveDataSources(std::vector<UInt32>& dataSources) const;
+			bool SetActiveDataSources(const std::vector<UInt32>& dataSources);
+			
 			//@}
 
 
@@ -317,9 +323,6 @@ namespace SFB {
 
 			bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const;
 			bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
-
-			bool GetDataSources(std::vector<UInt32>& dataSources) const;
-			bool SetDataSources(const std::vector<UInt32>& dataSources);
 
 			//@}
 

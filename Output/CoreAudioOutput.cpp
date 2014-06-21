@@ -834,6 +834,108 @@ bool SFB::Audio::CoreAudioOutput::SetDeviceID(AudioDeviceID deviceID)
 	return true;
 }
 
+bool SFB::Audio::CoreAudioOutput::GetAvailableDataSources(std::vector<UInt32>& dataSources) const
+{
+	dataSources.clear();
+
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDataSources,
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(deviceID,
+													 &propertyAddress,
+													 0,
+													 nullptr,
+													 &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSources) failed: " << result);
+		return false;
+	}
+
+	auto dataSourceCount = dataSize / sizeof(UInt32);
+	dataSources.resize(dataSourceCount);
+
+	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &dataSources[0]);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDataSources) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetActiveDataSources(std::vector<UInt32>& dataSources) const
+{
+	dataSources.clear();
+
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDataSource,
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize;
+	OSStatus result = AudioObjectGetPropertyDataSize(deviceID,
+													 &propertyAddress,
+													 0,
+													 nullptr,
+													 &dataSize);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSources) failed: " << result);
+		return false;
+	}
+
+	auto dataSourceCount = dataSize / sizeof(UInt32);
+	dataSources.resize(dataSourceCount);
+
+	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &dataSources[0]);
+
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDataSources) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::SetActiveDataSources(const std::vector<UInt32>& dataSources)
+{
+	if(dataSources.empty())
+		return false;
+
+	AudioDeviceID deviceID = kAudioDeviceUnknown;
+	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
+		return false;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDataSource,
+		.mScope		= kAudioDevicePropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	OSStatus result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, (UInt32)(dataSources.size() * sizeof(UInt32)), &dataSources[0]);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: " << result);
+		return false;
+	}
+	
+	return true;
+}
+
 #pragma mark Stream Management
 
 bool SFB::Audio::CoreAudioOutput::GetOutputStreams(std::vector<AudioStreamID>& streams) const
@@ -999,69 +1101,6 @@ bool SFB::Audio::CoreAudioOutput::SetOutputStreamPhysicalFormat(AudioStreamID st
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioStreamPropertyPhysicalFormat) failed: " << result);
-		return false;
-	}
-
-	return true;
-}
-
-bool SFB::Audio::CoreAudioOutput::GetDataSources(std::vector<UInt32>& dataSources) const
-{
-	dataSources.clear();
-
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
-		return false;
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDataSources,
-		.mScope		= kAudioDevicePropertyScopeOutput,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize;
-	OSStatus result = AudioObjectGetPropertyDataSize(deviceID,
-													 &propertyAddress,
-													 0,
-													 nullptr,
-													 &dataSize);
-
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSources) failed: " << result);
-		return false;
-	}
-
-	auto dataSourceCount = dataSize / sizeof(UInt32);
-	dataSources.resize(dataSourceCount);
-
-	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &dataSources[0]);
-
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDataSources) failed: " << result);
-		return false;
-	}
-
-	return true;
-}
-
-bool SFB::Audio::CoreAudioOutput::SetDataSources(const std::vector<UInt32>& dataSources)
-{
-	if(dataSources.empty())
-		return false;
-
-	AudioDeviceID deviceID = kAudioDeviceUnknown;
-	if(!GetDeviceID(deviceID) || kAudioDeviceUnknown == deviceID)
-		return false;
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDataSources,
-		.mScope		= kAudioDevicePropertyScopeOutput,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	OSStatus result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, (UInt32)(dataSources.size() * sizeof(UInt32)), &dataSources[0]);
-	if(kAudioHardwareNoError != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyDataSources) failed: " << result);
 		return false;
 	}
 
