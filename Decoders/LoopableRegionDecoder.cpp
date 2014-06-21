@@ -29,6 +29,7 @@
  */
 
 #include <algorithm>
+#include <stdexcept>
 
 #include "LoopableRegionDecoder.h"
 #include "Logger.h"
@@ -101,19 +102,22 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::LoopableRegionDecoder::CreateForDeco
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(0), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(nullptr != mDecoder);
+	if(!mDecoder)
+		throw std::runtime_error("mDecoder may not be nullptr");
 }
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(0), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(nullptr != mDecoder);
+	if(!mDecoder)
+		throw std::runtime_error("mDecoder may not be nullptr");
 }
 
 SFB::Audio::LoopableRegionDecoder::LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount)
 	: mDecoder(std::move(decoder)), mStartingFrame(startingFrame), mFrameCount(frameCount), mRepeatCount(repeatCount), mFramesReadInCurrentPass(0), mTotalFramesRead(0), mCompletedPasses(0)
 {
-	assert(nullptr != mDecoder);
+	if(!mDecoder)
+		throw std::runtime_error("mDecoder may not be nullptr");
 }
 
 bool SFB::Audio::LoopableRegionDecoder::_Open(CFErrorRef *error)
@@ -234,9 +238,6 @@ SInt64 SFB::Audio::LoopableRegionDecoder::_SeekToFrame(SInt64 frame)
 
 bool SFB::Audio::LoopableRegionDecoder::Reset()
 {
-	if(!IsOpen())
-		return false;
-
 	mFramesReadInCurrentPass	= 0;
 	mTotalFramesRead			= 0;
 	mCompletedPasses			= 0;
@@ -246,9 +247,6 @@ bool SFB::Audio::LoopableRegionDecoder::Reset()
 
 bool SFB::Audio::LoopableRegionDecoder::SetupDecoder(bool forceReset)
 {
-	assert(mDecoder);
-	assert(mDecoder->IsOpen());
-
 	mFormat			= mDecoder->GetFormat();
 	mChannelLayout	= mDecoder->GetChannelLayout();
 	mSourceFormat	= mDecoder->GetSourceFormat();
