@@ -399,7 +399,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	if(nullptr == url)
 		return false;
 
-	auto decoder = Decoder::CreateDecoderForURL(url, error);
+	auto decoder = Decoder::CreateForURL(url, error);
 	if(!decoder || !decoder->Open(error))
 		return false;
 	

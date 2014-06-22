@@ -30,28 +30,147 @@
 
 #pragma once
 
-#include <AudioToolbox/ExtendedAudioFile.h>
 #include "AudioDecoder.h"
 
+/*! @file LoopableRegionDecoder.h @brief Support for decoding specific audio regions */
+
+/*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
+	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		// ========================================
-		// A wrapper around a Decoder that decodes a specific file region
-		// ========================================
+		/*! @brief A wrapper around a Decoder that decodes a specific region */
 		class LoopableRegionDecoder : public Decoder
 		{
 
-			friend class Decoder;
+		public:
 
-		protected:
+			// ========================================
+			/*! @name Factory Methods */
+			//@{
 
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified URL
+			 * @param url The URL
+			 * @param startingFrame The first frame to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified URL
+			 * @param url The URL
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c Decoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified URL
+			 * @param url The URL
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param repeatCount The number of times to repeat
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
+
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c InputSource
+			 * @param inputSource The input source
+			 * @param startingFrame The first frame to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c InputSource
+			 * @param inputSource The input source
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c InputSource
+			 * @param inputSource The input source
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param repeatCount The number of times to repeat
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
+
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c Decoder
+			 * @param decoder The decoder
+			 * @param startingFrame The first frame to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c Decoder
+			 * @param decoder The decoder
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
+
+			/*!
+			 * @brief Create a \c LoopableRegionDecoder object for a region of the specified \c Decoder
+			 * @param decoder The decoder
+			 * @param startingFrame The first frame to decode
+			 * @param frameCount The number of frames to decode
+			 * @param repeatCount The number of times to repeat
+			 * @param error An optional pointer to a \c CFErrorRef to receive error information
+			 * @return A \c LoopableRegionDecoder object, or \c nullptr on failure
+			 */
+			static unique_ptr CreateForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
+
+			//@}
+
+
+			// ========================================
+			/*! @name Creation and Destruction */
+			//@{
+
+			/*! @brief Destroy this \c LoopableRegionDecoder */
+			virtual ~LoopableRegionDecoder() = default;
+
+			/*! @cond */
+
+			/*! @internal This class is non-copyable */
+			LoopableRegionDecoder(const LoopableRegionDecoder& rhs) = delete;
+
+			/*! @internal This class is non-assignable */
+			LoopableRegionDecoder& operator=(const LoopableRegionDecoder& rhs) = delete;
+
+			/*! @endcond */
+			//@}
+
+			
+		private:
+
+			// Creation
+			LoopableRegionDecoder() = delete;
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame);
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount);
 			LoopableRegionDecoder(Decoder::unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount);
-
-		private:
 
 			// Source access
 			inline virtual CFURLRef _GetURL() const					{ return mDecoder->GetURL(); }

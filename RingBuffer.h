@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013, 2014 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2014 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,143 +30,165 @@
 
 #pragma once
 
-#include <CoreAudio/CoreAudioTypes.h>
 #include <memory>
 
-/*! @file RingBuffer.h @brief An audio ring buffer */
+/*! @file RingBuffer.h @brief A generic ring buffer */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*! @brief %Audio functionality */
-	namespace Audio {
+	/*!
+	 * @brief A generic ring buffer implementation
+	 *
+	 * This class is thread safe when used from one reader thread
+	 * and one writer thread (single producer, single consumer model).
+	 *
+	 * The read and write routines are based on JACK's ringbuffer implementation
+	 */
+	class RingBuffer
+	{
+	public:
+		// ========================================
+		/*! @name Creation and Destruction */
+		//@{
+
+		/*! @brief A \c std::unique_ptr for \c RingBuffer objects */
+		typedef std::unique_ptr<RingBuffer> unique_ptr;
 
 		/*!
-		 * @brief A ring buffer implementation supporting non-interleaved audio.
-		 *
-		 * This class is thread safe when used from one reader thread
-		 * and one writer thread (single producer, single consumer model).
-		 *
-		 * The read and write routines are based on JACK's ringbuffer implementation
-		 * but are modified for non-interleaved audio.
+		 * @brief Create a new \c RingBuffer
+		 * @note Allocate() must be called before the object may be used.
 		 */
-		class RingBuffer
-		{
-		public:
-			// ========================================
-			/*! @name Creation and Destruction */
-			//@{
+		RingBuffer();
 
-			/*! @brief A \c std::unique_ptr for \c RingBuffer objects */
-			typedef std::unique_ptr<RingBuffer> unique_ptr;
+		/*! @brief Destroy the \c RingBuffer and release all associated resources. */
+		~RingBuffer();
 
-			/*!
-			 * @brief Create a new \c RingBuffer
-			 * @note Allocate() must be called before the object may be used.
-			 */
-			RingBuffer();
+		/*! @cond */
 
-			/*! @brief Destroy the \c RingBuffer and release all associated resources. */
-			~RingBuffer();
+		/*! @internal This class is non-copyable */
+		RingBuffer(const RingBuffer& rhs) = delete;
 
-			/*! @cond */
+		/*! @internal This class is non-assignable */
+		RingBuffer& operator=(const RingBuffer& rhs) = delete;
 
-			/*! @internal This class is non-copyable */
-			RingBuffer(const RingBuffer& rhs) = delete;
+		/*! @endcond */
 
-			/*! @internal This class is non-assignable */
-			RingBuffer& operator=(const RingBuffer& rhs) = delete;
-
-			/*! @endcond */
-
-			//@}
+		//@}
 
 
-			// ========================================
-			/*! @name Buffer management */
-			//@{
+		// ========================================
+		/*! @name Buffer management */
+		//@{
 
-			/*!
-			 * @brief Allocate space for audio data.
-			 * @note Only interleaved formats are supported.
-			 * @note This method is not thread safe.
-			 * @param format The format of the audio that will be written to and read from this buffer.
-			 * @param capacityFrames The desired capacity, in frames
-			 * @return \c true on success, \c false on error
-			 */
-			bool Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames);
+		/*!
+		 * @brief Allocate space for data.
+		 * @note This method is not thread safe.
+		 * @param byteCount The desired capacity, in bytes
+		 * @return \c true on success, \c false on error
+		 */
+		bool Allocate(size_t byteCount);
 
-			/*!
-			 * @brief Allocate space for audio data.
-			 * @note This method is not thread safe.
-			 * @param channelCount The number of interleaved channels
-			 * @param bytesPerFrame The number of bytes per audio frame
-			 * @param capacityFrames The desired capacity, in frames
-			 * @return \c true on success, \c false on error
-			 */
-			bool Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames);
-
-			/*!
-			 * @brief Free the resources used by this \c RingBuffer
-			 * @note This method is not thread safe.
-			 */
-			void Deallocate();
-
-			/*!
-			 * @brief Reset this \c RingBuffer to its default state.
-			 * @note This method is not thread safe.
-			 */
-			void Reset();
-
-			/*! @brief Get the capacity of this RingBuffer in frames */
-			inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
-
-			/*! @brief  Get the number of frames available for reading */
-			size_t GetFramesAvailableToRead() const;
-
-			/*! @brief Get the free space available for writing in frames */
-			size_t GetFramesAvailableToWrite() const;
-
-			//@}
+		/*!
+		 * @brief Free the resources used by this \c RingBuffer
+		 * @note This method is not thread safe.
+		 */
+		void Deallocate();
 
 
-			// ========================================
-			/*! @name Reading and writing audio */
-			//@{
+		/*!
+		 * @brief Reset this \c RingBuffer to its default state.
+		 * @note This method is not thread safe.
+		 */
+		void Reset();
 
-			/*!
-			 * @brief Read audio from the \c RingBuffer, advancing the read pointer.
-			 * @param bufferList An \c AudioBufferList to receive the audio
-			 * @param frameCount The desired number of frames to read
-			 * @return The number of frames actually read
-			 */
-			size_t ReadAudio(AudioBufferList *bufferList, size_t frameCount);
 
-			/*!
-			 * @brief Write audio to the \c RingBuffer, advancing the write pointer.
-			 * @param bufferList An \c AudioBufferList containing the audio to copy
-			 * @param frameCount The desired number of frames to write
-			 * @return The number of frames actually written
-			 */
-			size_t WriteAudio(const AudioBufferList *bufferList, size_t frameCount);
+		/*! @brief Get the capacity of this RingBuffer in bytes */
+		inline size_t GetCapacityBytes() const						{ return mCapacityBytes; }
 
-			//@}
+		/*! @brief  Get the number of bytes available for reading */
+		size_t GetBytesAvailableToRead() const;
 
-		private:
+		/*! @brief Get the free space available for writing in bytes */
+		size_t GetBytesAvailableToWrite() const;
 
-			UInt32				mNumberChannels;		// The number of interleaved channels
-			UInt32				mBytesPerFrame;			// The number of bytes per audio frames
+		//@}
 
-			unsigned char		**mBuffers;				// The channel pointers and buffers, allocated in one chunk of memory
 
-			size_t				mCapacityFrames;		// Frame capacity per channel
-			size_t				mCapacityFramesMask;
-			
-			size_t				mCapacityBytes;			// Byte capacity per frame
-			
-			volatile size_t		mWritePointer;			// In frames
-			volatile size_t		mReadPointer;
-		};
+		// ========================================
+		/*! @name Reading and writing data */
+		//@{
+
+		/*!
+		 * @brief Read data from the \c RingBuffer, advancing the read pointer.
+		 * @param destinationBuffer An address to receive the data
+		 * @param byteCount The desired number of bytes to read
+		 * @return The number of bytes actually read
+		 */
+		size_t Read(void *destinationBuffer, size_t byteCount);
+
+		/*!
+		 * @brief Read data from the \c RingBuffer without advancing the read pointer.
+		 * @param destinationBuffer An address to receive the data
+		 * @param byteCount The desired number of bytes to read
+		 * @return The number of bytes actually read
+		 */
+		size_t Peek(void *destinationBuffer, size_t byteCount) const;
+
+		/*!
+		 * @brief Write data to the \c RingBuffer, advancing the write pointer.
+		 * @param bufferList An address containing the data to copy
+		 * @param byteCount The desired number of frames to write
+		 * @return The number of bytes actually written
+		 */
+		size_t Write(const void *sourceBuffer, size_t byteCount);
+
+
+		/*! @brief Advance the read pointer by the specified number of bytes */
+		void ReadAdvance(size_t byteCount);
+
+		/*! @brief Advance the write pointer by the specified number of bytes */
+		void WriteAdvance(size_t byteCount);
+
 		
-	}
+		/*! @brief A struct wrapping a memory buffer location and capacity */
+		struct Buffer {
+			uint8_t	*mBuffer;			/*!< The memory buffer location */
+			size_t	mBufferCapacity;	/*!< The capacity of \c mBuffer in bytes */
+
+			/*! @brief Construct an empty Buffer */
+			Buffer()
+				: Buffer(nullptr, 0) {}
+			
+			/*! 
+			 * @brief Construct a Buffer for the specified location and capacity 
+			 * @param buffer The memory buffer location
+			 * @param bufferCapacity The capacity of \c buffer in bytes
+			 */
+			Buffer(uint8_t *buffer, size_t bufferCapacity)
+				: mBuffer(buffer), mBufferCapacity(bufferCapacity) {}
+		};
+
+		/*! @brief A pair of \c Buffer objects */
+		typedef std::pair<Buffer, Buffer> BufferPair;
+
+		/*! @brief Retrieve the read vector containing the current readable data */
+		BufferPair GetReadVector() const;
+
+		/*! @brief Retrieve the write vector containing the current writeable data */
+		BufferPair GetWriteVector() const;
+
+		//@}
+
+	private:
+
+		uint8_t				*mBuffer;				/*!< The memory buffer holding the data */
+
+		size_t				mCapacityBytes;			/*!< The capacity of \c mBuffer in bytes */
+		size_t				mCapacityBytesMask;		/*!< The capacity of \c mBuffer in bytes minus one */
+
+		volatile size_t		mWritePointer;			/*!< The offset into \c mBuffer of the read location */
+		volatile size_t		mReadPointer;			/*!< The offset into \c mBuffer of the write location */
+	};
+
 }

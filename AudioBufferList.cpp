@@ -34,35 +34,23 @@
 #include "AudioBufferList.h"
 
 SFB::Audio::BufferList::BufferList()
-	: mBufferList(nullptr, nullptr), mCapacityFrames(0), mBytesPerFrame(0)
+	: mBufferList(nullptr, nullptr), mCapacityFrames(0)
 {}
 
-SFB::Audio::BufferList::BufferList(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
+SFB::Audio::BufferList::BufferList(const AudioFormat& format, UInt32 capacityFrames)
 	: BufferList()
 {
 	if(!Allocate(format, capacityFrames))
 		throw std::bad_alloc();
 }
 
-SFB::Audio::BufferList::BufferList(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames)
-	: BufferList()
-{
-	if(!Allocate(channelsPerFrame, bytesPerFrame, interleaved, capacityFrames))
-		throw std::bad_alloc();
-}
-
-bool SFB::Audio::BufferList::Allocate(const AudioStreamBasicDescription& format, UInt32 capacityFrames)
-{
-	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, !(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags), capacityFrames);
-}
-
-bool SFB::Audio::BufferList::Allocate(UInt32 channelsPerFrame, UInt32 bytesPerFrame, bool interleaved, UInt32 capacityFrames)
+bool SFB::Audio::BufferList::Allocate(const AudioFormat& format, UInt32 capacityFrames)
 {
 	if(mBufferList)
 		Deallocate();
 
-	UInt32 numBuffers = interleaved ? 1 : channelsPerFrame;
-	UInt32 channelsPerBuffer = interleaved ? channelsPerFrame : 1;
+	UInt32 numBuffers = format.IsInterleaved() ? 1 : format.mChannelsPerFrame;
+	UInt32 channelsPerBuffer = format.IsInterleaved() ? format.mChannelsPerFrame : 1;
 
 	void *allocation = calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers));
 	if(nullptr == allocation)
@@ -84,17 +72,17 @@ bool SFB::Audio::BufferList::Allocate(UInt32 channelsPerFrame, UInt32 bytesPerFr
 
 	for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex) {
 		// If the allocation fails cleanup will be handled by the unique_ptr's deleter
-		void *data = calloc(capacityFrames, bytesPerFrame);
+		void *data = calloc(1, format.FrameCountToByteCount(capacityFrames));
 		if(nullptr == data)
 			return false;
 
 		mBufferList->mBuffers[bufferIndex].mData = data;
-		mBufferList->mBuffers[bufferIndex].mDataByteSize = capacityFrames * bytesPerFrame;
+		mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)format.FrameCountToByteCount(capacityFrames);
 		mBufferList->mBuffers[bufferIndex].mNumberChannels = channelsPerBuffer;
 	}
 
+	mFormat = format;
 	mCapacityFrames = capacityFrames;
-	mBytesPerFrame = bytesPerFrame;
 
 	return true;
 }
@@ -105,7 +93,7 @@ bool SFB::Audio::BufferList::Deallocate()
 		return false;
 
 	mCapacityFrames = 0;
-	mBytesPerFrame = 0;
+	mFormat = {};
 
 	mBufferList.reset();
 
@@ -118,7 +106,7 @@ bool SFB::Audio::BufferList::Reset()
 		return false;
 
 	for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
-		mBufferList->mBuffers[bufferIndex].mDataByteSize = mBytesPerFrame * mCapacityFrames;
+		mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(mCapacityFrames);
 
 	return true;
 }

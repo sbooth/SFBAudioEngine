@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013, 2014 Stephen F. Booth <me@sbooth.org>
+ *  Copyright (C) 2014 Stephen F. Booth <me@sbooth.org>
  *  All Rights Reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,38 +30,10 @@
 
 #include "RingBuffer.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 
 namespace {
-
-	/*!
-	 * Copy non-interleaved audio from \c bufferList to \c buffers
-	 * @param buffers The destination buffers
-	 * @param destOffset The byte offset in \c buffers to begin writing
-	 * @param bufferList The source buffers
-	 * @param srcOffset The byte offset in \c bufferList to begin reading
-	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
-	 */
-	inline void StoreABL(unsigned char **buffers, size_t destOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
-	{
-		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy(buffers[bufferIndex] + destOffset, (unsigned char *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
-	}
-
-	/*!
-	 * Copy non-interleaved audio from \c buffers to \c bufferList
-	 * @param bufferList The destination buffers
-	 * @param destOffset The byte offset in \c bufferList to begin writing
-	 * @param buffers The source buffers
-	 * @param srcOffset The byte offset in \c bufferList to begin reading
-	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
-	 */
-	inline void FetchABL(AudioBufferList *bufferList, size_t destOffset, const unsigned char **buffers, size_t srcOffset, size_t byteCount)
-	{
-		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-			memcpy((unsigned char *)bufferList->mBuffers[bufferIndex].mData + destOffset, buffers[bufferIndex] + srcOffset, byteCount);
-	}
 
 	/*!
 	 * Return the smallest power of two value greater than \c x
@@ -83,54 +55,33 @@ namespace {
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::RingBuffer::RingBuffer()
-	: mBuffers(nullptr), mNumberChannels(0), mCapacityFrames(0), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
+SFB::RingBuffer::RingBuffer()
+	: mBuffer(nullptr), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
 {}
 
-SFB::Audio::RingBuffer::~RingBuffer()
+SFB::RingBuffer::~RingBuffer()
 {
 	Deallocate();
 }
 
 #pragma mark Buffer Management
 
-bool SFB::Audio::RingBuffer::Allocate(const AudioStreamBasicDescription& format, size_t capacityFrames)
-{
-	if(!(kAudioFormatFlagIsNonInterleaved & format.mFormatFlags))
-		return false;
-	return Allocate(format.mChannelsPerFrame, format.mBytesPerFrame, capacityFrames);
-}
-
-bool SFB::Audio::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame, size_t capacityFrames)
+bool SFB::RingBuffer::Allocate(size_t capacityBytes)
 {
 	Deallocate();
 
 	// Round up to the next power of two
-	capacityFrames = NextPowerOfTwo((uint32_t)capacityFrames);
+	capacityBytes = NextPowerOfTwo((uint32_t)capacityBytes);
 
-	mNumberChannels = channelCount;
-	mBytesPerFrame = bytesPerFrame;
+	mCapacityBytes = capacityBytes;
+	mCapacityBytesMask = capacityBytes - 1;
 
-	mCapacityFrames = capacityFrames;
-	mCapacityFramesMask = capacityFrames - 1;
+	try {
+		mBuffer = new uint8_t [mCapacityBytes];
+	}
 
-	mCapacityBytes = bytesPerFrame * capacityFrames;
-
-	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
-	size_t allocationSize = (mCapacityBytes + sizeof(unsigned char *)) * channelCount;
-	unsigned char *memoryChunk = (unsigned char *)malloc(allocationSize);
-	if(nullptr == memoryChunk)
+	catch(const std::exception& e) {
 		return false;
-
-	// Zero the entire allocation
-	memset(memoryChunk, 0, allocationSize);
-
-	// Assign the pointers and channel buffers
-	mBuffers = (unsigned char **)memoryChunk;
-	memoryChunk += channelCount * sizeof(unsigned char *);
-	for(UInt32 i = 0; i < channelCount; ++i) {
-		mBuffers[i] = memoryChunk;
-		memoryChunk += mCapacityBytes;
 	}
 
 	mReadPointer = 0;
@@ -139,112 +90,192 @@ bool SFB::Audio::RingBuffer::Allocate(UInt32 channelCount, UInt32 bytesPerFrame,
 	return true;
 }
 
-void SFB::Audio::RingBuffer::Deallocate()
+void SFB::RingBuffer::Deallocate()
 {
-	if(mBuffers)
-		free(mBuffers), mBuffers = nullptr;
+	if(mBuffer)
+		delete [] mBuffer, mBuffer = nullptr;
 }
 
 
-void SFB::Audio::RingBuffer::Reset()
+void SFB::RingBuffer::Reset()
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
-
-	for(UInt32 i = 0; i < mNumberChannels; ++i)
-		memset(mBuffers[i], 0, mCapacityBytes);
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
+size_t SFB::RingBuffer::GetBytesAvailableToRead() const
 {
-	size_t w = mWritePointer;
-	size_t r = mReadPointer;
+	auto w = mWritePointer;
+	auto r = mReadPointer;
 
 	if(w > r)
 		return w - r;
 	else
-		return (w - r + mCapacityFrames) & mCapacityFramesMask;
+		return (w - r + mCapacityBytes) & mCapacityBytesMask;
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
+size_t SFB::RingBuffer::GetBytesAvailableToWrite() const
 {
-	size_t w = mWritePointer;
-	size_t r = mReadPointer;
+	auto w = mWritePointer;
+	auto r = mReadPointer;
 
 	if(w > r)
-		return ((r - w + mCapacityFrames) & mCapacityFramesMask) - 1;
+		return ((r - w + mCapacityBytes) & mCapacityBytesMask) - 1;
 	else if(w < r)
 		return (r - w) - 1;
 	else
-		return mCapacityFrames - 1;
+		return mCapacityBytes - 1;
 }
 
-size_t SFB::Audio::RingBuffer::ReadAudio(AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount)
 {
-	if(0 == frameCount)
+	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
 
-	size_t framesAvailable = GetFramesAvailableToRead();
-	if(0 == framesAvailable)
+	auto bytesAvailable = GetBytesAvailableToRead();
+	if(0 == bytesAvailable)
 		return 0;
 
-	size_t framesToRead = std::min(framesAvailable, frameCount);
-	size_t cnt2 = mReadPointer + framesToRead;
+	auto bytesToRead = std::min(bytesAvailable, byteCount);
+	auto cnt2 = mReadPointer + bytesToRead;
 
 	size_t n1, n2;
-	if(cnt2 > mCapacityFrames) {
-		n1 = mCapacityFrames - mReadPointer;
-		n2 = cnt2 & mCapacityFramesMask;
+	if(cnt2 > mCapacityBytes) {
+		n1 = mCapacityBytes - mReadPointer;
+		n2 = cnt2 & mCapacityBytesMask;
 	}
 	else {
-		n1 = framesToRead;
+		n1 = bytesToRead;
 		n2 = 0;
 	}
 
-	FetchABL(bufferList, 0, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n1 * mBytesPerFrame);
-	mReadPointer = (mReadPointer + n1) & mCapacityFramesMask;
+	memcpy(destinationBuffer, mBuffer, n1);
+	mReadPointer = (mReadPointer + n1) & mCapacityBytesMask;
 
 	if(n2) {
-		FetchABL(bufferList, n1 * mBytesPerFrame, (const unsigned char **)mBuffers, mReadPointer * mBytesPerFrame, n2 * mBytesPerFrame);
-		mReadPointer = (mReadPointer + n2) & mCapacityFramesMask;
+		memcpy((uint8_t *)destinationBuffer + n1, mBuffer + mReadPointer, n2);
+		mReadPointer = (mReadPointer + n2) & mCapacityBytesMask;
 	}
 
-	// Set the buffer sizes
-	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)(framesToRead * mBytesPerFrame);
-
-	return framesToRead;
+	return bytesToRead;
 }
 
-size_t SFB::Audio::RingBuffer::WriteAudio(const AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const
 {
-	if(0 == frameCount)
+	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
 
-	size_t framesAvailable = GetFramesAvailableToWrite();
-	if(0 == framesAvailable)
+	auto bytesAvailable = GetBytesAvailableToRead();
+	if(0 == bytesAvailable)
 		return 0;
 
-	size_t framesToWrite = std::min(framesAvailable, frameCount);
-	size_t cnt2 = mWritePointer + framesToWrite;
+	auto readPointer = mReadPointer;
+
+	auto bytesToRead = std::min(bytesAvailable, byteCount);
+	auto cnt2 = readPointer + bytesToRead;
 
 	size_t n1, n2;
-	if(cnt2 > mCapacityFrames) {
-		n1 = mCapacityFrames - mWritePointer;
-		n2 = cnt2 & mCapacityFramesMask;
+	if(cnt2 > mCapacityBytes) {
+		n1 = mCapacityBytes - mReadPointer;
+		n2 = cnt2 & mCapacityBytesMask;
 	}
 	else {
-		n1 = framesToWrite;
+		n1 = bytesToRead;
 		n2 = 0;
 	}
 
-	StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, 0, n1 * mBytesPerFrame);
-	mWritePointer = (mWritePointer + n1) & mCapacityFramesMask;
+	memcpy(destinationBuffer, mBuffer, n1);
+	readPointer = (readPointer + n1) & mCapacityBytesMask;
 
-	if(n2) {
-		StoreABL(mBuffers, mWritePointer * mBytesPerFrame, bufferList, n1 * mBytesPerFrame, n2 * mBytesPerFrame);
-		mWritePointer = (mWritePointer + n2) & mCapacityFramesMask;
+	if(n2)
+		memcpy((uint8_t *)destinationBuffer + n1, mBuffer + readPointer, n2);
+
+	return bytesToRead;
+}
+
+size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount)
+{
+	if(nullptr == sourceBuffer || 0 == byteCount)
+		return 0;
+
+	auto bytesAvailable = GetBytesAvailableToWrite();
+	if(0 == bytesAvailable)
+		return 0;
+
+	auto bytesToWrite = std::min(bytesAvailable, byteCount);
+	auto cnt2 = mWritePointer + bytesToWrite;
+
+	size_t n1, n2;
+	if(cnt2 > mCapacityBytes) {
+		n1 = mCapacityBytes - mWritePointer;
+		n2 = cnt2 & mCapacityBytesMask;
+	}
+	else {
+		n1 = bytesToWrite;
+		n2 = 0;
 	}
 
-	return framesToWrite;
+	memcpy(mBuffer + mWritePointer, sourceBuffer, n1);
+	mWritePointer = (mWritePointer + n1) & mCapacityBytesMask;
+
+	if(n2) {
+		memcpy(mBuffer + mWritePointer, (int8_t *)sourceBuffer + n1, n2);
+		mWritePointer = (mWritePointer + n2) & mCapacityBytesMask;
+	}
+
+	return bytesToWrite;
+}
+
+void SFB::RingBuffer::ReadAdvance(size_t byteCount)
+{
+	mReadPointer = (mReadPointer + byteCount) & mCapacityBytesMask;
+}
+
+void SFB::RingBuffer::WriteAdvance(size_t byteCount)
+{
+	mWritePointer = (mWritePointer + byteCount) & mCapacityBytesMask;;
+}
+
+SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
+{
+	auto w = mWritePointer;
+	auto r = mReadPointer;
+
+	size_t free_cnt;
+	if(w > r)
+		free_cnt = w - r;
+	else
+		free_cnt = (w - r + mCapacityBytes) & mCapacityBytesMask;
+
+	auto cnt2 = r + free_cnt;
+
+	if(cnt2 > mCapacityBytes)
+		return { { mBuffer + r, mCapacityBytes - r }, { mBuffer, cnt2 & mCapacityBytes } };
+	else
+		return { { mBuffer + r, free_cnt }, {} };
+
+	return {};
+}
+
+SFB::RingBuffer::BufferPair SFB::RingBuffer::GetWriteVector() const
+{
+	auto w = mWritePointer;
+	auto r = mReadPointer;
+
+	size_t free_cnt;
+	if(w > r)
+		free_cnt = ((r - w + mCapacityBytes) & mCapacityBytesMask) - 1;
+	else if(w < r)
+		free_cnt = (r - w) - 1;
+	else
+		free_cnt = mCapacityBytes - 1;
+
+	auto cnt2 = w + free_cnt;
+
+	if(cnt2 > mCapacityBytes)
+		return { { mBuffer + w, mCapacityBytes - w }, { mBuffer, cnt2 & mCapacityBytes } };
+	else
+		return { { mBuffer + w, free_cnt }, {} };
+
+	return {};
 }

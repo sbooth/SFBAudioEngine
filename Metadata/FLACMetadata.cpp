@@ -105,7 +105,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::FLACMetadata::CreateMetadata(CFURLR
 #pragma mark Creation and Destruction
 
 SFB::Audio::FLACMetadata::FLACMetadata(CFURLRef url)
-	: AudioMetadata(url)
+	: Metadata(url)
 {}
 
 #pragma mark Functionality

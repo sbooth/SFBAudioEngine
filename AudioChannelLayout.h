@@ -119,13 +119,34 @@ namespace SFB {
 			/*! @endcond */
 			//@}
 
-			
+
+			// ========================================
+			/*! @name Functionality */
+			//@{
+
+			/*! @brief Get the number of channels contained in this channel layout */
+			size_t GetChannelCount() const;
+
+			/*!
+			 * @brief Create a channel map for converting audio from this channel layout
+			 * @param outputLayout The output channel layout
+			 * @param channelMap A \c std::vector to receive the channel map on success
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool MapToLayout(const ChannelLayout& outputLayout, std::vector<SInt32>& channelMap) const;
+
+			//@}
+
+
 			// ========================================
 			/*! @name AudioChannelLayout access */
 			//@{
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
 			inline const AudioChannelLayout * GetACL() const		{ return mChannelLayout.get(); }
+
+			/*! @brief Retrieve the size of this object's internal \c AudioChannelLayout */
+			size_t GetACLSize() const;
 
 
 			/*! @brief Query whether this \c ChannelLayout is empty */

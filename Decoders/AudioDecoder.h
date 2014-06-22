@@ -38,6 +38,7 @@
 #include <algorithm>
 
 #include "InputSource.h"
+#include "AudioFormat.h"
 #include "AudioChannelLayout.h"
 
 /*! @file AudioDecoder.h @brief Support for decoding audio to PCM */
@@ -110,7 +111,7 @@ namespace SFB {
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return A \c Decoder object, or \c nullptr on failure
 			 */
-			static unique_ptr CreateDecoderForURL(CFURLRef url, CFErrorRef *error = nullptr);
+			static unique_ptr CreateForURL(CFURLRef url, CFErrorRef *error = nullptr);
 
 			/*!
 			 * @brief Create a \c Decoder object for the specified URL
@@ -120,7 +121,7 @@ namespace SFB {
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return A \c Decoder object, or \c nullptr on failure
 			 */
-			static unique_ptr CreateDecoderForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error = nullptr);
+			static unique_ptr CreateForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error = nullptr);
 
 
 			/*!
@@ -130,7 +131,7 @@ namespace SFB {
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return A \c Decoder object, or \c nullptr on failure
 			 */
-			static unique_ptr CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error = nullptr);
+			static unique_ptr CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error = nullptr);
 
 			/*!
 			 * @brief Create a \c Decoder object for the specified \c InputSource
@@ -141,100 +142,7 @@ namespace SFB {
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return A \c Decoder object, or \c nullptr on failure
 			 */
-			static unique_ptr CreateDecoderForInputSource(InputSource::unique_ptr inputSource, CFStringRef mimeType, CFErrorRef *error = nullptr);
-
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified URL
-			 * @param url The URL
-			 * @param startingFrame The first frame to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified URL
-			 * @param url The URL
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified URL
-			 * @param url The URL
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param repeatCount The number of times to repeat
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
-
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c InputSource
-			 * @param inputSource The input source
-			 * @param startingFrame The first frame to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c InputSource
-			 * @param inputSource The input source
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c InputSource
-			 * @param inputSource The input source
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param repeatCount The number of times to repeat
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
-
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c Decoder
-			 * @param decoder The decoder
-			 * @param startingFrame The first frame to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c Decoder
-			 * @param decoder The decoder
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error = nullptr);
-
-			/*!
-			 * @brief Create a \c Decoder object for a region of the specified \c Decoder
-			 * @param decoder The decoder
-			 * @param startingFrame The first frame to decode
-			 * @param frameCount The number of frames to decode
-			 * @param repeatCount The number of times to repeat
-			 * @param error An optional pointer to a \c CFErrorRef to receive error information
-			 * @return A \c Decoder object, or \c nullptr on failure
-			 */
-			static unique_ptr CreateDecoderForDecoderRegion(unique_ptr decoder, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error = nullptr);
+			static unique_ptr CreateForInputSource(InputSource::unique_ptr inputSource, CFStringRef mimeType, CFErrorRef *error = nullptr);
 
 			//@}
 
@@ -335,7 +243,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the native format of the source audio */
-			inline AudioStreamBasicDescription GetSourceFormat() const 	{ return mSourceFormat; }
+			inline const AudioFormat& GetSourceFormat() const 	{ return mSourceFormat; }
 
 			/*!
 			 * @brief Create a description of the source audio's native format
@@ -346,7 +254,7 @@ namespace SFB {
 
 
 			/*! @brief Get the type of PCM data provided by this decoder */
-			inline AudioStreamBasicDescription GetFormat() const		{ return mFormat; }
+			inline const AudioFormat& GetFormat() const		{ return mFormat; }
 
 			/*!
 			 * @brief Create a description of the type of PCM data provided by this decoder
@@ -402,10 +310,10 @@ namespace SFB {
 
 			InputSource::unique_ptr			mInputSource;		/*!< @brief The input source feeding this decoder */
 
-			AudioStreamBasicDescription		mFormat;			/*!< @brief The type of PCM data provided by this decoder */
+			AudioFormat						mFormat;			/*!< @brief The type of PCM data provided by this decoder */
 			ChannelLayout					mChannelLayout;		/*!< @brief The channel layout for the PCM data, or \c nullptr if unknown or unspecified */
 
-			AudioStreamBasicDescription		mSourceFormat;		/*!< @brief The native format of the source file */
+			AudioFormat						mSourceFormat;		/*!< @brief The native format of the source file */
 
 
 			/*! @brief Create a new \c Decoder and initialize \c Decoder::mInputSource to \c nullptr */
@@ -433,7 +341,7 @@ namespace SFB {
 
 			// Optional seeking support
 			virtual bool _SupportsSeeking() const						{ return false; }
-			virtual SInt64 _SeekToFrame(SInt64 frame)					{ return -1; }
+			virtual SInt64 _SeekToFrame(SInt64 /*frame*/)				{ return -1; }
 
 			// Data members
 			void							*mRepresentedObject;
@@ -497,6 +405,3 @@ namespace SFB {
 		
 	}
 }
-
-/*! @brief Compatibility typedef */
-typedef SFB::Audio::Decoder AudioDecoder __attribute__((deprecated));

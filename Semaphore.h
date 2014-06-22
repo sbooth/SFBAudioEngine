@@ -43,7 +43,7 @@ namespace SFB {
 	public:
 		/*!
 		 * @brief Create a new \c Semaphore
-		 * @throws std::runtime_exception
+		 * @throws std::runtime_error
 		 */
 		Semaphore();
 

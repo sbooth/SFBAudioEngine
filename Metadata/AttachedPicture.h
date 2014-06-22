@@ -227,6 +227,3 @@ namespace SFB {
 		
 	}
 }
-
-/*! @brief Compatibility typedef */
-typedef SFB::Audio::AttachedPicture AttachedPicture __attribute__((deprecated));

@@ -24,12 +24,8 @@ enum ePlayerFlags : unsigned int {
 @private
 	SFB::Audio::Player	*_player;		// The player instance
 	std::atomic_uint	_playerFlags;
-	NSTimer				*_uiTimer;
+	dispatch_source_t	_timer;
 }
-@end
-
-@interface PlayerWindowController (Callbacks)
-- (void) uiTimerFired:(NSTimer *)timer;
 @end
 
 @interface PlayerWindowController (Private)
@@ -41,7 +37,14 @@ enum ePlayerFlags : unsigned int {
 - (id) init
 {
 	if((self = [super initWithWindowNibName:@"PlayerWindow"])) {
-		_player = new SFB::Audio::Player();
+		try {
+			_player = new SFB::Audio::Player();
+		}
+
+		catch(const std::exception& e) {
+			NSRunAlertPanel(@"Unable to create audio player", @"", @"OK", @"", @"");
+			return nil;
+		}
 
 		_playerFlags = 0;
 
@@ -55,11 +58,50 @@ enum ePlayerFlags : unsigned int {
 			_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
 		});
 
-		// Update the UI 5 times per second in all run loop modes (so menus, etc. don't stop updates)
-		_uiTimer = [NSTimer timerWithTimeInterval:(1.0 / 5) target:self selector:@selector(uiTimerFired:) userInfo:nil repeats:YES];
+		// Update the UI 5 times per second
+		_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+		dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, NSEC_PER_SEC / 5, NSEC_PER_SEC / 3);
 
-		// addTimer:forMode: will keep a reference _uiTimer
-		[[NSRunLoop mainRunLoop] addTimer:_uiTimer forMode:NSRunLoopCommonModes];
+		dispatch_source_set_event_handler(_timer, ^{
+
+			// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
+			auto flags = _playerFlags.load();
+
+			if(ePlayerFlagRenderingStarted & flags) {
+				_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
+
+				[self updateWindowUI];
+
+				return;
+			}
+			else if(ePlayerFlagRenderingFinished & flags) {
+				_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
+
+				[self updateWindowUI];
+
+				return;
+			}
+
+			if(!_player->IsPlaying())
+				[self.playButton setTitle:@"Resume"];
+			else
+				[self.playButton setTitle:@"Pause"];
+
+			SInt64 currentFrame, totalFrames;
+			CFTimeInterval currentTime, totalTime;
+
+			if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
+				double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
+
+				[self.slider setDoubleValue:fractionComplete];
+				[self.elapsed setDoubleValue:currentTime];
+				[self.remaining setDoubleValue:(-1 * (totalTime - currentTime))];
+			}
+
+		});
+
+		// Start the timer
+		dispatch_resume(_timer);
 	}
 
 	return self;
@@ -67,7 +109,7 @@ enum ePlayerFlags : unsigned int {
 
 - (void) dealloc
 {
-	[_uiTimer invalidate], _uiTimer = nil;
+	dispatch_release(_timer);
 
 	delete _player, _player = nullptr;
 }
@@ -81,6 +123,12 @@ enum ePlayerFlags : unsigned int {
 - (NSString *) windowFrameAutosaveName
 {
 	return @"Player Window";
+}
+
+- (void) windowWillClose:(NSNotification *)notification
+{
+#pragma unused(notification)
+	_player->Stop();
 }
 
 - (IBAction) playPause:(id)sender
@@ -129,48 +177,6 @@ enum ePlayerFlags : unsigned int {
 	NSParameterAssert(nil != url);
 
 	return _player->Enqueue((__bridge CFURLRef)url);
-}
-
-@end
-
-@implementation PlayerWindowController (Callbacks)
-
-- (void) uiTimerFired:(NSTimer *)timer
-{
-#pragma unused(timer)
-	// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
-	auto flags = _playerFlags.load();
-
-	if(ePlayerFlagRenderingStarted & flags) {
-		_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
-
-		[self updateWindowUI];
-		
-		return;
-	}
-	else if(ePlayerFlagRenderingFinished & flags) {
-		_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
-
-		[self updateWindowUI];
-		
-		return;
-	}
-
-	if(!_player->IsPlaying())
-		[self.playButton setTitle:@"Resume"];
-	else
-		[self.playButton setTitle:@"Pause"];
-
-	SInt64 currentFrame, totalFrames;
-	CFTimeInterval currentTime, totalTime;
-
-	if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
-		double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
-		
-		[self.slider setDoubleValue:fractionComplete];
-		[self.elapsed setDoubleValue:currentTime];
-		[self.remaining setDoubleValue:(-1 * (totalTime - currentTime))];
-	}
 }
 
 @end

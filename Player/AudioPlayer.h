@@ -11,7 +11,7 @@
  *    - Redistributions in binary form must reproduce the above copyright
  *      notice, this list of conditions and the following disclaimer in the
  *      documentation and/or other materials provided with the distribution.
- *    - Neither the name of Stephen F. Booth nor the names of its 
+ *    - Neither the name of Stephen F. Booth nor the names of its
  *      contributors may be used to endorse or promote products derived
  *      from this software without specific prior written permission.
  *
@@ -31,21 +31,20 @@
 #pragma once
 
 #include <CoreAudio/CoreAudioTypes.h>
-#include <AudioToolbox/AudioToolbox.h>
 
 #include <memory>
 #include <atomic>
 #include <thread>
 #include <vector>
-#include <map>
 #include <utility>
 
+#include "AudioOutput.h"
 #include "AudioDecoder.h"
-#include "RingBuffer.h"
+#include "AudioRingBuffer.h"
 #include "AudioChannelLayout.h"
 #include "Semaphore.h"
 
-/*! @file AudioPlayer.h @brief Core playback functionality */
+/*! @file AudioPlayer.h @brief Audio playback functionality */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
@@ -53,20 +52,18 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		// ========================================
-		// Constants
-		// ========================================
-		/*! @brief The length of the array containing active audio decoders */
-#define kActiveDecoderArraySize 8
-
 		/*!
 		 * @brief The audio player class
 		 *
-		 * The player primarily uses two threads:
-		 *  1. A decoding thread, which reads audio via an AudioDecoder instance and stores it in the ring buffer.
-		 *     The audio is stored in the canonical Core Audio format (kAudioFormatFlagsAudioUnitCanonical)-
-		 *     deinterleaved, normalized [-1, 1) native floating point data in 32 bits (AKA floats) on Mac OS X and 8.24 fixed point on iOS
-		 *  2. A rendering thread, which reads audio from the ring buffer and hands it off to the output AU.
+		 * A player decodes audio into a ring buffer and passes it to the selected Output on demand.
+		 * The player supports seeking and playback control for all Decoder subclasses supported by the current Output.
+		 *
+		 * Decoding occurs in a high priority (non-realtime) thread which reads audio via a Decoder instance and stores it in the ring buffer.
+		 * For the common case using CoreAudioOutput the audio is stored in the canonical Core Audio format (kAudioFormatFlagsAudioUnitCanonical)-
+		 * deinterleaved, normalized [-1, 1) native floating point data in 32 bits (AKA floats) on Mac OS X and 8.24 fixed point on iOS.
+		 * For ASIOOutput (on exaSound devices) the audio may be stored in either DSD or PCM format.
+		 *
+		 * Rendering occurs in a realtime thread when ProvideAudio() is called by the output.
 		 *
 		 * Since decoding and rendering are distinct operations performed in separate threads, there is an additional thread
 		 * used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
@@ -79,10 +76,10 @@ namespace SFB {
 		 *  3. Rendering started
 		 *  4. Rendering finished
 		 *  5. Pre- and post- audio rendering
-		 *  6. Audio format mismatches preventing gapless playback
+		 *  6. %Audio format mismatches preventing gapless playback
 		 *
 		 * The decoding callbacks will be performed from the decoding thread.  Although not a real time thread,
-		 * lengthy operations should be avoided to prevent audio glitching.
+		 * lengthy operations should be avoided to prevent audio glitching resulting from gaps in the ring buffer.
 		 *
 		 * The rendering callbacks will be performed from the realtime rendering thread.  Execution of this thread must not be blocked!
 		 * Examples of prohibited actions that could cause problems:
@@ -90,8 +87,10 @@ namespace SFB {
 		 *  - Objective-C messaging
 		 *  - File IO
 		 */
-		class Player
-		{
+		class Player {
+
+			/*! @brief The length of the array containing active audio decoders */
+			static const size_t kActiveDecoderArraySize = 8;
 
 		public:
 			// ========================================
@@ -105,7 +104,14 @@ namespace SFB {
 			typedef void (^AudioPlayerDecoderEventBlock)(const Decoder& decoder);
 
 			/*!
-			 * @brief A block called when an \c AudioPlayer render event occurs
+			 * @brief A block called when an error occurs on a \c Decoder
+			 * @param decoder The \c AudioDecoder on which the error occurred
+			 * @param error An optional description of the error
+			 */
+			typedef void (^AudioPlayerDecoderErrorBlock)(const Decoder& decoder, CFErrorRef error);
+
+			/*!
+			 * @brief A block called when a \c Player render event occurs
 			 * @param data The audio data
 			 * @param frameCount The number of frames in \c data
 			 */
@@ -116,7 +122,13 @@ namespace SFB {
 			 * @param currentFormat The current audio format
 			 * @param nextFormat The next audio format
 			 */
-			typedef void (^AudioPlayerFormatMismatchBlock)(AudioStreamBasicDescription currentFormat, AudioStreamBasicDescription nextFormat);
+			typedef void (^AudioPlayerFormatMismatchBlock)(const AudioFormat& currentFormat, const AudioFormat& nextFormat);
+
+			/*!
+			 * @brief A block called when an error occurs
+			 * @param error An optional description of the error
+			 */
+			typedef void (^AudioPlayerErrorBlock)(CFErrorRef error);
 
 			//@}
 
@@ -126,7 +138,7 @@ namespace SFB {
 			//@{
 
 			/*!
-			 * @brief Create a new \c Player for the default output device
+			 * @brief Create a new \c Player for the default CoreAudioOutput device
 			 * @throws std::bad_alloc
 			 * @throws std::runtime_error
 			 */
@@ -260,6 +272,13 @@ namespace SFB {
 			 */
 			void SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block);
 
+			/*!
+			 * @brief Set the block to be invoked when a queued \c Decoder fails to open
+			 * @note The block is invoked from the decoding thread
+			 * @param block The block to invoke if an error occurs calling Decoder::Open
+			 */
+			void SetOpenDecoderErrorBlock(AudioPlayerDecoderErrorBlock block);
+
 
 			/*!
 			 * @brief Set the block to be invoked before the player renders audio
@@ -275,6 +294,7 @@ namespace SFB {
 			 */
 			void SetPostRenderBlock(AudioPlayerRenderEventBlock block);
 
+
 			/*!
 			 * @brief Set the block to be invoked when the player's sample rate or channel count will change
 			 * @note This block is invoked from the decoding thread
@@ -282,7 +302,15 @@ namespace SFB {
 			 */
 			void SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block);
 
+			/*!
+			 * @brief Set the block to be invoked when a \c Decoder with an unsupported format
+			 * @note The block is invoked from the decoding thread
+			 * @param block The block to invoke when an error occurs
+			 */
+			void SetUnsupportedFormatBlock(AudioPlayerErrorBlock block);
+
 			//@}
+
 
 			// ========================================
 			/*!
@@ -343,286 +371,6 @@ namespace SFB {
 
 
 			// ========================================
-			/*! @name Player Parameters */
-			//@{
-
-			/*!
-			 * @brief Get the player volume
-			 *
-			 * This corresponds to the property \c kHALOutputParam_Volume on element \c 0
-			 * @note The volume is linear across the interval [0, 1]
-			 * @param volume A \c Float32 to receive the volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetVolume(Float32& volume) const;
-
-			/*!
-			 * @brief Set the player volume
-			 *
-			 * This corresponds to the property \c kHALOutputParam_Volume on element \c 0
-			 * @note The volume is linear and the value will be clamped to the interval [0, 1]
-			 * @param volume The desired volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetVolume(Float32 volume);
-
-
-			/*!
-			 * @brief Get the volume for the specified channel
-			 *
-			 * This corresponds to the property \c kHALOutputParam_Volume on element \c channel
-			 * @note The volume is linear across the interval [0, 1]
-			 * @param channel The desired channel
-			 * @param volume A \c Float32 to receive the channel's volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetVolumeForChannel(UInt32 channel, Float32& volume) const;
-
-			/*!
-			 * @brief Set the volume for the specified channel
-			 *
-			 * This corresponds to the property \c kHALOutputParam_Volume on element \c channel
-			 * @note The volume is linear and the value will be clamped to the interval [0, 1]
-			 * @param channel The desired channel
-			 * @param volume The desired volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetVolumeForChannel(UInt32 channel, Float32 volume);
-
-
-			/*!
-			 * @brief Get the player pre-gain
-			 *
-			 * This corresponds to the property \c kMultiChannelMixerParam_Volume
-			 * @note Pre-gain is linear across the interval [0, 1]
-			 * @param preGain A \c Float32 to receive the pre-gain
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetPreGain(Float32& preGain) const;
-
-			/*!
-			 * @brief Set the player pre-gain
-			 *
-			 * This corresponds to the property \c kMultiChannelMixerParam_Volume
-			 * @note The pre-gain is linear and the value will be clamped to the interval [0, 1]
-			 * @param preGain The desired pre-gain
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetPreGain(Float32 preGain);
-
-
-			/*! @brief Query whether the player is performing sample rate conversion */
-			bool IsPerformingSampleRateConversion() const;
-
-			/*!
-			 * @brief Get the sample rate converter's complexity
-			 *
-			 * This corresponds to the property \c kAudioUnitProperty_SampleRateConverterComplexity
-			 * @param complexity A \c UInt32 to receive the SRC complexity
-			 * @return \c true on success, \c false otherwise
-			 * @see kAudioUnitProperty_SampleRateConverterComplexity
-			 */
-			bool GetSampleRateConverterComplexity(UInt32& complexity) const;
-
-			/*!
-			 * @brief Set the sample rate converter's complexity
-			 *
-			 * This corresponds to the property \c kAudioUnitProperty_SampleRateConverterComplexity
-			 * @param complexity The desired SRC complexity
-			 * @return \c true on success, \c false otherwise
-			 * @see kAudioUnitProperty_SampleRateConverterComplexity
-			 */
-			bool SetSampleRateConverterComplexity(UInt32 complexity);
-
-			//@}
-
-
-			// ========================================
-			/*! @name DSP Effects */
-			//@{
-
-            /*!
-			 * @brief Add a DSP effect to the audio processing graph with the component type kAudioUnitType_Effect
-			 * @param subType The \c AudioComponent subtype
-			 * @param manufacturer The \c AudioComponent manufacturer
-			 * @param flags The \c AudioComponent flags
-			 * @param mask The \c AudioComponent mask
-			 * @param effectUnit An optional pointer to an \c AudioUnit to receive the effect
-			 * @return \c true on success, \c false otherwise
-			 * @see AudioComponentDescription
-			 */
-			bool AddEffect(OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
-            
-			/*!
-			 * @brief Add a DSP effect to the audio processing graph
-             * @param componentType The \c AudioComponent type, normally \c kAudioUnitType_Effect
-			 * @param subType The \c AudioComponent subtype
-			 * @param manufacturer The \c AudioComponent manufacturer
-			 * @param flags The \c AudioComponent flags
-			 * @param mask The \c AudioComponent mask
-			 * @param effectUnit An optional pointer to an \c AudioUnit to receive the effect
-			 * @return \c true on success, \c false otherwise
-			 * @see AudioComponentDescription
-			 */
-			bool AddEffect(OSType componentType, OSType subType, OSType manufacturer, UInt32 flags, UInt32 mask, AudioUnit *effectUnit = nullptr);
-
-			/*!
-			 * @brief Remove the specified DSP effect
-			 * @param effectUnit The \c AudioUnit to remove from the processing graph
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool RemoveEffect(AudioUnit effectUnit);
-
-			//@}
-
-
-#if !TARGET_OS_IPHONE
-			// ========================================
-			/*! @name Hog Mode */
-			//@{
-
-			/*! @brief Query whether the output device hogged */
-			bool OutputDeviceIsHogged() const;
-
-			/*!
-			 * @brief Start hogging the output device
-			 *
-			 * This will attempt to set the property \c kAudioDevicePropertyHogMode
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool StartHoggingOutputDevice();
-
-			/*!
-			 * @brief Stop hogging the output device
-			 *
-			 * This will attempt to clear the property \c kAudioDevicePropertyHogMode
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool StopHoggingOutputDevice();
-
-			//@}
-
-			// ========================================
-			/*! @name Device parameters */
-			//@{
-
-			/*!
-			 * @brief Get the device's master volume
-			 *
-			 * This corresponds to the property \c kAudioDevicePropertyVolumeScalar on element \c kAudioObjectPropertyElementMaster
-			 * @param volume A \c Float32 to receive the master volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetDeviceMasterVolume(Float32& volume) const;
-
-			/*!
-			 * @brief Set the device's master volume
-			 *
-			 * This corresponds to the property \c kAudioDevicePropertyVolumeScalar on element \c kAudioObjectPropertyElementMaster
-			 * @param volume The desired master volume
-			 * @return \c true on success, \c false otherwise
-			 * @see kAudioDevicePropertyVolumeScalar
-			 */
-			bool SetDeviceMasterVolume(Float32 volume);
-
-
-			/*!
-			 * @brief Get the device's volume for the specified channel
-			 *
-			 * This corresponds to the property \c kAudioDevicePropertyVolumeScalar on element \c channel
-			 * @param channel The desired channel
-			 * @param volume A \c Float32 to receive the volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetDeviceVolumeForChannel(UInt32 channel, Float32& volume) const;
-
-			/*!
-			 * @brief Set the device's volume for the specified channel
-			 *
-			 * This corresponds to the property \c kAudioDevicePropertyVolumeScalar on element \c channel
-			 * @param channel The desired channel
-			 * @param volume The desired volume
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetDeviceVolumeForChannel(UInt32 channel, Float32 volume);
-
-
-			/*!
-			 * @brief Get the number of output channels on the device
-			 * @param channelCount A \c UInt32 to receive the channel count
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetDeviceChannelCount(UInt32& channelCount) const;
-
-			/*!
-			 * @brief Get the device's preferred stereo channel
-			 * @param preferredStereoChannels A \c std::pair to receive the channels
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetDevicePreferredStereoChannels(std::pair<UInt32, UInt32>& preferredStereoChannels) const;
-
-			//@}
-
-
-			// ========================================
-			/*! @name Device Management */
-			//@{
-
-			/*!
-			 * @brief Create the UID of the output device
-			 * @note The returned string must be released by the caller
-			 * @param deviceUID A \c CFStringRef to receive the UID
-			 * @return \c true on success, \c false otherwise
-			 * @see GetOutputDeviceID()
-			 */
-			bool CreateOutputDeviceUID(CFStringRef& deviceUID) const;
-
-			/*!
-			 * @brief Set the output device to the device matching the provided UID
-			 * @param deviceUID The UID of the desired device
-			 * @return \c true on success, \c false otherwise
-			 * @see SetOutputDeviceID()
-			 */
-			bool SetOutputDeviceUID(CFStringRef deviceUID);
-
-
-			/*!
-			 * @brief Get the device ID of the output device
-			 * @param deviceID An \c AudioDeviceID to receive the device ID
-			 * @return \c true on success, \c false otherwise
-			 * @see CreateOutputDeviceUID()
-			 */
-			bool GetOutputDeviceID(AudioDeviceID& deviceID) const;
-
-			/*!
-			 * @brief Set the output device to the device matching the provided ID
-			 * @param deviceID The ID of the desired device
-			 * @return \c true on success, \c false otherwise
-			 * @see SetOutputDeviceUID()
-			 */
-			bool SetOutputDeviceID(AudioDeviceID deviceID);
-
-
-			/*!
-			 * @brief Get the sample rate of the output device
-			 * @param sampleRate A \c Float64 to receive the sample rate
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool GetOutputDeviceSampleRate(Float64& sampleRate) const;
-
-			/*!
-			 * @brief Set the sample rate of the output device
-			 * @param sampleRate The desired sample rate
-			 * @return \c true on success, \c false otherwise
-			 */
-			bool SetOutputDeviceSampleRate(Float64 sampleRate);
-
-			//@}
-
-#endif
-
-
-			// ========================================
 			/*! @name Playlist Management */
 			//@{
 
@@ -677,6 +425,24 @@ namespace SFB {
 
 
 			// ========================================
+			/*! @name Output Management */
+			//@{
+
+			/*! @brief Get the Output used by this Player */
+			Output& GetOutput() const;
+
+			/*!
+			 * @brief Set the Output used by this player
+			 * @note The player will take ownership of the output on success and may take ownership on failure
+			 * @param output The desired output
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool SetOutput(Output::unique_ptr output);
+
+			//@}
+
+
+			// ========================================
 			/*! @name Ring Buffer Parameters */
 			//@{
 
@@ -714,6 +480,15 @@ namespace SFB {
 			/*! @internal This class is exposed so it can be used inside C callbacks */
 			class DecoderStateData;
 
+			/*!
+			 * @internal
+			 * @brief Copy decoded audio into the specified buffer
+			 * @param bufferList A buffer to receive the decoded audio
+			 * @param frameCount The requested number of audio frames
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool ProvideAudio(AudioBufferList *bufferList, UInt32 frameCount);
+
 			/*! @endcond */
 
 		private:
@@ -724,46 +499,17 @@ namespace SFB {
 			void * CollectorThreadEntry();
 
 			// ========================================
-			// AUGraph Setup and Control
-			bool OpenOutput();
-			bool CloseOutput();
-
-			bool StartOutput();
-			bool StopOutput();
-
-			bool OutputIsRunning() const;
-			bool ResetOutput();
-
-			// ========================================
-			// AUGraph Utilities
-			bool GetAUGraphLatency(Float64& latency) const;
-			bool GetAUGraphTailTime(Float64& tailTime) const;
-
-			bool SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
-
-			bool SetAUGraphSampleRateAndChannelsPerFrame(Float64 sampleRate, UInt32 channelsPerFrame);
-
-			bool SetOutputUnitChannelMap(const ChannelLayout& channelLayout);
-
-			// ========================================
 			// Other Utilities
 			void StopActiveDecoders();
 
 			DecoderStateData * GetCurrentDecoderState() const;
 			DecoderStateData * GetDecoderStateStartingAfterTimeStamp(SInt64 timeStamp) const;
 
-			bool SetupAUGraphAndRingBufferForDecoder(Decoder& decoder);
+			bool SetupOutputAndRingBufferForDecoder(Decoder& decoder);
 
 			// ========================================
 			// Data Members
-			AUGraph									mAUGraph;
-			AUNode									mMixerNode;
-			AUNode									mOutputNode;
-			UInt32									mDefaultMaximumFramesPerSlice;
-
 			RingBuffer::unique_ptr					mRingBuffer;
-			AudioStreamBasicDescription				mRingBufferFormat;
-			ChannelLayout							mRingBufferChannelLayout;
 			std::atomic_uint						mRingBufferCapacity;
 			std::atomic_uint						mRingBufferWriteChunkSize;
 
@@ -783,38 +529,17 @@ namespace SFB {
 
 			std::atomic_llong						mFramesDecoded;
 			std::atomic_llong						mFramesRendered;
-			int64_t									mFramesRenderedLastPass;
-			
+
+			Output::unique_ptr						mOutput;
+
 			// ========================================
 			// Callbacks
 			AudioPlayerDecoderEventBlock			mDecoderEventBlocks [4];
+			AudioPlayerDecoderErrorBlock			mDecoderErrorBlock;
 			AudioPlayerRenderEventBlock				mRenderEventBlocks [2];
 			AudioPlayerFormatMismatchBlock			mFormatMismatchBlock;
-			
-		public:
-			
-			// ========================================
-			/*! @cond */
-			
-			/*! @internal AUNode render callback */
-			OSStatus Render(AudioUnitRenderActionFlags		*ioActionFlags,
-							const AudioTimeStamp			*inTimeStamp,
-							UInt32							inBusNumber,
-							UInt32							inNumberFrames,
-							AudioBufferList					*ioData);
-			
-			/*! @internal AUGraph render notification */
-			OSStatus RenderNotify(AudioUnitRenderActionFlags	*ioActionFlags,
-								  const AudioTimeStamp			*inTimeStamp,
-								  UInt32						inBusNumber,
-								  UInt32						inNumberFrames,
-								  AudioBufferList				*ioData);
-
-			/*! @endcond */
+			AudioPlayerErrorBlock					mErrorBlock;
 		};
 		
 	}
 }
-
-/*! @brief Compatibility typedef */
-typedef SFB::Audio::Player AudioPlayer __attribute__((deprecated));
