@@ -127,37 +127,27 @@ enum ePlayerFlags : unsigned int {
 
 - (void) windowWillClose:(NSNotification *)notification
 {
-#pragma unused(notification)
 	_player->Stop();
 }
 
 - (IBAction) playPause:(id)sender
 {
-#pragma unused(sender)
 	_player->PlayPause();
 }
 
 - (IBAction) seekForward:(id)sender
 {
-#pragma unused(sender)
 	_player->SeekForward();
 }
 
 - (IBAction) seekBackward:(id)sender
 {
-#pragma unused(sender)
 	_player->SeekBackward();
 }
 
 - (IBAction) seek:(id)sender
 {
-	NSParameterAssert(nil != sender);
-	
-	SInt64 totalFrames;
-	if(_player->GetTotalFrames(totalFrames)) {
-		SInt64 desiredFrame = static_cast<SInt64>([sender doubleValue] * totalFrames);
-		_player->SeekToFrame(desiredFrame);
-	}
+	_player->SeekToPosition([sender floatValue]);
 }
 
 - (IBAction) skipToNextTrack:(id)sender
@@ -167,15 +157,11 @@ enum ePlayerFlags : unsigned int {
 
 - (BOOL) playURL:(NSURL *)url
 {
-	NSParameterAssert(nil != url);
-
 	return _player->Play((__bridge CFURLRef)url);
 }
 
 - (BOOL) enqueueURL:(NSURL *)url
 {
-	NSParameterAssert(nil != url);
-
 	return _player->Enqueue((__bridge CFURLRef)url);
 }
 

@@ -13,7 +13,6 @@
 
 - (void) applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-#pragma unused(aNotification)
 	// Enable verbose logging to stderr
 	asl_add_log_file(nullptr, STDERR_FILENO);
 	::SFB::Logger::SetCurrentLevel(::SFB::Logger::debug);
@@ -24,19 +23,16 @@
 
 - (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
 {
-#pragma unused(theApplication)
 	return YES;
 }
 
 - (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
-#pragma unused(theApplication)
 	return [self.playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
 - (IBAction) openFile:(id)sender
 {
-#pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 	
 	[openPanel setAllowsMultipleSelection:NO];
@@ -57,7 +53,6 @@
 
 - (IBAction) enqueueFiles:(id)sender
 {
-#pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 
 	[openPanel setAllowsMultipleSelection:YES];
