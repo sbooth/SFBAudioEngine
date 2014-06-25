@@ -31,10 +31,6 @@
 - (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename
 {
 #pragma unused(theApplication)
-	NSArray *supportedTypes = (__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions();
-	if(![supportedTypes containsObject:[filename pathExtension]])
-		return NO;
-	
 	return [self.playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
