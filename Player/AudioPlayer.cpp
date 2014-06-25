@@ -628,6 +628,19 @@ bool SFB::Audio::Player::SeekToTime(CFTimeInterval timeInSeconds)
 	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
 }
 
+bool SFB::Audio::Player::SeekToPosition(float position)
+{
+	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
+
+	if(nullptr == currentDecoderState)
+		return false;
+
+	SInt64 totalFrames		= currentDecoderState->mTotalFrames;
+	SInt64 desiredFrame		= (SInt64)(position * totalFrames);
+
+	return SeekToFrame(std::max(0LL, std::min(desiredFrame, totalFrames - 1)));
+}
+
 bool SFB::Audio::Player::SeekToFrame(SInt64 frame)
 {
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();

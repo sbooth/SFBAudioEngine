@@ -361,6 +361,9 @@ namespace SFB {
 			/*! @brief Seek to the specified time in the active \c Decoder */
 			bool SeekToTime(CFTimeInterval timeInSeconds);
 
+			/*! @brief Seek to the specified position in the active \c Decoder */
+			bool SeekToPosition(float position);
+
 			/*! @brief Seek to the specified frame in the active \c Decoder */
 			bool SeekToFrame(SInt64 frame);
 
