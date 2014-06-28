@@ -227,40 +227,40 @@ namespace SFB {
 	// ========================================
 	// Typedefs for common CoreFoundation types
 
-	typedef CFWrapper<CFTypeRef> CFType;										/*!< @brief A wrapped \c CFTypeRef */
-	typedef CFWrapper<CFDataRef> CFData;										/*!< @brief A wrapped \c CFDataRef */
-	typedef CFWrapper<CFMutableDataRef> CFMutableData;							/*!< @brief A wrapped \c CFMutableDataRef */
-	typedef CFWrapper<CFStringRef> CFString;									/*!< @brief A wrapped \c CFStringRef */
-	typedef CFWrapper<CFMutableStringRef> CFMutableString;						/*!< @brief A wrapped \c CFMutableStringRef */
-	typedef CFWrapper<CFAttributedStringRef> CFAttributedString;				/*!< @brief A wrapped \c CFAttributedStringRef */
-	typedef CFWrapper<CFMutableAttributedStringRef> CFMutableAttributedString;	/*!< @brief A wrapped \c CFMutableAttributedStringRef */
-	typedef CFWrapper<CFDictionaryRef> CFDictionary;							/*!< @brief A wrapped \c CFDictionaryRef */
-	typedef CFWrapper<CFMutableDictionaryRef> CFMutableDictionary;				/*!< @brief A wrapped \c CFMutableDictionaryRef */
-	typedef CFWrapper<CFArrayRef> CFArray;										/*!< @brief A wrapped \c CFArrayRef */
-	typedef CFWrapper<CFMutableArrayRef> CFMutableArray;						/*!< @brief A wrapped \c CFMutableArrayRef */
-	typedef CFWrapper<CFSetRef> CFSet;											/*!< @brief A wrapped \c CFSetRef */
-	typedef CFWrapper<CFMutableSetRef> CFMutableSet;							/*!< @brief A wrapped \c CFMutableSetRef */
-	typedef CFWrapper<CFBagRef> CFBag;											/*!< @brief A wrapped \c CFBagRef */
-	typedef CFWrapper<CFMutableBagRef> CFMutableBag;							/*!< @brief A wrapped \c CFMutableBagRef */
-	typedef CFWrapper<CFPropertyListRef> CFPropertyList;						/*!< @brief A wrapped \c CFPropertyListRef */
-	typedef CFWrapper<CFBitVectorRef> CFBitVector;								/*!< @brief A wrapped \c CFBitVectorRef */
-	typedef CFWrapper<CFMutableBitVectorRef> CFMutableBitVector;				/*!< @brief A wrapped \c CFMutableBitVectorRef */
-	typedef CFWrapper<CFCharacterSetRef> CFCharacterSet;						/*!< @brief A wrapped \c CFCharacterSetRef */
-	typedef CFWrapper<CFMutableCharacterSetRef> CFMutableCharacterSet;			/*!< @brief A wrapped \c CFMutableCharacterSetRef */
-	typedef CFWrapper<CFURLRef> CFURL;											/*!< @brief A wrapped \c CFURLRef */
-	typedef CFWrapper<CFUUIDRef> CFUUID;										/*!< @brief A wrapped \c CFUUIDRef */
-	typedef CFWrapper<CFNumberRef> CFNumber;									/*!< @brief A wrapped \c CFNumberRef */
-	typedef CFWrapper<CFBooleanRef> CFBoolean;									/*!< @brief A wrapped \c CFBooleanRef */
-	typedef CFWrapper<CFErrorRef> CFError;										/*!< @brief A wrapped \c CFErrorRef */
-	typedef CFWrapper<CFDateRef> CFDate;										/*!< @brief A wrapped \c CFDateRef */
-	typedef CFWrapper<CFReadStreamRef> CFReadStream;							/*!< @brief A wrapped \c CFReadStream */
-	typedef CFWrapper<CFWriteStreamRef> CFWriteStream;							/*!< @brief A wrapped \c CFWriteStream */
-	typedef CFWrapper<CFHTTPMessageRef> CFHTTPMessage;							/*!< @brief A wrapped \c CFHTTPMessageRef */
+	using CFType = CFWrapper<CFTypeRef>;										/*!< @brief A wrapped \c CFTypeRef */
+	using CFData = CFWrapper<CFDataRef>;										/*!< @brief A wrapped \c CFDataRef */
+	using CFMutableData = CFWrapper<CFMutableDataRef>;							/*!< @brief A wrapped \c CFMutableDataRef */
+	using CFString = CFWrapper<CFStringRef>;									/*!< @brief A wrapped \c CFStringRef */
+	using CFMutableString = CFWrapper<CFMutableStringRef>;						/*!< @brief A wrapped \c CFMutableStringRef */
+	using CFAttributedString = CFWrapper<CFAttributedStringRef>;				/*!< @brief A wrapped \c CFAttributedStringRef */
+	using CFMutableAttributedString = CFWrapper<CFMutableAttributedStringRef>;	/*!< @brief A wrapped \c CFMutableAttributedStringRef */
+	using CFDictionary = CFWrapper<CFDictionaryRef>;							/*!< @brief A wrapped \c CFDictionaryRef */
+	using CFMutableDictionary = CFWrapper<CFMutableDictionaryRef>;				/*!< @brief A wrapped \c CFMutableDictionaryRef */
+	using CFArray = CFWrapper<CFArrayRef>;										/*!< @brief A wrapped \c CFArrayRef */
+	using CFMutableArray = CFWrapper<CFMutableArrayRef>;						/*!< @brief A wrapped \c CFMutableArrayRef */
+	using CFSet = CFWrapper<CFSetRef>;											/*!< @brief A wrapped \c CFSetRef */
+	using CFMutableSet = CFWrapper<CFMutableSetRef>;							/*!< @brief A wrapped \c CFMutableSetRef */
+	using CFBag = CFWrapper<CFBagRef>;											/*!< @brief A wrapped \c CFBagRef */
+	using CFMutableBag = CFWrapper<CFMutableBagRef>;							/*!< @brief A wrapped \c CFMutableBagRef */
+	using CFPropertyList = CFWrapper<CFPropertyListRef>;						/*!< @brief A wrapped \c CFPropertyListRef */
+	using CFBitVector = CFWrapper<CFBitVectorRef>;								/*!< @brief A wrapped \c CFBitVectorRef */
+	using CFMutableBitVector = CFWrapper<CFMutableBitVectorRef>;				/*!< @brief A wrapped \c CFMutableBitVectorRef */
+	using CFCharacterSet = CFWrapper<CFCharacterSetRef>;						/*!< @brief A wrapped \c CFCharacterSetRef */
+	using CFMutableCharacterSet = CFWrapper<CFMutableCharacterSetRef>;			/*!< @brief A wrapped \c CFMutableCharacterSetRef */
+	using CFURL = CFWrapper<CFURLRef>;											/*!< @brief A wrapped \c CFURLRef */
+	using CFUUID = CFWrapper<CFUUIDRef>;										/*!< @brief A wrapped \c CFUUIDRef */
+	using CFNumber = CFWrapper<CFNumberRef>;									/*!< @brief A wrapped \c CFNumberRef */
+	using CFBoolean = CFWrapper<CFBooleanRef>;									/*!< @brief A wrapped \c CFBooleanRef */
+	using CFError = CFWrapper<CFErrorRef>;										/*!< @brief A wrapped \c CFErrorRef */
+	using CFDate = CFWrapper<CFDateRef>;										/*!< @brief A wrapped \c CFDateRef */
+	using CFReadStream = CFWrapper<CFReadStreamRef>;							/*!< @brief A wrapped \c CFReadStream */
+	using CFWriteStream = CFWrapper<CFWriteStreamRef>;							/*!< @brief A wrapped \c CFWriteStream */
+	using CFHTTPMessage = CFWrapper<CFHTTPMessageRef>;							/*!< @brief A wrapped \c CFHTTPMessageRef */
 #if !TARGET_OS_IPHONE
-	typedef CFWrapper<SecKeychainItemRef> SecKeychainItem;						/*!< @brief A wrapped \c SecKeychainItemRef */
-	typedef CFWrapper<SecCertificateRef> SecCertificate;						/*!< @brief A wrapped \c SecCertificateRef */
-	typedef CFWrapper<SecTransformRef> SecTransform;							/*!< @brief A wrapped \c SecTransformRef */
-	typedef CFWrapper<CGImageSourceRef> CGImageSource;							/*!< @brief A wrapped \c CGImageSourceRef */
+	using SecKeychainItem = CFWrapper<SecKeychainItemRef>;						/*!< @brief A wrapped \c SecKeychainItemRef */
+	using SecCertificate = CFWrapper<SecCertificateRef>;						/*!< @brief A wrapped \c SecCertificateRef */
+	using SecTransform = CFWrapper<SecTransformRef>;							/*!< @brief A wrapped \c SecTransformRef */
+	using CGImageSource = CFWrapper<CGImageSourceRef>;							/*!< @brief A wrapped \c CGImageSourceRef */
 #endif
 
 }
