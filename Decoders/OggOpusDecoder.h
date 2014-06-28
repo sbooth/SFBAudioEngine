@@ -77,7 +77,7 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			typedef std::unique_ptr<OggOpusFile, std::function<void(OggOpusFile *)>> unique_op_ptr;
+			using unique_op_ptr = std::unique_ptr<OggOpusFile, std::function<void(OggOpusFile *)>>;
 
 			// Data members
 			unique_op_ptr		mOpusFile;

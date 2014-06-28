@@ -124,8 +124,8 @@ namespace {
 	// Base class for DSDIFF chunks
 	struct DSDIFFChunk : std::enable_shared_from_this<DSDIFFChunk>
 	{
-		typedef std::shared_ptr<DSDIFFChunk> shared_ptr;
-		typedef std::map<uint32_t, shared_ptr> chunk_map;
+		using shared_ptr = std::shared_ptr<DSDIFFChunk>;
+		using chunk_map = std::map<uint32_t, shared_ptr>;
 
 		// Shared pointer support
 		shared_ptr getptr()					{ return shared_from_this(); }

@@ -172,7 +172,7 @@ namespace SFB {
 			//@}
 
 		private:
-			typedef std::unique_ptr<AudioChannelLayout, std::function<void(void *)>> unique_AudioChannelLayout_ptr;
+			using unique_AudioChannelLayout_ptr = std::unique_ptr<AudioChannelLayout, std::function<void(void *)>>;
 			unique_AudioChannelLayout_ptr mChannelLayout;
 		};
 

@@ -89,7 +89,7 @@ namespace SFB {
 			};
 
 			/*! @brief A \c std::shared_ptr for \c AttachedPicture objects */
-			typedef std::shared_ptr<AttachedPicture> shared_ptr;
+			using shared_ptr = std::shared_ptr<AttachedPicture>;
 
 
 			// ========================================

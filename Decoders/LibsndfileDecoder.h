@@ -77,7 +77,7 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			inline virtual SInt64 _SeekToFrame(SInt64 frame)		{ return sf_seek(mFile.get(), frame, SEEK_SET); }
 
-			typedef std::unique_ptr<SNDFILE, int(*)(SNDFILE *)> unique_SNDFILE_ptr;
+			using unique_SNDFILE_ptr = std::unique_ptr<SNDFILE, int(*)(SNDFILE *)>;
 
 			// Data members
 			enum class ReadMethod {

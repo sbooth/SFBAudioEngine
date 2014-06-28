@@ -62,7 +62,7 @@ namespace SFB {
 		public:
 
 			/*! @brief A \c std::unique_ptr for \c Output objects */
-			typedef std::unique_ptr<Output> unique_ptr;
+			using unique_ptr = std::unique_ptr<Output>;
 
 			// ========================================
 			/*! @name Creation and Destruction */

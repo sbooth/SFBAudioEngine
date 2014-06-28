@@ -68,7 +68,7 @@ namespace SFB {
 		//@{
 
 		/*! @brief A \c std::unique_ptr for \c InputSource objects */
-		typedef std::unique_ptr<InputSource> unique_ptr;
+		using unique_ptr = std::unique_ptr<InputSource>;
 
 		/*!
 		 * Create a new \c InputSource for the given URL

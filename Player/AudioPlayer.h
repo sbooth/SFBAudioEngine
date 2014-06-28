@@ -101,34 +101,34 @@ namespace SFB {
 			 * @brief A block called when an event occurs on a \c Decoder
 			 * @param decoder The \c AudioDecoder on which the event occurred
 			 */
-			typedef void (^AudioPlayerDecoderEventBlock)(const Decoder& decoder);
+			using AudioPlayerDecoderEventBlock = void (^)(const Decoder& decoder);
 
 			/*!
 			 * @brief A block called when an error occurs on a \c Decoder
 			 * @param decoder The \c AudioDecoder on which the error occurred
 			 * @param error An optional description of the error
 			 */
-			typedef void (^AudioPlayerDecoderErrorBlock)(const Decoder& decoder, CFErrorRef error);
+			using AudioPlayerDecoderErrorBlock = void (^)(const Decoder& decoder, CFErrorRef error);
 
 			/*!
 			 * @brief A block called when a \c Player render event occurs
 			 * @param data The audio data
 			 * @param frameCount The number of frames in \c data
 			 */
-			typedef void (^AudioPlayerRenderEventBlock)(AudioBufferList *data, UInt32 frameCount);
+			using AudioPlayerRenderEventBlock = void (^)(AudioBufferList *data, UInt32 frameCount);
 
 			/*!
 			 * @brief A block called when the audio format of the next \c AudioDecoder does not match the current format
 			 * @param currentFormat The current audio format
 			 * @param nextFormat The next audio format
 			 */
-			typedef void (^AudioPlayerFormatMismatchBlock)(const AudioFormat& currentFormat, const AudioFormat& nextFormat);
+			using AudioPlayerFormatMismatchBlock = void (^)(const AudioFormat& currentFormat, const AudioFormat& nextFormat);
 
 			/*!
 			 * @brief A block called when an error occurs
 			 * @param error An optional description of the error
 			 */
-			typedef void (^AudioPlayerErrorBlock)(CFErrorRef error);
+			using AudioPlayerErrorBlock = void (^)(CFErrorRef error);
 
 			//@}
 

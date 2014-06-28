@@ -60,7 +60,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief A \c std::unique_ptr for \c RingBuffer objects */
-			typedef std::unique_ptr<RingBuffer> unique_ptr;
+			using unique_ptr = std::unique_ptr<RingBuffer>;
 
 			/*!
 			 * @brief Create a new \c RingBuffer

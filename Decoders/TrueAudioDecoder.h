@@ -83,8 +83,8 @@ namespace SFB {
 
 		private:
 			
-			typedef std::unique_ptr<tta::tta_decoder> unique_tta_ptr;
-			typedef std::unique_ptr<TTA_io_callback_wrapper> unique_callback_wrapper_ptr;
+			using unique_tta_ptr = std::unique_ptr<tta::tta_decoder>;
+			using unique_callback_wrapper_ptr = std::unique_ptr<TTA_io_callback_wrapper>;
 
 			// Data members
 			unique_tta_ptr						mDecoder;

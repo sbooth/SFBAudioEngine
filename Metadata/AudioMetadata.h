@@ -158,10 +158,10 @@ namespace SFB {
 			//@{
 
 			/*! @brief A \c std::vector of \c AttachedPicture::shared_ptr objects */
-			typedef std::vector<AttachedPicture::shared_ptr> picture_vector;
+			using picture_vector = std::vector<AttachedPicture::shared_ptr>;
 
 			/*! @brief A \c std::unique_ptr for \c Metadata objects */
-			typedef std::unique_ptr<Metadata> unique_ptr;
+			using unique_ptr = std::unique_ptr<Metadata>;
 
 			/*!
 			 * @brief Create a \c Metadata object for the specified URL

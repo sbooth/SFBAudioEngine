@@ -103,7 +103,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief A \c std::unique_ptr for \c Decoder objects */
-			typedef std::unique_ptr<Decoder> unique_ptr;
+			using unique_ptr = std::unique_ptr<Decoder>;
 
 			/*!
 			 * @brief Create a \c Decoder object for the specified URL

@@ -79,7 +79,7 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			typedef std::unique_ptr<FLAC__StreamDecoder, void(*)(FLAC__StreamDecoder *)> unique_FLAC_ptr;
+			using unique_FLAC_ptr = std::unique_ptr<FLAC__StreamDecoder, void(*)(FLAC__StreamDecoder *)>;
 
 			// Data members
 			unique_FLAC_ptr						mFLAC;

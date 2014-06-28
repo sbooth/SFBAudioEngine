@@ -77,9 +77,9 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			typedef std::unique_ptr<DUMBFILE, int(*)(DUMBFILE *)> unique_DUMBFILE_ptr;
-			typedef std::unique_ptr<DUH, void(*)(DUH *)> unique_DUH_ptr;
-			typedef std::unique_ptr<DUH_SIGRENDERER, void(*)(DUH_SIGRENDERER *)> unique_DUH_SIGRENDERER_ptr;
+			using unique_DUMBFILE_ptr = std::unique_ptr<DUMBFILE, int(*)(DUMBFILE *)>;
+			using unique_DUH_ptr = std::unique_ptr<DUH, void(*)(DUH *)>;
+			using unique_DUH_SIGRENDERER_ptr = std::unique_ptr<DUH_SIGRENDERER, void(*)(DUH_SIGRENDERER *)>;
 
 			// Data members
 			DUMBFILE_SYSTEM						dfs;

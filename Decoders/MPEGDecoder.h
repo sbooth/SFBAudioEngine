@@ -79,7 +79,7 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			typedef std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>> unique_mpg123_ptr;
+			using unique_mpg123_ptr = std::unique_ptr<mpg123_handle, std::function<void (mpg123_handle *)>>;
 
 			// Data members
 			unique_mpg123_ptr	mDecoder;

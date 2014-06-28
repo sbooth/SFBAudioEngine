@@ -53,7 +53,7 @@ namespace SFB {
 		//@{
 
 		/*! @brief A \c std::unique_ptr for \c RingBuffer objects */
-		typedef std::unique_ptr<RingBuffer> unique_ptr;
+		using unique_ptr = std::unique_ptr<RingBuffer>;
 
 		/*!
 		 * @brief Create a new \c RingBuffer
@@ -170,7 +170,7 @@ namespace SFB {
 		};
 
 		/*! @brief A pair of \c Buffer objects */
-		typedef std::pair<Buffer, Buffer> BufferPair;
+		using BufferPair = std::pair<Buffer, Buffer>;
 
 		/*! @brief Retrieve the read vector containing the current readable data */
 		BufferPair GetReadVector() const;

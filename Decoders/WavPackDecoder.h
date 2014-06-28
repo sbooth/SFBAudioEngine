@@ -77,7 +77,7 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			typedef std::unique_ptr<WavpackContext, std::function<WavpackContext *(WavpackContext *)>> unique_WavpackContext_ptr;
+			using unique_WavpackContext_ptr = std::unique_ptr<WavpackContext, std::function<WavpackContext *(WavpackContext *)>>;
 
 			// Data members
 			WavpackStreamReader				mStreamReader;
