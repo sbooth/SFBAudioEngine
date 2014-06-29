@@ -43,6 +43,7 @@ namespace SFB {
 
 		/*!
 		 * @brief A wrapper around a Decoder supporting DoP (DSD over PCM)
+		 *
 		 * See http://dsd-guide.com/sites/default/files/white-papers/DoP_openStandard_1v1.pdf
 		 */
 		class DoPDecoder : public Decoder
