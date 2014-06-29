@@ -1,0 +1,4 @@
+<map id="SFB::Audio::Decoder" name="SFB::Audio::Decoder">
+<area shape="rect" id="node2" href="$class_s_f_b_1_1_audio_1_1_do_p_decoder.html" title="A wrapper around a Decoder supporting DoP (DSD over PCM) See http://dsd&#45;guide.com/sites/default/files..." alt="" coords="5,85,178,111"/>
+<area shape="rect" id="node3" href="$class_s_f_b_1_1_audio_1_1_loopable_region_decoder.html" title="A wrapper around a Decoder that decodes a specific region. " alt="" coords="202,79,395,117"/>
+</map>

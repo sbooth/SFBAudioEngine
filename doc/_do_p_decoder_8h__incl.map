@@ -1,0 +1,8 @@
+<map id="Decoders/DoPDecoder.h" name="Decoders/DoPDecoder.h">
+<area shape="rect" id="node2" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="366,79,482,104"/>
+<area shape="rect" id="node17" href="$_audio_buffer_list_8h.html" title="A Core Audio AudioBufferList wrapper. " alt="" coords="690,79,812,104"/>
+<area shape="rect" id="node8" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="156,152,261,177"/>
+<area shape="rect" id="node14" href="$_audio_format_8h.html" title="A Core Audio AudioStreamBasicDescription wrapper. " alt="" coords="769,152,877,177"/>
+<area shape="rect" id="node15" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="486,152,642,177"/>
+<area shape="rect" id="node9" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="262,225,363,251"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="Output/CoreAudioOutput.h" name="Output/CoreAudioOutput.h">
+<area shape="rect" id="node2" href="$_audio_output_8h.html" title="Audio output functionality. " alt="" coords="355,79,462,104"/>
+<area shape="rect" id="node5" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="350,152,466,177"/>
+<area shape="rect" id="node9" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="401,225,506,251"/>
+<area shape="rect" id="node15" href="$_audio_format_8h.html" title="A Core Audio AudioStreamBasicDescription wrapper. " alt="" coords="66,225,175,251"/>
+<area shape="rect" id="node16" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="682,225,838,251"/>
+<area shape="rect" id="node10" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="471,299,572,324"/>
+</map>

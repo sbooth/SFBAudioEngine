@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$class_s_f_b_1_1_audio_1_1_decoder.html" title="Base class for all audio decoder classes. " alt="" coords="5,33,152,59"/>
+<area shape="rect" id="node2" href="$class_s_f_b_1_1_audio_1_1_do_p_decoder.html" title="A wrapper around a Decoder supporting DoP (DSD over PCM) See http://dsd&#45;guide.com/sites/default/files..." alt="" coords="210,5,383,31"/>
+<area shape="rect" id="node3" href="$class_s_f_b_1_1_audio_1_1_loopable_region_decoder.html" title="A wrapper around a Decoder that decodes a specific region. " alt="" coords="200,55,393,93"/>
+</map>

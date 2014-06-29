@@ -1,3 +1,4 @@
 <map id="SFB::Audio::Decoder" name="SFB::Audio::Decoder">
-<area shape="rect" id="node2" href="$class_s_f_b_1_1_audio_1_1_channel_layout.html" title="A class wrapping a Core Audio AudioChannelLayout. " alt="" coords="4,7,189,35"/>
+<area shape="rect" id="node2" href="$class_s_f_b_1_1_audio_1_1_channel_layout.html" title="A class wrapping a Core Audio AudioChannelLayout. " alt="" coords="5,81,191,106"/>
+<area shape="rect" id="node3" href="$class_s_f_b_1_1_audio_1_1_audio_format.html" title="A class extending the functionality of a Core Audio AudioStreamBasicDescription for DSD..." alt="" coords="277,81,450,106"/>
 </map>

@@ -1,4 +1,9 @@
 <map id="Decoders/AudioDecoder.h" name="Decoders/AudioDecoder.h">
-<area shape="rect" id="node2" href="$_audio_player_8h.html" title="Core playback functionality. " alt="" coords="5,83,149,111"/>
-<area shape="rect" id="node3" href="$_audio_converter_8h.html" title="Support for converting audio from one PCM format to another. " alt="" coords="174,83,297,111"/>
+<area shape="rect" id="node2" href="$_do_p_decoder_8h.html" title="Support for DoP decoding. " alt="" coords="5,79,174,104"/>
+<area shape="rect" id="node3" href="$_loopable_region_decoder_8h.html" title="Support for decoding specific audio regions. " alt="" coords="198,79,438,104"/>
+<area shape="rect" id="node4" href="$_audio_output_8h.html" title="Audio output functionality. " alt="" coords="461,79,612,104"/>
+<area shape="rect" id="node7" href="$_audio_player_8h.html" title="Audio playback functionality. " alt="" coords="613,152,758,177"/>
+<area shape="rect" id="node8" href="$_audio_converter_8h.html" title="Support for converting audio from one PCM format to another. " alt="" coords="686,79,811,104"/>
+<area shape="rect" id="node5" href="$_a_s_i_o_output_8h.html" title="ASIO output functionality. " alt="" coords="237,152,385,177"/>
+<area shape="rect" id="node6" href="$_core_audio_output_8h.html" title="Core Audio output functionality. " alt="" coords="409,152,589,177"/>
 </map>
