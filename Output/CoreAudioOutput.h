@@ -304,9 +304,35 @@ namespace SFB {
 			bool SetDeviceID(AudioDeviceID deviceID);
 			
 
+			/*!
+			 * @brief Get the available data sources for the current device
+			 *
+			 * This corresponds to the property \c kAudioDevicePropertyDataSources
+			 * @param dataSources A \c std::vector to receive the data sources
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioDevicePropertyDataSources
+			 */
 			bool GetAvailableDataSources(std::vector<UInt32>& dataSources) const;
 
+
+			/*!
+			 * @brief Get the active data sources for the current device
+			 *
+			 * This corresponds to the property \c kAudioDevicePropertyDataSource
+			 * @param dataSources A \c std::vector to receive the data sources
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioDevicePropertyDataSource
+			 */
 			bool GetActiveDataSources(std::vector<UInt32>& dataSources) const;
+
+			/*!
+			 * @brief Set the active data sources for the current device
+			 *
+			 * This corresponds to the property \c kAudioDevicePropertyDataSource
+			 * @param dataSources A \c std::vector containing the desired data sources
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioDevicePropertyDataSource
+			 */
 			bool SetActiveDataSources(const std::vector<UInt32>& dataSources);
 			
 			//@}
@@ -316,12 +342,40 @@ namespace SFB {
 			/*! Stream Management */
 			//@{
 
+			/*!
+			 * @brief Get the output streams for the current device
+			 *
+			 * This corresponds to the property \c kAudioDevicePropertyStreams
+			 * @param streams A \c std::vector to receive the output streams
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioDevicePropertyStreams
+			 */
 			bool GetOutputStreams(std::vector<AudioStreamID>& streams) const;
+
 
 //			bool GetOutputStreamVirtualFormat(AudioStreamID streamID, AudioStreamBasicDescription& virtualFormat) const;
 //			bool SetOutputStreamVirtualFormat(AudioStreamID streamID, const AudioStreamBasicDescription& virtualFormat);
 
+
+			/*!
+			 * @brief Get the physical format for the specified output stream on the current device
+			 *
+			 * This corresponds to the property \c kAudioStreamPropertyPhysicalFormat
+			 * @param streamID The output stream ID
+			 * @param physicalFormat An \c AudioStreamBasicDescription to receive the stream's physical format
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioStreamPropertyPhysicalFormat
+			 */
 			bool GetOutputStreamPhysicalFormat(AudioStreamID streamID, AudioStreamBasicDescription& physicalFormat) const;
+
+			/*!
+			 * @brief Set the physical format for the specified output stream on the current device
+			 *
+			 * This corresponds to the property \c kAudioStreamPropertyPhysicalFormat
+			 * @param streamID The output stream ID
+			 * @param physicalFormat The desired physical format
+			 * @see kAudioStreamPropertyPhysicalFormat
+			 */
 			bool SetOutputStreamPhysicalFormat(AudioStreamID streamID, const AudioStreamBasicDescription& physicalFormat);
 
 			//@}

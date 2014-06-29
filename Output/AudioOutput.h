@@ -127,9 +127,10 @@ namespace SFB {
 			/*! @brief Get the audio format this output requires */
 			inline const AudioFormat& GetFormat() const					{ return mFormat; }
 
-			/*! @brief Get the channel layout used by this output*/
+			/*! @brief Get the channel layout used by this output */
 			inline const ChannelLayout& GetChannelLayout() const		{ return mChannelLayout; }
 
+			/*! @brief Query whether this output supports audio in the given format */
 			bool SupportsFormat(const AudioFormat& format) const;
 
 			//@}
