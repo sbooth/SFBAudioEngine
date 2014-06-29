@@ -33,7 +33,7 @@
 #include "AudioOutput.h"
 #include "RingBuffer.h"
 
-/*! @file ASIOOutput.h @brief ASIO output functionality for exaSound devices */
+/*! @file ASIOOutput.h @brief ASIO output functionality */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
@@ -41,22 +41,52 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @brief Output subclass supporting exaSound's ASIO driver */
+		/*! @brief Output subclass supporting ASIO */
 		class ASIOOutput : public Output
 		{
 		public:
 
+			// ========================================
+			/*! @name Driver dictionary keys */
+			//@{
+			static const CFStringRef kDriverIDKey;					/*!< @brief The driver's dylib ID */
+			static const CFStringRef kDriverNumberKey;				/*!< @brief The driver number (\c CFNumber) */
+			static const CFStringRef kDriverDisplayNameKey;			/*!< @brief The driver display name */
+			static const CFStringRef kDriverCompanyKey;				/*!< @brief The company */
+			static const CFStringRef kDriverFolderKey;				/*!< @brief The install folder */
+			static const CFStringRef kDriverArchitecturesKey;		/*!< @brief The supported architectures */
+			static const CFStringRef kDriverUIDKey;					/*!< @brief The driver's UID */
+			//@}
+
+			
+			// ========================================
+			/*! @name Driver discovery */
+			//@{
+
 			/*! @brief Query whether an ASIO driver is available */
 			static bool IsAvailable();
 
-			/*! @brief Create an ASIOOutput for the stereo driver */
-			static unique_ptr CreateStereoInstance();
+			/*! @brief Create a list of available ASIO drivers */
+			static CFArrayRef CreateAvailableDrivers();
 
-			/*! @brief Create an ASIOOutput for the multichannel driver */
-			static unique_ptr CreateMultichannelInstance();
+			/*! @brief Create an \c ASIOOutput for the specified driver */
+			static unique_ptr CreateInstanceForDriverUID(CFStringRef driverUID);
 
-			ASIOOutput();
+			//@}
+
+
+			// ========================================
+			/*! @name Creation and Destruction */
+			// @{
+
+			/*! @brief Create an \c ASIOOutput for the specified driver */
+			ASIOOutput(CFStringRef driverUID);
+
+			/*! @brief Destroy this \c ASIOOutput */
 			virtual ~ASIOOutput();
+
+			//@}
+
 
 			/*! Device input/output format information */
 			enum class DeviceIOFormat {
@@ -78,6 +108,8 @@ namespace SFB {
 			void SetStateChangedBlock(dispatch_block_t block);
 
 		private:
+
+			ASIOOutput();
 
 			virtual bool _Open();
 			virtual bool _Close();
@@ -103,14 +135,13 @@ namespace SFB {
 
 			virtual size_t _GetPreferredBufferSize() const;
 
-			uint32_t								mLibraryIndex;			/*!< ASIO driver index */
+			SFB::CFString							mDesiredDriverUID;		/*!< Requested ASIO driver UID */
 
 			SFB::RingBuffer::unique_ptr				mEventQueue;			/*!< ASIO event queue */
 			dispatch_source_t						mEventQueueTimer;		/*!< ASIO event queue timer */
 
 			dispatch_block_t						mStateChangedBlock;		/*!< Block called when running state changes */
 
-//			AudioFormat								mDriverFormat;			/*!< Audio format for ASIO driver transactions */
 			ChannelLayout							mDriverChannelLayout;	/*!< Channel layout for ASIO driver transactions */
 			std::vector<SInt32>						mChannelMap;			/*!< The channel map */
 

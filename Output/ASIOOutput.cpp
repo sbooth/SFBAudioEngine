@@ -303,11 +303,15 @@ namespace {
 		return nullptr;
 	}
 
-	// exaSound driver library indexes for x86_64
-	const uint32_t sStereoLibraryIndex			= 0;
-	const uint32_t sMultichannelLibraryIndex	= 2;
-
 }
+
+const CFStringRef SFB::Audio::ASIOOutput::kDriverIDKey					= CFSTR("ID");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverNumberKey				= CFSTR("Number");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverDisplayNameKey			= CFSTR("Display Name");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverCompanyKey				= CFSTR("Company Name");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverFolderKey				= CFSTR("Install Folder");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverArchitecturesKey		= CFSTR("Architectures");
+const CFStringRef SFB::Audio::ASIOOutput::kDriverUIDKey					= CFSTR("UID");
 
 bool SFB::Audio::ASIOOutput::IsAvailable()
 {
@@ -315,24 +319,71 @@ bool SFB::Audio::ASIOOutput::IsAvailable()
 	return 0 < count;
 }
 
-#pragma mark Creation and Destruction
-
-SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateStereoInstance()
+CFArrayRef SFB::Audio::ASIOOutput::CreateAvailableDrivers()
 {
-	// Stereo is the default
-	return unique_ptr(new ASIOOutput);
+	unsigned int count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
+	if(0 == count) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
+		return nullptr;
+	}
+
+	AsioLibInfo buffer [count];
+	count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(buffer, (unsigned int)count);
+	if(0 == count) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
+		return nullptr;
+	}
+
+	CFMutableArray driverInfoArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	if(!driverInfoArray)
+		return nullptr;
+
+	for(unsigned int i = 0; i < count; ++i) {
+		CFMutableDictionary driverDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+		if(!driverDictionary)
+			continue;
+
+		CFString str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverIDKey, str);
+
+		CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberCharType, &buffer[i].Number);
+		CFDictionarySetValue(driverDictionary, kDriverNumberKey, num);
+
+		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverDisplayNameKey, str);
+
+		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverCompanyKey, str);
+
+		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverFolderKey, str);
+
+		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverArchitecturesKey, str);
+
+		char deviceUID [1024];
+		if(buffer[i].ToCString(deviceUID, 1024, '|')) {
+			str = CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII);
+			CFDictionarySetValue(driverDictionary, kDriverUIDKey, str);
+		}
+		else
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to create driver UID");
+
+		CFArrayAppendValue(driverInfoArray, driverDictionary);
+	}
+
+	return driverInfoArray.Relinquish();
 }
 
-SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateMultichannelInstance()
-{
-	auto result = unique_ptr(new ASIOOutput);
-	((ASIOOutput *)result.get())->mLibraryIndex = sMultichannelLibraryIndex;
+#pragma mark Creation and Destruction
 
-	return result;
+SFB::Audio::Output::unique_ptr SFB::Audio::ASIOOutput::CreateInstanceForDriverUID(CFStringRef driverUID)
+{
+	return unique_ptr(new ASIOOutput(driverUID));
 }
 
 SFB::Audio::ASIOOutput::ASIOOutput()
-	: mLibraryIndex(sStereoLibraryIndex), mEventQueue(new SFB::RingBuffer), mStateChangedBlock(nullptr)
+	: mEventQueue(new SFB::RingBuffer), mStateChangedBlock(nullptr)
 {
 	mEventQueue->Allocate(512);
 
@@ -371,6 +422,12 @@ SFB::Audio::ASIOOutput::ASIOOutput()
 
 	// Start the timer
 	dispatch_resume(mEventQueueTimer);
+}
+
+SFB::Audio::ASIOOutput::ASIOOutput(CFStringRef driverUID)
+	: ASIOOutput()
+{
+	mDesiredDriverUID = (CFStringRef)CFRetain(driverUID);
 }
 
 SFB::Audio::ASIOOutput::~ASIOOutput()
@@ -464,38 +521,23 @@ size_t SFB::Audio::ASIOOutput::_GetPreferredBufferSize() const
 
 bool SFB::Audio::ASIOOutput::_Open()
 {
-	unsigned int count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(nullptr, 0);
-	if(0 == count) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
+	if(!CFStringGetCString(mDesiredDriverUID, sDriverInfo.mUID, kUIDLength, kCFStringEncodingUTF8))
 		return false;
-	}
 
-	if(mLibraryIndex >= count) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Invalid index requested in ASIO library list");
-		return false;
-	}
-
-	AsioLibInfo buffer [count];
-	count = (unsigned int)AsioLibWrapper::GetAsioLibraryList(buffer, (unsigned int)count);
-	if(0 == count) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library list");
-		return false;
-	}
+	AsioLibInfo libInfo;
+	AsioLibInfo::FromCString(libInfo, sDriverInfo.mUID, '|');
 
 	AsioLibWrapper::UnloadLib();
 
-	if(!AsioLibWrapper::LoadLib(buffer[mLibraryIndex])) {
+	if(!AsioLibWrapper::LoadLib(libInfo)) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to load ASIO library");
 		return false;
 	}
 
-	if(AsioLibWrapper::CreateInstance(buffer[mLibraryIndex].Number, &sASIO)) {
+	if(AsioLibWrapper::CreateInstance(libInfo.Number, &sASIO)) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Output.ASIO", "Unable to instantiate ASIO driver");
 		return false;
 	}
-
-	if(!buffer[mLibraryIndex].ToCString(sDriverInfo.mUID, kUIDLength, '|'))
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to get ASIO driver UID");
 
 	sDriverInfo.mDriverInfo = {
 		.asioVersion = 2,
