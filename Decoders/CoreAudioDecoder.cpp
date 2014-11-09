@@ -325,6 +325,8 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 //			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
 			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetProperty (kAudioFilePropertyChannelLayout) failed: " << result);
 			
+            free(channelLayout);
+
 			result = ExtAudioFileDispose(mExtAudioFile);
 			if(noErr != result)
 				LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
