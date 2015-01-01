@@ -194,7 +194,7 @@ bool SFB::Audio::ChannelLayout::MapToLayout(const ChannelLayout& outputLayout, s
 		return false;
 
 	SInt32 rawChannelMap [outputChannelCount];
-	UInt32 propertySize = sizeof(rawChannelMap);
+	UInt32 propertySize = (UInt32)sizeof(rawChannelMap);
 	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(layouts), (void *)layouts, &propertySize, &rawChannelMap);
 
 	if(noErr != result)
