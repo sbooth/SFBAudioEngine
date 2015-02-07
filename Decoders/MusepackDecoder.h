@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include <mpcdec/mpcdec.h>
+#include <mpc/mpcdec.h>
 
 #include "AudioDecoder.h"
 #include "AudioBufferList.h"
