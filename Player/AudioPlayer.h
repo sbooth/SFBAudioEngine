@@ -135,6 +135,9 @@ namespace SFB {
 			/*! @name Creation and Destruction */
 			//@{
 
+			/*! @brief A \c std::unique_ptr for \c Player objects */
+			using unique_ptr = std::unique_ptr<Player>;
+
 			/*!
 			 * @brief Create a new \c Player for the default CoreAudioOutput device
 			 * @throws std::bad_alloc
