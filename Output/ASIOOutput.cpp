@@ -341,28 +341,28 @@ CFArrayRef SFB::Audio::ASIOOutput::CreateAvailableDrivers()
 		if(!driverDictionary)
 			continue;
 
-		CFString str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII);
-		CFDictionarySetValue(driverDictionary, kDriverIDKey, str);
+		CFString driverID = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverIDKey, driverID);
 
-		CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberCharType, &buffer[i].Number);
-		CFDictionarySetValue(driverDictionary, kDriverNumberKey, num);
+		CFNumber driverNumber = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &buffer[i].Number);
+		CFDictionarySetValue(driverDictionary, kDriverNumberKey, driverNumber);
 
-		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII);
-		CFDictionarySetValue(driverDictionary, kDriverDisplayNameKey, str);
+		CFString driverDisplayName = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverDisplayNameKey, driverDisplayName);
 
-		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII);
-		CFDictionarySetValue(driverDictionary, kDriverCompanyKey, str);
+		CFString driverCompany = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverCompanyKey, driverCompany);
 
-		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII);
-		CFDictionarySetValue(driverDictionary, kDriverFolderKey, str);
+		CFString driverFolder = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverFolderKey, driverFolder);
 
-		str = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII);
-		CFDictionarySetValue(driverDictionary, kDriverArchitecturesKey, str);
+		CFString driverArchitecture = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII);
+		CFDictionarySetValue(driverDictionary, kDriverArchitecturesKey, driverArchitecture);
 
 		char deviceUID [1024];
 		if(buffer[i].ToCString(deviceUID, 1024, '|')) {
-			str = CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII);
-			CFDictionarySetValue(driverDictionary, kDriverUIDKey, str);
+			CFString driverUID = CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII);
+			CFDictionarySetValue(driverDictionary, kDriverUIDKey, driverUID);
 		}
 		else
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to create driver UID");
