@@ -122,6 +122,11 @@ namespace SFB {
 			static const CFStringRef kAlbumPeakKey;					/*!< @brief Replay gain album peak (\c CFNumber) */
 			//@}
 
+			/*! @name Attached Picture dictionary keys */
+			//@{
+			static const CFStringRef kAttachedPicturesKey;			/*!< @brief Attached pictures (\c CFArray of \c CFDictionary) */
+			//@}
+
 
 			// ========================================
 			/*! @name Supported file formats */
@@ -221,6 +226,26 @@ namespace SFB {
 			 * @return \c true on success, \c false otherwise
 			 */
 			bool WriteMetadata(CFErrorRef *error = nullptr);
+
+			//@}
+
+
+			// ========================================
+			/*! @name External Representations */
+			//@{
+
+			/*!
+			 * @brief Copy the metadata and artwork values contained in this object to a dictionary
+			 * @return A dictionary containing this object's metadata and artwork
+			 */
+			CFDictionaryRef CreateDictionaryRepresentation() const;
+
+			/*! 
+			 * @brief Set the values contained in this object from a dictionary
+			 * @param dictionary A dictionary containing the desired values
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool SetFromDictionaryRepresentation(CFDictionaryRef dictionary);
 
 			//@}
 

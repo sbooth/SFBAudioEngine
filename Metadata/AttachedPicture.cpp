@@ -51,6 +51,44 @@ SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Ty
 		CFDictionarySetValue(mMetadata, kDescriptionKey, description);
 }
 
+#pragma mark External Representations
+
+CFDictionaryRef SFB::Audio::AttachedPicture::CreateDictionaryRepresentation() const
+{
+	CFMutableDictionaryRef dictionaryRepresentation = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 0, mMetadata);
+
+	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
+
+	CFTypeRef *keys = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+	CFTypeRef *values = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+
+	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
+
+	for(CFIndex i = 0; i < count; ++i) {
+		if(kCFNull == values[i])
+			CFDictionaryRemoveValue(dictionaryRepresentation, keys[i]);
+		else
+			CFDictionarySetValue(dictionaryRepresentation, keys[i], values[i]);
+	}
+
+	free(keys), keys = nullptr;
+	free(values), values = nullptr;
+
+	return dictionaryRepresentation;
+}
+
+bool SFB::Audio::AttachedPicture::SetFromDictionaryRepresentation(CFDictionaryRef dictionary)
+{
+	if(nullptr == dictionary)
+		return false;
+
+	SetValue(kTypeKey, CFDictionaryGetValue(dictionary, kTypeKey));
+	SetValue(kDescriptionKey, CFDictionaryGetValue(dictionary, kDescriptionKey));
+	SetValue(kDataKey, CFDictionaryGetValue(dictionary, kDataKey));
+
+	return true;
+}
+
 #pragma mark Type-Specific Access
 
 SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const

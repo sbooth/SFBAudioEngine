@@ -46,7 +46,7 @@ const CFStringRef SFB::Audio::Metadata::ErrorDomain = CFSTR("org.sbooth.AudioEng
 const CFStringRef SFB::Audio::Metadata::kFormatNameKey					= CFSTR("Format Name");
 const CFStringRef SFB::Audio::Metadata::kTotalFramesKey					= CFSTR("Total Frames");
 const CFStringRef SFB::Audio::Metadata::kChannelsPerFrameKey			= CFSTR("Channels Per Frame");
-const CFStringRef SFB::Audio::Metadata::kBitsPerChannelKey				= CFSTR("Bits per Channel");
+const CFStringRef SFB::Audio::Metadata::kBitsPerChannelKey				= CFSTR("Bits Per Channel");
 const CFStringRef SFB::Audio::Metadata::kSampleRateKey					= CFSTR("Sample Rate");
 const CFStringRef SFB::Audio::Metadata::kDurationKey					= CFSTR("Duration");
 const CFStringRef SFB::Audio::Metadata::kBitrateKey						= CFSTR("Bitrate");
@@ -87,6 +87,8 @@ const CFStringRef SFB::Audio::Metadata::kTrackGainKey					= CFSTR("Replay Gain T
 const CFStringRef SFB::Audio::Metadata::kTrackPeakKey					= CFSTR("Replay Gain Track Peak");
 const CFStringRef SFB::Audio::Metadata::kAlbumGainKey					= CFSTR("Replay Gain Album Gain");
 const CFStringRef SFB::Audio::Metadata::kAlbumPeakKey					= CFSTR("Replay Gain Album Peak");
+
+const CFStringRef SFB::Audio::Metadata::kAttachedPicturesKey			= CFSTR("Attached Pictures");
 
 #pragma mark Static Methods
 
@@ -229,6 +231,106 @@ bool SFB::Audio::Metadata::WriteMetadata(CFErrorRef *error)
 	if(result)
 		MergeChangedMetadataIntoMetadata();
 	return result;
+}
+
+#pragma mark External Representations
+
+CFDictionaryRef SFB::Audio::Metadata::CreateDictionaryRepresentation() const
+{
+	CFMutableDictionaryRef dictionaryRepresentation = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 0, mMetadata);
+
+	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
+
+	CFTypeRef *keys = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+	CFTypeRef *values = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
+
+	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
+
+	for(CFIndex i = 0; i < count; ++i) {
+		if(kCFNull == values[i])
+			CFDictionaryRemoveValue(dictionaryRepresentation, keys[i]);
+		else
+			CFDictionarySetValue(dictionaryRepresentation, keys[i], values[i]);
+	}
+
+	free(keys), keys = nullptr;
+	free(values), values = nullptr;
+
+	CFMutableArray pictureArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+
+	for(auto picture : GetAttachedPictures()) {
+		CFDictionary pictureRepresentation = picture->CreateDictionaryRepresentation();
+		CFArrayAppendValue(pictureArray, pictureRepresentation);
+	}
+
+	if(0 < CFArrayGetCount(pictureArray)) {
+		CFDictionarySetValue(dictionaryRepresentation, kAttachedPicturesKey, pictureArray);
+	}
+
+	return dictionaryRepresentation;
+}
+
+bool SFB::Audio::Metadata::SetFromDictionaryRepresentation(CFDictionaryRef dictionary)
+{
+	if(nullptr == dictionary)
+		return false;
+
+	SetValue(kTitleKey, CFDictionaryGetValue(dictionary, kTitleKey));
+	SetValue(kAlbumTitleKey, CFDictionaryGetValue(dictionary, kAlbumTitleKey));
+	SetValue(kArtistKey, CFDictionaryGetValue(dictionary, kArtistKey));
+	SetValue(kAlbumArtistKey, CFDictionaryGetValue(dictionary, kAlbumArtistKey));
+	SetValue(kGenreKey, CFDictionaryGetValue(dictionary, kGenreKey));
+	SetValue(kComposerKey, CFDictionaryGetValue(dictionary, kComposerKey));
+	SetValue(kReleaseDateKey, CFDictionaryGetValue(dictionary, kReleaseDateKey));
+	SetValue(kCompilationKey, CFDictionaryGetValue(dictionary, kCompilationKey));
+	SetValue(kTrackNumberKey, CFDictionaryGetValue(dictionary, kTrackNumberKey));
+	SetValue(kTrackTotalKey, CFDictionaryGetValue(dictionary, kTrackTotalKey));
+	SetValue(kDiscNumberKey, CFDictionaryGetValue(dictionary, kDiscNumberKey));
+	SetValue(kDiscTotalKey, CFDictionaryGetValue(dictionary, kDiscTotalKey));
+	SetValue(kLyricsKey, CFDictionaryGetValue(dictionary, kLyricsKey));
+	SetValue(kBPMKey, CFDictionaryGetValue(dictionary, kBPMKey));
+	SetValue(kRatingKey, CFDictionaryGetValue(dictionary, kRatingKey));
+	SetValue(kCommentKey, CFDictionaryGetValue(dictionary, kCommentKey));
+	SetValue(kISRCKey, CFDictionaryGetValue(dictionary, kISRCKey));
+	SetValue(kMCNKey, CFDictionaryGetValue(dictionary, kMCNKey));
+	SetValue(kMusicBrainzReleaseIDKey, CFDictionaryGetValue(dictionary, kMusicBrainzReleaseIDKey));
+	SetValue(kMusicBrainzRecordingIDKey, CFDictionaryGetValue(dictionary, kMusicBrainzRecordingIDKey));
+
+	SetValue(kTitleSortOrderKey, CFDictionaryGetValue(dictionary, kTitleSortOrderKey));
+	SetValue(kAlbumTitleSortOrderKey, CFDictionaryGetValue(dictionary, kAlbumTitleSortOrderKey));
+	SetValue(kArtistSortOrderKey, CFDictionaryGetValue(dictionary, kArtistSortOrderKey));
+	SetValue(kAlbumArtistSortOrderKey, CFDictionaryGetValue(dictionary, kAlbumArtistSortOrderKey));
+	SetValue(kComposerSortOrderKey, CFDictionaryGetValue(dictionary, kComposerSortOrderKey));
+
+	SetValue(kGroupingKey, CFDictionaryGetValue(dictionary, kGroupingKey));
+
+	SetValue(kAdditionalMetadataKey, CFDictionaryGetValue(dictionary, kAdditionalMetadataKey));
+
+	SetValue(kReferenceLoudnessKey, CFDictionaryGetValue(dictionary, kReferenceLoudnessKey));
+	SetValue(kTrackGainKey, CFDictionaryGetValue(dictionary, kTrackGainKey));
+	SetValue(kTrackPeakKey, CFDictionaryGetValue(dictionary, kTrackPeakKey));
+	SetValue(kAlbumGainKey, CFDictionaryGetValue(dictionary, kAlbumGainKey));
+	SetValue(kAlbumPeakKey, CFDictionaryGetValue(dictionary, kAlbumPeakKey));
+
+	RemoveAllAttachedPictures();
+
+	CFArrayRef attachedPictures = (CFArrayRef)CFDictionaryGetValue(dictionary, kAttachedPicturesKey);
+	for(CFIndex i = 0; i < CFArrayGetCount(attachedPictures); ++i) {
+		CFDictionaryRef pictureDictionary = (CFDictionaryRef)CFArrayGetValueAtIndex(attachedPictures, i);
+
+		CFDataRef pictureData = (CFDataRef)CFDictionaryGetValue(pictureDictionary, AttachedPicture::kDataKey);
+
+		AttachedPicture::Type pictureType = AttachedPicture::Type::Other;
+		CFNumberRef typeWrapper = (CFNumberRef)CFDictionaryGetValue(pictureDictionary, AttachedPicture::kTypeKey);
+		if(nullptr != typeWrapper)
+			CFNumberGetValue(typeWrapper, kCFNumberIntType, &pictureType);
+
+		CFStringRef pictureDescription = (CFStringRef)CFDictionaryGetValue(pictureDictionary, AttachedPicture::kDescriptionKey);
+
+		AttachPicture(std::make_shared<AttachedPicture>(pictureData, pictureType, pictureDescription));
+	}
+
+	return true;
 }
 
 #pragma mark Change management

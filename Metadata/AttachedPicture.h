@@ -115,6 +115,26 @@ namespace SFB {
 
 
 			// ========================================
+			/*! @name External Representations */
+			//@{
+
+			/*! 
+			 * @brief Copy the values contained in this object to a dictionary
+			 * @return A dictionary containing this object's artwork information
+			 */
+			CFDictionaryRef CreateDictionaryRepresentation() const;
+
+			/*!
+			 * @brief Set the values contained in this object from a dictionary
+			 * @param dictionary A dictionary containing the desired values
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool SetFromDictionaryRepresentation(CFDictionaryRef dictionary);
+
+			//@}
+
+
+			// ========================================
 			/*!
 			 * @name Picture information
 			 * To remove an existing value call the appropriate \c Set() function with \c nullptr
@@ -219,7 +239,7 @@ namespace SFB {
 			 * @param value The value to set
 			 */
 			void SetValue(CFStringRef key, CFTypeRef value);
-			
+
 			//@}
 		};
 		
