@@ -36,6 +36,8 @@
 #include <vector>
 #include <utility>
 
+#include <dispatch/dispatch.h>
+
 #include "AudioOutput.h"
 #include "AudioDecoder.h"
 #include "AudioRingBuffer.h"
@@ -63,10 +65,9 @@ namespace SFB {
 		 *
 		 * Rendering occurs in a realtime thread when ProvideAudio() is called by the output.
 		 *
-		 * Since decoding and rendering are distinct operations performed in separate threads, there is an additional thread
+		 * Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background queue is
 		 * used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
-		 * rendering is complete, which cannot occur until after decoding is complete.  An alternative garbage collection
-		 * method would be hazard pointers.
+		 * rendering is complete, which cannot occur until after decoding is complete.
 		 *
 		 * The player supports block-based callbacks for the following events:
 		 *  1. Decoding started
@@ -498,9 +499,8 @@ namespace SFB {
 		private:
 
 			// ========================================
-			// Thread entry points
+			// Thread entry point
 			void * DecoderThreadEntry();
-			void * CollectorThreadEntry();
 
 			// ========================================
 			// Other Utilities
@@ -522,14 +522,13 @@ namespace SFB {
 			std::vector<Decoder::unique_ptr>		mDecoderQueue;
 			std::atomic<DecoderStateData *>			mActiveDecoders [kActiveDecoderArraySize];
 
-			std::mutex								mMutex;
+			dispatch_queue_t						mQueue;
 			Semaphore								mSemaphore;
 
 			std::thread								mDecoderThread;
 			Semaphore								mDecoderSemaphore;
 
-			std::thread								mCollectorThread;
-			Semaphore								mCollectorSemaphore;
+			dispatch_source_t						mCollector;
 
 			std::atomic_llong						mFramesDecoded;
 			std::atomic_llong						mFramesRendered;

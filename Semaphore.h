@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include <mach/task.h>
+#include <dispatch/dispatch.h>
 
 /*! @file Semaphore.h @brief A mach \c semaphore_t wrapper */
 
@@ -60,31 +60,25 @@ namespace SFB {
 
 		/*!
 		 * @brief Signal the \c Semaphore to wake a blocked thread
-		 * @return \c true if successful, \c false otherwise
+		 * @return \c true if a thread was woken, \c false otherwise
 		 */
 		bool Signal();
 
 		/*!
-		 * @brief Signal the \c Semaphore to wake all blocked threads
-		 * @return \c true if successful, \c false otherwise
-		 */
-		bool SignalAll();
-
-		/*!
 		 * @brief Block the calling thread until the \c Semaphore is signaled
-		 * @return \c true if successful, \c false otherwise
+		 * @return \c true if successful, \c false if the timeout occurred
 		 */
 		bool Wait();
 
 		/*!
 		 * @brief Block the calling thread until the \c Semaphore is signaled
 		 * @param duration The maximum duration to block
-		 * @return \c true if successful, \c false otherwise
+		 * @return \c true if successful, \c false if the timeout occurred
 		 */
-		bool TimedWait(mach_timespec_t duration);
+		bool TimedWait(dispatch_time_t duration);
 
 	private:
-		semaphore_t mSemaphore;		/*!< The mach semahore */
+		dispatch_semaphore_t mSemaphore; /*!< The libdispatch semahore */
 	};
 
 }

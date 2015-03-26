@@ -220,7 +220,7 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mDecoderErrorBlock(nullptr), mFormatMismatchBlock(nullptr), mErrorBlock(nullptr), mOutput(new CoreAudioOutput)
+	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mQueue(nullptr), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mDecoderErrorBlock(nullptr), mFormatMismatchBlock(nullptr), mErrorBlock(nullptr), mOutput(new CoreAudioOutput)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
@@ -229,6 +229,12 @@ SFB::Audio::Player::Player()
 	// Initialize the decoder array
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex)
 		mActiveDecoders[bufferIndex].store(nullptr);
+
+	mQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player", DISPATCH_QUEUE_SERIAL);
+	if(nullptr == mQueue) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "dispatch_queue_create failed");
+		throw std::runtime_error("Unable to create the dispatch queue");
+	}
 
 	// ========================================
 	// Launch the decoding thread
@@ -243,27 +249,33 @@ SFB::Audio::Player::Player()
 	}
 
 	// ========================================
-	// Launch the collector thread
-	try {
-		mCollectorThread = std::thread(&Player::CollectorThreadEntry, this);
-	}
+	// Setup the collector
+	mCollector = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
+	dispatch_source_set_timer(mCollector, DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC, 1 * NSEC_PER_SEC);
 
-	catch(const std::exception& e) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create collector thread: " << e.what());
+	dispatch_source_set_event_handler(mCollector, ^{
+		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
+			DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load();
 
-		mFlags.fetch_or(eAudioPlayerFlagStopDecoding);
-		mDecoderSemaphore.Signal();
+			if(nullptr == decoderState)
+				continue;
 
-		try {
-			mDecoderThread.join();
+			auto flags = decoderState->mFlags.load();
+
+			if(!(eDecoderStateDataFlagDecodingFinished & flags) || !(eDecoderStateDataFlagRenderingFinished & flags))
+				continue;
+
+			bool swapSucceeded = mActiveDecoders[bufferIndex].compare_exchange_strong(decoderState, nullptr);
+
+			if(swapSucceeded) {
+				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
+				delete decoderState, decoderState = nullptr;
+			}
 		}
+	});
 
-		catch(const std::exception& e) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
-		}
-
-		throw;
-	}
+	// Start collecting
+	dispatch_resume(mCollector);
 
 	// ========================================
 	// Set up output
@@ -294,17 +306,10 @@ SFB::Audio::Player::~Player()
 		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
 	}
 
-	// End the collector thread
-	mFlags.fetch_or(eAudioPlayerFlagStopCollecting);
-	mCollectorSemaphore.Signal();
+	// Stop collecting
+	dispatch_release(mCollector), mCollector = nullptr;
 
-	try {
-		mCollectorThread.join();
-	}
-
-	catch(const std::exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join collector thread: " << e.what());
-	}
+	dispatch_release(mQueue), mQueue = nullptr;
 
 	// Force any decoders left hanging by the collector to end
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -345,9 +350,12 @@ bool SFB::Audio::Player::Play()
 		return true;
 
 	// We don't want to start output in the middle of a buffer modification
-	std::lock_guard<std::mutex> guard(mMutex);
+	__block bool result = false;
+	dispatch_sync(mQueue, ^{
+		result = mOutput->Start();
+	});
 
-	return mOutput->Start();
+	return result;
 }
 
 bool SFB::Audio::Player::Pause()
@@ -360,23 +368,26 @@ bool SFB::Audio::Player::Pause()
 
 bool SFB::Audio::Player::Stop()
 {
-	std::lock_guard<std::mutex> guard(mMutex);
+	__block bool result = true;
+	dispatch_sync(mQueue, ^{
+		if(mOutput->IsRunning())
+			mOutput->Stop();
 
-	if(mOutput->IsRunning())
-		mOutput->Stop();
+		StopActiveDecoders();
 
-	StopActiveDecoders();
+		if(!mOutput->Reset()) {
+			result = false;
+			return;
+		}
 
-	if(!mOutput->Reset())
-		return false;
+		// Reset the ring buffer
+		mFramesDecoded.store(0);
+		mFramesRendered.store(0);
 
-	// Reset the ring buffer
-	mFramesDecoded.store(0);
-	mFramesRendered.store(0);
+		mFlags.fetch_or(eAudioPlayerFlagRingBufferNeedsReset);
+	});
 
-	mFlags.fetch_or(eAudioPlayerFlagRingBufferNeedsReset);
-
-	return true;
+	return result;
 }
 
 SFB::Audio::Player::PlayerState SFB::Audio::Player::GetPlayerState() const
@@ -736,20 +747,23 @@ bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 	//     from underneath them
 	// In practice, the only time I've seen this happen is when using GuardMalloc, presumably because the
 	// normal execution time of Enqueue() isn't sufficient to lead to this condition.
-	std::lock_guard<std::mutex> guard(mMutex);
+	__block bool result = true;
+	dispatch_sync(mQueue, ^{
+		// If there are no decoders in the queue, set up for playback
+		if(nullptr == GetCurrentDecoderState() && mDecoderQueue.empty()) {
+			if(!SetupOutputAndRingBufferForDecoder(*decoder)) {
+				result = false;
+				return;
+			}
+		}
 
-	// If there are no decoders in the queue, set up for playback
-	if(nullptr == GetCurrentDecoderState() && mDecoderQueue.empty()) {
-		if(!SetupOutputAndRingBufferForDecoder(*decoder))
-			return false;
-	}
+		// Take ownership of the decoder and add it to the queue
+		mDecoderQueue.push_back(std::move(decoder));
 
-	// Take ownership of the decoder and add it to the queue
-	mDecoderQueue.push_back(std::move(decoder));
+		mDecoderSemaphore.Signal();
+	});
 
-	mDecoderSemaphore.Signal();
-
-	return true;
+	return result;
 }
 
 bool SFB::Audio::Player::SkipToNextTrack()
@@ -764,14 +778,9 @@ bool SFB::Audio::Player::SkipToNextTrack()
 	if(mOutput->IsRunning()) {
 		mFlags.fetch_or(eAudioPlayerFlagRequestMute);
 
-		mach_timespec_t renderTimeout = {
-			.tv_sec = 0,
-			.tv_nsec = NSEC_PER_SEC / 10
-		};
-
 		// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
 		while(eAudioPlayerFlagRequestMute & mFlags.load())
-			mSemaphore.TimedWait(renderTimeout);
+			mSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
 	}
 	else
 		mFlags.fetch_or(eAudioPlayerFlagMuteOutput);
@@ -782,13 +791,8 @@ bool SFB::Audio::Player::SkipToNextTrack()
 	mDecoderSemaphore.Signal();
 
 	// Wait for decoding to finish or a SIGSEGV could occur if the collector collects an active decoder
-	mach_timespec_t timeout = {
-		.tv_sec = 0,
-		.tv_nsec = NSEC_PER_SEC / 10
-	};
-
 	while(!(eDecoderStateDataFlagDecodingFinished & currentDecoderState->mFlags.load()))
-		mSemaphore.TimedWait(timeout);
+		mSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
 
 	currentDecoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
 
@@ -802,9 +806,9 @@ bool SFB::Audio::Player::SkipToNextTrack()
 
 bool SFB::Audio::Player::ClearQueuedDecoders()
 {
-	std::lock_guard<std::mutex> guard(mMutex);
-
-	mDecoderQueue.clear();
+	dispatch_sync(mQueue, ^{
+		mDecoderQueue.clear();
+	});
 
 	return true;
 }
@@ -844,63 +848,55 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
 		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set decoder thread importance");
 
-	mach_timespec_t timeout = {
-		.tv_sec = 5,
-		.tv_nsec = 0
-	};
-
 	int64_t decoderCounter = 0;
 
 	while(!(eAudioPlayerFlagStopDecoding & mFlags.load())) {
 
-		DecoderStateData *decoderState = nullptr;
-		{
-			// ========================================
-			// Lock the queue and remove the head element that contains the next decoder to use
-			Decoder::unique_ptr decoder;
-			{
-				std::lock_guard<std::mutex> guard(mMutex);
+		__block DecoderStateData *decoderState = nullptr;
 
-				if(!mDecoderQueue.empty()) {
-					auto iter = std::begin(mDecoderQueue);
-					decoder = std::move(*iter);
-					mDecoderQueue.erase(iter);
+		// ========================================
+		// Lock the queue and remove the head element that contains the next decoder to use
+		__block Decoder::unique_ptr decoder;
+		dispatch_sync(mQueue, ^{
+			if(!mDecoderQueue.empty()) {
+				auto iter = std::begin(mDecoderQueue);
+				decoder = std::move(*iter);
+				mDecoderQueue.erase(iter);
+			}
+		});
+
+		// ========================================
+		// Open the decoder if necessary
+		if(decoder && !decoder->IsOpen()) {
+			CFErrorRef error = nullptr;
+			if(!decoder->Open(&error))  {
+				if(mDecoderErrorBlock)
+					mDecoderErrorBlock(*decoder, error);
+
+				if(error) {
+					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
+					CFRelease(error), error = nullptr;
 				}
 			}
+		}
 
-			// ========================================
-			// Open the decoder if necessary
-			if(decoder && !decoder->IsOpen()) {
-				CFErrorRef error = nullptr;
-				if(!decoder->Open(&error))  {
-					if(mDecoderErrorBlock)
-						mDecoderErrorBlock(*decoder, error);
-
-					if(error) {
-						LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
-						CFRelease(error), error = nullptr;
-					}
-				}
+		// Create the decoder state
+		if(decoder) {
+			if(mOutput->SupportsFormat(decoder->GetFormat())) {
+				decoderState = new DecoderStateData(std::move(decoder));
+				decoderState->mTimeStamp = decoderCounter++;
 			}
+			else {
+				LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder->GetFormat());
 
-			// Create the decoder state
-			if(decoder) {
-				if(mOutput->SupportsFormat(decoder->GetFormat())) {
-					decoderState = new DecoderStateData(std::move(decoder));
-					decoderState->mTimeStamp = decoderCounter++;
-				}
-				else {
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder->GetFormat());
+				if(mErrorBlock) {
+					SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), "");
+					SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Format not supported"), "");
+					SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), "");
 
-					if(mErrorBlock) {
-						SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), "");
-						SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Format not supported"), "");
-						SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), "");
+					SFB::CFError error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, decoder->GetInputSource().GetURL(), failureReason, recoverySuggestion);
 
-						SFB::CFError error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, decoder->GetInputSource().GetURL(), failureReason, recoverySuggestion);
-
-						mErrorBlock(error);
-					}
+					mErrorBlock(error);
 				}
 			}
 		}
@@ -942,25 +938,19 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					mFlags.fetch_or(eAudioPlayerFlagFormatMismatch);
 
 					// Wait for the currently rendering decoder to finish
-					mach_timespec_t renderTimeout = {
-						.tv_sec = 0,
-						.tv_nsec = NSEC_PER_SEC / 100
-					};
-
 					// The rendering thread will clear eAudioPlayerFlagFormatMismatch when the current render cycle completes
 					while(eAudioPlayerFlagFormatMismatch & mFlags.load())
-						mSemaphore.TimedWait(renderTimeout);
+						mSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 				}
 
 				if(mFormatMismatchBlock)
 					mFormatMismatchBlock(outputFormat, nextFormat);
 
 				// Adjust the formats
-				{
-					std::lock_guard<std::mutex> guard(mMutex);
+				dispatch_sync(mQueue, ^{
 					if(!SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder))
 						delete decoderState, decoderState = nullptr;
-				}
+				});
 
 				// Clear the mute flag that was set in the rendering thread so output will resume
 				mFlags.fetch_and(~eAudioPlayerFlagMuteOutput);
@@ -1015,12 +1005,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
 
 					decoderState->mFlags.fetch_or(eDecoderStateDataFlagDecodingFinished | eDecoderStateDataFlagRenderingFinished);
-
 					decoderState = nullptr;
 
 					// If this happens, output will be impossible
-					mCollectorSemaphore.Signal();
-
 					if(mErrorBlock)
 						mErrorBlock(nullptr);
 
@@ -1085,14 +1072,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(mOutput->IsRunning()) {
 							mFlags.fetch_or(eAudioPlayerFlagRequestMute);
 
-							mach_timespec_t renderTimeout = {
-								.tv_sec = 0,
-								.tv_nsec = NSEC_PER_SEC / 100
-							};
-
 							// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
 							while(eAudioPlayerFlagRequestMute & mFlags.load())
-								mSemaphore.TimedWait(renderTimeout);
+								mSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 						}
 						else
 							mFlags.fetch_or(eAudioPlayerFlagMuteOutput);
@@ -1127,14 +1109,9 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							if(mOutput->IsRunning()) {
 								mFlags.fetch_or(eAudioPlayerFlagRequestMute);
 
-								mach_timespec_t renderTimeout = {
-									.tv_sec = 0,
-									.tv_nsec = NSEC_PER_SEC / 100
-								};
-
 								// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
 								while(eAudioPlayerFlagRequestMute & mFlags.load())
-									mSemaphore.TimedWait(renderTimeout);
+									mSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 							}
 							else
 								mFlags.fetch_or(eAudioPlayerFlagMuteOutput);
@@ -1251,14 +1228,15 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 					if(!mOutput->IsRunning()) {
 						// We don't want to start output in the middle of a buffer modification
-						std::lock_guard<std::mutex> guard(mMutex);
-						if(!mOutput->Start())
-							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
+						dispatch_sync(mQueue, ^{
+							if(!mOutput->Start())
+								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
+						});
 					}
 				}
 
 				// Wait for the audio rendering thread to signal us that it could use more data, or for the timeout to happen
-				mDecoderSemaphore.TimedWait(timeout);
+				mDecoderSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
 			}
 
 			// ========================================
@@ -1282,50 +1260,10 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		}
 
 		// Wait for another thread to wake us, or for the timeout to happen
-		mDecoderSemaphore.TimedWait(timeout);
+		mDecoderSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
 	}
 
 	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding thread terminating");
-
-	return nullptr;
-}
-
-void * SFB::Audio::Player::CollectorThreadEntry()
-{
-	pthread_setname_np("org.sbooth.AudioEngine.Collector");
-
-	// The collector should be signaled when there is cleanup to be done, so there is no need for a short timeout
-	mach_timespec_t timeout = {
-		.tv_sec = 30,
-		.tv_nsec = 0
-	};
-
-	while(!(eAudioPlayerFlagStopCollecting & mFlags.load())) {
-
-		for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
-			DecoderStateData *decoderState = mActiveDecoders[bufferIndex].load();
-
-			if(nullptr == decoderState)
-				continue;
-
-			auto flags = decoderState->mFlags.load();
-
-			if(!(eDecoderStateDataFlagDecodingFinished & flags) || !(eDecoderStateDataFlagRenderingFinished & flags))
-				continue;
-
-			bool swapSucceeded = mActiveDecoders[bufferIndex].compare_exchange_strong(decoderState, nullptr);
-
-			if(swapSucceeded) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
-				delete decoderState, decoderState = nullptr;
-			}
-		}
-
-		// Wait for any thread to signal us to try and collect finished decoders
-		mCollectorSemaphore.TimedWait(timeout);
-	}
-
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Collecting thread terminating");
 
 	return nullptr;
 }
@@ -1399,8 +1337,6 @@ void SFB::Audio::Player::StopActiveDecoders()
 
 		decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
 	}
-
-	mCollectorSemaphore.Signal();
 }
 
 bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
@@ -1577,9 +1513,6 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 
 			decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
 			decoderState = nullptr;
-
-			// Since rendering is finished, signal the collector to clean up this decoder
-			mCollectorSemaphore.Signal();
 		}
 
 		framesRemainingToDistribute -= framesFromThisDecoder;

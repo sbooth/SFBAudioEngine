@@ -26,74 +26,38 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mach/mach.h>
 #include <stdexcept>
 
 #include "Semaphore.h"
 #include "Logger.h"
 
 SFB::Semaphore::Semaphore()
+	: mSemaphore(nullptr)
 {
-	kern_return_t result = semaphore_create(mach_task_self(), &mSemaphore, SYNC_POLICY_FIFO, 0);
+	mSemaphore = dispatch_semaphore_create(0);
 
-	if(KERN_SUCCESS != result) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Semaphore", "semaphore_create failed: " << mach_error_string(result));
+	if(nullptr == mSemaphore) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Semaphore", "dispatch_semaphore_create failed");
 		throw std::runtime_error("Unable to create the semaphore");
 	}
 }
 
 SFB::Semaphore::~Semaphore()
 {
-	kern_return_t result = semaphore_destroy(mach_task_self(), mSemaphore);
-
-	if(KERN_SUCCESS != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.Semaphore", "semaphore_destroy failed: " << mach_error_string(result));
+	dispatch_release(mSemaphore), mSemaphore = nullptr;
 }
 
 bool SFB::Semaphore::Signal()
 {
-	kern_return_t result = semaphore_signal(mSemaphore);
-
-	if(KERN_SUCCESS != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Couldn't signal the semaphore: " << mach_error_string(result));
-		return false;
-	}
-
-	return true;
-}
-
-bool SFB::Semaphore::SignalAll()
-{
-	kern_return_t result = semaphore_signal_all(mSemaphore);
-
-	if(KERN_SUCCESS != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Couldn't signal the semaphore: " << mach_error_string(result));
-		return false;
-	}
-
-	return true;
+	return dispatch_semaphore_signal(mSemaphore);
 }
 
 bool SFB::Semaphore::Wait()
 {
-	kern_return_t result = semaphore_wait(mSemaphore);
-
-	if(KERN_SUCCESS != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Semaphore couldn't wait: " << mach_error_string(result));
-		return false;
-	}
-
-	return true;
+	return TimedWait(DISPATCH_TIME_FOREVER);
 }
 
-bool SFB::Semaphore::TimedWait(mach_timespec_t duration)
+bool SFB::Semaphore::TimedWait(dispatch_time_t duration)
 {
-	kern_return_t result = semaphore_timedwait(mSemaphore, duration);
-
-	if(KERN_SUCCESS != result && KERN_OPERATION_TIMED_OUT != result) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Semaphore", "Semaphore couldn't timedwait: " << mach_error_string(result));
-		return false;
-	}
-
-	return true;
+	return dispatch_semaphore_wait(mSemaphore, duration);
 }
