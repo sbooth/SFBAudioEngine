@@ -30,12 +30,12 @@
 
 #include <dispatch/dispatch.h>
 
-/*! @file Semaphore.h @brief A mach \c semaphore_t wrapper */
+/*! @file Semaphore.h @brief A \c dispatch_semaphore_t wrapper */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*! @brief A wrapper around a mach semaphore */
+	/*! @brief A wrapper around a libdispatch semaphore */
 	class Semaphore
 	{
 	public:
