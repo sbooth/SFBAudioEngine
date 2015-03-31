@@ -95,6 +95,10 @@ enum ePlayerFlags : unsigned int {
 
 				[self updateWindowUI];
 
+				NSURL *playingURL = (__bridge NSURL *)_player->GetPlayingURL();
+				if([playingURL isFileURL])
+					[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:playingURL];
+
 				return;
 			}
 			else if(ePlayerFlagRenderingFinished & flags) {
