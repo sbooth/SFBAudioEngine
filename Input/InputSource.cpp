@@ -40,7 +40,7 @@ const CFStringRef SFB::InputSource::ErrorDomain = CFSTR("org.sbooth.AudioEngine.
 
 #pragma mark Static Methods
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateInputSourceForURL(CFURLRef url, int flags, CFErrorRef *error)
+SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int flags, CFErrorRef *error)
 {
 	if(nullptr == url)
 		return nullptr;

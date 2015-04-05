@@ -54,7 +54,7 @@ namespace {
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForURL(CFURLRef url, CFErrorRef *error)
 {
-	return CreateForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), error);
+	return CreateForInputSource(InputSource::CreateForURL(url, 0, error), error);
 }
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)

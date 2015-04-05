@@ -54,7 +54,7 @@ namespace SFB {
 			InputOutputError		= 1			/*!< Input/output error */
 		};
 
-		/*! Flags used in \c InputSource::CreateInputSourceForURL */
+		/*! Flags used in \c InputSource::CreateForURL */
 		enum InputSourceFlags {
 			MemoryMapFiles			= 1 << 0,	/*!< Files should be mapped in memory using \c mmap() */
 			LoadFilesInMemory		= 1 << 1	/*!< Files should be fully loaded in memory */
@@ -76,7 +76,7 @@ namespace SFB {
 		 * @return An \c InputSource for the specified URL, or \c nullptr on failure
 		 * @see InputSourceFlags
 		 */
-		static unique_ptr CreateInputSourceForURL(CFURLRef url, int flags = 0, CFErrorRef *error = nullptr);
+		static unique_ptr CreateForURL(CFURLRef url, int flags = 0, CFErrorRef *error = nullptr);
 
 		//@}
 

@@ -36,17 +36,17 @@
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::LoopableRegionDecoder::CreateForURLRegion(CFURLRef url, SInt64 startingFrame, CFErrorRef *error)
 {
-	return CreateForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, error);
+	return CreateForInputSourceRegion(InputSource::CreateForURL(url, 0, error), startingFrame, error);
 }
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::LoopableRegionDecoder::CreateForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, CFErrorRef *error)
 {
-	return CreateForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, error);
+	return CreateForInputSourceRegion(InputSource::CreateForURL(url, 0, error), startingFrame, frameCount, error);
 }
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::LoopableRegionDecoder::CreateForURLRegion(CFURLRef url, SInt64 startingFrame, UInt32 frameCount, UInt32 repeatCount, CFErrorRef *error)
 {
-	return CreateForInputSourceRegion(InputSource::CreateInputSourceForURL(url, 0, error), startingFrame, frameCount, repeatCount, error);
+	return CreateForInputSourceRegion(InputSource::CreateForURL(url, 0, error), startingFrame, frameCount, repeatCount, error);
 }
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::LoopableRegionDecoder::CreateForInputSourceRegion(InputSource::unique_ptr inputSource, SInt64 startingFrame, CFErrorRef *error)

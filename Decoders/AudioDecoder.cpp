@@ -104,7 +104,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForURL(CFURLRef url, 
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForURL(CFURLRef url, CFStringRef mimeType, CFErrorRef *error)
 {
-	return CreateForInputSource(InputSource::CreateInputSourceForURL(url, 0, error), mimeType, error);
+	return CreateForInputSource(InputSource::CreateForURL(url, 0, error), mimeType, error);
 }
 
 SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
