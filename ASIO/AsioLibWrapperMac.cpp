@@ -128,7 +128,7 @@ bool AsioLibWrapper::LoadLib(const AsioLibInfo & libInfo)
     }
  
     mode = RTLD_LOCAL | RTLD_LAZY;
-    _libHandle = dlopen(path, RTLD_LOCAL | RTLD_LAZY);
+    _libHandle = dlopen(path, mode);
     if ( ! _libHandle ) {
         return false;
     }
@@ -233,13 +233,13 @@ bool LoadAsioLibInfo(CFURLRef asioLibUrl, AsioLibInfo & buffer)
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("Name"), &val);
         if (ok) {
             if (val) {
-                ok = CFStringGetCString((CFStringRef)val, buffer.Id, ASIO_LIB_ID_CAPACITY, kCFStringEncodingASCII);
+                /*ok =*/ CFStringGetCString((CFStringRef)val, buffer.Id, ASIO_LIB_ID_CAPACITY, kCFStringEncodingASCII);
             }
         }
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("Number"), &val);
         if (ok) {
             if (val) {
-                ok = CFNumberGetValue((CFNumberRef)val, kCFNumberSInt32Type, &buffer.Number);
+                /*ok =*/ CFNumberGetValue((CFNumberRef)val, kCFNumberSInt32Type, &buffer.Number);
             }
         }
         // number
@@ -247,28 +247,28 @@ bool LoadAsioLibInfo(CFURLRef asioLibUrl, AsioLibInfo & buffer)
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("DisplayName"), &val);
         if (ok) {
             if (val) {
-                ok = CFStringGetCString((CFStringRef)val, buffer.DisplayName, ASIO_LIB_DISPLAYNAME_CAPACITY, kCFStringEncodingASCII);
+                /*ok =*/ CFStringGetCString((CFStringRef)val, buffer.DisplayName, ASIO_LIB_DISPLAYNAME_CAPACITY, kCFStringEncodingASCII);
             }
         }
         // company
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("Company"), &val);
         if (ok) {
             if (val) {
-                ok = CFStringGetCString((CFStringRef)val, buffer.Company, ASIO_LIB_COMPANY_CAPACITY, kCFStringEncodingASCII);
+                /*ok =*/ CFStringGetCString((CFStringRef)val, buffer.Company, ASIO_LIB_COMPANY_CAPACITY, kCFStringEncodingASCII);
             }
         }
         // installation folder
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("InstallationFolder"), &val);
         if (ok) {
             if (val) {
-                ok = CFStringGetCString((CFStringRef)val, buffer.InstallFolder, ASIO_LIB_FOLDER_CAPACITY, kCFStringEncodingASCII);
+                /*ok =*/ CFStringGetCString((CFStringRef)val, buffer.InstallFolder, ASIO_LIB_FOLDER_CAPACITY, kCFStringEncodingASCII);
             }
         }
         // build architectures
         ok = CFDictionaryGetValueIfPresent((CFDictionaryRef)propertyList, CFSTR("Architectures"), &val);
         if (ok) {
             if (val) {
-                ok = CFStringGetCString((CFStringRef)val, buffer.Architectures, ASIO_LIB_ARCHITECTURES_CAPACITY, kCFStringEncodingASCII);
+                /*ok =*/ CFStringGetCString((CFStringRef)val, buffer.Architectures, ASIO_LIB_ARCHITECTURES_CAPACITY, kCFStringEncodingASCII);
             }
         }
     }
