@@ -135,7 +135,7 @@ namespace SFB {
 
 		/*!
 		 * @brief Write data to the \c RingBuffer, advancing the write pointer.
-		 * @param bufferList An address containing the data to copy
+		 * @param sourceBuffer An address containing the data to copy
 		 * @param byteCount The desired number of frames to write
 		 * @return The number of bytes actually written
 		 */

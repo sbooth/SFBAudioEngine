@@ -283,6 +283,7 @@ namespace SFB {
 			 * @brief Copies the values contained in the specified metadata kinds from \c metadata
 			 * @note Does not copy album artwork
 			 * @param metadata A \c Metadata object containing the metadata to copy
+			 * @param kind A bitmask specifying the kinds of metadata to copy
 			 * @see CopyAllMetadata
 			 * @see CopyAttachedPictures
 			 */
