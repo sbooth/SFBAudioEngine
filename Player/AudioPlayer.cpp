@@ -108,6 +108,8 @@ public:
 
 		mDecoder = std::move(decoder);
 
+		mFramesRendered.store(mDecoder->GetCurrentFrame());
+
 		// NB: The decoder may return an estimate of the total frames
 		mTotalFrames = mDecoder->GetTotalFrames();
 	}
@@ -1497,7 +1499,7 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 		SInt64 decoderFramesRemaining = (-1 == decoderState->mTotalFrames ? framesRead : decoderState->mTotalFrames - decoderState->mFramesRendered);
 		SInt64 framesFromThisDecoder = std::min(decoderFramesRemaining, (SInt64)framesRead);
 
-		if(0 == decoderState->mFramesRendered && !(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags.load())) {
+		if(!(eDecoderStateDataFlagRenderingStarted & decoderState->mFlags.load())) {
 			// Call the rendering started block
 			if(mDecoderEventBlocks[2])
 				mDecoderEventBlocks[2](*decoderState->mDecoder);
