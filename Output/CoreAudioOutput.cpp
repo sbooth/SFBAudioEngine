@@ -1789,7 +1789,7 @@ bool SFB::Audio::CoreAudioOutput::_CreateDeviceUID(CFStringRef& deviceUID) const
 	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &deviceUID);
 	if(kAudioHardwareNoError != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: " << result);
-		return nullptr;
+		return false;
 	}
 
 	return true;
