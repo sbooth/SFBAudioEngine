@@ -70,7 +70,7 @@ bool SFB::HTTPInputSource::_Open(CFErrorRef *error)
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
 	}
 
-	mReadStream = CFReadStreamCreateForStreamedHTTPRequest(kCFAllocatorDefault, mRequest, nullptr);
+	mReadStream = CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, mRequest);
 	if(!mReadStream) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
