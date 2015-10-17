@@ -254,10 +254,10 @@ std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout);
 
 #include <Foundation/Foundation.h>
 
-std::ostream& operator<<(std::ostream& out, NSString *s);
-std::ostream& operator<<(std::ostream& out, NSNumber *n);
-std::ostream& operator<<(std::ostream& out, NSURL *u);
-std::ostream& operator<<(std::ostream& out, NSError *e);
+std::ostream& operator<<(std::ostream& out, NSString * _Nullable s);
+std::ostream& operator<<(std::ostream& out, NSNumber * _Nullable n);
+std::ostream& operator<<(std::ostream& out, NSURL * _Nullable u);
+std::ostream& operator<<(std::ostream& out, NSError * _Nullable e);
 
 #endif
 
