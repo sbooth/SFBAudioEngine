@@ -167,7 +167,7 @@ namespace SFB {
 		 * @param file The name of the file containing \c function or \c nullptr to omit
 		 * @param line The line number in \c file or \c -1 to omit
 		 */
-		void Log(levels level, const char *facility, const char *message, const char *function = nullptr, const char *file = nullptr, int line = -1);
+		void Log(levels level, const char * _Nullable facility, const char * _Nonnull message, const char * _Nullable function = nullptr, const char * _Nullable file = nullptr, int line = -1);
 
 
 		/*! @name Convenience functions */
@@ -178,56 +178,56 @@ namespace SFB {
 		 * @note It is preferable to use LOGGER_EMERG() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Emerg(const char *message)			{ Log(emerg, nullptr, message); }
+		inline void Emerg(const char * _Nonnull message)		{ Log(emerg, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #alert level
 		 * @note It is preferable to use LOGGER_ALERT() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Alert(const char *message)			{ Log(alert, nullptr, message); }
+		inline void Alert(const char * _Nonnull message)		{ Log(alert, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #crit level
 		 * @note It is preferable to use LOGGER_CRIT() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Crit(const char *message)			{ Log(crit, nullptr, message); }
+		inline void Crit(const char * _Nonnull message)			{ Log(crit, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #err level
 		 * @note It is preferable to use LOGGER_ERR() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Err(const char *message)			{ Log(err, nullptr, message); }
+		inline void Err(const char * _Nonnull message)			{ Log(err, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #warning level
 		 * @note It is preferable to use LOGGER_WARN() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Warn(const char *message)			{ Log(warning, nullptr, message); }
+		inline void Warn(const char * _Nonnull message)			{ Log(warning, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #notice level
 		 * @note It is preferable to use LOGGER_NOTICE() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Notice(const char *message)			{ Log(notice, nullptr, message); }
+		inline void Notice(const char * _Nonnull message)		{ Log(notice, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #info level
 		 * @note It is preferable to use LOGGER_INFO() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Info(const char *message)			{ Log(info, nullptr, message); }
+		inline void Info(const char * _Nonnull message)			{ Log(info, nullptr, message); }
 
 		/*!
 		 * @brief Log a message at the \c #debug level
 		 * @note It is preferable to use LOGGER_DEBUG() for efficiency
 		 * @param message The message to log
 		 */
-		inline void Debug(const char *message)			{ Log(debug, nullptr, message); }
+		inline void Debug(const char * _Nonnull message)		{ Log(debug, nullptr, message); }
 		
 		//@}
 	}
@@ -240,14 +240,14 @@ namespace SFB {
 
 // Useful ostream overloads
 
-std::ostream& operator<<(std::ostream& out, CFStringRef s);
-std::ostream& operator<<(std::ostream& out, CFNumberRef n);
-std::ostream& operator<<(std::ostream& out, CFURLRef u);
-std::ostream& operator<<(std::ostream& out, CFErrorRef e);
-std::ostream& operator<<(std::ostream& out, CFUUIDRef u);
+std::ostream& operator<<(std::ostream& out, CFStringRef _Nullable s);
+std::ostream& operator<<(std::ostream& out, CFNumberRef _Nullable n);
+std::ostream& operator<<(std::ostream& out, CFURLRef _Nullable u);
+std::ostream& operator<<(std::ostream& out, CFErrorRef _Nullable e);
+std::ostream& operator<<(std::ostream& out, CFUUIDRef _Nullable u);
 std::ostream& operator<<(std::ostream& out, CFUUIDBytes b);
 std::ostream& operator<<(std::ostream& out, const AudioStreamBasicDescription& format);
-std::ostream& operator<<(std::ostream& out, const AudioChannelLayout *layout);
+std::ostream& operator<<(std::ostream& out, const AudioChannelLayout * _Nullable  layout);
 
 // Helpers for common toll-free bridged classes
 #ifdef __OBJC__
