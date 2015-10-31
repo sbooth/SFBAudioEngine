@@ -200,19 +200,44 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputS
 #pragma mark Creation and Destruction
 
 SFB::Audio::Decoder::Decoder()
-	: mInputSource(nullptr), mIsOpen(false), mRepresentedObject(nullptr)
+	: mInputSource(nullptr), mIsOpen(false), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr)
 {
 	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
-	: mInputSource(std::move(inputSource)), mIsOpen(false), mRepresentedObject(nullptr)
+	: mInputSource(std::move(inputSource)), mIsOpen(false), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr)
 {
 	assert(nullptr != mInputSource);
 
 	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
+}
+
+SFB::Audio::Decoder::~Decoder()
+{
+	if(mRepresentedObject && mRepresentedObjectCleanupBlock)
+		mRepresentedObjectCleanupBlock(mRepresentedObject), mRepresentedObject = nullptr;
+	if(mRepresentedObjectCleanupBlock)
+		Block_release(mRepresentedObjectCleanupBlock), mRepresentedObjectCleanupBlock = nullptr;
+}
+
+#pragma mark Represented Object Support
+
+void SFB::Audio::Decoder::SetRepresentedObject(void *representedObject)
+{
+	if(mRepresentedObject && mRepresentedObjectCleanupBlock)
+		mRepresentedObjectCleanupBlock(mRepresentedObject);
+	mRepresentedObject = representedObject;
+}
+
+void SFB::Audio::Decoder::SetRepresentedObjectCleanupBlock(RepresentedObjectCleanupBlock block)
+{
+	if(mRepresentedObjectCleanupBlock)
+		Block_release(mRepresentedObjectCleanupBlock), mRepresentedObjectCleanupBlock = nullptr;
+	if(block)
+		mRepresentedObjectCleanupBlock = Block_copy(block);
 }
 
 #pragma mark Base Functionality

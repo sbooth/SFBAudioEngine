@@ -166,7 +166,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Destroy this \c Decoder */
-			virtual ~Decoder() = default;
+			virtual ~Decoder();
 
 			/*! @cond */
 
@@ -184,7 +184,9 @@ namespace SFB {
 			/*!
 			 * @name Represented object association
 			 * A represented object allows a decoder to be associated with a model object such as
-			 * a playlist or track
+			 * a playlist or track.  A represented object cleanup block may also be specified
+			 * which allows the lifetime of the represented object to easily be linked to the
+			 * lifetime of the decoder.
 			 */
 			//@{
 
@@ -192,7 +194,19 @@ namespace SFB {
 			inline void * GetRepresentedObject() const					{ return mRepresentedObject; }
 
 			/*! @brief Set the represented object associated with this decoder */
-			inline void SetRepresentedObject(void *representedObject)	{ mRepresentedObject = representedObject; }
+			void SetRepresentedObject(void *representedObject);
+
+			/*!
+			 * @brief A block called to dispose of this decoder's \c representedObject
+			 * @param representedObject The represented object to be disposed
+			 */
+			using RepresentedObjectCleanupBlock = void (^)(void *representedObject);
+			
+			/*! @brief Get the represented object associated with this decoder */
+			inline RepresentedObjectCleanupBlock GetRepresentedObjectCleanupBlock() const { return mRepresentedObjectCleanupBlock; }
+
+			/*! @brief Set the represented object associated with this decoder */
+			void SetRepresentedObjectCleanupBlock(RepresentedObjectCleanupBlock block);
 
 			//@}
 
@@ -343,6 +357,8 @@ namespace SFB {
 
 			// Data members
 			void							*mRepresentedObject;
+			RepresentedObjectCleanupBlock	mRepresentedObjectCleanupBlock;
+			
 			bool							mIsOpen;
 
 			// ========================================
