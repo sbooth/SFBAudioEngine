@@ -435,7 +435,7 @@ void * SFB::Audio::Player::GetPlayingRepresentedObject() const
 
 #pragma mark Block-based callback support
 
-void SFB::Audio::Player::SetDecodingStartedBlock(AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetDecodingStartedBlock(DecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[0])
 		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
@@ -443,7 +443,7 @@ void SFB::Audio::Player::SetDecodingStartedBlock(AudioPlayerDecoderEventBlock bl
 		mDecoderEventBlocks[0] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetDecodingFinishedBlock(DecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[1])
 		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
@@ -451,7 +451,7 @@ void SFB::Audio::Player::SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock b
 		mDecoderEventBlocks[1] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetRenderingStartedBlock(AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetRenderingStartedBlock(DecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[2])
 		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
@@ -459,7 +459,7 @@ void SFB::Audio::Player::SetRenderingStartedBlock(AudioPlayerDecoderEventBlock b
 		mDecoderEventBlocks[2] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block)
+void SFB::Audio::Player::SetRenderingFinishedBlock(DecoderEventBlock block)
 {
 	if(mDecoderEventBlocks[3])
 		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
@@ -467,7 +467,7 @@ void SFB::Audio::Player::SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock 
 		mDecoderEventBlocks[3] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetOpenDecoderErrorBlock(AudioPlayerDecoderErrorBlock block)
+void SFB::Audio::Player::SetOpenDecoderErrorBlock(DecoderErrorBlock block)
 {
 	if(mDecoderErrorBlock)
 		Block_release(mDecoderErrorBlock), mDecoderErrorBlock = nullptr;
@@ -475,7 +475,7 @@ void SFB::Audio::Player::SetOpenDecoderErrorBlock(AudioPlayerDecoderErrorBlock b
 		mDecoderErrorBlock = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetPreRenderBlock(AudioPlayerRenderEventBlock block)
+void SFB::Audio::Player::SetPreRenderBlock(RenderEventBlock block)
 {
 	if(mRenderEventBlocks[0])
 		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
@@ -483,7 +483,7 @@ void SFB::Audio::Player::SetPreRenderBlock(AudioPlayerRenderEventBlock block)
 		mRenderEventBlocks[0] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetPostRenderBlock(AudioPlayerRenderEventBlock block)
+void SFB::Audio::Player::SetPostRenderBlock(RenderEventBlock block)
 {
 	if(mRenderEventBlocks[1])
 		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
@@ -491,7 +491,7 @@ void SFB::Audio::Player::SetPostRenderBlock(AudioPlayerRenderEventBlock block)
 		mRenderEventBlocks[1] = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block)
+void SFB::Audio::Player::SetFormatMismatchBlock(FormatMismatchBlock block)
 {
 	if(mFormatMismatchBlock)
 		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
@@ -499,7 +499,7 @@ void SFB::Audio::Player::SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock b
 		mFormatMismatchBlock = Block_copy(block);
 }
 
-void SFB::Audio::Player::SetUnsupportedFormatBlock(AudioPlayerErrorBlock block)
+void SFB::Audio::Player::SetUnsupportedFormatBlock(ErrorBlock block)
 {
 	if(mErrorBlock)
 		Block_release(mErrorBlock), mErrorBlock = nullptr;

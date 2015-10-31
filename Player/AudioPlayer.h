@@ -100,34 +100,34 @@ namespace SFB {
 			 * @brief A block called when an event occurs on a \c Decoder
 			 * @param decoder The \c AudioDecoder on which the event occurred
 			 */
-			using AudioPlayerDecoderEventBlock = void (^)(const Decoder& decoder);
+			using DecoderEventBlock = void (^)(const Decoder& decoder);
 
 			/*!
 			 * @brief A block called when an error occurs on a \c Decoder
 			 * @param decoder The \c AudioDecoder on which the error occurred
 			 * @param error An optional description of the error
 			 */
-			using AudioPlayerDecoderErrorBlock = void (^)(const Decoder& decoder, CFErrorRef error);
+			using DecoderErrorBlock = void (^)(const Decoder& decoder, CFErrorRef error);
 
 			/*!
 			 * @brief A block called when a \c Player render event occurs
 			 * @param data The audio data
 			 * @param frameCount The number of frames in \c data
 			 */
-			using AudioPlayerRenderEventBlock = void (^)(AudioBufferList *data, UInt32 frameCount);
+			using RenderEventBlock = void (^)(AudioBufferList *data, UInt32 frameCount);
 
 			/*!
 			 * @brief A block called when the audio format of the next \c AudioDecoder does not match the current format
 			 * @param currentFormat The current audio format
 			 * @param nextFormat The next audio format
 			 */
-			using AudioPlayerFormatMismatchBlock = void (^)(const AudioFormat& currentFormat, const AudioFormat& nextFormat);
+			using FormatMismatchBlock = void (^)(const AudioFormat& currentFormat, const AudioFormat& nextFormat);
 
 			/*!
 			 * @brief A block called when an error occurs
 			 * @param error An optional description of the error
 			 */
-			using AudioPlayerErrorBlock = void (^)(CFErrorRef error);
+			using ErrorBlock = void (^)(CFErrorRef error);
 
 			//@}
 
@@ -251,35 +251,35 @@ namespace SFB {
 			 * @note The block is invoked from the decoding thread before the first audio frame is decoded
 			 * @param block The block to invoke when decoding starts
 			 */
-			void SetDecodingStartedBlock(AudioPlayerDecoderEventBlock block);
+			void SetDecodingStartedBlock(DecoderEventBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked when a \c Decoder finishes decoding
 			 * @note The block is invoked from the decoding thread after the last audio frame has been decoded
 			 * @param block The block to invoke when decoding finishes
 			 */
-			void SetDecodingFinishedBlock(AudioPlayerDecoderEventBlock block);
+			void SetDecodingFinishedBlock(DecoderEventBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked when a \c Decoder starts rendering
 			 * @note This block is invoked from the real-time rendering thread before the first audio frame is rendered
 			 * @param block The block to invoke when rendering starts
 			 */
-			void SetRenderingStartedBlock(AudioPlayerDecoderEventBlock block);
+			void SetRenderingStartedBlock(DecoderEventBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked when a \c Decoder finishes rendering
 			 * @note This block is invoked from the real-time rendering thread after the last audio frame has been rendered
 			 * @param block The block to invoke when rendering finishes
 			 */
-			void SetRenderingFinishedBlock(AudioPlayerDecoderEventBlock block);
+			void SetRenderingFinishedBlock(DecoderEventBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked when a queued \c Decoder fails to open
 			 * @note The block is invoked from the decoding thread
 			 * @param block The block to invoke if an error occurs calling Decoder::Open
 			 */
-			void SetOpenDecoderErrorBlock(AudioPlayerDecoderErrorBlock block);
+			void SetOpenDecoderErrorBlock(DecoderErrorBlock block);
 
 
 			/*!
@@ -287,14 +287,14 @@ namespace SFB {
 			 * @note This block is invoked from the real-time rendering thread before audio is rendered
 			 * @param block The block to invoke before audio rendering
 			 */
-			void SetPreRenderBlock(AudioPlayerRenderEventBlock block);
+			void SetPreRenderBlock(RenderEventBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked after the player renders audio
 			 * @note This block is invoked from the real-time rendering thread after audio is rendered
 			 * @param block The block to invoke after audio rendering
 			 */
-			void SetPostRenderBlock(AudioPlayerRenderEventBlock block);
+			void SetPostRenderBlock(RenderEventBlock block);
 
 
 			/*!
@@ -302,14 +302,14 @@ namespace SFB {
 			 * @note This block is invoked from the decoding thread
 			 * @param block The block to invoke when a format mismatch occurs
 			 */
-			void SetFormatMismatchBlock(AudioPlayerFormatMismatchBlock block);
+			void SetFormatMismatchBlock(FormatMismatchBlock block);
 
 			/*!
 			 * @brief Set the block to be invoked when a \c Decoder with an unsupported format
 			 * @note The block is invoked from the decoding thread
 			 * @param block The block to invoke when an error occurs
 			 */
-			void SetUnsupportedFormatBlock(AudioPlayerErrorBlock block);
+			void SetUnsupportedFormatBlock(ErrorBlock block);
 
 			//@}
 
@@ -537,11 +537,11 @@ namespace SFB {
 
 			// ========================================
 			// Callbacks
-			AudioPlayerDecoderEventBlock			mDecoderEventBlocks [4];
-			AudioPlayerDecoderErrorBlock			mDecoderErrorBlock;
-			AudioPlayerRenderEventBlock				mRenderEventBlocks [2];
-			AudioPlayerFormatMismatchBlock			mFormatMismatchBlock;
-			AudioPlayerErrorBlock					mErrorBlock;
+			DecoderEventBlock						mDecoderEventBlocks [4];
+			DecoderErrorBlock						mDecoderErrorBlock;
+			RenderEventBlock						mRenderEventBlocks [2];
+			FormatMismatchBlock						mFormatMismatchBlock;
+			ErrorBlock								mErrorBlock;
 		};
 		
 	}
