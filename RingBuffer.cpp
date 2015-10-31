@@ -147,7 +147,7 @@ size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount)
 		n2 = 0;
 	}
 
-	memcpy(destinationBuffer, mBuffer, n1);
+	memcpy(destinationBuffer, mBuffer + mReadPointer, n1);
 	mReadPointer = (mReadPointer + n1) & mCapacityBytesMask;
 
 	if(n2) {
@@ -182,7 +182,7 @@ size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const
 		n2 = 0;
 	}
 
-	memcpy(destinationBuffer, mBuffer, n1);
+	memcpy(destinationBuffer, mBuffer + readPointer, n1);
 	readPointer = (readPointer + n1) & mCapacityBytesMask;
 
 	if(n2)
