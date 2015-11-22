@@ -159,7 +159,7 @@ bool SFB::Audio::AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::v
 			if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) || kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Back)"), kCFCompareCaseInsensitive)) {
 				auto binaryData = item.binaryData();
 				size_t pos = binaryData.find('\0');
-				if(TagLib::ByteVector::npos != pos && 3 < binaryData.size()) {
+				if(TagLib::ByteVector::npos() != pos && 3 < binaryData.size()) {
 					SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
 					SFB::CFString description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
 

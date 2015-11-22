@@ -30,10 +30,10 @@
 #include "CFWrapper.h"
 #include "Logger.h"
 
-TagLib::String  TagLib::StringFromCFString(CFStringRef s)
+TagLib::String TagLib::StringFromCFString(CFStringRef s)
 {
 	if(nullptr == s)
-		return String::null;
+		return {};
 
 	CFRange range = CFRangeMake(0, CFStringGetLength(s));
 	CFIndex count;
@@ -41,28 +41,25 @@ TagLib::String  TagLib::StringFromCFString(CFStringRef s)
 	// Determine the length of the string in UTF-8
 	CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, nullptr, 0, &count);
 
-	char *buf = new char [count + 1];
+	std::vector<char> buf;
+	buf.reserve((size_t)count + 1);
 
 	// Convert it
 	CFIndex used;
-	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, (UInt8 *)buf, count, &used);
+	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, (UInt8 *)&buf[0], count, &used);
 
 	if(CFStringGetLength(s) != converted)
 		LOGGER_WARNING("org.sbooth.AudioEngine", "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
 
 	// Add terminator
-	buf[used] = '\0';
+	buf[(size_t)used] = '\0';
 
-	String result(buf, String::UTF8);
-
-	delete [] buf;
-
-	return result;
+	return {&buf[0], String::UTF8};
 }
 
 void TagLib::AddStringToCFDictionary(CFMutableDictionaryRef d, CFStringRef key, String value)
 {
-	if(nullptr == d || nullptr == key || value.isNull())
+	if(nullptr == d || nullptr == key || value.isEmpty())
 		return;
 
 	SFB::CFString string = CFStringCreateWithCString(kCFAllocatorDefault, value.toCString(true), kCFStringEncodingUTF8);

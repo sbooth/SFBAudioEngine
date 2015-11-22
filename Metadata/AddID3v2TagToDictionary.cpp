@@ -100,7 +100,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		bool ok;
 		size_t pos = s.find("/", 0);
-		if(TagLib::String::npos != pos) {
+		if(TagLib::String::npos() != pos) {
 			int trackNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
@@ -124,7 +124,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		bool ok;
 		size_t pos = s.find("/", 0);
-		if(TagLib::String::npos != pos) {
+		if(TagLib::String::npos() != pos) {
 			int discNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
@@ -302,7 +302,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 			SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
 			
 			SFB::CFString description;
-			if(!frame->description().isNull())
+			if(!frame->description().isEmpty())
 				description = CFStringCreateWithCString(kCFAllocatorDefault, frame->description().toCString(true), kCFStringEncodingUTF8);
 			
 			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));

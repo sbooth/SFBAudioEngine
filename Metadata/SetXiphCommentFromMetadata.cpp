@@ -46,7 +46,7 @@ namespace {
 		assert(nullptr != key);
 
 		// Remove the existing comment with this name
-		tag->removeField(key);
+		tag->removeFields(key);
 
 		// Nothing left to do if value is nullptr
 		if(nullptr == value)
@@ -170,7 +170,7 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 
 	// Album art
 	if(setAlbumArt) {
-		tag->removeField("METADATA_BLOCK_PICTURE");
+		tag->removeFields("METADATA_BLOCK_PICTURE");
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
 			SFB::CGImageSource imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);

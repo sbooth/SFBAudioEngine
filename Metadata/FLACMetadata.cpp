@@ -167,7 +167,7 @@ bool SFB::Audio::FLACMetadata::_ReadMetadata(CFErrorRef *error)
 		SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)iter->data().data(), (CFIndex)iter->data().size());
 
 		SFB::CFString description;
-		if(!iter->description().isNull())
+		if(!iter->description().isEmpty())
 			description = CFStringCreateWithCString(kCFAllocatorDefault, iter->description().toCString(true), kCFStringEncodingUTF8);
 
 		mPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)iter->type(), description));

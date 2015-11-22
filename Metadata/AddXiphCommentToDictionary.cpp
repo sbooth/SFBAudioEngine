@@ -125,7 +125,7 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 				SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)picture.data().data(), (CFIndex)picture.data().size());
 
 				SFB::CFString description;
-				if(!picture.description().isNull())
+				if(!picture.description().isEmpty())
 					description = CFStringCreateWithCString(kCFAllocatorDefault, picture.description().toCString(true), kCFStringEncodingUTF8);
 
 				attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)picture.type(), description));
