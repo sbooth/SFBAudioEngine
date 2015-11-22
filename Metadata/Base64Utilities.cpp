@@ -34,60 +34,52 @@
 
 TagLib::ByteVector TagLib::DecodeBase64(const TagLib::ByteVector& input)
 {
-	ByteVector result;
-
-	CFErrorRef error;
+	SFB::CFError error;
 	SFB::SecTransform decoder = SecDecodeTransformCreate(kSecBase64Encoding, &error);
     if(!decoder) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecDecodeTransformCreate failed: " << error);
-		return TagLib::ByteVector::null;
+		return {};
 	}
 
 	SFB::CFData sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull);
 	if(!sourceData)
-		return TagLib::ByteVector::null;
+		return {};
 
     if(!SecTransformSetAttribute(decoder, kSecTransformInputAttributeName, sourceData, &error)) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecTransformSetAttribute failed: " << error);
-		return TagLib::ByteVector::null;
+		return {};
 	}
 
 	SFB::CFData decodedData = (CFDataRef)SecTransformExecute(decoder, &error);
 	if(!decodedData)
-		return TagLib::ByteVector::null;
+		return {};
 
-	result.setData((const char *)CFDataGetBytePtr((CFDataRef)decodedData), (TagLib::uint)CFDataGetLength((CFDataRef)decodedData));
-
-	return result;
+	return {(const char *)CFDataGetBytePtr((CFDataRef)decodedData), (size_t)CFDataGetLength((CFDataRef)decodedData)};
 }
 
 TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 {
-	ByteVector result;
-
-	CFErrorRef error;
+	SFB::CFError error;
 	SFB::SecTransform encoder = SecEncodeTransformCreate(kSecBase64Encoding, &error);
     if(nullptr == encoder) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecEncodeTransformCreate failed: " << error);
-		return TagLib::ByteVector::null;
+		return {};
 	}
 
 	SFB::CFData sourceData = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull);
 	if(!sourceData)
-		return TagLib::ByteVector::null;
+		return {};
 
     if(!SecTransformSetAttribute(encoder, kSecTransformInputAttributeName, sourceData, &error)) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecTransformSetAttribute failed: " << error);
-		return TagLib::ByteVector::null;
+		return {};
 	}
 
 	SFB::CFData encodedData = (CFDataRef)SecTransformExecute(encoder, &error);
 	if(!encodedData) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecTransformExecute failed: " << error);
-		return TagLib::ByteVector::null;
+		return {};
 	}
 
-	result.setData((const char *)CFDataGetBytePtr((CFDataRef)encodedData), (TagLib::uint)CFDataGetLength((CFDataRef)encodedData));
-
-	return result;
+	return {(const char *)CFDataGetBytePtr((CFDataRef)encodedData), (size_t)CFDataGetLength((CFDataRef)encodedData)};
 }
