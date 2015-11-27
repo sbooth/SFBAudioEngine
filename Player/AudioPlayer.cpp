@@ -870,15 +870,13 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		// ========================================
 		// Open the decoder if necessary
 		if(decoder && !decoder->IsOpen()) {
-			CFErrorRef error = nullptr;
+			SFB::CFError error;
 			if(!decoder->Open(&error))  {
 				if(mDecoderErrorBlock)
 					mDecoderErrorBlock(*decoder, error);
 
-				if(error) {
+				if(error)
 					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
-					CFRelease(error), error = nullptr;
-				}
 			}
 		}
 
@@ -1344,13 +1342,11 @@ void SFB::Audio::Player::StopActiveDecoders()
 bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 {
 	// Open the decoder if necessary
-	CFErrorRef error = nullptr;
+	SFB::CFError error;
 	if(!decoder.IsOpen() && !decoder.Open(&error)) {
-		if(error) {
+		if(error)
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
-			CFRelease(error), error = nullptr;
-		}
-		
+
 		return false;
 	}
 
