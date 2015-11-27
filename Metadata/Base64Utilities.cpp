@@ -61,7 +61,7 @@ TagLib::ByteVector TagLib::EncodeBase64(const TagLib::ByteVector& input)
 {
 	SFB::CFError error;
 	SFB::SecTransform encoder = SecEncodeTransformCreate(kSecBase64Encoding, &error);
-    if(nullptr == encoder) {
+    if(!encoder) {
 		LOGGER_WARNING("org.sbooth.AudioEngine", "SecEncodeTransformCreate failed: " << error);
 		return {};
 	}
