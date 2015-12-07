@@ -28,6 +28,7 @@
 
 #include "InputSource.h"
 #include "FileInputSource.h"
+#include "MemoryInputSource.h"
 #include "MemoryMappedFileInputSource.h"
 #include "InMemoryFileInputSource.h"
 #include "HTTPInputSource.h"
@@ -65,6 +66,14 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int fl
 		return unique_ptr(new HTTPInputSource(url));
 
 	return nullptr;
+}
+
+SFB::InputSource::unique_ptr SFB::InputSource::CreateWithMemory(const void *bytes, SInt64 byteCount, bool copyBytes, CFErrorRef *error)
+{
+	if(nullptr == bytes || 0 >= byteCount)
+		return nullptr;
+
+	return unique_ptr(new MemoryInputSource(bytes, byteCount, copyBytes));
 }
 
 #pragma mark Creation and Destruction

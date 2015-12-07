@@ -78,6 +78,17 @@ namespace SFB {
 		 */
 		static unique_ptr CreateForURL(CFURLRef url, int flags = 0, CFErrorRef *error = nullptr);
 
+		/*!
+		 * Create a new \c InputSource for the given byte buffer
+		 * @param bytes A pointer to the desired byte buffer
+		 * @param byteCount The number of bytes in \c bytes
+		 * @param copyBytes Whether the data in \c bytes should be copied
+		 * @param error An optional pointer to a \c CFErrorRef to receive error information
+		 * @return An \c InputSource for the specified URL, or \c nullptr on failure
+		 * @see InputSourceFlags
+		 */
+		static unique_ptr CreateWithMemory(const void *bytes, SInt64 byteCount, bool copyBytes = true, CFErrorRef *error = nullptr);
+
 		//@}
 
 
