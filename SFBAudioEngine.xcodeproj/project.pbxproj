@@ -199,6 +199,8 @@
 		32C212DE109111A500BA2493 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5BA0108BA80B00CA9BDE /* AudioDecoder.cpp */; };
 		32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5B9F108BA80B00CA9BDE /* AudioDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C212E0109111A600BA2493 /* CoreAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322B5C1E108BC70600CA9BDE /* CoreAudioDecoder.cpp */; };
+		32C3BEAC1C152E61006A4E6B /* MemoryInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C3BEAA1C152E61006A4E6B /* MemoryInputSource.cpp */; };
+		32C3BEAE1C152E7E006A4E6B /* MemoryInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C3BEAA1C152E61006A4E6B /* MemoryInputSource.cpp */; };
 		32C3DD9A1943406000CEA060 /* DoPDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32C3DD981943406000CEA060 /* DoPDecoder.cpp */; };
 		32C3DD9B1943406000CEA060 /* DoPDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C3DD991943406000CEA060 /* DoPDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C3DD9C1943466E00CEA060 /* LoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E6AB9A1096C81200DA998D /* LoopableRegionDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -410,6 +412,8 @@
 		32BA761218203B0F00366204 /* DSFMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSFMetadata.cpp; sourceTree = "<group>"; };
 		32BA761318203B0F00366204 /* DSFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSFMetadata.h; sourceTree = "<group>"; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32C3BEAA1C152E61006A4E6B /* MemoryInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryInputSource.cpp; sourceTree = "<group>"; };
+		32C3BEAB1C152E61006A4E6B /* MemoryInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryInputSource.h; sourceTree = "<group>"; };
 		32C3DD981943406000CEA060 /* DoPDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DoPDecoder.cpp; sourceTree = "<group>"; };
 		32C3DD991943406000CEA060 /* DoPDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DoPDecoder.h; sourceTree = "<group>"; };
 		32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = OggSpeexMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -737,6 +741,8 @@
 			children = (
 				32D6552C115FC58C002B275C /* InputSource.h */,
 				32D6552B115FC58C002B275C /* InputSource.cpp */,
+				32C3BEAB1C152E61006A4E6B /* MemoryInputSource.h */,
+				32C3BEAA1C152E61006A4E6B /* MemoryInputSource.cpp */,
 				32D6552A115FC58C002B275C /* FileInputSource.h */,
 				32D65529115FC58C002B275C /* FileInputSource.cpp */,
 				32386EF313D2135400D25175 /* HTTPInputSource.h */,
@@ -1057,6 +1063,7 @@
 				32A9BC601955FBE000BD33FF /* MODMetadata.cpp in Sources */,
 				32A9BC611955FBE000BD33FF /* CreateStringForOSType.cpp in Sources */,
 				32A9BC621955FBE000BD33FF /* Semaphore.cpp in Sources */,
+				32C3BEAE1C152E7E006A4E6B /* MemoryInputSource.cpp in Sources */,
 				32A9BC631955FBE000BD33FF /* LibsndfileDecoder.cpp in Sources */,
 				32A9BC641955FBE000BD33FF /* DSFDecoder.cpp in Sources */,
 				32A9BC651955FBE000BD33FF /* HTTPInputSource.cpp in Sources */,
@@ -1143,6 +1150,7 @@
 				320A32E314DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp in Sources */,
 				3292489418CEAB48004365FF /* RingBuffer.cpp in Sources */,
 				3291CC2814F5D03C00B34DA4 /* AttachedPicture.cpp in Sources */,
+				32C3BEAC1C152E61006A4E6B /* MemoryInputSource.cpp in Sources */,
 				327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */,
 				327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */,
 				32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */,
