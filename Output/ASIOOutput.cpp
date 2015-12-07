@@ -727,7 +727,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 
 		default:
 			LOGGER_INFO("org.sbooth.AudioEngine.Output.ASIO", "Unknown driver channel layout");
-			mDriverChannelLayout = nullptr;
+			mDriverChannelLayout = {};
 			break;
 	}
 

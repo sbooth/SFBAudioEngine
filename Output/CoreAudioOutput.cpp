@@ -2039,7 +2039,7 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		return false;
 	}
 
-	if(nullptr == channelLayout)
+	if(!channelLayout)
 		return true;
 
 	// Stereo
@@ -2070,7 +2070,7 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		channelMap[preferredChannelsForStereo[0] - 1] = 0;
 		channelMap[preferredChannelsForStereo[1] - 1] = 1;
 
-		LOGGER_DEBUG("org.sbooth.AudioEngine.Output.CoreAudio", "Using  stereo channel map: ");
+		LOGGER_DEBUG("org.sbooth.AudioEngine.Output.CoreAudio", "Using stereo channel map: ");
 		for(UInt32 i = 0; i < outputFormat.mChannelsPerFrame; ++i)
 			LOGGER_DEBUG("org.sbooth.AudioEngine.Output.CoreAudio", "  " << i << " -> " << channelMap[i]);
 
