@@ -212,6 +212,14 @@
 		32D6552F115FC58C002B275C /* InputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6552B115FC58C002B275C /* InputSource.cpp */; };
 		32D65530115FC58C002B275C /* InputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552C115FC58C002B275C /* InputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */; };
+		32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; };
+		32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; };
+		32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		32DADE261C0E9A770058B2B7 /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; };
+		32DADE2E1C0E9A770058B2B7 /* libtta++.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; };
+		32DADE3E1C0E9D490058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		32DADE3F1C0E9D490058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */; };
 		32DFA2F314FA7FD400D1FB58 /* CFErrorUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */; };
 		32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */; };
@@ -258,6 +266,8 @@
 			dstPath = ../Libraries;
 			dstSubfolderSpec = 10;
 			files = (
+				32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */,
+				32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */,
 				3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */,
 			);
 			name = "Copy Embedded Libraries";
@@ -269,6 +279,8 @@
 			dstPath = ../Libraries;
 			dstSubfolderSpec = 10;
 			files = (
+				32DADE3E1C0E9D490058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */,
+				32DADE3F1C0E9D490058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */,
 				329392301A81938500983695 /* libsndfile.1.dylib in Copy Embedded Libraries */,
 			);
 			name = "Copy Embedded Libraries";
@@ -358,8 +370,6 @@
 		329392281A81929D00983695 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libsndfile.1.dylib"; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		3296829417B9D69400B3CDB4 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		3296829717B9D69400B3CDB4 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		329AB89F148B17AA00180506 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		329AB8A1148B185300180506 /* Base64Utilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Base64Utilities.cpp; sourceTree = "<group>"; };
 		329AB8A2148B185300180506 /* Base64Utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64Utilities.h; sourceTree = "<group>"; };
@@ -416,6 +426,8 @@
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
 		32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SetTagFromMetadata.cpp; sourceTree = "<group>"; };
 		32D9017014793DD100DBE73B /* SetTagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetTagFromMetadata.h; sourceTree = "<group>"; };
+		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libmpg123.0.dylib"; sourceTree = "<group>"; };
+		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx-x86_64-clang-libc++/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
 		32DF3209123E6C940002CA5A /* InMemoryFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InMemoryFileInputSource.cpp; sourceTree = "<group>"; };
 		32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFErrorUtilities.cpp; sourceTree = "<group>"; };
@@ -460,12 +472,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32DADE2E1C0E9A770058B2B7 /* libtta++.0.dylib in Frameworks */,
 				32A9BC741955FBE000BD33FF /* Accelerate.framework in Frameworks */,
 				32A9BC751955FBE000BD33FF /* ApplicationServices.framework in Frameworks */,
 				32A9BC761955FBE000BD33FF /* AudioToolbox.framework in Frameworks */,
 				32A9BC781955FBE000BD33FF /* AudioUnit.framework in Frameworks */,
 				32A9BC771955FBE000BD33FF /* CoreAudio.framework in Frameworks */,
 				3293922A1A8192C000983695 /* Security.framework in Frameworks */,
+				32DADE261C0E9A770058B2B7 /* libmpg123.0.dylib in Frameworks */,
 				3293922D1A81932900983695 /* libsndfile.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -477,8 +491,10 @@
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
 				329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
+				32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
+				32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */,
 				329392291A81929D00983695 /* Security.framework in Frameworks */,
 				3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */,
 			);
@@ -536,7 +552,9 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */,
 				3293922B1A81932900983695 /* libsndfile.1.dylib */,
+				32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */,
 				32A1012016A50C2400EC1F9C /* Accelerate.framework */,
 				329AB89F148B17AA00180506 /* ApplicationServices.framework */,
 				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
@@ -545,8 +563,6 @@
 				32AEB2D81409BA27001F9A60 /* CoreServices.framework */,
 				3296828617B9D69400B3CDB4 /* Foundation.framework */,
 				329392281A81929D00983695 /* Security.framework */,
-				3296829717B9D69400B3CDB4 /* UIKit.framework */,
-				3296829417B9D69400B3CDB4 /* XCTest.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1211,13 +1227,11 @@
 					"-lmac",
 					"-lmp4v2",
 					"-lmpcdec",
-					"-lmpg123",
 					"-logg",
 					"-lopus",
 					"-lopusfile",
 					"-lspeex",
 					"-ltag",
-					"-ltta++",
 					"-lvorbis",
 					"-lvorbisfile",
 					"-lwavpack",
@@ -1252,13 +1266,11 @@
 					"-lmac",
 					"-lmp4v2",
 					"-lmpcdec",
-					"-lmpg123",
 					"-logg",
 					"-lopus",
 					"-lopusfile",
 					"-lspeex",
 					"-ltag",
-					"-ltta++",
 					"-lvorbis",
 					"-lvorbisfile",
 					"-lwavpack",
@@ -1295,13 +1307,11 @@
 					"-lmac",
 					"-lmp4v2",
 					"-lmpcdec",
-					"-lmpg123",
 					"-logg",
 					"-lopus",
 					"-lopusfile",
 					"-lspeex",
 					"-ltag",
-					"-ltta++",
 					"-lvorbis",
 					"-lvorbisfile",
 					"-lwavpack",
@@ -1336,13 +1346,11 @@
 					"-lmac",
 					"-lmp4v2",
 					"-lmpcdec",
-					"-lmpg123",
 					"-logg",
 					"-lopus",
 					"-lopusfile",
 					"-lspeex",
 					"-ltag",
-					"-ltta++",
 					"-lvorbis",
 					"-lvorbisfile",
 					"-lwavpack",
