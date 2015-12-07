@@ -101,11 +101,11 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		bool ok;
 		size_t pos = s.find("/", 0);
 		if(TagLib::String::npos() != pos) {
-			int trackNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
+			int trackNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
 
-			int trackTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
+			int trackTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kTrackTotalKey, trackTotal);
 		}
@@ -125,11 +125,11 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		bool ok;
 		size_t pos = s.find("/", 0);
 		if(TagLib::String::npos() != pos) {
-			int discNum = s.substr(0, (TagLib::uint)pos).toInt(&ok);
+			int discNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
 
-			int discTotal = s.substr((TagLib::uint)pos + 1).toInt(&ok);
+			int discTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
 				AddIntToDictionary(dictionary, Metadata::kDiscTotalKey, discTotal);
 		}

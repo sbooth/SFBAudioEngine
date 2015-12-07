@@ -231,7 +231,7 @@ bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 		}
 
 		TagLib::FLAC::Picture *picture = new TagLib::FLAC::Picture;
-		picture->setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+		picture->setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
 		picture->setType((TagLib::FLAC::Picture::Type)attachedPicture->GetType());
 		if(attachedPicture->GetDescription())
 			picture->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));

@@ -183,7 +183,7 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 				if(attachedPicture->GetDescription())
 					data.append(TagLib::StringFromCFString(attachedPicture->GetDescription()).data(TagLib::String::UTF8));
 				data.append('\0');
-				data.append(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+				data.append(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
 
 				if(AttachedPicture::Type::FrontCover == attachedPicture->GetType())
 					tag->setData("Cover Art (Front)", data);

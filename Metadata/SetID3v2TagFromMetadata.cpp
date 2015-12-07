@@ -98,7 +98,7 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 	int year = 0;
 	if(metadata.GetReleaseDate())
 		year = CFStringGetIntValue(metadata.GetReleaseDate());
-	tag->setYear((TagLib::uint)year);
+	tag->setYear((unsigned int)year);
 #else
 	// TODO: Parse the release date into components and set the frame appropriately
 	tag->removeFrames("TDRC");
@@ -407,7 +407,7 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 			if(mimeType)
 				frame->setMimeType(TagLib::StringFromCFString(mimeType));
 
-			frame->setPicture(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (TagLib::uint)CFDataGetLength(attachedPicture->GetData())));
+			frame->setPicture(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
 			frame->setType((TagLib::ID3v2::AttachedPictureFrame::Type)attachedPicture->GetType());
 			if(attachedPicture->GetDescription())
 				frame->setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));

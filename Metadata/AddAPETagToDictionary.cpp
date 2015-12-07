@@ -160,8 +160,8 @@ bool SFB::Audio::AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::v
 				auto binaryData = item.binaryData();
 				size_t pos = binaryData.find('\0');
 				if(TagLib::ByteVector::npos() != pos && 3 < binaryData.size()) {
-					SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid((TagLib::uint)pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
-					SFB::CFString description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, (TagLib::uint)pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
+					SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)binaryData.mid(pos + 1).data(), (CFIndex)(binaryData.size() - pos - 1));
+					SFB::CFString description = CFStringCreateWithCString(kCFAllocatorDefault, TagLib::String(binaryData.mid(0, pos), TagLib::String::UTF8).toCString(true), kCFStringEncodingUTF8);
 
 					attachedPictures.push_back(std::make_shared<AttachedPicture>(data, kCFCompareEqualTo == CFStringCompare(key, CFSTR("Cover Art (Front)"), kCFCompareCaseInsensitive) ? AttachedPicture::Type::FrontCover : AttachedPicture::Type::BackCover, description));
 				}
