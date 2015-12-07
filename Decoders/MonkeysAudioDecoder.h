@@ -30,7 +30,9 @@
 
 #import "AudioDecoder.h"
 
-class IAPEDecompress;
+namespace APE {
+	class IAPEDecompress;
+}
 
 namespace SFB {
 
@@ -80,7 +82,7 @@ namespace SFB {
 
 			// Data members
 			std::unique_ptr<APEIOInterface> mIOInterface;
-			std::unique_ptr<IAPEDecompress> mDecompressor;
+			std::unique_ptr<APE::IAPEDecompress> mDecompressor;
 		};
 		
 	}
