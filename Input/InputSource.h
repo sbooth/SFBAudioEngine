@@ -80,7 +80,7 @@ namespace SFB {
 
 		/*!
 		 * Create a new \c InputSource for the given byte buffer
-		 * @param bytes A pointer to the desired byte
+		 * @param bytes A pointer to the desired byte buffer
 		 * @param byteCount The number of bytes in \c bytes
 		 * @param copyBytes Whether the data in \c bytes should be copied
 		 * @param error An optional pointer to a \c CFErrorRef to receive error information
