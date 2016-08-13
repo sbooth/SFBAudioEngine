@@ -144,7 +144,7 @@ public:
 private:
 
 	DecoderStateData()
-		: mDecoder(nullptr), mTimeStamp(0), mTotalFrames(0), mFramesRendered(ATOMIC_VAR_INIT(0)), mFrameToSeek(ATOMIC_VAR_INIT(-1)), mFlags(ATOMIC_VAR_INIT(0))
+		: mDecoder(nullptr), mTimeStamp(0), mTotalFrames(0), mFramesRendered(0), mFrameToSeek(-1), mFlags(0)
 	{}
 
 };
@@ -222,7 +222,7 @@ namespace {
 #pragma mark Creation/Destruction
 
 SFB::Audio::Player::Player()
-	: mFlags(ATOMIC_VAR_INIT(0)), mRingBuffer(new RingBuffer), mQueue(nullptr), mRingBufferCapacity(ATOMIC_VAR_INIT(RING_BUFFER_CAPACITY_FRAMES)), mRingBufferWriteChunkSize(ATOMIC_VAR_INIT(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES)), mFramesDecoded(ATOMIC_VAR_INIT(0)), mFramesRendered(ATOMIC_VAR_INIT(0)), mDecoderErrorBlock(nullptr), mFormatMismatchBlock(nullptr), mErrorBlock(nullptr), mOutput(new CoreAudioOutput)
+	: mFlags(0), mRingBuffer(new RingBuffer), mQueue(nullptr), mRingBufferCapacity(RING_BUFFER_CAPACITY_FRAMES), mRingBufferWriteChunkSize(RING_BUFFER_WRITE_CHUNK_SIZE_FRAMES), mFramesDecoded(0), mFramesRendered(0), mDecoderErrorBlock(nullptr), mFormatMismatchBlock(nullptr), mErrorBlock(nullptr), mOutput(new CoreAudioOutput)
 {
 	memset(&mDecoderEventBlocks, 0, sizeof(mDecoderEventBlocks));
 	memset(&mRenderEventBlocks, 0, sizeof(mRenderEventBlocks));
