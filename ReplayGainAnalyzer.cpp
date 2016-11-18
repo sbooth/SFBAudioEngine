@@ -268,7 +268,7 @@ public:
 	float			albumPeak;
 
 	ReplayGainAnalyzerPrivate()
-		: trackPeak(0), albumPeak(0)
+		: sampleWindow(0), totsamp(0), lsum(0), rsum(0), freqindex(0), trackPeak(0), albumPeak(0)
 	{
 		linpre	= linprebuf + MAX_ORDER;
 		rinpre	= rinprebuf + MAX_ORDER;
@@ -277,6 +277,7 @@ public:
 		lout	= loutbuf   + MAX_ORDER;
 		rout	= routbuf   + MAX_ORDER;
 
+		memset(A, 0, sizeof(A));
 		memset(B, 0, sizeof(B));
 	}
 
