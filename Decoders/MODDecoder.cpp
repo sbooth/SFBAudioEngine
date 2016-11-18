@@ -134,7 +134,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::MODDecoder::CreateDecoder(InputSourc
 #pragma mark Creation and Destruction
 
 SFB::Audio::MODDecoder::MODDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), df(nullptr, nullptr), duh(nullptr, nullptr), dsr(nullptr, nullptr), mCurrentFrame(0), mTotalFrames(0)
+	: Decoder(std::move(inputSource)), df(nullptr, nullptr), duh(nullptr, nullptr), dsr(nullptr, nullptr), mTotalFrames(0), mCurrentFrame(0)
 {}
 
 #pragma mark Functionality

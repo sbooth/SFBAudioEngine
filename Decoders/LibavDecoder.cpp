@@ -164,7 +164,7 @@ AudioDecoder * LibavDecoder::CreateDecoder(InputSource *inputSource)
 #pragma mark Creation and Destruction
 
 LibavDecoder::LibavDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mBufferList(nullptr), mIOContext(nullptr), mFrame(nullptr), mFormatContext(nullptr), mStreamIndex(0), mCurrentFrame(0)
+	: AudioDecoder(inputSource), mFrame(nullptr), mIOContext(nullptr), mFormatContext(nullptr), mStreamIndex(0), mCurrentFrame(0), mBufferList(nullptr)
 {}
 
 LibavDecoder::~LibavDecoder()
