@@ -82,7 +82,7 @@ namespace {
 #pragma mark Creation and Destruction
 
 SFB::Audio::RingBuffer::RingBuffer()
-	: mBuffers(nullptr), mCapacityFrames(0), mReadPointer(0), mWritePointer(0)
+	: mBuffers(nullptr), mCapacityFrames(0), mCapacityFramesMask(0), mWritePointer(0), mReadPointer(0)
 {}
 
 SFB::Audio::RingBuffer::~RingBuffer()
