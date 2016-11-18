@@ -141,7 +141,7 @@ namespace SFB {
 			bool GetAlbumGain(float& albumGain);
 
 			/*! @brief Get the album peak sample value normalized to [-1, 1) */
-			bool GetAlbumPeak(float& albumPeak);
+			bool GetAlbumPeak(float& albumPeak) const;
 
 			//@}
 

@@ -529,7 +529,7 @@ bool SFB::Audio::ReplayGainAnalyzer::GetAlbumGain(float& albumGain)
     return analyzeResult(priv->B, sizeof(priv->B) / sizeof(*(priv->B)), albumGain);
 }
 
-bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak)
+bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak) const
 {
 	albumPeak = priv->albumPeak;
 	return true;
