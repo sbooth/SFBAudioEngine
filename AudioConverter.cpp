@@ -92,7 +92,7 @@ namespace {
 }
 
 SFB::Audio::Converter::Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, ChannelLayout channelLayout)
-	: mDecoder(std::move(decoder)), mFormat(format), mChannelLayout(std::move(channelLayout)), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
+	: mFormat(format), mChannelLayout(std::move(channelLayout)), mDecoder(std::move(decoder)), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
 {}
 
 SFB::Audio::Converter::~Converter()

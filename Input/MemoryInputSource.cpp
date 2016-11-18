@@ -33,7 +33,7 @@
 #pragma mark Creation and Destruction
 
 SFB::MemoryInputSource::MemoryInputSource(const void *bytes, SInt64 byteCount, bool copyBytes)
-	: InputSource(), mMemory(nullptr, [](int8_t * /*buf*/) {}), mByteCount(byteCount), mCurrentPosition(nullptr)
+	: InputSource(), mByteCount(byteCount), mMemory(nullptr, [](int8_t * /*buf*/) {}), mCurrentPosition(nullptr)
 {
 	if(0 >= byteCount)
 		throw std::runtime_error("byteCount must be positive");

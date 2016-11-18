@@ -52,7 +52,7 @@ namespace {
 }
 
 SFB::Audio::CoreAudioOutput::CoreAudioOutput()
-	: mAUGraph(nullptr), mOutputNode(-1), mMixerNode(-1), mDefaultMaximumFramesPerSlice(0)
+	: mAUGraph(nullptr), mMixerNode(-1), mOutputNode(-1), mDefaultMaximumFramesPerSlice(0)
 {}
 
 SFB::Audio::CoreAudioOutput::~CoreAudioOutput()
