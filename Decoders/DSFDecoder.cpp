@@ -164,12 +164,12 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(!GetInputSource().ReadLE<uint32_t>(channelType) || (1 > channelType && 7 < channelType)) {
+	if(!GetInputSource().ReadLE<uint32_t>(channelType) || (1 > channelType || 7 < channelType)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected channel type in 'fmt ': " << channelType);
 		return false;
 	}
 
-	if(!GetInputSource().ReadLE<uint32_t>(channelNum) || (1 > channelNum && 6 < channelNum)) {
+	if(!GetInputSource().ReadLE<uint32_t>(channelNum) || (1 > channelNum || 6 < channelNum)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected channel count in 'fmt ': " << channelNum);
 		return false;
 	}
