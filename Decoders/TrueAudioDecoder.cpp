@@ -125,7 +125,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 		mDecoder = unique_tta_ptr(new tta::tta_decoder((TTA_io_callback *)mCallbacks.get()));
 		mDecoder->init_get_info(&streamInfo, 0);
 	}
-	catch(tta::tta_exception e) {
+	catch(const tta::tta_exception& e) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
 	}
 
@@ -260,7 +260,7 @@ UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 				eos = true;
 		}
 	}
-	catch(tta::tta_exception e) {
+	catch(const tta::tta_exception& e) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio decoding error: " << e.code());
 		return 0;
 	}
@@ -283,7 +283,7 @@ SInt64 SFB::Audio::TrueAudioDecoder::_SeekToFrame(SInt64 frame)
 	try {
 		mDecoder->set_position(seconds, &frame_start);
 	}
-	catch(tta::tta_exception e) {
+	catch(const tta::tta_exception& e) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
 		return -1;
 	}
