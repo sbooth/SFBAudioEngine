@@ -77,7 +77,7 @@ int AsioLibWrapper::GetAsioLibraryList(AsioLibInfo *buffer, unsigned int bufferC
             res = CFURLEnumeratorGetNextURL(dirEnum, &fileUrl, NULL);
             if (res == kCFURLEnumeratorSuccess) {
                 if ( HasExtension(fileUrl, CFSTR("plist")) ) {
-                    cnt++;
+                    ++cnt;
                 }
             }
         } while (res != kCFURLEnumeratorEnd);
@@ -89,8 +89,8 @@ int AsioLibWrapper::GetAsioLibraryList(AsioLibInfo *buffer, unsigned int bufferC
             if (res == kCFURLEnumeratorSuccess) {
                 if ( HasExtension(fileUrl, CFSTR("plist")) ) {
                     if (cnt < bufferCapacity) {
-                        if (LoadAsioLibInfo(fileUrl, buffer[cnt])) {
-                            cnt++;
+                        if ( LoadAsioLibInfo(fileUrl, buffer[cnt]) ) {
+                            ++cnt;
                         }
                     }
                 }

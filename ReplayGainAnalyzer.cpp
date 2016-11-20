@@ -94,7 +94,7 @@
  *    unsigned int  i;
  *
  *    InitGainAnalysis ( 44100 );
- *    for ( i = 1; i <= num_songs; i++ ) {
+ *    for ( i = 1; i <= num_songs; ++i ) {
  *        while ( ( num_samples = getSongSamples ( song[i], left_samples, right_samples ) ) > 0 )
  *            AnalyzeSamples ( left_samples, right_samples, num_samples, 2 );
  *        fprintf ("Recommended dB change for song %2d: %+6.2f dB\n", i, GetTitleGain() );
@@ -627,7 +627,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, c
 			if(ival >= (int)(sizeof(priv->A)/sizeof(*(priv->A))))
 				ival = (int)(sizeof(priv->A)/sizeof(*(priv->A))) - 1;
 
-			priv->A [ival]++;
+			++priv->A[ival];
 			priv->lsum = priv->rsum = 0.;
 
 			memmove(priv->loutbuf , priv->loutbuf  + priv->totsamp, MAX_ORDER * sizeof(float));
