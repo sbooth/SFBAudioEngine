@@ -591,6 +591,9 @@ bool SFB::Audio::Player::GetPlaybackPositionAndTime(SInt64& currentFrame, SInt64
 
 bool SFB::Audio::Player::SeekForward(CFTimeInterval secondsToSkip)
 {
+	if(0 > secondsToSkip)
+		return false;
+
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
@@ -610,6 +613,9 @@ bool SFB::Audio::Player::SeekForward(CFTimeInterval secondsToSkip)
 
 bool SFB::Audio::Player::SeekBackward(CFTimeInterval secondsToSkip)
 {
+	if(0 > secondsToSkip)
+		return false;
+
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
@@ -628,6 +634,9 @@ bool SFB::Audio::Player::SeekBackward(CFTimeInterval secondsToSkip)
 
 bool SFB::Audio::Player::SeekToTime(CFTimeInterval timeInSeconds)
 {
+	if(0 > timeInSeconds)
+		return false;
+
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
@@ -641,6 +650,9 @@ bool SFB::Audio::Player::SeekToTime(CFTimeInterval timeInSeconds)
 
 bool SFB::Audio::Player::SeekToPosition(float position)
 {
+	if(0 > position || 1 < position)
+		return false;
+
 	DecoderStateData *currentDecoderState = GetCurrentDecoderState();
 
 	if(nullptr == currentDecoderState)
