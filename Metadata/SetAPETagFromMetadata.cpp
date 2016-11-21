@@ -177,7 +177,7 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
 			// APE can handle front and back covers natively
-			if(AttachedPicture::Type::FrontCover == attachedPicture->GetType() || AttachedPicture::Type::FrontCover == attachedPicture->GetType()) {
+			if(AttachedPicture::Type::FrontCover == attachedPicture->GetType() || AttachedPicture::Type::BackCover == attachedPicture->GetType()) {
 				TagLib::ByteVector data;
 				
 				if(attachedPicture->GetDescription())

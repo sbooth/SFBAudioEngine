@@ -94,7 +94,7 @@
  *    unsigned int  i;
  *
  *    InitGainAnalysis ( 44100 );
- *    for ( i = 1; i <= num_songs; i++ ) {
+ *    for ( i = 1; i <= num_songs; ++i ) {
  *        while ( ( num_samples = getSongSamples ( song[i], left_samples, right_samples ) ) > 0 )
  *            AnalyzeSamples ( left_samples, right_samples, num_samples, 2 );
  *        fprintf ("Recommended dB change for song %2d: %+6.2f dB\n", i, GetTitleGain() );
@@ -268,7 +268,7 @@ public:
 	float			albumPeak;
 
 	ReplayGainAnalyzerPrivate()
-		: trackPeak(0), albumPeak(0)
+		: sampleWindow(0), totsamp(0), lsum(0), rsum(0), freqindex(0), trackPeak(0), albumPeak(0)
 	{
 		linpre	= linprebuf + MAX_ORDER;
 		rinpre	= rinprebuf + MAX_ORDER;
@@ -277,6 +277,7 @@ public:
 		lout	= loutbuf   + MAX_ORDER;
 		rout	= routbuf   + MAX_ORDER;
 
+		memset(A, 0, sizeof(A));
 		memset(B, 0, sizeof(B));
 	}
 
@@ -528,7 +529,7 @@ bool SFB::Audio::ReplayGainAnalyzer::GetAlbumGain(float& albumGain)
     return analyzeResult(priv->B, sizeof(priv->B) / sizeof(*(priv->B)), albumGain);
 }
 
-bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak)
+bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak) const
 {
 	albumPeak = priv->albumPeak;
 	return true;
@@ -626,7 +627,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, c
 			if(ival >= (int)(sizeof(priv->A)/sizeof(*(priv->A))))
 				ival = (int)(sizeof(priv->A)/sizeof(*(priv->A))) - 1;
 
-			priv->A [ival]++;
+			++priv->A[ival];
 			priv->lsum = priv->rsum = 0.;
 
 			memmove(priv->loutbuf , priv->loutbuf  + priv->totsamp, MAX_ORDER * sizeof(float));

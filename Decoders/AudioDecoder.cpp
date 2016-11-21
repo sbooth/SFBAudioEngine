@@ -200,14 +200,14 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputS
 #pragma mark Creation and Destruction
 
 SFB::Audio::Decoder::Decoder()
-	: mInputSource(nullptr), mIsOpen(false), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr)
+	: mInputSource(nullptr), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr), mIsOpen(false)
 {
 	memset(&mFormat, 0, sizeof(mFormat));
 	memset(&mSourceFormat, 0, sizeof(mSourceFormat));
 }
 
 SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
-	: mInputSource(std::move(inputSource)), mIsOpen(false), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr)
+	: mInputSource(std::move(inputSource)), mRepresentedObject(nullptr), mRepresentedObjectCleanupBlock(nullptr), mIsOpen(false)
 {
 	assert(nullptr != mInputSource);
 

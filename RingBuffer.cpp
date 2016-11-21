@@ -54,7 +54,7 @@ namespace {
 #pragma mark Creation and Destruction
 
 SFB::RingBuffer::RingBuffer()
-	: mBuffer(nullptr), mCapacityBytes(0), mReadPointer(0), mWritePointer(0)
+	: mBuffer(nullptr), mCapacityBytes(0), mCapacityBytesMask(0), mWritePointer(0), mReadPointer(0)
 {}
 
 SFB::RingBuffer::~RingBuffer()
