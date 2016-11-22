@@ -72,10 +72,10 @@ public:
 namespace {
 
 	// AudioConverter input callback
-	OSStatus myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
+	OSStatus myAudioConverterComplexInputDataProc(AudioConverterRef				/*inAudioConverter*/,
 												  UInt32						*ioNumberDataPackets,
 												  AudioBufferList				*ioData,
-												  AudioStreamPacketDescription	**outDataPacketDescription,
+												  AudioStreamPacketDescription	**/*outDataPacketDescription*/,
 												  void							*inUserData)
 	{
 		SFB::Audio::Converter::ConverterStateData *converterStateData = static_cast<SFB::Audio::Converter::ConverterStateData *>(inUserData);
@@ -155,7 +155,7 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::Audio::Converter::Close(CFErrorRef *error)
+bool SFB::Audio::Converter::Close(CFErrorRef */*error*/)
 {
 	if(!IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "Close() called on an AudioConverter that hasn't been opened");

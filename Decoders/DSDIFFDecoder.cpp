@@ -686,7 +686,7 @@ SFB::Audio::DSDIFFDecoder::~DSDIFFDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
+bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef */*error*/)
 {
 	auto chunks = ParseDSDIFF(GetInputSource());
 	if(!chunks) {

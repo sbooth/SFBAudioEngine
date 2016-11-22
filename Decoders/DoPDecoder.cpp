@@ -65,7 +65,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForInputSource(Inp
 	return CreateForDecoder(Decoder::CreateForInputSource(std::move(inputSource), error), error);
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForDecoder(unique_ptr decoder, CFErrorRef *error)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::DoPDecoder::CreateForDecoder(unique_ptr decoder, CFErrorRef */*error*/)
 {
 	if(!decoder)
 		return nullptr;

@@ -68,7 +68,7 @@ bool SFB::FileInputSource::_Open(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::FileInputSource::_Close(CFErrorRef *error)
+bool SFB::FileInputSource::_Close(CFErrorRef */*error*/)
 {
 	memset(&mFilestats, 0, sizeof(mFilestats));
 	mFile.reset();

@@ -68,7 +68,7 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int fl
 	return nullptr;
 }
 
-SFB::InputSource::unique_ptr SFB::InputSource::CreateWithMemory(const void *bytes, SInt64 byteCount, bool copyBytes, CFErrorRef *error)
+SFB::InputSource::unique_ptr SFB::InputSource::CreateWithMemory(const void *bytes, SInt64 byteCount, bool copyBytes, CFErrorRef */*error*/)
 {
 	if(nullptr == bytes || 0 >= byteCount)
 		return nullptr;

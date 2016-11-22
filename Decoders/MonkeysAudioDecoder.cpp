@@ -59,7 +59,7 @@ public:
 		: mInputSource(inputSource)
 	{}
 
-	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
+	inline virtual int Open(const wchar_t * pName, bool /*bOpenReadOnly*/)
 	{
 #pragma unused(pName)
 		return ERROR_INVALID_INPUT_FILE;
