@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			Musepack(CFURLRef url);
+			explicit Musepack(CFURLRef url);
 
 		private:
 

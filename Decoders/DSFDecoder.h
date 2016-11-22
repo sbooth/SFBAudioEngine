@@ -54,7 +54,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation and destruction
-			DSFDecoder(InputSource::unique_ptr inputSource);
+			explicit DSFDecoder(InputSource::unique_ptr inputSource);
 			virtual ~DSFDecoder();
 
 		private:

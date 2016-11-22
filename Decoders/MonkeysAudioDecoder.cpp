@@ -55,7 +55,7 @@ namespace {
 class SFB::Audio::MonkeysAudioDecoder::APEIOInterface : public APE::CIO
 {
 public:
-	APEIOInterface(SFB::InputSource& inputSource)
+	explicit APEIOInterface(SFB::InputSource& inputSource)
 		: mInputSource(inputSource)
 	{}
 

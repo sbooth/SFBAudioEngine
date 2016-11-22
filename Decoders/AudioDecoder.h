@@ -332,7 +332,7 @@ namespace SFB {
 			Decoder();
 
 			/*! @brief Create a new \c Decoder and initialize \c Decoder::mInputSource to \c inputSource */
-			Decoder(InputSource::unique_ptr inputSource);
+			explicit Decoder(InputSource::unique_ptr inputSource);
 
 		private:
 

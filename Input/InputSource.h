@@ -268,7 +268,7 @@ namespace SFB {
 		InputSource();
 		
 		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c url */
-		InputSource(CFURLRef url);
+		explicit InputSource(CFURLRef url);
 
 	private:
 

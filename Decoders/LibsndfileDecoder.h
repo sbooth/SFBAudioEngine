@@ -53,7 +53,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation
-			LibsndfileDecoder(InputSource::unique_ptr inputSource);
+			explicit LibsndfileDecoder(InputSource::unique_ptr inputSource);
 
 		private:
 

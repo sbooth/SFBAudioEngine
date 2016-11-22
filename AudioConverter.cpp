@@ -45,7 +45,7 @@ public:
 
 	ConverterStateData() = delete;
 
-	ConverterStateData(Decoder& decoder)
+	explicit ConverterStateData(Decoder& decoder)
 		: mDecoder(decoder)
 	{}
 

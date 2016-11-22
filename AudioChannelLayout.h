@@ -92,7 +92,7 @@ namespace SFB {
 			 * @param numberChannelDescriptions The number of channel descriptions this channel layout will contain
 			 * @throws std::bad_alloc
 			 */
-			ChannelLayout(UInt32 numberChannelDescriptions);
+			explicit ChannelLayout(UInt32 numberChannelDescriptions);
 
 			/*! @brief Create a new \c ChannelLayout by performing a deep copy of \c channelLayout */
 			ChannelLayout(const AudioChannelLayout *channelLayout);

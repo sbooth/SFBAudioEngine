@@ -101,7 +101,7 @@ class SFB::Audio::Player::DecoderStateData
 
 public:
 
-	DecoderStateData(std::unique_ptr<Decoder> decoder)
+	explicit DecoderStateData(std::unique_ptr<Decoder> decoder)
 		: DecoderStateData()
 	{
 		assert(nullptr != decoder);

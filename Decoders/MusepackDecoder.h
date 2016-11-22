@@ -55,7 +55,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation and destruction
-			MusepackDecoder(InputSource::unique_ptr inputSource);
+			explicit MusepackDecoder(InputSource::unique_ptr inputSource);
 			virtual ~MusepackDecoder();
 
 		private:

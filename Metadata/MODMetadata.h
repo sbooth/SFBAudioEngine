@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			MODMetadata(CFURLRef url);
+			explicit MODMetadata(CFURLRef url);
 
 		private:
 

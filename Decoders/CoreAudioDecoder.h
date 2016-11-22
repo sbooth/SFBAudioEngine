@@ -55,7 +55,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation and destruction
-			CoreAudioDecoder(InputSource::unique_ptr inputSource);
+			explicit CoreAudioDecoder(InputSource::unique_ptr inputSource);
 			virtual ~CoreAudioDecoder();
 
 		private:

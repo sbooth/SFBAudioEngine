@@ -56,7 +56,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation
-			MonkeysAudioDecoder(InputSource::unique_ptr inputSource);
+			explicit MonkeysAudioDecoder(InputSource::unique_ptr inputSource);
 
 		private:
 

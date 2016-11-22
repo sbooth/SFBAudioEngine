@@ -53,7 +53,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation
-			WavPackDecoder(InputSource::unique_ptr inputSource);
+			explicit WavPackDecoder(InputSource::unique_ptr inputSource);
 
 		private:
 

@@ -55,7 +55,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation
-			FLACDecoder(InputSource::unique_ptr inputSource);
+			explicit FLACDecoder(InputSource::unique_ptr inputSource);
 
 		private:
 

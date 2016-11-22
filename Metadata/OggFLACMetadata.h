@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			OggFLACMetadata(CFURLRef url);
+			explicit OggFLACMetadata(CFURLRef url);
 
 		private:
 

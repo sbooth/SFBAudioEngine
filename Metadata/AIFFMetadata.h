@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			AIFFMetadata(CFURLRef url);
+			explicit AIFFMetadata(CFURLRef url);
 
 		private:
 			
