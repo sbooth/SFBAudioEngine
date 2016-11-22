@@ -98,7 +98,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::OggSpeexDecoder::CreateDecoder(Input
 #pragma mark Creation and Destruction
 
 SFB::Audio::OggSpeexDecoder::OggSpeexDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mSpeexDecoder(nullptr), mCurrentFrame(0), mTotalFrames(-1), mOggPacketCount(0), mSpeexFramesPerOggPacket(0), mExtraSpeexHeaderCount(0), mSpeexStereoState(nullptr), mSpeexSerialNumber(-1), mSpeexEOSReached(false)
+	: Decoder(std::move(inputSource)), mCurrentFrame(0), mTotalFrames(-1), mSpeexDecoder(nullptr), mSpeexStereoState(nullptr), mSpeexSerialNumber(-1), mSpeexEOSReached(false), mSpeexFramesPerOggPacket(0), mOggPacketCount(0), mExtraSpeexHeaderCount(0)
 {}
 
 SFB::Audio::OggSpeexDecoder::~OggSpeexDecoder()
