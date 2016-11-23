@@ -59,7 +59,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation and destruction
-			OggVorbisDecoder(InputSource::unique_ptr inputSource);
+			explicit OggVorbisDecoder(InputSource::unique_ptr inputSource);
 			virtual ~OggVorbisDecoder();
 
 		private:

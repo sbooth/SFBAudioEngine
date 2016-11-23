@@ -102,7 +102,7 @@ namespace SFB {
 		private:
 
 			DoPDecoder() = delete;
-			DoPDecoder(Decoder::unique_ptr decoder);
+			explicit DoPDecoder(Decoder::unique_ptr decoder);
 
 			// Source access
 			inline virtual CFURLRef _GetURL() const					{ return mDecoder->GetURL(); }

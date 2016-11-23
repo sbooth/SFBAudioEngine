@@ -195,7 +195,7 @@ SFB::Audio::FLACDecoder::FLACDecoder(InputSource::unique_ptr inputSource)
 
 bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 {
-	SFB::CFString extension = CFURLCopyPathExtension(GetURL());
+	SFB::CFString extension(CFURLCopyPathExtension(GetURL()));
 	if(!extension)
 		return false;
 
@@ -244,9 +244,9 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 
 	if(FLAC__STREAM_DECODER_INIT_STATUS_OK != status) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -259,9 +259,9 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
 
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a FLAC file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -305,9 +305,9 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 			LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
 				
 				*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
@@ -363,11 +363,11 @@ bool SFB::Audio::FLACDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::FLACDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault,
-									nullptr,
-									CFSTR("FLAC, %u channels, %u Hz"),
-									(unsigned int)mSourceFormat.mChannelsPerFrame,
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("FLAC, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::FLACDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

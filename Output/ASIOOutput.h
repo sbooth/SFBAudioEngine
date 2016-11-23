@@ -78,7 +78,7 @@ namespace SFB {
 			// @{
 
 			/*! @brief Create an \c ASIOOutput for the specified driver */
-			ASIOOutput(CFStringRef driverUID);
+			explicit ASIOOutput(CFStringRef driverUID);
 
 			/*! @brief Destroy this \c ASIOOutput */
 			virtual ~ASIOOutput();

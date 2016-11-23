@@ -132,7 +132,7 @@ bool SFB::Audio::CoreAudioDecoder::HandlesFilesWithExtension(CFStringRef extensi
 	if(nullptr == extension)
 		return false;
 
-	SFB::CFArray supportedExtensions = CreateSupportedFileExtensions();
+	SFB::CFArray supportedExtensions(CreateSupportedFileExtensions());
 	if(!supportedExtensions)
 		return false;
 
@@ -151,7 +151,7 @@ bool SFB::Audio::CoreAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 	if(nullptr == mimeType)
 		return false;
 
-	SFB::CFArray supportedMIMETypes = CreateSupportedMIMETypes();
+	SFB::CFArray supportedMIMETypes(CreateSupportedMIMETypes());
 	if(!supportedMIMETypes)
 		return false;
 
@@ -193,9 +193,9 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileOpenWithCallbacks failed: " << result);
 		
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -209,9 +209,9 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileWrapAudioFileID failed: " << result);
 		
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -459,7 +459,7 @@ SFB::CFString SFB::Audio::CoreAudioDecoder::_GetSourceFormatDescription() const
 	if(noErr != result)
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
 
-	return sourceFormatDescription;
+	return CFString(sourceFormatDescription);
 }
 
 UInt32 SFB::Audio::CoreAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

@@ -2158,6 +2158,10 @@ OSStatus SFB::Audio::CoreAudioOutput::Render(AudioUnitRenderActionFlags		*ioActi
 											 UInt32							inNumberFrames,
 											 AudioBufferList				*ioData)
 {
+#pragma unused(ioActionFlags)
+#pragma unused(inTimeStamp)
+#pragma unused(inBusNumber)
+
 	mPlayer->ProvideAudio(ioData, inNumberFrames);
 	return noErr;
 }

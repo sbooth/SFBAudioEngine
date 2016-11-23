@@ -109,9 +109,9 @@ bool SFB::Audio::AIFFMetadata::_ReadMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -122,9 +122,9 @@ bool SFB::Audio::AIFFMetadata::_ReadMetadata(CFErrorRef *error)
 	TagLib::RIFF::AIFF::File file(stream.get());
 	if(!file.isValid()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an AIFF file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an AIFF file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -159,9 +159,9 @@ bool SFB::Audio::AIFFMetadata::_WriteMetadata(CFErrorRef *error)
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for writing."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -172,9 +172,9 @@ bool SFB::Audio::AIFFMetadata::_WriteMetadata(CFErrorRef *error)
 	TagLib::RIFF::AIFF::File file(stream.get(), false);
 	if(!file.isValid()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an AIFF file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an AIFF file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -186,9 +186,9 @@ bool SFB::Audio::AIFFMetadata::_WriteMetadata(CFErrorRef *error)
 
 	if(!file.save()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unable to write metadata"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}

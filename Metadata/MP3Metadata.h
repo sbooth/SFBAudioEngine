@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			MP3Metadata(CFURLRef url);
+			explicit MP3Metadata(CFURLRef url);
 
 		private:
 

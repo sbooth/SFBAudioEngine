@@ -55,7 +55,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation
-			MPEGDecoder(InputSource::unique_ptr inputSource);
+			explicit MPEGDecoder(InputSource::unique_ptr inputSource);
 
 		private:
 

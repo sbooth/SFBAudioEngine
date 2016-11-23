@@ -64,7 +64,7 @@ namespace {
 
 		SFB::CFString numberString;
 		if(nullptr != value)
-			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value);
+			numberString = SFB::CFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value));
 
 		bool result = SetXiphComment(tag, key, numberString);
 
@@ -95,7 +95,7 @@ namespace {
 			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
 				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
 
-			numberString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f);
+			numberString = SFB::CFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f));
 		}
 
 		bool result = SetXiphComment(tag, key, numberString);
@@ -173,7 +173,7 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 		tag->removeFields("METADATA_BLOCK_PICTURE");
 		
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
-			SFB::CGImageSource imageSource = CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr);
+			SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
 			if(!imageSource)
 				return false;
 			
@@ -184,12 +184,12 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 				picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
 			
 			// Convert the image's UTI into a MIME type
-			SFB::CFString mimeType = UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
+			SFB::CFString mimeType(UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType));
 			if(mimeType)
 				picture.setMimeType(TagLib::StringFromCFString(mimeType));
 
 			// Flesh out the height, width, and depth
-			SFB::CFDictionary imagePropertiesDictionary = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
+			SFB::CFDictionary imagePropertiesDictionary(CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr));
 			if(imagePropertiesDictionary) {
 				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);

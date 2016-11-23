@@ -46,7 +46,7 @@ namespace SFB {
 	public:
 
 		// Creation
-		HTTPInputSource(CFURLRef url);
+		explicit HTTPInputSource(CFURLRef url);
 
 	private:
 

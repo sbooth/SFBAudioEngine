@@ -66,7 +66,7 @@ namespace SFB {
 		 * @note The \c CFWrapper takes ownership of \c object
 		 * @param object The object to wrap
 		 */
-		inline CFWrapper(T object)				: CFWrapper(object, true)				{}
+		inline explicit CFWrapper(T object)		: CFWrapper(object, true)				{}
 
 		/*!
 		 * @brief Create a new \c CFWrapper

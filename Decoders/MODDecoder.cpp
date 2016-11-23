@@ -152,7 +152,7 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	SFB::CFString pathExtension = CFURLCopyPathExtension(GetURL());
+	SFB::CFString pathExtension(CFURLCopyPathExtension(GetURL()));
 	if(nullptr == pathExtension)
 		return false;
 
@@ -168,9 +168,9 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 	
 	if(!duh) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -184,9 +184,9 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 	dsr = unique_DUH_SIGRENDERER_ptr(duh_start_sigrenderer(duh.get(), 0, 2, 0), duh_end_sigrenderer);
 	if(!dsr) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -231,11 +231,11 @@ bool SFB::Audio::MODDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MODDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("MOD, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("MOD, %u channels, %u Hz"),
+											 mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::MODDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

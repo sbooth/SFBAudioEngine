@@ -287,7 +287,7 @@ std::ostream& operator<<(std::ostream& out, CFErrorRef e)
 		return out;
 	}
 
-	SFB::CFString r = CFErrorCopyDescription(e);
+	SFB::CFString r(CFErrorCopyDescription(e));
 	if(r)
 		out << r;
 
@@ -301,7 +301,7 @@ std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 		return out;
 	}
 
-	SFB::CFString r = CFUUIDCreateString(kCFAllocatorDefault, u);
+	SFB::CFString r(CFUUIDCreateString(kCFAllocatorDefault, u));
 	if(r)
 		out << r;
 
@@ -310,7 +310,7 @@ std::ostream& operator<<(std::ostream& out, CFUUIDRef u)
 
 std::ostream& operator<<(std::ostream& out, CFUUIDBytes b)
 {
-	SFB::CFUUID u = CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, b);
+	SFB::CFUUID u(CFUUIDCreateFromUUIDBytes(kCFAllocatorDefault, b));
 	if(u)
 		out << u;
 

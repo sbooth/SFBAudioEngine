@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			WAVEMetadata(CFURLRef url);
+			explicit WAVEMetadata(CFURLRef url);
 
 		private:
 

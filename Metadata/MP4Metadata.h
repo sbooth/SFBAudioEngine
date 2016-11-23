@@ -52,7 +52,7 @@ namespace SFB {
 			static Metadata::unique_ptr CreateMetadata(CFURLRef url);
 
 			// Creation
-			MP4Metadata(CFURLRef url);
+			explicit MP4Metadata(CFURLRef url);
 
 		private:
 

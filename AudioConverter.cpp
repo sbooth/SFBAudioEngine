@@ -45,7 +45,7 @@ public:
 
 	ConverterStateData() = delete;
 
-	ConverterStateData(Decoder& decoder)
+	explicit ConverterStateData(Decoder& decoder)
 		: mDecoder(decoder)
 	{}
 
@@ -78,6 +78,9 @@ namespace {
 												  AudioStreamPacketDescription	**outDataPacketDescription,
 												  void							*inUserData)
 	{
+#pragma unused(inAudioConverter)
+#pragma unused(outDataPacketDescription)
+
 		SFB::Audio::Converter::ConverterStateData *converterStateData = static_cast<SFB::Audio::Converter::ConverterStateData *>(inUserData);
 		UInt32 framesRead = converterStateData->ReadAudio(*ioNumberDataPackets);
 
@@ -157,6 +160,8 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 
 bool SFB::Audio::Converter::Close(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	if(!IsOpen()) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "Close() called on an AudioConverter that hasn't been opened");
 		return true;

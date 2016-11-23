@@ -44,7 +44,7 @@ namespace SFB {
 	public:
 
 		// Creation
-		MemoryMappedFileInputSource(CFURLRef url);
+		explicit MemoryMappedFileInputSource(CFURLRef url);
 
 	private:
 

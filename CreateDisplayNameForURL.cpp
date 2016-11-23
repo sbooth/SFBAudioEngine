@@ -43,7 +43,7 @@ SFB::CreateDisplayNameForURL(CFURLRef url)
 	CFStringRef displayName = nullptr;
 
 #if !TARGET_OS_IPHONE
-	SFB::CFString scheme = CFURLCopyScheme(url);
+	SFB::CFString scheme(CFURLCopyScheme(url));
 	if(scheme) {
 		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
 

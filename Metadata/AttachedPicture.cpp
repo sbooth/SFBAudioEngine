@@ -102,7 +102,7 @@ SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const
 
 void SFB::Audio::AttachedPicture::SetType(Type type)
 {
-	SFB::CFNumber wrapper = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type);
+	SFB::CFNumber wrapper(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type));
 	SetValue(kTypeKey, wrapper);
 }
 

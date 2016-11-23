@@ -665,7 +665,7 @@ namespace SFB {
 			Metadata();
 
 			/*! @brief Create a new \c Metadata and initialize \c Metadata::mURL to \c url */
-			Metadata(CFURLRef url);
+			explicit Metadata(CFURLRef url);
 
 
 			/*! @name Type-specific access */

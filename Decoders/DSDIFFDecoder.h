@@ -53,7 +53,7 @@ namespace SFB {
 			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
 			// Creation and destruction
-			DSDIFFDecoder(InputSource::unique_ptr inputSource);
+			explicit DSDIFFDecoder(InputSource::unique_ptr inputSource);
 			virtual ~DSDIFFDecoder();
 
 		private:

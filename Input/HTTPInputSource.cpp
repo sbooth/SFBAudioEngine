@@ -66,7 +66,7 @@ bool SFB::HTTPInputSource::_Open(CFErrorRef *error)
 
 	// Seek support
 	if(0 < mDesiredOffset) {
-		SFB::CFString byteRange = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset);
+		SFB::CFString byteRange(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset));
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
 	}
 
@@ -176,7 +176,7 @@ void SFB::HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEv
 
 		case kCFStreamEventHasBytesAvailable:
 			if(nullptr == mResponseHeaders) {
-				SFB::CFType responseHeader = CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
+				SFB::CFType responseHeader(CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader));
 				if(responseHeader) {
 					mResponseHeaders = CFHTTPMessageCopyAllHeaderFields((CFHTTPMessageRef)responseHeader.Object());
 				}
@@ -185,7 +185,7 @@ void SFB::HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEv
 		
 		case kCFStreamEventErrorOccurred:
 		{
-			SFB::CFError error = CFReadStreamCopyError(stream);
+			SFB::CFError error(CFReadStreamCopyError(stream));
 			if(error)
 				LOGGER_ERR("org.sbooth.AudioEngine.InputSource.HTTP", "Error: " << error);
 			break;

@@ -55,13 +55,15 @@ namespace {
 class SFB::Audio::MonkeysAudioDecoder::APEIOInterface : public APE::CIO
 {
 public:
-	APEIOInterface(SFB::InputSource& inputSource)
+	explicit APEIOInterface(SFB::InputSource& inputSource)
 		: mInputSource(inputSource)
 	{}
 
 	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
 	{
 #pragma unused(pName)
+#pragma unused(bOpenReadOnly)
+
 		return ERROR_INVALID_INPUT_FILE;
 	}
 
@@ -86,6 +88,7 @@ public:
 #pragma unused(pBuffer)
 #pragma unused(nBytesToWrite)
 #pragma unused(pBytesWritten)
+
 		return ERROR_IO_WRITE;
 	}
 
@@ -206,9 +209,9 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 	auto decompressor = std::unique_ptr<APE::IAPEDecompress>(CreateIAPEDecompressEx(ioInterface.get(), nullptr));
 	if(!decompressor) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -259,11 +262,11 @@ bool SFB::Audio::MonkeysAudioDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MonkeysAudioDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("Monkey's Audio, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("Monkey's Audio, %u channels, %u Hz"),
+											 mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

@@ -164,9 +164,9 @@ bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 	mDemux = mpc_demux_init(&mReader);
 	if(nullptr == mDemux) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a Musepack file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Musepack file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a Musepack file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -241,11 +241,11 @@ bool SFB::Audio::MusepackDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MusepackDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("Musepack, %u channels, %u Hz"), 
-									mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("Musepack, %u channels, %u Hz"),
+											 mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

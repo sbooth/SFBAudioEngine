@@ -152,9 +152,9 @@ bool SFB::Audio::OggOpusDecoder::_Open(CFErrorRef *error)
 
 	if(!mOpusFile) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -226,11 +226,11 @@ bool SFB::Audio::OggOpusDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::OggOpusDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault,
-									nullptr,
-									CFSTR("Ogg Opus, %u channels, %u Hz"),
-									(unsigned int)mSourceFormat.mChannelsPerFrame,
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("Ogg Opus, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
