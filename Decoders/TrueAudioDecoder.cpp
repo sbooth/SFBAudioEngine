@@ -131,9 +131,9 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 
 	if(!mDecoder) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a True Audio file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -176,9 +176,9 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 			LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
 
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Bit depth not supported"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
 				
 				*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
@@ -218,11 +218,11 @@ bool SFB::Audio::TrueAudioDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::TrueAudioDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("True Audio, %u channels, %u Hz"), 
-									(unsigned int)mSourceFormat.mChannelsPerFrame,
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("True Audio, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

@@ -159,9 +159,9 @@ bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 
 	if(0 != ov_test_callbacks(this, &mVorbisFile, nullptr, 0, callbacks)) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Vorbis file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Vorbis file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -247,11 +247,11 @@ bool SFB::Audio::OggVorbisDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::OggVorbisDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("Ogg Vorbis, %u channels, %u Hz"), 
-									(unsigned int)mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("Ogg Vorbis, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::OggVorbisDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

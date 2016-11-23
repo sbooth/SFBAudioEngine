@@ -99,7 +99,7 @@ CFArrayRef SFB::Audio::Metadata::CreateSupportedFileExtensions()
 	CFMutableArrayRef supportedFileExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		SFB::CFArray decoderFileExtensions = subclassInfo.mCreateSupportedFileExtensions();
+		SFB::CFArray decoderFileExtensions(subclassInfo.mCreateSupportedFileExtensions());
 		CFArrayAppendArray(supportedFileExtensions, decoderFileExtensions, CFRangeMake(0, CFArrayGetCount(decoderFileExtensions)));
 	}
 
@@ -111,7 +111,7 @@ CFArrayRef SFB::Audio::Metadata::CreateSupportedMIMETypes()
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		SFB::CFArray decoderMIMETypes = subclassInfo.mCreateSupportedMIMETypes();
+		SFB::CFArray decoderMIMETypes(subclassInfo.mCreateSupportedMIMETypes());
 		CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	}
 
@@ -150,7 +150,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 		return nullptr;
 
 	// If this is a file URL, use the extension-based resolvers
-	SFB::CFString scheme = CFURLCopyScheme(url);
+	SFB::CFString scheme(CFURLCopyScheme(url));
 
 	// If there is no scheme the URL is invalid
 	if(!scheme) {
@@ -162,11 +162,11 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		// Verify the file exists
 		SInt32 errorCode = noErr;
-		SFB::CFBoolean fileExists = (CFBooleanRef)CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode);
+		SFB::CFBoolean fileExists((CFBooleanRef)CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
 		
 		if(fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
-				SFB::CFString pathExtension = CFURLCopyPathExtension(url);
+				SFB::CFString pathExtension(CFURLCopyPathExtension(url));
 				if(pathExtension) {
 					
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
@@ -184,9 +184,9 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 				LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "The requested URL doesn't exist");
 				
 				if(error) {
-					SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), "");
-					SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File not found"), "");
-					SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), "");
+					SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""));
+					SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File not found"), ""));
+					SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
 					
 					*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, url, failureReason, recoverySuggestion);
 				}
@@ -256,10 +256,10 @@ CFDictionaryRef SFB::Audio::Metadata::CreateDictionaryRepresentation() const
 	free(keys), keys = nullptr;
 	free(values), values = nullptr;
 
-	CFMutableArray pictureArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	CFMutableArray pictureArray(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
 
 	for(auto picture : GetAttachedPictures()) {
-		CFDictionary pictureRepresentation = picture->CreateDictionaryRepresentation();
+		CFDictionary pictureRepresentation(picture->CreateDictionaryRepresentation());
 		CFArrayAppendValue(pictureArray, pictureRepresentation);
 	}
 

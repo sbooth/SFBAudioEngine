@@ -110,7 +110,7 @@ CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedFileExtensions()
 		SF_FORMAT_INFO formatInfo;
 		formatInfo.format = i;
 		if(0 == sf_command(nullptr, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
-			SFB::CFString extension = CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8);
+			SFB::CFString extension(CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8));
 			if(extension)
 				CFArrayAppendValue(supportedExtensions, extension);
 		}
@@ -131,7 +131,7 @@ bool SFB::Audio::LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extens
 	if(nullptr == extension)
 		return false;
 
-	SFB::CFArray supportedExtensions = CreateSupportedFileExtensions();
+	SFB::CFArray supportedExtensions(CreateSupportedFileExtensions());
 	if(!supportedExtensions)
 		return false;
 	
@@ -182,9 +182,9 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -358,15 +358,15 @@ SFB::CFString SFB::Audio::LibsndfileDecoder::_GetSourceFormatDescription() const
 
 	if(0 != sf_command(nullptr, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
-		return nullptr;
+		return CFString();
 	}
 	
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("%s, %u channels, %u Hz"), 
-									formatInfo.name,
-									mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("%s, %u channels, %u Hz"),
+											 formatInfo.name,
+											 mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::LibsndfileDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

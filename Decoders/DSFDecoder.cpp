@@ -264,11 +264,11 @@ bool SFB::Audio::DSFDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::DSFDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault,
-									nullptr,
-									CFSTR("DSD Stream File, %u channels, %u Hz"),
-									(unsigned int)mSourceFormat.mChannelsPerFrame,
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("DSD Stream File, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::DSFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

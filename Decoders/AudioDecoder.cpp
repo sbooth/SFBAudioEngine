@@ -52,7 +52,7 @@ CFArrayRef SFB::Audio::Decoder::CreateSupportedFileExtensions()
 	CFMutableArrayRef supportedFileExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		SFB::CFArray decoderFileExtensions = subclassInfo.mCreateSupportedFileExtensions();
+		SFB::CFArray decoderFileExtensions(subclassInfo.mCreateSupportedFileExtensions());
 		CFArrayAppendArray(supportedFileExtensions, decoderFileExtensions, CFRangeMake(0, CFArrayGetCount(decoderFileExtensions)));
 	}
 
@@ -64,7 +64,7 @@ CFArrayRef SFB::Audio::Decoder::CreateSupportedMIMETypes()
 	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	for(auto subclassInfo : sRegisteredSubclasses) {
-		SFB::CFArray decoderMIMETypes = subclassInfo.mCreateSupportedMIMETypes();
+		SFB::CFArray decoderMIMETypes(subclassInfo.mCreateSupportedMIMETypes());
 		CFArrayAppendArray(supportedMIMETypes, decoderMIMETypes, CFRangeMake(0, CFArrayGetCount(decoderMIMETypes)));
 	}
 
@@ -162,12 +162,12 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputS
 	if(!inputURL)
 		return nullptr;
 
-	SFB::CFString pathExtension = CFURLCopyPathExtension(inputURL);
+	SFB::CFString pathExtension(CFURLCopyPathExtension(inputURL));
 	if(!pathExtension) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unknown file type"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unknown file type"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(InputSource::ErrorDomain, InputSource::FileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
 		}

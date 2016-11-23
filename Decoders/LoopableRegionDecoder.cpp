@@ -141,7 +141,7 @@ bool SFB::Audio::LoopableRegionDecoder::_Close(CFErrorRef *error)
 
 SFB::CFString SFB::Audio::LoopableRegionDecoder::_GetSourceFormatDescription() const
 {
-	return mDecoder->CreateSourceFormatDescription();
+	return CFString(mDecoder->CreateSourceFormatDescription());
 }
 
 #pragma mark Functionality

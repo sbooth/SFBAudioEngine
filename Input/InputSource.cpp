@@ -47,7 +47,7 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int fl
 		return nullptr;
 
 	// If there is no scheme the URL is invalid
-	SFB::CFString scheme = CFURLCopyScheme(url);
+	SFB::CFString scheme(CFURLCopyScheme(url));
 	if(!scheme) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, nullptr);

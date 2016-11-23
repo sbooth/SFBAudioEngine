@@ -121,9 +121,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 	if(-1 == bytesRead) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Read error"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("Unable to read from the input file."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Read error"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("Unable to read from the input file."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -136,9 +136,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	int result = ogg_sync_wrote(&mOggSyncState, bytesRead);
 	if(-1 == result) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -151,9 +151,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	result = ogg_sync_pageout(&mOggSyncState, &mOggPage);
 	if(1 != result) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -169,9 +169,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 	if(0 != result) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -185,9 +185,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	result = ogg_stream_packetout(&mOggStreamState, &op);
 	if(1 != result) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -205,9 +205,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	SpeexHeader *header = speex_packet_to_header((char *)op.packet, (int)op.bytes);
 	if(nullptr == header) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotRecognizedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -217,9 +217,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	}
 	else if(SPEEX_NB_MODES <= header->mode) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The Speex mode in the file “%@” is not supported."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file mode"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("This file may have been encoded with a newer version of Speex."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The Speex mode in the file “%@” is not supported."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file mode"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("This file may have been encoded with a newer version of Speex."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -232,9 +232,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	const SpeexMode *mode = speex_lib_get_mode(header->mode);
 	if(mode->bitstream_version != header->mode_bitstream_version) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The Speex version in the file “%@” is not supported."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file version"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("This file was encoded with a different version of Speex."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The Speex version in the file “%@” is not supported."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file version"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("This file was encoded with a different version of Speex."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -248,9 +248,9 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	mSpeexDecoder = speex_decoder_init(mode);
 	if(nullptr== mSpeexDecoder) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("Unable to initialize the Speex decoder."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Error initializing Speex decoder"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("An unknown error occurred."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("Unable to initialize the Speex decoder."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Error initializing Speex decoder"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("An unknown error occurred."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -347,11 +347,11 @@ bool SFB::Audio::OggSpeexDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::OggSpeexDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault, 
-									nullptr, 
-									CFSTR("Ogg Speex, %u channels, %u Hz"), 
-									(unsigned int)mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("Ogg Speex, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

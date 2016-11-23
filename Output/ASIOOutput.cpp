@@ -341,27 +341,27 @@ CFArrayRef SFB::Audio::ASIOOutput::CreateAvailableDrivers()
 		if(!driverDictionary)
 			continue;
 
-		CFString driverID = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII);
+		CFString driverID(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII));
 		CFDictionarySetValue(driverDictionary, kDriverIDKey, driverID);
 
-		CFNumber driverNumber = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &buffer[i].Number);
+		CFNumber driverNumber(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &buffer[i].Number));
 		CFDictionarySetValue(driverDictionary, kDriverNumberKey, driverNumber);
 
-		CFString driverDisplayName = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII);
+		CFString driverDisplayName(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII));
 		CFDictionarySetValue(driverDictionary, kDriverDisplayNameKey, driverDisplayName);
 
-		CFString driverCompany = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII);
+		CFString driverCompany(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII));
 		CFDictionarySetValue(driverDictionary, kDriverCompanyKey, driverCompany);
 
-		CFString driverFolder = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII);
+		CFString driverFolder(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII));
 		CFDictionarySetValue(driverDictionary, kDriverFolderKey, driverFolder);
 
-		CFString driverArchitecture = CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII);
+		CFString driverArchitecture(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII));
 		CFDictionarySetValue(driverDictionary, kDriverArchitecturesKey, driverArchitecture);
 
 		char deviceUID [1024];
 		if(buffer[i].ToCString(deviceUID, 1024, '|')) {
-			CFString driverUID = CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII);
+			CFString driverUID(CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII));
 			CFDictionarySetValue(driverDictionary, kDriverUIDKey, driverUID);
 		}
 		else

@@ -201,9 +201,9 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 	mWPC = unique_WavpackContext_ptr(WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0), WavpackCloseFile);
 	if(!mWPC) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a WavPack file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
@@ -285,11 +285,11 @@ bool SFB::Audio::WavPackDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::WavPackDecoder::_GetSourceFormatDescription() const
 {
-	return CFStringCreateWithFormat(kCFAllocatorDefault,
-									nullptr, 
-									CFSTR("WavPack, %u channels, %u Hz"), 
-									(unsigned int)mSourceFormat.mChannelsPerFrame, 
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
+											 nullptr,
+											 CFSTR("WavPack, %u channels, %u Hz"),
+											 (unsigned int)mSourceFormat.mChannelsPerFrame,
+											 (unsigned int)mSourceFormat.mSampleRate));
 }
 
 UInt32 SFB::Audio::WavPackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

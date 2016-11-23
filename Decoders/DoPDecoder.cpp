@@ -90,9 +90,9 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 
 	if(!decoderFormat.IsDSD()) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSD file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a DSD file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSD file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a DSD file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
 		}
@@ -104,9 +104,9 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
 
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Unsupported DSD sample rate"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD over PCM."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported DSD sample rate"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD over PCM."), ""));
 
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
 		}
@@ -147,7 +147,7 @@ bool SFB::Audio::DoPDecoder::_Close(CFErrorRef *error)
 
 SFB::CFString SFB::Audio::DoPDecoder::_GetSourceFormatDescription() const
 {
-	return mDecoder->CreateSourceFormatDescription();
+	return CFString(mDecoder->CreateSourceFormatDescription());
 }
 
 #pragma mark Functionality

@@ -410,9 +410,9 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	bool validSampleRate = EvenMultipleSampleRateIsSupported(decoderSampleRate);
 	if(!validSampleRate) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
@@ -424,9 +424,9 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 
 	if(!(1 == inputFormat.mChannelsPerFrame || 2 == inputFormat.mChannelsPerFrame)) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” does not contain mono or stereo audio."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only mono or stereo files supported"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not contain mono or stereo audio."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Only mono or stereo files supported"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}
@@ -448,9 +448,9 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	
 	if(!SetSampleRate((int32_t)outputFormat.mSampleRate)) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported."), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
 			*error = CreateErrorForURL(ReplayGainAnalyzer::ErrorDomain, ReplayGainAnalyzer::FileFormatNotSupportedError, description, url, failureReason, recoverySuggestion);
 		}

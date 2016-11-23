@@ -120,7 +120,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
 
-	SFB::CFString pathExtension = CFURLCopyPathExtension(mURL);
+	SFB::CFString pathExtension(CFURLCopyPathExtension(mURL));
 	if(!pathExtension)
 		return false;
 
@@ -129,9 +129,9 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
@@ -155,9 +155,9 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
@@ -181,9 +181,9 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
@@ -207,9 +207,9 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 		std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 		if(!stream->isOpen()) {
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Input/output error"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be opened for reading."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Input/output error"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may have been renamed, moved, deleted, or you may not have appropriate permissions."), ""));
 
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 			}
@@ -232,9 +232,9 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 
 	if(!fileIsValid) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not a MOD file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}

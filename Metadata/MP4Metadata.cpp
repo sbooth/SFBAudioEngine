@@ -115,9 +115,9 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotRecognizedError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -135,9 +135,9 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			MP4Close(file), file = nullptr;
 			
 			if(error) {
-				SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), "");
-				SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), "");
-				SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 				
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotSupportedError, description, mURL, failureReason, recoverySuggestion);
 			}
@@ -148,19 +148,19 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 		MP4Duration mp4Duration = MP4GetTrackDuration(file, trackID);
 		uint32_t mp4TimeScale = MP4GetTrackTimeScale(file, trackID);
 		
-		SFB::CFNumber totalFrames = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration);
+		SFB::CFNumber totalFrames(CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &mp4Duration));
 		CFDictionarySetValue(mMetadata, kTotalFramesKey, totalFrames);
 
-		SFB::CFNumber sampleRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale);
+		SFB::CFNumber sampleRate(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &mp4TimeScale));
 		CFDictionarySetValue(mMetadata, kSampleRateKey, sampleRate);
 
 		double length = (double)mp4Duration / (double)mp4TimeScale;
-		SFB::CFNumber duration = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length);
+		SFB::CFNumber duration(CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &length));
 		CFDictionarySetValue(mMetadata, kDurationKey, duration);
 
 		// "mdia.minf.stbl.stsd.*[0].channels"
 		int channels = MP4GetTrackAudioChannels(file, trackID);
-		SFB::CFNumber channelsPerFrame = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels);
+		SFB::CFNumber channelsPerFrame(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &channels));
 		CFDictionaryAddValue(mMetadata, kChannelsPerFrameKey, channelsPerFrame);
 
 		// ALAC files
@@ -174,21 +174,21 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 				// The ALAC magic cookie seems to have the following layout (28 bytes, BE):
 				// Byte 10: Sample size
 				// Bytes 25-28: Sample rate
-				SFB::CFNumber bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, decoderConfig + 9);
+				SFB::CFNumber bitsPerChannel(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, decoderConfig + 9));
 				CFDictionaryAddValue(mMetadata, kBitsPerChannelKey, bitsPerChannel);
 
 				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * decoderConfig[9]) / 1000.0;
-				SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				SFB::CFNumber bitrate(CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate));
 				CFDictionarySetValue(mMetadata, kBitrateKey, bitrate);
 
 				free(decoderConfig), decoderConfig = nullptr;
 			}			
 			else if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
-				SFB::CFNumber bitsPerChannel = CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize);
+				SFB::CFNumber bitsPerChannel(CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &sampleSize));
 				CFDictionaryAddValue(mMetadata, kBitsPerChannelKey, bitsPerChannel);
 
 				double losslessBitrate = (double)(mp4TimeScale * (unsigned int)channels * sampleSize) / 1000.0;
-				SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate);
+				SFB::CFNumber bitrate(CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &losslessBitrate));
 				CFDictionarySetValue(mMetadata, kBitrateKey, bitrate);
 			}
 		}
@@ -199,7 +199,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 
 			// "mdia.minf.stbl.stsd.*.esds.decConfigDescr.avgBitrate"
 			uint32_t trackBitrate = MP4GetTrackBitRate(file, trackID) / 1000;
-			SFB::CFNumber bitrate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackBitrate);
+			SFB::CFNumber bitrate(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &trackBitrate));
 			CFDictionaryAddValue(mMetadata, kBitrateKey, bitrate);
 
 		}
@@ -209,9 +209,9 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 		MP4Close(file), file = nullptr;
 		
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotSupportedError, description, mURL, failureReason, recoverySuggestion);
 		}
@@ -235,56 +235,56 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	
 	// Album title
 	if(tags->album) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->album, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->album, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumTitleKey, str);
 	}
 	
 	// Artist
 	if(tags->artist) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->artist, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->artist, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kArtistKey, str);
 	}
 	
 	// Album Artist
 	if(tags->albumArtist) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->albumArtist, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->albumArtist, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumArtistKey, str);
 	}
 	
 	// Genre
 	if(tags->genre) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->genre, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->genre, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kGenreKey, str);
 	}
 	
 	// Release date
 	if(tags->releaseDate) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->releaseDate, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->releaseDate, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kReleaseDateKey, str);
 	}
 	
 	// Composer
 	if(tags->composer) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->composer, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->composer, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kComposerKey, str);
 	}
 	
 	// Comment
 	if(tags->comments) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->comments, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->comments, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kCommentKey, str);
 	}
 	
 	// Track title
 	if(tags->name) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->name, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->name, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kTitleKey, str);
 	}
@@ -292,12 +292,12 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	// Track number
 	if(tags->track) {
 		if(tags->track->index) {
-			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index);
+			SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->index));
 			CFDictionarySetValue(mMetadata, kTrackNumberKey, num);
 		}
 		
 		if(tags->track->total) {
-			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total);
+			SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->track->total));
 			CFDictionarySetValue(mMetadata, kTrackTotalKey, num);
 		}
 	}
@@ -305,12 +305,12 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	// Disc number
 	if(tags->disk) {
 		if(tags->disk->index) {
-			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->index);
+			SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->index));
 			CFDictionarySetValue(mMetadata, kDiscNumberKey, num);
 		}
 		
 		if(tags->disk->total) {
-			SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->total);
+			SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->disk->total));
 			CFDictionarySetValue(mMetadata, kDiscTotalKey, num);
 		}
 	}
@@ -321,49 +321,49 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	
 	// BPM
 	if(tags->tempo) {
-		SFB::CFNumber num = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->tempo);
+		SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &tags->tempo));
 		CFDictionarySetValue(mMetadata, kBPMKey, num);
 	}
 	
 	// Lyrics
 	if(tags->lyrics) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->lyrics, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->lyrics, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kLyricsKey, str);
 	}
 
 	if(tags->sortName) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortName, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->sortName, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kTitleSortOrderKey, str);
 	}
 
 	if(tags->sortAlbum) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbum, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbum, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumTitleSortOrderKey, str);
 	}
 
 	if(tags->sortArtist) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortArtist, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->sortArtist, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kArtistSortOrderKey, str);
 	}
 
 	if(tags->sortAlbumArtist) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbumArtist, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->sortAlbumArtist, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumArtistSortOrderKey, str);
 	}
 
 	if(tags->sortComposer) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->sortComposer, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->sortComposer, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kComposerSortOrderKey, str);
 	}
 
 	if(tags->grouping) {
-		SFB::CFString str = CFStringCreateWithCString(kCFAllocatorDefault, tags->grouping, kCFStringEncodingUTF8);
+		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, tags->grouping, kCFStringEncodingUTF8));
 		if(str)
 			CFDictionarySetValue(mMetadata, kGroupingKey, str);
 	}
@@ -371,7 +371,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	// Album art
 	if(tags->artworkCount) {
 		for(uint32_t i = 0; i < tags->artworkCount; ++i) {
-			SFB::CFData data = CFDataCreate(kCFAllocatorDefault, (const UInt8 *)tags->artwork[i].data, tags->artwork[i].size);
+			SFB::CFData data(CFDataCreate(kCFAllocatorDefault, (const UInt8 *)tags->artwork[i].data, tags->artwork[i].size));
 
 			mPictures.push_back(std::make_shared<AttachedPicture>(data));
 		}
@@ -381,7 +381,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Album Id");
 	if(nullptr != items) {
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size) {
-			SFB::CFString releaseID = CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8);
+			SFB::CFString releaseID(CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8));
 			CFDictionaryAddValue(mMetadata, kMusicBrainzReleaseIDKey, releaseID);
 		}
 
@@ -391,7 +391,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Track Id");
 	if(nullptr != items) {
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size) {
-			SFB::CFString recordingID = CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8);
+			SFB::CFString recordingID(CFStringCreateWithCString(kCFAllocatorDefault, (const char *)items->elements[0].dataList.elements[0].value, kCFStringEncodingUTF8));
 			CFDictionaryAddValue(mMetadata, kMusicBrainzRecordingIDKey, recordingID);
 		}
 
@@ -405,7 +405,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	if(nullptr != items) {
 		float referenceLoudnessValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &referenceLoudnessValue)) {
-			SFB::CFNumber referenceLoudness = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &referenceLoudnessValue);
+			SFB::CFNumber referenceLoudness(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &referenceLoudnessValue));
 			CFDictionaryAddValue(mMetadata, kReferenceLoudnessKey, referenceLoudness);
 		}
 		
@@ -417,7 +417,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	if(nullptr != items) {
 		float trackGainValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &trackGainValue)) {
-			SFB::CFNumber trackGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackGainValue);
+			SFB::CFNumber trackGain(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackGainValue));
 			CFDictionaryAddValue(mMetadata, kTrackGainKey, trackGain);
 		}
 		
@@ -429,7 +429,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	if(nullptr != items) {
 		float trackPeakValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &trackPeakValue)) {
-			SFB::CFNumber trackPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackPeakValue);
+			SFB::CFNumber trackPeak(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &trackPeakValue));
 			CFDictionaryAddValue(mMetadata, kTrackPeakKey, trackPeak);
 		}
 		
@@ -441,7 +441,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	if(nullptr != items) {
 		float albumGainValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &albumGainValue)) {
-			SFB::CFNumber albumGain = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumGainValue);
+			SFB::CFNumber albumGain(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumGainValue));
 			CFDictionaryAddValue(mMetadata, kAlbumGainKey, albumGain);
 		}
 		
@@ -453,7 +453,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	if(nullptr != items) {
 		float albumPeakValue;
 		if(1 <= items->size && 1 <= items->elements[0].dataList.size && sscanf((const char *)items->elements[0].dataList.elements[0].value, "%f", &albumPeakValue)) {
-			SFB::CFNumber albumPeak = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumPeakValue);
+			SFB::CFNumber albumPeak(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &albumPeakValue));
 			CFDictionaryAddValue(mMetadata, kAlbumPeakKey, albumPeak);
 		}
 		
@@ -477,9 +477,9 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	MP4FileHandle file = MP4Modify((const char *)buf);
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 			
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
