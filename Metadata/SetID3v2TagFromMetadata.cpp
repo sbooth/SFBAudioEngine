@@ -158,6 +158,9 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 			frame->setRating(i);
 			tag->addFrame(frame);
 		}
+		else {
+			delete frame;
+		}
 	}
 
 	// Track number and total tracks
