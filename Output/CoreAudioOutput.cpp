@@ -2152,12 +2152,16 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 
 #pragma mark Callbacks
 
-OSStatus SFB::Audio::CoreAudioOutput::Render(AudioUnitRenderActionFlags		*/*ioActionFlags*/,
-											 const AudioTimeStamp			*/*inTimeStamp*/,
-											 UInt32							/*inBusNumber*/,
+OSStatus SFB::Audio::CoreAudioOutput::Render(AudioUnitRenderActionFlags		*ioActionFlags,
+											 const AudioTimeStamp			*inTimeStamp,
+											 UInt32							inBusNumber,
 											 UInt32							inNumberFrames,
 											 AudioBufferList				*ioData)
 {
+#pragma unused(ioActionFlags)
+#pragma unused(inTimeStamp)
+#pragma unused(inBusNumber)
+
 	mPlayer->ProvideAudio(ioData, inNumberFrames);
 	return noErr;
 }

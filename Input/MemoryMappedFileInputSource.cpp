@@ -85,8 +85,10 @@ bool SFB::MemoryMappedFileInputSource::_Open(CFErrorRef *error)
 	return true;
 }
 
-bool SFB::MemoryMappedFileInputSource::_Close(CFErrorRef */*error*/)
+bool SFB::MemoryMappedFileInputSource::_Close(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	memset(&mFilestats, 0, sizeof(mFilestats));
 	mMemory.reset();
 	mCurrentPosition = nullptr;

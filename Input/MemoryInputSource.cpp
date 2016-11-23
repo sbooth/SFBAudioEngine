@@ -52,14 +52,18 @@ SFB::MemoryInputSource::MemoryInputSource(const void *bytes, SInt64 byteCount, b
 
 }
 
-bool SFB::MemoryInputSource::_Open(CFErrorRef */*error*/)
+bool SFB::MemoryInputSource::_Open(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	mCurrentPosition = mMemory.get();
 	return true;
 }
 
-bool SFB::MemoryInputSource::_Close(CFErrorRef */*error*/)
+bool SFB::MemoryInputSource::_Close(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	mCurrentPosition = nullptr;
 	return true;
 }

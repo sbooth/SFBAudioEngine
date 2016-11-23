@@ -59,9 +59,11 @@ public:
 		: mInputSource(inputSource)
 	{}
 
-	inline virtual int Open(const wchar_t * pName, bool /*bOpenReadOnly*/)
+	inline virtual int Open(const wchar_t * pName, bool bOpenReadOnly)
 	{
 #pragma unused(pName)
+#pragma unused(bOpenReadOnly)
+
 		return ERROR_INVALID_INPUT_FILE;
 	}
 
@@ -86,6 +88,7 @@ public:
 #pragma unused(pBuffer)
 #pragma unused(nBytesToWrite)
 #pragma unused(pBytesWritten)
+
 		return ERROR_IO_WRITE;
 	}
 

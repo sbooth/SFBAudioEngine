@@ -686,8 +686,10 @@ SFB::Audio::DSDIFFDecoder::~DSDIFFDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef */*error*/)
+bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	auto chunks = ParseDSDIFF(GetInputSource());
 	if(!chunks) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Error parsing file");

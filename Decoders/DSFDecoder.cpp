@@ -112,8 +112,10 @@ SFB::Audio::DSFDecoder::~DSFDecoder()
 
 #pragma mark Functionality
 
-bool SFB::Audio::DSFDecoder::_Open(CFErrorRef */*error*/)
+bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 {
+#pragma unused(error)
+
 	// Read the 'DSD ' chunk
 	uint32_t chunkID;
 	if(!ReadChunkID(GetInputSource(), chunkID) || 'DSD ' != chunkID) {
