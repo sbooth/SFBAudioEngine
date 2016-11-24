@@ -64,7 +64,7 @@ namespace {
 
 		SFB::CFString numberString;
 		if(nullptr != value)
-			numberString = SFB::CFString(CFSTR("%@"), value);
+			numberString = SFB::CFString(nullptr, CFSTR("%@"), value);
 
 		bool result = SetAPETag(tag, key, numberString);
 
