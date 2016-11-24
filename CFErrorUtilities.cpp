@@ -35,7 +35,7 @@ CFErrorRef SFB::CreateError(CFStringRef domain, CFIndex code, CFStringRef descri
 	if(nullptr == domain)
 		return nullptr;
 	
-	SFB::CFMutableDictionary errorDictionary(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+	SFB::CFMutableDictionary errorDictionary(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	if(!errorDictionary)
 		return nullptr;
 	
@@ -56,7 +56,7 @@ CFErrorRef SFB::CreateErrorForURL(CFStringRef domain, CFIndex code, CFStringRef 
 	if(nullptr == domain)
 		return nullptr;
 	
-	SFB::CFMutableDictionary errorDictionary(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+	SFB::CFMutableDictionary errorDictionary(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	if(!errorDictionary)
 		return nullptr;
 
@@ -65,7 +65,7 @@ CFErrorRef SFB::CreateErrorForURL(CFStringRef domain, CFIndex code, CFStringRef 
 
 		SFB::CFString displayName(CreateDisplayNameForURL(url));
 		if(displayName) {
-			SFB::CFString description(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, descriptionFormatStringForURL, displayName.Object()));
+			SFB::CFString description(nullptr, descriptionFormatStringForURL, displayName.Object());
 			if(description)
 				CFDictionarySetValue(errorDictionary, kCFErrorLocalizedDescriptionKey, description);
 		}

@@ -37,11 +37,8 @@ const CFStringRef SFB::Audio::AttachedPicture::kDescriptionKey			= CFSTR("Pictur
 const CFStringRef SFB::Audio::AttachedPicture::kDataKey					= CFSTR("Picture Data");
 
 SFB::Audio::AttachedPicture::AttachedPicture(CFDataRef data, AttachedPicture::Type type, CFStringRef description)
-	: mState(ChangeState::Saved)
+	: mMetadata(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks), mChangedMetadata(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks), mState(ChangeState::Saved)
 {
-	mMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	mChangedMetadata = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-
 	if(data)
 		CFDictionarySetValue(mMetadata, kDataKey, data);
 
@@ -102,7 +99,7 @@ SFB::Audio::AttachedPicture::Type SFB::Audio::AttachedPicture::GetType() const
 
 void SFB::Audio::AttachedPicture::SetType(Type type)
 {
-	SFB::CFNumber wrapper(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &type));
+	SFB::CFNumber wrapper(kCFNumberIntType, &type);
 	SetValue(kTypeKey, wrapper);
 }
 

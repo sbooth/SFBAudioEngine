@@ -201,7 +201,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!trackGainFrame)
 		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
-		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8));
+		SFB::CFString str(trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
 		AddDoubleToDictionary(dictionary, Metadata::kTrackGainKey, num);
@@ -213,7 +213,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!trackPeakFrame)
 		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
-		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8));
+		SFB::CFString str(trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
 		AddDoubleToDictionary(dictionary, Metadata::kTrackPeakKey, num);
@@ -222,7 +222,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
-		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8));
+		SFB::CFString str(albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
 		AddDoubleToDictionary(dictionary, Metadata::kAlbumGainKey, num);
@@ -234,7 +234,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!albumPeakFrame)
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
-		SFB::CFString str(CFStringCreateWithCString(kCFAllocatorDefault, albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8));
+		SFB::CFString str(albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
 		double num = CFStringGetDoubleValue(str);
 
 		AddDoubleToDictionary(dictionary, Metadata::kAlbumPeakKey, num);
@@ -299,11 +299,11 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	for(auto it : tag->frameListMap()["APIC"]) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
 		if(frame) {
-			SFB::CFData data(CFDataCreate(kCFAllocatorDefault, (const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size()));
+			SFB::CFData data((const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
 			
 			SFB::CFString description;
 			if(!frame->description().isEmpty())
-				description = CFString(CFStringCreateWithCString(kCFAllocatorDefault, frame->description().toCString(true), kCFStringEncodingUTF8));
+				description = CFString(frame->description().toCString(true), kCFStringEncodingUTF8);
 			
 			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));
 		}

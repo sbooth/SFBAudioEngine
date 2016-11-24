@@ -64,7 +64,7 @@ namespace {
 
 		SFB::CFString numberString;
 		if(nullptr != value)
-			numberString = SFB::CFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), value));
+			numberString = SFB::CFString(CFSTR("%@"), value);
 
 		bool result = SetXiphComment(tag, key, numberString);
 
@@ -95,7 +95,7 @@ namespace {
 			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
 				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
 
-			numberString = SFB::CFString(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, f));
+			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
 		}
 
 		bool result = SetXiphComment(tag, key, numberString);

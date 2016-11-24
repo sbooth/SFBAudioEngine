@@ -218,11 +218,10 @@ bool SFB::Audio::TrueAudioDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::TrueAudioDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("True Audio, %u channels, %u Hz"),
-											 (unsigned int)mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("True Audio, %u channels, %u Hz"),
+					(unsigned int)mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

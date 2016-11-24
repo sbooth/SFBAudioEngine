@@ -110,7 +110,7 @@ CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedFileExtensions()
 		SF_FORMAT_INFO formatInfo;
 		formatInfo.format = i;
 		if(0 == sf_command(nullptr, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
-			SFB::CFString extension(CFStringCreateWithCString(kCFAllocatorDefault, formatInfo.extension, kCFStringEncodingUTF8));
+			SFB::CFString extension(formatInfo.extension, kCFStringEncodingUTF8);
 			if(extension)
 				CFArrayAppendValue(supportedExtensions, extension);
 		}
@@ -361,12 +361,11 @@ SFB::CFString SFB::Audio::LibsndfileDecoder::_GetSourceFormatDescription() const
 		return CFString();
 	}
 	
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("%s, %u channels, %u Hz"),
-											 formatInfo.name,
-											 mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("%s, %u channels, %u Hz"),
+					formatInfo.name,
+					mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::LibsndfileDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

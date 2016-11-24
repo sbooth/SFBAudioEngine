@@ -762,11 +762,10 @@ bool SFB::Audio::DSDIFFDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::DSDIFFDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("DSD Interchange File Format, %u channels, %u Hz"),
-											 (unsigned int)mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("DSD Interchange File Format, %u channels, %u Hz"),
+					(unsigned int)mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::DSDIFFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

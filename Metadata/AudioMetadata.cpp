@@ -202,11 +202,8 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 #pragma mark Creation and Destruction
 
 SFB::Audio::Metadata::Metadata()
-	: mURL(nullptr)
-{	
-	mMetadata			= CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	mChangedMetadata	= CFDictionaryCreateMutable(kCFAllocatorDefault,  0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-}
+	: mURL(nullptr), mMetadata(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks), mChangedMetadata(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks)
+{}
 
 SFB::Audio::Metadata::Metadata(CFURLRef url)
 	: Metadata()
@@ -256,7 +253,7 @@ CFDictionaryRef SFB::Audio::Metadata::CreateDictionaryRepresentation() const
 	free(keys), keys = nullptr;
 	free(values), values = nullptr;
 
-	CFMutableArray pictureArray(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
+	CFMutableArray pictureArray(0, &kCFTypeArrayCallBacks);
 
 	for(auto picture : GetAttachedPictures()) {
 		CFDictionary pictureRepresentation(picture->CreateDictionaryRepresentation());

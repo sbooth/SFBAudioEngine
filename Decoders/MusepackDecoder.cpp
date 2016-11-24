@@ -241,11 +241,10 @@ bool SFB::Audio::MusepackDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MusepackDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("Musepack, %u channels, %u Hz"),
-											 mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("Musepack, %u channels, %u Hz"),
+					mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
