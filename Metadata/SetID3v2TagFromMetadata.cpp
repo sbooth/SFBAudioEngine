@@ -55,7 +55,7 @@ namespace {
 				double d;
 				CFNumberGetValue(value, type, &d);
 
-				return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, nullptr == format ? CFSTR("%f") : format, d);
+				return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, format ?: CFSTR("%f"), d);
 			}
 
 				// Everything else
@@ -140,7 +140,7 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 	// BPM
 	tag->removeFrames("TBPM");
 	if(metadata.GetBPM()) {
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), metadata.GetBPM()));
+		SFB::CFString str(nullptr, CFSTR("%@"), metadata.GetBPM());
 
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TBPM", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
@@ -168,21 +168,21 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 	CFNumberRef trackNumber	= metadata.GetTrackNumber();
 	CFNumberRef trackTotal	= metadata.GetTrackTotal();
 	if(trackNumber && trackTotal) {
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@/%@"), trackNumber, trackTotal));
+		SFB::CFString str(nullptr, CFSTR("%@/%@"), trackNumber, trackTotal);
 
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
 	}
 	else if(trackNumber) {		
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), trackNumber));
+		SFB::CFString str(nullptr, CFSTR("%@"), trackNumber);
 		
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
 	}
 	else if(trackTotal) {		
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("/%@"), trackTotal));
+		SFB::CFString str(nullptr, CFSTR("/%@"), trackTotal);
 		
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TRCK", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
@@ -203,21 +203,21 @@ bool SFB::Audio::SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2
 	CFNumberRef discNumber	= metadata.GetDiscNumber();
 	CFNumberRef discTotal	= metadata.GetDiscTotal();
 	if(discNumber && discTotal) {
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@/%@"), discNumber, discTotal));
+		SFB::CFString str(nullptr, CFSTR("%@/%@"), discNumber, discTotal);
 		
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
 	}
 	else if(discNumber) {		
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@"), discNumber));
+		SFB::CFString str(nullptr, CFSTR("%@"), discNumber);
 		
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));
 		tag->addFrame(frame);
 	}
 	else if(discTotal) {		
-		SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("/%@"), discTotal));
+		SFB::CFString str(nullptr, CFSTR("/%@"), discTotal);
 		
 		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TPOS", TagLib::String::Latin1);
 		frame->setText(TagLib::StringFromCFString(str));

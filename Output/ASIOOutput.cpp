@@ -259,7 +259,7 @@ namespace {
 	// Sadly ASIO requires global state
 	static SFB::Audio::ASIOOutput *sOutput	= nullptr;
 	static AsioDriver		*sASIO		= nullptr;
-	static DriverInfo		sDriverInfo	= {{0}};
+	static DriverInfo		sDriverInfo	= {};
 	static ASIOCallbacks	sCallbacks	= {
 		.bufferSwitch			= myASIOBufferSwitch,
 		.sampleRateDidChange	= myASIOSampleRateDidChange,
@@ -273,7 +273,7 @@ namespace {
 	// Backdoor into myASIOBufferSwitchTimeInfo
 	void myASIOBufferSwitch(long doubleBufferIndex, ASIOBool directProcess)
 	{
-		ASIOTime timeInfo = {{0}};
+		ASIOTime timeInfo = {};
 
 		auto result = sASIO->getSamplePosition(&timeInfo.timeInfo.samplePosition, &timeInfo.timeInfo.systemTime);
 		if(ASE_OK == result)
@@ -296,6 +296,9 @@ namespace {
 
 	ASIOTime * myASIOBufferSwitchTimeInfo(ASIOTime *params, long doubleBufferIndex, ASIOBool directProcess)
 	{
+#pragma unused(params)
+#pragma unused(directProcess)
+
 		if(sOutput)
 			sOutput->FillASIOBuffer(doubleBufferIndex);
 		return nullptr;
@@ -332,36 +335,36 @@ CFArrayRef SFB::Audio::ASIOOutput::CreateAvailableDrivers()
 		return nullptr;
 	}
 
-	CFMutableArray driverInfoArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	CFMutableArray driverInfoArray(0, &kCFTypeArrayCallBacks);
 	if(!driverInfoArray)
 		return nullptr;
 
 	for(unsigned int i = 0; i < count; ++i) {
-		CFMutableDictionary driverDictionary = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+		CFMutableDictionary driverDictionary(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 		if(!driverDictionary)
 			continue;
 
-		CFString driverID(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Id, kCFStringEncodingASCII));
+		CFString driverID(buffer[i].Id, kCFStringEncodingASCII);
 		CFDictionarySetValue(driverDictionary, kDriverIDKey, driverID);
 
-		CFNumber driverNumber(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &buffer[i].Number));
+		CFNumber driverNumber(kCFNumberIntType, &buffer[i].Number);
 		CFDictionarySetValue(driverDictionary, kDriverNumberKey, driverNumber);
 
-		CFString driverDisplayName(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].DisplayName, kCFStringEncodingASCII));
+		CFString driverDisplayName(buffer[i].DisplayName, kCFStringEncodingASCII);
 		CFDictionarySetValue(driverDictionary, kDriverDisplayNameKey, driverDisplayName);
 
-		CFString driverCompany(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Company, kCFStringEncodingASCII));
+		CFString driverCompany(buffer[i].Company, kCFStringEncodingASCII);
 		CFDictionarySetValue(driverDictionary, kDriverCompanyKey, driverCompany);
 
-		CFString driverFolder(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].InstallFolder, kCFStringEncodingASCII));
+		CFString driverFolder(buffer[i].InstallFolder, kCFStringEncodingASCII);
 		CFDictionarySetValue(driverDictionary, kDriverFolderKey, driverFolder);
 
-		CFString driverArchitecture(CFStringCreateWithCString(kCFAllocatorDefault, buffer[i].Architectures, kCFStringEncodingASCII));
+		CFString driverArchitecture(buffer[i].Architectures, kCFStringEncodingASCII);
 		CFDictionarySetValue(driverDictionary, kDriverArchitecturesKey, driverArchitecture);
 
 		char deviceUID [1024];
 		if(buffer[i].ToCString(deviceUID, 1024, '|')) {
-			CFString driverUID(CFStringCreateWithCString(kCFAllocatorDefault, deviceUID, kCFStringEncodingASCII));
+			CFString driverUID(deviceUID, kCFStringEncodingASCII);
 			CFDictionarySetValue(driverDictionary, kDriverUIDKey, driverUID);
 		}
 		else
@@ -691,7 +694,7 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 
 
 	// Store the ASIO driver format
-	asioFormat = {0};
+	asioFormat = {};
 	result = sASIO->future(kAsioGetIoFormat, &asioFormat);
 	if(ASE_SUCCESS != result) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Output.ASIO", "Unable to get ASIO format: " << result);
@@ -872,6 +875,9 @@ bool SFB::Audio::ASIOOutput::_SetDeviceUID(CFStringRef deviceUID)
 
 long SFB::Audio::ASIOOutput::HandleASIOMessage(long selector, long value, void *message, double *opt)
 {
+#pragma unused(message)
+#pragma unused(opt)
+
 	LOGGER_INFO("org.sbooth.AudioEngine.Output.ASIO", "HandleASIOMessage: selector = " << selector << ", value = " << value);
 
 	switch(selector) {

@@ -262,11 +262,10 @@ bool SFB::Audio::MonkeysAudioDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MonkeysAudioDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("Monkey's Audio, %u channels, %u Hz"),
-											 mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("Monkey's Audio, %u channels, %u Hz"),
+					mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

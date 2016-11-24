@@ -231,11 +231,10 @@ bool SFB::Audio::MODDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::MODDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("MOD, %u channels, %u Hz"),
-											 mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("MOD, %u channels, %u Hz"),
+					mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::MODDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

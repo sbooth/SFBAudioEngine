@@ -286,11 +286,10 @@ SFB::CFString SFB::Audio::MPEGDecoder::_GetSourceFormatDescription() const
 {
 	mpg123_frameinfo mi;
 	if(MPG123_OK != mpg123_info(mDecoder.get(), &mi)) {
-		return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-												 nullptr,
-												 CFSTR("MPEG-1 Audio, %u channels, %u Hz"),
-												 (unsigned int)mSourceFormat.mChannelsPerFrame,
-												 (unsigned int)mSourceFormat.mSampleRate));
+		return CFString(nullptr,
+						CFSTR("MPEG-1 Audio, %u channels, %u Hz"),
+						(unsigned int)mSourceFormat.mChannelsPerFrame,
+						(unsigned int)mSourceFormat.mSampleRate);
 	}
 
 	CFStringRef layerDescription = nullptr;
@@ -308,12 +307,11 @@ SFB::CFString SFB::Audio::MPEGDecoder::_GetSourceFormatDescription() const
 		case MPG123_M_STEREO:			channelDescription = CFSTR("Stereo");			break;
 	}
 
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("MPEG-1 Audio (%@), %@, %u Hz"),
-											 layerDescription,
-											 channelDescription,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("MPEG-1 Audio (%@), %@, %u Hz"),
+					layerDescription,
+					channelDescription,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

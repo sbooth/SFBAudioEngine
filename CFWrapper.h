@@ -224,6 +224,65 @@ namespace SFB {
 
 		//@}
 
+
+		// ========================================
+		/*! @name CoreFoundation object creation */
+		//@{
+
+		/*! @brief Create a new wrapped \c CFStringRef using \c CFStringCreateWithCString with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFStringRef>::value>>
+		CFWrapper(const char *cStr, CFStringEncoding encoding)
+			: CFWrapper(CFStringCreateWithCString(kCFAllocatorDefault, cStr, encoding))
+		{}
+
+		/*! @brief Create a new wrapped \c CFStringRef using \c CFStringCreateWithFormatAndArguments with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFStringRef>::value>>
+		CFWrapper(CFDictionaryRef formatOptions, CFStringRef format, ...) CF_FORMAT_FUNCTION(3,4)
+		{
+			va_list ap;
+			va_start(ap, format);
+			*this = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, formatOptions, format, ap);
+			va_end(ap);
+		}
+
+		/*! @brief Create a new wrapped \c CFNumberRef using \c CFNumberCreate with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFNumberRef>::value>>
+		CFWrapper(CFNumberType theType, const void *valuePtr)
+			: CFWrapper(CFNumberCreate(kCFAllocatorDefault, theType, valuePtr))
+		{}
+
+		/*! @brief Create a new wrapped \c CFArrayRef using \c CFArrayCreate with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFArrayRef>::value>>
+		CFWrapper(const void **values, CFIndex numValues, const CFArrayCallBacks *callBacks)
+			: CFWrapper(CFArrayCreate(kCFAllocatorDefault, values, numValues, callBacks))
+		{}
+
+		/*! @brief Create a new wrapped \c CFMutableArrayRef using \c CFArrayCreateMutable with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFMutableArrayRef>::value>>
+		CFWrapper(CFIndex capacity, const CFArrayCallBacks *callBacks)
+			: CFWrapper(CFArrayCreateMutable(kCFAllocatorDefault, capacity, callBacks))
+		{}
+
+		/*! @brief Create a new wrapped \c CFDictionaryRef using \c CFDictionaryCreate with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFDictionaryRef>::value>>
+		CFWrapper(const void **keys, const void **values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks)
+			: CFWrapper(CFDictionaryCreate(kCFAllocatorDefault, keys, values, numValues, keyCallBacks, valueCallBacks))
+		{}
+
+		/*! @brief Create a new wrapped \c CFMutableDictionaryRef using \c CFDictionaryCreateMutable with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFMutableDictionaryRef>::value>>
+		CFWrapper(CFIndex capacity, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks)
+			: CFWrapper(CFDictionaryCreateMutable(kCFAllocatorDefault, capacity, keyCallBacks, valueCallBacks))
+		{}
+
+		/*! @brief Create a new wrapped \c CFDataRef using \c CFDataCreate with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFDataRef>::value>>
+		CFWrapper(const UInt8 *bytes, CFIndex length)
+			: CFWrapper(CFDataCreate(kCFAllocatorDefault, bytes, length))
+		{}
+
+		//@}
+
 	private:
 		T mObject;				/*!< The Core Foundation object */
 		bool mRelease;			/*!< Whether \c CFRelease should be called on destruction or reassignment */

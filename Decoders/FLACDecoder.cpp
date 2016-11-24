@@ -363,11 +363,10 @@ bool SFB::Audio::FLACDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::FLACDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("FLAC, %u channels, %u Hz"),
-											 (unsigned int)mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("FLAC, %u channels, %u Hz"),
+					(unsigned int)mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::FLACDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

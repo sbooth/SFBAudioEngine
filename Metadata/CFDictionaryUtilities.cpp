@@ -34,7 +34,7 @@ void SFB::AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int valu
 	if(nullptr == d || nullptr == key)
 		return;
 	
-	SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &value));
+	SFB::CFNumber num(kCFNumberIntType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);
 }
@@ -44,7 +44,7 @@ void SFB::AddIntToDictionaryAsString(CFMutableDictionaryRef d, CFStringRef key, 
 	if(nullptr == d || nullptr == key)
 		return;
 
-	SFB::CFString str(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"), value));
+	SFB::CFString str(nullptr, CFSTR("%d"), value);
 	if(str)
 		CFDictionarySetValue(d, key, str);
 }
@@ -54,7 +54,7 @@ void SFB::AddLongLongToDictionary(CFMutableDictionaryRef d, CFStringRef key, lon
 	if(nullptr == d || nullptr == key)
 		return;
 
-	SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberLongLongType, &value));
+	SFB::CFNumber num(kCFNumberLongLongType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);
 }
@@ -64,7 +64,7 @@ void SFB::AddFloatToDictionary(CFMutableDictionaryRef d, CFStringRef key, float 
 	if(nullptr == d || nullptr == key)
 		return;
 
-	SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &value));
+	SFB::CFNumber num(kCFNumberFloatType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);
 }
@@ -74,7 +74,7 @@ void SFB::AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, doubl
 	if(nullptr == d || nullptr == key)
 		return;
 	
-	SFB::CFNumber num(CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value));
+	SFB::CFNumber num(kCFNumberDoubleType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);
 }

@@ -66,7 +66,7 @@ bool SFB::HTTPInputSource::_Open(CFErrorRef *error)
 
 	// Seek support
 	if(0 < mDesiredOffset) {
-		SFB::CFString byteRange(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("bytes=%lld-"), mDesiredOffset));
+		SFB::CFString byteRange(nullptr, CFSTR("bytes=%lld-"), mDesiredOffset);
 		CFHTTPMessageSetHeaderFieldValue(mRequest, CFSTR("Range"), byteRange);
 	}
 

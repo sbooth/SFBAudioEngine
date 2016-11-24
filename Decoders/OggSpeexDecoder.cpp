@@ -347,11 +347,10 @@ bool SFB::Audio::OggSpeexDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::OggSpeexDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("Ogg Speex, %u channels, %u Hz"),
-											 (unsigned int)mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("Ogg Speex, %u channels, %u Hz"),
+					(unsigned int)mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

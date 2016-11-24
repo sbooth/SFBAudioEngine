@@ -226,11 +226,10 @@ bool SFB::Audio::OggOpusDecoder::_Close(CFErrorRef */*error*/)
 
 SFB::CFString SFB::Audio::OggOpusDecoder::_GetSourceFormatDescription() const
 {
-	return CFString(CFStringCreateWithFormat(kCFAllocatorDefault,
-											 nullptr,
-											 CFSTR("Ogg Opus, %u channels, %u Hz"),
-											 (unsigned int)mSourceFormat.mChannelsPerFrame,
-											 (unsigned int)mSourceFormat.mSampleRate));
+	return CFString(nullptr,
+					CFSTR("Ogg Opus, %u channels, %u Hz"),
+					(unsigned int)mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
 UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)

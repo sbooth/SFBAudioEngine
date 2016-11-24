@@ -164,11 +164,11 @@ bool SFB::Audio::FLACMetadata::_ReadMetadata(CFErrorRef *error)
 
 	// Add album art
 	for(auto iter : file.pictureList()) {
-		SFB::CFData data(CFDataCreate(kCFAllocatorDefault, (const UInt8 *)iter->data().data(), (CFIndex)iter->data().size()));
+		SFB::CFData data((const UInt8 *)iter->data().data(), (CFIndex)iter->data().size());
 
 		SFB::CFString description;
 		if(!iter->description().isEmpty())
-			description = CFString(CFStringCreateWithCString(kCFAllocatorDefault, iter->description().toCString(true), kCFStringEncodingUTF8));
+			description = CFString(iter->description().toCString(true), kCFStringEncodingUTF8);
 
 		mPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)iter->type(), description));
 	}
