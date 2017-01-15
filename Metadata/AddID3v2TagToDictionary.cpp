@@ -226,46 +226,26 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 			if(!relativeVolume)
 				continue;
 			
+			// Attempt to use the master volume if present
+			auto channels		= relativeVolume->channels();
+			auto channelType	= TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
+			
+			// Fall back on whatever else exists in the frame
+			if(!channels.contains(TagLib::ID3v2::RelativeVolumeFrame::MasterVolume))
+				channelType = channels.front();
+			
+			float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
+
 			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
-				// Attempt to use the master volume if present
-				auto channels		= relativeVolume->channels();
-				auto channelType	= TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
-				
-				// Fall back on whatever else exists in the frame
-				if(!channels.contains(TagLib::ID3v2::RelativeVolumeFrame::MasterVolume))
-					channelType = channels.front();
-				
-				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
-				
 				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
-				// Attempt to use the master volume if present
-				auto channels		= relativeVolume->channels();
-				auto channelType	= TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
-				
-				// Fall back on whatever else exists in the frame
-				if(!channels.contains(TagLib::ID3v2::RelativeVolumeFrame::MasterVolume))
-					channelType = channels.front();
-				
-				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
-				
 				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
 			}
 			// Fall back to track gain if identification is not specified
 			else {
-				// Attempt to use the master volume if present
-				auto channels		= relativeVolume->channels();
-				auto channelType	= TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
-				
-				// Fall back on whatever else exists in the frame
-				if(!channels.contains(TagLib::ID3v2::RelativeVolumeFrame::MasterVolume))
-					channelType = channels.front();
-				
-				float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
-				
 				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
 			}
