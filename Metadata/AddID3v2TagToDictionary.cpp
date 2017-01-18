@@ -247,7 +247,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 			// Fall back to track gain if identification is not specified
 			else {
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
+					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
 			}
 		}			
 	}
