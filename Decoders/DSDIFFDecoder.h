@@ -58,6 +58,6 @@ namespace SFB {
 			SInt64		mCurrentFrame;
 			SInt64		mAudioOffset;
 		};
-		
+
 	}
 }

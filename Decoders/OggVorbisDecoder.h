@@ -62,6 +62,6 @@ namespace SFB {
 			// Data members
 			OggVorbis_File		mVorbisFile;
 		};
-		
+
 	}
 }

@@ -62,11 +62,11 @@ namespace SFB {
 				Float,
 				Double
 			};
-			
+
 			unique_SNDFILE_ptr	mFile;
 			SF_INFO				mFileInfo;
 			ReadMethod			mReadMethod;
 		};
-		
+
 	}
 }

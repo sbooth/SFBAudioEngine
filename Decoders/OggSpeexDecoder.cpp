@@ -93,7 +93,7 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 
 	// Get the ogg buffer for writing
 	char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
-	
+
 	// Read bitstream from input file
 	ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 	if(-1 == bytesRead) {
@@ -101,14 +101,14 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” could not be read."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Read error"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("Unable to read from the input file."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	// Tell the sync layer how many bytes were written to its internal buffer
 	int result = ogg_sync_wrote(&mOggSyncState, bytesRead);
 	if(-1 == result) {
@@ -116,14 +116,14 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	// Turn the data we wrote into an ogg page
 	result = ogg_sync_pageout(&mOggSyncState, &mOggPage);
 	if(1 != result) {
@@ -131,17 +131,17 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
 
 	// Initialize the stream and grab the serial number
 	ogg_stream_init(&mOggStreamState, ogg_page_serialno(&mOggPage));
-	
+
 	// Get the first Ogg page
 	result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 	if(0 != result) {
@@ -149,14 +149,14 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	// Get the first packet (should be the header) from the page
 	ogg_packet op;
 	result = ogg_stream_packetout(&mOggStreamState, &op);
@@ -165,10 +165,10 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
@@ -177,7 +177,7 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		mSpeexSerialNumber = mOggStreamState.serialno;
 
 	++mOggPacketCount;
-	
+
 	// Convert the packet to the Speex header
 	SpeexHeader *header = speex_packet_to_header((char *)op.packet, (int)op.bytes);
 	if(nullptr == header) {
@@ -185,7 +185,7 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Speex file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Speex file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotRecognizedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
@@ -197,30 +197,30 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The Speex mode in the file “%@” is not supported."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file mode"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("This file may have been encoded with a newer version of Speex."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		speex_header_free(header), header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	const SpeexMode *mode = speex_lib_get_mode(header->mode);
 	if(mode->bitstream_version != header->mode_bitstream_version) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The Speex version in the file “%@” is not supported."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported Ogg Speex file version"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("This file was encoded with a different version of Speex."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		speex_header_free(header), header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	// Initialize the decoder
 	mSpeexDecoder = speex_decoder_init(mode);
 	if(nullptr== mSpeexDecoder) {
@@ -228,26 +228,26 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("Unable to initialize the Speex decoder."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Error initializing Speex decoder"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("An unknown error occurred."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		speex_header_free(header), header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_SET_SAMPLING_RATE, &header->rate);
-	
+
 	mSpeexFramesPerOggPacket = (0 == header->frames_per_packet ? 1 : header->frames_per_packet);
 	mExtraSpeexHeaderCount = (UInt32)header->extra_headers;
 
 	// Initialize the speex bit-packing data structure
 	speex_bits_init(&mSpeexBits);
-	
+
 	// Initialize the stereo mode
 	mSpeexStereoState = speex_stereo_state_init();
-	
+
 	if(2 == header->nb_channels) {
 		SpeexCallback callback;
 		callback.callback_id = SPEEX_INBAND_STEREO;
@@ -255,38 +255,38 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		callback.data = mSpeexStereoState;
 		speex_decoder_ctl(mSpeexDecoder, SPEEX_SET_HANDLER, &callback);
 	}
-	
+
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
-	
+
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
 	mFormat.mSampleRate			= header->rate;
 	mFormat.mChannelsPerFrame	= (UInt32)header->nb_channels;
-	
+
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-	
+
 	mFormat.mReserved			= 0;
-	
+
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'SPEE';
-	
+
 	mSourceFormat.mSampleRate			= header->rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;
-	
+
 	switch(header->nb_channels) {
 		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
 		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
-	
+
 	speex_header_free(header), header = nullptr;
 
 	// Allocate the buffer list
 	spx_int32_t speexFrameSize = 0;
 	speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
-	
+
 	if(!mBufferList.Allocate(mFormat, (UInt32)speexFrameSize)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -299,7 +299,7 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
-	
+
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
@@ -338,39 +338,39 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 	}
 
 	UInt32 framesRead = 0;
-	
+
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
 		bufferList->mBuffers[i].mDataByteSize = 0;
 
 	for(;;) {
-		
+
 		UInt32	framesRemaining	= frameCount - framesRead;
 		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
-		
+
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 			float *floatBuffer = (float *)bufferList->mBuffers[i].mData;
 			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
 			bufferList->mBuffers[i].mDataByteSize += framesToCopy * sizeof(float);
-			
+
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
 				floatBuffer = (float *)mBufferList->mBuffers[i].mData;
 				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
 			}
-			
+
 			mBufferList->mBuffers[i].mDataByteSize -= framesToCopy * sizeof(float);
 		}
-		
+
 		framesRead += framesToCopy;
-		
+
 		// All requested frames were read
 		if(framesRead == frameCount)
 			break;
-		
+
 		// EOS reached
 		if(mSpeexEOSReached)
 			break;
@@ -389,7 +389,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 					LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: Ogg loss of streaming");
 					break;
 				}
-				
+
 				// If result is 0, there is insufficient data to assemble a packet
 				if(0 == result)
 					break;
@@ -398,10 +398,10 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 				if(1 == result) {
 					if(5 <= oggPacket.bytes && !memcmp(oggPacket.packet, "Speex", 5))
 						mSpeexSerialNumber = mOggStreamState.serialno;
-					
+
 					if(-1 == mSpeexSerialNumber || mOggStreamState.serialno != mSpeexSerialNumber)
 						break;
-					
+
 					// Ignore the following:
 					//  - Speex comments in packet #2
 					//  - Extra headers (optionally) in packets 3+
@@ -414,13 +414,13 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 						spx_int32_t speexFrameSize;
 						speex_decoder_ctl(mSpeexDecoder, SPEEX_GET_FRAME_SIZE, &speexFrameSize);
 						float buffer [(2 == mFormat.mChannelsPerFrame) ? 2 * speexFrameSize : speexFrameSize];
-						
+
 						// Copy the Ogg packet to the Speex bitstream
 						speex_bits_read_from(&mSpeexBits, (char *)oggPacket.packet, (int)oggPacket.bytes);
-						
+
 						// Decode each frame in the Speex packet
 						for(spx_int32_t i = 0; i < mSpeexFramesPerOggPacket; ++i) {
-							
+
 							result = speex_decode(mSpeexDecoder, &mSpeexBits, buffer);
 
 							// -1 indicates EOS
@@ -430,12 +430,12 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: possible corrupted stream");
 								break;
 							}
-							
+
 							if(0 > speex_bits_remaining(&mSpeexBits)) {
 								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding overflow: possible corrupted stream");
 								break;
 							}
-							
+
 							// Normalize the values
 							float maxSampleValue = 1u << 15;
 							vDSP_vsdiv(buffer, 1, &maxSampleValue, buffer, 1, (vDSP_Length)speexFrameSize);
@@ -444,7 +444,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 							framesInBuffer = mBufferList->mBuffers[0].mDataByteSize / sizeof(float);
 							memcpy((float *)mBufferList->mBuffers[0].mData + framesInBuffer, buffer, (size_t)speexFrameSize * sizeof(float));
 							mBufferList->mBuffers[0].mDataByteSize += (size_t)speexFrameSize * sizeof(float);
-							
+
 							// Process stereo channel, if present
 							if(2 == mFormat.mChannelsPerFrame) {
 								speex_decode_stereo(buffer, speexFrameSize, mSpeexStereoState);
@@ -453,7 +453,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 								memcpy((float *)mBufferList->mBuffers[1].mData + framesInBuffer, buffer + speexFrameSize, (size_t)speexFrameSize * sizeof(float));
 								mBufferList->mBuffers[1].mDataByteSize += (size_t)speexFrameSize * sizeof(float);
 							}
-							
+
 							// Packet processing finished
 							--packetsDesired;
 						}
@@ -462,27 +462,27 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 					++mOggPacketCount;
 				}
 			}
-			
+
 			// Grab a new Ogg page for processing, if necessary
 			if(!mSpeexEOSReached && 0 < packetsDesired) {
 				while(1 != ogg_sync_pageout(&mOggSyncState, &mOggPage)) {
 					// Get the ogg buffer for writing
 					char *data = ogg_sync_buffer(&mOggSyncState, READ_SIZE_BYTES);
-					
+
 					// Read bitstream from input file
 					ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
 						LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Unable to read from the input file");
 						break;
 					}
-					
+
 					ogg_sync_wrote(&mOggSyncState, bytesRead);
 
 					// No more data available from input file
 					if(0 == bytesRead)
 						break;
 				}
-				
+
 				// Ensure all Ogg streams are read
 				if(ogg_page_serialno(&mOggPage) != mOggStreamState.serialno)
 					ogg_stream_reset_serialno(&mOggStreamState, ogg_page_serialno(&mOggPage));
@@ -496,7 +496,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 			}
 		}
 	}
-	
+
 	mCurrentFrame += framesRead;
 
 	if(0 == framesRead && mSpeexEOSReached)

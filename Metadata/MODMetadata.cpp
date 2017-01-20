@@ -46,7 +46,7 @@ bool SFB::Audio::MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("it"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("xm"), kCFCompareCaseInsensitive))
@@ -55,7 +55,7 @@ bool SFB::Audio::MODMetadata::HandlesFilesWithExtension(CFStringRef extension)
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mod"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -63,7 +63,7 @@ bool SFB::Audio::MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/xm"), kCFCompareCaseInsensitive))
@@ -74,7 +74,7 @@ bool SFB::Audio::MODMetadata::HandlesMIMEType(CFStringRef mimeType)
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-mod"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -212,10 +212,10 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

@@ -76,7 +76,7 @@ namespace {
 
 		if(!inputSource.SeekToOffset(offset))
 			return -1;
-		
+
 		return offset;
 	}
 
@@ -100,10 +100,10 @@ bool SFB::Audio::MPEGDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp3"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -111,10 +111,10 @@ bool SFB::Audio::MPEGDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -143,10 +143,10 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -159,7 +159,7 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
@@ -171,10 +171,10 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
  	}
 
@@ -185,7 +185,7 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
@@ -195,15 +195,15 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 	// Canonical Core Audio format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved;
-	
+
 	mFormat.mSampleRate			= rate;
 	mFormat.mChannelsPerFrame	= (UInt32)channels;
 	mFormat.mBitsPerChannel		= 8 * sizeof(float);
-	
+
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8);
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-	
+
 	mFormat.mReserved			= 0;
 
 	size_t bufferSizeBytes = mpg123_outblock(decoder.get());
@@ -211,12 +211,12 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'MPEG';
-	
+
 	mSourceFormat.mSampleRate			= rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)channels;
 
 	mSourceFormat.mFramesPerPacket		= framesPerMPEGFrame;
-	
+
 	// Setup the channel layout
 	switch(channels) {
 		case 1:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);		break;
@@ -228,21 +228,21 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MP3 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MP3 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
-	
+
 	// Allocate the buffer list
 	if(!mBufferList.Allocate(mFormat, framesPerMPEGFrame)) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
-		
+
 		return false;
 	}
-	
+
 	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
 		mBufferList->mBuffers[i].mDataByteSize = 0;
 
@@ -275,9 +275,9 @@ SFB::CFString SFB::Audio::MPEGDecoder::_GetSourceFormatDescription() const
 		case 2:							layerDescription = CFSTR("Layer II");			break;
 		case 3:							layerDescription = CFSTR("Layer III");			break;
 	}
-	
+
 	CFStringRef channelDescription = nullptr;
-	switch(mi.mode) {  
+	switch(mi.mode) {
 		case MPG123_M_MONO:				channelDescription = CFSTR("Single Channel");	break;
 		case MPG123_M_DUAL:				channelDescription = CFSTR("Dual Channel");		break;
 		case MPG123_M_JOINT:			channelDescription = CFSTR("Joint Stereo");		break;
@@ -303,29 +303,29 @@ UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
 		bufferList->mBuffers[i].mDataByteSize = 0;
-	
+
 	for(;;) {
-		
+
 		UInt32	framesRemaining	= frameCount - framesRead;
 		UInt32	framesToSkip	= (UInt32)(bufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesInBuffer	= (UInt32)(mBufferList->mBuffers[0].mDataByteSize / sizeof(float));
 		UInt32	framesToCopy	= std::min(framesInBuffer, framesRemaining);
-		
+
 		// Copy data from the buffer to output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 			float *floatBuffer = (float *)bufferList->mBuffers[i].mData;
 			memcpy(floatBuffer + framesToSkip, mBufferList->mBuffers[i].mData, framesToCopy * sizeof(float));
 			bufferList->mBuffers[i].mDataByteSize += framesToCopy * sizeof(float);
-			
+
 			// Move remaining data in buffer to beginning
 			if(framesToCopy != framesInBuffer) {
 				floatBuffer = (float *)mBufferList->mBuffers[i].mData;
 				memmove(floatBuffer, floatBuffer + framesToCopy, (framesInBuffer - framesToCopy) * sizeof(float));
 			}
-			
+
 			mBufferList->mBuffers[i].mDataByteSize -= framesToCopy * sizeof(float);
 		}
-		
+
 		framesRead += framesToCopy;
 
 		// All requested frames were read
@@ -359,9 +359,9 @@ UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 
 			mBufferList->mBuffers[channel].mNumberChannels	= 1;
 			mBufferList->mBuffers[channel].mDataByteSize	= framesDecoded * sizeof(float);
-		}		
+		}
 	}
-	
+
 	mCurrentFrame += framesRead;
 
 	return framesRead;

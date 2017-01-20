@@ -20,7 +20,7 @@ bool SFB::Audio::AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::v
 		return true;
 
 	SFB::CFMutableDictionary additionalMetadata(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	
+
 	for(auto iterator : tag->itemListMap()) {
 		auto item = iterator.second;
 

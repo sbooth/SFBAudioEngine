@@ -31,6 +31,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool AddID3v1TagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::ID3v1::Tag *tag);
-		
+
 	}
 }

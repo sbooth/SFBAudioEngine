@@ -88,7 +88,7 @@ bool SFB::Audio::MODDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/it"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/xm"), kCFCompareCaseInsensitive))
@@ -142,16 +142,16 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 		duh = unique_DUH_ptr(dumb_read_s3m(df.get()), unload_duh);
 	else if(kCFCompareEqualTo == CFStringCompare(pathExtension, CFSTR("mod"), kCFCompareCaseInsensitive))
 		duh = unique_DUH_ptr(dumb_read_mod(df.get()), unload_duh);
-	
+
 	if(!duh) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -164,33 +164,33 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MOD file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a MOD file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
-	
+
 	// Generate interleaved 2 channel 44.1 16-bit output
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-	
+
 	mFormat.mSampleRate			= DUMB_SAMPLE_RATE;
 	mFormat.mChannelsPerFrame	= DUMB_CHANNELS;
 	mFormat.mBitsPerChannel		= DUMB_BIT_DEPTH;
-	
+
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-	
+
 	mFormat.mReserved			= 0;
-	
+
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'MOD ';
-	
+
 	mSourceFormat.mSampleRate			= DUMB_SAMPLE_RATE;
 	mSourceFormat.mChannelsPerFrame		= DUMB_CHANNELS;
-	
+
 	// Setup the channel layout
 	mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 

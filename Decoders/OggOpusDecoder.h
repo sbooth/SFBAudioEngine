@@ -57,6 +57,6 @@ namespace SFB {
 			// Data members
 			unique_op_ptr		mOpusFile;
 		};
-		
+
 	}
 }

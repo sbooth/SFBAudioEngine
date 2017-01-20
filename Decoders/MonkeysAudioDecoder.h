@@ -61,6 +61,6 @@ namespace SFB {
 			std::unique_ptr<APEIOInterface> mIOInterface;
 			std::unique_ptr<APE::IAPEDecompress> mDecompressor;
 		};
-		
+
 	}
 }

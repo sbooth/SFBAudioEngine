@@ -277,7 +277,7 @@ namespace SFB {
 			 * @see SetDeviceUID()
 			 */
 			bool SetDeviceID(AudioDeviceID deviceID);
-			
+
 
 			/*!
 			 * @brief Get the available data sources for the current device
@@ -309,7 +309,7 @@ namespace SFB {
 			 * @see kAudioDevicePropertyDataSource
 			 */
 			bool SetActiveDataSources(const std::vector<UInt32>& dataSources);
-			
+
 			//@}
 
 

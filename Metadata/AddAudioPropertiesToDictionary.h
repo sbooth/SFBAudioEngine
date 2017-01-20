@@ -22,6 +22,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionary, const TagLib::AudioProperties *properties);
-		
+
 	}
 }

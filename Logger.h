@@ -205,7 +205,7 @@ namespace SFB {
 		 * @param message The message to log
 		 */
 		inline void Debug(const char * _Nonnull message)		{ Log(debug, nullptr, message); }
-		
+
 		//@}
 	}
 }

@@ -26,6 +26,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Tag *tag, bool setAlbumArt = true);
-		
+
 	}
 }

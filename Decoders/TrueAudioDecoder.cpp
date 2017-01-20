@@ -22,7 +22,7 @@ namespace {
 		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::TrueAudioDecoder>();
 	}
 
-	
+
 #pragma mark Callbacks
 
 	TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
@@ -36,7 +36,7 @@ namespace {
 		SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *iocb = (SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper *)io;
 		return iocb->decoder->GetInputSource().SeekToOffset(offset);
 	}
-	
+
 }
 
 #pragma mark Static Methods
@@ -71,7 +71,7 @@ bool SFB::Audio::TrueAudioDecoder::HandlesMIMEType(CFStringRef mimeType)
 
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-tta"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -111,26 +111,26 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
-	
+
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
-	
+
 	mFormat.mSampleRate			= streamInfo.sps;
 	mFormat.mChannelsPerFrame	= streamInfo.nch;
 	mFormat.mBitsPerChannel		= streamInfo.bps;
-	
+
 	mFormat.mBytesPerPacket		= ((streamInfo.bps + 7) / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-	
+
 	mFormat.mReserved			= 0;
-	
+
 	// Support 4 to 32 bits per sample (True Audio may support more or less, but the documentation didn't say)
 	switch(mFormat.mBitsPerChannel) {
 		case 8:
@@ -156,7 +156,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), ""));
 				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Bit depth not supported"), ""));
 				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's bit depth is not supported."), ""));
-				
+
 				*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 			}
 
@@ -214,7 +214,7 @@ UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 
 	UInt32 framesRead = 0;
 	bool eos = false;
-	
+
 	try {
 		while(mFramesToSkip && !eos) {
 			if(mFramesToSkip >= frameCount) {
@@ -229,7 +229,7 @@ UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 			if(0 == framesRead)
 				eos = true;
 		}
-		
+
 		if(!eos) {
 			framesRead = (UInt32)mDecoder->process_stream((TTAuint8 *)bufferList->mBuffers[0].mData, frameCount);
 			if(0 == framesRead)

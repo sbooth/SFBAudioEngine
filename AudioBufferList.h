@@ -29,7 +29,7 @@ namespace SFB {
 			/*! @brief Create a new, empty \c BufferList */
 			BufferList();
 
-			/*! 
+			/*!
 			 * @brief Create a new \c BufferList
 			 * @param format The format of the audio the \c BufferList will hold
 			 * @param capacityFrames The desired buffer capacity in audio frames
@@ -114,7 +114,7 @@ namespace SFB {
 			//@}
 
 		private:
-			
+
 			std::unique_ptr<AudioBufferList, void (*)(AudioBufferList *)> mBufferList;
 			AudioFormat mFormat;
 			UInt32 mCapacityFrames;

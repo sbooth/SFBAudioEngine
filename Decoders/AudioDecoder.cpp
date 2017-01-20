@@ -145,7 +145,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::Decoder::CreateForInputSource(InputS
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The type of the file “%@” could not be determined."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unknown file type"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may be missing or may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(InputSource::ErrorDomain, InputSource::FileNotFoundError, description, inputURL, failureReason, recoverySuggestion);
 		}
 
@@ -295,10 +295,10 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 
 	CFStringRef		channelLayoutDescription	= nullptr;
 	UInt32			specifierSize				= sizeof(channelLayoutDescription);
-	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName, 
+	OSStatus		result						= AudioFormatGetProperty(kAudioFormatProperty_ChannelLayoutName,
 																		 sizeof(mChannelLayout.GetACL()),
 																		 mChannelLayout.GetACL(),
-																		 &specifierSize, 
+																		 &specifierSize,
 																		 &channelLayoutDescription);
 
 	if(noErr != result)

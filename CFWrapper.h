@@ -30,7 +30,7 @@ namespace SFB {
 	class CFWrapper
 	{
 	public:
-		
+
 		// ========================================
 		/*! @name Creation and Destruction */
 		//@{
@@ -96,7 +96,7 @@ namespace SFB {
 				mObject = rhs;
 				mRelease = true;
 			}
-			
+
 			return *this;
 		}
 
@@ -113,7 +113,7 @@ namespace SFB {
 				if(mObject && mRelease)
 					CFRetain(mObject);
 			}
-			
+
 			return *this;
 		}
 
@@ -195,7 +195,7 @@ namespace SFB {
 			return &mObject;
 		}
 
-		
+
 		/*! @brief Get the wrapped object */
 		inline T Object() const									{ return mObject; }
 

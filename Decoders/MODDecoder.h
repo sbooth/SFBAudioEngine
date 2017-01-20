@@ -65,6 +65,6 @@ namespace SFB {
 			SInt64								mTotalFrames;
 			SInt64								mCurrentFrame;
 		};
-		
+
 	}
 }

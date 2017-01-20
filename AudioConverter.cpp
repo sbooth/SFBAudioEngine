@@ -17,8 +17,8 @@
 // State data for conversion
 // ========================================
 class SFB::Audio::Converter::ConverterStateData
-{	
-public:	
+{
+public:
 
 	ConverterStateData() = delete;
 

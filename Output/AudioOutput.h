@@ -55,7 +55,7 @@ namespace SFB {
 			Output& operator=(const Output& rhs) = delete;
 
 			/*! @endcond */
-			
+
 			//@}
 
 			// ========================================
@@ -91,7 +91,7 @@ namespace SFB {
 			 * @return \c true on success, \c false otherwise
 			 */
 			bool SetDeviceSampleRate(Float64 sampleRate);
-			
+
 			//@}
 
 

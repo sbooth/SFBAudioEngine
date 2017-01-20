@@ -57,12 +57,12 @@ namespace SFB {
 			// Data members
 			WavpackStreamReader				mStreamReader;
 			unique_WavpackContext_ptr		mWPC;
-			
+
 			std::unique_ptr<int32_t []>		mBuffer;
-			
+
 			SInt64							mTotalFrames;
 			SInt64							mCurrentFrame;
 		};
-		
+
 	}
 }

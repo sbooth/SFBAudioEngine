@@ -33,7 +33,7 @@ namespace SFB {
 			static const CFStringRef kDriverUIDKey;					/*!< @brief The driver's UID */
 			//@}
 
-			
+
 			// ========================================
 			/*! @name Driver discovery */
 			//@{
@@ -73,7 +73,7 @@ namespace SFB {
 			bool GetDeviceIOFormat(DeviceIOFormat& deviceIOFormat) const;
 
 		protected:
-			
+
 			/*! @brief Set the format the device should use for IO transactions */
 			bool SetDeviceIOFormat(const DeviceIOFormat& deviceIOFormat);
 

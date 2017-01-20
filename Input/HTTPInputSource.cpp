@@ -99,7 +99,7 @@ bool SFB::HTTPInputSource::_Close(CFErrorRef */*error*/)
 SInt64 SFB::HTTPInputSource::_Read(void *buffer, SInt64 byteCount)
 {
 	CFStreamStatus status = CFReadStreamGetStatus(mReadStream);
-		
+
 	if(kCFStreamStatusAtEnd == status)
 		return 0;
 	else if(kCFStreamStatusNotOpen == status || kCFStreamStatusClosed == status || kCFStreamStatusError == status)
@@ -159,7 +159,7 @@ void SFB::HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEv
 				}
 			}
 			break;
-		
+
 		case kCFStreamEventErrorOccurred:
 		{
 			SFB::CFError error(CFReadStreamCopyError(stream));

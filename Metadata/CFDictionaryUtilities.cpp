@@ -10,7 +10,7 @@ void SFB::AddIntToDictionary(CFMutableDictionaryRef d, CFStringRef key, int valu
 {
 	if(nullptr == d || nullptr == key)
 		return;
-	
+
 	SFB::CFNumber num(kCFNumberIntType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);
@@ -50,7 +50,7 @@ void SFB::AddDoubleToDictionary(CFMutableDictionaryRef d, CFStringRef key, doubl
 {
 	if(nullptr == d || nullptr == key)
 		return;
-	
+
 	SFB::CFNumber num(kCFNumberDoubleType, &value);
 	if(num)
 		CFDictionarySetValue(d, key, num);

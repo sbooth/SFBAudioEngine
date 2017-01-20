@@ -65,12 +65,12 @@ int AsioLibWrapper::GetAsioLibraryList(AsioLibInfo *buffer, unsigned int bufferC
     CFURLRef              fileUrl;
     CFURLEnumeratorResult res;
     bool                  ok;
-    
+
     dirEnum = CreateDirectoryEnumerator(CFSTR("/Library/Application Support/ASIO"));
     if ( ! dirEnum ) {
         return -1;
     }
-    
+
     cnt = 0;
     if (( ! buffer ) || (bufferCapacity == 0) ) {
         // calculate the number of ASIO libraries
@@ -99,11 +99,11 @@ int AsioLibWrapper::GetAsioLibraryList(AsioLibInfo *buffer, unsigned int bufferC
             }
         } while (res != kCFURLEnumeratorEnd);
     }
-    
+
     if (dirEnum) {
         CFRelease(dirEnum);
     }
-    
+
     return (int)cnt;
 }
 //-----------------------------------------------------------------------------
@@ -111,7 +111,7 @@ bool AsioLibWrapper::LoadLib(const AsioLibInfo & libInfo)
 {
     int mode;
     char path[ASIO_LIB_ID_CAPACITY + ASIO_LIB_FOLDER_CAPACITY];
-    
+
     if (strlen(libInfo.InstallFolder) > 0) {
         strcpy(path, libInfo.InstallFolder);
         if (path[strlen(path) - 1] != '/') {
@@ -120,29 +120,29 @@ bool AsioLibWrapper::LoadLib(const AsioLibInfo & libInfo)
         strcat(path, libInfo.Id);
     }
     else {
-        strcpy(path, libInfo.Id);        
+        strcpy(path, libInfo.Id);
     }
-    
+
     if (AsioLibWrapper::IsLibLoaded()) {
         return (strcasecmp(path, _libName) == 0);
     }
- 
+
     mode = RTLD_LOCAL | RTLD_LAZY;
     _libHandle = dlopen(path, mode);
     if ( ! _libHandle ) {
         return false;
     }
-    
+
     strcpy(_libName, path);
-    
+
     // CreateInstance
     _pCreateInstance = (PtrToCreateInstance) dlsym(_libHandle, "CreateInstance");
     if ( ! _pCreateInstance ) {
         AsioLibWrapper::UnloadLib();
         return false;
     }
-    
-        
+
+
     return true;
 }
 
@@ -176,7 +176,7 @@ CFURLEnumeratorRef CreateDirectoryEnumerator(CFStringRef dirPath)
 {
     CFURLRef           dirUrl  = NULL;
     CFURLEnumeratorRef dirEnum = NULL;
-    
+
     dirUrl = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, dirPath, kCFURLPOSIXPathStyle, true);
     if (dirUrl ) {
         dirEnum = CFURLEnumeratorCreateForDirectoryURL(kCFAllocatorDefault, dirUrl, kCFURLEnumeratorDefaultBehavior, NULL);
@@ -192,7 +192,7 @@ bool HasExtension(CFURLRef fileUrl, CFStringRef ext)
 {
     CFStringRef fileExt;
     bool        ok;
-    
+
     fileExt = CFURLCopyPathExtension(fileUrl);
     if (fileExt) {
         ok = (kCFCompareEqualTo == CFStringCompare(fileExt, ext, kCFCompareCaseInsensitive));
@@ -212,19 +212,19 @@ bool LoadAsioLibInfo(CFURLRef asioLibUrl, AsioLibInfo & buffer)
     CFPropertyListRef   propertyList;
     Boolean             ok;
     const void        * val;
-    
+
     buffer.Number = 0;
 	memset(buffer.Id,            '\0', ASIO_LIB_ID_CAPACITY);
 	memset(buffer.DisplayName,   '\0', ASIO_LIB_DISPLAYNAME_CAPACITY);
     memset(buffer.Company,       '\0', ASIO_LIB_COMPANY_CAPACITY);
 	memset(buffer.InstallFolder, '\0', ASIO_LIB_FOLDER_CAPACITY);
 	memset(buffer.Architectures, '\0', ASIO_LIB_ARCHITECTURES_CAPACITY);
-    
+
     status = CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, asioLibUrl, &resourceData, NULL, NULL, &errorCode);
     if ( ! status ) {
         return false;
     }
-    
+
     errorRef     = NULL;
     propertyList = CFPropertyListCreateWithData(kCFAllocatorDefault, resourceData, kCFPropertyListImmutable, NULL, &errorRef);
 
@@ -272,7 +272,7 @@ bool LoadAsioLibInfo(CFURLRef asioLibUrl, AsioLibInfo & buffer)
             }
         }
     }
-    
+
     // cleanup
     CFRelease(resourceData);
     if (errorRef) {
@@ -281,7 +281,7 @@ bool LoadAsioLibInfo(CFURLRef asioLibUrl, AsioLibInfo & buffer)
     if (propertyList) {
         CFRelease(propertyList);
     }
-    
+
     // Id and DisplayName are mandatory, other fields are optional
     return (strlen(buffer.Id) > 0) && (strlen(buffer.DisplayName) > 0);
 }
@@ -291,7 +291,7 @@ bool AsioLibInfo::ToCString(char * dest, unsigned int destCapacity, char delimit
 {
 	if ( ! dest )
 		return false;
-	if (destCapacity < strlen(Id) + 1 + strlen(DisplayName) + 1 + strlen(Company) + 1 + 
+	if (destCapacity < strlen(Id) + 1 + strlen(DisplayName) + 1 + strlen(Company) + 1 +
                        strlen(InstallFolder) + 1 + strlen(Architectures) + 1)
 		return false;
 	if (delimiter == '\0')
@@ -299,13 +299,13 @@ bool AsioLibInfo::ToCString(char * dest, unsigned int destCapacity, char delimit
 
 	strcpy  (dest, Id);
 	strncat (dest, &delimiter, 1);
-    
+
     char numChars[12];
     memset(numChars, 0, sizeof(numChars));
     sprintf(numChars, "%d", Number);
     strcat(dest, numChars);
     strncat (dest, &delimiter, 1);
-    
+
 	strcat  (dest, DisplayName);
 	strncat (dest, &delimiter, 1);
 	strcat  (dest, Company);
@@ -353,7 +353,7 @@ void AsioLibInfo::FromCString(AsioLibInfo & dest, const char * source, char deli
     if (strlen(numChars)) {
         sscanf(numChars, "%d", &dest.Number);
     }
-    
+
 	// DisplayName
 	if ( ! p2 )
 		return;
@@ -365,7 +365,7 @@ void AsioLibInfo::FromCString(AsioLibInfo & dest, const char * source, char deli
 	else {
 		strcpy(dest.DisplayName, p1);
 	}
-        
+
     // Company
 	if ( ! p2 )
 		return;

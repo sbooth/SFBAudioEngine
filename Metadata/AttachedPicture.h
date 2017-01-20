@@ -95,7 +95,7 @@ namespace SFB {
 			/*! @name External Representations */
 			//@{
 
-			/*! 
+			/*!
 			 * @brief Copy the values contained in this object to a dictionary
 			 * @return A dictionary containing this object's artwork information
 			 */
@@ -209,7 +209,7 @@ namespace SFB {
 			 * @return The value associated with \c key
 			 */
 			CFTypeRef GetValue(CFStringRef key) const;
-			
+
 			/*!
 			 * @brief Set a value in the metadata dictionary
 			 * @param key The key to associate with \c value
@@ -219,6 +219,6 @@ namespace SFB {
 
 			//@}
 		};
-		
+
 	}
 }

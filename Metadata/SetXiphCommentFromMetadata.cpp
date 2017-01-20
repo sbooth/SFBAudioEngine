@@ -76,7 +76,7 @@ namespace {
 		}
 
 		bool result = SetXiphComment(tag, key, numberString);
-		
+
 		return result;
 	}
 
@@ -119,25 +119,25 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
 	if(nullptr != additionalMetadata) {
 		CFIndex count = CFDictionaryGetCount(additionalMetadata);
-		
+
 		const void * keys [count];
 		const void * values [count];
-		
+
 		CFDictionaryGetKeysAndValues(additionalMetadata, (const void **)keys, (const void **)values);
-		
+
 		for(CFIndex i = 0; i < count; ++i) {
 			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength((CFStringRef)keys[i]), kCFStringEncodingASCII);
 			char key [keySize + 1];
-			
+
 			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
 				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
 				continue;
 			}
-			
+
 			SetXiphComment(tag, key, (CFStringRef)values[i]);
 		}
 	}
-	
+
 	// ReplayGain info
 	SetXiphCommentDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata.GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
 	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata.GetReplayGainTrackGain(), CFSTR("%+2.2f dB"));
@@ -148,18 +148,18 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 	// Album art
 	if(setAlbumArt) {
 		tag->removeFields("METADATA_BLOCK_PICTURE");
-		
+
 		for(auto attachedPicture : metadata.GetAttachedPictures()) {
 			SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
 			if(!imageSource)
 				return false;
-			
+
 			TagLib::FLAC::Picture picture;
 			picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
 			picture.setType((TagLib::FLAC::Picture::Type)attachedPicture->GetType());
 			if(attachedPicture->GetDescription())
 				picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
-			
+
 			// Convert the image's UTI into a MIME type
 			SFB::CFString mimeType(UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType));
 			if(mimeType)
@@ -171,19 +171,19 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
 				CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
-				
+
 				int height, width, depth;
-				
+
 				// Ignore numeric conversion errors
 				CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
 				CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
 				CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
-				
+
 				picture.setHeight(height);
 				picture.setWidth(width);
 				picture.setColorDepth(depth);
 			}
-			
+
 			TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
 			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
 		}

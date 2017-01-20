@@ -70,8 +70,8 @@ namespace SFB {
 			FLAC__StreamDecoderWriteStatus Write(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[]);
 			void Metadata(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata);
 			void Error(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status);
-			
+
 		};
-		
+
 	}
 }

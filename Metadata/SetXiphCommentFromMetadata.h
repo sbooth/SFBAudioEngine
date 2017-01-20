@@ -25,6 +25,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
-		
+
 	}
 }

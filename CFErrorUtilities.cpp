@@ -11,20 +11,20 @@ CFErrorRef SFB::CreateError(CFStringRef domain, CFIndex code, CFStringRef descri
 {
 	if(nullptr == domain)
 		return nullptr;
-	
+
 	SFB::CFMutableDictionary errorDictionary(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	if(!errorDictionary)
 		return nullptr;
-	
+
 	if(description)
 		CFDictionarySetValue(errorDictionary, kCFErrorLocalizedDescriptionKey, description);
-	
+
 	if(failureReason)
 		CFDictionarySetValue(errorDictionary, kCFErrorLocalizedFailureReasonKey, failureReason);
-	
+
 	if(recoverySuggestion)
 		CFDictionarySetValue(errorDictionary, kCFErrorLocalizedRecoverySuggestionKey, recoverySuggestion);
-	
+
 	return CFErrorCreate(kCFAllocatorDefault, domain, code, errorDictionary);
 }
 
@@ -32,7 +32,7 @@ CFErrorRef SFB::CreateErrorForURL(CFStringRef domain, CFIndex code, CFStringRef 
 {
 	if(nullptr == domain)
 		return nullptr;
-	
+
 	SFB::CFMutableDictionary errorDictionary(0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	if(!errorDictionary)
 		return nullptr;
