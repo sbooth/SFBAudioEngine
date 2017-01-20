@@ -48,12 +48,12 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	frameList = tag->frameListMap()["TCOM"];
 	if(!frameList.isEmpty())
 		TagLib::AddStringToCFDictionary(dictionary, Metadata::kComposerKey, frameList.front()->toString());
-	
+
 	// Extract album artist
 	frameList = tag->frameListMap()["TPE2"];
 	if(!frameList.isEmpty())
 		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumArtistKey, frameList.front()->toString());
-	
+
 	// BPM
 	frameList = tag->frameListMap()["TBPM"];
 	if(!frameList.isEmpty()) {
@@ -92,7 +92,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
 		}
 	}
-	
+
 	// Extract disc number and total discs
 	frameList = tag->frameListMap()["TPOS"];
 	if(!frameList.isEmpty()) {
@@ -168,13 +168,13 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 	// ReplayGain
 	bool foundReplayGain = false;
-	
+
 	// Preference is TXXX frames, RVA2 frame, then LAME header
 	auto trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_TRACK_GAIN");
 	auto trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_TRACK_PEAK");
 	auto albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_ALBUM_GAIN");
 	auto albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "REPLAYGAIN_ALBUM_PEAK");
-	
+
 	if(!trackGainFrame)
 		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
@@ -183,10 +183,10 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		AddDoubleToDictionary(dictionary, Metadata::kTrackGainKey, num);
 		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
-		
+
 		foundReplayGain = true;
 	}
-	
+
 	if(!trackPeakFrame)
 		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
@@ -195,7 +195,7 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		AddDoubleToDictionary(dictionary, Metadata::kTrackPeakKey, num);
 	}
-	
+
 	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
@@ -204,10 +204,10 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		AddDoubleToDictionary(dictionary, Metadata::kAlbumGainKey, num);
 		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
-		
+
 		foundReplayGain = true;
 	}
-	
+
 	if(!albumPeakFrame)
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
@@ -216,24 +216,24 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 		AddDoubleToDictionary(dictionary, Metadata::kAlbumPeakKey, num);
 	}
-	
+
 	// If nothing found check for RVA2 frame
 	if(!foundReplayGain) {
 		frameList = tag->frameListMap()["RVA2"];
-		
+
 		for(auto frameIterator : tag->frameListMap()["RVA2"]) {
 			TagLib::ID3v2::RelativeVolumeFrame *relativeVolume = dynamic_cast<TagLib::ID3v2::RelativeVolumeFrame *>(frameIterator);
 			if(!relativeVolume)
 				continue;
-			
+
 			// Attempt to use the master volume if present
 			auto channels		= relativeVolume->channels();
 			auto channelType	= TagLib::ID3v2::RelativeVolumeFrame::MasterVolume;
-			
+
 			// Fall back on whatever else exists in the frame
 			if(!channels.contains(TagLib::ID3v2::RelativeVolumeFrame::MasterVolume))
 				channelType = channels.front();
-			
+
 			float volumeAdjustment = relativeVolume->volumeAdjustment(channelType);
 
 			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
@@ -249,19 +249,19 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 				if((int)volumeAdjustment)
 					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
 			}
-		}			
+		}
 	}
-	
+
 	// Extract album art if present
 	for(auto it : tag->frameListMap()["APIC"]) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
 		if(frame) {
 			SFB::CFData data((const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
-			
+
 			SFB::CFString description;
 			if(!frame->description().isEmpty())
 				description = CFString(frame->description().toCString(true), kCFStringEncodingUTF8);
-			
+
 			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));
 		}
 	}

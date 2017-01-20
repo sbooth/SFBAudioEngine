@@ -58,12 +58,12 @@ namespace SFB {
 			// Data members
 			mpc_reader			mReader;
 			mpc_demux			*mDemux;
-			
+
 			BufferList			mBufferList;
-			
+
 			SInt64				mTotalFrames;
 			SInt64				mCurrentFrame;
 		};
-		
+
 	}
 }

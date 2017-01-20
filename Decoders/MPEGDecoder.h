@@ -61,6 +61,6 @@ namespace SFB {
 			BufferList			mBufferList;
 			SInt64				mCurrentFrame;
 		};
-		
+
 	}
 }

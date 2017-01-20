@@ -32,11 +32,11 @@ namespace SFB {
 			explicit AIFFMetadata(CFURLRef url);
 
 		private:
-			
+
 			// Functionality
 			virtual bool _ReadMetadata(CFErrorRef *error);
 			virtual bool _WriteMetadata(CFErrorRef *error);
 		};
-		
+
 	}
 }

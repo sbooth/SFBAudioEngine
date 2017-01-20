@@ -520,6 +520,6 @@ namespace SFB {
 			FormatMismatchBlock						mFormatMismatchBlock;
 			ErrorBlock								mErrorBlock;
 		};
-		
+
 	}
 }

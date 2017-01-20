@@ -76,7 +76,7 @@ namespace {
 		}
 
 		bool result = SetAPETag(tag, key, numberString);
-		
+
 		return result;
 	}
 
@@ -118,25 +118,25 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
 	if(nullptr != additionalMetadata) {
 		CFIndex count = CFDictionaryGetCount(additionalMetadata);
-		
+
 		const void * keys [count];
 		const void * values [count];
-		
+
 		CFDictionaryGetKeysAndValues(additionalMetadata, (const void **)keys, (const void **)values);
-		
+
 		for(CFIndex i = 0; i < count; ++i) {
 			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength((CFStringRef)keys[i]), kCFStringEncodingASCII);
 			char key [keySize + 1];
-			
+
 			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
 				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
 				continue;
 			}
-			
+
 			SetAPETag(tag, key, (CFStringRef)values[i]);
 		}
 	}
-	
+
 	// ReplayGain info
 	SetAPETagDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata.GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
 	SetAPETagDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata.GetReplayGainTrackGain(), CFSTR("%+2.2f dB"));
@@ -156,7 +156,7 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 			// APE can handle front and back covers natively
 			if(AttachedPicture::Type::FrontCover == attachedPicture->GetType() || AttachedPicture::Type::BackCover == attachedPicture->GetType()) {
 				TagLib::ByteVector data;
-				
+
 				if(attachedPicture->GetDescription())
 					data.append(TagLib::StringFromCFString(attachedPicture->GetDescription()).data(TagLib::String::UTF8));
 				data.append('\0');
@@ -190,14 +190,14 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 					CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
 					CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
 					CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
-					
+
 					int height, width, depth;
-					
+
 					// Ignore numeric conversion errors
 					CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
 					CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
 					CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
-					
+
 					picture.setHeight(height);
 					picture.setWidth(width);
 					picture.setColorDepth(depth);

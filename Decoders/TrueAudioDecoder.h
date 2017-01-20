@@ -57,7 +57,7 @@ namespace SFB {
 			struct TTA_io_callback_wrapper;
 
 		private:
-			
+
 			using unique_tta_ptr = std::unique_ptr<tta::tta_decoder>;
 			using unique_callback_wrapper_ptr = std::unique_ptr<TTA_io_callback_wrapper>;
 
@@ -68,6 +68,6 @@ namespace SFB {
 			SInt64								mTotalFrames;
 			UInt32								mFramesToSkip;
 		};
-		
+
 	}
 }

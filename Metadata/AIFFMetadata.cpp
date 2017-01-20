@@ -44,7 +44,7 @@ bool SFB::Audio::AIFFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("aiff"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("aif"), kCFCompareCaseInsensitive))
@@ -57,10 +57,10 @@ bool SFB::Audio::AIFFMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/aiff"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -82,7 +82,7 @@ bool SFB::Audio::AIFFMetadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -108,7 +108,7 @@ bool SFB::Audio::AIFFMetadata::_ReadMetadata(CFErrorRef *error)
 
 		return false;
 	}
-	
+
 	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("AIFF"));
 
 	if(file.audioProperties()) {
@@ -152,7 +152,7 @@ bool SFB::Audio::AIFFMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an AIFF file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -166,10 +166,10 @@ bool SFB::Audio::AIFFMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid AIFF file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

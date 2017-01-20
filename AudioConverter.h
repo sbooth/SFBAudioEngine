@@ -141,6 +141,6 @@ namespace SFB {
 			std::unique_ptr<ConverterStateData>	mConverterState;	/*!< Internal conversion state */
 			bool								mIsOpen;			/*!< Flag indicating if the mConverter is open */
 		};
-		
+
 	}
 }

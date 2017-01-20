@@ -64,6 +64,6 @@ namespace SFB {
 			uint32_t	mBlockByteSizePerChannel;
 			BufferList	mBufferList;
 		};
-		
+
 	}
 }

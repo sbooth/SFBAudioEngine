@@ -48,7 +48,7 @@ bool SFB::Audio::TrueAudioMetadata::HandlesFilesWithExtension(CFStringRef extens
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("tta"), kCFCompareCaseInsensitive))
 		return true;
 
@@ -59,10 +59,10 @@ bool SFB::Audio::TrueAudioMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/x-tta"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -84,7 +84,7 @@ bool SFB::Audio::TrueAudioMetadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -104,13 +104,13 @@ bool SFB::Audio::TrueAudioMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
-	
+
 	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("True Audio"));
 
 	if(file.audioProperties()) {
@@ -158,7 +158,7 @@ bool SFB::Audio::TrueAudioMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a True Audio file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -177,7 +177,7 @@ bool SFB::Audio::TrueAudioMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid True Audio file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 

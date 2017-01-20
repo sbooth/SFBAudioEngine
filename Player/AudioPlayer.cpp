@@ -66,7 +66,7 @@ namespace {
 		eAudioPlayerFlagStopDecoding			= 1u << 10,
 		eAudioPlayerFlagStopCollecting			= 1u << 11
 	};
-	
+
 }
 
 

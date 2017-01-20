@@ -45,7 +45,7 @@ bool SFB::Audio::OggFLACMetadata::HandlesFilesWithExtension(CFStringRef extensio
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ogg"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("oga"), kCFCompareCaseInsensitive))
@@ -58,10 +58,10 @@ bool SFB::Audio::OggFLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/ogg"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -83,7 +83,7 @@ bool SFB::Audio::OggFLACMetadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -103,10 +103,10 @@ bool SFB::Audio::OggFLACMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -115,7 +115,7 @@ bool SFB::Audio::OggFLACMetadata::_ReadMetadata(CFErrorRef *error)
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
-		
+
 		if(properties->sampleWidth())
 			AddIntToDictionary(mMetadata, kBitsPerChannelKey, properties->sampleWidth());
 	}
@@ -151,7 +151,7 @@ bool SFB::Audio::OggFLACMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -165,10 +165,10 @@ bool SFB::Audio::OggFLACMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

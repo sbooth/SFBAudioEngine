@@ -47,7 +47,7 @@ bool SFB::Audio::WavPack::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("wv"), kCFCompareCaseInsensitive))
 		return true;
 
@@ -58,10 +58,10 @@ bool SFB::Audio::WavPack::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/wavpack"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -103,25 +103,25 @@ bool SFB::Audio::WavPack::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
-	
+
 	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("WavPack"));
-	
+
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		AddAudioPropertiesToDictionary(mMetadata, properties);
-		
+
 		if(properties->bitsPerSample())
 			AddIntToDictionary(mMetadata, kBitsPerChannelKey, properties->bitsPerSample());
 		if(properties->sampleFrames())
 			AddIntToDictionary(mMetadata, kTotalFramesKey, (int)properties->sampleFrames());
 	}
-	
+
 	if(file.ID3v1Tag())
 		AddID3v1TagToDictionary(mMetadata, file.ID3v1Tag());
 
@@ -156,15 +156,15 @@ bool SFB::Audio::WavPack::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a WavPack file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
-	
+
 	// ID3v1 tags are only written if present, but an APE tag is always written
-	
+
 	if(file.ID3v1Tag())
 		SetID3v1TagFromMetadata(*this, file.ID3v1Tag());
 
@@ -175,10 +175,10 @@ bool SFB::Audio::WavPack::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

@@ -70,7 +70,7 @@ namespace {
 		auto decoder = static_cast<SFB::Audio::LibsndfileDecoder *>(user_data);
 		return decoder->GetInputSource().GetOffset();
 	}
-	
+
 }
 
 #pragma mark Static Methods
@@ -83,7 +83,7 @@ CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedFileExtensions()
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, majorCount, &kCFTypeArrayCallBacks);
 
 	// Loop through each major mode
-	for(int i = 0; i < majorCount; ++i) {	
+	for(int i = 0; i < majorCount; ++i) {
 		SF_FORMAT_INFO formatInfo;
 		formatInfo.format = i;
 		if(0 == sf_command(nullptr, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
@@ -111,14 +111,14 @@ bool SFB::Audio::LibsndfileDecoder::HandlesFilesWithExtension(CFStringRef extens
 	SFB::CFArray supportedExtensions(CreateSupportedFileExtensions());
 	if(!supportedExtensions)
 		return false;
-	
+
 	CFIndex numberOfSupportedExtensions = CFArrayGetCount(supportedExtensions);
 	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedExtensions; ++currentIndex) {
 		CFStringRef currentExtension = (CFStringRef)CFArrayGetValueAtIndex(supportedExtensions, currentIndex);
 		if(kCFCompareEqualTo == CFStringCompare(extension, currentExtension, kCFCompareCaseInsensitive))
 			return true;
 	}
-		
+
 	return false;
 }
 
@@ -162,7 +162,7 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
@@ -191,9 +191,9 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 	}
 	else if(SF_FORMAT_PCM_S8 == subFormat) {
 		mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh;
-		
+
 		mFormat.mBitsPerChannel		= 8;
-		
+
 		mFormat.mBytesPerPacket		= sizeof(short) * mFormat.mChannelsPerFrame;
 		mFormat.mFramesPerPacket	= 1;
 		mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
@@ -276,7 +276,7 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'SNDF';
-	
+
 	mSourceFormat.mSampleRate			= mFileInfo.samplerate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)mFileInfo.channels;
 
@@ -289,12 +289,12 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 			mSourceFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger;
 			mSourceFormat.mBitsPerChannel = 8;
 			break;
-		
+
 		case SF_FORMAT_PCM_16:
 			mSourceFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger;
 			mSourceFormat.mBitsPerChannel = 16;
 			break;
-		
+
 		case SF_FORMAT_PCM_24:
 			mSourceFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger;
 			mSourceFormat.mBitsPerChannel = 24;
@@ -304,7 +304,7 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 			mSourceFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger;
 			mSourceFormat.mBitsPerChannel = 32;
 			break;
-		
+
 		case SF_FORMAT_FLOAT:
 			mSourceFormat.mFormatFlags = kAudioFormatFlagIsFloat;
 			mSourceFormat.mBitsPerChannel = 32;
@@ -337,7 +337,7 @@ SFB::CFString SFB::Audio::LibsndfileDecoder::_GetSourceFormatDescription() const
 		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
 		return CFString();
 	}
-	
+
 	return CFString(nullptr,
 					CFSTR("%s, %u channels, %u Hz"),
 					formatInfo.name,

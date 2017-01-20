@@ -57,7 +57,7 @@
 #define ASIO_LIB_ARCHITECTURES_CAPACITY   32
 
 //
-// AsioLibInfo struct 
+// AsioLibInfo struct
 //
 typedef struct AsioLibInfo
 {
@@ -85,7 +85,7 @@ class AsioLibWrapper
 public:
 	AsioLibWrapper(ASIODriverInfo & info);
 	~AsioLibWrapper();
-	
+
 	// ASIO discovery
 	static int GetAsioLibraryList(AsioLibInfo * buffer, unsigned int bufferCapacity);
 
@@ -93,7 +93,7 @@ public:
 	static bool LoadLib     (const AsioLibInfo & libInfo);
 	static void UnloadLib   ();
 	static bool IsLibLoaded ();
-    
+
     static int CreateInstance(int driverNumber, AsioDriverType ** driver);
 
 };

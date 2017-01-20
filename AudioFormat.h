@@ -43,7 +43,7 @@ namespace SFB {
 
 			//@}
 
-			
+
 			// ========================================
 			/*! @name Format information */
 			//@{
@@ -71,6 +71,6 @@ namespace SFB {
 
 			//@}
 		};
-		
+
 	}
 }

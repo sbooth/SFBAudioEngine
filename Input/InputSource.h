@@ -36,7 +36,7 @@ namespace SFB {
 			MemoryMapFiles			= 1 << 0,	/*!< Files should be mapped in memory using \c mmap() */
 			LoadFilesInMemory		= 1 << 1	/*!< Files should be fully loaded in memory */
 		};
-		
+
 
 		// ========================================
 		/*! @name Factory Methods */
@@ -243,7 +243,7 @@ namespace SFB {
 
 		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c nullptr */
 		InputSource();
-		
+
 		/*! @brief Create a new \c InputSource and initialize \c InputSource::mURL to \c url */
 		explicit InputSource(CFURLRef url);
 

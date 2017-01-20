@@ -34,7 +34,7 @@ namespace SFB {
 		{
 
 		public:
-			
+
 			/*! @brief The \c CFErrorRef error domain used by \c Decoder and subclasses */
 			static const CFStringRef ErrorDomain;
 
@@ -178,7 +178,7 @@ namespace SFB {
 			 * @param representedObject The represented object to be disposed
 			 */
 			using RepresentedObjectCleanupBlock = void (^)(void *representedObject);
-			
+
 			/*! @brief Get the represented object associated with this decoder */
 			inline RepresentedObjectCleanupBlock GetRepresentedObjectCleanupBlock() const { return mRepresentedObjectCleanupBlock; }
 
@@ -335,7 +335,7 @@ namespace SFB {
 			// Data members
 			void							*mRepresentedObject;
 			RepresentedObjectCleanupBlock	mRepresentedObjectCleanupBlock;
-			
+
 			bool							mIsOpen;
 
 			// ========================================
@@ -367,9 +367,9 @@ namespace SFB {
 			 * @param priority The priority of the subclass
 			 */
 			template <typename T> static void RegisterSubclass(int priority = 0);
-			
+
 		};
-		
+
 		// ========================================
 		// Template implementation
 		template <typename T> void Decoder::RegisterSubclass(int priority)
@@ -377,22 +377,22 @@ namespace SFB {
 			SubclassInfo subclassInfo = {
 				.mCreateSupportedFileExtensions = T::CreateSupportedFileExtensions,
 				.mCreateSupportedMIMETypes = T::CreateSupportedMIMETypes,
-				
+
 				.mHandlesFilesWithExtension = T::HandlesFilesWithExtension,
 				.mHandlesMIMEType = T::HandlesMIMEType,
-				
+
 				.mCreateDecoder = T::CreateDecoder,
-				
+
 				.mPriority = priority
 			};
-			
+
 			sRegisteredSubclasses.push_back(subclassInfo);
-			
+
 			// Sort subclasses by priority
 			std::sort(sRegisteredSubclasses.begin(), sRegisteredSubclasses.end(), [](const SubclassInfo& a, const SubclassInfo& b) {
 				return a.mPriority > b.mPriority;
 			});
 		}
-		
+
 	}
 }

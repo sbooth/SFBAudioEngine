@@ -214,7 +214,7 @@ namespace {
 		result = (float) (PINK_REF - i / STEPS_per_dB);
 		return true;
 	}
-	
+
 }
 
 // This class exists to hide the internal state from the world
@@ -296,7 +296,7 @@ bool SFB::Audio::ReplayGainAnalyzer::SampleRateIsSupported(int32_t sampleRate)
 		case  8000:
 			return true;
 
-		default:    
+		default:
 			return false;
 	}
 }
@@ -378,7 +378,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	auto decoder = Decoder::CreateForURL(url, error);
 	if(!decoder || !decoder->Open(error))
 		return false;
-	
+
 	AudioStreamBasicDescription inputFormat = decoder->GetFormat();
 
 	// Higher sampling rates aren't natively supported but are handled via resampling
@@ -422,7 +422,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 		.mBytesPerFrame			= 4,
 		.mFramesPerPacket		= 1
 	};
-	
+
 	if(!SetSampleRate((int32_t)outputFormat.mSampleRate)) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not contain audio at a supported sample rate."), ""));
@@ -439,7 +439,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeURL(CFURLRef url, CFErrorRef *error)
 	Converter converter(std::move(decoder), outputFormat);
 	if(!converter.Open(error))
 		return false;
-	
+
 	const UInt32 bufferSizeFrames = 512;
 	BufferList outputBuffer(outputFormat, bufferSizeFrames);
 
@@ -515,7 +515,7 @@ bool SFB::Audio::ReplayGainAnalyzer::GetAlbumPeak(float& albumPeak)
 bool SFB::Audio::ReplayGainAnalyzer::SetSampleRate(int32_t sampleRate)
 {
 	priv->Zero();
-	
+
 	switch(sampleRate) {
 		case 48000: priv->freqindex = 0; break;
 		case 44100: priv->freqindex = 1; break;
@@ -526,18 +526,18 @@ bool SFB::Audio::ReplayGainAnalyzer::SetSampleRate(int32_t sampleRate)
 		case 12000: priv->freqindex = 6; break;
 		case 11025: priv->freqindex = 7; break;
 		case  8000: priv->freqindex = 8; break;
-		default:    
+		default:
 			return false;
 	}
-	
+
 	priv->sampleWindow		= (unsigned int) ceil(sampleRate * RMS_WINDOW_TIME);
-	
+
 	priv->lsum				= 0.;
 	priv->rsum				= 0.;
 	priv->totsamp			= 0;
-	
+
 	memset(priv->A, 0, sizeof(priv->A));
-	
+
 	return true;
 }
 
@@ -563,7 +563,7 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, c
 		memcpy(priv->linprebuf + MAX_ORDER, left_samples,  MAX_ORDER   * sizeof(float));
 		memcpy(priv->rinprebuf + MAX_ORDER, right_samples, MAX_ORDER   * sizeof(float));
 	}
-	
+
 	while(batchsamples > 0) {
 		long cursamples = std::min((long)priv->sampleWindow - (long)priv->totsamp, batchsamples);
 		if(cursamplepos < MAX_ORDER) {
@@ -576,13 +576,13 @@ bool SFB::Audio::ReplayGainAnalyzer::AnalyzeSamples(const float *left_samples, c
 			curleft  = left_samples  + cursamplepos;
 			curright = right_samples + cursamplepos;
 		}
-		
+
 		filter(curleft , priv->lstep + priv->totsamp, (size_t)cursamples, AYule[priv->freqindex], BYule[priv->freqindex], YULE_ORDER);
 		filter(curright, priv->rstep + priv->totsamp, (size_t)cursamples, AYule[priv->freqindex], BYule[priv->freqindex], YULE_ORDER);
-		
+
 		filter(priv->lstep + priv->totsamp, priv->lout + priv->totsamp, (size_t)cursamples, AButter[priv->freqindex], BButter[priv->freqindex], BUTTER_ORDER);
 		filter(priv->rstep + priv->totsamp, priv->rout + priv->totsamp, (size_t)cursamples, AButter[priv->freqindex], BButter[priv->freqindex], BUTTER_ORDER);
-		
+
 		/* Get the squared values */
 		float sum;
 		vDSP_svesq(priv->lout + priv->totsamp, 1, &sum, (vDSP_Length)cursamples);

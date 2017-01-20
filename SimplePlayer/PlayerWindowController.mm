@@ -177,18 +177,18 @@ enum ePlayerFlags : unsigned int {
 - (void) updateWindowUI
 {
 	NSURL *url = (__bridge NSURL *)_player->GetPlayingURL();
-	
+
 	// Nothing happening, reset the window
 	if(nullptr == url) {
 		[[self window] setRepresentedURL:nil];
 		[[self window] setTitle:@""];
-		
+
 		[self.slider setEnabled:NO];
 		[self.playButton setState:NSOffState];
 		[self.playButton setEnabled:NO];
 		[self.backwardButton setEnabled:NO];
 		[self.forwardButton setEnabled:NO];
-		
+
 		[self.elapsed setHidden:YES];
 		[self.remaining setHidden:YES];
 
@@ -198,21 +198,21 @@ enum ePlayerFlags : unsigned int {
 
 		return;
 	}
-	
+
 	bool seekable = _player->SupportsSeeking();
-	
+
 	// Update the window's title and represented file
 	[[self window] setRepresentedURL:url];
 	[[self window] setTitle:[[NSFileManager defaultManager] displayNameAtPath:[url path]]];
-	
+
 	[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
-	
+
 	// Update the UI
 	[self.slider setEnabled:seekable];
 	[self.playButton setEnabled:YES];
 	[self.backwardButton setEnabled:seekable];
 	[self.forwardButton setEnabled:seekable];
-	
+
 	// Show the times
 	[self.elapsed setHidden:NO];
 

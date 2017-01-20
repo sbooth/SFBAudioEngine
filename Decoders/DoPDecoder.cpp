@@ -73,7 +73,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

@@ -140,12 +140,12 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 		// Verify the file exists
 		SInt32 errorCode = noErr;
 		SFB::CFBoolean fileExists((CFBooleanRef)CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
-		
+
 		if(fileExists) {
 			if(CFBooleanGetValue(fileExists)) {
 				SFB::CFString pathExtension(CFURLCopyPathExtension(url));
 				if(pathExtension) {
-					
+
 					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
 
 					for(auto subclassInfo : sRegisteredSubclasses) {
@@ -159,18 +159,18 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 			}
 			else {
 				LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "The requested URL doesn't exist");
-				
+
 				if(error) {
 					SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""));
 					SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File not found"), ""));
 					SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
-					
+
 					*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, url, failureReason, recoverySuggestion);
 				}
 			}
 		}
 		else
-			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "CFURLCreatePropertyFromResource failed: " << errorCode);		
+			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
 	}
 
 	return nullptr;
@@ -553,7 +553,7 @@ void SFB::Audio::Metadata::SetReleaseDate(CFStringRef releaseDate)
 CFBooleanRef SFB::Audio::Metadata::GetCompilation() const
 {
 	CFTypeRef value = GetValue(kCompilationKey);
-	
+
 	if(nullptr == value)
 		return nullptr;
 
@@ -753,7 +753,7 @@ void SFB::Audio::Metadata::SetGrouping(CFStringRef grouping)
 CFDictionaryRef SFB::Audio::Metadata::GetAdditionalMetadata() const
 {
 	CFTypeRef value = GetValue(kAdditionalMetadataKey);
-	
+
 	if(nullptr == value)
 		return nullptr;
 
@@ -905,10 +905,10 @@ void SFB::Audio::Metadata::RemoveAllAttachedPictures()
 CFStringRef SFB::Audio::Metadata::GetStringValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
-	
+
 	if(nullptr == value)
 		return nullptr;
-	
+
 	if(CFStringGetTypeID() != CFGetTypeID(value))
 		return nullptr;
 	else
@@ -918,7 +918,7 @@ CFStringRef SFB::Audio::Metadata::GetStringValue(CFStringRef key) const
 CFNumberRef SFB::Audio::Metadata::GetNumberValue(CFStringRef key) const
 {
 	CFTypeRef value = GetValue(key);
-	
+
 	if(nullptr == value)
 		return nullptr;
 
@@ -934,7 +934,7 @@ CFTypeRef SFB::Audio::Metadata::GetValue(CFStringRef key) const
 {
 	if(nullptr == key)
 		return nullptr;
-	
+
 	if(CFDictionaryContainsKey(mChangedMetadata, key)) {
 		CFTypeRef value = CFDictionaryGetValue(mChangedMetadata, key);
 		return (kCFNull == value ? nullptr : value);
@@ -982,22 +982,22 @@ void SFB::Audio::Metadata::ClearAllMetadata()
 void SFB::Audio::Metadata::MergeChangedMetadataIntoMetadata()
 {
 	CFIndex count = CFDictionaryGetCount(mChangedMetadata);
-	
+
 	CFTypeRef *keys = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
 	CFTypeRef *values = (CFTypeRef *)malloc(sizeof(CFTypeRef) * (size_t)count);
-	
+
 	CFDictionaryGetKeysAndValues(mChangedMetadata, keys, values);
-	
+
 	for(CFIndex i = 0; i < count; ++i) {
 		if(kCFNull == values[i])
 			CFDictionaryRemoveValue(mMetadata, keys[i]);
 		else
 			CFDictionarySetValue(mMetadata, keys[i], values[i]);
 	}
-	
+
 	free(keys), keys = nullptr;
 	free(values), values = nullptr;
-	
+
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 
 	auto iter = std::begin(mPictures);

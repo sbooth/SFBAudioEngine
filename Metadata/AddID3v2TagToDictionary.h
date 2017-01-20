@@ -26,6 +26,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag);
-		
+
 	}
 }

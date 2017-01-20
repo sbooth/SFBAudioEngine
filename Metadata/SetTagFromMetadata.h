@@ -24,6 +24,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool SetTagFromMetadata(const Metadata& metadata, TagLib::Tag *tag);
-		
+
 	}
 }

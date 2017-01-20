@@ -48,7 +48,7 @@ bool SFB::Audio::MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("m4a"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp4"), kCFCompareCaseInsensitive))
@@ -61,10 +61,10 @@ bool SFB::Audio::MP4Metadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/mpeg-4"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -86,19 +86,19 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, FALSE, buf, PATH_MAX))
 		return false;
-	
+
 	// Open the file for reading
 	MP4FileHandle file = MP4Read((const char *)buf);
-	
+
 	if(MP4_INVALID_FILE_HANDLE == file) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotRecognizedError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -110,21 +110,21 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 		// Verify this is an MPEG-4 audio file
 		if(MP4_INVALID_TRACK_ID == trackID || strncmp("soun", MP4GetTrackType(file, trackID), 4)) {
 			MP4Close(file), file = nullptr;
-			
+
 			if(error) {
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
 				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
 				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-				
+
 				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotSupportedError, description, mURL, failureReason, recoverySuggestion);
 			}
-			
+
 			return false;
 		}
-		
+
 		MP4Duration mp4Duration = MP4GetTrackDuration(file, trackID);
 		uint32_t mp4TimeScale = MP4GetTrackTimeScale(file, trackID);
-		
+
 		SFB::CFNumber totalFrames(kCFNumberLongLongType, &mp4Duration);
 		CFDictionarySetValue(mMetadata, kTotalFramesKey, totalFrames);
 
@@ -143,7 +143,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 		// ALAC files
 		if(MP4HaveTrackAtom(file, trackID, "mdia.minf.stbl.stsd.alac")) {
 			CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("Apple Lossless"));
-			
+
 			uint64_t sampleSize;
 			uint8_t *decoderConfig;
 			uint32_t decoderConfigSize;
@@ -159,7 +159,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 				CFDictionarySetValue(mMetadata, kBitrateKey, bitrate);
 
 				free(decoderConfig), decoderConfig = nullptr;
-			}			
+			}
 			else if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
 				SFB::CFNumber bitsPerChannel(kCFNumberLongLongType, &sampleSize);
 				CFDictionaryAddValue(mMetadata, kBitsPerChannelKey, bitsPerChannel);
@@ -184,15 +184,15 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	// No valid tracks in file
 	else {
 		MP4Close(file), file = nullptr;
-		
+
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::FileFormatNotSupportedError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -207,101 +207,101 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 
 		return false;
 	}
-	
+
 	MP4TagsFetch(tags, file);
-	
+
 	// Album title
 	if(tags->album) {
 		SFB::CFString str(tags->album, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumTitleKey, str);
 	}
-	
+
 	// Artist
 	if(tags->artist) {
 		SFB::CFString str(tags->artist, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kArtistKey, str);
 	}
-	
+
 	// Album Artist
 	if(tags->albumArtist) {
 		SFB::CFString str(tags->albumArtist, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kAlbumArtistKey, str);
 	}
-	
+
 	// Genre
 	if(tags->genre) {
 		SFB::CFString str(tags->genre, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kGenreKey, str);
 	}
-	
+
 	// Release date
 	if(tags->releaseDate) {
 		SFB::CFString str(tags->releaseDate, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kReleaseDateKey, str);
 	}
-	
+
 	// Composer
 	if(tags->composer) {
 		SFB::CFString str(tags->composer, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kComposerKey, str);
 	}
-	
+
 	// Comment
 	if(tags->comments) {
 		SFB::CFString str(tags->comments, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kCommentKey, str);
 	}
-	
+
 	// Track title
 	if(tags->name) {
 		SFB::CFString str(tags->name, kCFStringEncodingUTF8);
 		if(str)
 			CFDictionarySetValue(mMetadata, kTitleKey, str);
 	}
-	
+
 	// Track number
 	if(tags->track) {
 		if(tags->track->index) {
 			SFB::CFNumber num(kCFNumberSInt16Type, &tags->track->index);
 			CFDictionarySetValue(mMetadata, kTrackNumberKey, num);
 		}
-		
+
 		if(tags->track->total) {
 			SFB::CFNumber num(kCFNumberSInt16Type, &tags->track->total);
 			CFDictionarySetValue(mMetadata, kTrackTotalKey, num);
 		}
 	}
-	
+
 	// Disc number
 	if(tags->disk) {
 		if(tags->disk->index) {
 			SFB::CFNumber num(kCFNumberSInt16Type, &tags->disk->index);
 			CFDictionarySetValue(mMetadata, kDiscNumberKey, num);
 		}
-		
+
 		if(tags->disk->total) {
 			SFB::CFNumber num(kCFNumberSInt16Type, &tags->disk->total);
 			CFDictionarySetValue(mMetadata, kDiscTotalKey, num);
 		}
 	}
-	
+
 	// Compilation
 	if(tags->compilation)
 		CFDictionarySetValue(mMetadata, kCompilationKey, *(tags->compilation) ? kCFBooleanTrue : kCFBooleanFalse);
-	
+
 	// BPM
 	if(tags->tempo) {
 		SFB::CFNumber num(kCFNumberSInt16Type, &tags->tempo);
 		CFDictionarySetValue(mMetadata, kBPMKey, num);
 	}
-	
+
 	// Lyrics
 	if(tags->lyrics) {
 		SFB::CFString str(tags->lyrics, kCFStringEncodingUTF8);
@@ -385,10 +385,10 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFNumber referenceLoudness(kCFNumberFloatType, &referenceLoudnessValue);
 			CFDictionaryAddValue(mMetadata, kReferenceLoudnessKey, referenceLoudness);
 		}
-		
+
 		MP4ItmfItemListFree(items), items = nullptr;
 	}
-	
+
 	// Track gain
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_gain");
 	if(nullptr != items) {
@@ -397,10 +397,10 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFNumber trackGain(kCFNumberFloatType, &trackGainValue);
 			CFDictionaryAddValue(mMetadata, kTrackGainKey, trackGain);
 		}
-		
+
 		MP4ItmfItemListFree(items), items = nullptr;
-	}		
-	
+	}
+
 	// Track peak
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_track_peak");
 	if(nullptr != items) {
@@ -409,10 +409,10 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFNumber trackPeak(kCFNumberFloatType, &trackPeakValue);
 			CFDictionaryAddValue(mMetadata, kTrackPeakKey, trackPeak);
 		}
-		
+
 		MP4ItmfItemListFree(items), items = nullptr;
-	}		
-	
+	}
+
 	// Album gain
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_gain");
 	if(nullptr != items) {
@@ -421,10 +421,10 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFNumber albumGain(kCFNumberFloatType, &albumGainValue);
 			CFDictionaryAddValue(mMetadata, kAlbumGainKey, albumGain);
 		}
-		
+
 		MP4ItmfItemListFree(items), items = nullptr;
-	}		
-	
+	}
+
 	// Album peak
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_peak");
 	if(nullptr != items) {
@@ -433,7 +433,7 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFNumber albumPeak(kCFNumberFloatType, &albumPeakValue);
 			CFDictionaryAddValue(mMetadata, kAlbumPeakKey, albumPeak);
 		}
-		
+
 		MP4ItmfItemListFree(items), items = nullptr;
 	}
 
@@ -449,7 +449,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	// Open the file for modification
 	MP4FileHandle file = MP4Modify((const char *)buf);
 	if(MP4_INVALID_FILE_HANDLE == file) {
@@ -457,39 +457,39 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an MPEG-4 file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
-	
+
 	// Read the tags
 	const MP4Tags *tags = MP4TagsAlloc();
 
 	if(nullptr == tags) {
 		MP4Close(file), file = nullptr;
-		
+
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
-	
+
 		return false;
 	}
-	
+
 	MP4TagsFetch(tags, file);
-	
+
 	// Album Title
 	CFStringRef str = GetAlbumTitle();
 
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetAlbum(tags, cString);
 	}
 	else
@@ -497,33 +497,33 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 	// Artist
 	str = GetArtist();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetArtist(tags, cString);
 	}
 	else
 		MP4TagsSetArtist(tags, nullptr);
-	
+
 	// Album Artist
 	str = GetAlbumArtist();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetAlbumArtist(tags, cString);
 	}
 	else
@@ -531,84 +531,84 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 	// Genre
 	str = GetGenre();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetGenre(tags, cString);
 	}
 	else
 		MP4TagsSetGenre(tags, nullptr);
-	
+
 	// Release date
 	str = GetReleaseDate();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetReleaseDate(tags, cString);
 	}
 	else
 		MP4TagsSetReleaseDate(tags, nullptr);
-	
+
 	// Composer
 	str = GetComposer();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetComposer(tags, cString);
 	}
 	else
 		MP4TagsSetComposer(tags, nullptr);
-	
+
 	// Comment
 	str = GetComment();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetComments(tags, cString);
 	}
 	else
 		MP4TagsSetComments(tags, nullptr);
-	
+
 	// Track title
 	str = GetTitle();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetName(tags, cString);
 	}
 	else
@@ -623,19 +623,19 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 	if(GetTrackTotal())
 		CFNumberGetValue(GetTrackTotal(), kCFNumberSInt32Type, &trackInfo.total);
-	
+
 	MP4TagsSetTrack(tags, &trackInfo);
 
 	// Disc number and total
 	MP4TagDisk discInfo;
 	memset(&discInfo, 0, sizeof(MP4TagDisk));
-		
+
 	if(GetDiscNumber())
 		CFNumberGetValue(GetDiscNumber(), kCFNumberSInt32Type, &discInfo.index);
-	
+
 	if(GetDiscTotal())
 		CFNumberGetValue(GetDiscTotal(), kCFNumberSInt32Type, &discInfo.total);
-	
+
 	MP4TagsSetDisk(tags, &discInfo);
 
 	// Compilation
@@ -657,16 +657,16 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 	// Lyrics
 	str = GetLyrics();
-	
+
 	if(str) {
 		CFIndex cStringSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(str), kCFStringEncodingUTF8);
 		char cString [cStringSize + 1];
-		
+
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
-		
+
 		MP4TagsSetLyrics(tags, cString);
 	}
 	else
@@ -681,7 +681,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetSortName(tags, cString);
@@ -698,7 +698,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetSortAlbum(tags, cString);
@@ -715,7 +715,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetSortArtist(tags, cString);
@@ -732,7 +732,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetSortAlbumArtist(tags, cString);
@@ -749,7 +749,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetSortComposer(tags, cString);
@@ -766,7 +766,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 		if(!CFStringGetCString(str, cString, cStringSize + 1, kCFStringEncodingUTF8)) {
 			LOGGER_WARNING("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFStringGetCString() failed");
-			return false;			
+			return false;
 		}
 
 		MP4TagsSetGrouping(tags, cString);
@@ -777,7 +777,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	// Remove existing front cover art
 	for(uint32_t i = 0; i < tags->artworkCount; ++i)
 		MP4TagsRemoveArtwork(tags, i);
-	
+
 	// Add album art
 	for(auto attachedPicture : GetAttachedPictures()) {
 		MP4TagArtwork artwork;
@@ -786,7 +786,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 			artwork.data = (void *)CFDataGetBytePtr(data);
 			artwork.size = (uint32_t)CFDataGetLength(data);
 			artwork.type = MP4_ART_UNDEFINED;
-			
+
 			MP4TagsAddArtwork(tags, &artwork);
 		}
 	}
@@ -883,7 +883,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 		if(nullptr != item) {
 			item->mean = strdup("com.apple.iTunes");
 			item->name = strdup("replaygain_reference_loudness");
-			
+
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
 			item->dataList.elements[0].value = (uint8_t *)strdup(value);
 			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
@@ -907,15 +907,15 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 		float f;
 		if(!CFNumberGetValue(GetReplayGainTrackGain(), kCFNumberFloatType, &f))
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
-		
+
 		char value [10];
 		snprintf(value, sizeof(value), "%+2.2f dB", f);
-		
+
 		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
 		if(nullptr != item) {
 			item->mean = strdup("com.apple.iTunes");
 			item->name = strdup("replaygain_track_gain");
-			
+
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
 			item->dataList.elements[0].value = (uint8_t *)strdup(value);
 			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
@@ -939,15 +939,15 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 		float f;
 		if(!CFNumberGetValue(GetReplayGainTrackPeak(), kCFNumberFloatType, &f))
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
-		
+
 		char value [12];
 		snprintf(value, sizeof(value), "%1.8f", f);
-		
+
 		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
 		if(nullptr != item) {
 			item->mean = strdup("com.apple.iTunes");
 			item->name = strdup("replaygain_track_peak");
-			
+
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
 			item->dataList.elements[0].value = (uint8_t *)strdup(value);
 			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
@@ -971,15 +971,15 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 		float f;
 		if(!CFNumberGetValue(GetReplayGainAlbumGain(), kCFNumberFloatType, &f))
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
-		
+
 		char value [10];
 		snprintf(value, sizeof(value), "%+2.2f dB", f);
-		
+
 		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
 		if(nullptr != item) {
 			item->mean = strdup("com.apple.iTunes");
 			item->name = strdup("replaygain_album_gain");
-			
+
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
 			item->dataList.elements[0].value = (uint8_t *)strdup(value);
 			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);
@@ -990,7 +990,7 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 			}
 		}
 	}
-	
+
 	// Album peak
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "replaygain_album_peak");
 	if(items) {
@@ -1003,15 +1003,15 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 		float f;
 		if(!CFNumberGetValue(GetReplayGainAlbumPeak(), kCFNumberFloatType, &f))
 			LOGGER_INFO("org.sbooth.AudioEngine.AudioMetadata.MP4", "CFNumberGetValue returned an approximation");
-		
+
 		char value [12];
 		snprintf(value, sizeof(value), "%1.8f", f);
-		
+
 		MP4ItmfItem *item = MP4ItmfItemAlloc("----", 1);
 		if(nullptr != item) {
 			item->mean = strdup("com.apple.iTunes");
 			item->name = strdup("replaygain_album_peak");
-			
+
 			item->dataList.elements[0].typeCode = MP4_ITMF_BT_UTF8;
 			item->dataList.elements[0].value = (uint8_t *)strdup(value);
 			item->dataList.elements[0].valueSize = (uint32_t)strlen(value);

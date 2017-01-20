@@ -138,7 +138,7 @@ namespace SFB {
 			/*! @endcond */
 			//@}
 
-			
+
 		private:
 
 			// Creation
@@ -196,11 +196,11 @@ namespace SFB {
 			SInt64					mStartingFrame;
 			UInt32					mFrameCount;
 			UInt32					mRepeatCount;
-			
+
 			UInt32					mFramesReadInCurrentPass;
 			SInt64					mTotalFramesRead;
 			UInt32					mCompletedPasses;
 		};
-		
+
 	}
 }

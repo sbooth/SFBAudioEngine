@@ -37,6 +37,6 @@ namespace SFB {
 			virtual bool _ReadMetadata(CFErrorRef *error);
 			virtual bool _WriteMetadata(CFErrorRef *error);
 		};
-		
+
 	}
 }

@@ -21,10 +21,10 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 	for(auto it : tag->fieldListMap()) {
 		// According to the Xiph comment specification keys should only contain a limited subset of ASCII, but UTF-8 is a safer choice
 		SFB::CFString key(it.first.toCString(true), kCFStringEncodingUTF8);
-		
+
 		// Vorbis allows multiple comments with the same key, but this isn't supported by AudioMetadata
 		SFB::CFString value(it.second.front().toCString(true), kCFStringEncodingUTF8);
-		
+
 		if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ALBUM"), kCFCompareCaseInsensitive))
 			CFDictionarySetValue(dictionary, Metadata::kAlbumTitleKey, value);
 		else if(kCFCompareEqualTo == CFStringCompare(key, CFSTR("ARTIST"), kCFCompareCaseInsensitive))
@@ -98,7 +98,7 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 				// Create the picture
 				TagLib::FLAC::Picture picture;
 				picture.parse(decodedBlock);
-				
+
 				SFB::CFData data((const UInt8 *)picture.data().data(), (CFIndex)picture.data().size());
 
 				SFB::CFString description;
@@ -112,7 +112,7 @@ bool SFB::Audio::AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, s
 		else
 			CFDictionarySetValue(additionalMetadata, key, value);
 	}
-	
+
 	if(CFDictionaryGetCount(additionalMetadata))
 		CFDictionarySetValue(dictionary, Metadata::kAdditionalMetadataKey, additionalMetadata);
 

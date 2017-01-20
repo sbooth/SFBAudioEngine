@@ -59,8 +59,8 @@ namespace SFB {
 			AudioFileID			mAudioFile;
 			ExtAudioFileRef		mExtAudioFile;
 			bool				mUseM4AWorkarounds;
-			SInt64				mCurrentFrame;	
+			SInt64				mCurrentFrame;
 		};
-		
+
 	}
 }

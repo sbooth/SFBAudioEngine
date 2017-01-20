@@ -53,7 +53,7 @@ namespace SFB {
 			 * @return A \c DoPDecoder object, or \c nullptr on failure
 			 */
 			static unique_ptr CreateForDecoder(unique_ptr decoder, CFErrorRef *error = nullptr);
-			
+
 			//@}
 
 
@@ -75,7 +75,7 @@ namespace SFB {
 			/*! @endcond */
 			//@}
 
-			
+
 		private:
 
 			DoPDecoder() = delete;
@@ -110,6 +110,6 @@ namespace SFB {
 			uint8_t					mMarker;
 			bool					mReverseBits;
 		};
-		
+
 	}
 }

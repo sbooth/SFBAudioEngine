@@ -72,6 +72,6 @@ namespace SFB {
 			UInt32				mOggPacketCount;
 			UInt32				mExtraSpeexHeaderCount;
 		};
-		
+
 	}
 }

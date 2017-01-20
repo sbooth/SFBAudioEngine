@@ -11,7 +11,7 @@ bool SFB::Audio::AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionar
 {
 	if(nullptr == dictionary || nullptr == properties)
 		return false;
-	
+
 	if(properties->length())
 		AddIntToDictionary(dictionary, Metadata::kDurationKey, properties->length());
 
@@ -23,6 +23,6 @@ bool SFB::Audio::AddAudioPropertiesToDictionary(CFMutableDictionaryRef dictionar
 
 	if(properties->bitrate())
 		AddIntToDictionary(dictionary, Metadata::kBitrateKey, properties->bitrate());
-	
+
 	return true;
 }

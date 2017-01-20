@@ -33,6 +33,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool SetID3v1TagFromMetadata(const Metadata& metadata, TagLib::ID3v1::Tag *tag);
-		
+
 	}
 }

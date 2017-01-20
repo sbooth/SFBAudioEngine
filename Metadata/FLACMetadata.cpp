@@ -54,7 +54,7 @@ bool SFB::Audio::FLACMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("flac"), kCFCompareCaseInsensitive))
 		return true;
 
@@ -65,10 +65,10 @@ bool SFB::Audio::FLACMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/flac"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -110,7 +110,7 @@ bool SFB::Audio::FLACMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -178,7 +178,7 @@ bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a FLAC file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -200,7 +200,7 @@ bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 
 	// Add album art
 	for(auto attachedPicture : GetAttachedPictures()) {
-	
+
 		SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
 		if(!imageSource) {
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioMetadata.FLAC", "Skipping album art (unable to create image)");
@@ -245,7 +245,7 @@ bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 

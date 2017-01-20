@@ -86,7 +86,7 @@ bool SFB::InMemoryFileInputSource::_SeekToOffset(SInt64 offset)
 {
 	if(offset > mFilestats.st_size)
 		return false;
-	
+
 	mCurrentPosition = mMemory.get() + offset;
 	return true;
 }

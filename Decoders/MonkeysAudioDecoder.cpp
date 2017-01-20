@@ -145,10 +145,10 @@ bool SFB::Audio::MonkeysAudioDecoder::HandlesFilesWithExtension(CFStringRef exte
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("ape"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -189,10 +189,10 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Monkey's Audio file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a Monkey's Audio file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 
@@ -202,20 +202,20 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 	// The file format
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 	mFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
-	
+
 	mFormat.mBitsPerChannel		= (UInt32)mDecompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE);
 	mFormat.mSampleRate			= mDecompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);
 	mFormat.mChannelsPerFrame	= (UInt32)mDecompressor->GetInfo(APE::APE_INFO_CHANNELS);
-	
+
 	mFormat.mBytesPerPacket		= (mFormat.mBitsPerChannel / 8) * mFormat.mChannelsPerFrame;
 	mFormat.mFramesPerPacket	= 1;
 	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
-	
+
 	mFormat.mReserved			= 0;
-	
+
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'APE ';
-	
+
 	mSourceFormat.mSampleRate			= mFormat.mSampleRate;
 	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;
 	mSourceFormat.mBitsPerChannel		= mFormat.mBitsPerChannel;

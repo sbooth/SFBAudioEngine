@@ -25,6 +25,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool SetID3v2TagFromMetadata(const Metadata& metadata, TagLib::ID3v2::Tag *tag, bool setAlbumArt = true);
-		
+
 	}
 }

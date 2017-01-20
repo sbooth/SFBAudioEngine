@@ -43,10 +43,10 @@ bool SFB::Audio::OggOpusMetadata::HandlesFilesWithExtension(CFStringRef extensio
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("opus"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -54,10 +54,10 @@ bool SFB::Audio::OggOpusMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/opus"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -79,7 +79,7 @@ bool SFB::Audio::OggOpusMetadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -99,18 +99,18 @@ bool SFB::Audio::OggOpusMetadata::_ReadMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
-	
+
 	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("Ogg Opus"));
-	
+
 	if(file.audioProperties())
 		AddAudioPropertiesToDictionary(mMetadata, file.audioProperties());
-	
+
 	if(file.tag())
 		AddXiphCommentToDictionary(mMetadata, mPictures, file.tag());
 
@@ -122,7 +122,7 @@ bool SFB::Audio::OggOpusMetadata::_WriteMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -142,24 +142,24 @@ bool SFB::Audio::OggOpusMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not an Ogg Opus file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
-	
+
 	SetXiphCommentFromMetadata(*this, file.tag());
-	
+
 	if(!file.save()) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid Ogg Opus file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

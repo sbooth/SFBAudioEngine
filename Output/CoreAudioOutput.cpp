@@ -907,7 +907,7 @@ bool SFB::Audio::CoreAudioOutput::SetActiveDataSources(const std::vector<UInt32>
 		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: " << result);
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -2123,7 +2123,7 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		}
 	}
 #endif
-	
+
 	return true;
 }
 

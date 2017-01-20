@@ -125,7 +125,7 @@ namespace SFB {
 		/*! @brief Advance the write pointer by the specified number of bytes */
 		void WriteAdvance(size_t byteCount);
 
-		
+
 		/*! @brief A struct wrapping a memory buffer location and capacity */
 		struct Buffer {
 			uint8_t	*mBuffer;			/*!< The memory buffer location */
@@ -134,9 +134,9 @@ namespace SFB {
 			/*! @brief Construct an empty Buffer */
 			Buffer()
 				: Buffer(nullptr, 0) {}
-			
-			/*! 
-			 * @brief Construct a Buffer for the specified location and capacity 
+
+			/*!
+			 * @brief Construct a Buffer for the specified location and capacity
 			 * @param buffer The memory buffer location
 			 * @param bufferCapacity The capacity of \c buffer in bytes
 			 */

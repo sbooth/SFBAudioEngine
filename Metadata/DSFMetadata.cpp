@@ -44,7 +44,7 @@ bool SFB::Audio::DSFMetadata::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("dsf"), kCFCompareCaseInsensitive))
 		return true;
 
@@ -55,10 +55,10 @@ bool SFB::Audio::DSFMetadata::HandlesMIMEType(CFStringRef mimeType)
 {
 	if(nullptr == mimeType)
 		return false;
-	
+
 	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/dsf"), kCFCompareCaseInsensitive))
 		return true;
-	
+
 	return false;
 }
 
@@ -80,7 +80,7 @@ bool SFB::Audio::DSFMetadata::_ReadMetadata(CFErrorRef *error)
 	UInt8 buf [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mURL, false, buf, PATH_MAX))
 		return false;
-	
+
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream((const char *)buf, true));
 	if(!stream->isOpen()) {
 		if(error) {
@@ -106,7 +106,7 @@ bool SFB::Audio::DSFMetadata::_ReadMetadata(CFErrorRef *error)
 
 		return false;
 	}
-	
+
 	CFDictionarySetValue(mMetadata, kFormatNameKey, CFSTR("DSD Stream File"));
 
 	if(file.audioProperties()) {
@@ -150,7 +150,7 @@ bool SFB::Audio::DSFMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSF file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a DSF file"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
 
@@ -164,10 +164,10 @@ bool SFB::Audio::DSFMetadata::_WriteMetadata(CFErrorRef *error)
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSF file."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unable to write metadata"), ""));
 			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-			
+
 			*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, mURL, failureReason, recoverySuggestion);
 		}
-		
+
 		return false;
 	}
 

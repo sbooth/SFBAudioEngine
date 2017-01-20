@@ -35,7 +35,7 @@
 - (IBAction) openFile:(id)sender
 {
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-	
+
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
 	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions()];
@@ -43,7 +43,7 @@
 	if(NSFileHandlingPanelOKButton == [openPanel runModal]) {
 		NSArray *URLs = [openPanel URLs];
 		[self.playerWindowController playURL:[URLs objectAtIndex:0]];
-	}	
+	}
 }
 
 - (IBAction) openURL:(id)sender

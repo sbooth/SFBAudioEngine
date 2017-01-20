@@ -34,7 +34,7 @@ namespace SFB {
 			enum ErrorCode {
 				FileFormatNotSupportedError			= 0,	/*!< File format not supported */
 			};
-			
+
 
 			/*! @brief Get the reference loudness in dB SPL, defined as 89.0 dB */
 			static float GetReferenceLoudness();
@@ -126,11 +126,11 @@ namespace SFB {
 		private:
 			bool SetSampleRate(int32_t sampleRate);
 			bool AnalyzeSamples(const float *left_samples, const float *right_samples, size_t num_samples, bool stereo);
-			
+
 			// The replay gain internal state
 			class ReplayGainAnalyzerPrivate;
 			std::unique_ptr<ReplayGainAnalyzerPrivate> priv;
 		};
-		
+
 	}
 }

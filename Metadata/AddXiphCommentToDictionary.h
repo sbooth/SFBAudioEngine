@@ -26,6 +26,6 @@ namespace SFB {
 		 * @return \c true on success, \c false otherwise
 		 */
 		bool AddXiphCommentToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::Ogg::XiphComment *tag);
-		
+
 	}
 }
