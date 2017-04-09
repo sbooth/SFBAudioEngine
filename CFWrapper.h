@@ -215,6 +215,7 @@ namespace SFB {
 		/*! @brief Create a new wrapped \c CFStringRef using \c CFStringCreateWithFormatAndArguments with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFStringRef>::value>>
 		CFWrapper(CFDictionaryRef formatOptions, CFStringRef format, ...) CF_FORMAT_FUNCTION(3,4)
+			: CFWrapper()
 		{
 			va_list ap;
 			va_start(ap, format);
