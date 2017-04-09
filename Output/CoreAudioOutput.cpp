@@ -2019,8 +2019,8 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 	if(!channelLayout)
 		return true;
 
-	// Stereo
-	if(channelLayout == ChannelLayout::Stereo) {
+	// Mono or Stereo
+	if(channelLayout == ChannelLayout::Mono || channelLayout == ChannelLayout::Stereo) {
 		UInt32 preferredChannelsForStereo [2];
 		UInt32 preferredChannelsForStereoSize = sizeof(preferredChannelsForStereo);
 		result = AudioUnitGetProperty(outputUnit, kAudioDevicePropertyPreferredChannelsForStereo, kAudioUnitScope_Output, 0, preferredChannelsForStereo, &preferredChannelsForStereoSize);
@@ -2045,7 +2045,7 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		// TODO: Verify the following statement to be true
 		// preferredChannelsForStereo uses 1-based indices
 		channelMap[preferredChannelsForStereo[0] - 1] = 0;
-		channelMap[preferredChannelsForStereo[1] - 1] = 1;
+		channelMap[preferredChannelsForStereo[1] - 1] = channelLayout == ChannelLayout::Mono ? 0 : 1;
 
 		LOGGER_DEBUG("org.sbooth.AudioEngine.Output.CoreAudio", "Using stereo channel map: ");
 		for(UInt32 i = 0; i < outputFormat.mChannelsPerFrame; ++i)
