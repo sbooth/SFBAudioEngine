@@ -116,7 +116,8 @@ enum ePlayerFlags : unsigned int {
 {
 	dispatch_release(_timer);
 
-	delete _player, _player = nullptr;
+	delete _player;
+	_player = nullptr;
 }
 
 - (void) awakeFromNib
@@ -132,31 +133,37 @@ enum ePlayerFlags : unsigned int {
 
 - (void) windowWillClose:(NSNotification *)notification
 {
+#pragma unused(notification)
 	_player->Stop();
 }
 
 - (IBAction) playPause:(id)sender
 {
+#pragma unused(sender)
 	_player->PlayPause();
 }
 
 - (IBAction) seekForward:(id)sender
 {
+#pragma unused(sender)
 	_player->SeekForward();
 }
 
 - (IBAction) seekBackward:(id)sender
 {
+#pragma unused(sender)
 	_player->SeekBackward();
 }
 
 - (IBAction) seek:(id)sender
 {
+#pragma unused(sender)
 	_player->SeekToPosition([sender floatValue]);
 }
 
 - (IBAction) skipToNextTrack:(id)sender
 {
+#pragma unused(sender)
 	_player->SkipToNextTrack();
 }
 

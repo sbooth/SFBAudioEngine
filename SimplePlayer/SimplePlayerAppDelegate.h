@@ -8,7 +8,7 @@
 
 @class PlayerWindowController;
 
-@interface SimplePlayerAppDelegate : NSObject
+@interface SimplePlayerAppDelegate : NSObject <NSApplicationDelegate>
 {}
 
 // IB outlets

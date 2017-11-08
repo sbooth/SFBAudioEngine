@@ -112,8 +112,10 @@ bool SFB::Audio::RingBuffer::Allocate(const AudioFormat& format, size_t capacity
 
 void SFB::Audio::RingBuffer::Deallocate()
 {
-	if(mBuffers)
-		free(mBuffers), mBuffers = nullptr;
+	if(mBuffers) {
+		free(mBuffers);
+		mBuffers = nullptr;
+	}
 }
 
 

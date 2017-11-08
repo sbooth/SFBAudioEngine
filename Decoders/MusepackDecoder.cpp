@@ -193,7 +193,8 @@ bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		mpc_demux_exit(mDemux), mDemux = nullptr;
+		mpc_demux_exit(mDemux);
+		mDemux = nullptr;
 		mpc_reader_exit_stdio(&mReader);
 
 		return false;
@@ -207,8 +208,10 @@ bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 
 bool SFB::Audio::MusepackDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(mDemux)
-		mpc_demux_exit(mDemux), mDemux = nullptr;
+	if(mDemux) {
+		mpc_demux_exit(mDemux);
+		mDemux = nullptr;
+	}
 
     mpc_reader_exit_stdio(&mReader);
 	mBufferList.Deallocate();

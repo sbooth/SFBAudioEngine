@@ -201,7 +201,8 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
-		speex_header_free(header), header = nullptr;
+		speex_header_free(header);
+		header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
@@ -216,7 +217,8 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::FileFormatNotSupportedError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
-		speex_header_free(header), header = nullptr;
+		speex_header_free(header);
+		header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
@@ -232,7 +234,8 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
-		speex_header_free(header), header = nullptr;
+		speex_header_free(header);
+		header = nullptr;
 		ogg_sync_destroy(&mOggSyncState);
 		return false;
 	}
@@ -281,7 +284,8 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		case 2:		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);	break;
 	}
 
-	speex_header_free(header), header = nullptr;
+	speex_header_free(header);
+	header = nullptr;
 
 	// Allocate the buffer list
 	spx_int32_t speexFrameSize = 0;
@@ -291,9 +295,12 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		speex_header_free(header), header = nullptr;
-		speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = nullptr;
-		speex_decoder_destroy(mSpeexDecoder), mSpeexDecoder = nullptr;
+		speex_header_free(header);
+		header = nullptr;
+		speex_stereo_state_destroy(mSpeexStereoState);
+		mSpeexStereoState = nullptr;
+		speex_decoder_destroy(mSpeexDecoder);
+		mSpeexDecoder = nullptr;
 		speex_bits_destroy(&mSpeexBits);
 
 		ogg_sync_destroy(&mOggSyncState);
@@ -311,8 +318,10 @@ bool SFB::Audio::OggSpeexDecoder::_Close(CFErrorRef */*error*/)
 	mBufferList.Deallocate();
 
 	// Speex cleanup
-	speex_stereo_state_destroy(mSpeexStereoState), mSpeexStereoState = nullptr;
-	speex_decoder_destroy(mSpeexDecoder), mSpeexDecoder = nullptr;
+	speex_stereo_state_destroy(mSpeexStereoState);
+	mSpeexStereoState = nullptr;
+	speex_decoder_destroy(mSpeexDecoder);
+	mSpeexDecoder = nullptr;
 	speex_bits_destroy(&mSpeexBits);
 
 	// Ogg cleanup

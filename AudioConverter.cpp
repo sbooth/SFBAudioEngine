@@ -147,8 +147,10 @@ bool SFB::Audio::Converter::Close(CFErrorRef *error)
 	mConverterState.reset();
 	mDecoder.reset();
 
-	if(mConverter)
-		AudioConverterDispose(mConverter), mConverter = nullptr;
+	if(mConverter) {
+		AudioConverterDispose(mConverter);
+		mConverter = nullptr;
+	}
 
 	mIsOpen = false;
 	return true;

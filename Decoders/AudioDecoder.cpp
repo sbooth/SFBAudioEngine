@@ -194,10 +194,14 @@ SFB::Audio::Decoder::Decoder(InputSource::unique_ptr inputSource)
 
 SFB::Audio::Decoder::~Decoder()
 {
-	if(mRepresentedObject && mRepresentedObjectCleanupBlock)
-		mRepresentedObjectCleanupBlock(mRepresentedObject), mRepresentedObject = nullptr;
-	if(mRepresentedObjectCleanupBlock)
-		Block_release(mRepresentedObjectCleanupBlock), mRepresentedObjectCleanupBlock = nullptr;
+	if(mRepresentedObject && mRepresentedObjectCleanupBlock) {
+		mRepresentedObjectCleanupBlock(mRepresentedObject);
+		mRepresentedObject = nullptr;
+	}
+	if(mRepresentedObjectCleanupBlock) {
+		Block_release(mRepresentedObjectCleanupBlock);
+		mRepresentedObjectCleanupBlock = nullptr;
+	}
 }
 
 #pragma mark Represented Object Support
@@ -211,8 +215,10 @@ void SFB::Audio::Decoder::SetRepresentedObject(void *representedObject)
 
 void SFB::Audio::Decoder::SetRepresentedObjectCleanupBlock(RepresentedObjectCleanupBlock block)
 {
-	if(mRepresentedObjectCleanupBlock)
-		Block_release(mRepresentedObjectCleanupBlock), mRepresentedObjectCleanupBlock = nullptr;
+	if(mRepresentedObjectCleanupBlock) {
+		Block_release(mRepresentedObjectCleanupBlock);
+		mRepresentedObjectCleanupBlock = nullptr;
+	}
 	if(block)
 		mRepresentedObjectCleanupBlock = Block_copy(block);
 }

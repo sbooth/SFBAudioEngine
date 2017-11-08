@@ -12,8 +12,9 @@
 
 @implementation SimplePlayerAppDelegate
 
-- (void) applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void) applicationDidFinishLaunching:(NSNotification *)notification
 {
+#pragma unused(notification)
 	// Enable verbose logging to stderr
 	asl_add_log_file(nullptr, STDERR_FILENO);
 	::SFB::Logger::SetCurrentLevel(::SFB::Logger::debug);
@@ -22,18 +23,21 @@
 	[self.playerWindowController showWindow:self];
 }
 
-- (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
+- (BOOL) applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
 {
+#pragma unused(sender)
 	return YES;
 }
 
-- (BOOL) application:(NSApplication *)theApplication openFile:(NSString *)filename
+- (BOOL) application:(NSApplication *)sender openFile:(NSString *)filename
 {
+#pragma unused(sender)
 	return [self.playerWindowController playURL:[NSURL fileURLWithPath:filename]];
 }
 
 - (IBAction) openFile:(id)sender
 {
+#pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 
 	[openPanel setAllowsMultipleSelection:NO];
@@ -54,6 +58,7 @@
 
 - (IBAction) enqueueFiles:(id)sender
 {
+#pragma unused(sender)
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
 
 	[openPanel setAllowsMultipleSelection:YES];

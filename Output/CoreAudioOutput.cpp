@@ -683,7 +683,8 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 
 	if(kAudioHardwareNoError != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput) failed: " << result);
-		free(bufferList), bufferList = nullptr;
+		free(bufferList);
+		bufferList = nullptr;
 		return false;
 	}
 
@@ -691,7 +692,8 @@ bool SFB::Audio::CoreAudioOutput::GetDeviceChannelCount(UInt32& channelCount) co
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 		channelCount += bufferList->mBuffers[bufferIndex].mNumberChannels;
 
-	free(bufferList), bufferList = nullptr;
+	free(bufferList);
+	bufferList = nullptr;
 	return true;
 }
 
@@ -2074,8 +2076,10 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		if(noErr != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioUnitScope_Output) failed: " << result);
 
-			if(devicePreferredChannelLayout)
-				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+			if(devicePreferredChannelLayout) {
+				free(devicePreferredChannelLayout);
+				devicePreferredChannelLayout = nullptr;
+			}
 
 			return false;
 		}
@@ -2086,8 +2090,10 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 		if(noErr != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: " << result);
 
-			if(devicePreferredChannelLayout)
-				free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+			if(devicePreferredChannelLayout) {
+				free(devicePreferredChannelLayout);
+				devicePreferredChannelLayout = nullptr;
+			}
 
 			return false;
 		}
@@ -2103,8 +2109,10 @@ bool SFB::Audio::CoreAudioOutput::SetOutputUnitChannelMap(const ChannelLayout& c
 
 		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
 
-		if(devicePreferredChannelLayout)
-			free(devicePreferredChannelLayout), devicePreferredChannelLayout = nullptr;
+		if(devicePreferredChannelLayout) {
+			free(devicePreferredChannelLayout);
+			devicePreferredChannelLayout = nullptr;
+		}
 
 		if(noErr != result) {
 			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);

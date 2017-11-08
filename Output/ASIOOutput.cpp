@@ -454,9 +454,12 @@ bool SFB::Audio::ASIOOutput::SetDeviceIOFormat(const DeviceIOFormat& deviceIOFor
 
 void SFB::Audio::ASIOOutput::SetStateChangedBlock(dispatch_block_t block)
 {
-	if(mStateChangedBlock)
-		Block_release(mStateChangedBlock), mStateChangedBlock = nullptr;
-	mStateChangedBlock = Block_copy(block);
+	if(mStateChangedBlock) {
+		Block_release(mStateChangedBlock);
+		mStateChangedBlock = nullptr;
+	}
+	if(block)
+		mStateChangedBlock = Block_copy(block);
 }
 
 #pragma mark -
@@ -537,16 +540,21 @@ bool SFB::Audio::ASIOOutput::_Open()
 bool SFB::Audio::ASIOOutput::_Close()
 {
 	sASIO->disposeBuffers();
-	delete sASIO, sASIO = nullptr;
+	delete sASIO;
+	sASIO = nullptr;
 
 	sDriverInfo.mInputBufferCount = 0;
 	sDriverInfo.mOutputBufferCount = 0;
 
-	if(sDriverInfo.mBufferInfo)
-		delete [] sDriverInfo.mBufferInfo, sDriverInfo.mBufferInfo = nullptr;
+	if(sDriverInfo.mBufferInfo) {
+		delete [] sDriverInfo.mBufferInfo;
+		sDriverInfo.mBufferInfo = nullptr;
+	}
 
-	if(sDriverInfo.mChannelInfo)
-		delete [] sDriverInfo.mChannelInfo, sDriverInfo.mChannelInfo = nullptr;
+	if(sDriverInfo.mChannelInfo) {
+		delete [] sDriverInfo.mChannelInfo;
+		sDriverInfo.mChannelInfo = nullptr;
+	}
 
 	sDriverInfo.mBufferList.Deallocate();
 
@@ -646,11 +654,15 @@ bool SFB::Audio::ASIOOutput::_SetupForDecoder(const Decoder& decoder)
 	sDriverInfo.mInputBufferCount = 0;
 	sDriverInfo.mOutputBufferCount = 0;
 
-	if(sDriverInfo.mBufferInfo)
-		delete [] sDriverInfo.mBufferInfo, sDriverInfo.mBufferInfo = nullptr;
+	if(sDriverInfo.mBufferInfo) {
+		delete [] sDriverInfo.mBufferInfo;
+		sDriverInfo.mBufferInfo = nullptr;
+	}
 
-	if(sDriverInfo.mChannelInfo)
-		delete [] sDriverInfo.mChannelInfo, sDriverInfo.mChannelInfo = nullptr;
+	if(sDriverInfo.mChannelInfo) {
+		delete [] sDriverInfo.mChannelInfo;
+		sDriverInfo.mChannelInfo = nullptr;
+	}
 
 	sDriverInfo.mBufferList.Deallocate();
 

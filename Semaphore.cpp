@@ -21,7 +21,8 @@ SFB::Semaphore::Semaphore()
 
 SFB::Semaphore::~Semaphore()
 {
-	dispatch_release(mSemaphore), mSemaphore = nullptr;
+	dispatch_release(mSemaphore);
+	mSemaphore = nullptr;
 }
 
 bool SFB::Semaphore::Signal()

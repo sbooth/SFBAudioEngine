@@ -248,7 +248,8 @@ SFB::Audio::Player::Player()
 
 			if(swapSucceeded) {
 				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
-				delete decoderState, decoderState = nullptr;
+				delete decoderState;
+				decoderState = nullptr;
 			}
 		}
 	});
@@ -286,9 +287,11 @@ SFB::Audio::Player::~Player()
 	}
 
 	// Stop collecting
-	dispatch_release(mCollector), mCollector = nullptr;
+	dispatch_release(mCollector);
+	mCollector = nullptr;
 
-	dispatch_release(mQueue), mQueue = nullptr;
+	dispatch_release(mQueue);
+	mQueue = nullptr;
 
 	// Force any decoders left hanging by the collector to end
 	for(UInt32 bufferIndex = 0; bufferIndex < kActiveDecoderArraySize; ++bufferIndex) {
@@ -297,28 +300,46 @@ SFB::Audio::Player::~Player()
 	}
 
 	// Free the block callbacks
-	if(mDecoderEventBlocks[0])
-		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
-	if(mDecoderEventBlocks[1])
-		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
-	if(mDecoderEventBlocks[2])
-		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
-	if(mDecoderEventBlocks[3])
-		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
+	if(mDecoderEventBlocks[0]) {
+		Block_release(mDecoderEventBlocks[0]);
+		mDecoderEventBlocks[0] = nullptr;
+	}
+	if(mDecoderEventBlocks[1]) {
+		Block_release(mDecoderEventBlocks[1]);
+		mDecoderEventBlocks[1] = nullptr;
+	}
+	if(mDecoderEventBlocks[2]) {
+		Block_release(mDecoderEventBlocks[2]);
+		mDecoderEventBlocks[2] = nullptr;
+	}
+	if(mDecoderEventBlocks[3]) {
+		Block_release(mDecoderEventBlocks[3]);
+		mDecoderEventBlocks[3] = nullptr;
+	}
 
-	if(mDecoderErrorBlock)
-		Block_release(mDecoderErrorBlock), mDecoderErrorBlock = nullptr;
+	if(mDecoderErrorBlock) {
+		Block_release(mDecoderErrorBlock);
+		mDecoderErrorBlock = nullptr;
+	}
 
-	if(mRenderEventBlocks[0])
-		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
-	if(mRenderEventBlocks[1])
-		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
+	if(mRenderEventBlocks[0]) {
+		Block_release(mRenderEventBlocks[0]);
+		mRenderEventBlocks[0] = nullptr;
+	}
+	if(mRenderEventBlocks[1]) {
+		Block_release(mRenderEventBlocks[1]);
+		mRenderEventBlocks[1] = nullptr;
+	}
 
-	if(mFormatMismatchBlock)
-		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
+	if(mFormatMismatchBlock) {
+		Block_release(mFormatMismatchBlock);
+		mFormatMismatchBlock = nullptr;
+	}
 
-	if(mErrorBlock)
-		Block_release(mErrorBlock), mErrorBlock = nullptr;
+	if(mErrorBlock) {
+		Block_release(mErrorBlock);
+		mErrorBlock = nullptr;
+	}
 }
 
 #pragma mark Playback Control
@@ -414,72 +435,90 @@ void * SFB::Audio::Player::GetPlayingRepresentedObject() const
 
 void SFB::Audio::Player::SetDecodingStartedBlock(DecoderEventBlock block)
 {
-	if(mDecoderEventBlocks[0])
-		Block_release(mDecoderEventBlocks[0]), mDecoderEventBlocks[0] = nullptr;
+	if(mDecoderEventBlocks[0]) {
+		Block_release(mDecoderEventBlocks[0]);
+		mDecoderEventBlocks[0] = nullptr;
+	}
 	if(block)
 		mDecoderEventBlocks[0] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetDecodingFinishedBlock(DecoderEventBlock block)
 {
-	if(mDecoderEventBlocks[1])
-		Block_release(mDecoderEventBlocks[1]), mDecoderEventBlocks[1] = nullptr;
+	if(mDecoderEventBlocks[1]) {
+		Block_release(mDecoderEventBlocks[1]);
+		mDecoderEventBlocks[1] = nullptr;
+	}
 	if(block)
 		mDecoderEventBlocks[1] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetRenderingStartedBlock(DecoderEventBlock block)
 {
-	if(mDecoderEventBlocks[2])
-		Block_release(mDecoderEventBlocks[2]), mDecoderEventBlocks[2] = nullptr;
+	if(mDecoderEventBlocks[2]) {
+		Block_release(mDecoderEventBlocks[2]);
+		mDecoderEventBlocks[2] = nullptr;
+	}
 	if(block)
 		mDecoderEventBlocks[2] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetRenderingFinishedBlock(DecoderEventBlock block)
 {
-	if(mDecoderEventBlocks[3])
-		Block_release(mDecoderEventBlocks[3]), mDecoderEventBlocks[3] = nullptr;
+	if(mDecoderEventBlocks[3]) {
+		Block_release(mDecoderEventBlocks[3]);
+		mDecoderEventBlocks[3] = nullptr;
+	}
 	if(block)
 		mDecoderEventBlocks[3] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetOpenDecoderErrorBlock(DecoderErrorBlock block)
 {
-	if(mDecoderErrorBlock)
-		Block_release(mDecoderErrorBlock), mDecoderErrorBlock = nullptr;
+	if(mDecoderErrorBlock) {
+		Block_release(mDecoderErrorBlock);
+		mDecoderErrorBlock = nullptr;
+	}
 	if(block)
 		mDecoderErrorBlock = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetPreRenderBlock(RenderEventBlock block)
 {
-	if(mRenderEventBlocks[0])
-		Block_release(mRenderEventBlocks[0]), mRenderEventBlocks[0] = nullptr;
+	if(mRenderEventBlocks[0]) {
+		Block_release(mRenderEventBlocks[0]);
+		mRenderEventBlocks[0] = nullptr;
+	}
 	if(block)
 		mRenderEventBlocks[0] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetPostRenderBlock(RenderEventBlock block)
 {
-	if(mRenderEventBlocks[1])
-		Block_release(mRenderEventBlocks[1]), mRenderEventBlocks[1] = nullptr;
+	if(mRenderEventBlocks[1]) {
+		Block_release(mRenderEventBlocks[1]);
+		mRenderEventBlocks[1] = nullptr;
+	}
 	if(block)
 		mRenderEventBlocks[1] = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetFormatMismatchBlock(FormatMismatchBlock block)
 {
-	if(mFormatMismatchBlock)
-		Block_release(mFormatMismatchBlock), mFormatMismatchBlock = nullptr;
+	if(mFormatMismatchBlock) {
+		Block_release(mFormatMismatchBlock);
+		mFormatMismatchBlock = nullptr;
+	}
 	if(block)
 		mFormatMismatchBlock = Block_copy(block);
 }
 
 void SFB::Audio::Player::SetUnsupportedFormatBlock(ErrorBlock block)
 {
-	if(mErrorBlock)
-		Block_release(mErrorBlock), mErrorBlock = nullptr;
+	if(mErrorBlock) {
+		Block_release(mErrorBlock);
+		mErrorBlock = nullptr;
+	}
 	if(block)
 		mErrorBlock = Block_copy(block);
 }
@@ -937,8 +976,10 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 				// Adjust the formats
 				dispatch_sync(mQueue, ^{
-					if(!SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder))
-						delete decoderState, decoderState = nullptr;
+					if(!SetupOutputAndRingBufferForDecoder(*decoderState->mDecoder)) {
+						delete decoderState;
+						decoderState = nullptr;
+					}
 				});
 
 				// Clear the mute flag that was set in the rendering thread so output will resume
