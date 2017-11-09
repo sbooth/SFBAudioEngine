@@ -109,7 +109,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 
 		// Verify this is an MPEG-4 audio file
 		if(MP4_INVALID_TRACK_ID == trackID || strncmp("soun", MP4GetTrackType(file, trackID), 4)) {
-			MP4Close(file), file = nullptr;
+			MP4Close(file);
+			file = nullptr;
 
 			if(error) {
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
@@ -158,7 +159,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 				SFB::CFNumber bitrate(kCFNumberDoubleType, &losslessBitrate);
 				CFDictionarySetValue(mMetadata, kBitrateKey, bitrate);
 
-				free(decoderConfig), decoderConfig = nullptr;
+				free(decoderConfig);
+				decoderConfig = nullptr;
 			}
 			else if(MP4GetTrackIntegerProperty(file, trackID, "mdia.minf.stbl.stsd.alac.sampleSize", &sampleSize)) {
 				SFB::CFNumber bitsPerChannel(kCFNumberLongLongType, &sampleSize);
@@ -183,7 +185,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	}
 	// No valid tracks in file
 	else {
-		MP4Close(file), file = nullptr;
+		MP4Close(file);
+		file = nullptr;
 
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid MPEG-4 file."), ""));
@@ -200,7 +203,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 	const MP4Tags *tags = MP4TagsAlloc();
 
 	if(nullptr == tags) {
-		MP4Close(file), file = nullptr;
+		MP4Close(file);
+		file = nullptr;
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -362,7 +366,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kMusicBrainzReleaseIDKey, releaseID);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Track Id");
@@ -372,7 +377,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kMusicBrainzRecordingIDKey, recordingID);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 
@@ -386,7 +392,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kReferenceLoudnessKey, referenceLoudness);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	// Track gain
@@ -398,7 +405,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kTrackGainKey, trackGain);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	// Track peak
@@ -410,7 +418,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kTrackPeakKey, trackPeak);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	// Album gain
@@ -422,7 +431,8 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kAlbumGainKey, albumGain);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	// Album peak
@@ -434,12 +444,15 @@ bool SFB::Audio::MP4Metadata::_ReadMetadata(CFErrorRef *error)
 			CFDictionaryAddValue(mMetadata, kAlbumPeakKey, albumPeak);
 		}
 
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	// Clean up
-	MP4TagsFree(tags), tags = nullptr;
-	MP4Close(file), file = nullptr;
+	MP4TagsFree(tags);
+	tags = nullptr;
+	MP4Close(file);
+	file = nullptr;
 
 	return true;
 }
@@ -468,7 +481,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	const MP4Tags *tags = MP4TagsAlloc();
 
 	if(nullptr == tags) {
-		MP4Close(file), file = nullptr;
+		MP4Close(file);
+		file = nullptr;
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -793,14 +807,16 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 
 	// Save our changes
 	MP4TagsStore(tags, file);
-	MP4TagsFree(tags), tags = nullptr;
+	MP4TagsFree(tags);
+	tags = nullptr;
 
 	// MusicBrainz
 	MP4ItmfItemList *items = MP4ItmfGetItemsByMeaning(file, "com.apple.iTunes", "MusicBrainz Album Id");
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	CFStringRef musicBrainzReleaseID = GetMusicBrainzReleaseID();
@@ -833,7 +849,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	CFStringRef musicBrainzRecordingID = GetMusicBrainzRecordingID();
@@ -868,7 +885,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	if(GetReplayGainReferenceLoudness()) {
@@ -900,7 +918,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	if(GetReplayGainTrackGain()) {
@@ -932,7 +951,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	if(GetReplayGainTrackPeak()) {
@@ -964,7 +984,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	if(GetReplayGainAlbumGain()) {
@@ -996,7 +1017,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	if(items) {
 		for(uint32_t i = 0; i < items->size; ++i)
 			MP4ItmfRemoveItem(file, items->elements + i);
-		MP4ItmfItemListFree(items), items = nullptr;
+		MP4ItmfItemListFree(items);
+		items = nullptr;
 	}
 
 	if(GetReplayGainAlbumPeak()) {
@@ -1024,7 +1046,8 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	}
 
 	// Clean up
-	MP4Close(file), file = nullptr;
+	MP4Close(file);
+	file = nullptr;
 
 	return true;
 }

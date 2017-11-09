@@ -67,8 +67,10 @@ bool SFB::RingBuffer::Allocate(size_t capacityBytes)
 
 void SFB::RingBuffer::Deallocate()
 {
-	if(mBuffer)
-		delete [] mBuffer, mBuffer = nullptr;
+	if(mBuffer) {
+		delete [] mBuffer;
+		mBuffer = nullptr;
+	}
 }
 
 

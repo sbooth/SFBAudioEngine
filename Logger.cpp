@@ -247,7 +247,8 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 
 		if(noErr == result && nullptr != displayName) {
 			out << displayName;
-			CFRelease(displayName), displayName = nullptr;
+			CFRelease(displayName);
+			displayName = nullptr;
 		}
 	}
 	else

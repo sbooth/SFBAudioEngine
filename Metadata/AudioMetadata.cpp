@@ -227,8 +227,10 @@ CFDictionaryRef SFB::Audio::Metadata::CreateDictionaryRepresentation() const
 			CFDictionarySetValue(dictionaryRepresentation, keys[i], values[i]);
 	}
 
-	free(keys), keys = nullptr;
-	free(values), values = nullptr;
+	free(keys);
+	keys = nullptr;
+	free(values);
+	values = nullptr;
 
 	CFMutableArray pictureArray(0, &kCFTypeArrayCallBacks);
 
@@ -995,8 +997,10 @@ void SFB::Audio::Metadata::MergeChangedMetadataIntoMetadata()
 			CFDictionarySetValue(mMetadata, keys[i], values[i]);
 	}
 
-	free(keys), keys = nullptr;
-	free(values), values = nullptr;
+	free(keys);
+	keys = nullptr;
+	free(values);
+	values = nullptr;
 
 	CFDictionaryRemoveAllValues(mChangedMetadata);
 
