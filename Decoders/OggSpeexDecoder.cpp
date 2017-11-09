@@ -295,8 +295,6 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		speex_header_free(header);
-		header = nullptr;
 		speex_stereo_state_destroy(mSpeexStereoState);
 		mSpeexStereoState = nullptr;
 		speex_decoder_destroy(mSpeexDecoder);
