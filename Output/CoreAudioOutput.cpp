@@ -580,6 +580,76 @@ bool SFB::Audio::CoreAudioOutput::StopHoggingDevice()
 
 #pragma mark Device Parameters
 
+bool SFB::Audio::CoreAudioOutput::DeviceIsMuted() const
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyMute,
+		.mScope		= kAudioObjectPropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 isMuted = 0;
+	UInt32 dataSize = sizeof(isMuted);
+
+	AudioDeviceID deviceID;
+	if(!GetDeviceID(deviceID))
+		return false;
+
+	auto result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &isMuted);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectGetPropertyData (kAudioDevicePropertyMute) failed: " << result);
+		return false;
+	}
+
+	return (isMuted ? true : false);
+}
+
+bool SFB::Audio::CoreAudioOutput::MuteDevice()
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyMute,
+		.mScope		= kAudioObjectPropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 mute = 1;
+
+	AudioDeviceID deviceID;
+	if(!GetDeviceID(deviceID))
+		return false;
+
+	auto result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(mute), &mute);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::UnmuteDevice()
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyMute,
+		.mScope		= kAudioObjectPropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 mute = 0;
+
+	AudioDeviceID deviceID;
+	if(!GetDeviceID(deviceID))
+		return false;
+
+	auto result = AudioObjectSetPropertyData(deviceID, &propertyAddress, 0, nullptr, sizeof(mute), &mute);
+	if(kAudioHardwareNoError != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
 bool SFB::Audio::CoreAudioOutput::GetDeviceMasterVolume(Float32& volume) const
 {
 	return GetDeviceVolumeForChannel(kAudioObjectPropertyElementMaster, volume);

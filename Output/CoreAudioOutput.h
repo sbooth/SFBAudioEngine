@@ -192,6 +192,25 @@ namespace SFB {
 			/*! @name Device parameters */
 			//@{
 
+			/*! @brief Query whether the output device muted */
+			bool DeviceIsMuted() const;
+
+			/*!
+			 * @brief Mute the output device
+			 *
+			 * This will attempt to set the property \c kAudioDevicePropertyMute
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool MuteDevice();
+
+			/*!
+			 * @brief Unmute the output device
+			 *
+			 * This will attempt to clear the property \c kAudioDevicePropertyMute
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool UnmuteDevice();
+
 			/*!
 			 * @brief Get the device's master volume
 			 *
