@@ -1156,6 +1156,128 @@ bool SFB::Audio::CoreAudioOutput::SetOutputStreamPhysicalFormat(AudioStreamID st
 
 #endif
 
+#pragma mark Advanced AUGraph Functionality
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphLatency(Float64& latency) const
+{
+	latency = 0;
+
+	UInt32 nodeCount = 0;
+	auto result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetNodeCount failed: " << result);
+		return false;
+	}
+
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetIndNode failed: " << result);
+			return false;
+		}
+
+		AudioUnit au = nullptr;
+		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+			return false;
+		}
+
+		Float64 auLatency = 0;
+		UInt32 dataSize = sizeof(auLatency);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &auLatency, &dataSize);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_Latency, kAudioUnitScope_Global) failed: " << result);
+			return false;
+		}
+
+		latency += auLatency;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphTailTime(Float64& tailTime) const
+{
+	tailTime = 0;
+
+	UInt32 nodeCount = 0;
+	auto result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetNodeCount failed: " << result);
+		return false;
+	}
+
+	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
+		AUNode node = 0;
+		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetIndNode failed: " << result);
+			return false;
+		}
+
+		AudioUnit au = nullptr;
+		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+			return false;
+		}
+
+		Float64 auTailTime = 0;
+		UInt32 dataSize = sizeof(auTailTime);
+		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &auTailTime, &dataSize);
+		if(noErr != result) {
+			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_TailTime, kAudioUnitScope_Global) failed: " << result);
+			return false;
+		}
+
+		tailTime += auTailTime;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraph(AUGraph& graph) const
+{
+	graph = mAUGraph;
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphMixerNode(AUNode& node) const
+{
+	node = mMixerNode;
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphOutputNode(AUNode& node) const
+{
+	node = mOutputNode;
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphMixer(AudioUnit& au) const
+{
+	auto result = AUGraphNodeInfo(mAUGraph, mMixerNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetAUGraphOutput(AudioUnit& au) const
+{
+	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
 #pragma mark Device Management
 
 bool SFB::Audio::CoreAudioOutput::_GetDeviceSampleRate(Float64& sampleRate) const
@@ -1895,86 +2017,6 @@ bool SFB::Audio::CoreAudioOutput::_SetDeviceUID(CFStringRef deviceUID)
 #endif
 
 #pragma mark AUGraph Utilities
-
-bool SFB::Audio::CoreAudioOutput::GetAUGraphLatency(Float64& latency) const
-{
-	latency = 0;
-
-	UInt32 nodeCount = 0;
-	auto result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetNodeCount failed: " << result);
-		return false;
-	}
-
-	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
-		AUNode node = 0;
-		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetIndNode failed: " << result);
-			return false;
-		}
-
-		AudioUnit au = nullptr;
-		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
-			return false;
-		}
-
-		Float64 auLatency = 0;
-		UInt32 dataSize = sizeof(auLatency);
-		result = AudioUnitGetProperty(au, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &auLatency, &dataSize);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_Latency, kAudioUnitScope_Global) failed: " << result);
-			return false;
-		}
-
-		latency += auLatency;
-	}
-
-	return true;
-}
-
-bool SFB::Audio::CoreAudioOutput::GetAUGraphTailTime(Float64& tailTime) const
-{
-	tailTime = 0;
-
-	UInt32 nodeCount = 0;
-	auto result = AUGraphGetNodeCount(mAUGraph, &nodeCount);
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetNodeCount failed: " << result);
-		return false;
-	}
-
-	for(UInt32 nodeIndex = 0; nodeIndex < nodeCount; ++nodeIndex) {
-		AUNode node = 0;
-		result = AUGraphGetIndNode(mAUGraph, nodeIndex, &node);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphGetIndNode failed: " << result);
-			return false;
-		}
-
-		AudioUnit au = nullptr;
-		result = AUGraphNodeInfo(mAUGraph, node, nullptr, &au);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
-			return false;
-		}
-
-		Float64 auTailTime = 0;
-		UInt32 dataSize = sizeof(auTailTime);
-		result = AudioUnitGetProperty(au, kAudioUnitProperty_TailTime, kAudioUnitScope_Global, 0, &auTailTime, &dataSize);
-		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_TailTime, kAudioUnitScope_Global) failed: " << result);
-			return false;
-		}
-
-		tailTime += auTailTime;
-	}
-
-	return true;
-}
 
 bool SFB::Audio::CoreAudioOutput::SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize)
 {

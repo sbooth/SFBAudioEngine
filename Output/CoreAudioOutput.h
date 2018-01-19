@@ -211,6 +211,7 @@ namespace SFB {
 			 */
 			bool UnmuteDevice();
 
+
 			/*!
 			 * @brief Get the device's master volume
 			 *
@@ -376,6 +377,81 @@ namespace SFB {
 
 #endif
 
+
+			// ========================================
+			/*! Advanced AUGraph Functionality */
+			//@{
+
+			/*!
+			 * @brief Get the latency of the AUGraph in seconds
+			 *
+			 * This corresponds to the sum of the property \c kAudioUnitProperty_Latency over the
+			 * nodes of the AUGraph
+			 * @param latency A \c Float64 to receive the AUGraph's latency
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphLatency(Float64& latency) const;
+
+			/*!
+			 * @brief Get the tail time of the AUGraph in seconds
+			 *
+			 * This corresponds to the sum of the property \c kAudioUnitProperty_TailTime over the
+			 * nodes of the AUGraph
+			 * @param tailTime A \c Float64 to receive the AUGraph's tail time
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphTailTime(Float64& tailTime) const;
+
+
+			/*!
+			 * @brief Get the \c AUGraph used internally for audio processing
+			 *
+			 * The default AUGraph has two nodes: a mixer (\c kAudioUnitSubType_MultiChannelMixer)
+			 * connected to the output (\c kAudioUnitSubType_HALOutput on macOS, \c kAudioUnitSubType_RemoteIO on iOS)
+			 *
+			 * @warning The graph may be manipulated but changing the graph's mixer or output node is not supported
+			 *
+			 * @param graph An \c AUGraph to receive the graph used for audio processing
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraph(AUGraph& graph) const;
+
+
+			/*!
+			 * @brief Get the mixer \c AUNode for the internal \c AUGraph
+			 *
+			 * @param node An \c AUNode to receive the mixer node
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphMixerNode(AUNode& node) const;
+
+			/*!
+			 * @brief Get the output \c AUNode for the internal \c AUGraph
+			 *
+			 * @param node An \c AUNode to receive the output node
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphOutputNode(AUNode& node) const;
+
+
+			/*!
+			 * @brief Get the mixer \c AudioUnit used by the internal \c AUGraph
+			 *
+			 * @param node An \c AudioUnit to receive the mixer unit
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphMixer(AudioUnit& au) const;
+
+			/*!
+			 * @brief Get the output \c AudioUnit used by the internal \c AUGraph
+			 *
+			 * @param node An \c AudioUnit to receive the output unit
+			 * @return \c true on success, \c false otherwise
+			 */
+			bool GetAUGraphOutput(AudioUnit& au) const;
+
+			//@}
+
 		private:
 
 			virtual bool _Open();
@@ -406,9 +482,6 @@ namespace SFB {
 
 			// ========================================
 			// AUGraph Utilities
-			bool GetAUGraphLatency(Float64& latency) const;
-			bool GetAUGraphTailTime(Float64& tailTime) const;
-
 			bool SetPropertyOnAUGraphNodes(AudioUnitPropertyID propertyID, const void *propertyData, UInt32 propertyDataSize);
 
 			bool SetOutputUnitChannelMap(const ChannelLayout& channelLayout);
