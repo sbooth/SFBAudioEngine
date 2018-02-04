@@ -156,7 +156,7 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 	mFile = unique_SNDFILE_ptr(sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this), sf_close);
 
 	if(!mFile) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error(nullptr));
+		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error_number(sf_error(nullptr)));
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
