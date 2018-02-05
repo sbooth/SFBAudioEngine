@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -55,7 +55,7 @@ namespace SFB {
 		bool TimedWait(dispatch_time_t duration);
 
 	private:
-		dispatch_semaphore_t mSemaphore; /*!< The libdispatch semahore */
+		dispatch_semaphore_t mSemaphore; /*!< The libdispatch semaphore */
 	};
 
 }

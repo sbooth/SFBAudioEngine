@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -37,5 +37,5 @@ bool SFB::Semaphore::Wait()
 
 bool SFB::Semaphore::TimedWait(dispatch_time_t duration)
 {
-	return dispatch_semaphore_wait(mSemaphore, duration);
+	return !dispatch_semaphore_wait(mSemaphore, duration);
 }
