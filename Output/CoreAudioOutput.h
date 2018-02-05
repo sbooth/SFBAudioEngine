@@ -99,6 +99,7 @@ namespace SFB {
 			/*! @brief Query whether the output is performing sample rate conversion */
 			bool IsPerformingSampleRateConversion() const;
 
+
 			/*!
 			 * @brief Get the sample rate converter's complexity
 			 *
@@ -118,6 +119,27 @@ namespace SFB {
 			 * @see kAudioUnitProperty_SampleRateConverterComplexity
 			 */
 			bool SetSampleRateConverterComplexity(UInt32 complexity);
+
+
+			/*!
+			 * @brief Get the sample rate converter's quality
+			 *
+			 * This corresponds to the property \c kAudioUnitProperty_RenderQuality
+			 * @param complexity A \c UInt32 to receive the SRC quality
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioUnitProperty_RenderQuality
+			 */
+			bool GetSampleRateConverterQuality(UInt32& quality) const;
+
+			/*!
+			 * @brief Set the sample rate converter's quality
+			 *
+			 * This corresponds to the property \c kAudioUnitProperty_RenderQuality
+			 * @param complexity The desired SRC quality
+			 * @return \c true on success, \c false otherwise
+			 * @see kAudioUnitProperty_RenderQuality
+			 */
+			bool SetSampleRateConverterQuality(UInt32 quality);
 
 			//@}
 

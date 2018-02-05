@@ -170,7 +170,7 @@ bool SFB::Audio::CoreAudioOutput::GetSampleRateConverterComplexity(UInt32& compl
 
 bool SFB::Audio::CoreAudioOutput::SetSampleRateConverterComplexity(UInt32 complexity)
 {
-	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting sample rate converter quality to " << complexity);
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting sample rate converter complexity to " << complexity);
 
 	AudioUnit au = nullptr;
 	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
@@ -182,6 +182,45 @@ bool SFB::Audio::CoreAudioOutput::SetSampleRateConverterComplexity(UInt32 comple
 	result = AudioUnitSetProperty(au, kAudioUnitProperty_SampleRateConverterComplexity, kAudioUnitScope_Global, 0, &complexity, (UInt32)sizeof(complexity));
 	if(noErr != result) {
 		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitSetProperty (kAudioUnitProperty_SampleRateConverterComplexity) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::GetSampleRateConverterQuality(UInt32& quality) const
+{
+	AudioUnit au = nullptr;
+	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	UInt32 dataSize = sizeof(quality);
+	result = AudioUnitGetProperty(au, kAudioUnitProperty_RenderQuality, kAudioUnitScope_Global, 0, &quality, &dataSize);
+	if(noErr != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitGetProperty (kAudioUnitProperty_RenderQuality) failed: " << result);
+		return false;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::CoreAudioOutput::SetSampleRateConverterQuality(UInt32 quality)
+{
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting sample rate converter quality to " << quality);
+
+	AudioUnit au = nullptr;
+	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
+	if(noErr != result) {
+		LOGGER_ERR("org.sbooth.AudioEngine.Output.CoreAudio", "AUGraphNodeInfo failed: " << result);
+		return false;
+	}
+
+	result = AudioUnitSetProperty(au, kAudioUnitProperty_RenderQuality, kAudioUnitScope_Global, 0, &quality, (UInt32)sizeof(quality));
+	if(noErr != result) {
+		LOGGER_WARNING("org.sbooth.AudioEngine.Output.CoreAudio", "AudioUnitSetProperty (kAudioUnitProperty_RenderQuality) failed: " << result);
 		return false;
 	}
 
