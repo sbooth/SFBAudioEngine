@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -1374,6 +1374,9 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 	// Open the decoder if necessary
 	SFB::CFError error;
 	if(!decoder.IsOpen() && !decoder.Open(&error)) {
+		if(mDecoderErrorBlock)
+			mDecoderErrorBlock(decoder, error);
+
 		if(error)
 			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
 
@@ -1395,7 +1398,6 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 
 		return false;
 	}
-
 
 	// Configure the output for decoder
 	if(!mOutput->SetupForDecoder(decoder))

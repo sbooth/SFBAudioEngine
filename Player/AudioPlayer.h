@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -282,7 +282,7 @@ namespace SFB {
 			void SetFormatMismatchBlock(FormatMismatchBlock block);
 
 			/*!
-			 * @brief Set the block to be invoked when a \c Decoder with an unsupported format
+			 * @brief Set the block to be invoked when a \c Decoder with an unsupported format is encountered
 			 * @note The block is invoked from the decoding thread
 			 * @param block The block to invoke when an error occurs
 			 */
