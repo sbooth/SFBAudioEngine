@@ -170,7 +170,7 @@ bool SFB::Audio::CoreAudioOutput::GetSampleRateConverterComplexity(UInt32& compl
 
 bool SFB::Audio::CoreAudioOutput::SetSampleRateConverterComplexity(UInt32 complexity)
 {
-	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting sample rate converter complexity to " << complexity);
+	LOGGER_INFO("org.sbooth.AudioEngine.Output.CoreAudio", "Setting sample rate converter complexity to '" << SFB::StringForOSType(complexity) << "'");
 
 	AudioUnit au = nullptr;
 	auto result = AUGraphNodeInfo(mAUGraph, mOutputNode, nullptr, &au);
