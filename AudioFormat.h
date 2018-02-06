@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -40,6 +40,12 @@ namespace SFB {
 
 			/*! @brief Assignment operator */
 			AudioFormat& operator=(const AudioFormat& rhs);
+
+			/*! @brief Compare two \c AudioFormat objects for equality*/
+			bool operator==(const AudioFormat& rhs) const;
+
+			/*! @brief Compare two \c AudioFormat objects for inequality*/
+			inline bool operator!=(const AudioFormat& rhs) const { return !operator==(rhs); }
 
 			//@}
 
