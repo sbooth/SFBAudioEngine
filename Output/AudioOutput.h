@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -39,12 +39,18 @@ namespace SFB {
 			/*! @brief A \c std::unique_ptr for \c Output objects */
 			using unique_ptr = std::unique_ptr<Output>;
 
+			/*!
+			 * @brief A block called immediately before the output is configured for an \c AudioDecoder with the specified format
+			 * @param format The next audio format
+			 */
+			using FormatBlock = void (^)(const AudioFormat& format);
+
 			// ========================================
 			/*! @name Creation and Destruction */
 			// @{
 
 			/*! @brief Destroy this \c Output */
-			virtual ~Output() = default;
+			virtual ~Output();
 
 			/*! @cond */
 
@@ -110,6 +116,21 @@ namespace SFB {
 
 			//@}
 
+
+			// ========================================
+			/*! @name Block-based callback support */
+			//@{
+
+			/*!
+			 * @brief Set the block called immediately before the output is configured for an \c AudioDecoder with the specified format
+			 * @note Normally the most relevant parameters are the sample rate and number of channels
+			 * @note This block may be invoked from the decoding thread
+			 * @param block The block to be invoked before the output is configured for th specified format
+			 */
+			void SetPrepareForFormatBlock(FormatBlock block);
+
+			//@}
+
 		protected:
 
 			// ========================================
@@ -169,6 +190,10 @@ namespace SFB {
 			Player				*mPlayer;			/*!< @brief Weak reference to owning player */
 
 		private:
+
+			// ========================================
+			// Callbacks
+			FormatBlock								mPrepareForFormatBlock;
 
 			// ========================================
 			// Subclasses must implement the following methods

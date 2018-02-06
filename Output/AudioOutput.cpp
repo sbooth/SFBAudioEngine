@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2018 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -7,14 +7,31 @@
 #include "Logger.h"
 
 SFB::Audio::Output::Output()
-	: mPlayer(nullptr)
+	: mPlayer(nullptr),	mPrepareForFormatBlock(nullptr)
 {}
+SFB::Audio::Output::~Output()
+{
+	if(mPrepareForFormatBlock) {
+		Block_release(mPrepareForFormatBlock);
+		mPrepareForFormatBlock = nullptr;
+	}
+}
 
 #pragma mark -
 
 bool SFB::Audio::Output::SupportsFormat(const AudioFormat& format) const
 {
 	return _SupportsFormat(format);
+}
+
+void SFB::Audio::Output::SetPrepareForFormatBlock(FormatBlock block)
+{
+	if(mPrepareForFormatBlock) {
+		Block_release(mPrepareForFormatBlock);
+		mPrepareForFormatBlock = nullptr;
+	}
+	if(block)
+		mPrepareForFormatBlock = Block_copy(block);
 }
 
 bool SFB::Audio::Output::Open()
@@ -91,6 +108,8 @@ bool SFB::Audio::Output::Reset()
 
 bool SFB::Audio::Output::SetupForDecoder(const Decoder& decoder)
 {
+	if(mPrepareForFormatBlock)
+		mPrepareForFormatBlock(decoder.GetFormat());
 	return _SetupForDecoder(decoder);
 }
 
