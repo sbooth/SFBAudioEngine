@@ -633,10 +633,10 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	memset(&trackInfo, 0, sizeof(MP4TagTrack));
 
 	if(GetTrackNumber())
-		CFNumberGetValue(GetTrackNumber(), kCFNumberSInt32Type, &trackInfo.index);
+		CFNumberGetValue(GetTrackNumber(), kCFNumberSInt16Type, &trackInfo.index);
 
 	if(GetTrackTotal())
-		CFNumberGetValue(GetTrackTotal(), kCFNumberSInt32Type, &trackInfo.total);
+		CFNumberGetValue(GetTrackTotal(), kCFNumberSInt16Type, &trackInfo.total);
 
 	MP4TagsSetTrack(tags, &trackInfo);
 
@@ -645,10 +645,10 @@ bool SFB::Audio::MP4Metadata::_WriteMetadata(CFErrorRef *error)
 	memset(&discInfo, 0, sizeof(MP4TagDisk));
 
 	if(GetDiscNumber())
-		CFNumberGetValue(GetDiscNumber(), kCFNumberSInt32Type, &discInfo.index);
+		CFNumberGetValue(GetDiscNumber(), kCFNumberSInt16Type, &discInfo.index);
 
 	if(GetDiscTotal())
-		CFNumberGetValue(GetDiscTotal(), kCFNumberSInt32Type, &discInfo.total);
+		CFNumberGetValue(GetDiscTotal(), kCFNumberSInt16Type, &discInfo.total);
 
 	MP4TagsSetDisk(tags, &discInfo);
 
