@@ -51,12 +51,12 @@ enum ePlayerFlags : unsigned int {
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
 		_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
-			_playerFlags.fetch_or(ePlayerFlagRenderingStarted);
+			self->_playerFlags.fetch_or(ePlayerFlagRenderingStarted);
 		});
 
 		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
 		_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
-			_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
+			self->_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
 		});
 
 		// Update the UI 5 times per second
@@ -66,28 +66,28 @@ enum ePlayerFlags : unsigned int {
 		dispatch_source_set_event_handler(_timer, ^{
 
 			// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
-			auto flags = _playerFlags.load();
+			auto flags = self->_playerFlags.load();
 
 			if(ePlayerFlagRenderingStarted & flags) {
-				_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
+				self->_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
 
 				[self updateWindowUI];
 
-				NSURL *playingURL = (__bridge NSURL *)_player->GetPlayingURL();
+				NSURL *playingURL = (__bridge NSURL *)self->_player->GetPlayingURL();
 				if([playingURL isFileURL])
 					[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:playingURL];
 
 				return;
 			}
 			else if(ePlayerFlagRenderingFinished & flags) {
-				_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
+				self->_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
 
 				[self updateWindowUI];
 
 				return;
 			}
 
-			if(!_player->IsPlaying())
+			if(!self->_player->IsPlaying())
 				[self.playButton setTitle:@"Resume"];
 			else
 				[self.playButton setTitle:@"Pause"];
@@ -95,7 +95,7 @@ enum ePlayerFlags : unsigned int {
 			SInt64 currentFrame, totalFrames;
 			CFTimeInterval currentTime, totalTime;
 
-			if(_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
+			if(self->_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
 				double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
 
 				[self.slider setDoubleValue:fractionComplete];
