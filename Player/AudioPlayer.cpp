@@ -1034,12 +1034,19 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				if(noErr != result) {
 					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
 
+					// If this happens, output will be impossible
+					if(mErrorBlock) {
+						SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), ""));
+						SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Format not supported"), ""));
+						SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's format is not supported by the selected output device."), ""));
+
+						SFB::CFError formatError(CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, decoderState->mDecoder->GetURL(), failureReason, recoverySuggestion));
+
+						mErrorBlock(formatError);
+					}
+
 					decoderState->mFlags.fetch_or(eDecoderStateDataFlagDecodingFinished | eDecoderStateDataFlagRenderingFinished);
 					decoderState = nullptr;
-
-					// If this happens, output will be impossible
-					if(mErrorBlock)
-						mErrorBlock(nullptr);
 
 					continue;
 				}
