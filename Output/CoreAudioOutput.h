@@ -125,7 +125,7 @@ namespace SFB {
 			 * @brief Get the sample rate converter's quality
 			 *
 			 * This corresponds to the property \c kAudioUnitProperty_RenderQuality
-			 * @param complexity A \c UInt32 to receive the SRC quality
+			 * @param quality A \c UInt32 to receive the SRC quality
 			 * @return \c true on success, \c false otherwise
 			 * @see kAudioUnitProperty_RenderQuality
 			 */
@@ -135,7 +135,7 @@ namespace SFB {
 			 * @brief Set the sample rate converter's quality
 			 *
 			 * This corresponds to the property \c kAudioUnitProperty_RenderQuality
-			 * @param complexity The desired SRC quality
+			 * @param quality The desired SRC quality
 			 * @return \c true on success, \c false otherwise
 			 * @see kAudioUnitProperty_RenderQuality
 			 */
@@ -459,7 +459,7 @@ namespace SFB {
 			/*!
 			 * @brief Get the mixer \c AudioUnit used by the internal \c AUGraph
 			 *
-			 * @param node An \c AudioUnit to receive the mixer unit
+			 * @param au An \c AudioUnit to receive the mixer unit
 			 * @return \c true on success, \c false otherwise
 			 */
 			bool GetAUGraphMixer(AudioUnit& au) const;
@@ -467,7 +467,7 @@ namespace SFB {
 			/*!
 			 * @brief Get the output \c AudioUnit used by the internal \c AUGraph
 			 *
-			 * @param node An \c AudioUnit to receive the output unit
+			 * @param au An \c AudioUnit to receive the output unit
 			 * @return \c true on success, \c false otherwise
 			 */
 			bool GetAUGraphOutput(AudioUnit& au) const;

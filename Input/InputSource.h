@@ -136,7 +136,7 @@ namespace SFB {
 
 		/*!
 		 * @brief Read an integral type from the input
-		 * @tparam The integral type to read
+		 * @tparam T The integral type to read
 		 * @param value The destination value
 		 * @return \c true on success, \c false otherwise
 		 */
@@ -151,7 +151,7 @@ namespace SFB {
 
 		/*!
 		 * @brief Read an unsigned little endian integral type from the input and convert to host byte ordering
-		 * @tparam The unsigned integral type to read
+		 * @tparam T The unsigned integral type to read
 		 * @param value The destination value
 		 * @return \c true on success, \c false otherwise
 		 */
@@ -173,7 +173,7 @@ namespace SFB {
 
 		/*!
 		 * @brief Read an unsigned big endian integral type from the input and convert to host byte ordering
-		 * @tparam The unsigned integral type to read
+		 * @tparam T The unsigned integral type to read
 		 * @param value The destination value
 		 * @return \c true on success, \c false otherwise
 		 */
@@ -195,7 +195,7 @@ namespace SFB {
 
 		/*!
 		 * @brief Read an unsigned integral type from the input and swap its byte ordering
-		 * @tparam The unsigned integral type to read
+		 * @tparam T The unsigned integral type to read
 		 * @param value The destination value
 		 * @return \c true on success, \c false otherwise
 		 */
