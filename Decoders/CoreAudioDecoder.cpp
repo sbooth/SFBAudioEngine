@@ -150,7 +150,7 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::CoreAudioDecoder::CreateDecoder(Inpu
 #pragma mark Creation and Destruction
 
 SFB::Audio::CoreAudioDecoder::CoreAudioDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mAudioFile(nullptr), mExtAudioFile(nullptr), mUseM4AWorkarounds(false), mCurrentFrame(0)
+	: Decoder(std::move(inputSource)), mAudioFile(nullptr), mExtAudioFile(nullptr)
 {}
 
 SFB::Audio::CoreAudioDecoder::~CoreAudioDecoder()
@@ -288,17 +288,13 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 	}
 
 	// Setup the channel layout
-	// There is a bug in EAF where if the underlying AF doesn't return a channel layout it returns an empty struct
-//	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
-	result = AudioFileGetPropertyInfo(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, nullptr);
+	result = ExtAudioFileGetPropertyInfo(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, nullptr);
 	if(noErr == result) {
 		auto channelLayout = (AudioChannelLayout *)malloc(dataSize);
-//		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, mChannelLayout);
-		result = AudioFileGetProperty(mAudioFile, kAudioFilePropertyChannelLayout, &dataSize, channelLayout);
+		result = ExtAudioFileGetProperty(mExtAudioFile, kExtAudioFileProperty_FileChannelLayout, &dataSize, channelLayout);
 
 		if(noErr != result) {
-//			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileGetProperty (kAudioFilePropertyChannelLayout) failed: " << result);
+			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: " << result);
 
             free(channelLayout);
 
@@ -368,36 +364,6 @@ bool SFB::Audio::CoreAudioDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	if(kAudioFileM4AType == fileFormat || kAudioFileMPEG4Type == fileFormat || kAudioFileAAC_ADTSType == fileFormat)
-		mUseM4AWorkarounds = true;
-
-#if 0
-	// This was supposed to determine if ExtAudioFile had been fixed, but even though
-	// it passes on 10.6.2 things are not behaving properly
-	SInt64 currentFrame = -1;
-	result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
-
-	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileTell failed: " << result);
-
-		result = ExtAudioFileDispose(mExtAudioFile);
-		if(noErr != result)
-			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileDispose failed: " << result);
-
-		result = AudioFileClose(mAudioFile);
-		if(noErr != result)
-			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.CoreAudio", "AudioFileClose failed: " << result);
-
-		mAudioFile = nullptr;
-		mExtAudioFile = nullptr;
-
-		return false;
-	}
-
-	if(0 > currentFrame)
-		mUseM4AWorkarounds = true;
-#endif
-
 	return true;
 }
 
@@ -447,9 +413,6 @@ UInt32 SFB::Audio::CoreAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 		return 0;
 	}
 
-	if(mUseM4AWorkarounds)
-		mCurrentFrame += frameCount;
-
 	return frameCount;
 }
 
@@ -467,9 +430,6 @@ SInt64 SFB::Audio::CoreAudioDecoder::_GetTotalFrames() const
 
 SInt64 SFB::Audio::CoreAudioDecoder::_GetCurrentFrame() const
 {
-	if(mUseM4AWorkarounds)
-		return mCurrentFrame;
-
 	SInt64 currentFrame = -1;
 
 	OSStatus result = ExtAudioFileTell(mExtAudioFile, &currentFrame);
@@ -488,9 +448,6 @@ SInt64 SFB::Audio::CoreAudioDecoder::_SeekToFrame(SInt64 frame)
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.CoreAudio", "ExtAudioFileSeek failed: " << result);
 		return -1;
 	}
-
-	if(mUseM4AWorkarounds)
-		mCurrentFrame = frame;
 
 	return _GetCurrentFrame();
 }
