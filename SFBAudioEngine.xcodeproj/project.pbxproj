@@ -45,12 +45,16 @@
 		3261EA3B1902E41400730236 /* AudioOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3261EA321902A0D200730236 /* AudioOutput.cpp */; };
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		326AA58C215C28E9003ACA3C /* AddMP4TagToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326AA58A215C28E9003ACA3C /* AddMP4TagToDictionary.cpp */; };
+		326AA58D215C28E9003ACA3C /* AddMP4TagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 326AA58B215C28E9003ACA3C /* AddMP4TagToDictionary.h */; };
 		326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */; };
 		326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* CreateStringForOSType.h */; };
 		327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */; };
 		327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */; };
 		327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */; };
 		327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */; };
+		328BBA9E215F938B004150C6 /* SetMP4TagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.cpp */; };
+		328BBA9F215F938B004150C6 /* SetMP4TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */; };
 		328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */; };
 		3291CC1514F5CB7D00B34DA4 /* Base64Utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 329AB8A1148B185300180506 /* Base64Utilities.cpp */; };
 		3291CC1614F5CB8100B34DA4 /* SetTagFromMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32D9016F14793DD100DBE73B /* SetTagFromMetadata.cpp */; };
@@ -217,10 +221,14 @@
 		3261EA331902A0D200730236 /* AudioOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioOutput.h; sourceTree = "<group>"; };
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
+		326AA58A215C28E9003ACA3C /* AddMP4TagToDictionary.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AddMP4TagToDictionary.cpp; sourceTree = "<group>"; };
+		326AA58B215C28E9003ACA3C /* AddMP4TagToDictionary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddMP4TagToDictionary.h; sourceTree = "<group>"; };
 		327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringUtilities.cpp; sourceTree = "<group>"; };
 		327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
 		327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFDictionaryUtilities.cpp; sourceTree = "<group>"; };
 		327C4BAD14F7D8B50063F7AB /* CFDictionaryUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFDictionaryUtilities.h; sourceTree = "<group>"; };
+		328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SetMP4TagFromMetadata.cpp; sourceTree = "<group>"; };
+		328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SetMP4TagFromMetadata.h; sourceTree = "<group>"; };
 		328E230D1476EE9E00C34178 /* AddTagToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = AddTagToDictionary.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		328E230E1476EE9E00C34178 /* AddTagToDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AddTagToDictionary.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AddXiphCommentToDictionary.cpp; sourceTree = "<group>"; };
@@ -527,6 +535,8 @@
 				32EE7D4812DD3D1500533884 /* AddID3v1TagToDictionary.cpp */,
 				3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */,
 				3205E3CB11307A3700FD9DAD /* AddID3v2TagToDictionary.cpp */,
+				326AA58B215C28E9003ACA3C /* AddMP4TagToDictionary.h */,
+				326AA58A215C28E9003ACA3C /* AddMP4TagToDictionary.cpp */,
 				328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */,
 				328EDB8011FD384800266816 /* AddXiphCommentToDictionary.cpp */,
 				32D9017014793DD100DBE73B /* SetTagFromMetadata.h */,
@@ -537,6 +547,8 @@
 				32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.cpp */,
 				3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */,
 				3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.cpp */,
+				328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */,
+				328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.cpp */,
 				3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */,
 				3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp */,
 			);
@@ -622,6 +634,7 @@
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */,
 				32C3DD9C1943466E00CEA060 /* LoopableRegionDecoder.h in Headers */,
+				326AA58D215C28E9003ACA3C /* AddMP4TagToDictionary.h in Headers */,
 				32C3DD9B1943406000CEA060 /* DoPDecoder.h in Headers */,
 				32AEB2F61409BB23001F9A60 /* Logger.h in Headers */,
 				32B848EC180E395D00A222C5 /* ReplayGainAnalyzer.h in Headers */,
@@ -631,6 +644,7 @@
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
 				32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */,
 				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
+				328BBA9F215F938B004150C6 /* SetMP4TagFromMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
 				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
@@ -768,6 +782,7 @@
 				3205E45C11308F8C00FD9DAD /* MusepackMetadata.cpp in Sources */,
 				3261EA3B1902E41400730236 /* AudioOutput.cpp in Sources */,
 				3205E4C311309CA300FD9DAD /* OggFLACMetadata.cpp in Sources */,
+				328BBA9E215F938B004150C6 /* SetMP4TagFromMetadata.cpp in Sources */,
 				3205E4C511309CA300FD9DAD /* OggVorbisMetadata.cpp in Sources */,
 				3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */,
 				3291CC1714F5CB9400B34DA4 /* AddTagToDictionary.cpp in Sources */,
@@ -776,6 +791,7 @@
 				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
 				32A319FE11C2072C009AE255 /* AddAudioPropertiesToDictionary.cpp in Sources */,
 				328EDB8211FD384800266816 /* AddXiphCommentToDictionary.cpp in Sources */,
+				326AA58C215C28E9003ACA3C /* AddMP4TagToDictionary.cpp in Sources */,
 				32C3DD9A1943406000CEA060 /* DoPDecoder.cpp in Sources */,
 				3291CC1514F5CB7D00B34DA4 /* Base64Utilities.cpp in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
@@ -884,7 +900,6 @@
 					"-ldumb",
 					"-lFLAC",
 					"-lmac",
-					"-lmp4v2",
 					"-lmpcdec",
 					"-logg",
 					"-lopus",
@@ -923,7 +938,6 @@
 					"-ldumb",
 					"-lFLAC",
 					"-lmac",
-					"-lmp4v2",
 					"-lmpcdec",
 					"-logg",
 					"-lopus",
