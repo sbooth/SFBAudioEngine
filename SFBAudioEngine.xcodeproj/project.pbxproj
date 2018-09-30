@@ -896,7 +896,7 @@
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -935,7 +935,7 @@
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
