@@ -891,11 +891,12 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -929,11 +930,12 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
