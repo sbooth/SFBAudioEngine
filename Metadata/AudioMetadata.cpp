@@ -138,39 +138,31 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		// Verify the file exists
-		SInt32 errorCode = noErr;
-		SFB::CFBoolean fileExists((CFBooleanRef)CFURLCreatePropertyFromResource(kCFAllocatorDefault, url, kCFURLFileExists, &errorCode));
+		if(CFURLResourceIsReachable(url, error)) {
+			SFB::CFString pathExtension(CFURLCopyPathExtension(url));
+			if(pathExtension) {
+				// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
 
-		if(fileExists) {
-			if(CFBooleanGetValue(fileExists)) {
-				SFB::CFString pathExtension(CFURLCopyPathExtension(url));
-				if(pathExtension) {
-
-					// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-
-					for(auto subclassInfo : sRegisteredSubclasses) {
-						if(subclassInfo.mHandlesFilesWithExtension(pathExtension)) {
-							unique_ptr metadata(subclassInfo.mCreateMetadata(url));
-							if(metadata->ReadMetadata(error))
-								return metadata;
-						}
+				for(auto subclassInfo : sRegisteredSubclasses) {
+					if(subclassInfo.mHandlesFilesWithExtension(pathExtension)) {
+						unique_ptr metadata(subclassInfo.mCreateMetadata(url));
+						if(metadata->ReadMetadata(error))
+							return metadata;
 					}
 				}
 			}
-			else {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "The requested URL doesn't exist");
+		}
+		else {
+			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "The requested URL doesn't exist");
 
-				if(error) {
-					SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""));
-					SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File not found"), ""));
-					SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
+			if(error) {
+				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""));
+				SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File not found"), ""));
+				SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file may exist on removable media or may have been deleted."), ""));
 
-					*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, url, failureReason, recoverySuggestion);
-				}
+				*error = CreateErrorForURL(Metadata::ErrorDomain, Metadata::InputOutputError, description, url, failureReason, recoverySuggestion);
 			}
 		}
-		else
-			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "CFURLCreatePropertyFromResource failed: " << errorCode);
 	}
 
 	return nullptr;

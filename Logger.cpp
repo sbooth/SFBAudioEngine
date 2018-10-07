@@ -243,9 +243,9 @@ std::ostream& operator<<(std::ostream& out, CFURLRef u)
 #if !TARGET_OS_IPHONE
 	if(CFStringHasPrefix(s, CFSTR("file:"))) {
 		CFStringRef displayName = nullptr;
-		OSStatus result = LSCopyDisplayNameForURL(u, &displayName);
+		Boolean result = CFURLCopyResourcePropertyForKey(u, kCFURLLocalizedNameKey, &displayName, nullptr);
 
-		if(noErr == result && nullptr != displayName) {
+		if(result && nullptr != displayName) {
 			out << displayName;
 			CFRelease(displayName);
 			displayName = nullptr;

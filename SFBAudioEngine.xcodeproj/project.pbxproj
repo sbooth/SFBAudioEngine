@@ -850,7 +850,7 @@
 				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				SDKROOT = macosx;
@@ -869,7 +869,7 @@
 				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				SDKROOT = macosx;
@@ -895,7 +895,7 @@
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -933,7 +933,7 @@
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",

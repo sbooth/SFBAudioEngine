@@ -1,7 +1,7 @@
 About SFBAudioEngine
 ====================
 
-SFBAudioEngine is a set of C++ classes enabling Mac OS X and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
+SFBAudioEngine is a set of C++ classes enabling macOS (10.13+) and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
 
 * WAVE
 * AIFF
@@ -13,14 +13,12 @@ SFBAudioEngine is a set of C++ classes enabling Mac OS X and iOS applications to
 * Ogg Vorbis
 * Ogg Speex
 * Ogg Opus
-* Musepack (Mac OS X only)
-* Monkey's Audio (Mac OS X only)
-* True Audio (Mac OS X only)
+* Musepack (macOS only)
+* Monkey's Audio (macOS only)
+* True Audio (macOS only)
 * All other formats supported natively by Core Audio
 
 In addition to playback, SFBAudioEngine supports reading and writing of metadata for most supported formats.
-
-SFBAudioEngine uses C++11 language and standard library features.  For this reason clang must be used to compile SFBAudioEngine and its dependencies, and clang's libc++ must be used as the C++ standard library.  Any application using SFBAudioEngine must also be compiled with clang and libc++.
 
 Building SFBAudioEngine
 =======================

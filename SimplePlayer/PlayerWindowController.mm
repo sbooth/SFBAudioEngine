@@ -43,7 +43,11 @@ enum ePlayerFlags : unsigned int {
 		}
 
 		catch(const std::exception& e) {
-			NSRunAlertPanel(@"Unable to create audio player", @"", @"OK", @"", @"");
+			NSAlert *alert = [[NSAlert alloc] init];
+			[alert setAlertStyle:NSAlertStyleCritical];
+			[alert setMessageText:@"Unable to create audio player"];
+			[alert addButtonWithTitle:@"OK"];
+			/* response = */ [alert runModal];
 			return nil;
 		}
 
@@ -114,8 +118,6 @@ enum ePlayerFlags : unsigned int {
 
 - (void) dealloc
 {
-	dispatch_release(_timer);
-
 	delete _player;
 	_player = nullptr;
 }

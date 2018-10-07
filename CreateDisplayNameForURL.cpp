@@ -25,10 +25,10 @@ SFB::CreateDisplayNameForURL(CFURLRef url)
 		bool isFileURL = (kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive));
 
 		if(isFileURL) {
-			OSStatus result = LSCopyDisplayNameForURL(url, &displayName);
+			Boolean result = CFURLCopyResourcePropertyForKey(url, kCFURLLocalizedNameKey, &displayName, nullptr);
 
-			if(noErr != result) {
-				LOGGER_WARNING("org.sbooth.AudioEngine", "LSCopyDisplayNameForURL failed: " << result);
+			if(!result) {
+				LOGGER_WARNING("org.sbooth.AudioEngine", "CFURLCopyResourcePropertyForKey(kCFURLLocalizedNameKey) failed: " << result);
 				displayName = CFURLCopyLastPathComponent(url);
 			}
 		}
