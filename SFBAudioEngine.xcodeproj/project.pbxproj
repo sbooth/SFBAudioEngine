@@ -891,6 +891,7 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
@@ -929,6 +930,7 @@
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
 					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
