@@ -28,8 +28,8 @@ namespace {
 
 CFArrayRef SFB::Audio::MP4Metadata::CreateSupportedFileExtensions()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("m4a"), CFSTR("mp4") };
-	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 2, &kCFTypeArrayCallBacks);
+	CFStringRef supportedExtensions [] = { CFSTR("m4a"), CFSTR("m4r"), CFSTR("mp4") };
+	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 3, &kCFTypeArrayCallBacks);
 }
 
 CFArrayRef SFB::Audio::MP4Metadata::CreateSupportedMIMETypes()
@@ -44,6 +44,8 @@ bool SFB::Audio::MP4Metadata::HandlesFilesWithExtension(CFStringRef extension)
 		return false;
 
 	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("m4a"), kCFCompareCaseInsensitive))
+		return true;
+	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("m4r"), kCFCompareCaseInsensitive))
 		return true;
 	else if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("mp4"), kCFCompareCaseInsensitive))
 		return true;
