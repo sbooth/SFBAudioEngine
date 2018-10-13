@@ -1,37 +1,11 @@
 /*
- *  Copyright (C) 2013 Stephen F. Booth <me@sbooth.org>
- *  All Rights Reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions are
- *  met:
- *
- *    - Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *    - Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in the
- *      documentation and/or other materials provided with the distribution.
- *    - Neither the name of Stephen F. Booth nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright (c) 2013 - 2018 Stephen F. Booth <me@sbooth.org>
+ * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include "LibavDecoder.h"
-#include "AllocateABL.h"
-#include "DeallocateABL.h"
-#include "CreateChannelLayout.h"
+#include "AudioBufferList.h"
+#include "AudioChannelLayout.h"
 #include "CFWrapper.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -43,64 +17,74 @@ extern "C" {
 }
 
 
+namespace {
+
 #define BUF_SIZE 4096
 #define ERRBUF_SIZE 512
 
-static void RegisterLibavDecoder() __attribute__ ((constructor));
-static void RegisterLibavDecoder()
-{
-	AudioDecoder::RegisterSubclass<LibavDecoder>(-1);
-}
-
-#pragma mark Initialization
-
-static void Setuplibav() __attribute__ ((constructor));
-static void Setuplibav()
-{
-	// Register codecs and disable logging
-	av_register_all();
-	av_log_set_level(AV_LOG_QUIET);
-}
-
-#pragma mark Callbacks
-
-static int
-my_read_packet(void *opaque, uint8_t *buf, int buf_size)
-{
-	assert(nullptr != opaque);
-
-	LibavDecoder *decoder = static_cast<LibavDecoder *>(opaque);
-	return (int)decoder->GetInputSource()->Read(buf, buf_size);
-}
-
-static int64_t
-my_seek(void *opaque, int64_t offset, int whence)
-{
-	assert(nullptr != opaque);
-
-	LibavDecoder *decoder = static_cast<LibavDecoder *>(opaque);
-	InputSource *inputSource = decoder->GetInputSource();
-
-	if(!inputSource->SupportsSeeking())
-		return -1;
-
-	// Adjust offset as required
-	switch(whence) {
-		case SEEK_SET:		/* offset remains unchanged */			break;
-		case SEEK_CUR:		offset += inputSource->GetOffset();		break;
-		case SEEK_END:		offset += inputSource->GetLength();		break;
-		case AVSEEK_SIZE:	return inputSource->GetLength();		/* break; */
+	void RegisterLibavDecoder() __attribute__ ((constructor));
+	void RegisterLibavDecoder()
+	{
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::LibavDecoder>(-75);
 	}
 
-	if(!inputSource->SeekToOffset(offset))
-		return -1;
+	#pragma mark Initialization
 
-	return inputSource->GetOffset();
+	void SetupLibav() __attribute__ ((constructor));
+	void SetupLibav()
+	{
+		// Register codecs and disable logging
+		av_register_all();
+		av_log_set_level(AV_LOG_QUIET);
+	}
+
+	#pragma mark Callbacks
+
+	int my_read_packet(void *opaque, uint8_t *buf, int buf_size)
+	{
+		assert(nullptr != opaque);
+
+		SFB::Audio::LibavDecoder *decoder = static_cast<SFB::Audio::LibavDecoder *>(opaque);
+		return (int)decoder->GetInputSource().Read(buf, buf_size);
+	}
+
+	int64_t my_seek(void *opaque, int64_t offset, int whence)
+	{
+		assert(nullptr != opaque);
+
+		SFB::Audio::LibavDecoder *decoder = static_cast<SFB::Audio::LibavDecoder *>(opaque);
+		SFB::InputSource& inputSource = decoder->GetInputSource();
+
+		if(!inputSource.SupportsSeeking())
+			return -1;
+
+		// Adjust offset as required
+		switch(whence) {
+			case SEEK_SET:
+				/* offset remains unchanged */
+				break;
+			case SEEK_CUR:
+				offset += inputSource.GetOffset();
+				break;
+			case SEEK_END:
+				offset += inputSource.GetLength();
+				break;
+			case AVSEEK_SIZE:
+				return inputSource.GetLength();
+				/* break; */
+		}
+
+		if(!inputSource.SeekToOffset(offset))
+			return -1;
+
+		return inputSource.GetOffset();
+	}
+
 }
 
 #pragma mark Static Methods
 
-CFArrayRef LibavDecoder::CreateSupportedFileExtensions()
+CFArrayRef SFB::Audio::LibavDecoder::CreateSupportedFileExtensions()
 {
 	CFMutableArrayRef supportedExtensions = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
@@ -108,9 +92,9 @@ CFArrayRef LibavDecoder::CreateSupportedFileExtensions()
 	AVInputFormat *inputFormat = nullptr;
 	while((inputFormat = av_iformat_next(inputFormat))) {
 		if(inputFormat->extensions) {
-			SFB::CFString extensions = CFStringCreateWithCString(kCFAllocatorDefault, inputFormat->extensions, kCFStringEncodingUTF8);
+			SFB::CFString extensions(inputFormat->extensions, kCFStringEncodingUTF8);
 			if(extensions) {
-				SFB::CFArray extensionsArray = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, extensions, CFSTR(","));
+				SFB::CFArray extensionsArray(CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, extensions, CFSTR(",")));
 				if(extensionsArray)
 					CFArrayAppendArray(supportedExtensions, extensionsArray, CFRangeMake(0, CFArrayGetCount(extensionsArray)));
 			}
@@ -120,12 +104,27 @@ CFArrayRef LibavDecoder::CreateSupportedFileExtensions()
 	return supportedExtensions;
 }
 
-CFArrayRef LibavDecoder::CreateSupportedMIMETypes()
+CFArrayRef SFB::Audio::LibavDecoder::CreateSupportedMIMETypes()
 {
-	return CFArrayCreate(kCFAllocatorDefault, nullptr, 0, &kCFTypeArrayCallBacks);
+	CFMutableArrayRef supportedMIMETypes = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+
+	// Loop through each input format
+	AVInputFormat *inputFormat = nullptr;
+	while((inputFormat = av_iformat_next(inputFormat))) {
+		if(inputFormat->extensions) {
+			SFB::CFString mimeTypes(inputFormat->mime_type, kCFStringEncodingUTF8);
+			if(mimeTypes) {
+				SFB::CFArray mimeTypesArray(CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mimeTypes, CFSTR(",")));
+				if(mimeTypesArray)
+					CFArrayAppendArray(supportedMIMETypes, mimeTypesArray, CFRangeMake(0, CFArrayGetCount(mimeTypesArray)));
+			}
+		}
+	}
+
+	return supportedMIMETypes;
 }
 
-bool LibavDecoder::HandlesFilesWithExtension(CFStringRef extension)
+bool SFB::Audio::LibavDecoder::HandlesFilesWithExtension(CFStringRef extension)
 {
 	if(nullptr == extension)
 		return false;
@@ -146,54 +145,67 @@ bool LibavDecoder::HandlesFilesWithExtension(CFStringRef extension)
 		}
 	}
 
-	CFRelease(supportedExtensions), supportedExtensions = nullptr;
+	CFRelease(supportedExtensions);
+	supportedExtensions = nullptr;
 
 	return extensionIsSupported;
 }
 
-bool LibavDecoder::HandlesMIMEType(CFStringRef /*mimeType*/)
+bool SFB::Audio::LibavDecoder::HandlesMIMEType(CFStringRef mimeType)
 {
-	return false;
+	if(nullptr == mimeType)
+		return false;
+
+	CFArrayRef supportedMIMETypes = CreateSupportedMIMETypes();
+
+	if(nullptr == supportedMIMETypes)
+		return false;
+
+	bool mimeTypeIsSupported = false;
+
+	CFIndex numberOfSupportedMIMETypes = CFArrayGetCount(supportedMIMETypes);
+	for(CFIndex currentIndex = 0; currentIndex < numberOfSupportedMIMETypes; ++currentIndex) {
+		CFStringRef currentMIMEType = (CFStringRef)CFArrayGetValueAtIndex(supportedMIMETypes, currentIndex);
+		if(kCFCompareEqualTo == CFStringCompare(mimeType, currentMIMEType, kCFCompareCaseInsensitive)) {
+			mimeTypeIsSupported = true;
+			break;
+		}
+	}
+
+	CFRelease(supportedMIMETypes);
+	supportedMIMETypes = nullptr;
+
+	return mimeTypeIsSupported;
 }
 
-AudioDecoder * LibavDecoder::CreateDecoder(InputSource *inputSource)
+SFB::Audio::Decoder::unique_ptr SFB::Audio::LibavDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
 {
-	return new LibavDecoder(inputSource);
+	return unique_ptr(new LibavDecoder(std::move(inputSource)));
 }
 
 #pragma mark Creation and Destruction
 
-LibavDecoder::LibavDecoder(InputSource *inputSource)
-	: AudioDecoder(inputSource), mBufferList(nullptr), mIOContext(nullptr), mFrame(nullptr), mFormatContext(nullptr), mStreamIndex(0), mCurrentFrame(0)
+SFB::Audio::LibavDecoder::LibavDecoder(InputSource::unique_ptr inputSource)
+	: Decoder(std::move(inputSource)), mStreamIndex(-1), mCurrentFrame(0)
 {}
-
-LibavDecoder::~LibavDecoder()
-{
-	if(IsOpen())
-		Close();
-}
 
 #pragma mark Functionality
 
-bool LibavDecoder::Open(CFErrorRef *error)
+bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 {
-	if(IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libav", "Open() called on an AudioDecoder that is already open");
-		return true;
-	}
+	auto ioContext = unique_AVIOContext_ptr(avio_alloc_context((unsigned char *)av_malloc(BUF_SIZE), BUF_SIZE, 0, this, my_read_packet, nullptr, my_seek),
+											[](AVIOContext *context) { av_free(context); });
 
-	// Ensure the input source is open
-	if(!mInputSource->IsOpen() && !mInputSource->Open(error))
-		return false;
-
-	auto ioContext = std::unique_ptr<AVIOContext, std::function<void (AVIOContext *)>>(avio_alloc_context((unsigned char *)av_malloc(BUF_SIZE), BUF_SIZE, 0, this, my_read_packet, nullptr, my_seek),
-																				   [](AVIOContext *context) { av_free(context); });
-
-	auto formatContext = std::unique_ptr<AVFormatContext, std::function<void (AVFormatContext *)>>(avformat_alloc_context(), [](AVFormatContext *context) { avformat_free_context(context); });
+	auto formatContext = unique_AVFormatContext_ptr(avformat_alloc_context(),
+													[](AVFormatContext *context) { avformat_free_context(context); });
 	formatContext->pb = ioContext.get();
 
+	char filename [PATH_MAX];
+	if(!CFURLGetFileSystemRepresentation(mInputSource->GetURL(), false, (UInt8 *)filename, PATH_MAX))
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "CFURLGetFileSystemRepresentation failed");
+
 	auto rawFormatContext = formatContext.get();
-	int result = avformat_open_input(&rawFormatContext, nullptr, nullptr, nullptr);
+	int result = avformat_open_input(&rawFormatContext, filename, nullptr, nullptr);
 	if(0 != result) {
 		char errbuf [ERRBUF_SIZE];
 		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
@@ -203,11 +215,11 @@ bool LibavDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avformat_open_input failed: " << result);
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -218,19 +230,19 @@ bool LibavDecoder::Open(CFErrorRef *error)
 		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "Could not find stream information");
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
     }
 
 	// Use the best audio stream present in the file
-	AVCodec *codec = nullptr;
-	result = av_find_best_stream(formatContext.get(), AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
+	AVCodec *decoder = nullptr;
+	result = av_find_best_stream(formatContext.get(), AVMEDIA_TYPE_AUDIO, -1, -1, &decoder, 0);
 	if(0 > result) {
 		char errbuf [ERRBUF_SIZE];
 		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
@@ -240,11 +252,11 @@ bool LibavDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_find_best_stream failed: " << result);
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
@@ -252,25 +264,25 @@ bool LibavDecoder::Open(CFErrorRef *error)
 
 	mStreamIndex = result;
 
-	auto stream = formatContext->streams[mStreamIndex];
-	auto codecContext = stream->codec;
-
-	AVCodec *decoder = avcodec_find_decoder(codecContext->codec_id);
-	if(!decoder) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_find_decoder(" << codecContext->codec_id << ") failed");
+	auto codecContext = unique_AVCodecContext_ptr(avcodec_alloc_context3(decoder),
+												  [](AVCodecContext *context) { avcodec_free_context(&context); });
+	if(!codecContext) {
+		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_alloc_context3 failed");
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
 
-	result = avcodec_open2(codecContext, decoder, nullptr);
+	result = avcodec_parameters_to_context(codecContext.get(), formatContext->streams[mStreamIndex]->codecpar);
+
+	result = avcodec_open2(codecContext.get(), decoder, nullptr);
 	if(0 != result) {
 		char errbuf [ERRBUF_SIZE];
 		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
@@ -280,23 +292,25 @@ bool LibavDecoder::Open(CFErrorRef *error)
 			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_open2 failed: " << result);
 
 		if(nullptr != error) {
-			SFB::CFString description = CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), "");
-			SFB::CFString failureReason = CFCopyLocalizedString(CFSTR("File Format Not Recognized"), "");
-			SFB::CFString recoverySuggestion = CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), "");
+			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
+			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("File Format Not Recognized"), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
 
-			*error = CreateErrorForURL(AudioDecoderErrorDomain, AudioDecoderInputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
+			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, mInputSource->GetURL(), failureReason, recoverySuggestion);
 		}
 
 		return false;
 	}
 
+	av_dump_format(formatContext.get(), 0, "", 0);
+
 	// Generate PCM output
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 
-	mFormat.mSampleRate			= codecContext->sample_rate;
-	mFormat.mChannelsPerFrame	= (UInt32)codecContext->channels;
+	mFormat.mSampleRate			= formatContext->streams[mStreamIndex]->codecpar->sample_rate;
+	mFormat.mChannelsPerFrame	= (UInt32)formatContext->streams[mStreamIndex]->codecpar->channels;
 
-	switch(codecContext->sample_fmt) {
+	switch(formatContext->streams[mStreamIndex]->codecpar->format) {
 
 		case AV_SAMPLE_FMT_U8P:
 			mFormat.mFormatFlags		= kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
@@ -383,118 +397,75 @@ bool LibavDecoder::Open(CFErrorRef *error)
 			break;
 	}
 
-	mFormat.mReserved			= 0;
+	mFormat.mReserved					= 0;
 
 	// Set up the source format
 	mSourceFormat.mFormatID				= 'LBAV';
 
-	mSourceFormat.mSampleRate			= codecContext->sample_rate;
-	mSourceFormat.mChannelsPerFrame		= (UInt32)codecContext->channels;
+	mSourceFormat.mSampleRate			= formatContext->streams[mStreamIndex]->codecpar->sample_rate;;
+	mSourceFormat.mChannelsPerFrame		= (UInt32)formatContext->streams[mStreamIndex]->codecpar->channels;
 
 	mSourceFormat.mFormatFlags			= mFormat.mFormatFlags;
 	mSourceFormat.mBitsPerChannel		= mFormat.mBitsPerChannel;
 
 	// TODO: Determine max frame size
-	mBufferList = AllocateABL(mFormat, 4096);
-	if(nullptr == mBufferList) {
+	if(!mBufferList.Allocate(mFormat, 4096)) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.Libav", "Unable to allocate memory")
+
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
 		return false;
 	}
 
-	// Allocate the libav frame
-	auto frame = std::unique_ptr<AVFrame, std::function<void (AVFrame *)>>(avcodec_alloc_frame(), [](AVFrame *f) { av_free(f); });
-	mFrame = std::move(frame);
+	mFrame = unique_AVFrame_ptr(av_frame_alloc(),
+								[](AVFrame *f) { av_frame_free(&f); });
+
+	mPacket = unique_AVPacket_ptr(av_packet_alloc(),
+								  [](AVPacket *p) { av_packet_free(&p); });
 
 	mIOContext = std::move(ioContext);
 	mFormatContext = std::move(formatContext);
+	mCodecContext = std::move(codecContext);
 
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-		mBufferList->mBuffers[i].mDataByteSize = 0;
-
-	mIsOpen = true;
 	return true;
 }
 
-bool LibavDecoder::Close(CFErrorRef */*error*/)
+bool SFB::Audio::LibavDecoder::_Close(CFErrorRef */*error*/)
 {
-	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioDecoder.Libav", "Close() called on an AudioDecoder that hasn't been opened");
-		return true;
-	}
-
 	mStreamIndex = -1;
 
+	mPacket.reset();
 	mFrame.reset();
 	mIOContext.reset();
 	mFormatContext.reset();
 
-	mIsOpen = false;
+	mBufferList.Deallocate();
+
 	return true;
 }
 
-CFStringRef LibavDecoder::CreateSourceFormatDescription() const
+SFB::CFString SFB::Audio::LibavDecoder::_GetSourceFormatDescription() const
 {
-	if(!IsOpen())
-		return nullptr;
+	auto codecDescriptor = avcodec_descriptor_get(mFormatContext->streams[mStreamIndex]->codecpar->codec_id);
 
-	return CFStringCreateWithFormat(kCFAllocatorDefault,
-									nullptr,
-									CFSTR("%s, %u channels, %u Hz"),
-									mFormatContext->streams[mStreamIndex]->codec->codec->long_name,
-									mSourceFormat.mChannelsPerFrame,
-									(unsigned int)mSourceFormat.mSampleRate);
+	return CFString(nullptr,
+					CFSTR("%s, %u channels, %u Hz"),
+					codecDescriptor ? codecDescriptor->long_name : "",
+					mSourceFormat.mChannelsPerFrame,
+					(unsigned int)mSourceFormat.mSampleRate);
 }
 
-SInt64 LibavDecoder::GetTotalFrames() const
+SInt64 SFB::Audio::LibavDecoder::_GetTotalFrames() const
 {
-	if(!IsOpen())
-		return -1;
-
 	if(mFormatContext->streams[mStreamIndex]->nb_frames)
 		return mFormatContext->streams[mStreamIndex]->nb_frames;
 
 	return av_rescale(mFormatContext->streams[mStreamIndex]->duration, mFormatContext->streams[mStreamIndex]->time_base.num, mFormatContext->streams[mStreamIndex]->time_base.den) * (SInt64)mFormat.mSampleRate;
 }
 
-SInt64 LibavDecoder::GetCurrentFrame() const
+UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	if(!IsOpen())
-		return -1;
-
-	return mCurrentFrame;
-}
-
-SInt64 LibavDecoder::SeekToFrame(SInt64 frame)
-{
-	if(!IsOpen() || 0 > frame || frame >= GetTotalFrames())
-		return -1;
-
-	int64_t timestamp = av_rescale(frame / (SInt64)mFormat.mSampleRate, mFormatContext->streams[mStreamIndex]->time_base.den, mFormatContext->streams[mStreamIndex]->time_base.num);
-	int result = av_seek_frame(mFormatContext.get(), mStreamIndex, timestamp, 0);
-	if(0 > result) {
-		char errbuf [ERRBUF_SIZE];
-		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << errbuf);
-		}
-		else
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << result);
-
-		return -1;
-	}
-
-	avcodec_flush_buffers(mFormatContext->streams[mStreamIndex]->codec);
-
-	mCurrentFrame = frame;
-	return mCurrentFrame;
-}
-
-UInt32 LibavDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
-{
-	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
-		return 0;
-
 	UInt32 framesRead = 0;
 
 	// Reset output buffer data size
@@ -530,17 +501,13 @@ UInt32 LibavDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			break;
 
 		// Read a single frame from the file
-		AVPacket packet;
-		av_init_packet(&packet);
-
-		int result = av_read_frame(mFormatContext.get(), &packet);
-		if(0 != result) {
+		int result = av_read_frame(mFormatContext.get(), mPacket.get());
+		if(0 > result) {
 			// EOF reached
 			if(AVERROR_EOF == result) {
-				if(CODEC_CAP_DELAY & mFormatContext->streams[mStreamIndex]->codec->codec->capabilities) {
-					// TODO: Flush buffer using avcodec_decode_audio4
+				if(CODEC_CAP_DELAY & mCodecContext->codec->capabilities) {
+					// TODO: Flush buffer
 				}
-
 			}
 			else {
 				char errbuf [ERRBUF_SIZE];
@@ -554,54 +521,71 @@ UInt32 LibavDecoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 			break;
 		}
 
-		if(packet.stream_index != mStreamIndex)
+		if(mPacket->stream_index != mStreamIndex)
 			continue;
 
-		// Decode the audio
-		avcodec_get_frame_defaults(mFrame.get());
+//		av_frame_unref(mFrame.get());
 
-		// Feed the packet to the decoder unitl no frames are returned or the input is fully consumed
-		while(0 < packet.size) {
-			int gotFrame = 0;
-			int bytesConsumed = avcodec_decode_audio4(mFormatContext->streams[mStreamIndex]->codec, mFrame.get(), &gotFrame, &packet);
-
-			if(0 > bytesConsumed) {
-				char errbuf [ERRBUF_SIZE];
-				if(0 == av_strerror(bytesConsumed, errbuf, ERRBUF_SIZE)) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_decode_audio4 failed: " << errbuf);
-				}
-				else
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_decode_audio4 failed: " << result);
-
-				packet.size = 0;
-
-				continue;
+		// Send the packet with the compressed data to the decoder
+		result = avcodec_send_packet(mCodecContext.get(), mPacket.get());
+		if(0 != result) {
+			char errbuf [ERRBUF_SIZE];
+			if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
+				LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_send_packet failed: " << errbuf);
 			}
-			else if(gotFrame) {
-				// Planar formats are not interleaved
-				if(av_sample_fmt_is_planar(mFormatContext->streams[mStreamIndex]->codec->sample_fmt)) {
-					for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex) {
-						memcpy(mBufferList->mBuffers[bufferIndex].mData, mFrame->extended_data[bufferIndex], (size_t)mFrame->linesize[0]);
-						mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFrame->linesize[0];
-						mBufferList->mBuffers[bufferIndex].mNumberChannels = 1;
-					}
-				}
-				else {
-					memcpy(mBufferList->mBuffers[0].mData, mFrame->extended_data[0], (size_t)mFrame->linesize[0]);
-					mBufferList->mBuffers[0].mDataByteSize = (UInt32)mFrame->linesize[0];
-					mBufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
-				}
-			}
+			else
+				LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_send_packet failed: " << result);
 
-			// Adjust packet size and buffer
-			packet.data += bytesConsumed;
-			packet.size -= bytesConsumed;
+			break;
 		}
 
-		av_free_packet(&packet);
+		// Read the output frames
+		while(result >= 0) {
+			result = avcodec_receive_frame(mCodecContext.get(), mFrame.get());
+			if(AVERROR(EAGAIN) == result || AVERROR_EOF == result)
+				break;
+
+			// Planar formats are not interleaved
+			if(av_sample_fmt_is_planar(mCodecContext->sample_fmt)) {
+				for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex) {
+					memcpy(mBufferList->mBuffers[bufferIndex].mData, mFrame->extended_data[bufferIndex], (size_t)mFrame->linesize[0]);
+					mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFrame->linesize[0];
+					mBufferList->mBuffers[bufferIndex].mNumberChannels = 1;
+				}
+			}
+			else {
+				memcpy(mBufferList->mBuffers[0].mData, mFrame->extended_data[0], (size_t)mFrame->linesize[0]);
+				mBufferList->mBuffers[0].mDataByteSize = (UInt32)mFrame->linesize[0];
+				mBufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
+			}
+
+		}
+
+//		av_packet_unref(&packet);
 	}
 
 	mCurrentFrame += framesRead;
 
 	return framesRead;
+}
+
+SInt64 SFB::Audio::LibavDecoder::_SeekToFrame(SInt64 frame)
+{
+	int64_t timestamp = av_rescale(frame / (SInt64)mFormat.mSampleRate, mFormatContext->streams[mStreamIndex]->time_base.den, mFormatContext->streams[mStreamIndex]->time_base.num);
+	int result = av_seek_frame(mFormatContext.get(), mStreamIndex, timestamp, 0);
+	if(0 > result) {
+		char errbuf [ERRBUF_SIZE];
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << errbuf);
+		}
+		else
+			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << result);
+
+		return -1;
+	}
+
+	avcodec_flush_buffers(mCodecContext.get());
+
+	mCurrentFrame = frame;
+	return mCurrentFrame;
 }

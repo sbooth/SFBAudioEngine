@@ -1,102 +1,84 @@
 /*
- *  Copyright (C) 2013 Stephen F. Booth <me@sbooth.org>
- *  All Rights Reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions are
- *  met:
- *
- *    - Redistributions of source code must retain the above copyright
- *      notice, this list of conditions and the following disclaimer.
- *    - Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in the
- *      documentation and/or other materials provided with the distribution.
- *    - Neither the name of Stephen F. Booth nor the names of its
- *      contributors may be used to endorse or promote products derived
- *      from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright (c) 2013 - 2018 Stephen F. Booth <me@sbooth.org>
+ * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <functional>
-
-#include <CoreFoundation/CoreFoundation.h>
-
 #include "AudioDecoder.h"
+#include "AudioBufferList.h"
 
+struct AVPacket;
 struct AVFrame;
 struct AVIOContext;
 struct AVFormatContext;
+struct AVCodecContext;
 
-// ========================================
-// An AudioDecoder subclass supporting all formats handled by libav
-// ========================================
-class LibavDecoder : public AudioDecoder
-{
+namespace SFB {
 
-public:
+	namespace Audio {
 
-	// ========================================
-	// The data types handled by this class
-	static CFArrayRef CreateSupportedFileExtensions();
-	static CFArrayRef CreateSupportedMIMETypes();
+		// ========================================
+		// An AudioDecoder subclass supporting all formats handled by ffmpeg/libav
+		// ========================================
+		class LibavDecoder : public Decoder
+		{
 
-	static bool HandlesFilesWithExtension(CFStringRef extension);
-	static bool HandlesMIMEType(CFStringRef mimeType);
+		public:
 
-	static AudioDecoder * CreateDecoder(InputSource *inputSource);
+			// ========================================
+			// The data types handled by this class
+			static CFArrayRef CreateSupportedFileExtensions();
+			static CFArrayRef CreateSupportedMIMETypes();
 
-	// ========================================
-	// Creation
-	LibavDecoder(InputSource *inputSource);
+			static bool HandlesFilesWithExtension(CFStringRef extension);
+			static bool HandlesMIMEType(CFStringRef mimeType);
 
-	// ========================================
-	// Destruction
-	virtual ~LibavDecoder();
+			static Decoder::unique_ptr CreateDecoder(InputSource::unique_ptr inputSource);
 
-	// ========================================
-	// Audio access
-	virtual bool Open(CFErrorRef *error = nullptr);
-	virtual bool Close(CFErrorRef *error = nullptr);
+			// Creation
+			explicit LibavDecoder(InputSource::unique_ptr inputSource);
 
-	// ========================================
-	// The native format of the source audio
-	virtual CFStringRef CreateSourceFormatDescription() const;
+		private:
 
-	// ========================================
-	// Attempt to read frameCount frames of audio, returning the actual number of frames read
-	virtual UInt32 ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
+			// Audio access
+			virtual bool _Open(CFErrorRef *error);
+			virtual bool _Close(CFErrorRef *error);
 
-	// ========================================
-	// Source audio information
-	virtual SInt64 GetTotalFrames() const;
-	virtual SInt64 GetCurrentFrame() const;
+			// The native format of the source audio
+			virtual SFB::CFString _GetSourceFormatDescription() const;
 
-	// ========================================
-	// Seeking support
-	virtual inline bool SupportsSeeking() const				{ return mInputSource->SupportsSeeking(); }
-	virtual SInt64 SeekToFrame(SInt64 frame);
+			// Attempt to read frameCount frames of audio, returning the actual number of frames read
+			virtual UInt32 _ReadAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
-private:
+			// Source audio information
+			virtual SInt64 _GetTotalFrames() const;
+			inline virtual SInt64 _GetCurrentFrame() const			{ return mCurrentFrame; }
 
-	std::unique_ptr<AVFrame, std::function<void (AVFrame *)>> mFrame;
-	std::unique_ptr<AVIOContext, std::function<void (AVIOContext *)>> mIOContext;
-	std::unique_ptr<AVFormatContext, std::function<void (AVFormatContext *)>> mFormatContext;
+			// Seeking support
+			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
+			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-	int mStreamIndex;
-	SInt64 mCurrentFrame;
-	AudioBufferList *mBufferList;
+			using unique_AVPacket_ptr = std::unique_ptr<AVPacket, std::function<void (AVPacket *)>>;
+			using unique_AVFrame_ptr = std::unique_ptr<AVFrame, std::function<void (AVFrame *)>>;
+			using unique_AVIOContext_ptr = std::unique_ptr<AVIOContext, std::function<void (AVIOContext *)>>;
+			using unique_AVFormatContext_ptr = std::unique_ptr<AVFormatContext, std::function<void (AVFormatContext *)>>;
+			using unique_AVCodecContext_ptr = std::unique_ptr<AVCodecContext, std::function<void (AVCodecContext *)>>;
 
-};
+			// Data members
+			unique_AVPacket_ptr					mPacket;
+			unique_AVFrame_ptr 					mFrame;
+			unique_AVIOContext_ptr 				mIOContext;
+			unique_AVFormatContext_ptr 			mFormatContext;
+			unique_AVCodecContext_ptr 			mCodecContext;
+
+			int 								mStreamIndex;
+			SInt64 								mCurrentFrame;
+
+			// For converting push to pull
+			BufferList							mBufferList;
+
+		};
+
+	}
+}
