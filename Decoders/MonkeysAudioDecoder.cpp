@@ -69,7 +69,7 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
-	virtual int Seek(int nDistance, unsigned int nMoveMode)
+	virtual int Seek(int64_t nDistance, unsigned int nMoveMode)
 	{
 		if(!mInputSource.SupportsSeeking())
 			return ERROR_IO_READ;
@@ -247,8 +247,8 @@ SFB::CFString SFB::Audio::MonkeysAudioDecoder::_GetSourceFormatDescription() con
 
 UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
-	int blocksRead = 0;
-	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int)frameCount, &blocksRead)) {
+	int64_t blocksRead = 0;
+	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int64_t)frameCount, &blocksRead)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
 		return 0;
 	}
