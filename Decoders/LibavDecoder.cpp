@@ -13,6 +13,7 @@
 extern "C" {
 	#include <libavformat/avformat.h>
 	#include <libavcodec/avcodec.h>
+	#include <libavutil/channel_layout.h>
 	#include <libavutil/mathematics.h>
 }
 
@@ -302,8 +303,6 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	av_dump_format(formatContext.get(), 0, "", 0);
-
 	// Generate PCM output
 	mFormat.mFormatID			= kAudioFormatLinearPCM;
 
@@ -408,6 +407,20 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 	mSourceFormat.mFormatFlags			= mFormat.mFormatFlags;
 	mSourceFormat.mBitsPerChannel		= mFormat.mBitsPerChannel;
 
+	switch(formatContext->streams[mStreamIndex]->codecpar->channel_layout) {
+		case AV_CH_LAYOUT_MONO:
+			mChannelLayout = SFB::Audio::ChannelLayout::Mono;
+			break;
+
+		case AV_CH_LAYOUT_STEREO:
+			mChannelLayout = SFB::Audio::ChannelLayout::Stereo;
+			break;
+
+//		default:
+//			mChannelLayout = SFB::Audio::ChannelLayout::ChannelLayoutWithBitmap(formatContext->streams[mStreamIndex]->codecpar->channel_layout);
+//			break;
+	}
+
 	// TODO: Determine max frame size
 	if(!mBufferList.Allocate(mFormat, 4096)) {
 		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.Libav", "Unable to allocate memory")
@@ -421,9 +434,6 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 	mFrame = unique_AVFrame_ptr(av_frame_alloc(),
 								[](AVFrame *f) { av_frame_free(&f); });
 
-	mPacket = unique_AVPacket_ptr(av_packet_alloc(),
-								  [](AVPacket *p) { av_packet_free(&p); });
-
 	mIOContext = std::move(ioContext);
 	mFormatContext = std::move(formatContext);
 	mCodecContext = std::move(codecContext);
@@ -435,7 +445,6 @@ bool SFB::Audio::LibavDecoder::_Close(CFErrorRef */*error*/)
 {
 	mStreamIndex = -1;
 
-	mPacket.reset();
 	mFrame.reset();
 	mIOContext.reset();
 	mFormatContext.reset();
@@ -500,8 +509,13 @@ UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 
 		if(framesRead == frameCount)
 			break;
 
+		AVPacket packet;
+		av_init_packet(&packet);
+		packet.data = nullptr;
+		packet.size = 0;
+
 		// Read a single frame from the file
-		int result = av_read_frame(mFormatContext.get(), mPacket.get());
+		int result = av_read_frame(mFormatContext.get(), &packet);
 		if(0 > result) {
 			// EOF reached
 			if(AVERROR_EOF == result) {
@@ -521,13 +535,13 @@ UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 
 			break;
 		}
 
-		if(mPacket->stream_index != mStreamIndex)
+		if(packet.stream_index != mStreamIndex)
 			continue;
 
 //		av_frame_unref(mFrame.get());
 
 		// Send the packet with the compressed data to the decoder
-		result = avcodec_send_packet(mCodecContext.get(), mPacket.get());
+		result = avcodec_send_packet(mCodecContext.get(), &packet);
 		if(0 != result) {
 			char errbuf [ERRBUF_SIZE];
 			if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
@@ -561,7 +575,7 @@ UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 
 
 		}
 
-//		av_packet_unref(&packet);
+		av_packet_unref(&packet);
 	}
 
 	mCurrentFrame += framesRead;

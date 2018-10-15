@@ -59,14 +59,12 @@ namespace SFB {
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
 
-			using unique_AVPacket_ptr = std::unique_ptr<AVPacket, std::function<void (AVPacket *)>>;
 			using unique_AVFrame_ptr = std::unique_ptr<AVFrame, std::function<void (AVFrame *)>>;
 			using unique_AVIOContext_ptr = std::unique_ptr<AVIOContext, std::function<void (AVIOContext *)>>;
 			using unique_AVFormatContext_ptr = std::unique_ptr<AVFormatContext, std::function<void (AVFormatContext *)>>;
 			using unique_AVCodecContext_ptr = std::unique_ptr<AVCodecContext, std::function<void (AVCodecContext *)>>;
 
 			// Data members
-			unique_AVPacket_ptr					mPacket;
 			unique_AVFrame_ptr 					mFrame;
 			unique_AVIOContext_ptr 				mIOContext;
 			unique_AVFormatContext_ptr 			mFormatContext;
