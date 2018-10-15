@@ -76,6 +76,11 @@ bool SFB::Audio::AudioFormat::IsDoP() const
 	return kAudioFormatDoP == mFormatID;
 }
 
+bool SFB::Audio::AudioFormat::IsBigEndian() const
+{
+	return kAudioFormatFlagIsBigEndian & mFormatFlags;
+}
+
 bool SFB::Audio::AudioFormat::IsNativeEndian() const
 {
 	return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags);

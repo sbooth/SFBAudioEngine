@@ -16,7 +16,10 @@ SFBAudioEngine is a set of C++ classes enabling macOS (10.13+) and iOS applicati
 * Musepack (macOS only)
 * Monkey's Audio (macOS only)
 * True Audio (macOS only)
-* All other formats supported natively by Core Audio
+* All formats supported by libsndfile
+* All formats supported by Core Audio
+* DSD to PCM conversion for DSD64
+* DSD over PCM (DoP) for DSF and DSDIFF on supported hardware
 
 In addition to playback, SFBAudioEngine supports reading and writing of metadata for most supported formats.
 

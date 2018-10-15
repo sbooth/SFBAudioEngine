@@ -66,6 +66,9 @@ namespace SFB {
 			/*! @brief Query whether this format represents DoP audio data */
 			bool IsDoP() const;
 
+			/*! @brief Query whether this format represents big-endian ordered daa */
+			bool IsBigEndian() const;
+
 			/*! @brief Query whether this format represents native-endian ordered daa */
 			bool IsNativeEndian() const;
 
