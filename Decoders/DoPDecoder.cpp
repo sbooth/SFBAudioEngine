@@ -91,7 +91,14 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 		return false;
 	}
 
-	mBufferList.Allocate(decoderFormat, 4096);
+	if(!mBufferList.Allocate(decoderFormat, 4096)) {
+		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.DoP", "Unable to allocate memory")
+
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
+
+		return false;
+	}
 
 	// Generate non-interleaved 24-bit big endian output
 	mFormat.mFormatID			= kAudioFormatDoP;
@@ -154,6 +161,7 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 		UInt32 framesDecoded = dsdFramesDecoded / DSD_FRAMES_PER_DOP_FRAME;
 
 		// Convert to DoP
+		// NB: Currently DSDIFFDecoder and DSFDecoder only produce non-interleaved output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 			const unsigned char *src = (const unsigned char *)mBufferList->mBuffers[i].mData;
 			unsigned char *dst = (unsigned char *)bufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize;
