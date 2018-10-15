@@ -14,8 +14,6 @@
 
 namespace {
 
-	const int kBufferCapacityFrames = 16384;
-
 	// Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 	static const uint8_t sBitReverseTable256 [256] =
 	{
@@ -24,22 +22,6 @@ namespace {
 #   define R6(n) R4(n), R4(n + 2*4 ), R4(n + 1*4 ), R4(n + 3*4 )
 		R6(0), R6(2), R6(1), R6(3)
 	};
-
-	/*!
-	 * Return the smallest power of two value greater than \c x
-	 * @param x A value in the range [2..2147483648]
-	 * @return The smallest power of two greater than \c x
-	 *
-	 */
-	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
-	{
-#if 0
-		assert(x > 1);
-		assert(x <= ((UINT32_MAX / 2) + 1));
-#endif
-
-		return 1 << (32 - __builtin_clz(x - 1));
-	}
 
 #pragma mark Begin DSD2PCM
 
@@ -79,6 +61,10 @@ namespace {
 #define FIFOSIZE 16             /* must be a power of two */
 #define FIFOMASK (FIFOSIZE-1)   /* bit mask for FIFO offsets */
 #define CTABLES ((HTAPS+7)/8)   /* number of "8 MACs" lookup tables */
+
+#if FIFOSIZE*8 < HTAPS*2
+#  error "FIFOSIZE too small"
+#endif
 
 	/*
 	 * Properties of this 96-tap lowpass filter when applied on a signal
@@ -153,7 +139,7 @@ namespace {
 
 	static float ctables[CTABLES][256];
 
-	void precalc()
+	void dsd2pcm_precalc()
 	{
 		int t, e, m, k;
 		double acc;
@@ -275,7 +261,7 @@ namespace {
 	void SetupDSD2PCM() __attribute__ ((constructor));
 	void SetupDSD2PCM()
 	{
-		precalc();
+		dsd2pcm_precalc();
 	}
 
 }
@@ -384,7 +370,7 @@ bool SFB::Audio::DSDPCMDecoder::_Open(CFErrorRef *error)
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), ""));
 			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported DSD sample rate"), ""));
-			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD over PCM."), ""));
+			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD to PCM conversion."), ""));
 
 			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
 		}
