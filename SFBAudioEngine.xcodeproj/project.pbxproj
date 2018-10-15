@@ -30,6 +30,8 @@
 		3230A938182E698900D630CF /* AudioBufferList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3230A936182E698900D630CF /* AudioBufferList.cpp */; };
 		3230A939182E698900D630CF /* AudioBufferList.h in Headers */ = {isa = PBXBuildFile; fileRef = 3230A937182E698900D630CF /* AudioBufferList.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 32386EF213D2135400D25175 /* HTTPInputSource.cpp */; };
+		324A31F521742DA2004EBCF8 /* DSDPCMDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 324A31F321742DA2004EBCF8 /* DSDPCMDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324A31F621742DA2004EBCF8 /* DSDPCMDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324A31F421742DA2004EBCF8 /* DSDPCMDecoder.cpp */; };
 		324DB05C12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */; };
 		324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */; };
 		3250B42D190B439F00C28CA8 /* CoreAudioOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3250B42B190B439E00C28CA8 /* CoreAudioOutput.cpp */; };
@@ -199,6 +201,8 @@
 		3230A937182E698900D630CF /* AudioBufferList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioBufferList.h; sourceTree = "<group>"; };
 		32386EF213D2135400D25175 /* HTTPInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HTTPInputSource.cpp; sourceTree = "<group>"; };
 		32386EF313D2135400D25175 /* HTTPInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPInputSource.h; sourceTree = "<group>"; };
+		324A31F321742DA2004EBCF8 /* DSDPCMDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSDPCMDecoder.h; sourceTree = "<group>"; };
+		324A31F421742DA2004EBCF8 /* DSDPCMDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSDPCMDecoder.cpp; sourceTree = "<group>"; };
 		324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MonkeysAudioDecoder.h; sourceTree = "<group>"; };
 		324DB05A12DBFA1E0055AF3F /* MonkeysAudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MonkeysAudioDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MonkeysAudioMetadata.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -342,11 +346,11 @@
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
 				329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
-				32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
-				32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */,
 				329392291A81929D00983695 /* Security.framework in Frameworks */,
+				32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */,
+				32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */,
 				3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -439,6 +443,8 @@
 				32C3DD981943406000CEA060 /* DoPDecoder.cpp */,
 				32E0FDCD21473B86009189FB /* DSDIFFDecoder.h */,
 				32E0FDCC21473B86009189FB /* DSDIFFDecoder.cpp */,
+				324A31F321742DA2004EBCF8 /* DSDPCMDecoder.h */,
+				324A31F421742DA2004EBCF8 /* DSDPCMDecoder.cpp */,
 				32E0FDCF21473B86009189FB /* DSFDecoder.h */,
 				32E0FDCE21473B86009189FB /* DSFDecoder.cpp */,
 				3255602A1092A38F00580566 /* FLACDecoder.h */,
@@ -644,6 +650,7 @@
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
 				32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */,
 				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
+				324A31F521742DA2004EBCF8 /* DSDPCMDecoder.h in Headers */,
 				328BBA9F215F938B004150C6 /* SetMP4TagFromMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
@@ -819,6 +826,7 @@
 				32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */,
 				32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */,
 				32D429E613E308DB00FA07DE /* AudioPlayer.cpp in Sources */,
+				324A31F621742DA2004EBCF8 /* DSDPCMDecoder.cpp in Sources */,
 				32AEB2911409AF2B001F9A60 /* Logger.cpp in Sources */,
 				32AF1A6014C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */,
 				320A32E314DD5E8F00A5BAA4 /* TrueAudioMetadata.cpp in Sources */,
