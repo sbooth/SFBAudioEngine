@@ -457,7 +457,7 @@ UInt32 SFB::Audio::DSDPCMDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32
 		// NB: Currently DSDIFFDecoder and DSFDecoder only produce non-interleaved output
 		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
 			mContext[i].Translate(framesDecoded,
-								  (const unsigned char *)mBufferList->mBuffers[i].mData, 1,
+								  (const unsigned char *)mBufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize, 1,
 								  !mBufferList.GetFormat().IsBigEndian(),
 								  (float *)bufferList->mBuffers[i].mData, 1);
 
