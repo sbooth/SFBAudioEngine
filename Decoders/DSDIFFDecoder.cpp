@@ -606,6 +606,15 @@ namespace {
 
 		return ParseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 	}
+
+	CFErrorRef CreateInvalidDSDIFFFileError(CFURLRef url) CF_RETURNS_RETAINED
+	{
+		SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSDIFF file."), ""));
+		SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a DSDIFF file"), ""));
+		SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+
+		return CreateErrorForURL(SFB::Audio::Decoder::ErrorDomain, SFB::Audio::Decoder::InputOutputError, description, url, failureReason, recoverySuggestion);
+	}
 }
 
 #pragma mark Static Methods
@@ -670,6 +679,9 @@ bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 	auto chunks = ParseDSDIFF(GetInputSource());
 	if(!chunks) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Error parsing file");
+		if(error)
+			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
+
 		return false;
 	}
 
@@ -679,6 +691,9 @@ bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 
 	if(!propertyChunk || !sampleRateChunk || !channelsChunk) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Missing chunk in file");
+		if(error)
+			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
+
 		return false;
 	}
 
@@ -721,6 +736,9 @@ bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 	auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->mLocalChunks['DSD ']);
 	if(!soundDataChunk) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSDIFF", "Missing chunk in file");
+		if(error)
+			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
+
 		return false;
 	}
 
