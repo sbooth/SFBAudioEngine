@@ -18,7 +18,7 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @brief A wrapper around a Decoder supporting DSD to PCM conversion */
+		/*! @brief A wrapper around a Decoder supporting DSD64 to PCM conversion */
 		class DSDPCMDecoder : public Decoder
 		{
 
@@ -73,6 +73,20 @@ namespace SFB {
 			/*! @endcond */
 			//@}
 
+			// ========================================
+			/*! @name PCM Level Adjustment */
+			//@{
+
+			/*! @brief Get the linear gain applied to the converted DSD samples (default is 6 dBFS) */
+			inline float GetLinearGain() const 						{ return mLinearGain; }
+
+			/*!
+			 * @brief Set the linear gain applied to the converted DSD samples
+			 * @param linearGain The linear gain to apply after conversion to PCM
+			 */
+			inline void SetLinearGain(float linearGain) 			{ mLinearGain = linearGain; }
+
+			//@}
 
 		private:
 
@@ -107,6 +121,7 @@ namespace SFB {
 			Decoder::unique_ptr		mDecoder;
 			BufferList				mBufferList;
 			std::vector<DXD> 		mContext;
+			float 					mLinearGain;
 		};
 
 	}

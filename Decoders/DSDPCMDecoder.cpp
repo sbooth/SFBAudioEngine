@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <array>
 
+#include <Accelerate/Accelerate.h>
+
 #include "DSDPCMDecoder.h"
 #include "CFErrorUtilities.h"
 #include "Logger.h"
@@ -339,8 +341,9 @@ SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDPCMDecoder::CreateForDecoder(uniq
 	return unique_ptr(new DSDPCMDecoder(std::move(decoder)));
 }
 
+// 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
 SFB::Audio::DSDPCMDecoder::DSDPCMDecoder(Decoder::unique_ptr decoder)
-	: mDecoder(std::move(decoder))
+	: mDecoder(std::move(decoder)), mLinearGain(0x1.fec984p+0)
 {
 	assert(nullptr != mDecoder);
 }
@@ -417,7 +420,7 @@ bool SFB::Audio::DSDPCMDecoder::_Close(CFErrorRef *error)
 		return false;
 
 	mBufferList.Deallocate();
-//	mContext.clear();
+	mContext.clear();
 
 	return true;
 }
@@ -438,6 +441,7 @@ UInt32 SFB::Audio::DSDPCMDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32
 	}
 
 	UInt32 framesRead = 0;
+	const float linearGain = mLinearGain;
 
 	// Reset output buffer data size
 	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
@@ -460,6 +464,9 @@ UInt32 SFB::Audio::DSDPCMDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32
 								  (const unsigned char *)mBufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize, 1,
 								  !mBufferList.GetFormat().IsBigEndian(),
 								  (float *)bufferList->mBuffers[i].mData, 1);
+
+			// Boost signal by 6 dBFS
+			vDSP_vsmul((float *)bufferList->mBuffers[i].mData, 1, &linearGain, (float *)bufferList->mBuffers[i].mData, 1, framesDecoded);
 
 			bufferList->mBuffers[i].mDataByteSize += mFormat.FrameCountToByteCount(framesDecoded);
 		}
