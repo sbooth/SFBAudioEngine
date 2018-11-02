@@ -54,6 +54,10 @@ bool SFB::HTTPInputSource::_Open(CFErrorRef *error)
 		return false;
 	}
 
+    if(CFStringHasPrefix(CFURLGetString(GetURL()), CFSTR("https://"))) {
+        CFReadStreamSetProperty(mReadStream, kCFStreamPropertySocketSecurityLevel, kCFStreamSocketSecurityLevelNegotiatedSSL);
+    }
+
 	// Start the HTTP connection
 	CFStreamClientContext myContext = {
 		.version = 0,
