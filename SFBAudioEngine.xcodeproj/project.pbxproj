@@ -51,6 +51,8 @@
 		326AA58D215C28E9003ACA3C /* AddMP4TagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 326AA58B215C28E9003ACA3C /* AddMP4TagToDictionary.h */; };
 		326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */; };
 		326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* CreateStringForOSType.h */; };
+		3277E4D2218617CA00F5C0FF /* DSDIFFMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3277E4D0218617C900F5C0FF /* DSDIFFMetadata.cpp */; };
+		3277E4D3218617CA00F5C0FF /* DSDIFFMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3277E4D1218617CA00F5C0FF /* DSDIFFMetadata.h */; };
 		327C4BAA14F7D7F10063F7AB /* TagLibStringUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */; };
 		327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */; };
 		327C4BAE14F7D8B50063F7AB /* CFDictionaryUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */; };
@@ -227,6 +229,8 @@
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
 		326AA58A215C28E9003ACA3C /* AddMP4TagToDictionary.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AddMP4TagToDictionary.cpp; sourceTree = "<group>"; };
 		326AA58B215C28E9003ACA3C /* AddMP4TagToDictionary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddMP4TagToDictionary.h; sourceTree = "<group>"; };
+		3277E4D0218617C900F5C0FF /* DSDIFFMetadata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DSDIFFMetadata.cpp; sourceTree = "<group>"; };
+		3277E4D1218617CA00F5C0FF /* DSDIFFMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DSDIFFMetadata.h; sourceTree = "<group>"; };
 		327C4BA814F7D7F10063F7AB /* TagLibStringUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TagLibStringUtilities.cpp; sourceTree = "<group>"; };
 		327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
 		327C4BAC14F7D8B50063F7AB /* CFDictionaryUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CFDictionaryUtilities.cpp; sourceTree = "<group>"; };
@@ -589,6 +593,8 @@
 				3291CC2614F5D03C00B34DA4 /* AttachedPicture.cpp */,
 				3205E4291130847C00FD9DAD /* AIFFMetadata.h */,
 				3205E4281130847C00FD9DAD /* AIFFMetadata.cpp */,
+				3277E4D1218617CA00F5C0FF /* DSDIFFMetadata.h */,
+				3277E4D0218617C900F5C0FF /* DSDIFFMetadata.cpp */,
 				32BA761318203B0F00366204 /* DSFMetadata.h */,
 				32BA761218203B0F00366204 /* DSFMetadata.cpp */,
 				32EA6824112CD84B006C26F1 /* FLACMetadata.h */,
@@ -652,6 +658,7 @@
 				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
 				324A31F521742DA2004EBCF8 /* DSDPCMDecoder.h in Headers */,
 				328BBA9F215F938B004150C6 /* SetMP4TagFromMetadata.h in Headers */,
+				3277E4D3218617CA00F5C0FF /* DSDIFFMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
 				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
@@ -793,6 +800,7 @@
 				3205E4C511309CA300FD9DAD /* OggVorbisMetadata.cpp in Sources */,
 				3205E52C1130F49700FD9DAD /* SetXiphCommentFromMetadata.cpp in Sources */,
 				3291CC1714F5CB9400B34DA4 /* AddTagToDictionary.cpp in Sources */,
+				3277E4D2218617CA00F5C0FF /* DSDIFFMetadata.cpp in Sources */,
 				32D6552D115FC58C002B275C /* FileInputSource.cpp in Sources */,
 				32D6552F115FC58C002B275C /* InputSource.cpp in Sources */,
 				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
