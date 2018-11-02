@@ -30,6 +30,7 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int fl
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, EINVAL, nullptr);
 		return nullptr;
 	}
+
 	if(kCFCompareEqualTo == CFStringCompare(CFSTR("file"), scheme, kCFCompareCaseInsensitive)) {
 		if(InputSource::MemoryMapFiles & flags)
 			return unique_ptr(new MemoryMappedFileInputSource(url));
