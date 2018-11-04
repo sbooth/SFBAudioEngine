@@ -39,7 +39,8 @@ SFB::InputSource::unique_ptr SFB::InputSource::CreateForURL(CFURLRef url, int fl
 		else
 			return unique_ptr(new FileInputSource(url));
 	}
-	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive))
+	else if(kCFCompareEqualTo == CFStringCompare(CFSTR("http"), scheme, kCFCompareCaseInsensitive)
+            || kCFCompareEqualTo == CFStringCompare(CFSTR("https"), scheme, kCFCompareCaseInsensitive))
 		return unique_ptr(new HTTPInputSource(url));
 
 	return nullptr;
