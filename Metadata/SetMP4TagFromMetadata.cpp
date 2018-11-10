@@ -66,7 +66,7 @@ namespace {
 		if(nullptr == valueOne && nullptr == valueTwo)
 			return true;
 
-		int i, j = 0;
+		int i = 0, j = 0;
 		if(valueOne != nullptr && !CFNumberGetValue(valueOne, kCFNumberIntType, &i))
 			return false;
 		if(valueTwo != nullptr && !CFNumberGetValue(valueTwo, kCFNumberIntType, &j))
