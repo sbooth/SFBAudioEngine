@@ -345,7 +345,8 @@ UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 			break;
 		}
 
-		// The analyzer error about division by zero may be safely ignored, because mChannelsPerFrame is verified > 0 in Open()
+		// The analyzer error about division by zero may be safely ignored with assert, because mChannelsPerFrame is verified > 0 in Open()
+    assert(mFormat.mChannelsPerFrame > 0);
 		UInt32 framesDecoded = (UInt32)(bytesDecoded / (sizeof(float) * mFormat.mChannelsPerFrame));
 
 		// Deinterleave the samples
