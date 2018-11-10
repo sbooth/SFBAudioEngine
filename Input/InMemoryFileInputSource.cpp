@@ -41,7 +41,7 @@ bool SFB::InMemoryFileInputSource::_Open(CFErrorRef *error)
 	}
 
 	// Perform the allocation
-	mMemory = std::unique_ptr<int8_t []>(new int8_t [mFilestats.st_size]);
+	mMemory = std::unique_ptr<int8_t []>(new int8_t [static_cast<UInt64>(mFilestats.st_size)]);
 	if(!mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
