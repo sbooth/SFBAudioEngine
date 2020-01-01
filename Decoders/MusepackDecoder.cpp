@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -174,7 +174,7 @@ bool SFB::Audio::MusepackDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'MUSE';
+	mSourceFormat.mFormatID				= kAudioFormatMusepack;
 
 	mSourceFormat.mSampleRate			= streaminfo.sample_freq;
 	mSourceFormat.mChannelsPerFrame		= streaminfo.channels;

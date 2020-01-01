@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -180,7 +180,7 @@ bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'VORB';
+	mSourceFormat.mFormatID				= kAudioFormatVorbis;
 
 	mSourceFormat.mSampleRate			= ovInfo->rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)ovInfo->channels;

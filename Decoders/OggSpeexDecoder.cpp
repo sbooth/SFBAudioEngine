@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -274,7 +274,7 @@ bool SFB::Audio::OggSpeexDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'SPEE';
+	mSourceFormat.mFormatID				= kAudioFormatSpeex;
 
 	mSourceFormat.mSampleRate			= header->rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->nb_channels;

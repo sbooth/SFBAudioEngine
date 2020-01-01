@@ -210,7 +210,7 @@ bool SFB::Audio::MPEGDecoder::_Open(CFErrorRef *error)
 	UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'MPEG';
+	mSourceFormat.mFormatID				= kAudioFormatMPEG1;
 
 	mSourceFormat.mSampleRate			= rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)channels;

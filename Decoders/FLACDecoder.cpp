@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -294,7 +294,7 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 	}
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'FLAC';
+	mSourceFormat.mFormatID				= kAudioFormatFLAC;
 
 	mSourceFormat.mSampleRate			= mStreamInfo.sample_rate;
 	mSourceFormat.mChannelsPerFrame		= mStreamInfo.channels;

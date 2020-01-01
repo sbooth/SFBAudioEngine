@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -17,8 +17,18 @@ namespace SFB {
 
 		/*! @brief Additional audio format IDs */
 		enum {
+			kAudioFormatDoP = 'DoP ',						/*!< DSD over PCM (DoP) */
 			kAudioFormatDirectStreamDigital = 'DSD ',		/*!< Direct Stream Digital (DSD) */
-			kAudioFormatDoP = 'DoP '						/*!< DSD over PCM (DoP) */
+			kAudioFormatFLAC = 'FLAC',						/*!< Free Lossless Audio Codec (FLAC) */
+			kAudioFormatMOD = 'MOD ',						/*!< MOD */
+			kAudioFormatMonkeysAudio = 'APE ',				/*!< Monkey's Audio (APE) */
+			kAudioFormatMPEG1 = 'MPG1',						/*!< MPEG-1 (Layer I, II, or III) */
+			kAudioFormatMusepack = 'MPC ',					/*!< Musepack */
+			kAudioFormatOpus = 'OPUS',						/*!< Ogg Opus */
+			kAudioFormatSpeex = 'SPX ',						/*!< Ogg Speex */
+			kAudioFormatVorbis = 'OGG ',					/*!< Ogg Vorbis */
+			kAudioFormatTrueAudio = 'TTA ',					/*!< True Audio */
+			kAudioFormatWavpack = 'WV  '					/*!< Wavpack */
 		};
 
 		/*! @brief A class extending the functionality of a Core %Audio \c AudioStreamBasicDescription for DSD */

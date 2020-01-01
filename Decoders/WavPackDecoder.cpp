@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -226,7 +226,7 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 	mTotalFrames						= WavpackGetNumSamples(mWPC.get());
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'WVPK';
+	mSourceFormat.mFormatID				= kAudioFormatWavpack;
 
 	mSourceFormat.mSampleRate			= WavpackGetSampleRate(mWPC.get());
 	mSourceFormat.mChannelsPerFrame		= (UInt32)WavpackGetNumChannels(mWPC.get());

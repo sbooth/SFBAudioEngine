@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -161,7 +161,7 @@ bool SFB::Audio::OggOpusDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'OPUS';
+	mSourceFormat.mFormatID				= kAudioFormatOpus;
 
 	mSourceFormat.mSampleRate			= header->input_sample_rate;
 	mSourceFormat.mChannelsPerFrame		= (UInt32)header->channel_count;

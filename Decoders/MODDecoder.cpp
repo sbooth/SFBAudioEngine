@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -186,7 +186,7 @@ bool SFB::Audio::MODDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'MOD ';
+	mSourceFormat.mFormatID				= kAudioFormatMOD;
 
 	mSourceFormat.mSampleRate			= DUMB_SAMPLE_RATE;
 	mSourceFormat.mChannelsPerFrame		= DUMB_CHANNELS;

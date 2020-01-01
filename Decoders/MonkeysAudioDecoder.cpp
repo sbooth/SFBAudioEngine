@@ -214,7 +214,7 @@ bool SFB::Audio::MonkeysAudioDecoder::_Open(CFErrorRef *error)
 	mFormat.mReserved			= 0;
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'APE ';
+	mSourceFormat.mFormatID				= kAudioFormatMonkeysAudio;
 
 	mSourceFormat.mSampleRate			= mFormat.mSampleRate;
 	mSourceFormat.mChannelsPerFrame		= mFormat.mChannelsPerFrame;

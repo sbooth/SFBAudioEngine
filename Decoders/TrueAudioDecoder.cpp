@@ -165,7 +165,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 	}
 
 	// Set up the source format
-	mSourceFormat.mFormatID				= 'TTA ';
+	mSourceFormat.mFormatID				= kAudioFormatTrueAudio;
 
 	mSourceFormat.mSampleRate			= streamInfo.sps;
 	mSourceFormat.mChannelsPerFrame		= streamInfo.nch;
