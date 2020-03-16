@@ -175,7 +175,7 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 	char errorBuf [80];
 
 	// Setup converter
-	mWPC = unique_WavpackContext_ptr(WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE, 0), WavpackCloseFile);
+	mWPC = unique_WavpackContext_ptr(WavpackOpenFileInputEx(&mStreamReader, this, nullptr, errorBuf, OPEN_WVC | OPEN_NORMALIZE/* | OPEN_DSD_NATIVE*/, 0), WavpackCloseFile);
 	if(!mWPC) {
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid WavPack file."), ""));
@@ -190,6 +190,7 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 
 	// Floating-point and lossy files will be handed off in the canonical Core Audio format
 	int mode = WavpackGetMode(mWPC.get());
+//	int qmode = WavpackGetQualifyMode(mWPC.get());
 	if(MODE_FLOAT & mode || !(MODE_LOSSLESS & mode)) {
 		// Canonical Core Audio format
 		mFormat.mFormatID			= kAudioFormatLinearPCM;
@@ -205,6 +206,8 @@ bool SFB::Audio::WavPackDecoder::_Open(CFErrorRef *error)
 
 		mFormat.mReserved			= 0;
 	}
+//	else if(qmode & QMODE_DSD_AUDIO) {
+//	}
 	else {
 		mFormat.mFormatID			= kAudioFormatLinearPCM;
 		mFormat.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
@@ -293,6 +296,7 @@ UInt32 SFB::Audio::WavPackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt3
 
 		// The samples returned are handled differently based on the file's mode
 		int mode = WavpackGetMode(mWPC.get());
+//		int qmode = WavpackGetQualifyMode(mWPC.get());
 
 		// Floating point files require no special handling other than deinterleaving
 		if(MODE_FLOAT & mode) {
@@ -311,18 +315,34 @@ UInt32 SFB::Audio::WavPackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt3
 		}
 		// Lossless files will be handed off as integers
 		else if(MODE_LOSSLESS & mode) {
-			// WavPack hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
+			// WavPack hands us 32-bit signed ints with the samples low-aligned
 			UInt32 shift = (UInt32)(8 * (sizeof(int32_t) - (size_t)WavpackGetBytesPerSample(mWPC.get())));
 
-			// Deinterleave the 32-bit samples and shift to high-alignment
-			for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
-				int32_t *shiftedBuffer = (int32_t *)bufferList->mBuffers[channel].mData;
+			// Deinterleave the 32-bit samples, shifting to high alignment
+			if(0 < shift) {
+				int32_t mask = (1 << shift) - 1;
 
-				for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
-					*shiftedBuffer++ = mBuffer[sample] << shift;
+				for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+					int32_t *buffer = (int32_t *)bufferList->mBuffers[channel].mData;
 
-				bufferList->mBuffers[channel].mNumberChannels	= 1;
-				bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(int32_t);
+					for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+						*buffer++ = (mBuffer[sample] & mask) << shift;
+
+					bufferList->mBuffers[channel].mNumberChannels	= 1;
+					bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(int32_t);
+				}
+			}
+			// Just deinterleave the 32-bit samples
+			else {
+				for(UInt32 channel = 0; channel < mFormat.mChannelsPerFrame; ++channel) {
+					int32_t *buffer = (int32_t *)bufferList->mBuffers[channel].mData;
+
+					for(UInt32 sample = channel; sample < samplesRead * mFormat.mChannelsPerFrame; sample += mFormat.mChannelsPerFrame)
+						*buffer++ = mBuffer[sample];
+
+					bufferList->mBuffers[channel].mNumberChannels	= 1;
+					bufferList->mBuffers[channel].mDataByteSize		= samplesRead * sizeof(int32_t);
+				}
 			}
 		}
 		// Convert lossy files to float
