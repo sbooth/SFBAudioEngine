@@ -916,7 +916,7 @@
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
-					"-lmac",
+					"-lMAC",
 					"-lmpcdec",
 					"-logg",
 					"-lopus",
@@ -955,7 +955,7 @@
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
-					"-lmac",
+					"-lMAC",
 					"-lmpcdec",
 					"-logg",
 					"-lopus",
