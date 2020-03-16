@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -501,7 +501,7 @@ bool SFB::Audio::CoreAudioOutput::DeviceIsHogged() const
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
@@ -532,7 +532,7 @@ bool SFB::Audio::CoreAudioOutput::StartHoggingDevice()
 	// Is it hogged already?
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
@@ -581,7 +581,7 @@ bool SFB::Audio::CoreAudioOutput::StopHoggingDevice()
 	// Is it hogged by us?
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mScope		= kAudioObjectPropertyScopeOutput,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
