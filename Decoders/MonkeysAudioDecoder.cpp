@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -11,10 +11,10 @@
 
 #define PLATFORM_APPLE
 
-#include <mac/All.h>
-#include <mac/MACLib.h>
+#include <MAC/All.h>
+#include <MAC/MACLib.h>
 
-#include <mac/IO.h>
+#include <MAC/IO.h>
 
 namespace {
 
@@ -69,13 +69,13 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
-	virtual int Seek(int64_t nDistance, unsigned int nMoveMode)
+	virtual APE::int64 PerformSeek()
 	{
 		if(!mInputSource.SupportsSeeking())
 			return ERROR_IO_READ;
 
-		SInt64 offset = nDistance;
-		switch(nMoveMode) {
+		SInt64 offset = m_nSeekPosition;
+		switch(m_nSeekMethod) {
 			case SEEK_SET:
 				// offset remains unchanged
 				break;
@@ -106,14 +106,14 @@ public:
 		return ERROR_IO_WRITE;
 	}
 
-	inline virtual int GetPosition()
+	inline virtual APE::int64 GetPosition()
 	{
-		return (int)mInputSource.GetOffset();
+		return mInputSource.GetOffset();
 	}
 
-	inline virtual unsigned int GetSize()
+	inline virtual APE::int64 GetSize()
 	{
-		return (unsigned int)mInputSource.GetLength();
+		return mInputSource.GetLength();
 	}
 
 	inline virtual int GetName(wchar_t * pBuffer)
@@ -271,7 +271,7 @@ SInt64 SFB::Audio::MonkeysAudioDecoder::_GetCurrentFrame() const
 
 SInt64 SFB::Audio::MonkeysAudioDecoder::_SeekToFrame(SInt64 frame)
 {
-	if(ERROR_SUCCESS != mDecompressor->Seek((int)frame)) {
+	if(ERROR_SUCCESS != mDecompressor->Seek(frame)) {
 		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "mDecompressor->Seek() failed");
 		return -1;
 	}
