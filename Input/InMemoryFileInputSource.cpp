@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -41,7 +41,7 @@ bool SFB::InMemoryFileInputSource::_Open(CFErrorRef *error)
 	}
 
 	// Perform the allocation
-	mMemory = std::unique_ptr<int8_t []>(new int8_t [mFilestats.st_size]);
+	mMemory = std::unique_ptr<int8_t []>(new int8_t [(size_t)mFilestats.st_size]);
 	if(!mMemory) {
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, errno, nullptr);
