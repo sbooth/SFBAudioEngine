@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -9,8 +9,8 @@
 #include <speex/speex_bits.h>
 #include <speex/speex_stereo.h>
 
-#include "AudioDecoder.h"
 #include "AudioBufferList.h"
+#include "AudioDecoder.h"
 
 namespace SFB {
 

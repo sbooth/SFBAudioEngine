@@ -3,10 +3,11 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "MODDecoder.h"
-#include "CFWrapper.h"
+#include <os/log.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "MODDecoder.h"
 
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
@@ -217,7 +218,7 @@ SFB::CFString SFB::Audio::MODDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::MODDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MOD", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -242,7 +243,7 @@ SInt64 SFB::Audio::MODDecoder::_SeekToFrame(SInt64 frame)
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < mCurrentFrame) {
 		if(!_Close(nullptr) || !mInputSource->SeekToOffset(0) || !_Open(nullptr)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MOD", "Error reseting DUMB decoder");
+			os_log_error(OS_LOG_DEFAULT, "Error reseting DUMB decoder");
 			return -1;
 		}
 

@@ -1,17 +1,19 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/flacpicture.h>
+#include <os/log.h>
+
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "SetAPETagFromMetadata.h"
+#include <taglib/flacpicture.h>
+
 #include "AudioMetadata.h"
-#include "CFWrapper.h"
-#include "TagLibStringUtilities.h"
 #include "Base64Utilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "SetAPETagFromMetadata.h"
+#include "TagLibStringUtilities.h"
 
 // ========================================
 // APE tag utilities
@@ -70,7 +72,7 @@ namespace {
 		if(nullptr != value) {
 			double f;
 			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+				os_log_info(OS_LOG_DEFAULT, "CFNumberGetValue returned an approximation");
 
 			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
 		}
@@ -129,7 +131,7 @@ bool SFB::Audio::SetAPETagFromMetadata(const Metadata& metadata, TagLib::APE::Ta
 			char key [keySize + 1];
 
 			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
-				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
+				os_log_error(OS_LOG_DEFAULT, "CFStringGetCString failed");
 				continue;
 			}
 

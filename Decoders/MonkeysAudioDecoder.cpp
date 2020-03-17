@@ -3,18 +3,20 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <AudioToolbox/AudioFormat.h>
+#include <os/log.h>
 
-#include "MonkeysAudioDecoder.h"
-#include "CFErrorUtilities.h"
-#include "Logger.h"
+#include <AudioToolbox/AudioFormat.h>
 
 #define PLATFORM_APPLE
 
 #include <MAC/All.h>
+#include <MAC/IO.h>
 #include <MAC/MACLib.h>
 
-#include <MAC/IO.h>
+#undef PLATFORM_APPLE
+
+#include "CFErrorUtilities.h"
+#include "MonkeysAudioDecoder.h"
 
 namespace {
 
@@ -249,7 +251,7 @@ UInt32 SFB::Audio::MonkeysAudioDecoder::_ReadAudio(AudioBufferList *bufferList, 
 {
 	int64_t blocksRead = 0;
 	if(ERROR_SUCCESS != mDecompressor->GetData((char *)bufferList->mBuffers[0].mData, (int64_t)frameCount, &blocksRead)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "Monkey's Audio invalid checksum");
+		os_log_error(OS_LOG_DEFAULT, "Monkey's Audio invalid checksum");
 		return 0;
 	}
 
@@ -272,7 +274,7 @@ SInt64 SFB::Audio::MonkeysAudioDecoder::_GetCurrentFrame() const
 SInt64 SFB::Audio::MonkeysAudioDecoder::_SeekToFrame(SInt64 frame)
 {
 	if(ERROR_SUCCESS != mDecompressor->Seek(frame)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MonkeysAudio", "mDecompressor->Seek() failed");
+		os_log_error(OS_LOG_DEFAULT, "mDecompressor->Seek() failed");
 		return -1;
 	}
 

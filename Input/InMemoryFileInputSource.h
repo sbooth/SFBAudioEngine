@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
 #include <memory>
+
 #include <sys/stat.h>
 
 #include "InputSource.h"

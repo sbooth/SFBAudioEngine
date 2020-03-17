@@ -3,12 +3,13 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include <AudioToolbox/AudioFormat.h>
 
-#include "WavPackDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "WavPackDecoder.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -274,7 +275,7 @@ SFB::CFString SFB::Audio::WavPackDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::WavPackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.WavPack", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 

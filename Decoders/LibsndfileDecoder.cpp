@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "LibsndfileDecoder.h"
-#include "CFWrapper.h"
+#include <os/log.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "LibsndfileDecoder.h"
 
 namespace {
 
@@ -92,7 +93,7 @@ CFArrayRef SFB::Audio::LibsndfileDecoder::CreateSupportedFileExtensions()
 				CFArrayAppendValue(supportedExtensions, extension);
 		}
 		else
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_MAJOR) " << i << "failed");
+			os_log_debug(OS_LOG_DEFAULT, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 	}
 
 	return supportedExtensions;
@@ -156,7 +157,7 @@ bool SFB::Audio::LibsndfileDecoder::_Open(CFErrorRef *error)
 	mFile = unique_SNDFILE_ptr(sf_open_virtual(&virtualIO, SFM_READ, &mFileInfo, this), sf_close);
 
 	if(!mFile) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_open_virtual failed: " << sf_error_number(sf_error(nullptr)));
+		os_log_error(OS_LOG_DEFAULT, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(nullptr)));
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -334,7 +335,7 @@ SFB::CFString SFB::Audio::LibsndfileDecoder::_GetSourceFormatDescription() const
 	formatInfo.format = mFileInfo.format;
 
 	if(0 != sf_command(nullptr, SFC_GET_FORMAT_INFO, &formatInfo, sizeof(formatInfo))) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Libsndfile", "sf_command (SFC_GET_FORMAT_INFO) failed");
+		os_log_debug(OS_LOG_DEFAULT, "sf_command (SFC_GET_FORMAT_INFO) failed");
 		return CFString();
 	}
 

@@ -1,22 +1,23 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <memory>
 
-#include <taglib/tfilestream.h>
-#include <taglib/itfile.h>
-#include <taglib/xmfile.h>
-#include <taglib/s3mfile.h>
-#include <taglib/modfile.h>
+#include <os/log.h>
 
-#include "MODMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "Logger.h"
+#include <taglib/itfile.h>
+#include <taglib/modfile.h>
+#include <taglib/s3mfile.h>
+#include <taglib/xmfile.h>
+#include <taglib/tfilestream.h>
+
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddTagToDictionary.h"
+#include "MODMetadata.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
 
 namespace {
 
@@ -224,7 +225,7 @@ bool SFB::Audio::MODMetadata::_ReadMetadata(CFErrorRef *error)
 
 bool SFB::Audio::MODMetadata::_WriteMetadata(CFErrorRef */*error*/)
 {
-	LOGGER_NOTICE("org.sbooth.AudioEngine.AudioMetadata.MOD", "Writing of MOD metadata is not supported");
+	os_log_error(OS_LOG_DEFAULT, "Writing of MOD metadata is not supported");
 
 	return false;
 }

@@ -1,17 +1,19 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/flacpicture.h>
+#include <os/log.h>
+
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "SetXiphCommentFromMetadata.h"
+#include <taglib/flacpicture.h>
+
 #include "AudioMetadata.h"
-#include "CFWrapper.h"
-#include "TagLibStringUtilities.h"
 #include "Base64Utilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "SetXiphCommentFromMetadata.h"
+#include "TagLibStringUtilities.h"
 
 // ========================================
 // Xiph comment utilities
@@ -70,7 +72,7 @@ namespace {
 		if(nullptr != value) {
 			double f;
 			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+				os_log_info(OS_LOG_DEFAULT, "CFNumberGetValue returned an approximation");
 
 			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
 		}
@@ -130,7 +132,7 @@ bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Og
 			char key [keySize + 1];
 
 			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
-				LOGGER_ERR("org.sbooth.AudioEngine", "CFStringGetCString failed");
+				os_log_error(OS_LOG_DEFAULT, "CFStringGetCString failed");
 				continue;
 			}
 

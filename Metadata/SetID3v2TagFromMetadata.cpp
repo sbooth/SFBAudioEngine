@@ -1,19 +1,20 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/id3v2frame.h>
-#include <taglib/attachedpictureframe.h>
-#include <taglib/relativevolumeframe.h>
-#include <taglib/popularimeterframe.h>
-#include <taglib/textidentificationframe.h>
-#include <taglib/unsynchronizedlyricsframe.h>
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "SetID3v2TagFromMetadata.h"
+#include <taglib/attachedpictureframe.h>
+#include <taglib/id3v2frame.h>
+#include <taglib/popularimeterframe.h>
+#include <taglib/relativevolumeframe.h>
+#include <taglib/textidentificationframe.h>
+#include <taglib/unsynchronizedlyricsframe.h>
+
 #include "AudioMetadata.h"
 #include "CFWrapper.h"
+#include "SetID3v2TagFromMetadata.h"
 #include "TagLibStringUtilities.h"
 
 namespace {

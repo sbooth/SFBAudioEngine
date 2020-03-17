@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <memory>
 
-#include <taglib/tfilestream.h>
 #include <taglib/mpcfile.h>
+#include <taglib/tfilestream.h>
 
-#include "MusepackMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
+#include "AddAPETagToDictionary.h"
 #include "AddAudioPropertiesToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
-#include "AddAPETagToDictionary.h"
-#include "SetID3v1TagFromMetadata.h"
-#include "SetAPETagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "MusepackMetadata.h"
+#include "SetAPETagFromMetadata.h"
+#include "SetID3v1TagFromMetadata.h"
 
 namespace {
 

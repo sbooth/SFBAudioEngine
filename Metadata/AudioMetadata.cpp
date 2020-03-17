@@ -1,16 +1,17 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
+
+#include <os/log.h>
 
 #include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
 # include <CoreServices/CoreServices.h>
 #endif
 
-#include "AudioMetadata.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "AudioMetadata.h"
 
 // ========================================
 // Error Codes
@@ -153,7 +154,7 @@ SFB::Audio::Metadata::unique_ptr SFB::Audio::Metadata::CreateMetadataForURL(CFUR
 			}
 		}
 		else {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Metadata", "The requested URL doesn't exist");
+			os_log_debug(OS_LOG_DEFAULT, "The requested URL doesn't exist");
 
 			if(error) {
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” does not exist."), ""));

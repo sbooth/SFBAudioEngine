@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <algorithm>
 #include <array>
 
-#include "DoPDecoder.h"
+#include <os/log.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "DoPDecoder.h"
 
 #define DSD_FRAMES_PER_DOP_FRAME 16
 
@@ -78,7 +79,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	}
 
 	if(std::end(sSupportedSampleRates) == std::find(std::begin(sSupportedSampleRates), std::end(sSupportedSampleRates), decoderFormat.mSampleRate)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DOP", "Unsupported sample rate: " << decoderFormat.mSampleRate);
+		os_log_error(OS_LOG_DEFAULT, "Unsupported sample rate: %f", decoderFormat.mSampleRate);
 
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), ""));
@@ -92,7 +93,7 @@ bool SFB::Audio::DoPDecoder::_Open(CFErrorRef *error)
 	}
 
 	if(!mBufferList.Allocate(decoderFormat, 4096)) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.DoP", "Unable to allocate memory")
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -140,7 +141,7 @@ UInt32 SFB::Audio::DoPDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 {
 	// Only multiples of 16 frames can be read (16 frames equals two bytes)
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 16) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DOP", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 

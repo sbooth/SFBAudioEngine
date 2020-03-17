@@ -3,15 +3,16 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include <AudioToolbox/AudioFormat.h>
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "HTTPInputSource.h"
 #include "AudioDecoder.h"
-#include "Logger.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
+#include "CFWrapper.h"
 #include "CreateStringForOSType.h"
+#include "HTTPInputSource.h"
 #include "LoopableRegionDecoder.h"
 
 // ========================================
@@ -228,7 +229,7 @@ void SFB::Audio::Decoder::SetRepresentedObjectCleanupBlock(RepresentedObjectClea
 bool SFB::Audio::Decoder::Open(CFErrorRef *error)
 {
 	if(IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "Open() called on a Decoder that is already open");
+		os_log_info(OS_LOG_DEFAULT, "Open() called on a Decoder that is already open");
 		return true;
 	}
 
@@ -245,7 +246,7 @@ bool SFB::Audio::Decoder::Open(CFErrorRef *error)
 bool SFB::Audio::Decoder::Close(CFErrorRef *error)
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "Close() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "Close() called on a Decoder that hasn't been opened");
 		return true;
 	}
 
@@ -264,7 +265,7 @@ bool SFB::Audio::Decoder::Close(CFErrorRef *error)
 CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateFormatDescription() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "CreateFormatDescription() called on a Decoder that hasn't been opened");
 		return nullptr;
 	}
 
@@ -277,7 +278,7 @@ CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		os_log_error(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	return sourceFormatDescription;
 }
@@ -285,7 +286,7 @@ CFStringRef SFB::Audio::Decoder::CreateFormatDescription() const
 CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateSourceFormatDescription() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "CreateSourceFormatDescription() called on a Decoder that hasn't been opened");
 		return nullptr;
 	}
 
@@ -295,7 +296,7 @@ CFStringRef SFB::Audio::Decoder::CreateSourceFormatDescription() const
 CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "CreateChannelLayoutDescription() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "CreateChannelLayoutDescription() called on a Decoder that hasn't been opened");
 		return nullptr;
 	}
 
@@ -308,7 +309,7 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result)
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		os_log_error(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	return channelLayoutDescription;
 }
@@ -316,12 +317,12 @@ CFStringRef SFB::Audio::Decoder::CreateChannelLayoutDescription() const
 UInt32 SFB::Audio::Decoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "ReadAudio() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "ReadAudio() called on a Decoder that hasn't been opened");
 		return 0;
 	}
 
 	if(nullptr == bufferList || 0 == frameCount) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -331,7 +332,7 @@ UInt32 SFB::Audio::Decoder::ReadAudio(AudioBufferList *bufferList, UInt32 frameC
 SInt64 SFB::Audio::Decoder::GetTotalFrames() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "GetTotalFrames() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "GetTotalFrames() called on a Decoder that hasn't been opened");
 		return -1;
 	}
 
@@ -341,7 +342,7 @@ SInt64 SFB::Audio::Decoder::GetTotalFrames() const
 SInt64 SFB::Audio::Decoder::GetCurrentFrame() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "GetCurrentFrame() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "GetCurrentFrame() called on a Decoder that hasn't been opened");
 		return -1;
 	}
 
@@ -351,7 +352,7 @@ SInt64 SFB::Audio::Decoder::GetCurrentFrame() const
 bool SFB::Audio::Decoder::SupportsSeeking() const
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "SupportsSeeking() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "SupportsSeeking() called on a Decoder that hasn't been opened");
 		return false;
 	}
 
@@ -361,12 +362,12 @@ bool SFB::Audio::Decoder::SupportsSeeking() const
 SInt64 SFB::Audio::Decoder::SeekToFrame(SInt64 frame)
 {
 	if(!IsOpen()) {
-		LOGGER_INFO("org.sbooth.AudioEngine.Decoder", "SeekToFrame() called on a Decoder that hasn't been opened");
+		os_log_info(OS_LOG_DEFAULT, "SeekToFrame() called on a Decoder that hasn't been opened");
 		return -1;
 	}
 
 	if(0 > frame || frame >= GetTotalFrames()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder", "SeekToFrame() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "SeekToFrame() called with invalid parameters");
 		return -1;
 	}
 

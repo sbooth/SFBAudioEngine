@@ -3,17 +3,18 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <AudioToolbox/AudioFormat.h>
+#include <os/log.h>
+
 #include <Accelerate/Accelerate.h>
+#include <AudioToolbox/AudioFormat.h>
 
 #include <speex/speex.h>
-#include <speex/speex_header.h>
 #include <speex/speex_callbacks.h>
+#include <speex/speex_header.h>
 
-#include "OggSpeexDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "OggSpeexDecoder.h"
 
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
@@ -340,7 +341,7 @@ SFB::CFString SFB::Audio::OggSpeexDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggSpeex", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -393,7 +394,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 				ogg_packet oggPacket;
 				int result = ogg_stream_packetout(&mOggStreamState, &oggPacket);
 				if(-1 == result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: Ogg loss of streaming");
+					os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding error: Ogg loss of streaming");
 					break;
 				}
 
@@ -434,12 +435,12 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 							if(-1 == result)
 								break;
 							else if(-2 == result) {
-								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding error: possible corrupted stream");
+								os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding error: possible corrupted stream");
 								break;
 							}
 
 							if(0 > speex_bits_remaining(&mSpeexBits)) {
-								LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Ogg Speex decoding overflow: possible corrupted stream");
+								os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding overflow: possible corrupted stream");
 								break;
 							}
 
@@ -479,7 +480,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 					// Read bitstream from input file
 					ssize_t bytesRead = (ssize_t)GetInputSource().Read(data, READ_SIZE_BYTES);
 					if(-1 == bytesRead) {
-						LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Unable to read from the input file");
+						os_log_error(OS_LOG_DEFAULT, "Unable to read from the input file");
 						break;
 					}
 
@@ -497,7 +498,7 @@ UInt32 SFB::Audio::OggSpeexDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 				// Get the resultant Ogg page
 				int result = ogg_stream_pagein(&mOggStreamState, &mOggPage);
 				if(0 != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggSpeex", "Error reading Ogg page");
+					os_log_error(OS_LOG_DEFAULT, "Error reading Ogg page");
 					break;
 				}
 			}

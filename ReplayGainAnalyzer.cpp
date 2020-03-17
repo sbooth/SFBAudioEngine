@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -94,18 +94,18 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <algorithm>
 
 #include <Accelerate/Accelerate.h>
 
-#include "ReplayGainAnalyzer.h"
+#include "AudioBufferList.h"
 #include "AudioConverter.h"
 #include "AudioDecoder.h"
-#include "AudioBufferList.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "ReplayGainAnalyzer.h"
 
 // ========================================
 // Error Codes

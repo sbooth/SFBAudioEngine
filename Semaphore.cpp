@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2010 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <stdexcept>
 
+#include <os/log.h>
+
 #include "Semaphore.h"
-#include "Logger.h"
 
 SFB::Semaphore::Semaphore()
 	: mSemaphore(nullptr)
@@ -14,7 +15,7 @@ SFB::Semaphore::Semaphore()
 	mSemaphore = dispatch_semaphore_create(0);
 
 	if(nullptr == mSemaphore) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Semaphore", "dispatch_semaphore_create failed");
+		os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
 		throw std::runtime_error("Unable to create the semaphore");
 	}
 }

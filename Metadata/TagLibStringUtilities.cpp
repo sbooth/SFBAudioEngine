@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "TagLibStringUtilities.h"
+#include <os/log.h>
+
 #include "CFWrapper.h"
-#include "Logger.h"
+#include "TagLibStringUtilities.h"
 
 TagLib::String TagLib::StringFromCFString(CFStringRef s)
 {
@@ -26,7 +27,7 @@ TagLib::String TagLib::StringFromCFString(CFStringRef s)
 	CFIndex converted = CFStringGetBytes(s, range, kCFStringEncodingUTF8, 0, false, (UInt8 *)&buf[0], count, &used);
 
 	if(CFStringGetLength(s) != converted)
-		LOGGER_WARNING("org.sbooth.AudioEngine", "CFStringGetBytes failed: converted " << converted << " of " << CFStringGetLength(s) << " characters");
+		os_log_debug(OS_LOG_DEFAULT, "CFStringGetBytes failed: converted %ld of %ld characters", (long)converted, (long)CFStringGetLength(s));
 
 	// Add terminator
 	buf[(size_t)used] = '\0';

@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "AudioOutput.h"
-
-#include <CoreAudio/CoreAudioTypes.h>
 #include <AudioToolbox/AudioToolbox.h>
+#include <CoreAudio/CoreAudioTypes.h>
+
+#include "AudioOutput.h"
 
 /*! @file CoreAudioOutput.h @brief Core %Audio output functionality */
 

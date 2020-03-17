@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <vector>
+
+#include <CoreFoundation/CoreFoundation.h>
+
 #include <taglib/id3v2tag.h>
 
 /*! @file AddID3v2TagToDictionary.h @brief Utility method for adding \c TagLib::ID3v2::Tag contents to \c CFDictionary */

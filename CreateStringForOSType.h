@@ -1,20 +1,10 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
+/*! @file CreateStringForOSType.h @brief OSType to const char [] conversion */
 
-#include "CFWrapper.h"
-
-/*! @file CreateStringForOSType.h @brief OSType to CFString conversion */
-
-/*! @brief \c SFBAudioEngine's encompassing namespace */
-namespace SFB {
-
-	/*! @brief Create a string representation of the four character code \c osType */
-	CFString StringForOSType(OSType osType);
-
-}
+#define SFBCStringForOSType(osType) (const char[]){ *(((char *)&osType) + 3), *(((char *)&osType) + 2), *(((char *)&osType) + 1), *(((char *)&osType) + 0), 0 }

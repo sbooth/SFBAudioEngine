@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "TrueAudioDecoder.h"
-#include "CFWrapper.h"
+#include <os/log.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "TrueAudioDecoder.h"
 
 struct SFB::Audio::TrueAudioDecoder::TTA_io_callback_wrapper
 {
@@ -103,7 +104,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 		mDecoder->init_get_info(&streamInfo, 0);
 	}
 	catch(const tta::tta_exception& e) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Error creating True Audio decoder: " << e.code());
+		os_log_error(OS_LOG_DEFAULT, "Error creating True Audio decoder: %d", e.code());
 	}
 
 	if(!mDecoder) {
@@ -150,7 +151,7 @@ bool SFB::Audio::TrueAudioDecoder::_Open(CFErrorRef *error)
 
 		default:
 		{
-			LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.TrueAudio", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			os_log_error(OS_LOG_DEFAULT, "Unsupported bit depth: %d", mFormat.mBitsPerChannel);
 
 			if(error) {
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a supported True Audio file."), ""));
@@ -204,7 +205,7 @@ SFB::CFString SFB::Audio::TrueAudioDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.TrueAudio", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -237,7 +238,7 @@ UInt32 SFB::Audio::TrueAudioDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 		}
 	}
 	catch(const tta::tta_exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio decoding error: " << e.code());
+		os_log_error(OS_LOG_DEFAULT, "True Audio decoding error: %d", e.code());
 		return 0;
 	}
 
@@ -260,7 +261,7 @@ SInt64 SFB::Audio::TrueAudioDecoder::_SeekToFrame(SInt64 frame)
 		mDecoder->set_position(seconds, &frame_start);
 	}
 	catch(const tta::tta_exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.TrueAudio", "True Audio seek error: " << e.code());
+		os_log_error(OS_LOG_DEFAULT, "True Audio seek error: %d", e.code());
 		return -1;
 	}
 

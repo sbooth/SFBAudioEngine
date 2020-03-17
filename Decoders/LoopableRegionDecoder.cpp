@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <algorithm>
 #include <stdexcept>
 
+#include <os/log.h>
+
 #include "LoopableRegionDecoder.h"
-#include "Logger.h"
 
 #pragma mark Factory Methods
 
@@ -136,7 +137,7 @@ UInt32 SFB::Audio::LoopableRegionDecoder::_ReadAudio(AudioBufferList *bufferList
 	AudioBufferList *bufferListAlias = (AudioBufferList *)alloca(offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * bufferList->mNumberBuffers));
 
 	if(nullptr == bufferListAlias) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.LoopableRegion", "Unable to allocate memory");
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
 		return 0;
 	}
 

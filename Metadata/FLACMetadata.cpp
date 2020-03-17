@@ -1,30 +1,31 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <memory>
 
-#include <taglib/tfilestream.h>
-#include <taglib/flacfile.h>
-#include <taglib/flacproperties.h>
-#include <taglib/id3v2framefactory.h>
+#include <os/log.h>
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "FLACMetadata.h"
-#include "Logger.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
+#include <taglib/flacfile.h>
+#include <taglib/flacproperties.h>
+#include <taglib/id3v2framefactory.h>
+#include <taglib/tfilestream.h>
+
+#include "AddAudioPropertiesToDictionary.h"
 #include "AddID3v1TagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
 #include "AddXiphCommentToDictionary.h"
+#include "CFDictionaryUtilities.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "FLACMetadata.h"
 #include "SetID3v1TagFromMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
 #include "SetXiphCommentFromMetadata.h"
-#include "AddAudioPropertiesToDictionary.h"
 #include "TagLibStringUtilities.h"
-#include "CFDictionaryUtilities.h"
 
 namespace {
 
@@ -203,7 +204,7 @@ bool SFB::Audio::FLACMetadata::_WriteMetadata(CFErrorRef *error)
 
 		SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
 		if(!imageSource) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioMetadata.FLAC", "Skipping album art (unable to create image)");
+			os_log_error(OS_LOG_DEFAULT, "Skipping album art (unable to create image)");
 			continue;
 		}
 

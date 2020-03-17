@@ -1,22 +1,24 @@
 /*
- * Copyright (c) 2006 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <pthread.h>
-#include <mach/mach_init.h>
-#include <mach/thread_act.h>
-#include <mach/mach_error.h>
-#include <mach/sync_policy.h>
 #include <stdexcept>
 #include <new>
 #include <algorithm>
+
+#include <pthread.h>
+#include <mach/mach_error.h>
+#include <mach/mach_init.h>
+#include <mach/sync_policy.h>
+#include <mach/thread_act.h>
+#include <os/log.h>
 
 #include "AudioPlayer.h"
 #include "CoreAudioOutput.h"
 #include "AudioBufferList.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CreateDisplayNameForURL.h"
 #include "CreateStringForOSType.h"
 
 // ========================================
@@ -27,14 +29,6 @@
 #define DECODER_THREAD_IMPORTANCE				6
 
 namespace {
-
-	// ========================================
-	// Turn off logging by default
-	void InitializeLoggingSubsystem() __attribute__ ((constructor));
-	void InitializeLoggingSubsystem()
-	{
-		::SFB::Logger::SetCurrentLevel(::SFB::Logger::disabled);
-	}
 
 	// Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 	static const uint8_t sBitReverseTable256 [256] =
@@ -142,7 +136,7 @@ namespace {
 												THREAD_EXTENDED_POLICY_COUNT);
 
 		if(KERN_SUCCESS != error) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's extended policy: " << mach_error_string(error));
+			os_log_debug(OS_LOG_DEFAULT, "Couldn't set thread's extended policy: %{public}s", mach_error_string(error));
 			return false;
 		}
 
@@ -156,7 +150,7 @@ namespace {
 								  THREAD_PRECEDENCE_POLICY_COUNT);
 
 		if (error != KERN_SUCCESS) {
-			LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set thread's precedence policy: " << mach_error_string(error));
+			os_log_debug(OS_LOG_DEFAULT, "Couldn't set thread's precedence policy: %{public}s", mach_error_string(error));
 			return false;
 		}
 
@@ -211,7 +205,7 @@ SFB::Audio::Player::Player()
 
 	mQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player", DISPATCH_QUEUE_SERIAL);
 	if(nullptr == mQueue) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "dispatch_queue_create failed");
+		os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 		throw std::runtime_error("Unable to create the dispatch queue");
 	}
 
@@ -222,7 +216,7 @@ SFB::Audio::Player::Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to create decoder thread: " << e.what());
+		os_log_error(OS_LOG_DEFAULT, "Unable to create decoder thread: %{public}s", e.what());
 
 		throw;
 	}
@@ -247,7 +241,7 @@ SFB::Audio::Player::Player()
 			bool swapSucceeded = mActiveDecoders[bufferIndex].compare_exchange_strong(decoderState, nullptr);
 
 			if(swapSucceeded) {
-				LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Collecting decoder: \"" << decoderState->mDecoder->GetURL() << "\"");
+				os_log_debug(OS_LOG_DEFAULT, "Collecting decoder: \"%{public}@\"", (CFStringRef)CFString(CreateDisplayNameForURL(decoderState->mDecoder->GetURL())));
 				delete decoderState;
 				decoderState = nullptr;
 			}
@@ -261,7 +255,7 @@ SFB::Audio::Player::Player()
 	// Set up output
 	mOutput->SetPlayer(this);
 	if(!mOutput->Open()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "OpenOutput() failed");
+		os_log_error(OS_LOG_DEFAULT, "OpenOutput() failed");
 		throw std::runtime_error("OpenOutput() failed");
 	}
 }
@@ -272,7 +266,7 @@ SFB::Audio::Player::~Player()
 
 	// Stop the processing graph and reclaim its resources
 	if(!mOutput->Close())
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "CloseOutput() failed");
+		os_log_error(OS_LOG_DEFAULT, "CloseOutput() failed");
 
 	// End the decoding thread
 	mFlags.fetch_or(eAudioPlayerFlagStopDecoding);
@@ -283,7 +277,7 @@ SFB::Audio::Player::~Player()
 	}
 
 	catch(const std::exception& e) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to join decoder thread: " << e.what());
+		os_log_error(OS_LOG_DEFAULT, "Unable to join decoder thread: %{public}s", e.what());
 	}
 
 	// Stop collecting
@@ -761,7 +755,7 @@ bool SFB::Audio::Player::Enqueue(Decoder::unique_ptr& decoder)
 	if(!decoder)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Enqueuing \"" << decoder->GetURL() << "\"");
+	os_log_info(OS_LOG_DEFAULT, "Enqueuing \"%{public}@\"", (CFStringRef)CFString(CreateDisplayNameForURL(decoder->GetURL())));
 
 	// The lock is held for the entire method, because enqueuing a track is an inherently
 	// sequential operation.  Without the lock, if Enqueue() is called from multiple
@@ -803,7 +797,7 @@ bool SFB::Audio::Player::SkipToNextTrack()
 	if(nullptr == currentDecoderState)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Skipping \"" << currentDecoderState->mDecoder->GetURL() << "\"");
+	os_log_info(OS_LOG_DEFAULT, "Skipping \"%{public}@\"", (CFStringRef)CFString(CreateDisplayNameForURL(currentDecoderState->mDecoder->GetURL())));
 
 	if(mOutput->IsRunning()) {
 		mFlags.fetch_or(eAudioPlayerFlagRequestMute);
@@ -850,7 +844,7 @@ bool SFB::Audio::Player::SetRingBufferCapacity(uint32_t bufferCapacity)
 	if(0 == bufferCapacity || mRingBufferWriteChunkSize > bufferCapacity)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer capacity to " << bufferCapacity);
+	os_log_info(OS_LOG_DEFAULT, "Setting ring buffer capacity to %u", bufferCapacity);
 
 	mRingBufferCapacity.store(bufferCapacity);
 	return true;
@@ -861,7 +855,7 @@ bool SFB::Audio::Player::SetRingBufferWriteChunkSize(uint32_t chunkSize)
 	if(0 == chunkSize || mRingBufferCapacity < chunkSize)
 		return false;
 
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Setting ring buffer write chunk size to " << chunkSize);
+	os_log_info(OS_LOG_DEFAULT, "Setting ring buffer write chunk size to %u", chunkSize);
 
 	mRingBufferWriteChunkSize.store(chunkSize);
 	return true;
@@ -876,7 +870,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 	// ========================================
 	// Make ourselves a high priority thread
 	if(!setThreadPolicy(DECODER_THREAD_IMPORTANCE))
-		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Couldn't set decoder thread importance");
+		os_log_debug(OS_LOG_DEFAULT, "Couldn't set decoder thread importance");
 
 	int64_t decoderCounter = 0;
 
@@ -904,7 +898,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 					mDecoderErrorBlock(*decoder, error);
 
 				if(error)
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
+					os_log_error(OS_LOG_DEFAULT, "Error opening decoder: %{public}@", error.Object());
 			}
 		}
 
@@ -915,7 +909,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				decoderState->mTimeStamp = decoderCounter++;
 			}
 			else {
-				LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder->GetFormat());
+				os_log_error(OS_LOG_DEFAULT, "Format not supported: %{public}@}", (CFStringRef)decoder->GetFormat().Description());
 
 				if(mErrorBlock) {
 					SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), ""));
@@ -941,21 +935,21 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			bool formatsMatch = true;
 
 			if(nextFormat.mFormatID != outputFormat.mFormatID) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output format ('" << StringForOSType(outputFormat.mFormatID) << "') and decoder format ('" << StringForOSType(nextFormat.mFormatID) << "') don't match");
+				os_log_debug(OS_LOG_DEFAULT, "Gapless join failed: Output format ('%{public}.4s') and decoder format ('%{public}.4s') don't match", SFBCStringForOSType(outputFormat.mFormatID), SFBCStringForOSType(nextFormat.mFormatID));
 				formatsMatch = false;
 			}
 			else if(nextFormat.mSampleRate != outputFormat.mSampleRate) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output sample rate (" << outputFormat.mSampleRate << " Hz) and decoder sample rate (" << nextFormat.mSampleRate << " Hz) don't match");
+				os_log_debug(OS_LOG_DEFAULT, "Gapless join failed: Output sample rate (%.2f Hz) and decoder sample rate (%.2f Hz) don't match", outputFormat.mSampleRate, nextFormat.mSampleRate);
 				formatsMatch = false;
 			}
 			else if(nextFormat.mChannelsPerFrame != outputFormat.mChannelsPerFrame) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel count (" << outputFormat.mChannelsPerFrame << ") and decoder channel count (" << nextFormat.mChannelsPerFrame << ") don't match");
+				os_log_debug(OS_LOG_DEFAULT, "Gapless join failed: Output channel count (%u) and decoder channel count (%u) don't match", outputFormat.mChannelsPerFrame, nextFormat.mChannelsPerFrame);
 				formatsMatch = false;
 			}
 
 			// Enqueue the decoder if its channel layout matches the ring buffer's channel layout (so the channel map in the output will remain valid)
 			if(nextChannelLayout != outputChannelLayout) {
-				LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Gapless join failed: Output channel layout (" << outputChannelLayout << ") and decoder channel layout (" << nextChannelLayout << ") don't match");
+				os_log_debug(OS_LOG_DEFAULT, "Gapless join failed: Output channel layout (%{public}@) and decoder channel layout (%{public}@) don't match", (CFStringRef)outputChannelLayout.Description(), (CFStringRef)nextChannelLayout.Description());
 				formatsMatch = false;
 			}
 
@@ -999,16 +993,16 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				if(mActiveDecoders[bufferIndex].compare_exchange_strong(current, decoderState))
 					break;
 				else
-					LOGGER_WARNING("org.sbooth.AudioEngine.Player", "compare_exchange_strong() failed");
+					os_log_debug(OS_LOG_DEFAULT, "compare_exchange_strong() failed");
 			}
 		}
 
 		// ========================================
 		// If a decoder was found at the head of the queue, process it
 		if(decoderState) {
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding starting for \"" << decoderState->mDecoder->GetURL() << "\"");
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder format: " << decoderState->mDecoder->GetFormat());
-			LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoder channel layout: " << decoderState->mDecoder->GetChannelLayout());
+			os_log_info(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", (CFStringRef)CFString(CreateDisplayNameForURL(decoderState->mDecoder->GetURL())));
+			os_log_info(OS_LOG_DEFAULT, "Decoder format: %{public}@", (CFStringRef)decoderState->mDecoder->GetFormat().Description());
+			os_log_info(OS_LOG_DEFAULT, "Decoder channel layout: %{public}@", (CFStringRef)decoderState->mDecoder->GetChannelLayout().Description());
 
 //			const AudioFormat& decoderFormat = decoderState->mDecoder->GetFormat();
 			AudioFormat decoderFormat = decoderState->mDecoder->GetFormat();
@@ -1032,7 +1026,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 				OSStatus result = AudioConverterNew(&decoderFormat, &outputFormat, &audioConverter);
 				if(noErr != result) {
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterNew failed: " << result);
+					os_log_error(OS_LOG_DEFAULT, "AudioConverterNew failed: %d", result);
 
 					// If this happens, output will be impossible
 					if(mErrorBlock) {
@@ -1063,7 +1057,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 //					auto decoderACL = decoderChannelLayout.GetACL();
 //					result = AudioConverterSetProperty(audioConverter, kAudioConverterInputChannelLayout, sizeof(*decoderACL), decoderACL);
 //					if(noErr != result)
-//						LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterSetProperty (kAudioConverterInputChannelLayout) failed: " << result);
+//						os_log_error(OS_LOG_DEFAULT, "AudioConverterSetProperty (kAudioConverterInputChannelLayout) failed: %d", result);
 //				}
 //
 //				auto& outputChannelLayout = mOutput->GetChannelLayout();
@@ -1071,7 +1065,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 //					auto outputACL = outputChannelLayout.GetACL();
 //					result = AudioConverterSetProperty(audioConverter, kAudioConverterOutputChannelLayout, sizeof(*outputACL), outputACL);
 //					if(noErr != result)
-//						LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterSetProperty (kAudioConverterOutputChannelLayout) failed: " << result);
+//						os_log_error(OS_LOG_DEFAULT, "AudioConverterSetProperty (kAudioConverterOutputChannelLayout) failed: %d", result);
 //				}
 
 				// ========================================
@@ -1080,7 +1074,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 				UInt32 dataSize = sizeof(inputBufferSize);
 				result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: " << result);
+					os_log_error(OS_LOG_DEFAULT, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %d", result);
 
 				// ========================================
 				// Allocate the buffer lists which will serve as the transport between the decoder and the ring buffer
@@ -1120,7 +1114,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(audioConverter) {
 							auto result = AudioConverterReset(audioConverter);
 							if(noErr != result)
-								LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
+								os_log_error(OS_LOG_DEFAULT, "AudioConverterReset failed: %d", result);
 						}
 
 						// Reset() is not thread safe but the rendering thread is outputting silence
@@ -1140,7 +1134,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 
 						// Seek to the specified frame
 						if(-1 != frameToSeek) {
-							LOGGER_DEBUG("org.sbooth.AudioEngine.Player", "Seeking to frame " << frameToSeek);
+							os_log_debug(OS_LOG_DEFAULT, "Seeking to frame %lld", frameToSeek);
 
 							// Ensure output is muted before performing operations that aren't thread safe
 							if(mOutput->IsRunning()) {
@@ -1156,7 +1150,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 							SInt64 newFrame = decoderState->mDecoder->SeekToFrame(frameToSeek);
 
 							if(newFrame != frameToSeek)
-								LOGGER_NOTICE("org.sbooth.AudioEngine.Player", "Inaccurate seek to frame  " << frameToSeek << ", got frame " << newFrame);
+								os_log_debug(OS_LOG_DEFAULT, "Inaccurate seek to frame %lld, got frame %lld", frameToSeek, newFrame);
 
 							// Update the seek request
 							decoderState->mFrameToSeek.store(-1);
@@ -1171,7 +1165,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 								if(audioConverter) {
 									auto result = AudioConverterReset(audioConverter);
 									if(noErr != result)
-										LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterReset failed: " << result);
+										os_log_error(OS_LOG_DEFAULT, "AudioConverterReset failed: %d", result);
 								}
 
 								// Reset the ring buffer and output
@@ -1186,7 +1180,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						SInt64 startingFrameNumber = decoderState->mDecoder->GetCurrentFrame();
 
 						if(-1 == startingFrameNumber) {
-							LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to determine starting frame number");
+							os_log_error(OS_LOG_DEFAULT, "Unable to determine starting frame number");
 							break;
 						}
 
@@ -1204,7 +1198,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(audioConverter) {
 							auto result = AudioConverterFillComplexBuffer(audioConverter, myAudioConverterComplexInputDataProc, decoderState, &framesDecoded, bufferList, nullptr);
 							if(noErr != result)
-								LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterFillComplexBuffer failed: " << result);
+								os_log_error(OS_LOG_DEFAULT, "AudioConverterFillComplexBuffer failed: %d", result);
 						}
 						else {
 							framesDecoded = decoderState->ReadAudio(framesDecoded);
@@ -1228,14 +1222,14 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						if(0 != framesDecoded) {
 							UInt32 framesWritten = (UInt32)mRingBuffer->WriteAudio(audioConverter ? bufferList : decoderState->mBufferList, framesDecoded);
 							if(framesWritten != framesDecoded)
-								LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::Store failed");
+								os_log_error(OS_LOG_DEFAULT, "RingBuffer::Store failed");
 
 							mFramesDecoded.fetch_add(framesWritten);
 						}
 
 						// If no frames were returned, this is the end of stream
 						if(0 == framesDecoded/* && !(eDecoderStateDataFlagDecodingFinished & decoderState->mFlags.load())*/) {
-							LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding finished for \"" << decoderState->mDecoder->GetURL() << "\"");
+							os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", (CFStringRef)CFString(CreateDisplayNameForURL(decoderState->mDecoder->GetURL())));
 
 							// Some formats (MP3) may not know the exact number of frames in advance
 							// without processing the entire file, which is a potentially slow operation
@@ -1267,7 +1261,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 						// We don't want to start output in the middle of a buffer modification
 						dispatch_sync(mQueue, ^{
 							if(!mOutput->Start())
-								LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to start output");
+								os_log_error(OS_LOG_DEFAULT, "Unable to start output");
 						});
 					}
 				}
@@ -1291,7 +1285,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 			if(audioConverter) {
 				auto result = AudioConverterDispose(audioConverter);
 				if(noErr != result)
-					LOGGER_ERR("org.sbooth.AudioEngine.Player", "AudioConverterDispose failed: " << result);
+					os_log_error(OS_LOG_DEFAULT, "AudioConverterDispose failed: %d", result);
 				audioConverter = nullptr;
 			}
 		}
@@ -1300,7 +1294,7 @@ void * SFB::Audio::Player::DecoderThreadEntry()
 		mDecoderSemaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
 	}
 
-	LOGGER_INFO("org.sbooth.AudioEngine.Player", "Decoding thread terminating");
+	os_log_info(OS_LOG_DEFAULT, "Decoding thread terminating");
 
 	return nullptr;
 }
@@ -1385,13 +1379,13 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 			mDecoderErrorBlock(decoder, error);
 
 		if(error)
-			LOGGER_ERR("org.sbooth.AudioEngine.Player", "Error opening decoder: " << error);
+			os_log_error(OS_LOG_DEFAULT, "Error opening decoder: %{public}@", error.Object());
 
 		return false;
 	}
 
 	if(!mOutput->SupportsFormat(decoder.GetFormat())) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Format not supported: " << decoder.GetFormat());
+		os_log_error(OS_LOG_DEFAULT, "Format not supported: %{public}@", (CFStringRef)decoder.GetFormat().Description());
 
 		if(mErrorBlock) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” is not supported."), ""));
@@ -1412,7 +1406,7 @@ bool SFB::Audio::Player::SetupOutputAndRingBufferForDecoder(Decoder& decoder)
 
 	// Allocate enough space in the ring buffer for the new format
 	if(!mRingBuffer->Allocate(mOutput->GetFormat(), mRingBufferCapacity)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to allocate ring buffer");
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate ring buffer");
 		return false;
 	}
 
@@ -1433,10 +1427,10 @@ bool SFB::Audio::Player::SetOutput(Output::unique_ptr output)
 		return false;
 
 	if(!mOutput->Close())
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "Unable to close output");
+		os_log_error(OS_LOG_DEFAULT, "Unable to close output");
 
 	if(!output->Open()) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Player", "Unable to open output");
+		os_log_error(OS_LOG_DEFAULT, "Unable to open output");
 		return false;
 	}
 
@@ -1484,7 +1478,7 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 	size_t framesToRead = std::min((UInt32)framesAvailableToRead, frameCount);
 	UInt32 framesRead = (UInt32)mRingBuffer->ReadAudio(bufferList, framesToRead);
 	if(framesRead != framesToRead) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Player", "RingBuffer::ReadAudio failed: Requested " << framesToRead << " frames, got " << framesRead);
+		os_log_error(OS_LOG_DEFAULT, "RingBuffer::ReadAudio failed: Requested %zu frames, got %d", framesToRead, framesRead);
 		return false;
 	}
 
@@ -1492,7 +1486,7 @@ bool SFB::Audio::Player::ProvideAudio(AudioBufferList *bufferList, UInt32 frameC
 
 	// If the ring buffer didn't contain as many frames as were requested, fill the remainder with silence
 	if(framesRead != frameCount) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Player", "Insufficient audio in ring buffer: " << framesRead << " frames available, " << frameCount << " requested");
+		os_log_debug(OS_LOG_DEFAULT, "Insufficient audio in ring buffer: %d frames available, %d requested", framesRead, frameCount);
 
 		size_t framesOfSilence = frameCount - framesRead;
 		size_t byteCountToSkip = outputFormat.FrameCountToByteCount(framesRead);

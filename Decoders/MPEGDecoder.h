@@ -1,14 +1,17 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
+#include <functional>
+#include <memory>
+
 #include <mpg123/mpg123.h>
 
-#include "AudioDecoder.h"
 #include "AudioBufferList.h"
+#include "AudioDecoder.h"
 
 namespace SFB {
 

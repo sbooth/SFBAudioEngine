@@ -1,15 +1,16 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <vector>
 
-#include "CFWrapper.h"
+#include <CoreFoundation/CoreFoundation.h>
+
 #include "AttachedPicture.h"
+#include "CFWrapper.h"
 
 /*! @file AudioMetadata.h @brief Support for metadata reading and writing */
 

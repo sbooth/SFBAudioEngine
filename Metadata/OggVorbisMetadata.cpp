@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -8,12 +8,12 @@
 #include <taglib/tfilestream.h>
 #include <taglib/vorbisfile.h>
 
-#include "OggVorbisMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "AddXiphCommentToDictionary.h"
-#include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddXiphCommentToDictionary.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "OggVorbisMetadata.h"
+#include "SetXiphCommentFromMetadata.h"
 
 namespace {
 

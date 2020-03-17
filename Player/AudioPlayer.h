@@ -1,24 +1,24 @@
 /*
- * Copyright (c) 2006 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreAudio/CoreAudioTypes.h>
-
-#include <memory>
 #include <atomic>
+#include <memory>
 #include <thread>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <dispatch/dispatch.h>
 
-#include "AudioOutput.h"
-#include "AudioDecoder.h"
-#include "AudioRingBuffer.h"
+#include <CoreAudio/CoreAudioTypes.h>
+
 #include "AudioChannelLayout.h"
+#include "AudioDecoder.h"
+#include "AudioOutput.h"
+#include "AudioRingBuffer.h"
 #include "Semaphore.h"
 
 /*! @file AudioPlayer.h @brief Audio playback functionality */

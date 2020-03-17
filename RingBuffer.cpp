@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "RingBuffer.h"
-
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+
+#include "RingBuffer.h"
 
 namespace {
 

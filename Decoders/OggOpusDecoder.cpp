@@ -3,10 +3,11 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "OggOpusDecoder.h"
-#include "CFWrapper.h"
+#include <os/log.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "OggOpusDecoder.h"
 
 #define OPUS_SAMPLE_RATE 48000
 
@@ -140,7 +141,7 @@ bool SFB::Audio::OggOpusDecoder::_Open(CFErrorRef *error)
 	}
 
 	if(0 != op_test_open(mOpusFile.get())) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "op_test_open failed");
+		os_log_error(OS_LOG_DEFAULT, "op_test_open failed");
 		return false;
 	}
 
@@ -212,7 +213,7 @@ SFB::CFString SFB::Audio::OggOpusDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mBuffers[0].mNumberChannels != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggOpus", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -224,7 +225,7 @@ UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt3
 		int framesRead = op_read_float(mOpusFile.get(), buffer, (int)(framesRemaining * mFormat.mChannelsPerFrame), nullptr);
 
 		if(0 > framesRead) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "Ogg Opus decoding error: " << framesRead);
+			os_log_error(OS_LOG_DEFAULT, "Ogg Opus decoding error: %d", framesRead);
 			return 0;
 		}
 
@@ -247,7 +248,7 @@ UInt32 SFB::Audio::OggOpusDecoder::_ReadAudio(AudioBufferList *bufferList, UInt3
 SInt64 SFB::Audio::OggOpusDecoder::_SeekToFrame(SInt64 frame)
 {
 	if(0 != op_pcm_seek(mOpusFile.get(), frame)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggOpus", "op_pcm_seek() failed");
+		os_log_error(OS_LOG_DEFAULT, "op_pcm_seek() failed");
 		return -1;
 	}
 

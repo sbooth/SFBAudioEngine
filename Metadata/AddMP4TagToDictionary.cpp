@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2018 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -8,8 +8,8 @@
 #include "AddMP4TagToDictionary.h"
 #include "AddTagToDictionary.h"
 #include "AudioMetadata.h"
-#include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
+#include "TagLibStringUtilities.h"
 
 bool SFB::Audio::AddMP4TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::MP4::Tag *tag)
 {

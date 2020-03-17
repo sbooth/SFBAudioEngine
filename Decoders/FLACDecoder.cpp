@@ -3,14 +3,15 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include <AudioToolbox/AudioFormat.h>
 
 #include <FLAC/metadata.h>
 
-#include "FLACDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "FLACDecoder.h"
 
 namespace {
 
@@ -180,7 +181,7 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 	mFLAC = unique_FLAC_ptr(FLAC__stream_decoder_new(), [](FLAC__StreamDecoder *decoder){
 		if(decoder) {
 			if(!FLAC__stream_decoder_finish(decoder))
-				LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_finish failed: " << FLAC__stream_decoder_get_resolved_state_string(decoder));
+				os_log_info(OS_LOG_DEFAULT, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(decoder));
 
 			FLAC__stream_decoder_delete(decoder);
 		}
@@ -233,7 +234,7 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 
 	// Process metadata
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(mFLAC.get())) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_until_end_of_metadata failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
+		os_log_error(OS_LOG_DEFAULT, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
 
 		if(error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid FLAC file."), ""));
@@ -279,7 +280,7 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 
 		default:
 		{
-			LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.FLAC", "Unsupported bit depth: " << mFormat.mBitsPerChannel)
+			os_log_error(OS_LOG_DEFAULT, "Unsupported bit depth: %u", mFormat.mBitsPerChannel);
 
 			if(error) {
 				SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a supported FLAC file."), ""));
@@ -315,7 +316,7 @@ bool SFB::Audio::FLACDecoder::_Open(CFErrorRef *error)
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	if(!mBufferList.Allocate(mFormat, mStreamInfo.max_blocksize)) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.FLAC", "Unable to allocate memory")
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
@@ -349,7 +350,7 @@ SFB::CFString SFB::Audio::FLACDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::FLACDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.FLAC", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -393,7 +394,7 @@ UInt32 SFB::Audio::FLACDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 		// Grab the next frame
 		FLAC__bool result = FLAC__stream_decoder_process_single(mFLAC.get());
 		if(!result)
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC__stream_decoder_process_single failed: " << FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
+			os_log_error(OS_LOG_DEFAULT, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(mFLAC.get()));
 	}
 
 	mCurrentFrame += framesRead;
@@ -531,5 +532,5 @@ void SFB::Audio::FLACDecoder::Error(const FLAC__StreamDecoder *decoder, FLAC__St
 {
 	assert(nullptr != decoder);
 
-	LOGGER_ERR("org.sbooth.AudioEngine.Decoder.FLAC", "FLAC error: " << FLAC__StreamDecoderErrorStatusString[status]);
+	os_log_error(OS_LOG_DEFAULT, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
 }

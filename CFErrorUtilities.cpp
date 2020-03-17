@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2012 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2012 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include "CFErrorUtilities.h"
-#include "CreateDisplayNameForURL.h"
 #include "CFWrapper.h"
+#include "CreateDisplayNameForURL.h"
 
 CFErrorRef SFB::CreateError(CFStringRef domain, CFIndex code, CFStringRef description, CFStringRef failureReason, CFStringRef recoverySuggestion)
 {

@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/id3v2frame.h>
 #include <taglib/attachedpictureframe.h>
-#include <taglib/relativevolumeframe.h>
+#include <taglib/id3v2frame.h>
 #include <taglib/popularimeterframe.h>
+#include <taglib/relativevolumeframe.h>
 #include <taglib/textidentificationframe.h>
 
 #include "AddID3v2TagToDictionary.h"
 #include "AddTagToDictionary.h"
 #include "AudioMetadata.h"
+#include "CFDictionaryUtilities.h"
 #include "CFWrapper.h"
 #include "TagLibStringUtilities.h"
-#include "CFDictionaryUtilities.h"
 
 bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag)
 {

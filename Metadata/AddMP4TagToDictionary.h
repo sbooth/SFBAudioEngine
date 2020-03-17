@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2018 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
 #include <vector>
+
+#include <CoreFoundation/CoreFoundation.h>
+
 #include <taglib/mp4tag.h>
 
 /*! @file AddMP4TagToDictionary.h @brief Utility method for adding \c TagLib::MP4::Tag contents to \c CFDictionary */

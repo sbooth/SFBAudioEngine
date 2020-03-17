@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -8,15 +8,15 @@
 #include <taglib/tfilestream.h>
 #include <taglib/wavfile.h>
 
-#include "WAVEMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
+#include "AddAudioPropertiesToDictionary.h"
 #include "AddTagToDictionary.h"
 #include "AddID3v2TagToDictionary.h"
-#include "SetTagFromMetadata.h"
 #include "SetID3v2TagFromMetadata.h"
-#include "AddAudioPropertiesToDictionary.h"
+#include "SetTagFromMetadata.h"
 #include "CFDictionaryUtilities.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "WAVEMetadata.h"
 
 namespace {
 

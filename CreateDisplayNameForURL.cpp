@@ -1,16 +1,17 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <CoreFoundation/CoreFoundation.h>
+#include <os/log.h>
+
 #if !TARGET_OS_IPHONE
 # include <ApplicationServices/ApplicationServices.h>
 #endif
+#include <CoreFoundation/CoreFoundation.h>
 
-#include "CreateDisplayNameForURL.h"
 #include "CFWrapper.h"
-#include "Logger.h"
+#include "CreateDisplayNameForURL.h"
 
 CFStringRef
 SFB::CreateDisplayNameForURL(CFURLRef url)
@@ -28,7 +29,7 @@ SFB::CreateDisplayNameForURL(CFURLRef url)
 			Boolean result = CFURLCopyResourcePropertyForKey(url, kCFURLLocalizedNameKey, &displayName, nullptr);
 
 			if(!result) {
-				LOGGER_WARNING("org.sbooth.AudioEngine", "CFURLCopyResourcePropertyForKey(kCFURLLocalizedNameKey) failed: " << result);
+				os_log_info(OS_LOG_DEFAULT, "CFURLCopyResourcePropertyForKey(kCFURLLocalizedNameKey) failed: %d", result);
 				displayName = CFURLCopyLastPathComponent(url);
 			}
 		}

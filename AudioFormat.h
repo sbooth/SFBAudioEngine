@@ -7,6 +7,8 @@
 
 #include <CoreAudio/CoreAudioTypes.h>
 
+#include "CFWrapper.h"
+
 /*! @file AudioFormat.h @brief A Core %Audio \c AudioStreamBasicDescription wrapper */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
@@ -89,6 +91,10 @@ namespace SFB {
 			size_t ByteCountToFrameCount(size_t byteCount) const;
 
 			//@}
+
+			/*! @brief Returns a string representation of this format suitable for logging */
+			CFString Description() const;
+
 		};
 
 	}

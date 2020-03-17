@@ -3,15 +3,16 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <AudioToolbox/AudioFormat.h>
-#include <Accelerate/Accelerate.h>
-
 #include <algorithm>
 
-#include "MusepackDecoder.h"
-#include "CFWrapper.h"
+#include <os/log.h>
+
+#include <Accelerate/Accelerate.h>
+#include <AudioToolbox/AudioFormat.h>
+
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "MusepackDecoder.h"
 
 namespace {
 
@@ -230,7 +231,7 @@ SFB::CFString SFB::Audio::MusepackDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.Musepack", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -274,7 +275,7 @@ UInt32 SFB::Audio::MusepackDecoder::_ReadAudio(AudioBufferList *bufferList, UInt
 
 		mpc_status result = mpc_demux_decode(mDemux, &frame);
 		if(MPC_STATUS_OK != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.Musepack", "Musepack decoding error");
+			os_log_error(OS_LOG_DEFAULT, "Musepack decoding error");
 			break;
 		}
 

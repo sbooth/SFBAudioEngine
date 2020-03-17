@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <memory>
 
-#include <taglib/tfilestream.h>
 #include <taglib/dsffile.h>
+#include <taglib/tfilestream.h>
 
-#include "DSFMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "AddID3v2TagToDictionary.h"
-#include "SetID3v2TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddID3v2TagToDictionary.h"
 #include "CFDictionaryUtilities.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "DSFMetadata.h"
+#include "SetID3v2TagFromMetadata.h"
 
 namespace {
 

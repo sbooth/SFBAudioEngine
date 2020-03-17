@@ -1,14 +1,16 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include <CoreFoundation/CoreFoundation.h>
 
-#include "DSFDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "CreateStringForOSType.h"
+#include "DSFDecoder.h"
 
 namespace {
 
@@ -24,7 +26,7 @@ namespace {
 		char chunkIDBytes [4];
 		auto bytesRead = inputSource.Read(chunkIDBytes, 4);
 		if(4 != bytesRead) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read chunk ID");
+			os_log_error(OS_LOG_DEFAULT, "Unable to read chunk ID");
 			return false;
 		}
 
@@ -105,7 +107,7 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 	// Read the 'DSD ' chunk
 	uint32_t chunkID;
 	if(!ReadChunkID(GetInputSource(), chunkID) || 'DSD ' != chunkID) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read 'DSD ' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
@@ -114,21 +116,21 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 	uint64_t chunkSize, fileSize, metadataOffset;
 	// Unlike normal IFF, the chunkSize includes the size of the chunk ID and size
 	if(!GetInputSource().ReadLE<uint64_t>(chunkSize) || 28 != chunkSize) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected 'DSD ' chunk size: " << chunkSize);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected 'DSD ' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint64_t>(fileSize)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read file size in 'DSD ' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read file size in 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint64_t>(metadataOffset)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read metadata offset in 'DSD ' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read metadata offset in 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
@@ -137,14 +139,14 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 
 	// Read the 'fmt ' chunk
 	if(!ReadChunkID(GetInputSource(), chunkID) || 'fmt ' != chunkID) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read 'fmt ' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read 'fmt ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint64_t>(chunkSize)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected 'fmt ' chunk size: " << chunkSize);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected 'fmt ' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
@@ -155,63 +157,63 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 	uint32_t blockSizePerChannel, reserved;
 
 	if(!GetInputSource().ReadLE<uint32_t>(formatVersion) || 1 != formatVersion) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected format version in 'fmt ': " << formatVersion);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected format version in 'fmt ': %u", formatVersion);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(formatID) || 0 != formatID) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected format ID in 'fmt ': " << formatID);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected format ID in 'fmt ': %{public}.4s", SFBCStringForOSType(formatID));
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(channelType) || (1 > channelType || 7 < channelType)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected channel type in 'fmt ': " << channelType);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected channel type in 'fmt ': %u", channelType);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(channelNum) || (1 > channelNum || 6 < channelNum)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected channel count in 'fmt ': " << channelNum);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected channel count in 'fmt ': %u", channelNum);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(samplingFrequency) || (2822400 != samplingFrequency && 5644800 != samplingFrequency)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected sample rate in 'fmt ': " << samplingFrequency);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected sample rate in 'fmt ': %u", samplingFrequency);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(bitsPerSample) || (1 != bitsPerSample && 8 != bitsPerSample)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected bits per sample in 'fmt ': " << bitsPerSample);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected bits per sample in 'fmt ': %u", bitsPerSample);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint64_t>(sampleCount) ) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read sample count in 'fmt ' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read sample count in 'fmt ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(blockSizePerChannel) || 4096 != blockSizePerChannel) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected block size per channel in 'fmt ': " << blockSizePerChannel);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected block size per channel in 'fmt ': %u", blockSizePerChannel);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint32_t>(reserved) || 0 != reserved) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected non-zero value for reserved in 'fmt ': " << reserved);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected non-zero value for reserved in 'fmt ': %u", reserved);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
@@ -219,14 +221,14 @@ bool SFB::Audio::DSFDecoder::_Open(CFErrorRef *error)
 
 	// Read the 'data' chunk
 	if(!ReadChunkID(GetInputSource(), chunkID) || 'data' != chunkID) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unable to read 'data' chunk");
+		os_log_error(OS_LOG_DEFAULT, "Unable to read 'data' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
 	}
 
 	if(!GetInputSource().ReadLE<uint64_t>(chunkSize) ) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.DSF", "Unexpected 'data' chunk size: " << chunkSize);
+		os_log_error(OS_LOG_DEFAULT, "Unexpected 'data' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(mInputSource->GetURL());
 		return false;
@@ -294,7 +296,7 @@ UInt32 SFB::Audio::DSFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 fr
 {
 	// Only multiples of 8 frames can be read (8 frames equals one byte)
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 8) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DSF", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -354,7 +356,7 @@ SInt64 SFB::Audio::DSFDecoder::_SeekToFrame(SInt64 frame)
 	auto blockOffset = blockNumber * mBlockByteSizePerChannel * mFormat.mChannelsPerFrame;
 
 	if(!GetInputSource().SeekToOffset(mAudioOffset + (SInt64)blockOffset)) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DSF", "_SeekToFrame() failed for offset: " << mAudioOffset + (SInt64)blockOffset);
+		os_log_debug(OS_LOG_DEFAULT, "_SeekToFrame() failed for offset: %lld", mAudioOffset + (SInt64)blockOffset);
 		return -1;
 	}
 
@@ -386,7 +388,7 @@ bool SFB::Audio::DSFDecoder::ReadAndDeinterleaveDSDBlock()
 
 	auto bytesRead = GetInputSource().Read(buf, bufsize);
 	if(bytesRead != bufsize) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.DSF", "Error reading audio block: requested " << bufsize << " bytes, got " << bytesRead);
+		os_log_debug(OS_LOG_DEFAULT, "Error reading audio block: requested %d bytes, got %lld", bufsize, bytesRead);
 		return false;
 	}
 

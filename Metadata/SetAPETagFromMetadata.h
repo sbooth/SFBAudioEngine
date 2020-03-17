@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+
 #include <taglib/apetag.h>
 
 /*! @file SetAPETagFromMetadata.h @brief Utility method for setting \c TagLib::APE::Tag values from \c Metadata */

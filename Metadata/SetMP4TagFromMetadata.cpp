@@ -1,16 +1,18 @@
 /*
- * Copyright (c) 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2018 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/mp4coverart.h>
+#include <os/log.h>
+
 #include <ApplicationServices/ApplicationServices.h>
 
-#include "SetMP4TagFromMetadata.h"
+#include <taglib/mp4coverart.h>
+
 #include "AudioMetadata.h"
 #include "CFWrapper.h"
+#include "SetMP4TagFromMetadata.h"
 #include "TagLibStringUtilities.h"
-#include "Logger.h"
 
 // ========================================
 // MP4 item utilities
@@ -101,7 +103,7 @@ namespace {
 		if(nullptr != value) {
 			double f;
 			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-				LOGGER_INFO("org.sbooth.AudioEngine", "CFNumberGetValue returned an approximation");
+				os_log_info(OS_LOG_DEFAULT, "CFNumberGetValue returned an approximation");
 
 			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
 		}

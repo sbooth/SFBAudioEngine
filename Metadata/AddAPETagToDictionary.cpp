@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -7,9 +7,9 @@
 
 #include "AddAPETagToDictionary.h"
 #include "AudioMetadata.h"
-#include "CFWrapper.h"
 #include "Base64Utilities.h"
 #include "CFDictionaryUtilities.h"
+#include "CFWrapper.h"
 
 bool SFB::Audio::AddAPETagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::APE::Tag *tag)
 {

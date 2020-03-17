@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2010 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2010 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include "HTTPInputSource.h"
-#include "Logger.h"
 
 // ========================================
 // CFNetwork callbacks
@@ -168,7 +169,7 @@ void SFB::HTTPInputSource::HandleNetworkEvent(CFReadStreamRef stream, CFStreamEv
 		{
 			SFB::CFError error(CFReadStreamCopyError(stream));
 			if(error)
-				LOGGER_ERR("org.sbooth.AudioEngine.InputSource.HTTP", "Error: " << error);
+				os_log_error(OS_LOG_DEFAULT, "Error: %{public}@", error.Object());
 			break;
 		}
 

@@ -1,19 +1,19 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <memory>
 
-#include <taglib/tfilestream.h>
 #include <taglib/speexfile.h>
+#include <taglib/tfilestream.h>
 
-#include "OggSpeexMetadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "AddXiphCommentToDictionary.h"
-#include "SetXiphCommentFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddXiphCommentToDictionary.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "OggSpeexMetadata.h"
+#include "SetXiphCommentFromMetadata.h"
 
 namespace {
 

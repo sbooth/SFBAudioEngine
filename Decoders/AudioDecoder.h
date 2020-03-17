@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <CoreAudio/CoreAudioTypes.h>
-
+#include <algorithm>
 #include <memory>
 #include <vector>
-#include <algorithm>
 
-#include "InputSource.h"
-#include "AudioFormat.h"
+#include <CoreAudio/CoreAudioTypes.h>
+#include <CoreFoundation/CoreFoundation.h>
+
 #include "AudioChannelLayout.h"
+#include "AudioFormat.h"
+#include "InputSource.h"
 
 /*! @file AudioDecoder.h @brief Support for decoding audio to PCM */
 

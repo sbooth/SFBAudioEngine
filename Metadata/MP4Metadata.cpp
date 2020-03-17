@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2006 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/tfilestream.h>
 #include <taglib/mp4file.h>
+#include <taglib/tfilestream.h>
 
-#include "MP4Metadata.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "AddMP4TagToDictionary.h"
-#include "SetMP4TagFromMetadata.h"
 #include "AddAudioPropertiesToDictionary.h"
+#include "AddMP4TagToDictionary.h"
 #include "CFDictionaryUtilities.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "MP4Metadata.h"
+#include "SetMP4TagFromMetadata.h"
 
 namespace {
 

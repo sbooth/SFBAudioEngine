@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2009 - 2020 Stephen F. Booth <me@sbooth.org>
  *
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
@@ -8,17 +8,12 @@
 #import "PlayerWindowController.h"
 
 #include <SFBAudioEngine/AudioDecoder.h>
-#include <SFBAudioEngine/Logger.h>
 
 @implementation SimplePlayerAppDelegate
 
 - (void) applicationDidFinishLaunching:(NSNotification *)notification
 {
 #pragma unused(notification)
-	// Enable verbose logging to stderr
-	asl_add_log_file(nullptr, STDERR_FILENO);
-	::SFB::Logger::SetCurrentLevel(::SFB::Logger::debug);
-
 	// Show the player window
 	[self.playerWindowController showWindow:self];
 }

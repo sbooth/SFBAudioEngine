@@ -1,14 +1,17 @@
 /*
- * Copyright (c) 2013 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <vector>
+
 #include <AudioToolbox/AudioToolbox.h>
 
-#include <vector>
-#include <memory>
+#include "CFWrapper.h"
 
 /*! @file AudioChannelLayout.h @brief A Core %Audio \c AudioChannelLayout wrapper  */
 
@@ -145,6 +148,9 @@ namespace SFB {
 			inline bool operator!=(const ChannelLayout& rhs) const { return !operator==(rhs); }
 
 			//@}
+
+			/*! @brief Returns a string representation of this channel layout suitable for logging */
+			CFString Description() const;
 
 		private:
 			using unique_AudioChannelLayout_ptr = std::unique_ptr<AudioChannelLayout, std::function<void(void *)>>;

@@ -5,13 +5,11 @@
 
 #pragma once
 
-#include <iostream>
-
-#include <CoreFoundation/CoreFoundation.h>
 #include <CFNetwork/CFNetwork.h>
+#include <CoreFoundation/CoreFoundation.h>
 #if !TARGET_OS_IPHONE
-# include <Security/Security.h>
 # include <ImageIO/ImageIO.h>
+# include <Security/Security.h>
 #endif
 
 /*! @file CFWrapper.h @brief A wrapper around a Core Foundation object */
@@ -223,12 +221,6 @@ namespace SFB {
 			va_end(ap);
 		}
 
-		/*! @brief Create a new wrapped \c CFMutableStringRef using \c CFStringCreateMutable with the default allocator */
-		template <typename = std::enable_if<std::is_same<T, CFMutableStringRef>::value>>
-		CFWrapper(CFIndex maxLength = 0)
-			: CFWrapper(CFStringCreateMutable(kCFAllocatorDefault, maxLength))
-		{}
-
 		/*! @brief Create a new wrapped \c CFNumberRef using \c CFNumberCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFNumberRef>::value>>
 		CFWrapper(CFNumberType theType, const void *valuePtr)
@@ -314,12 +306,3 @@ namespace SFB {
 }
 
 /*! @cond */
-
-template <typename T>
-std::ostream& operator<<(std::ostream& out, SFB::CFWrapper<T> obj)
-{
-	out << (T)obj;
-	return out;
-}
-
-/*! @endcond */

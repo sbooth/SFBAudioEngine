@@ -4,6 +4,7 @@
  */
 
 #include <cstdio>
+#include <functional>
 
 #include "InMemoryFileInputSource.h"
 

@@ -3,12 +3,13 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <os/log.h>
+
 #include <AudioToolbox/AudioFormat.h>
 
-#include "OggVorbisDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "OggVorbisDecoder.h"
 
 #define BUFFER_SIZE_FRAMES 2048
 
@@ -147,20 +148,20 @@ bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 	}
 
 	if(0 != ov_test_open(&mVorbisFile)) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_test_open failed");
+		os_log_error(OS_LOG_DEFAULT, "ov_test_open failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
+			os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
 
 		return false;
 	}
 
 	vorbis_info *ovInfo = ov_info(&mVorbisFile, -1);
 	if(nullptr == ovInfo) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_info failed");
+		os_log_error(OS_LOG_DEFAULT, "ov_info failed");
 
 		if(0 != ov_clear(&mVorbisFile))
-			LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
+			os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
 
 		return false;
 	}
@@ -217,7 +218,7 @@ bool SFB::Audio::OggVorbisDecoder::_Open(CFErrorRef *error)
 bool SFB::Audio::OggVorbisDecoder::_Close(CFErrorRef */*error*/)
 {
 	if(0 != ov_clear(&mVorbisFile))
-		LOGGER_NOTICE("org.sbooth.AudioEngine.Decoder.OggVorbis", "ov_clear failed");
+		os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
 
 	return true;
 }
@@ -233,7 +234,7 @@ SFB::CFString SFB::Audio::OggVorbisDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::OggVorbisDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.OggVorbis", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -256,7 +257,7 @@ UInt32 SFB::Audio::OggVorbisDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 										&currentSection);
 
 		if(0 > framesRead) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggVorbis", "Ogg Vorbis decoding error");
+			os_log_error(OS_LOG_DEFAULT, "Ogg Vorbis decoding error");
 			return 0;
 		}
 
@@ -281,7 +282,7 @@ UInt32 SFB::Audio::OggVorbisDecoder::_ReadAudio(AudioBufferList *bufferList, UIn
 SInt64 SFB::Audio::OggVorbisDecoder::_SeekToFrame(SInt64 frame)
 {
 	if(0 != ov_pcm_seek(&mVorbisFile, frame)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.Decoder.OggVorbis", "Ogg Vorbis seek error");
+		os_log_error(OS_LOG_DEFAULT, "Ogg Vorbis seek error");
 		return -1;
 	}
 

@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2006 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <algorithm>
 
 #include <unistd.h>
+#include <os/log.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #include <Accelerate/Accelerate.h>
 
-#include "MPEGDecoder.h"
-#include "CFWrapper.h"
 #include "CFErrorUtilities.h"
-#include "Logger.h"
+#include "CFWrapper.h"
+#include "MPEGDecoder.h"
 
 namespace {
 
@@ -32,7 +32,7 @@ namespace {
 		// What happens if this fails?
 		int result = mpg123_init();
 		if(MPG123_OK != result)
-			LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "Unable to initialize mpg123: " << mpg123_plain_strerror(result));
+			os_log_debug(OS_LOG_DEFAULT, "Unable to initialize mpg123: %s", mpg123_plain_strerror(result));
 	}
 
 	void Teardownmpg123() __attribute__ ((destructor));
@@ -294,7 +294,7 @@ SFB::CFString SFB::Audio::MPEGDecoder::_GetSourceFormatDescription() const
 UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
 {
 	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.Decoder.MPEG", "_ReadAudio() called with invalid parameters");
+		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
 		return 0;
 	}
 
@@ -341,7 +341,7 @@ UInt32 SFB::Audio::MPEGDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 f
 		if(MPG123_DONE == result)
 			break;
 		else if(MPG123_OK != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.Decoder.MPEG", "mpg123_decode_frame failed: " << mpg123_strerror(mDecoder.get()));
+			os_log_error(OS_LOG_DEFAULT, "mpg123_decode_frame failed: %s", mpg123_strerror(mDecoder.get()));
 			break;
 		}
 

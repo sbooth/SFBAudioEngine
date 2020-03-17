@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include <algorithm>
 
-#include "AudioConverter.h"
+#include <os/log.h>
+
 #include "AudioBufferList.h"
-#include "Logger.h"
+#include "AudioConverter.h"
 #include "CFWrapper.h"
 #include "CreateStringForOSType.h"
 
@@ -89,7 +90,7 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 	// Open the decoder if necessary
 	if(!mDecoder->IsOpen() && !mDecoder->Open(error)) {
 		if(error)
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioConverter", "Error opening decoder: " << error);
+			os_log_error(OS_LOG_DEFAULT, "Error opening decoder: %{public}@", *error);
 
 		return false;
 	}
@@ -97,7 +98,7 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 	AudioStreamBasicDescription inputFormat = mDecoder->GetFormat();
 	OSStatus result = AudioConverterNew(&inputFormat, &mFormat, &mConverter);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioConverter", "AudioConverterNewfailed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		os_log_error(OS_LOG_DEFAULT, "AudioConverterNew failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
@@ -122,7 +123,7 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 
 		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
 		if(noErr != result) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioConverter", "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: " << result);
+			os_log_error(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
 
 			if(error)
 				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
@@ -140,7 +141,7 @@ bool SFB::Audio::Converter::Close(CFErrorRef *error)
 #pragma unused(error)
 
 	if(!IsOpen()) {
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "Close() called on an AudioConverter that hasn't been opened");
+		os_log_debug(OS_LOG_DEFAULT, "Close() called on an AudioConverter that hasn't been opened");
 		return true;
 	}
 
@@ -170,7 +171,7 @@ CFStringRef SFB::Audio::Converter::CreateFormatDescription() const
 																		 &sourceFormatDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		os_log_debug(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_FormatName) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	return sourceFormatDescription;
 }
@@ -189,7 +190,7 @@ CFStringRef SFB::Audio::Converter::CreateChannelLayoutDescription() const
 																		 &channelLayoutDescription);
 
 	if(noErr != result)
-		LOGGER_WARNING("org.sbooth.AudioEngine.AudioConverter", "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: " << result << "'" << SFB::StringForOSType((OSType)result) << "'");
+		os_log_debug(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutName) failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
 
 	return channelLayoutDescription;
 }
@@ -214,7 +215,7 @@ bool SFB::Audio::Converter::Reset()
 
 	OSStatus result = AudioConverterReset(mConverter);
 	if(noErr != result) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioConverter", "AudioConverterReset failed: " << result);
+		os_log_error(OS_LOG_DEFAULT, "AudioConverterReset failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
 		return false;
 	}
 

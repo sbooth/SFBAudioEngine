@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2011 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2011 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #include "AddTagToDictionary.h"
 #include "AudioMetadata.h"
-#include "TagLibStringUtilities.h"
 #include "CFDictionaryUtilities.h"
+#include "TagLibStringUtilities.h"
 
 bool SFB::Audio::AddTagToDictionary(CFMutableDictionaryRef dictionary, const TagLib::Tag *tag)
 {

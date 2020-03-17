@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2013 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "AudioRingBuffer.h"
-
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+
+#include "AudioRingBuffer.h"
 
 namespace {
 

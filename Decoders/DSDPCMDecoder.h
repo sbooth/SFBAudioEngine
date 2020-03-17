@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2018 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -7,8 +7,8 @@
 
 #include <vector>
 
-#include "AudioDecoder.h"
 #include "AudioBufferList.h"
+#include "AudioDecoder.h"
 
 /*! @file DSDPCMDecoder.h @brief Support for decoding DSD64 to PCM */
 

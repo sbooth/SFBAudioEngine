@@ -44,7 +44,7 @@ PROJECT_NUMBER         =
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "A powerful audio playback engine for Mac OS X and iOS"
+PROJECT_BRIEF          = "A powerful audio playback engine for macOS and iOS"
 
 # With the PROJECT_LOGO tag one can specify an logo or icon that is included in
 # the documentation. The maximum height of the logo should not exceed 55 pixels
@@ -760,7 +760,6 @@ INPUT                  = README.md \
                          AudioFormat.h \
                          AudioRingBuffer.h \
                          RingBuffer.h \
-                         Logger.h \
                          CFWrapper.h \
                          Semaphore.h \
                          Input/InputSource.h \
