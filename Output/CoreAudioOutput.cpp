@@ -1944,7 +1944,7 @@ bool SFB::Audio::CoreAudioOutput::_SetupForDecoder(const Decoder& decoder)
 
 	// If the output unit's input and output sample rates don't match, calculate a working maximum number of frames per slice
 	if(inputSampleRate != outputSampleRate) {
-		os_log_info(OS_LOG_DEFAULT, "Input sample rate (%f) and output sample rate (%f) don't match", inputSampleRate, outputSampleRate);
+		os_log_info(OS_LOG_DEFAULT, "Input sample rate (%.2f Hz) and output sample rate (%.2f Hz) don't match", inputSampleRate, outputSampleRate);
 
 		Float64 ratio = inputSampleRate / outputSampleRate;
 		Float64 multiplier = std::max(1.0, ratio);
