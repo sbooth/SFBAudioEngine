@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2012 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -222,6 +222,12 @@ namespace SFB {
 			*this = CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, formatOptions, format, ap);
 			va_end(ap);
 		}
+
+		/*! @brief Create a new wrapped \c CFMutableStringRef using \c CFStringCreateMutable with the default allocator */
+		template <typename = std::enable_if<std::is_same<T, CFMutableStringRef>::value>>
+		CFWrapper(CFIndex maxLength = 0)
+			: CFWrapper(CFStringCreateMutable(kCFAllocatorDefault, maxLength))
+		{}
 
 		/*! @brief Create a new wrapped \c CFNumberRef using \c CFNumberCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFNumberRef>::value>>
