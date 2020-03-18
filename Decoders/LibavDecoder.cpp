@@ -15,7 +15,6 @@ extern "C" {
 #include "AudioBufferList.h"
 #include "AudioChannelLayout.h"
 #include "CFErrorUtilities.h"
-#include "CFWrapper.h"
 #include "LibavDecoder.h"
 
 namespace {
