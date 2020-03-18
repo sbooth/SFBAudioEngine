@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2013 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include "LibavDecoder.h"
-#include "AudioBufferList.h"
-#include "AudioChannelLayout.h"
-#include "CFWrapper.h"
-#include "CFErrorUtilities.h"
-#include "Logger.h"
+#include <os/log.h>
 
 extern "C" {
-	#include <libavformat/avformat.h>
 	#include <libavcodec/avcodec.h>
+	#include <libavformat/avformat.h>
 	#include <libavutil/channel_layout.h>
 	#include <libavutil/mathematics.h>
 }
 
+#include "AudioBufferList.h"
+#include "AudioChannelLayout.h"
+#include "CFErrorUtilities.h"
+#include "CFWrapper.h"
+#include "LibavDecoder.h"
 
 namespace {
 
@@ -203,17 +203,16 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 
 	char filename [PATH_MAX];
 	if(!CFURLGetFileSystemRepresentation(mInputSource->GetURL(), false, (UInt8 *)filename, PATH_MAX))
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "CFURLGetFileSystemRepresentation failed");
+		os_log_error(OS_LOG_DEFAULT, "CFURLGetFileSystemRepresentation failed");
 
 	auto rawFormatContext = formatContext.get();
 	int result = avformat_open_input(&rawFormatContext, filename, nullptr, nullptr);
 	if(0 != result) {
 		char errbuf [ERRBUF_SIZE];
-		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avformat_open_input failed: " << errbuf);
-		}
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "avformat_open_input failed: %{public}s", errbuf);
 		else
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avformat_open_input failed: " << result);
+			os_log_error(OS_LOG_DEFAULT, "avformat_open_input failed: %d", result);
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -228,7 +227,7 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 
 	// Retrieve stream information
     if(0 > avformat_find_stream_info(formatContext.get(), nullptr)) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "Could not find stream information");
+		os_log_error(OS_LOG_DEFAULT, "Could not find stream information");
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -242,15 +241,14 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
     }
 
 	// Use the best audio stream present in the file
-	AVCodec *decoder = nullptr;
-	result = av_find_best_stream(formatContext.get(), AVMEDIA_TYPE_AUDIO, -1, -1, &decoder, 0);
-	if(0 > result) {
+	AVCodec *codec = nullptr;
+	result = av_find_best_stream(formatContext.get(), AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
+	if(AVERROR_STREAM_NOT_FOUND == result || nullptr == codec) {
 		char errbuf [ERRBUF_SIZE];
-		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_find_best_stream failed: " << errbuf);
-		}
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "av_find_best_stream failed: %{public}s", errbuf);
 		else
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_find_best_stream failed: " << result);
+			os_log_error(OS_LOG_DEFAULT, "av_find_best_stream failed: %d", result);
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -265,10 +263,10 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 
 	mStreamIndex = result;
 
-	auto codecContext = unique_AVCodecContext_ptr(avcodec_alloc_context3(decoder),
+	auto codecContext = unique_AVCodecContext_ptr(avcodec_alloc_context3(codec),
 												  [](AVCodecContext *context) { avcodec_free_context(&context); });
 	if(!codecContext) {
-		LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_alloc_context3 failed");
+		os_log_error(OS_LOG_DEFAULT, "avcodec_alloc_context3 failed");
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -282,15 +280,17 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 	}
 
 	result = avcodec_parameters_to_context(codecContext.get(), formatContext->streams[mStreamIndex]->codecpar);
+	if(0 != result) {
+		os_log_error(OS_LOG_DEFAULT, "avcodec_parameters_to_context failed");
+	}
 
-	result = avcodec_open2(codecContext.get(), decoder, nullptr);
+	result = avcodec_open2(codecContext.get(), codec, nullptr);
 	if(0 != result) {
 		char errbuf [ERRBUF_SIZE];
-		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_open2 failed: " << errbuf);
-		}
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "avcodec_open2 failed: %{public}s", errbuf);
 		else
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_open2 failed: " << result);
+			os_log_error(OS_LOG_DEFAULT, "avcodec_open2 failed: %d", result);
 
 		if(nullptr != error) {
 			SFB::CFString description(CFCopyLocalizedString(CFSTR("The format of the file “%@” was not recognized."), ""));
@@ -392,7 +392,7 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 			break;
 
 		default:
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "Unknown sample format")
+			os_log_error(OS_LOG_DEFAULT, "Unknown sample format");
 			break;
 	}
 
@@ -423,13 +423,16 @@ bool SFB::Audio::LibavDecoder::_Open(CFErrorRef *error)
 
 	// TODO: Determine max frame size
 	if(!mBufferList.Allocate(mFormat, 4096)) {
-		LOGGER_CRIT("org.sbooth.AudioEngine.Decoder.Libav", "Unable to allocate memory")
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
 
 		if(error)
 			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
 		return false;
 	}
+
+	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
+		mBufferList->mBuffers[i].mDataByteSize = 0;
 
 	mFrame = unique_AVFrame_ptr(av_frame_alloc(),
 								[](AVFrame *f) { av_frame_free(&f); });
@@ -469,8 +472,10 @@ SInt64 SFB::Audio::LibavDecoder::_GetTotalFrames() const
 {
 	if(mFormatContext->streams[mStreamIndex]->nb_frames)
 		return mFormatContext->streams[mStreamIndex]->nb_frames;
-
-	return av_rescale(mFormatContext->streams[mStreamIndex]->duration, mFormatContext->streams[mStreamIndex]->time_base.num, mFormatContext->streams[mStreamIndex]->time_base.den) * (SInt64)mFormat.mSampleRate;
+	else if(AV_NOPTS_VALUE != mFormatContext->streams[mStreamIndex]->duration)
+		return av_rescale(mFormatContext->streams[mStreamIndex]->duration, mFormatContext->streams[mStreamIndex]->time_base.num, mFormatContext->streams[mStreamIndex]->time_base.den) * (SInt64)mFormat.mSampleRate;
+	else
+		return -1;
 }
 
 UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
@@ -509,73 +514,28 @@ UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 
 		if(framesRead == frameCount)
 			break;
 
-		AVPacket packet;
-		av_init_packet(&packet);
-		packet.data = nullptr;
-		packet.size = 0;
+		// Decode some audio
+		int result = DecodeFrame();
 
-		// Read a single frame from the file
-		int result = av_read_frame(mFormatContext.get(), &packet);
-		if(0 > result) {
-			// EOF reached
+		// EOF reached
+		if(AVERROR_EOF == result) {
+			break;
+		}
+		// Need to provide input data to the codec
+		else if(AVERROR(EAGAIN) == result) {
+			result = ReadFrame();
+
 			if(AVERROR_EOF == result) {
-				if(CODEC_CAP_DELAY & mCodecContext->codec->capabilities) {
+				if(AV_CODEC_CAP_DELAY & mCodecContext->codec->capabilities) {
 					// TODO: Flush buffer
 				}
 			}
-			else {
-				char errbuf [ERRBUF_SIZE];
-				if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_read_frame failed: " << errbuf);
-				}
-				else
-					LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_read_frame failed: " << result);
+			else if(AVERROR(EAGAIN) == result) {
 			}
-
-			break;
+			else if(result < 0) {
+				os_log_error(OS_LOG_DEFAULT, "ReadFrame() failed: %d", result);
+			}
 		}
-
-		if(packet.stream_index != mStreamIndex)
-			continue;
-
-//		av_frame_unref(mFrame.get());
-
-		// Send the packet with the compressed data to the decoder
-		result = avcodec_send_packet(mCodecContext.get(), &packet);
-		if(0 != result) {
-			char errbuf [ERRBUF_SIZE];
-			if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_send_packet failed: " << errbuf);
-			}
-			else
-				LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "avcodec_send_packet failed: " << result);
-
-			break;
-		}
-
-		// Read the output frames
-		while(result >= 0) {
-			result = avcodec_receive_frame(mCodecContext.get(), mFrame.get());
-			if(AVERROR(EAGAIN) == result || AVERROR_EOF == result)
-				break;
-
-			// Planar formats are not interleaved
-			if(av_sample_fmt_is_planar(mCodecContext->sample_fmt)) {
-				for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex) {
-					memcpy(mBufferList->mBuffers[bufferIndex].mData, mFrame->extended_data[bufferIndex], (size_t)mFrame->linesize[0]);
-					mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFrame->linesize[0];
-					mBufferList->mBuffers[bufferIndex].mNumberChannels = 1;
-				}
-			}
-			else {
-				memcpy(mBufferList->mBuffers[0].mData, mFrame->extended_data[0], (size_t)mFrame->linesize[0]);
-				mBufferList->mBuffers[0].mDataByteSize = (UInt32)mFrame->linesize[0];
-				mBufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
-			}
-
-		}
-
-		av_packet_unref(&packet);
 	}
 
 	mCurrentFrame += framesRead;
@@ -589,11 +549,10 @@ SInt64 SFB::Audio::LibavDecoder::_SeekToFrame(SInt64 frame)
 	int result = av_seek_frame(mFormatContext.get(), mStreamIndex, timestamp, 0);
 	if(0 > result) {
 		char errbuf [ERRBUF_SIZE];
-		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE)) {
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << errbuf);
-		}
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "av_seek_frame failed: %{public}s", errbuf);
 		else
-			LOGGER_ERR("org.sbooth.AudioEngine.AudioDecoder.Libav", "av_seek_frame failed: " << result);
+			os_log_error(OS_LOG_DEFAULT, "av_seek_frame failed: %d", result);
 
 		return -1;
 	}
@@ -602,4 +561,96 @@ SInt64 SFB::Audio::LibavDecoder::_SeekToFrame(SInt64 frame)
 
 	mCurrentFrame = frame;
 	return mCurrentFrame;
+}
+
+int SFB::Audio::LibavDecoder::ReadFrame()
+{
+	AVPacket packet;
+	av_init_packet(&packet);
+	packet.data = nullptr;
+	packet.size = 0;
+
+	int result = av_read_frame(mFormatContext.get(), &packet);
+
+	// EOF reached?
+	if(AVERROR_EOF == result) {
+	}
+	// Other error encountered
+	else if(0 > result) {
+		char errbuf [ERRBUF_SIZE];
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "av_read_frame failed: %{public}s", errbuf);
+		else
+			os_log_error(OS_LOG_DEFAULT, "av_read_frame failed: %d", result);
+	}
+	// Send the packet with the compressed data to the decoder
+	else {
+		result = avcodec_send_packet(mCodecContext.get(), &packet);
+
+		// Decoder has been flushed
+		if(AVERROR_EOF == result) {
+		}
+		// Input not accepted in current state
+		else if(AVERROR(EAGAIN) == result) {
+		}
+		// Other error encountered
+		else if(0 != result) {
+			char errbuf [ERRBUF_SIZE];
+			if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+				os_log_error(OS_LOG_DEFAULT, "avcodec_send_packet failed: %{public}s", errbuf);
+			else
+				os_log_error(OS_LOG_DEFAULT, "avcodec_send_packet failed: %d", result);
+		}
+	}
+
+	av_packet_unref(&packet);
+
+	return result;
+}
+
+int SFB::Audio::LibavDecoder::DecodeFrame()
+{
+	// Attempt to read decoded audio
+	int result = avcodec_receive_frame(mCodecContext.get(), mFrame.get());
+
+	// EOF reached?
+	if(AVERROR_EOF == result) {
+	}
+	// Need to provide input data to the codec
+	else if(AVERROR(EAGAIN) == result) {
+	}
+	// Other error encountered
+	else if(0 < result) {
+		char errbuf [ERRBUF_SIZE];
+		if(0 == av_strerror(result, errbuf, ERRBUF_SIZE))
+			os_log_error(OS_LOG_DEFAULT, "avcodec_receive_frame failed: %{public}s", errbuf);
+		else
+			os_log_error(OS_LOG_DEFAULT, "avcodec_receive_frame failed: %d", result);
+
+		return result;
+	}
+	// Copy received audio to mBufferList
+	else {
+		auto spaceRemaining = mBufferList.GetFormat().FrameCountToByteCount(mBufferList.GetCapacityFrames()) - mBufferList->mBuffers[0].mDataByteSize;
+		if(spaceRemaining < (UInt32)mFrame->linesize[0]) {
+			os_log_error(OS_LOG_DEFAULT, "Insufficient space in buffer for decoded frame: %lu available, need %d", spaceRemaining, mFrame->linesize[0]);
+			return AVERROR(ENOMEM);
+		}
+
+		// Planar formats are not interleaved
+		if(av_sample_fmt_is_planar(mCodecContext->sample_fmt)) {
+			for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
+				memcpy((unsigned char *)mBufferList->mBuffers[i].mData + mBufferList->mBuffers[i].mDataByteSize, mFrame->extended_data[i], (size_t)mFrame->linesize[0]);
+				mBufferList->mBuffers[i].mDataByteSize += (UInt32)mFrame->linesize[0];
+				mBufferList->mBuffers[i].mNumberChannels = 1;
+			}
+		}
+		else {
+			memcpy((unsigned char *)mBufferList->mBuffers[0].mData + mBufferList->mBuffers[0].mDataByteSize, mFrame->extended_data[0], (size_t)mFrame->linesize[0]);
+			mBufferList->mBuffers[0].mDataByteSize += (UInt32)mFrame->linesize[0];
+			mBufferList->mBuffers[0].mNumberChannels = mFormat.mChannelsPerFrame;
+		}
+	}
+
+	return result;
 }

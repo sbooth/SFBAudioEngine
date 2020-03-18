@@ -1,14 +1,13 @@
 /*
- * Copyright (c) 2013 - 2018 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #pragma once
 
-#include "AudioDecoder.h"
 #include "AudioBufferList.h"
+#include "AudioDecoder.h"
 
-struct AVPacket;
 struct AVFrame;
 struct AVIOContext;
 struct AVFormatContext;
@@ -58,6 +57,9 @@ namespace SFB {
 			// Seeking support
 			inline virtual bool _SupportsSeeking() const			{ return mInputSource->SupportsSeeking(); }
 			virtual SInt64 _SeekToFrame(SInt64 frame);
+
+			int ReadFrame();
+			int DecodeFrame();
 
 			using unique_AVFrame_ptr = std::unique_ptr<AVFrame, std::function<void (AVFrame *)>>;
 			using unique_AVIOContext_ptr = std::unique_ptr<AVIOContext, std::function<void (AVIOContext *)>>;
