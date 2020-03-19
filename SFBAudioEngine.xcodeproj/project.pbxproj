@@ -35,6 +35,48 @@
 		324DB31412DC27FE0055AF3F /* MonkeysAudioMetadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 324DB31212DC27FE0055AF3F /* MonkeysAudioMetadata.cpp */; };
 		3250B42D190B439F00C28CA8 /* CoreAudioOutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3250B42B190B439E00C28CA8 /* CoreAudioOutput.cpp */; };
 		3250B42E190B439F00C28CA8 /* CoreAudioOutput.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250B42C190B439F00C28CA8 /* CoreAudioOutput.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3251168924239A0F00B02926 /* Base64Utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 329AB8A2148B185300180506 /* Base64Utilities.h */; };
+		3251168A24239A0F00B02926 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A319FB11C2072C009AE255 /* AddAudioPropertiesToDictionary.h */; };
+		3251168B24239A0F00B02926 /* AddTagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 328E230E1476EE9E00C34178 /* AddTagToDictionary.h */; };
+		3251168C24239A0F00B02926 /* AddAPETagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D6912DD408000533884 /* AddAPETagToDictionary.h */; };
+		3251168D24239A0F00B02926 /* AddID3v1TagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D4712DD3D1500533884 /* AddID3v1TagToDictionary.h */; };
+		3251168E24239A0F00B02926 /* AddID3v2TagToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E3CC11307A3700FD9DAD /* AddID3v2TagToDictionary.h */; };
+		3251168F24239A0F00B02926 /* AddXiphCommentToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 328EDB8111FD384800266816 /* AddXiphCommentToDictionary.h */; };
+		3251169024239A0F00B02926 /* SetTagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D9017014793DD100DBE73B /* SetTagFromMetadata.h */; };
+		3251169124239A0F00B02926 /* SetAPETagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */; };
+		3251169224239A0F00B02926 /* SetID3v1TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */; };
+		3251169324239A0F00B02926 /* SetID3v2TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */; };
+		3251169424239A0F00B02926 /* SetXiphCommentFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */; };
+		3251169524239A2E00B02926 /* AIFFMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4291130847C00FD9DAD /* AIFFMetadata.h */; };
+		3251169624239A2E00B02926 /* FLACMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EA6824112CD84B006C26F1 /* FLACMetadata.h */; };
+		3251169724239A2E00B02926 /* MODMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A95E4F1347EBC6006B40EF /* MODMetadata.h */; };
+		3251169824239A2E00B02926 /* MonkeysAudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DB31112DC27FE0055AF3F /* MonkeysAudioMetadata.h */; };
+		3251169924239A2E00B02926 /* MP3Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E43D113085AE00FD9DAD /* MP3Metadata.h */; };
+		3251169A24239A2E00B02926 /* MP4Metadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D7A5211304C24006676FC /* MP4Metadata.h */; };
+		3251169B24239A2E00B02926 /* MusepackMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E45B11308F8C00FD9DAD /* MusepackMetadata.h */; };
+		3251169C24239A2E00B02926 /* OggFLACMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4C011309CA300FD9DAD /* OggFLACMetadata.h */; };
+		3251169D24239A2E00B02926 /* OggSpeexMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C613A512E7E28D00F714C9 /* OggSpeexMetadata.h */; };
+		3251169E24239A2E00B02926 /* OggVorbisMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4C211309CA300FD9DAD /* OggVorbisMetadata.h */; };
+		3251169F24239A2E00B02926 /* WAVEMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E3BE1130787300FD9DAD /* WAVEMetadata.h */; };
+		325116A024239A2E00B02926 /* WavPackMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78A8112F971C006676FC /* WavPackMetadata.h */; };
+		325116A124239A4600B02926 /* MemoryInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C3BEAB1C152E61006A4E6B /* MemoryInputSource.h */; };
+		325116A224239A4600B02926 /* FileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6552A115FC58C002B275C /* FileInputSource.h */; };
+		325116A324239A4600B02926 /* HTTPInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32386EF313D2135400D25175 /* HTTPInputSource.h */; };
+		325116A424239A4600B02926 /* InMemoryFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */; };
+		325116A524239A4600B02926 /* MemoryMappedFileInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */; };
+		325116A624239A5D00B02926 /* CoreAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322B5C1D108BC70600CA9BDE /* CoreAudioDecoder.h */; };
+		325116A724239A6300B02926 /* DSDIFFDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E0FDCD21473B86009189FB /* DSDIFFDecoder.h */; };
+		325116A824239A7900B02926 /* DSFDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E0FDCF21473B86009189FB /* DSFDecoder.h */; };
+		325116A924239A7900B02926 /* FLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3255602A1092A38F00580566 /* FLACDecoder.h */; };
+		325116AA24239A7900B02926 /* LibsndfileDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */; };
+		325116AB24239A7900B02926 /* MODDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3203A6191346E0ED00A7A22E /* MODDecoder.h */; };
+		325116AC24239A7900B02926 /* MonkeysAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DB05912DBFA1E0055AF3F /* MonkeysAudioDecoder.h */; };
+		325116AD24239A7900B02926 /* MPEGDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7374310B90C9A00094C8A /* MPEGDecoder.h */; };
+		325116AE24239A7900B02926 /* MusepackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7379610B9978200094C8A /* MusepackDecoder.h */; };
+		325116AF24239A7900B02926 /* OggSpeexDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3258AE3112DF8FDF00ADA052 /* OggSpeexDecoder.h */; };
+		325116B024239A7900B02926 /* OggVorbisDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */; };
+		325116B124239A7900B02926 /* TrueAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF1A5F14C8FE3C00750053 /* TrueAudioDecoder.h */; };
+		325116B224239A7900B02926 /* WavPackDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E734A210B8C9F900094C8A /* WavPackDecoder.h */; };
 		3252E85B10CC9EFD00F1AA23 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85510CC9EFD00F1AA23 /* main.m */; };
 		3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */; };
 		3252E85D10CC9EFD00F1AA23 /* PlayerWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3252E85810CC9EFD00F1AA23 /* PlayerWindowController.mm */; };
@@ -625,35 +667,77 @@
 			files = (
 				32D65530115FC58C002B275C /* InputSource.h in Headers */,
 				32C212DF109111A600BA2493 /* AudioDecoder.h in Headers */,
+				325116A224239A4600B02926 /* FileInputSource.h in Headers */,
+				3251169D24239A2E00B02926 /* OggSpeexMetadata.h in Headers */,
 				32BA760D18203A6200366204 /* OggOpusMetadata.h in Headers */,
 				32D429E713E308DB00FA07DE /* AudioPlayer.h in Headers */,
 				326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */,
+				325116A624239A5D00B02926 /* CoreAudioDecoder.h in Headers */,
+				3251168D24239A0F00B02926 /* AddID3v1TagToDictionary.h in Headers */,
+				3251168C24239A0F00B02926 /* AddAPETagToDictionary.h in Headers */,
 				32EA67F8112BC4D9006C26F1 /* AudioMetadata.h in Headers */,
+				3251169124239A0F00B02926 /* SetAPETagFromMetadata.h in Headers */,
+				3251169F24239A2E00B02926 /* WAVEMetadata.h in Headers */,
 				3291CC2A14F5D03C00B34DA4 /* AttachedPicture.h in Headers */,
 				3261EA3A1902E41400730236 /* AudioOutput.h in Headers */,
+				325116A024239A2E00B02926 /* WavPackMetadata.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */,
+				325116AD24239A7900B02926 /* MPEGDecoder.h in Headers */,
 				32C3DD9C1943466E00CEA060 /* LoopableRegionDecoder.h in Headers */,
+				3251169C24239A2E00B02926 /* OggFLACMetadata.h in Headers */,
+				325116AC24239A7900B02926 /* MonkeysAudioDecoder.h in Headers */,
 				326AA58D215C28E9003ACA3C /* AddMP4TagToDictionary.h in Headers */,
+				3251168924239A0F00B02926 /* Base64Utilities.h in Headers */,
 				32C3DD9B1943406000CEA060 /* DoPDecoder.h in Headers */,
 				32B848EC180E395D00A222C5 /* ReplayGainAnalyzer.h in Headers */,
+				325116A724239A6300B02926 /* DSDIFFDecoder.h in Headers */,
 				32A5A20317DD1BF80064C5DE /* CFWrapper.h in Headers */,
 				32C99D2218305387004388CF /* AudioChannelLayout.h in Headers */,
+				3251169824239A2E00B02926 /* MonkeysAudioMetadata.h in Headers */,
+				325116B224239A7900B02926 /* WavPackDecoder.h in Headers */,
 				32B848E8180E199D00A222C5 /* AudioConverter.h in Headers */,
+				3251168F24239A0F00B02926 /* AddXiphCommentToDictionary.h in Headers */,
+				325116AA24239A7900B02926 /* LibsndfileDecoder.h in Headers */,
+				3251169E24239A2E00B02926 /* OggVorbisMetadata.h in Headers */,
+				325116A524239A4600B02926 /* MemoryMappedFileInputSource.h in Headers */,
+				3251169924239A2E00B02926 /* MP3Metadata.h in Headers */,
+				3251169B24239A2E00B02926 /* MusepackMetadata.h in Headers */,
 				320A32E414DD5E8F00A5BAA4 /* TrueAudioMetadata.h in Headers */,
 				32BA761118203AFF00366204 /* OggOpusDecoder.h in Headers */,
+				325116AF24239A7900B02926 /* OggSpeexDecoder.h in Headers */,
 				32BA761518203B0F00366204 /* DSFMetadata.h in Headers */,
+				325116B124239A7900B02926 /* TrueAudioDecoder.h in Headers */,
 				324A31F521742DA2004EBCF8 /* DSDPCMDecoder.h in Headers */,
 				328BBA9F215F938B004150C6 /* SetMP4TagFromMetadata.h in Headers */,
+				325116AB24239A7900B02926 /* MODDecoder.h in Headers */,
+				3251168B24239A0F00B02926 /* AddTagToDictionary.h in Headers */,
+				3251169A24239A2E00B02926 /* MP4Metadata.h in Headers */,
+				325116AE24239A7900B02926 /* MusepackDecoder.h in Headers */,
+				325116B024239A7900B02926 /* OggVorbisDecoder.h in Headers */,
 				3277E4D3218617CA00F5C0FF /* DSDIFFMetadata.h in Headers */,
 				327C4BAB14F7D7F10063F7AB /* TagLibStringUtilities.h in Headers */,
+				3251169524239A2E00B02926 /* AIFFMetadata.h in Headers */,
+				3251169424239A0F00B02926 /* SetXiphCommentFromMetadata.h in Headers */,
 				327C4BAF14F7D8B50063F7AB /* CFDictionaryUtilities.h in Headers */,
 				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
+				3251169624239A2E00B02926 /* FLACMetadata.h in Headers */,
+				3251168A24239A0F00B02926 /* AddAudioPropertiesToDictionary.h in Headers */,
 				32B3639818C4127300F2C61F /* AudioFormat.h in Headers */,
+				3251168E24239A0F00B02926 /* AddID3v2TagToDictionary.h in Headers */,
 				3292489518CEAB48004365FF /* RingBuffer.h in Headers */,
+				325116A824239A7900B02926 /* DSFDecoder.h in Headers */,
+				3251169224239A0F00B02926 /* SetID3v1TagFromMetadata.h in Headers */,
 				3292489118CEAA96004365FF /* AudioRingBuffer.h in Headers */,
+				325116A924239A7900B02926 /* FLACDecoder.h in Headers */,
+				325116A424239A4600B02926 /* InMemoryFileInputSource.h in Headers */,
+				3251169724239A2E00B02926 /* MODMetadata.h in Headers */,
+				325116A124239A4600B02926 /* MemoryInputSource.h in Headers */,
 				3250B42E190B439F00C28CA8 /* CoreAudioOutput.h in Headers */,
 				3230A939182E698900D630CF /* AudioBufferList.h in Headers */,
+				325116A324239A4600B02926 /* HTTPInputSource.h in Headers */,
+				3251169324239A0F00B02926 /* SetID3v2TagFromMetadata.h in Headers */,
+				3251169024239A0F00B02926 /* SetTagFromMetadata.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -850,7 +934,6 @@
 				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				SDKROOT = macosx;
@@ -869,7 +952,6 @@
 				INFOPLIST_FILE = "SimplePlayer/SimplePlayer-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				SDKROOT = macosx;
@@ -892,10 +974,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
-				LIBRARY_SEARCH_PATHS = (
-					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
-					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -930,10 +1009,7 @@
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "@rpath";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/Libraries";
-				LIBRARY_SEARCH_PATHS = (
-					"$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib",
-					"$(PROJECT_DIR)/Libraries/macosx-x86_64-clang-libc++/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
