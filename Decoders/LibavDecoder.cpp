@@ -5,12 +5,17 @@
 
 #include <os/log.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
+
 extern "C" {
 	#include <libavcodec/avcodec.h>
 	#include <libavformat/avformat.h>
 	#include <libavutil/channel_layout.h>
 	#include <libavutil/mathematics.h>
 }
+
+#pragma clang diagnostic pop
 
 #include "AudioBufferList.h"
 #include "AudioChannelLayout.h"
@@ -528,11 +533,13 @@ UInt32 SFB::Audio::LibavDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 
 				if(AV_CODEC_CAP_DELAY & mCodecContext->codec->capabilities) {
 					// TODO: Flush buffer
 				}
+				break;
 			}
 			else if(AVERROR(EAGAIN) == result) {
 			}
 			else if(result < 0) {
 				os_log_error(OS_LOG_DEFAULT, "ReadFrame() failed: %d", result);
+				break;
 			}
 		}
 	}
