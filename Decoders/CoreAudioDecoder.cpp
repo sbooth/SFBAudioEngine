@@ -22,7 +22,7 @@ namespace {
 	void RegisterCoreAudioDecoder() __attribute__ ((constructor));
 	void RegisterCoreAudioDecoder()
 	{
-		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::CoreAudioDecoder>(-100);
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::CoreAudioDecoder>(-75);
 	}
 
 #pragma mark Callbacks

@@ -30,7 +30,7 @@ namespace {
 	void RegisterLibavDecoder() __attribute__ ((constructor));
 	void RegisterLibavDecoder()
 	{
-		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::LibavDecoder>(-75);
+		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::LibavDecoder>(-100);
 	}
 
 	#pragma mark Initialization
