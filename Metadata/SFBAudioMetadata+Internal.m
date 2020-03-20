@@ -20,8 +20,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void) registerSubclass:(Class)subclass priority:(int)priority
 {
-	NSParameterAssert([subclass isKindOfClass:[SFBAudioMetadata class]]);
-
 	if(_registeredSubclasses == nil) {
 		_registeredSubclasses = [NSMutableArray array];
 	}

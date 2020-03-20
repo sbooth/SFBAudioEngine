@@ -14,7 +14,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 // Subclass registration support
-@interface SFBAudioMetadataSubclassInfo: NSObject
+@interface SFBAudioMetadataSubclassInfo : NSObject
 @property (nonatomic) Class subclass;
 @property (nonatomic) int priority;
 @end
@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBAudioMetadata ()
 {
-@protected
+@package
 	SFBChangeTrackingDictionary *_metadata;
 	SFBChangeTrackingSet<SFBAttachedPicture *> *_pictures;
 }

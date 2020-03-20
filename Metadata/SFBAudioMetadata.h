@@ -103,7 +103,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 
 
 /*! @brief Base class for all audio metadata reader/writer classes */
-@interface SFBAudioMetadata: NSObject
+@interface SFBAudioMetadata : NSObject
 
 /*! @brief Returns an array containing the supported file extensions */
 + (NSArray<NSString *> *)supportedFileExtensions;

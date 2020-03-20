@@ -48,7 +48,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  *
  * Most file formats may have more than one attached picture of each type.
  */
-@interface SFBAttachedPicture: NSObject
+@interface SFBAttachedPicture : NSObject
 
 /*!
  * @brief Create a new \c SFBAttachedPicture from the values contained in a dictionary
