@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <taglib/audioproperties.h>
+#import <taglib/audioproperties.h>
 
 #import "SFBAudioMetadata.h"
 

@@ -10,7 +10,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnon-virtual-dtor"
 
-#include <taglib/id3v1tag.h>
+#import <taglib/id3v1tag.h>
 
 #pragma clang diagnostic pop
 

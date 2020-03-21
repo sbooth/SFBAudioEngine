@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <taglib/tag.h>
+#import <taglib/tag.h>
 
 #import "SFBAudioMetadata.h"
 

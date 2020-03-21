@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <taglib/id3v2tag.h>
+#import <taglib/id3v2tag.h>
 
 #import "SFBAudioMetadata.h"
 

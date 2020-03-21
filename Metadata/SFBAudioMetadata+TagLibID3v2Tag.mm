@@ -3,11 +3,11 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <taglib/attachedpictureframe.h>
-#include <taglib/id3v2frame.h>
-#include <taglib/popularimeterframe.h>
-#include <taglib/relativevolumeframe.h>
-#include <taglib/textidentificationframe.h>
+#import <taglib/attachedpictureframe.h>
+#import <taglib/id3v2frame.h>
+#import <taglib/popularimeterframe.h>
+#import <taglib/relativevolumeframe.h>
+#import <taglib/textidentificationframe.h>
 
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
