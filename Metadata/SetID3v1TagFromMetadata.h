@@ -16,7 +16,7 @@
 
 #import "SFBAudioMetadata.h"
 
-/*! @file SetID3v1TagFromMetadata.h @brief Utility method for setting \c TagLib::ID3v1::Tag values from \c SFBAudioMetadata */
+/*! @file SetID3v1TagFromMetadata.h @brief Utility function for setting \c TagLib::ID3v1::Tag values from \c SFBAudioMetadata */
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -9,7 +9,7 @@
 
 #import "SFBAudioMetadata.h"
 
-/*! @file SetAPETagFromMetadata.h @brief Utility method for setting \c TagLib::APE::Tag values from \c SFBAudioMetadata */
+/*! @file SetAPETagFromMetadata.h @brief Utility function for setting \c TagLib::APE::Tag values from \c SFBAudioMetadata */
 
 NS_ASSUME_NONNULL_BEGIN
 

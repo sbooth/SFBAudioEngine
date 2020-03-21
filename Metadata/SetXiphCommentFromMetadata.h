@@ -9,7 +9,7 @@
 
 #import "SFBAudioMetadata.h"
 
-/*! @file SetXiphCommentFromMetadata.h @brief Utility method for setting \c TagLib::Ogg::XiphComment values from \c SFBAudioMetadata */
+/*! @file SetXiphCommentFromMetadata.h @brief Utility function for setting \c TagLib::Ogg::XiphComment values from \c SFBAudioMetadata */
 
 NS_ASSUME_NONNULL_BEGIN
 

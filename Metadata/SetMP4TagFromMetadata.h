@@ -9,7 +9,7 @@
 
 #import "SFBAudioMetadata.h"
 
-/*! @file SetMP4TagFromMetadata.h @brief Utility method for setting \c TagLib::MP4::Tag values from \c SFBAudioMetadata */
+/*! @file SetMP4TagFromMetadata.h @brief Utility function for setting \c TagLib::MP4::Tag values from \c SFBAudioMetadata */
 
 NS_ASSUME_NONNULL_BEGIN
 
