@@ -74,7 +74,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	SEL sel = NSSelectorFromString(@"_supportedFileExtensions:");
 	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
 		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass: _supportedFileExtensions: not implemented");
+			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass %{public}@: _supportedFileExtensions: not implemented", NSStringFromClass(subclassInfo.subclass));
 			continue;
 		}
 		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
@@ -92,7 +92,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	SEL sel = NSSelectorFromString(@"_supportedMIMETypes:");
 	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
 		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass: _supportedMIMETypes: not implemented");
+			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass %{public}@: _supportedMIMETypes: not implemented", NSStringFromClass(subclassInfo.subclass));
 			continue;
 		}
 		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
@@ -108,7 +108,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	SEL sel = NSSelectorFromString(@"_handlesFilesWithExtension:");
 	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
 		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass: _handlesFilesWithExtension: not implemented");
+			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass %{public}@: _handlesFilesWithExtension: not implemented", NSStringFromClass(subclassInfo.subclass));
 			continue;
 		}
 		BOOL (*imp)(Class, SEL, NSString *) = (BOOL (*)(Class, SEL, NSString *))objc_msgSend;
@@ -123,7 +123,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	SEL sel = NSSelectorFromString(@"_handlesMIMEType:");
 	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
 		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass: _handlesMIMEType: not implemented");
+			os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass %{public}@: _handlesMIMEType: not implemented", NSStringFromClass(subclassInfo.subclass));
 			continue;
 		}
 		BOOL (*imp)(Class, SEL, NSString *) = (BOOL (*)(Class, SEL, NSString *))objc_msgSend;
@@ -159,7 +159,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 				SEL sel = NSSelectorFromString(@"_handlesFilesWithExtension:");
 				for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
 					if(![subclassInfo.subclass respondsToSelector:sel]) {
-						os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass: _handlesFilesWithExtension: not implemented");
+						os_log_info(OS_LOG_DEFAULT, "Malformed SFBAudioMetadata subclass %{public}@: _handlesFilesWithExtension: not implemented", NSStringFromClass(subclassInfo.subclass));
 						continue;
 					}
 					BOOL (*imp)(Class, SEL, NSString *) = (BOOL (*)(Class, SEL, NSString *))objc_msgSend;
