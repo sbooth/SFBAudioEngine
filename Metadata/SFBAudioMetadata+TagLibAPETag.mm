@@ -89,27 +89,6 @@
 				self.replayGainAlbumGain = @(value.doubleValue);
 			else if([key caseInsensitiveCompare:@"REPLAYGAIN_ALBUM_PEAK"] == NSOrderedSame)
 				self.replayGainAlbumPeak = @(value.doubleValue);
-#if 0
-			else if([key caseInsensitiveCompare:@"METADATA_BLOCK_PICTURE"] == NSOrderedSame) {
-				// Handle embedded pictures
-				for(auto blockIterator : item.values()) {
-					auto encodedBlock = blockIterator.data(TagLib::String::UTF8);
-
-					// Decode the Base-64 encoded data
-					auto decodedBlock = TagLib::DecodeBase64(encodedBlock);
-
-					// Create the picture
-					TagLib::FLAC::Picture picture;
-					picture.parse(decodedBlock);
-
-					NSData *imageData = [NSData dataWithBytes:picture.data().data() length:picture.data().size()];
-					NSString *description = nil;
-					if(!picture.description().isEmpty())
-						description = [NSString stringWithUTF8String:picture.description().toCString(true)];
-					[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData type:(SFBAttachedPictureType)picture.type() description:description]];
-				}
-			}
-#endif
 			// Put all unknown tags into the additional metadata
 			else
 				[additionalMetadata setObject:value forKey:key];
