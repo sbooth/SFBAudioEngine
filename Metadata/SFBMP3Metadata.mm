@@ -107,15 +107,14 @@
 			self.totalFrames = @(properties->xingHeader()->totalFrames());
 	}
 
-	if(file.APETag())
+	if(file.hasAPETag())
 		[self addMetadataFromTagLibAPETag:file.APETag()];
 
-	if(file.ID3v1Tag())
+	if(file.hasID3v1Tag())
 		[self addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
 
-	if(file.ID3v2Tag())
+	if(file.hasID3v2Tag())
 		[self addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
-
 
 	return YES;
 }
@@ -146,13 +145,11 @@
 
 	// APE and ID3v1 tags are only written if present, but ID3v2 tags are always written
 
-	auto apeTag = file.APETag();
-	if(apeTag && !apeTag->isEmpty())
-		SFB::Audio::SetAPETagFromMetadata(self, apeTag);
+	if(file.hasAPETag())
+		SFB::Audio::SetAPETagFromMetadata(self, file.APETag());
 
-	auto id3v1Tag = file.ID3v1Tag();
-	if(id3v1Tag && !id3v1Tag->isEmpty())
-		SFB::Audio::SetID3v1TagFromMetadata(self, id3v1Tag);
+	if(file.hasID3v1Tag())
+		SFB::Audio::SetID3v1TagFromMetadata(self, file.ID3v1Tag());
 
 	SFB::Audio::SetID3v2TagFromMetadata(self, file.ID3v2Tag(true));
 
@@ -165,7 +162,6 @@
 										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
-
 
 	return YES;
 }

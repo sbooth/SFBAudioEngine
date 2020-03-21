@@ -79,10 +79,10 @@
 			self.totalFrames = @(properties->sampleFrames());
 	}
 
-	if(file.ID3v1Tag())
+	if(file.hasID3v1Tag())
 		[self addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
 
-	if(file.APETag())
+	if(file.hasAPETag())
 		[self addMetadataFromTagLibAPETag:file.APETag()];
 
 	return YES;
@@ -114,9 +114,8 @@
 
 	// ID3v1 tags are only written if present, but an APE tag is always written
 
-	auto id3v1Tag = file.ID3v1Tag();
-	if(id3v1Tag && !id3v1Tag->isEmpty())
-		SFB::Audio::SetID3v1TagFromMetadata(self, id3v1Tag);
+	if(file.hasID3v1Tag())
+		SFB::Audio::SetID3v1TagFromMetadata(self, file.ID3v1Tag());
 
 	SFB::Audio::SetAPETagFromMetadata(self, file.APETag(true));
 
