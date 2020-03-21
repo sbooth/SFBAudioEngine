@@ -3,13 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <os/log.h>
-
-#include <ApplicationServices/ApplicationServices.h>
-
 #include <taglib/flacpicture.h>
 
-#include "AudioMetadata.h"
 #include "Base64Utilities.h"
 #include "CFWrapper.h"
 #include "SetXiphCommentFromMetadata.h"
@@ -19,7 +14,7 @@
 // Xiph comment utilities
 namespace {
 
-	bool SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, CFStringRef value)
+	void SetXiphComment(TagLib::Ogg::XiphComment *tag, const char *key, NSString *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
@@ -27,169 +22,120 @@ namespace {
 		// Remove the existing comment with this name
 		tag->removeFields(key);
 
-		// Nothing left to do if value is nullptr
-		if(nullptr == value)
-			return true;
-
-		tag->addField(key, TagLib::StringFromCFString(value));
-
-		return true;
+		if(value)
+			tag->addField(key, TagLib::StringFromNSString(value));
 	}
 
-	bool SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value)
+	void SetXiphCommentNumber(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SFB::CFString numberString;
-		if(nullptr != value)
-			numberString = SFB::CFString(nullptr, CFSTR("%@"), value);
-
-		bool result = SetXiphComment(tag, key, numberString);
-
-		return result;
+		SetXiphComment(tag, key, value.stringValue);
 	}
 
-	bool SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, CFBooleanRef value)
+	void SetXiphCommentBoolean(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		if(nullptr == value)
-			return SetXiphComment(tag, key, nullptr);
-		else if(CFBooleanGetValue(value))
-			return SetXiphComment(tag, key, CFSTR("1"));
+		if(!value)
+			SetXiphComment(tag, key, nil);
 		else
-			return SetXiphComment(tag, key, CFSTR("0"));
+			SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
 	}
 
-	bool SetXiphCommentDouble(TagLib::Ogg::XiphComment *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
+	void SetXiphCommentDoubleWithFormat(TagLib::Ogg::XiphComment *tag, const char *key, NSNumber *value, NSString *format = nil)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SFB::CFString numberString;
-		if(nullptr != value) {
-			double f;
-			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-				os_log_info(OS_LOG_DEFAULT, "CFNumberGetValue returned an approximation");
-
-			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
-		}
-
-		bool result = SetXiphComment(tag, key, numberString);
-
-		return result;
+		SetXiphComment(tag, key, value ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
 	}
 
 }
 
-bool SFB::Audio::SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
+void SFB::Audio::SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt)
 {
-	if(nullptr == tag)
-		return false;
+	NSCParameterAssert(metadata != nil);
+	assert(nullptr != tag);
 
 	// Standard tags
-	SetXiphComment(tag, "ALBUM", metadata.GetAlbumTitle());
-	SetXiphComment(tag, "ARTIST", metadata.GetArtist());
-	SetXiphComment(tag, "ALBUMARTIST", metadata.GetAlbumArtist());
-	SetXiphComment(tag, "COMPOSER", metadata.GetComposer());
-	SetXiphComment(tag, "GENRE", metadata.GetGenre());
-	SetXiphComment(tag, "DATE", metadata.GetReleaseDate());
-	SetXiphComment(tag, "DESCRIPTION", metadata.GetComment());
-	SetXiphComment(tag, "TITLE", metadata.GetTitle());
-	SetXiphCommentNumber(tag, "TRACKNUMBER", metadata.GetTrackNumber());
-	SetXiphCommentNumber(tag, "TRACKTOTAL", metadata.GetTrackTotal());
-	SetXiphCommentBoolean(tag, "COMPILATION", metadata.GetCompilation());
-	SetXiphCommentNumber(tag, "DISCNUMBER", metadata.GetDiscNumber());
-	SetXiphCommentNumber(tag, "DISCTOTAL", metadata.GetDiscTotal());
-	SetXiphComment(tag, "LYRICS", metadata.GetLyrics());
-	SetXiphCommentNumber(tag, "BPM", metadata.GetBPM());
-	SetXiphCommentNumber(tag, "RATING", metadata.GetRating());
-	SetXiphComment(tag, "ISRC", metadata.GetISRC());
-	SetXiphComment(tag, "MCN", metadata.GetMCN());
-	SetXiphComment(tag, "MUSICBRAINZ_ALBUMID", metadata.GetMusicBrainzReleaseID());
-	SetXiphComment(tag, "MUSICBRAINZ_TRACKID", metadata.GetMusicBrainzRecordingID());
-	SetXiphComment(tag, "TITLESORT", metadata.GetTitleSortOrder());
-	SetXiphComment(tag, "ALBUMTITLESORT", metadata.GetAlbumTitleSortOrder());
-	SetXiphComment(tag, "ARTISTSORT", metadata.GetArtistSortOrder());
-	SetXiphComment(tag, "ALBUMARTISTSORT", metadata.GetAlbumArtistSortOrder());
-	SetXiphComment(tag, "COMPOSERSORT", metadata.GetComposerSortOrder());
-	SetXiphComment(tag, "GROUPING", metadata.GetGrouping());
+	SetXiphComment(tag, "ALBUM", metadata.albumTitle);
+	SetXiphComment(tag, "ARTIST", metadata.artist);
+	SetXiphComment(tag, "ALBUMARTIST", metadata.albumArtist);
+	SetXiphComment(tag, "COMPOSER", metadata.composer);
+	SetXiphComment(tag, "GENRE", metadata.genre);
+	SetXiphComment(tag, "DATE", metadata.releaseDate);
+	SetXiphComment(tag, "DESCRIPTION", metadata.comment);
+	SetXiphComment(tag, "TITLE", metadata.title);
+	SetXiphCommentNumber(tag, "TRACKNUMBER", metadata.trackNumber);
+	SetXiphCommentNumber(tag, "TRACKTOTAL", metadata.trackTotal);
+	SetXiphCommentBoolean(tag, "COMPILATION", metadata.compilation);
+	SetXiphCommentNumber(tag, "DISCNUMBER", metadata.discNumber);
+	SetXiphCommentNumber(tag, "DISCTOTAL", metadata.discTotal);
+	SetXiphComment(tag, "LYRICS", metadata.lyrics);
+	SetXiphCommentNumber(tag, "BPM", metadata.bpm);
+	SetXiphCommentNumber(tag, "RATING", metadata.rating);
+	SetXiphComment(tag, "ISRC", metadata.isrc);
+	SetXiphComment(tag, "MCN", metadata.mcn);
+	SetXiphComment(tag, "MUSICBRAINZ_ALBUMID", metadata.musicBrainzReleaseID);
+	SetXiphComment(tag, "MUSICBRAINZ_TRACKID", metadata.musicBrainzRecordingID);
+	SetXiphComment(tag, "TITLESORT", metadata.titleSortOrder);
+	SetXiphComment(tag, "ALBUMTITLESORT", metadata.albumTitleSortOrder);
+	SetXiphComment(tag, "ARTISTSORT", metadata.artistSortOrder);
+	SetXiphComment(tag, "ALBUMARTISTSORT", metadata.albumArtistSortOrder);
+	SetXiphComment(tag, "COMPOSERSORT", metadata.composerSortOrder);
+	SetXiphComment(tag, "GROUPING", metadata.grouping);
 
 	// Additional metadata
-	CFDictionaryRef additionalMetadata = metadata.GetAdditionalMetadata();
-	if(nullptr != additionalMetadata) {
-		CFIndex count = CFDictionaryGetCount(additionalMetadata);
-
-		const void * keys [count];
-		const void * values [count];
-
-		CFDictionaryGetKeysAndValues(additionalMetadata, (const void **)keys, (const void **)values);
-
-		for(CFIndex i = 0; i < count; ++i) {
-			CFIndex keySize = CFStringGetMaximumSizeForEncoding(CFStringGetLength((CFStringRef)keys[i]), kCFStringEncodingASCII);
-			char key [keySize + 1];
-
-			if(!CFStringGetCString((CFStringRef)keys[i], key, keySize + 1, kCFStringEncodingASCII)) {
-				os_log_error(OS_LOG_DEFAULT, "CFStringGetCString failed");
-				continue;
-			}
-
-			SetXiphComment(tag, key, (CFStringRef)values[i]);
-		}
+	NSDictionary *additionalMetadata = metadata.additionalMetadata;
+	if(additionalMetadata) {
+		for(NSString *key in additionalMetadata)
+			SetXiphComment(tag, key.UTF8String, additionalMetadata[key]);
 	}
 
 	// ReplayGain info
-	SetXiphCommentDouble(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata.GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_GAIN", metadata.GetReplayGainTrackGain(), CFSTR("%+2.2f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_TRACK_PEAK", metadata.GetReplayGainTrackPeak(), CFSTR("%1.8f"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_GAIN", metadata.GetReplayGainAlbumGain(), CFSTR("%+2.2f dB"));
-	SetXiphCommentDouble(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f"));
+	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_REFERENCE_LOUDNESS", metadata.replayGainReferenceLoudness, @"%2.1f dB");
+	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_TRACK_GAIN", metadata.replayGainTrackGain, @"%+2.2f dB");
+	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_TRACK_PEAK", metadata.replayGainTrackPeak, @"%1.8f");
+	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_ALBUM_GAIN", metadata.replayGainAlbumGain, @"%+2.2f dB");
+	SetXiphCommentDoubleWithFormat(tag, "REPLAYGAIN_ALBUM_PEAK", metadata.replayGainAlbumPeak, @"%1.8f");
 
 	// Album art
 	if(setAlbumArt) {
 		tag->removeFields("METADATA_BLOCK_PICTURE");
 
-		for(auto attachedPicture : metadata.GetAttachedPictures()) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
+		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
+			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
 			if(!imageSource)
-				return false;
+				continue;
 
 			TagLib::FLAC::Picture picture;
-			picture.setData(TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
-			picture.setType((TagLib::FLAC::Picture::Type)attachedPicture->GetType());
-			if(attachedPicture->GetDescription())
-				picture.setDescription(TagLib::StringFromCFString(attachedPicture->GetDescription()));
+			picture.setData(TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
+			picture.setType((TagLib::FLAC::Picture::Type)attachedPicture.pictureType);
+			if(attachedPicture.pictureDescription)
+				picture.setDescription(TagLib::StringFromNSString(attachedPicture.pictureDescription));
 
 			// Convert the image's UTI into a MIME type
-			SFB::CFString mimeType(UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType));
+			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
 			if(mimeType)
-				picture.setMimeType(TagLib::StringFromCFString(mimeType));
+				picture.setMimeType(TagLib::StringFromNSString(mimeType));
 
 			// Flesh out the height, width, and depth
-			SFB::CFDictionary imagePropertiesDictionary(CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr));
+			NSDictionary *imagePropertiesDictionary = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nullptr);
 			if(imagePropertiesDictionary) {
-				CFNumberRef imageWidth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelWidth);
-				CFNumberRef imageHeight = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyPixelHeight);
-				CFNumberRef imageDepth = (CFNumberRef)CFDictionaryGetValue(imagePropertiesDictionary, kCGImagePropertyDepth);
+				NSNumber *imageWidth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelWidth];
+				NSNumber *imageHeight = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyPixelHeight];
+				NSNumber *imageDepth = imagePropertiesDictionary[(__bridge NSString *)kCGImagePropertyDepth];
 
-				int height, width, depth;
-
-				// Ignore numeric conversion errors
-				CFNumberGetValue(imageWidth, kCFNumberIntType, &width);
-				CFNumberGetValue(imageHeight, kCFNumberIntType, &height);
-				CFNumberGetValue(imageDepth, kCFNumberIntType, &depth);
-
-				picture.setHeight(height);
-				picture.setWidth(width);
-				picture.setColorDepth(depth);
+				picture.setHeight(imageHeight.intValue);
+				picture.setWidth(imageWidth.intValue);
+				picture.setColorDepth(imageDepth.intValue);
 			}
 
 			TagLib::ByteVector encodedBlock = TagLib::EncodeBase64(picture.render());
 			tag->addField("METADATA_BLOCK_PICTURE", TagLib::String(encodedBlock, TagLib::String::UTF8), false);
 		}
 	}
-
-	return true;
 }

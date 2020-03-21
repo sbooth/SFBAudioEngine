@@ -3,13 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <os/log.h>
-
-#include <ApplicationServices/ApplicationServices.h>
-
 #include <taglib/mp4coverart.h>
 
-#include "AudioMetadata.h"
 #include "CFWrapper.h"
 #include "SetMP4TagFromMetadata.h"
 #include "TagLibStringUtilities.h"
@@ -18,7 +13,7 @@
 // MP4 item utilities
 namespace {
 
-	bool SetMP4Item(TagLib::MP4::Tag *tag, const char *key, CFStringRef value)
+	void SetMP4Item(TagLib::MP4::Tag *tag, const char *key, NSString *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
@@ -26,16 +21,11 @@ namespace {
 		// Remove the existing item with this name
 		tag->removeItem(key);
 
-		// Nothing left to do if value is nullptr
-		if(nullptr == value)
-			return true;
-
-		tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromCFString(value)));
-
-		return true;
+		if(value)
+			tag->setItem(key, TagLib::MP4::Item(TagLib::StringFromNSString(value)));
 	}
 
-	bool SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, CFNumberRef value)
+	void SetMP4ItemInt(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
@@ -43,20 +33,11 @@ namespace {
 		// Remove the existing item with this name
 		tag->removeItem(key);
 
-		// Nothing left to do if value is nullptr
-		if(nullptr == value)
-			return true;
-
-		int i;
-		if(!CFNumberGetValue(value, kCFNumberIntType, &i))
-			return false;
-
-		tag->setItem(key, TagLib::MP4::Item(i));
-
-		return true;
+		if(value)
+			tag->setItem(key, TagLib::MP4::Item(value.intValue));
 	}
 
-	bool SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, CFNumberRef valueOne, CFNumberRef valueTwo)
+	void SetMP4ItemIntPair(TagLib::MP4::Tag *tag, const char *key, NSNumber *valueOne, NSNumber *valueTwo)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
@@ -64,127 +45,99 @@ namespace {
 		// Remove the existing item with this name
 		tag->removeItem(key);
 
-		// Nothing left to do if value is nullptr
-		if(nullptr == valueOne && nullptr == valueTwo)
-			return true;
-
-		int i = 0, j = 0;
-		if(valueOne != nullptr && !CFNumberGetValue(valueOne, kCFNumberIntType, &i))
-			return false;
-		if(valueTwo != nullptr && !CFNumberGetValue(valueTwo, kCFNumberIntType, &j))
-			return false;
-
-		tag->setItem(key, TagLib::MP4::Item(i, j));
-
-		return true;
+		if(valueOne || valueTwo)
+			tag->setItem(key, TagLib::MP4::Item(valueOne.intValue, valueTwo.intValue));
 	}
 
-	bool SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, CFBooleanRef value)
+	void SetMP4ItemBoolean(TagLib::MP4::Tag *tag, const char *key, NSNumber *value)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		if(nullptr == value)
-			return SetMP4Item(tag, key, nullptr);
-		else if(CFBooleanGetValue(value))
-			tag->setItem(key, TagLib::MP4::Item(1));
+		if(!value)
+			tag->removeItem(key);
 		else
-			tag->setItem(key, TagLib::MP4::Item(0));
-
-		return true;
+			tag->setItem(key, TagLib::MP4::Item((int)value.boolValue));
 	}
 
-	bool SetMP4ItemDouble(TagLib::MP4::Tag *tag, const char *key, CFNumberRef value, CFStringRef format = nullptr)
+	void SetMP4ItemDoubleWithFormat(TagLib::MP4::Tag *tag, const char *key, NSNumber *value, NSString *format = nil)
 	{
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SFB::CFString numberString;
-		if(nullptr != value) {
-			double f;
-			if(!CFNumberGetValue(value, kCFNumberDoubleType, &f))
-				os_log_info(OS_LOG_DEFAULT, "CFNumberGetValue returned an approximation");
-
-			numberString = SFB::CFString(nullptr, format ?: CFSTR("%f"), f);
-		}
-
-		bool result = SetMP4Item(tag, key, numberString);
-
-		return result;
+		SetMP4Item(tag, key, value ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
 	}
 
 }
 
-bool SFB::Audio::SetMP4TagFromMetadata(const Metadata& metadata, TagLib::MP4::Tag *tag, bool setAlbumArt)
+void SFB::Audio::SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt)
 {
-	if(nullptr == tag)
-		return false;
+	NSCParameterAssert(metadata != nil);
+	assert(nullptr != tag);
 
-	SetMP4Item(tag, "\251nam", metadata.GetTitle());
-	SetMP4Item(tag, "\251ART", metadata.GetArtist());
-	SetMP4Item(tag, "\251ALB", metadata.GetAlbumTitle());
-	SetMP4Item(tag, "aART", metadata.GetAlbumArtist());
-	SetMP4Item(tag, "\251gen", metadata.GetGenre());
-	SetMP4Item(tag, "\251wrt", metadata.GetComposer());
-	SetMP4Item(tag, "\251cmt", metadata.GetComment());
-	SetMP4Item(tag, "\251day", metadata.GetReleaseDate());
+	SetMP4Item(tag, "\251nam", metadata.title);
+	SetMP4Item(tag, "\251ART", metadata.artist);
+	SetMP4Item(tag, "\251ALB", metadata.albumTitle);
+	SetMP4Item(tag, "aART", metadata.albumArtist);
+	SetMP4Item(tag, "\251gen", metadata.genre);
+	SetMP4Item(tag, "\251wrt", metadata.composer);
+	SetMP4Item(tag, "\251cmt", metadata.comment);
+	SetMP4Item(tag, "\251day", metadata.releaseDate);
 
-	SetMP4ItemIntPair(tag, "trkn", metadata.GetTrackNumber(), metadata.GetTrackTotal());
-	SetMP4ItemIntPair(tag, "disk", metadata.GetDiscNumber(), metadata.GetDiscTotal());
+	SetMP4ItemIntPair(tag, "trkn", metadata.trackNumber, metadata.trackTotal);
+	SetMP4ItemIntPair(tag, "disk", metadata.discNumber, metadata.discTotal);
 
-	SetMP4ItemBoolean(tag, "cpil", metadata.GetCompilation());
+	SetMP4ItemBoolean(tag, "cpil", metadata.compilation);
 
-	SetMP4ItemInt(tag, "tmpo", metadata.GetBPM());
+	SetMP4ItemInt(tag, "tmpo", metadata.bpm);
 
-	SetMP4Item(tag, "\251lyr", metadata.GetLyrics());
+	SetMP4Item(tag, "\251lyr", metadata.lyrics);
 
 	// Sorting
-	SetMP4Item(tag, "sonm", metadata.GetTitleSortOrder());
-	SetMP4Item(tag, "soal", metadata.GetAlbumTitleSortOrder());
-	SetMP4Item(tag, "soar", metadata.GetArtistSortOrder());
-	SetMP4Item(tag, "soaa", metadata.GetAlbumArtistSortOrder());
-	SetMP4Item(tag, "soco", metadata.GetComposerSortOrder());
+	SetMP4Item(tag, "sonm", metadata.titleSortOrder);
+	SetMP4Item(tag, "soal", metadata.albumTitleSortOrder);
+	SetMP4Item(tag, "soar", metadata.artistSortOrder);
+	SetMP4Item(tag, "soaa", metadata.albumArtistSortOrder);
+	SetMP4Item(tag, "soco", metadata.composerSortOrder);
 
-	SetMP4Item(tag, "\251grp", metadata.GetGrouping());
+	SetMP4Item(tag, "\251grp", metadata.grouping);
 
 	// MusicBrainz
-	SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Album Id", metadata.GetMusicBrainzReleaseID());
-	SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Track Id", metadata.GetMusicBrainzRecordingID());
+	SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Album Id", metadata.musicBrainzReleaseID);
+	SetMP4Item(tag, "---:com.apple.iTunes:MusicBrainz Track Id", metadata.musicBrainzRecordingID);
 
 	// ReplayGain info
-	SetMP4ItemDouble(tag, "---:com.apple.iTunes:replaygain_reference_loudness", metadata.GetReplayGainReferenceLoudness(), CFSTR("%2.1f dB"));
-	SetMP4ItemDouble(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.GetReplayGainTrackGain(), CFSTR("%2.2f dB"));
-	SetMP4ItemDouble(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.GetReplayGainTrackPeak(), CFSTR("%1.8f dB"));
-	SetMP4ItemDouble(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.GetReplayGainAlbumGain(), CFSTR("%2.2f dB"));
-	SetMP4ItemDouble(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.GetReplayGainAlbumPeak(), CFSTR("%1.8f dB"));
+	SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_reference_loudness", metadata.replayGainReferenceLoudness, @"%2.1f dB");
+	SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_gain", metadata.replayGainTrackGain, @"%2.2f dB");
+	SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_track_peak", metadata.replayGainTrackPeak, @"%1.8f dB");
+	SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_gain", metadata.replayGainAlbumGain, @"%2.2f dB");
+	SetMP4ItemDoubleWithFormat(tag, "---:com.apple.iTunes:replaygain_album_peak", metadata.replayGainAlbumPeak, @"%1.8f dB");
 
 	if(setAlbumArt) {
 		auto list = TagLib::MP4::CoverArtList();
-		for(auto attachedPicture : metadata.GetAttachedPictures()) {
-			SFB::CGImageSource imageSource(CGImageSourceCreateWithData(attachedPicture->GetData(), nullptr));
+		for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
+			SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
 			if(!imageSource)
 				continue;
 
 			// Convert the image's UTI into a MIME type
-			SFB::CFString mimeType(UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType));
+			NSString *mimeType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(CGImageSourceGetType(imageSource), kUTTagClassMIMEType);
 			auto type = TagLib::MP4::CoverArt::CoverArt::Unknown;
 			if(mimeType) {
-				if(UTTypeEqual(kUTTypeBMP, mimeType))
+				if(UTTypeEqual(kUTTypeBMP, (__bridge CFStringRef)mimeType))
 					type = TagLib::MP4::CoverArt::CoverArt::BMP;
-				else if(UTTypeEqual(kUTTypePNG, mimeType))
+				else if(UTTypeEqual(kUTTypePNG, (__bridge CFStringRef)mimeType))
 					type = TagLib::MP4::CoverArt::CoverArt::PNG;
-				else if(UTTypeEqual(kUTTypeGIF, mimeType))
+				else if(UTTypeEqual(kUTTypeGIF, (__bridge CFStringRef)mimeType))
 					type = TagLib::MP4::CoverArt::CoverArt::GIF;
-				else if(UTTypeEqual(kUTTypeJPEG, mimeType))
+				else if(UTTypeEqual(kUTTypeJPEG, (__bridge CFStringRef)mimeType))
 					type = TagLib::MP4::CoverArt::CoverArt::JPEG;
 			}
 
-			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector((const char *)CFDataGetBytePtr(attachedPicture->GetData()), (size_t)CFDataGetLength(attachedPicture->GetData())));
+			auto picture = TagLib::MP4::CoverArt(type, TagLib::ByteVector((const char *)attachedPicture.imageData.bytes, (size_t)attachedPicture.imageData.length));
 			list.append(picture);
 		}
 
 		tag->setItem("covr", list);
 	}
-
-	return true;
 }
