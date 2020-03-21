@@ -133,11 +133,11 @@
 	// MusicBrainz
 	auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
 	if(musicBrainzReleaseIDFrame)
-		self.musicBrainzReleaseID = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+		self.musicBrainzReleaseID = [NSString stringWithUTF8String:musicBrainzReleaseIDFrame->fieldList().back().toCString(true)];
 
 	auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
 	if(musicBrainzRecordingIDFrame)
-		self.musicBrainzRecordingID = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
+		self.musicBrainzRecordingID = [NSString stringWithUTF8String:musicBrainzRecordingIDFrame->fieldList().back().toCString(true)];
 
 	// Sorting and grouping
 	frameList = tag->frameListMap()["TSOT"];
