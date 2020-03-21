@@ -3,14 +3,12 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <memory>
+#import <taglib/tag.h>
+#import <taglib/tfilestream.h>
+#import <taglib/wavpackfile.h>
 
-#include <taglib/tag.h>
-#include <taglib/tfilestream.h>
-#include <taglib/wavpackfile.h>
-
-#include "SetAPETagFromMetadata.h"
-#include "SetID3v1TagFromMetadata.h"
+#import "SetAPETagFromMetadata.h"
+#import "SetID3v1TagFromMetadata.h"
 
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
@@ -69,16 +67,16 @@
 		return NO;
 	}
 
-	[_metadata setObject:@"WavPack" forKey:SFBAudioMetadataFormatNameKey];
+	self.formatName = @"WavPack";
 
-	auto properties = file.audioProperties();
-	if(properties) {
+	if(file.audioProperties()) {
+		auto properties = file.audioProperties();
 		[self addAudioPropertiesFromTagLibAudioProperties:properties];
 
 		if(properties->bitsPerSample())
-			[_metadata setObject:@(properties->bitsPerSample()) forKey:SFBAudioMetadataBitsPerChannelKey];
+			self.bitsPerChannel = @(properties->bitsPerSample());
 		if(properties->sampleFrames())
-			[_metadata setObject:@(properties->sampleFrames()) forKey:SFBAudioMetadataTotalFramesKey];
+			self.totalFrames = @(properties->sampleFrames());
 	}
 
 	if(file.ID3v1Tag())
@@ -116,15 +114,16 @@
 
 	// ID3v1 tags are only written if present, but an APE tag is always written
 
-	if(file.ID3v1Tag())
-		SFB::Audio::SetID3v1TagFromMetadata(self, file.ID3v1Tag());
+	auto id3v1Tag = file.ID3v1Tag();
+	if(id3v1Tag && !id3v1Tag->isEmpty())
+		SFB::Audio::SetID3v1TagFromMetadata(self, id3v1Tag);
 
 	SFB::Audio::SetAPETagFromMetadata(self, file.APETag(true));
 
 	if(!file.save()) {
 		if(error)
 			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @"")
+							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
 														 url:self.url
 											   failureReason:NSLocalizedString(@"Unable to write metadata", @"")
 										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
