@@ -32,7 +32,7 @@
 
 + (BOOL)_handlesFilesWithExtension:(NSString *)extension
 {
-	return [extension caseInsensitiveCompare:@"mpc"] == NSOrderedSame;
+	return [extension caseInsensitiveCompare:@"m4a"] == NSOrderedSame || [extension caseInsensitiveCompare:@"m4r"] == NSOrderedSame || [extension caseInsensitiveCompare:@"mp4"] == NSOrderedSame;
 }
 
 + (BOOL)_handlesMIMEType:(NSString *)mimeType
