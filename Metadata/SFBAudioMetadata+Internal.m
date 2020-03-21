@@ -5,6 +5,46 @@
 
 #import "SFBAudioMetadata+Internal.h"
 
+@implementation SFBAudioMetadata (Internal)
+
+- (void)setFormatName:(NSString *)formatName
+{
+	[_metadata setObject:[formatName copy] forKey:SFBAudioMetadataFormatNameKey];
+}
+
+- (void)setTotalFrames:(NSNumber *)totalFrames
+{
+	[_metadata setObject:totalFrames forKey:SFBAudioMetadataTotalFramesKey];
+}
+
+- (void)setChannelsPerFrame:(NSNumber *)channelsPerFrame
+{
+	[_metadata setObject:channelsPerFrame forKey:SFBAudioMetadataChannelsPerFrameKey];
+}
+
+- (void)setBitsPerChannel:(NSNumber *)bitsPerChannel
+{
+	[_metadata setObject:bitsPerChannel forKey:SFBAudioMetadataBitsPerChannelKey];
+}
+
+- (void)setSampleRate:(NSNumber *)sampleRate
+{
+	[_metadata setObject:sampleRate forKey:SFBAudioMetadataSampleRateKey];
+}
+
+- (void)setDuration:(NSNumber *)duration
+{
+	[_metadata setObject:duration forKey:SFBAudioMetadataDurationKey];
+}
+
+- (void)setBitrate:(NSNumber *)bitrate
+{
+	[_metadata setObject:bitrate forKey:SFBAudioMetadataBitrateKey];
+}
+
+@end
+
+
 @implementation SFBAudioMetadataSubclassInfo
 @end
 

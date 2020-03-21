@@ -13,6 +13,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface SFBAudioMetadata ()
+{
+@package
+	SFBChangeTrackingDictionary *_metadata;
+	SFBChangeTrackingSet<SFBAttachedPicture *> *_pictures;
+}
+@end
+
+
+@interface SFBAudioMetadata (Internal)
+@property (nonatomic, nullable) NSString *formatName;
+@property (nonatomic, nullable) NSNumber *totalFrames;
+@property (nonatomic, nullable) NSNumber *channelsPerFrame;
+@property (nonatomic, nullable) NSNumber *bitsPerChannel;
+@property (nonatomic, nullable) NSNumber *sampleRate;
+@property (nonatomic, nullable) NSNumber *duration;
+@property (nonatomic, nullable) NSNumber *bitrate;
+@end
+
+
 // Subclass registration support
 @interface SFBAudioMetadataSubclassInfo : NSObject
 @property (nonatomic) Class subclass;
@@ -24,15 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)registerSubclass:(Class)subclass;
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
 + (NSArray<SFBAudioMetadataSubclassInfo *> *)registeredSubclasses;
-@end
-
-
-@interface SFBAudioMetadata ()
-{
-@package
-	SFBChangeTrackingDictionary *_metadata;
-	SFBChangeTrackingSet<SFBAttachedPicture *> *_pictures;
-}
 @end
 
 
