@@ -3,7 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <taglib/tag.h>
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
 

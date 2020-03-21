@@ -4,7 +4,6 @@
  */
 
 #import <taglib/mpegfile.h>
-#import <taglib/mpegproperties.h>
 #import <taglib/tfilestream.h>
 #import <taglib/xingheader.h>
 
