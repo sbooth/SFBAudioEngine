@@ -9,20 +9,18 @@
 #include <taglib/relativevolumeframe.h>
 #include <taglib/textidentificationframe.h>
 
-#include "AddID3v2TagToDictionary.h"
-#include "AddTagToDictionary.h"
-#include "AudioMetadata.h"
-#include "CFDictionaryUtilities.h"
-#include "CFWrapper.h"
-#include "TagLibStringUtilities.h"
+#import "SFBAudioMetadata+TagLibID3v2Tag.h"
+#import "SFBAudioMetadata+TagLibTag.h"
+#import "SFBAudioMetadata+Internal.h"
 
-bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std::vector<std::shared_ptr<AttachedPicture>>& attachedPictures, const TagLib::ID3v2::Tag *tag)
+@implementation SFBAudioMetadata (TagLibID3v2Tag)
+
+- (void)addMetadataFromTagLibID3v2Tag:(const TagLib::ID3v2::Tag *)tag
 {
-	if(nullptr == dictionary || nullptr == tag)
-		return false;
+	NSParameterAssert(tag != nil);
 
 	// Add the basic tags not specific to ID3v2
-	AddTagToDictionary(dictionary, tag);
+	[self addMetadataFromTagLibTag:tag];
 
 	// Release date
 	auto frameList = tag->frameListMap()["TDRC"];
@@ -41,18 +39,18 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		 definition.
 		 */
 
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kReleaseDateKey, frameList.front()->toString());
+		self.releaseDate = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 	}
 
 	// Extract composer if present
 	frameList = tag->frameListMap()["TCOM"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kComposerKey, frameList.front()->toString());
+		self.composer = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// Extract album artist
 	frameList = tag->frameListMap()["TPE2"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumArtistKey, frameList.front()->toString());
+		self.albumArtist = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// BPM
 	frameList = tag->frameListMap()["TBPM"];
@@ -60,14 +58,14 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		bool ok = false;
 		int BPM = frameList.front()->toString().toInt(&ok);
 		if(ok)
-			AddIntToDictionary(dictionary, Metadata::kBPMKey, BPM);
+			self.bpm = [NSNumber numberWithInt:BPM];
 	}
 
 	// Rating
 	TagLib::ID3v2::PopularimeterFrame *popularimeter = nullptr;
 	frameList = tag->frameListMap()["POPM"];
 	if(!frameList.isEmpty() && nullptr != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front())))
-		AddIntToDictionary(dictionary, Metadata::kRatingKey, popularimeter->rating());
+		self.rating = [NSNumber numberWithInt:popularimeter->rating()];
 
 	// Extract total tracks if present
 	frameList = tag->frameListMap()["TRCK"];
@@ -80,16 +78,16 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		if(TagLib::String::npos() != pos) {
 			int trackNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
+				self.trackNumber = [NSNumber numberWithInt:trackNum];
 
 			int trackTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kTrackTotalKey, trackTotal);
+				self.trackTotal = [NSNumber numberWithInt:trackTotal];
 		}
 		else if(s.length()) {
 			int trackNum = s.toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kTrackNumberKey, trackNum);
+				self.trackNumber = [NSNumber numberWithInt:trackNum];
 		}
 	}
 
@@ -104,67 +102,67 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 		if(TagLib::String::npos() != pos) {
 			int discNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
+				self.trackNumber = [NSNumber numberWithInt:discNum];
 
 			int discTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kDiscTotalKey, discTotal);
+				self.trackNumber = [NSNumber numberWithInt:discTotal];
 		}
 		else if(s.length()) {
 			int discNum = s.toInt(&ok);
 			if(ok)
-				AddIntToDictionary(dictionary, Metadata::kDiscNumberKey, discNum);
+				self.trackNumber = [NSNumber numberWithInt:discNum];
 		}
 	}
 
 	// Lyrics
 	frameList = tag->frameListMap()["USLT"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kLyricsKey, frameList.front()->toString());
+		self.lyrics = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// Extract compilation if present (iTunes TCMP tag)
 	frameList = tag->frameListMap()["TCMP"];
 	if(!frameList.isEmpty())
 		// It seems that the presence of this frame indicates a compilation
-		CFDictionarySetValue(dictionary, Metadata::kCompilationKey, kCFBooleanTrue);
+		self.compilation = [NSNumber numberWithBool:YES];
 
 	frameList = tag->frameListMap()["TSRC"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kISRCKey, frameList.front()->toString());
+		self.isrc = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// MusicBrainz
 	auto musicBrainzReleaseIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Album Id");
 	if(musicBrainzReleaseIDFrame)
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kMusicBrainzReleaseIDKey, musicBrainzReleaseIDFrame->fieldList().back());
+		self.musicBrainzReleaseID = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	auto musicBrainzRecordingIDFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "MusicBrainz Track Id");
 	if(musicBrainzRecordingIDFrame)
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kMusicBrainzRecordingIDKey, musicBrainzRecordingIDFrame->fieldList().back());
+		self.musicBrainzRecordingID = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// Sorting and grouping
 	frameList = tag->frameListMap()["TSOT"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kTitleSortOrderKey, frameList.front()->toString());
+		self.titleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	frameList = tag->frameListMap()["TSOA"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumTitleSortOrderKey, frameList.front()->toString());
+		self.albumTitleSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	frameList = tag->frameListMap()["TSOP"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kArtistSortOrderKey, frameList.front()->toString());
+		self.artistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	frameList = tag->frameListMap()["TSO2"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kAlbumArtistSortOrderKey, frameList.front()->toString());
+		self.albumArtistSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	frameList = tag->frameListMap()["TSOC"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kComposerSortOrderKey, frameList.front()->toString());
+		self.composerSortOrder = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	frameList = tag->frameListMap()["TIT1"];
 	if(!frameList.isEmpty())
-		TagLib::AddStringToCFDictionary(dictionary, Metadata::kGroupingKey, frameList.front()->toString());
+		self.grouping = [NSString stringWithUTF8String:frameList.front()->toString().toCString(true)];
 
 	// ReplayGain
 	bool foundReplayGain = false;
@@ -178,11 +176,9 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!trackGainFrame)
 		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
-		SFB::CFString str(trackGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
-		double num = CFStringGetDoubleValue(str);
-
-		AddDoubleToDictionary(dictionary, Metadata::kTrackGainKey, num);
-		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
+		NSString *s = [NSString stringWithUTF8String:trackGainFrame->fieldList().back().toCString(true)];
+		self.replayGainTrackGain = [NSNumber numberWithDouble:s.doubleValue];
+		self.replayGainReferenceLoudness = [NSNumber numberWithDouble:89.0];
 
 		foundReplayGain = true;
 	}
@@ -190,20 +186,16 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!trackPeakFrame)
 		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
-		SFB::CFString str(trackPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
-		double num = CFStringGetDoubleValue(str);
-
-		AddDoubleToDictionary(dictionary, Metadata::kTrackPeakKey, num);
+		NSString *s = [NSString stringWithUTF8String:trackPeakFrame->fieldList().back().toCString(true)];
+		self.replayGainTrackPeak = [NSNumber numberWithDouble:s.doubleValue];
 	}
 
 	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
-		SFB::CFString str(albumGainFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
-		double num = CFStringGetDoubleValue(str);
-
-		AddDoubleToDictionary(dictionary, Metadata::kAlbumGainKey, num);
-		AddDoubleToDictionary(dictionary, Metadata::kReferenceLoudnessKey, 89.0);
+		NSString *s = [NSString stringWithUTF8String:albumGainFrame->fieldList().back().toCString(true)];
+		self.replayGainAlbumGain = [NSNumber numberWithDouble:s.doubleValue];
+		self.replayGainReferenceLoudness = [NSNumber numberWithDouble:89.0];
 
 		foundReplayGain = true;
 	}
@@ -211,10 +203,8 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	if(!albumPeakFrame)
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
-		SFB::CFString str(albumPeakFrame->fieldList().back().toCString(true), kCFStringEncodingUTF8);
-		double num = CFStringGetDoubleValue(str);
-
-		AddDoubleToDictionary(dictionary, Metadata::kAlbumPeakKey, num);
+		NSString *s = [NSString stringWithUTF8String:albumPeakFrame->fieldList().back().toCString(true)];
+		self.replayGainAlbumPeak = [NSNumber numberWithDouble:s.doubleValue];
 	}
 
 	// If nothing found check for RVA2 frame
@@ -238,16 +228,16 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 
 			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
+					self.replayGainTrackGain = [NSNumber numberWithFloat:volumeAdjustment];
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, Metadata::kAlbumGainKey, volumeAdjustment);
+					self.replayGainAlbumGain = [NSNumber numberWithFloat:volumeAdjustment];
 			}
 			// Fall back to track gain if identification is not specified
 			else {
 				if((int)volumeAdjustment)
-					AddFloatToDictionary(dictionary, Metadata::kTrackGainKey, volumeAdjustment);
+					self.replayGainTrackGain = [NSNumber numberWithFloat:volumeAdjustment];
 			}
 		}
 	}
@@ -256,15 +246,17 @@ bool SFB::Audio::AddID3v2TagToDictionary(CFMutableDictionaryRef dictionary, std:
 	for(auto it : tag->frameListMap()["APIC"]) {
 		TagLib::ID3v2::AttachedPictureFrame *frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame *>(it);
 		if(frame) {
-			SFB::CFData data((const UInt8 *)frame->picture().data(), (CFIndex)frame->picture().size());
-
-			SFB::CFString description;
+			NSData *imageData = [NSData dataWithBytes:frame->picture().data() length:frame->picture().size()];
+			NSString *description = nil;
 			if(!frame->description().isEmpty())
-				description = CFString(frame->description().toCString(true), kCFStringEncodingUTF8);
+				description = [NSString stringWithUTF8String:frame->description().toCString(true)];
 
-			attachedPictures.push_back(std::make_shared<AttachedPicture>(data, (AttachedPicture::Type)frame->type(), description));
+			SFBAttachedPicture *picture = [[SFBAttachedPicture alloc] initWithImageData:imageData
+																				   type:(SFBAttachedPictureType)frame->type()
+																			description:description];
+			[self attachPicture:picture];
 		}
 	}
-
-	return true;
 }
+
+@end
