@@ -58,14 +58,14 @@
 		bool ok = false;
 		int BPM = frameList.front()->toString().toInt(&ok);
 		if(ok)
-			self.bpm = [NSNumber numberWithInt:BPM];
+			self.bpm = @(BPM);
 	}
 
 	// Rating
 	TagLib::ID3v2::PopularimeterFrame *popularimeter = nullptr;
 	frameList = tag->frameListMap()["POPM"];
 	if(!frameList.isEmpty() && nullptr != (popularimeter = dynamic_cast<TagLib::ID3v2::PopularimeterFrame *>(frameList.front())))
-		self.rating = [NSNumber numberWithInt:popularimeter->rating()];
+		self.rating = @(popularimeter->rating());
 
 	// Extract total tracks if present
 	frameList = tag->frameListMap()["TRCK"];
@@ -78,16 +78,16 @@
 		if(TagLib::String::npos() != pos) {
 			int trackNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
-				self.trackNumber = [NSNumber numberWithInt:trackNum];
+				self.trackNumber = @(trackNum);
 
 			int trackTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
-				self.trackTotal = [NSNumber numberWithInt:trackTotal];
+				self.trackTotal = @(trackTotal);
 		}
 		else if(s.length()) {
 			int trackNum = s.toInt(&ok);
 			if(ok)
-				self.trackNumber = [NSNumber numberWithInt:trackNum];
+				self.trackNumber = @(trackNum);
 		}
 	}
 
@@ -102,16 +102,16 @@
 		if(TagLib::String::npos() != pos) {
 			int discNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
-				self.trackNumber = [NSNumber numberWithInt:discNum];
+				self.trackNumber = @(discNum);
 
 			int discTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
-				self.trackNumber = [NSNumber numberWithInt:discTotal];
+				self.trackNumber = @(discTotal);
 		}
 		else if(s.length()) {
 			int discNum = s.toInt(&ok);
 			if(ok)
-				self.trackNumber = [NSNumber numberWithInt:discNum];
+				self.trackNumber = @(discNum);
 		}
 	}
 
@@ -124,7 +124,7 @@
 	frameList = tag->frameListMap()["TCMP"];
 	if(!frameList.isEmpty())
 		// It seems that the presence of this frame indicates a compilation
-		self.compilation = [NSNumber numberWithBool:YES];
+		self.compilation = @(YES);
 
 	frameList = tag->frameListMap()["TSRC"];
 	if(!frameList.isEmpty())
@@ -177,8 +177,8 @@
 		trackGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_gain");
 	if(trackGainFrame) {
 		NSString *s = [NSString stringWithUTF8String:trackGainFrame->fieldList().back().toCString(true)];
-		self.replayGainTrackGain = [NSNumber numberWithDouble:s.doubleValue];
-		self.replayGainReferenceLoudness = [NSNumber numberWithDouble:89.0];
+		self.replayGainTrackGain = @(s.doubleValue);
+		self.replayGainReferenceLoudness = @(89.0);
 
 		foundReplayGain = true;
 	}
@@ -187,15 +187,15 @@
 		trackPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_track_peak");
 	if(trackPeakFrame) {
 		NSString *s = [NSString stringWithUTF8String:trackPeakFrame->fieldList().back().toCString(true)];
-		self.replayGainTrackPeak = [NSNumber numberWithDouble:s.doubleValue];
+		self.replayGainTrackPeak = @(s.doubleValue);
 	}
 
 	if(!albumGainFrame)
 		albumGainFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_gain");
 	if(albumGainFrame) {
 		NSString *s = [NSString stringWithUTF8String:albumGainFrame->fieldList().back().toCString(true)];
-		self.replayGainAlbumGain = [NSNumber numberWithDouble:s.doubleValue];
-		self.replayGainReferenceLoudness = [NSNumber numberWithDouble:89.0];
+		self.replayGainAlbumGain = @(s.doubleValue);
+		self.replayGainReferenceLoudness = @(89.0);
 
 		foundReplayGain = true;
 	}
@@ -204,7 +204,7 @@
 		albumPeakFrame = TagLib::ID3v2::UserTextIdentificationFrame::find(const_cast<TagLib::ID3v2::Tag *>(tag), "replaygain_album_peak");
 	if(albumPeakFrame) {
 		NSString *s = [NSString stringWithUTF8String:albumPeakFrame->fieldList().back().toCString(true)];
-		self.replayGainAlbumPeak = [NSNumber numberWithDouble:s.doubleValue];
+		self.replayGainAlbumPeak = @(s.doubleValue);
 	}
 
 	// If nothing found check for RVA2 frame
@@ -228,16 +228,16 @@
 
 			if(TagLib::String("track", TagLib::String::Latin1) == relativeVolume->identification()) {
 				if((int)volumeAdjustment)
-					self.replayGainTrackGain = [NSNumber numberWithFloat:volumeAdjustment];
+					self.replayGainTrackGain = @(volumeAdjustment);
 			}
 			else if(TagLib::String("album", TagLib::String::Latin1) == relativeVolume->identification()) {
 				if((int)volumeAdjustment)
-					self.replayGainAlbumGain = [NSNumber numberWithFloat:volumeAdjustment];
+					self.replayGainAlbumGain = @(volumeAdjustment);
 			}
 			// Fall back to track gain if identification is not specified
 			else {
 				if((int)volumeAdjustment)
-					self.replayGainTrackGain = [NSNumber numberWithFloat:volumeAdjustment];
+					self.replayGainTrackGain = @(volumeAdjustment);
 			}
 		}
 	}
