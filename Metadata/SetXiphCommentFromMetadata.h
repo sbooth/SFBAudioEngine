@@ -5,27 +5,28 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-
 #include <taglib/xiphcomment.h>
 
-/*! @file SetXiphCommentFromMetadata.h @brief Utility method for setting \c TagLib::Ogg::XiphComment values from \c Metadata */
+#import "SFBAudioMetadata.h"
+
+/*! @file SetXiphCommentFromMetadata.h @brief Utility method for setting \c TagLib::Ogg::XiphComment values from \c SFBAudioMetadata */
+
+NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
 	namespace Audio {
 
-		class Metadata;
-
 		/*!
-		 * @brief Set the values in a \c TagLib::Ogg::XiphComment from \c Metadata
+		 * @brief Set the values in a \c TagLib::Ogg::XiphComment from \c SFBAudioMetadata
 		 * @param metadata The metadata
 		 * @param tag A \c TagLib::Ogg::XiphComment to receive the metadata
 		 * @param setAlbumArt Whether to set album art
-		 * @return \c true on success, \c false otherwise
 		 */
-		bool SetXiphCommentFromMetadata(const Metadata& metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
+		void SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
 
 	}
 }
+
+NS_ASSUME_NONNULL_END
