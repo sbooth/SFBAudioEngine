@@ -5,8 +5,8 @@
 
 #import <memory>
 
-#import <taglib/tfilestream.h>
 #import <taglib/apefile.h>
+#import <taglib/tfilestream.h>
 
 #import "SetAPETagFromMetadata.h"
 #import "SetID3v1TagFromMetadata.h"

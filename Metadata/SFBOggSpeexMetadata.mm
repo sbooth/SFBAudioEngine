@@ -5,8 +5,8 @@
 
 #import <memory>
 
-#import <taglib/tfilestream.h>
 #import <taglib/speexfile.h>
+#import <taglib/tfilestream.h>
 
 #import "SetXiphCommentFromMetadata.h"
 

@@ -5,8 +5,8 @@
 
 #import <memory>
 
-#import <taglib/tfilestream.h>
 #import <taglib/oggflacfile.h>
+#import <taglib/tfilestream.h>
 
 #import "SetXiphCommentFromMetadata.h"
 

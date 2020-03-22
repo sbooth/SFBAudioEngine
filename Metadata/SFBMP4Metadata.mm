@@ -5,8 +5,8 @@
 
 #import <memory>
 
-#import <taglib/tfilestream.h>
 #import <taglib/mp4file.h>
+#import <taglib/tfilestream.h>
 
 #import "SetMP4TagFromMetadata.h"
 
