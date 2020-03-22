@@ -34,16 +34,6 @@
 	return @[@"audio/wavpack"];
 }
 
-+ (BOOL)_handlesFilesWithExtension:(NSString *)extension
-{
-	return [extension caseInsensitiveCompare:@"wv"] == NSOrderedSame;
-}
-
-+ (BOOL)_handlesMIMEType:(NSString *)mimeType
-{
-	return [mimeType caseInsensitiveCompare:@"audio/wavpack"] == NSOrderedSame;
-}
-
 - (BOOL)_readMetadata:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));

@@ -32,16 +32,6 @@
 	return @[@"audio/mpeg-4"];
 }
 
-+ (BOOL)_handlesFilesWithExtension:(NSString *)extension
-{
-	return [extension caseInsensitiveCompare:@"m4a"] == NSOrderedSame || [extension caseInsensitiveCompare:@"m4r"] == NSOrderedSame || [extension caseInsensitiveCompare:@"mp4"] == NSOrderedSame;
-}
-
-+ (BOOL)_handlesMIMEType:(NSString *)mimeType
-{
-	return [mimeType caseInsensitiveCompare:@"audio/mpeg-4"] == NSOrderedSame;
-}
-
 - (BOOL)_readMetadata:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));

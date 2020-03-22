@@ -32,16 +32,6 @@
 	return @[@"audio/it"];
 }
 
-+ (BOOL)_handlesFilesWithExtension:(NSString *)extension
-{
-	return [extension caseInsensitiveCompare:@"it"] == NSOrderedSame;
-}
-
-+ (BOOL)_handlesMIMEType:(NSString *)mimeType
-{
-	return [mimeType caseInsensitiveCompare:@"audio/it"] == NSOrderedSame;
-}
-
 - (BOOL)_readMetadata:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));

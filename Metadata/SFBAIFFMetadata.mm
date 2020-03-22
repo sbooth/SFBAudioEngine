@@ -32,16 +32,6 @@
 	return @[@"audio/aiff"];
 }
 
-+ (BOOL)_handlesFilesWithExtension:(NSString *)extension
-{
-	return [extension caseInsensitiveCompare:@"aiff"] == NSOrderedSame || [extension caseInsensitiveCompare:@"aif"] == NSOrderedSame;
-}
-
-+ (BOOL)_handlesMIMEType:(NSString *)mimeType
-{
-	return [mimeType caseInsensitiveCompare:@"audio/aiff"] == NSOrderedSame;
-}
-
 - (BOOL)_readMetadata:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));

@@ -32,16 +32,6 @@
 	return @[@"audio/speex"];
 }
 
-+ (BOOL)_handlesFilesWithExtension:(NSString *)extension
-{
-	return [extension caseInsensitiveCompare:@"spx"] == NSOrderedSame;
-}
-
-+ (BOOL)_handlesMIMEType:(NSString *)mimeType
-{
-	return [mimeType caseInsensitiveCompare:@"audio/speex"] == NSOrderedSame;
-}
-
 - (BOOL)_readMetadata:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
