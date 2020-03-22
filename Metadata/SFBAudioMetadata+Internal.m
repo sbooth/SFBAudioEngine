@@ -60,6 +60,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void) registerSubclass:(Class)subclass priority:(int)priority
 {
+	SEL sel = NSSelectorFromString(@"_supportedFileExtensions");
+	NSAssert([subclass respondsToSelector:sel], @"%@ is a malformed SFBAudioMetadata subclass: %@ is required but not implemented", NSStringFromClass(subclass), NSStringFromSelector(sel));
+
+	sel = NSSelectorFromString(@"_supportedMIMETypes");
+	NSAssert([subclass respondsToSelector:sel], @"%@ is a malformed SFBAudioMetadata subclass: %@ is required but not implemented", NSStringFromClass(subclass), NSStringFromSelector(sel));
+
 	if(_registeredSubclasses == nil) {
 		_registeredSubclasses = [NSMutableArray array];
 	}
