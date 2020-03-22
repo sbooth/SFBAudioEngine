@@ -11,11 +11,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*! @brief The \c CFErrorRef error domain used by \c SFBAudioMetadata and subclasses */
+/*! @brief The \c NSErrorDomain used by \c SFBAudioMetadata and subclasses */
 extern NSErrorDomain const SFBAudioMetadataErrorDomain;
 
 
-/*! @brief Possible \c CFErrorRef error codes used by \c SFBAudioMetadata */
+/*! @brief Possible \c NSError  error codes used by \c SFBAudioMetadata */
 typedef NS_ENUM(NSUInteger, SFBAudioMetadataErrorCode) {
 	SFBAudioMetadataErrorCodeFileFormatNotRecognized		= 0,	/*!< File format not recognized */
 	SFBAudioMetadataErrorCodeFileFormatNotSupported			= 1,	/*!< File format not supported */
@@ -23,7 +23,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioMetadataErrorCode) {
 };
 
 
-/*! @brief Metadata kind bitmask values used in CopyMetadata() and RemoveMetadata() */
+/*! @brief Metadata kind bitmask values used in copyMetadataFrom: and removeMetadataOfKind: */
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	SFBAudioMetadataKindBasic			= (1u << 0),	/*!< Basic metadata */
 	SFBAudioMetadataKindSorting			= (1u << 1),	/*!< Sorting metadata */
