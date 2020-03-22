@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBAudioMetadata ()
 {
-@package
+@private
 	SFBChangeTrackingDictionary *_metadata;
 	SFBChangeTrackingSet<SFBAttachedPicture *> *_pictures;
 }
