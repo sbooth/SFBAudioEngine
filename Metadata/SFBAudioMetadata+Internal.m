@@ -93,14 +93,14 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (BOOL)_readMetadata:(NSError **)error
 {
 #pragma unused(error)
-	NSAssert(0, @"SFBAudioMetadata subclasses are required to implement _readMetadata");
+	NSAssert(0, @"SFBAudioMetadata subclasses are required to implement _readMetadata:");
 	return NO;
 }
 
 - (BOOL)_writeMetadata:(NSError **)error
 {
-	#pragma unused(error)
-	NSAssert(0, @"SFBAudioMetadata subclasses are required to implement _writeMetadata");
+#pragma unused(error)
+	NSAssert(0, @"SFBAudioMetadata subclasses are required to implement _writeMetadata:");
 	return NO;
 }
 
