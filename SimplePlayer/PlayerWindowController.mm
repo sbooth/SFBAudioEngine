@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2009 - 2020 Stephen F. Booth <me@sbooth.org>
  *
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
@@ -10,7 +10,8 @@
 
 #include <SFBAudioEngine/AudioPlayer.h>
 #include <SFBAudioEngine/AudioDecoder.h>
-#include <SFBAudioEngine/AudioMetadata.h>
+
+#import <SFBAudioEngine/SFBAudioMetadata.h>
 
 // ========================================
 // Player flags
@@ -19,6 +20,14 @@ enum ePlayerFlags : unsigned int {
 	ePlayerFlagRenderingStarted			= 1u << 0,
 	ePlayerFlagRenderingFinished		= 1u << 1
 };
+
+@interface SFBAttachedPicture (ImageCreation)
+@property (nonatomic, nullable, readonly) NSImage *image;
+@end
+
+@implementation SFBAttachedPicture (ImageCreation)
+- (NSImage *)image { return [[NSImage alloc] initWithData:self.imageData]; }
+@end
 
 @interface PlayerWindowController ()
 {
@@ -231,23 +240,16 @@ enum ePlayerFlags : unsigned int {
 
 	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
 	// but for simplicity's sake it is done here.
-	auto metadata = SFB::Audio::Metadata::CreateMetadataForURL((__bridge CFURLRef)url);
+	SFBAudioMetadata *metadata = [SFBAudioMetadata metadataForURL:url error:nil];
 	if(metadata) {
-		auto pictures = metadata->GetAttachedPictures();
-		if(!pictures.empty())
-			[self.albumArt setImage:[[NSImage alloc] initWithData:(__bridge NSData *)pictures.front()->GetData()]];
+		NSArray *pictures = metadata.attachedPictures;
+		if([pictures count] > 0)
+			[self.albumArt setImage:[[pictures objectAtIndex:0] image]];
 		else
 			[self.albumArt setImage:nil];
 
-		if(metadata->GetTitle())
-			[self.title setStringValue:(__bridge NSString *)metadata->GetTitle()];
-		else
-			[self.title setStringValue:@""];
-
-		if(metadata->GetArtist())
-			[self.artist setStringValue:(__bridge NSString *)metadata->GetArtist()];
-		else
-			[self.artist setStringValue:@""];
+		[self.title setStringValue:metadata.title ?: @""];
+		[self.artist setStringValue:metadata.artist ?: @""];
 	}
 	else {
 		[self.albumArt setImage:[NSImage imageNamed:@"NSApplicationIcon"]];

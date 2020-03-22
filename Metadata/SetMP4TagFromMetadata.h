@@ -5,27 +5,28 @@
 
 #pragma once
 
-#include <CoreFoundation/CoreFoundation.h>
-
 #include <taglib/mp4tag.h>
 
-/*! @file SetMP4TagFromMetadata.h @brief Utility method for setting \c TagLib::MP4::Tag values from \c Metadata */
+#import "SFBAudioMetadata.h"
+
+/*! @file SetMP4TagFromMetadata.h @brief Utility function for setting \c TagLib::MP4::Tag values from \c SFBAudioMetadata */
+
+NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
 	namespace Audio {
 
-		class Metadata;
-
 		/*!
-		 * @brief Set the values in a \c TagLib::MP4::Tag from \c Metadata
+		 * @brief Set the values in a \c TagLib::MP4::Tag from \c SFBAudioMetadata
 		 * @param metadata The metadata
 		 * @param tag A \c TagLib::MP4::Tag to receive the metadata
 		 * @param setAlbumArt Whether to set album art
-		 * @return \c true on success, \c false otherwise
 		 */
-		bool SetMP4TagFromMetadata(const Metadata& metadata, TagLib::MP4::Tag *tag, bool setAlbumArt = true);
+		void SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt = true);
 
 	}
 }
+
+NS_ASSUME_NONNULL_END
