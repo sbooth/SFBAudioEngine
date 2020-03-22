@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting WavPack
+// An SFBAudioMetadata subclass supporting WavPack files
 @interface SFBWavPackMetadata : SFBAudioMetadata
 @end

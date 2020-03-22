@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting MP3
+// An SFBAudioMetadata subclass supporting MP3 files
 @interface SFBMP3Metadata : SFBAudioMetadata
 @end

@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Ogg Opus
+// An SFBAudioMetadata subclass supporting Ogg Opus files
 @interface SFBOggOpusMetadata : SFBAudioMetadata
 @end

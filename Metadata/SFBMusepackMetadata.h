@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Musepack
+// An SFBAudioMetadata subclass supporting Musepack files
 @interface SFBMusepackMetadata : SFBAudioMetadata
 @end

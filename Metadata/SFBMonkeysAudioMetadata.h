@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Monkey's Audio
+// An SFBAudioMetadata subclass supporting Monkey's Audio files
 @interface SFBMonkeysAudioMetadata : SFBAudioMetadata
 @end

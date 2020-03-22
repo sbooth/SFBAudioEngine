@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting WAVE
+// An SFBAudioMetadata subclass supporting WAVE files
 @interface SFBWAVEMetadata : SFBAudioMetadata
 @end

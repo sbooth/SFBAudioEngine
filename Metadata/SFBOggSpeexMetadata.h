@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Ogg Speex
+// An SFBAudioMetadata subclass supporting Ogg Speex files
 @interface SFBOggSpeexMetadata : SFBAudioMetadata
 @end

@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting TrueAudio
+// An SFBAudioMetadata subclass supporting True Audio files
 @interface SFBTrueAudioMetadata : SFBAudioMetadata
 @end

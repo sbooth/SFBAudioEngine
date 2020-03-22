@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Ogg Vorbis
+// An SFBAudioMetadata subclass supporting Ogg Vorbis files
 @interface SFBOggVorbisMetadata : SFBAudioMetadata
 @end

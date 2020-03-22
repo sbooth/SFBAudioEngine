@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting Ogg FLAC
+// An SFBAudioMetadata subclass supporting Ogg FLAC files
 @interface SFBOggFLACMetadata : SFBAudioMetadata
 @end

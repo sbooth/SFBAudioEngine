@@ -7,6 +7,6 @@
 
 #import "SFBAudioMetadata.h"
 
-// An SFBAudioMetadata subclass supporting MPEG-4
+// An SFBAudioMetadata subclass supporting MPEG-4 files
 @interface SFBMP4Metadata : SFBAudioMetadata
 @end
