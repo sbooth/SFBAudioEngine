@@ -251,7 +251,10 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 {
 	[_metadata reset];
 	[_pictures reset];
-	return [self _readMetadata:error];
+	BOOL result = [self _readMetadata:error];
+	if(result)
+	   [self mergeChanges];
+	return result;
 }
 
 - (BOOL)writeMetadata:(NSError **)error
