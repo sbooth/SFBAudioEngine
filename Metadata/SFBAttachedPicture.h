@@ -54,7 +54,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  * @brief Create a new \c SFBAttachedPicture from the values contained in a dictionary
  * @param dictionary A dictionary containing the desired values
  */
-+ (instancetype)attachedPictureFromDictionaryRepresentation:(NSDictionary *)dictionary;
++ (instancetype)attachedPictureFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
 
 /*!
  * @brief Create a new \c SFBAttachedPicture
