@@ -49,6 +49,7 @@ NSString * const SFBAudioMetadataAlbumTitleSortOrderKey			= @"Album Title Sort O
 NSString * const SFBAudioMetadataArtistSortOrderKey				= @"Artist Sort Order";
 NSString * const SFBAudioMetadataAlbumArtistSortOrderKey		= @"Album Artist Sort Order";
 NSString * const SFBAudioMetadataComposerSortOrderKey			= @"Composer Sort Order";
+NSString * const SFBAudioMetadataGenreSortOrderKey				= @"Genre Sort Order";
 
 NSString * const SFBAudioMetadataGroupingKey					= @"Grouping";
 
@@ -216,6 +217,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	metadata.artistSortOrder = dictionary[SFBAudioMetadataArtistSortOrderKey];
 	metadata.albumArtistSortOrder = dictionary[SFBAudioMetadataAlbumArtistSortOrderKey];
 	metadata.composerSortOrder = dictionary[SFBAudioMetadataComposerSortOrderKey];
+	metadata.genreSortOrder = dictionary[SFBAudioMetadataGenreSortOrderKey];
 
 	metadata.grouping = dictionary[SFBAudioMetadataGroupingKey];
 
@@ -329,6 +331,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 		self.artistSortOrder = metadata.artistSortOrder;
 		self.albumArtistSortOrder = metadata.albumArtistSortOrder;
 		self.composerSortOrder = metadata.composerSortOrder;
+		self.genreSortOrder = metadata.genreSortOrder;
 	}
 
 	if(kind & SFBAudioMetadataKindGrouping)
@@ -382,6 +385,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 		self.artistSortOrder = nil;
 		self.albumArtistSortOrder = nil;
 		self.composerSortOrder = nil;
+		self.genreSortOrder = nil;
 	}
 
 	if(kind & SFBAudioMetadataKindGrouping)
@@ -692,6 +696,16 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 - (void)setComposerSortOrder:(NSString *)composerSortOrder
 {
 	[_metadata setObject:[composerSortOrder copy] forKey:SFBAudioMetadataComposerSortOrderKey];
+}
+
+- (NSString *)genreSortOrder
+{
+	return [_metadata objectForKey:SFBAudioMetadataGenreSortOrderKey];
+}
+
+- (void)setGenreSortOrder:(NSString *)genreSortOrder
+{
+	[_metadata setObject:[genreSortOrder copy] forKey:SFBAudioMetadataGenreSortOrderKey];
 }
 
 #pragma mark Grouping Metadata

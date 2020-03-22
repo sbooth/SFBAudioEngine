@@ -75,6 +75,7 @@ extern NSString * const SFBAudioMetadataAlbumTitleSortOrderKey;			/*!< @brief Al
 extern NSString * const SFBAudioMetadataArtistSortOrderKey;				/*!< @brief Artist sort order (\c NSString) */
 extern NSString * const SFBAudioMetadataAlbumArtistSortOrderKey;		/*!< @brief Album artist sort order (\c NSString) */
 extern NSString * const SFBAudioMetadataComposerSortOrderKey;			/*!< @brief Composer sort order (\c NSString) */
+extern NSString * const SFBAudioMetadataGenreSortOrderKey;				/*!< @brief Genre sort order (\c NSString) */
 //@}
 
 /*! @name Grouping dictionary keys */
@@ -125,13 +126,13 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @param error An optional pointer to a \c NSError to receive error information
  * @return A \c SFBAudioMetadata object, or \c nil on failure
  */
-+ (instancetype)metadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
++ (nullable instancetype)metadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
 /*!
  * @brief Create a new \c SFBAudioMetadata  from the values contained in a dictionary
  * @param dictionary A dictionary containing the desired values
  */
-+ (instancetype)metadataFromDictionaryRepresentation:(NSDictionary *)dictionary;
++ (instancetype)metadataFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
 
 
 /*! @brief The URL containing this metadata */
@@ -157,7 +158,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @brief Copy the values contained in this object to a dictionary
  * @return A dictionary containing this object's artwork information
  */
-- (NSDictionary *)dictionaryRepresentation;
+- (NSDictionary<NSString *, id> *)dictionaryRepresentation;
 
 
 /*! @brief Query the object for unmerged changes */
@@ -304,6 +305,9 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 /*! @brief Get the composer sort order */
 @property (nonatomic, nullable) NSString *composerSortOrder;
 
+/*! @brief Get the genre sort order */
+@property (nonatomic, nullable) NSString *genreSortOrder;
+
 
 /*! @brief Get the grouping */
 @property (nonatomic, nullable) NSString *grouping;
@@ -339,7 +343,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata;
 
 /*! @brief Get all attached pictures */
-- (NSArray<SFBAttachedPicture *> *)attachedPictures;
+@property (nonatomic, readonly) NSArray<SFBAttachedPicture *> *attachedPictures;
 
 /*! @brief Get all attached pictures of the specified type */
 - (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type;
