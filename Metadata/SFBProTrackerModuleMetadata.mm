@@ -10,6 +10,7 @@
 #import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
 
+#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibTag.h"
@@ -37,22 +38,24 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Input/output error", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Input/output error", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
 	}
 
 	TagLib::Mod::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid ProTracker module file.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Not a ProTracker module file", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid ProTracker module file.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Not a ProTracker module file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
@@ -72,11 +75,12 @@
 	os_log_error(OS_LOG_DEFAULT, "Writing ProTracker module metadata is not supported");
 
 	if(error)
-		*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-						   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-													 url:self.url
-										   failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-									  recoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @"")];
+		*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+										 code:SFBAudioMetadataErrorCodeInputOutput
+				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
+										  url:self.url
+								failureReason:NSLocalizedString(@"Unable to write metadata", @"")
+						   recoverySuggestion:NSLocalizedString(@"Writing ProTracker module metadata is not supported.", @"")];
 	return NO;
 }
 

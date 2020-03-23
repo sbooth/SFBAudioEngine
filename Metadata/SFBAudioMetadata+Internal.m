@@ -105,24 +105,3 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 @end
-
-
-@implementation NSError (SFBAudioMetadataMethods)
-
-+ (instancetype)sfb_audioMetadataErrorWithCode:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion
-{
-	NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
-
-	NSString *displayName = nil;
-	if([url getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil])
-		userInfo[NSLocalizedDescriptionKey] = [NSString stringWithFormat:descriptionFormatStringForURL, displayName];
-	else
-		userInfo[NSLocalizedDescriptionKey] = [NSString stringWithFormat:descriptionFormatStringForURL, url.lastPathComponent];
-
-	userInfo[NSLocalizedFailureReasonErrorKey] = failureReason;
-	userInfo[NSLocalizedRecoverySuggestionErrorKey] = recoverySuggestion;
-
-	return [NSError errorWithDomain:SFBAudioMetadataErrorDomain code:code userInfo:userInfo];
-}
-
-@end

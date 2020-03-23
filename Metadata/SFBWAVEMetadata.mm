@@ -11,6 +11,7 @@
 #import "SetID3v2TagFromMetadata.h"
 #import "SetTagFromMetadata.h"
 
+#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
@@ -39,22 +40,24 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Input/output error", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Input/output error", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
 	}
 
 	TagLib::RIFF::WAV::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Not an WAVE file", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Not an WAVE file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
@@ -84,22 +87,24 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Input/output error", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Input/output error", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
 	}
 
 	TagLib::RIFF::WAV::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Not a WAVE file", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WAVE file.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Not a WAVE file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
@@ -113,11 +118,12 @@
 
 	if(!file.save()) {
 		if(error)
-			*error = [NSError sfb_audioMetadataErrorWithCode:SFBAudioMetadataErrorCodeInputOutput
-							   descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-														 url:self.url
-											   failureReason:NSLocalizedString(@"Unable to write metadata", @"")
-										  recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
+											 code:SFBAudioMetadataErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
+											  url:self.url
+									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 

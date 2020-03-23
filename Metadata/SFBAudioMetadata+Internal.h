@@ -53,10 +53,4 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)_writeMetadata:(NSError * _Nullable *)error;
 @end
 
-
-// Utility category
-@interface NSError (SFBAudioMetadataMethods)
-+ (instancetype)sfb_audioMetadataErrorWithCode:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion;
-@end
-
 NS_ASSUME_NONNULL_END
