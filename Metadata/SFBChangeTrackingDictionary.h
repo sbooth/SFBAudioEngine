@@ -13,8 +13,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SFBChangeTrackingDictionary<KeyType, ObjectType> : NSObject
 - (instancetype)initWithInitialValues:(NSDictionary<KeyType, ObjectType> *)initialValues;
 
-- (nullable ObjectType) objectForKey:(KeyType)key;
-- (void)setObject:(nullable ObjectType)object forKey:(KeyType)key;
+- (nullable ObjectType)objectForKey:(KeyType)key;
+- (nullable ObjectType)objectForKeyedSubscript:(KeyType)key;
+
+- (void)setObject:(nullable ObjectType)object forKey:(KeyType<NSCopying>)key;
+- (void)setObject:(nullable ObjectType)object forKeyedSubscript:(KeyType<NSCopying>)key;
 
 - (void)removeObjectForKey:(KeyType)key;
 - (void)removeAllObjects;

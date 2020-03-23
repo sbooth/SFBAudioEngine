@@ -45,6 +45,11 @@ static NSString * const SFBChangeTrackingDictionaryNullSentinel = @"Null";
 		return _initial[key];
 }
 
+- (id)objectForKeyedSubscript:(id)key
+{
+	return [self objectForKey:key];
+}
+
 - (void)setObject:(id)object forKey:(id)key
 {
 	if(object) {
@@ -56,6 +61,11 @@ static NSString * const SFBChangeTrackingDictionaryNullSentinel = @"Null";
 	}
 	else
 		_changes[key] = _initial[key] ? SFBChangeTrackingDictionaryNullSentinel : nil;
+}
+
+- (void)setObject:(id)object forKeyedSubscript:(id)key
+{
+	[self setObject:object forKey:key];
 }
 
 - (void)removeObjectForKey:(id)key
