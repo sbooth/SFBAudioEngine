@@ -8,8 +8,6 @@
 #import <taglib/mp4file.h>
 #import <taglib/tfilestream.h>
 
-#import "SetMP4TagFromMetadata.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"

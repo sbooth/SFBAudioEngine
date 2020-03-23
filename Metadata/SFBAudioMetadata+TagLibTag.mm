@@ -5,6 +5,7 @@
 
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBAudioMetadata+Internal.h"
+#import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibTag)
 
@@ -27,3 +28,17 @@
 }
 
 @end
+
+void SFB::Audio::SetTagFromMetadata(SFBAudioMetadata *metadata, TagLib::Tag *tag)
+{
+	NSCParameterAssert(metadata != nil);
+	assert(nullptr != tag);
+
+	tag->setTitle(TagLib::StringFromNSString(metadata.title));
+	tag->setArtist(TagLib::StringFromNSString(metadata.artist));
+	tag->setAlbum(TagLib::StringFromNSString(metadata.albumTitle));
+	tag->setComment(TagLib::StringFromNSString(metadata.comment));
+	tag->setGenre(TagLib::StringFromNSString(metadata.genre));
+	tag->setYear(metadata.releaseDate ? (unsigned int)metadata.releaseDate.intValue : 0);
+	tag->setTrack(metadata.trackNumber.unsignedIntValue);
+}

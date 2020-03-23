@@ -8,10 +8,6 @@
 #import <taglib/tfilestream.h>
 #import <taglib/trueaudiofile.h>
 
-#import "SetAPETagFromMetadata.h"
-#import "SetID3v1TagFromMetadata.h"
-#import "SetID3v2TagFromMetadata.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"

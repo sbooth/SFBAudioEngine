@@ -8,8 +8,6 @@
 #import <taglib/oggflacfile.h>
 #import <taglib/tfilestream.h>
 
-#import "SetXiphCommentFromMetadata.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"

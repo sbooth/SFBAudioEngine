@@ -15,4 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibMP4Tag:(const TagLib::MP4::Tag *)tag;
 @end
 
+namespace SFB {
+	namespace Audio {
+		void SetMP4TagFromMetadata(SFBAudioMetadata *metadata, TagLib::MP4::Tag *tag, bool setAlbumArt = true);
+	}
+}
+
 NS_ASSUME_NONNULL_END

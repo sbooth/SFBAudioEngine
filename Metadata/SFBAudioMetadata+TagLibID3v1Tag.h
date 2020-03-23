@@ -22,4 +22,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibID3v1Tag:(const TagLib::ID3v1::Tag *)tag;
 @end
 
+namespace SFB {
+	namespace Audio {
+		void SetID3v1TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3v1::Tag *tag);
+	}
+}
+
 NS_ASSUME_NONNULL_END

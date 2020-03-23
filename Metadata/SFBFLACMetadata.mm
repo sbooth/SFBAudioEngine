@@ -9,11 +9,6 @@
 #import <taglib/tfilestream.h>
 
 #import "CFWrapper.h"
-#import "SetID3v1TagFromMetadata.h"
-#import "SetID3v2TagFromMetadata.h"
-#import "SetXiphCommentFromMetadata.h"
-#import "TagLibStringUtilities.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"
@@ -21,6 +16,7 @@
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBFLACMetadata.h"
+#import "TagLibStringUtilities.h"
 
 @implementation SFBFLACMetadata
 

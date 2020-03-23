@@ -8,8 +8,6 @@
 #import <taglib/tfilestream.h>
 #import <taglib/vorbisfile.h>
 
-#import "SetXiphCommentFromMetadata.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"

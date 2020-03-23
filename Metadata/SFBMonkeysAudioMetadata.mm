@@ -8,9 +8,6 @@
 #import <taglib/apefile.h>
 #import <taglib/tfilestream.h>
 
-#import "SetAPETagFromMetadata.h"
-#import "SetID3v1TagFromMetadata.h"
-
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"

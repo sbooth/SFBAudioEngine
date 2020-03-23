@@ -34,21 +34,7 @@
 		322859D5242554040080B500 /* SFBAudioMetadata+TagLibTag.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859D3242554040080B500 /* SFBAudioMetadata+TagLibTag.h */; };
 		322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */ = {isa = PBXBuildFile; fileRef = 322859D6242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm */; };
 		322859D9242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859D7242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h */; };
-		322859DA2425B2F60080B500 /* Base64Utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 329AB8A2148B185300180506 /* Base64Utilities.h */; };
-		322859DB2425B2F60080B500 /* Base64Utilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 329AB8A1148B185300180506 /* Base64Utilities.cpp */; };
-		322859DC242617670080B500 /* SetTagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D9017014793DD100DBE73B /* SetTagFromMetadata.h */; };
-		322859DD242617670080B500 /* SetTagFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32D9016F14793DD100DBE73B /* SetTagFromMetadata.mm */; };
 		322859DE24261A920080B500 /* TagLibStringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */; };
-		322859DF24261E2C0080B500 /* SetAPETagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */; };
-		322859E024261E2C0080B500 /* SetAPETagFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.mm */; };
-		322859E124261E2C0080B500 /* SetID3v1TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */; };
-		322859E224261E2C0080B500 /* SetID3v1TagFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.mm */; };
-		322859E324261E2C0080B500 /* SetID3v2TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */; };
-		322859E424261E2C0080B500 /* SetID3v2TagFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.mm */; };
-		322859E524261E2C0080B500 /* SetMP4TagFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */; };
-		322859E624261E2C0080B500 /* SetMP4TagFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.mm */; };
-		322859E724261E2C0080B500 /* SetXiphCommentFromMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */; };
-		322859E824261E2C0080B500 /* SetXiphCommentFromMetadata.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.mm */; };
 		322D78B2112F9851006676FC /* CreateDisplayNameForURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */; };
 		3230A938182E698900D630CF /* AudioBufferList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3230A936182E698900D630CF /* AudioBufferList.cpp */; };
 		3230A939182E698900D630CF /* AudioBufferList.h in Headers */ = {isa = PBXBuildFile; fileRef = 3230A937182E698900D630CF /* AudioBufferList.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -213,10 +199,6 @@
 /* Begin PBXFileReference section */
 		3203A6191346E0ED00A7A22E /* MODDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODDecoder.h; sourceTree = "<group>"; };
 		3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MODDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SetID3v2TagFromMetadata.mm; sourceTree = "<group>"; };
-		3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v2TagFromMetadata.h; sourceTree = "<group>"; };
-		3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SetXiphCommentFromMetadata.mm; sourceTree = "<group>"; };
-		3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetXiphCommentFromMetadata.h; sourceTree = "<group>"; };
 		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
 		3210AB8D17B9BF8000743639 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -277,8 +259,6 @@
 		326A98F51392F38A0061A65F /* Semaphore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Semaphore.cpp; sourceTree = "<group>"; };
 		326A98F61392F38A0061A65F /* Semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Semaphore.h; sourceTree = "<group>"; };
 		327C4BA914F7D7F10063F7AB /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
-		328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SetMP4TagFromMetadata.mm; sourceTree = "<group>"; };
-		328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SetMP4TagFromMetadata.h; sourceTree = "<group>"; };
 		3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAttachedPicture.h; sourceTree = "<group>"; };
 		3292489018CEAA96004365FF /* AudioRingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioRingBuffer.h; sourceTree = "<group>"; };
 		3292489218CEAB48004365FF /* RingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = RingBuffer.cpp; sourceTree = "<group>"; };
@@ -287,8 +267,6 @@
 		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libsndfile.1.dylib"; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		329AB89F148B17AA00180506 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		329AB8A1148B185300180506 /* Base64Utilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Base64Utilities.cpp; sourceTree = "<group>"; };
-		329AB8A2148B185300180506 /* Base64Utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64Utilities.h; sourceTree = "<group>"; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		32A5A20117DD1BF80064C5DE /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
@@ -360,8 +338,6 @@
 		32D6552C115FC58C002B275C /* InputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InputSource.h; sourceTree = "<group>"; };
 		32D6556A115FE7EA002B275C /* MemoryMappedFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryMappedFileInputSource.h; sourceTree = "<group>"; };
 		32D6556B115FE7EA002B275C /* MemoryMappedFileInputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedFileInputSource.cpp; sourceTree = "<group>"; };
-		32D9016F14793DD100DBE73B /* SetTagFromMetadata.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SetTagFromMetadata.mm; sourceTree = "<group>"; };
-		32D9017014793DD100DBE73B /* SetTagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetTagFromMetadata.h; sourceTree = "<group>"; };
 		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libmpg123.0.dylib"; sourceTree = "<group>"; };
 		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx-x86_64-clang-libc++/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
 		32DF3208123E6C940002CA5A /* InMemoryFileInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InMemoryFileInputSource.h; sourceTree = "<group>"; };
@@ -382,10 +358,6 @@
 		32E7376D10B913AE00094C8A /* OggVorbisDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OggVorbisDecoder.h; sourceTree = "<group>"; };
 		32E7379510B9978200094C8A /* MusepackDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MusepackDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32E7379610B9978200094C8A /* MusepackDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusepackDecoder.h; sourceTree = "<group>"; };
-		32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetID3v1TagFromMetadata.h; sourceTree = "<group>"; };
-		32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SetID3v1TagFromMetadata.mm; sourceTree = "<group>"; };
-		32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SetAPETagFromMetadata.h; sourceTree = "<group>"; };
-		32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SetAPETagFromMetadata.mm; sourceTree = "<group>"; };
 		32F6274D13A52AA7004EC204 /* LibsndfileDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = LibsndfileDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		32F6274E13A52AA7004EC204 /* LibsndfileDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibsndfileDecoder.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -583,20 +555,6 @@
 		32AEB27C1409AD4B001F9A60 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				329AB8A2148B185300180506 /* Base64Utilities.h */,
-				329AB8A1148B185300180506 /* Base64Utilities.cpp */,
-				32EE7D7312DD40D200533884 /* SetAPETagFromMetadata.h */,
-				32EE7D7412DD40D200533884 /* SetAPETagFromMetadata.mm */,
-				32EE7D5412DD3E3100533884 /* SetID3v1TagFromMetadata.h */,
-				32EE7D5512DD3E3100533884 /* SetID3v1TagFromMetadata.mm */,
-				3205E4181130840A00FD9DAD /* SetID3v2TagFromMetadata.h */,
-				3205E4171130840A00FD9DAD /* SetID3v2TagFromMetadata.mm */,
-				328BBA9D215F938B004150C6 /* SetMP4TagFromMetadata.h */,
-				328BBA9C215F938B004150C6 /* SetMP4TagFromMetadata.mm */,
-				32D9017014793DD100DBE73B /* SetTagFromMetadata.h */,
-				32D9016F14793DD100DBE73B /* SetTagFromMetadata.mm */,
-				3205E52B1130F49700FD9DAD /* SetXiphCommentFromMetadata.h */,
-				3205E52A1130F49700FD9DAD /* SetXiphCommentFromMetadata.mm */,
 				322859D7242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h */,
 				322859D6242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm */,
 				322859CA2425519A0080B500 /* SFBAudioMetadata+TagLibAudioProperties.h */,
@@ -710,7 +668,6 @@
 				32BC09B12426582E008BB695 /* SFBMP3Metadata.h in Headers */,
 				32BC09E12426DFE5008BB695 /* SFBScreamTracker3ModuleMetadata.h in Headers */,
 				325116A624239A5D00B02926 /* CoreAudioDecoder.h in Headers */,
-				322859E124261E2C0080B500 /* SetID3v1TagFromMetadata.h in Headers */,
 				3219C6172428159000BB1CF1 /* SFBReplayGainAnalyzer.h in Headers */,
 				322859C3242422A10080B500 /* SFBAudioMetadata+Internal.h in Headers */,
 				322859D9242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h in Headers */,
@@ -722,7 +679,6 @@
 				3261EA3A1902E41400730236 /* AudioOutput.h in Headers */,
 				326A98F81392F38A0061A65F /* Semaphore.h in Headers */,
 				326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */,
-				322859DC242617670080B500 /* SetTagFromMetadata.h in Headers */,
 				325116AD24239A7900B02926 /* MPEGDecoder.h in Headers */,
 				32C3DD9C1943466E00CEA060 /* LoopableRegionDecoder.h in Headers */,
 				325116AC24239A7900B02926 /* MonkeysAudioDecoder.h in Headers */,
@@ -734,7 +690,6 @@
 				32C99D2218305387004388CF /* AudioChannelLayout.h in Headers */,
 				325116B224239A7900B02926 /* WavPackDecoder.h in Headers */,
 				32B848E8180E199D00A222C5 /* AudioConverter.h in Headers */,
-				322859E524261E2C0080B500 /* SetMP4TagFromMetadata.h in Headers */,
 				325116AA24239A7900B02926 /* LibsndfileDecoder.h in Headers */,
 				322859D12425528B0080B500 /* SFBAudioMetadata+TagLibID3v1Tag.h in Headers */,
 				32BC09E52426DFE5008BB695 /* SFBExtendedModuleMetadata.h in Headers */,
@@ -745,7 +700,6 @@
 				32BC09B9242685AE008BB695 /* SFBTrueAudioMetadata.h in Headers */,
 				325116B124239A7900B02926 /* TrueAudioDecoder.h in Headers */,
 				322859BA242417B10080B500 /* SFBAudioMetadata.h in Headers */,
-				322859DF24261E2C0080B500 /* SetAPETagFromMetadata.h in Headers */,
 				324A31F521742DA2004EBCF8 /* DSDPCMDecoder.h in Headers */,
 				32BC09EC242787EE008BB695 /* SFBDSFMetadata.h in Headers */,
 				325116AB24239A7900B02926 /* MODDecoder.h in Headers */,
@@ -753,13 +707,11 @@
 				325116B024239A7900B02926 /* OggVorbisDecoder.h in Headers */,
 				32DFA2F414FA7FD400D1FB58 /* CFErrorUtilities.h in Headers */,
 				32B3639818C4127300F2C61F /* AudioFormat.h in Headers */,
-				322859E324261E2C0080B500 /* SetID3v2TagFromMetadata.h in Headers */,
 				322859DE24261A920080B500 /* TagLibStringUtilities.h in Headers */,
 				32BC09E92426E536008BB695 /* SFBFLACMetadata.h in Headers */,
 				32BC09C0242688BA008BB695 /* SFBOggSpeexMetadata.h in Headers */,
 				322859C72424F4900080B500 /* SFBChangeTrackingSet.h in Headers */,
 				322859CC2425519A0080B500 /* SFBAudioMetadata+TagLibAudioProperties.h in Headers */,
-				322859DA2425B2F60080B500 /* Base64Utilities.h in Headers */,
 				32BC09F524278B24008BB695 /* SFBAIFFMetadata.h in Headers */,
 				3292489518CEAB48004365FF /* RingBuffer.h in Headers */,
 				32BC09C4242689B4008BB695 /* SFBOggOpusMetadata.h in Headers */,
@@ -771,7 +723,6 @@
 				325116A924239A7900B02926 /* FLACDecoder.h in Headers */,
 				325116A424239A4600B02926 /* InMemoryFileInputSource.h in Headers */,
 				32BC09BC2426871B008BB695 /* SFBOggVorbisMetadata.h in Headers */,
-				322859E724261E2C0080B500 /* SetXiphCommentFromMetadata.h in Headers */,
 				325116A124239A4600B02926 /* MemoryInputSource.h in Headers */,
 				32BC09D024268CAF008BB695 /* SFBMP4Metadata.h in Headers */,
 				3250B42E190B439F00C28CA8 /* CoreAudioOutput.h in Headers */,
@@ -905,14 +856,12 @@
 				32BC09C1242688BA008BB695 /* SFBOggSpeexMetadata.mm in Sources */,
 				32BC09B524266158008BB695 /* SFBWAVEMetadata.mm in Sources */,
 				3219C61C2428C61600BB1CF1 /* NSError+SFBURLPresentation.m in Sources */,
-				322859E024261E2C0080B500 /* SetAPETagFromMetadata.mm in Sources */,
 				32D6552D115FC58C002B275C /* FileInputSource.cpp in Sources */,
 				32D6552F115FC58C002B275C /* InputSource.cpp in Sources */,
 				322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
 				32BC09E02426DFE5008BB695 /* SFBImpulseTrackerModuleMetadata.mm in Sources */,
 				32D6556D115FE7EA002B275C /* MemoryMappedFileInputSource.cpp in Sources */,
 				32BC09BD2426871B008BB695 /* SFBOggVorbisMetadata.mm in Sources */,
-				322859E824261E2C0080B500 /* SetXiphCommentFromMetadata.mm in Sources */,
 				32C3DD9A1943406000CEA060 /* DoPDecoder.cpp in Sources */,
 				322859D02425528B0080B500 /* SFBAudioMetadata+TagLibID3v1Tag.mm in Sources */,
 				32DF320B123E6C940002CA5A /* InMemoryFileInputSource.cpp in Sources */,
@@ -937,21 +886,16 @@
 				326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */,
 				32BC09F02427895C008BB695 /* SFBDSDIFFMetadata.mm in Sources */,
 				32BC09D124268CAF008BB695 /* SFBMP4Metadata.mm in Sources */,
-				322859E624261E2C0080B500 /* SetMP4TagFromMetadata.mm in Sources */,
 				32BC09F424278B24008BB695 /* SFBAIFFMetadata.mm in Sources */,
-				322859DB2425B2F60080B500 /* Base64Utilities.cpp in Sources */,
 				32BC09C5242689B4008BB695 /* SFBOggOpusMetadata.mm in Sources */,
 				32BC09A824265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.mm in Sources */,
 				32F6274F13A52AA7004EC204 /* LibsndfileDecoder.cpp in Sources */,
 				32BC09E32426DFE5008BB695 /* SFBScreamTracker3ModuleMetadata.mm in Sources */,
 				32386EF413D2135400D25175 /* HTTPInputSource.cpp in Sources */,
-				322859E224261E2C0080B500 /* SetID3v1TagFromMetadata.mm in Sources */,
 				32D429E613E308DB00FA07DE /* AudioPlayer.cpp in Sources */,
 				324A31F621742DA2004EBCF8 /* DSDPCMDecoder.cpp in Sources */,
 				32AF1A6014C8FE3C00750053 /* TrueAudioDecoder.cpp in Sources */,
 				3292489418CEAB48004365FF /* RingBuffer.cpp in Sources */,
-				322859DD242617670080B500 /* SetTagFromMetadata.mm in Sources */,
-				322859E424261E2C0080B500 /* SetID3v2TagFromMetadata.mm in Sources */,
 				32C3BEAC1C152E61006A4E6B /* MemoryInputSource.cpp in Sources */,
 				32BC09E42426DFE5008BB695 /* SFBExtendedModuleMetadata.mm in Sources */,
 				32BC09E82426E536008BB695 /* SFBFLACMetadata.mm in Sources */,

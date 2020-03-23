@@ -15,4 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibXiphComment:(const TagLib::Ogg::XiphComment *)tag;
 @end
 
+namespace SFB {
+	namespace Audio {
+		void SetXiphCommentFromMetadata(SFBAudioMetadata *metadata, TagLib::Ogg::XiphComment *tag, bool setAlbumArt = true);
+	}
+}
+
 NS_ASSUME_NONNULL_END

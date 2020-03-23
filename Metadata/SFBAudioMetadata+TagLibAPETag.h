@@ -15,4 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMetadataFromTagLibAPETag:(const TagLib::APE::Tag *)tag;
 @end
 
+namespace SFB {
+	namespace Audio {
+		void SetAPETagFromMetadata(SFBAudioMetadata *metadata, TagLib::APE::Tag *tag, bool setAlbumArt = true);
+	}
+}
+
 NS_ASSUME_NONNULL_END
