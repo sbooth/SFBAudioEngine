@@ -123,7 +123,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 /*!
  * @brief Create a new \c SFBAudioMetadata  for the specified URL
  * @param url The URL
- * @param error An optional pointer to a \c NSError to receive error information
+ * @param error An optional pointer to an \c NSError to receive error information
  * @return A \c SFBAudioMetadata object, or \c nil on failure
  */
 + (nullable instancetype)metadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
