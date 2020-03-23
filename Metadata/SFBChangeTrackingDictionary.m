@@ -38,9 +38,8 @@ static NSString * const SFBChangeTrackingDictionaryNullSentinel = @"Null";
 - (id)objectForKey:(id)key
 {
 	id object = nil;
-	if((object = _changes[key])) {
+	if((object = _changes[key]))
 		return object == SFBChangeTrackingDictionaryNullSentinel ? nil : object;
-	}
 	else
 		return _initial[key];
 }
