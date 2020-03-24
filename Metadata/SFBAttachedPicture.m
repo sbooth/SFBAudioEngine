@@ -31,6 +31,7 @@ NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
 
 - (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(NSString *)description
 {
+	NSParameterAssert(imageData != nil);
 	if((self = [super init])) {
 		_imageData = [imageData copy];
 		_pictureType = type;
