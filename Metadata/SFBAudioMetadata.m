@@ -187,57 +187,6 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	return nil;
 }
 
-+ (instancetype)metadataFromDictionaryRepresentation:(NSDictionary *)dictionary
-{
-	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-
-	metadata.title = dictionary[SFBAudioMetadataTitleKey];
-	metadata.albumTitle = dictionary[SFBAudioMetadataAlbumTitleKey];
-	metadata.artist = dictionary[SFBAudioMetadataArtistKey];
-	metadata.albumArtist = dictionary[SFBAudioMetadataAlbumArtistKey];
-	metadata.genre = dictionary[SFBAudioMetadataGenreKey];
-	metadata.composer = dictionary[SFBAudioMetadataComposerKey];
-	metadata.releaseDate = dictionary[SFBAudioMetadataReleaseDateKey];
-	metadata.compilation = dictionary[SFBAudioMetadataCompilationKey];
-	metadata.trackNumber = dictionary[SFBAudioMetadataTrackNumberKey];
-	metadata.trackTotal = dictionary[SFBAudioMetadataTrackTotalKey];
-	metadata.discNumber = dictionary[SFBAudioMetadataDiscNumberKey];
-	metadata.discTotal = dictionary[SFBAudioMetadataDiscTotalKey];
-	metadata.lyrics = dictionary[SFBAudioMetadataLyricsKey];
-	metadata.bpm = dictionary[SFBAudioMetadataBPMKey];
-	metadata.rating = dictionary[SFBAudioMetadataRatingKey];
-	metadata.comment = dictionary[SFBAudioMetadataCommentKey];
-	metadata.isrc = dictionary[SFBAudioMetadataISRCKey];
-	metadata.mcn = dictionary[SFBAudioMetadataMCNKey];
-	metadata.musicBrainzReleaseID = dictionary[SFBAudioMetadataMusicBrainzReleaseIDKey];
-	metadata.musicBrainzRecordingID = dictionary[SFBAudioMetadataMusicBrainzRecordingIDKey];
-
-	metadata.titleSortOrder = dictionary[SFBAudioMetadataTitleSortOrderKey];
-	metadata.albumTitleSortOrder = dictionary[SFBAudioMetadataAlbumTitleSortOrderKey];
-	metadata.artistSortOrder = dictionary[SFBAudioMetadataArtistSortOrderKey];
-	metadata.albumArtistSortOrder = dictionary[SFBAudioMetadataAlbumArtistSortOrderKey];
-	metadata.composerSortOrder = dictionary[SFBAudioMetadataComposerSortOrderKey];
-	metadata.genreSortOrder = dictionary[SFBAudioMetadataGenreSortOrderKey];
-
-	metadata.grouping = dictionary[SFBAudioMetadataGroupingKey];
-
-	metadata.additionalMetadata = dictionary[SFBAudioMetadataAdditionalMetadataKey];
-
-	metadata.replayGainReferenceLoudness = dictionary[SFBAudioMetadataReplayGainReferenceLoudnessKey];
-	metadata.replayGainTrackGain = dictionary[SFBAudioMetadataReplayGainTrackGainKey];
-	metadata.replayGainTrackPeak = dictionary[SFBAudioMetadataReplayGainTrackPeakKey];
-	metadata.replayGainAlbumGain = dictionary[SFBAudioMetadataReplayGainAlbumGainKey];
-	metadata.replayGainAlbumPeak = dictionary[SFBAudioMetadataReplayGainAlbumPeakKey];
-
-	NSArray *pictures = dictionary[SFBAudioMetadataAttachedPicturesKey];
-	for(NSDictionary *picture in pictures)
-		[metadata attachPicture:[SFBAttachedPicture attachedPictureFromDictionaryRepresentation:picture]];
-
-	[metadata mergeChanges];
-
-	return metadata;
-}
-
 - (instancetype)init
 {
 	if((self = [super init])) {
@@ -277,6 +226,51 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 		[pictures addObject:picture.dictionaryRepresentation];
 	dictionary[SFBAudioMetadataAttachedPicturesKey] = pictures;
 	return dictionary;
+}
+
+- (void)copyMetadataFromDictionaryRepresentation:(NSDictionary<NSString *,id> *)dictionary
+{
+	self.title = dictionary[SFBAudioMetadataTitleKey];
+	self.albumTitle = dictionary[SFBAudioMetadataAlbumTitleKey];
+	self.artist = dictionary[SFBAudioMetadataArtistKey];
+	self.albumArtist = dictionary[SFBAudioMetadataAlbumArtistKey];
+	self.genre = dictionary[SFBAudioMetadataGenreKey];
+	self.composer = dictionary[SFBAudioMetadataComposerKey];
+	self.releaseDate = dictionary[SFBAudioMetadataReleaseDateKey];
+	self.compilation = dictionary[SFBAudioMetadataCompilationKey];
+	self.trackNumber = dictionary[SFBAudioMetadataTrackNumberKey];
+	self.trackTotal = dictionary[SFBAudioMetadataTrackTotalKey];
+	self.discNumber = dictionary[SFBAudioMetadataDiscNumberKey];
+	self.discTotal = dictionary[SFBAudioMetadataDiscTotalKey];
+	self.lyrics = dictionary[SFBAudioMetadataLyricsKey];
+	self.bpm = dictionary[SFBAudioMetadataBPMKey];
+	self.rating = dictionary[SFBAudioMetadataRatingKey];
+	self.comment = dictionary[SFBAudioMetadataCommentKey];
+	self.isrc = dictionary[SFBAudioMetadataISRCKey];
+	self.mcn = dictionary[SFBAudioMetadataMCNKey];
+	self.musicBrainzReleaseID = dictionary[SFBAudioMetadataMusicBrainzReleaseIDKey];
+	self.musicBrainzRecordingID = dictionary[SFBAudioMetadataMusicBrainzRecordingIDKey];
+
+	self.titleSortOrder = dictionary[SFBAudioMetadataTitleSortOrderKey];
+	self.albumTitleSortOrder = dictionary[SFBAudioMetadataAlbumTitleSortOrderKey];
+	self.artistSortOrder = dictionary[SFBAudioMetadataArtistSortOrderKey];
+	self.albumArtistSortOrder = dictionary[SFBAudioMetadataAlbumArtistSortOrderKey];
+	self.composerSortOrder = dictionary[SFBAudioMetadataComposerSortOrderKey];
+	self.genreSortOrder = dictionary[SFBAudioMetadataGenreSortOrderKey];
+
+	self.grouping = dictionary[SFBAudioMetadataGroupingKey];
+
+	self.additionalMetadata = dictionary[SFBAudioMetadataAdditionalMetadataKey];
+
+	self.replayGainReferenceLoudness = dictionary[SFBAudioMetadataReplayGainReferenceLoudnessKey];
+	self.replayGainTrackGain = dictionary[SFBAudioMetadataReplayGainTrackGainKey];
+	self.replayGainTrackPeak = dictionary[SFBAudioMetadataReplayGainTrackPeakKey];
+	self.replayGainAlbumGain = dictionary[SFBAudioMetadataReplayGainAlbumGainKey];
+	self.replayGainAlbumPeak = dictionary[SFBAudioMetadataReplayGainAlbumPeakKey];
+
+	NSArray *pictures = dictionary[SFBAudioMetadataAttachedPicturesKey];
+	for(NSDictionary *picture in pictures)
+		[self attachPicture:[SFBAttachedPicture attachedPictureFromDictionaryRepresentation:picture]];
 }
 
 #pragma mark Change Management

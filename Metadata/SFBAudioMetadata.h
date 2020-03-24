@@ -128,12 +128,6 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  */
 + (nullable instancetype)metadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
-/*!
- * @brief Create a new \c SFBAudioMetadata  from the values contained in a dictionary
- * @param dictionary A dictionary containing the desired values
- */
-+ (instancetype)metadataFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
-
 
 /*! @brief The URL containing this metadata */
 @property (nonatomic) NSURL *url;
@@ -159,6 +153,12 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @return A dictionary containing this object's artwork information
  */
 - (NSDictionary<NSString *, id> *)dictionaryRepresentation;
+
+/*!
+ * @brief Set the values contained in this object from a dictionary
+ * @param dictionary A dictionary containing the desired values
+ */
+- (void)copyMetadataFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
 
 
 /*! @brief Query the object for unmerged changes */
