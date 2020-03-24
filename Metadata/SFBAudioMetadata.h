@@ -124,9 +124,9 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @brief Create a new \c SFBAudioMetadata  for the specified URL
  * @param url The URL
  * @param error An optional pointer to an \c NSError to receive error information
- * @return A \c SFBAudioMetadata object, or \c nil on failure
+ * @return An \c SFBAudioMetadata object, or \c nil on failure
  */
-+ (nullable instancetype)metadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
++ (nullable instancetype)audioMetadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
 
 /*! @brief The URL containing this metadata */
@@ -138,14 +138,14 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL) readMetadata:(NSError * _Nullable *)error;
+- (BOOL)readMetadata:(NSError * _Nullable *)error;
 
 /*!
  * @brief Writes the metadata
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL) writeMetadata:(NSError * _Nullable *)error;
+- (BOOL)writeMetadata:(NSError * _Nullable *)error;
 
 
 /*!

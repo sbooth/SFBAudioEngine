@@ -140,7 +140,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 
 #pragma mark Creation
 
-+ (instancetype)metadataForURL:(NSURL *)url error:(NSError **)error
++ (instancetype)audioMetadataForURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
