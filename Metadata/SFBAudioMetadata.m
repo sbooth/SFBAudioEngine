@@ -228,7 +228,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	return dictionary;
 }
 
-- (void)copyMetadataFromDictionaryRepresentation:(NSDictionary<NSString *,id> *)dictionary
+- (void)setFromDictionaryRepresentation:(NSDictionary *)dictionary
 {
 	self.title = dictionary[SFBAudioMetadataTitleKey];
 	self.albumTitle = dictionary[SFBAudioMetadataAlbumTitleKey];
@@ -270,7 +270,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 
 	NSArray *pictures = dictionary[SFBAudioMetadataAttachedPicturesKey];
 	for(NSDictionary *picture in pictures)
-		[self attachPicture:[SFBAttachedPicture attachedPictureFromDictionaryRepresentation:picture]];
+		[self attachPicture:[[SFBAttachedPicture alloc] initWithDictionaryRepresentation:picture]];
 }
 
 #pragma mark Change Management
@@ -806,7 +806,7 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	[_pictures addObject:picture];
 }
 
-- (void)removePicture:(SFBAttachedPicture *)picture
+- (void)removeAttachedPicture:(SFBAttachedPicture *)picture
 {
 	[_pictures removeObject:picture];
 }

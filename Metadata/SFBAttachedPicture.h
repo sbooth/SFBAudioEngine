@@ -50,11 +50,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  */
 @interface SFBAttachedPicture : NSObject
 
-/*!
- * @brief Create a new \c SFBAttachedPicture from the values contained in a dictionary
- * @param dictionary A dictionary containing the desired values
- */
-+ (instancetype)attachedPictureFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
+- (instancetype)init NS_UNAVAILABLE;
 
 /*!
  * @brief Create a new \c SFBAttachedPicture
@@ -75,24 +71,31 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  * @param type The  artwork type
  * @param description The  image description
  */
-- (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(nullable NSString *)description;
+- (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(nullable NSString *)description NS_DESIGNATED_INITIALIZER;
+
+/*!
+ * @brief Create a new \c SFBAttachedPicture
+ * @discussion Returns \c nil if \c dictionary does not contain image data
+ * @param dictionary A dictionary containing the desired values
+ */
+- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
 
 
 /*!
  * @brief Copy the values contained in this object to a dictionary
  * @return A dictionary containing this object's artwork information
  */
-- (NSDictionary *)dictionaryRepresentation;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionaryRepresentation;
 
 
 /*! @brief The raw image data */
 @property (nonatomic, readonly) NSData *imageData;
 
 /*! @brief The artwork type */
-@property (nonatomic, readonly) SFBAttachedPictureType pictureType;
+@property (nonatomic, readonly) SFBAttachedPictureType pictureType NS_SWIFT_NAME(type);
 
-/*! @brief The image description */
-@property (nonatomic, nullable, readonly) NSString *pictureDescription;
+/*! @brief The artwork description */
+@property (nonatomic, nullable, readonly) NSString *pictureDescription NS_SWIFT_NAME(description);
 
 @end
 

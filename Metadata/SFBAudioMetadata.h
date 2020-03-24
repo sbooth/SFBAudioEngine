@@ -155,10 +155,10 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 - (NSDictionary<NSString *, id> *)dictionaryRepresentation;
 
 /*!
- * @brief Set the values contained in this object from a dictionary
+ * @brief Set the metadata and attached pictures contained in this object from a dictionary
  * @param dictionary A dictionary containing the desired values
  */
-- (void)copyMetadataFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
+- (void)setFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
 
 
 /*! @brief Query the object for unmerged changes */
@@ -178,7 +178,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @see -copyMetadataOfKind:from:
  * @see -copyAttachedPictures:
  */
-- (void)copyMetadataFrom:(SFBAudioMetadata *)metadata;
+- (void)copyMetadataFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(from:));
 
 /*!
  * @brief Copies the values contained in the specified metadata kinds from \c metadata
@@ -188,7 +188,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @see -copyMetadataFrom:
  * @see -copyAttachedPictures
  */
-- (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata;
+- (void)copyMetadataOfKind:(SFBAudioMetadataKind)kind from:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyMetadata(ofKind:from:));
 
 /*!
  * @brief Sets the values contained in specified metadata kinds to \c nullptr
@@ -196,7 +196,7 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @see -removeAllMetadata
  * @see -removeAllAttachedPictures
  */
-- (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind;
+- (void)removeMetadataOfKind:(SFBAudioMetadataKind)kind NS_SWIFT_NAME(removeMetadata(ofKind:));
 
 /*!
  * @brief Sets all metadata to \c nullptr
@@ -340,22 +340,22 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @param metadata A \c SFBAudioMetadata object containing the artwork to copy
  * @see -copyMetadataFrom:
  */
-- (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata;
+- (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyAttachedPicturesFrom(_:));
 
 /*! @brief Get all attached pictures */
 @property (nonatomic, readonly) NSArray<SFBAttachedPicture *> *attachedPictures;
 
 /*! @brief Get all attached pictures of the specified type */
-- (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type;
+- (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type NS_SWIFT_NAME(attachedPictures(ofType:));
 
 /*! @brief Attach a picture */
-- (void)attachPicture:(SFBAttachedPicture *)picture;
+- (void)attachPicture:(SFBAttachedPicture *)picture NS_SWIFT_NAME(attachPicture(_:));
 
 /*! @brief Remove an attached picture */
-- (void)removePicture:(SFBAttachedPicture *)picture;
+- (void)removeAttachedPicture:(SFBAttachedPicture *)picture NS_SWIFT_NAME(removeAttachedPicture(_:));
 
 /*! @brief Remove all attached pictures of the specified type */
-- (void)removeAttachedPicturesOfType:(SFBAttachedPictureType)type;
+- (void)removeAttachedPicturesOfType:(SFBAttachedPictureType)type NS_SWIFT_NAME(removeAttachedPicturesOfType(_:));
 
 /*! @brief Remove all attached pictures */
 - (void)removeAllAttachedPictures;
