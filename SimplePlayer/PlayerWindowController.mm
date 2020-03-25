@@ -240,7 +240,7 @@ enum ePlayerFlags : unsigned int {
 
 	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
 	// but for simplicity's sake it is done here.
-	SFBAudioMetadata *metadata = [SFBAudioMetadata metadataForURL:url error:nil];
+	SFBAudioMetadata *metadata = [SFBAudioMetadata audioMetadataForURL:url error:nil];
 	if(metadata) {
 		NSArray *pictures = metadata.attachedPictures;
 		if([pictures count] > 0)

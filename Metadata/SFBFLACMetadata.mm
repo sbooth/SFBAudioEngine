@@ -22,31 +22,31 @@
 
 + (void)load
 {
-	[SFBAudioMetadata registerSubclass:[self class]];
+	[SFBAudioMetadata registerInputOutputHandler:[self class]];
 }
 
-+ (NSArray *)_supportedFileExtensions
++ (NSSet *)supportedPathExtensions
 {
-	return @[@"flac"];
+	return [NSSet setWithObject:@"flac"];
 }
 
-+ (NSArray *)_supportedMIMETypes
++ (NSSet *)supportedMIMETypes
 {
-	return @[@"audio/flac"];
+	return [NSSet setWithObject:@"audio/flac"];
 }
 
-- (BOOL)_readMetadata:(NSError **)error
+- (SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return NO;
+		return nil;
 	}
 
 	TagLib::FLAC::File file(stream.get());
@@ -55,33 +55,34 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
+		return nil;
 	}
 
-	self.formatName = @"FLAC";
+	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+	metadata.formatName = @"FLAC";
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
-		[self addAudioPropertiesFromTagLibAudioProperties:properties];
+		[metadata addAudioPropertiesFromTagLibAudioProperties:properties];
 
 		if(properties->bitsPerSample())
-			self.bitsPerChannel = @(properties->bitsPerSample());
+			metadata.bitsPerChannel = @(properties->bitsPerSample());
 		if(properties->sampleFrames())
-			self.totalFrames = @(properties->sampleFrames());
+			metadata.totalFrames = @(properties->sampleFrames());
 	}
 
 	// Add all tags that are present
 	if(file.hasID3v1Tag())
-		[self addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
+		[metadata addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
 
 	if(file.hasID3v2Tag())
-		[self addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
+		[metadata addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
 
 	if(file.hasXiphComment())
-		[self addMetadataFromTagLibXiphComment:file.xiphComment()];
+		[metadata addMetadataFromTagLibXiphComment:file.xiphComment()];
 
 	// Add album art
 	for(auto iter : file.pictureList()) {
@@ -91,23 +92,23 @@
 		if(!iter->description().isEmpty())
 			description = [NSString stringWithUTF8String:iter->description().toCString(true)];
 
-		[self attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
+		[metadata attachPicture:[[SFBAttachedPicture alloc] initWithImageData:imageData
 																	 type:(SFBAttachedPictureType)iter->type()
 															  description:description]];
 	}
 
-	return YES;
+	return metadata;
 }
 
-- (BOOL)_writeMetadata:(NSError **)error
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
@@ -119,7 +120,7 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
@@ -128,26 +129,26 @@
 	// ID3v1 and ID3v2 tags are only written if present, but a Xiph comment is always written
 
 	if(file.hasID3v1Tag())
-		SFB::Audio::SetID3v1TagFromMetadata(self, file.ID3v1Tag());
+		SFB::Audio::SetID3v1TagFromMetadata(metadata, file.ID3v1Tag());
 
 	if(file.hasID3v2Tag())
-		SFB::Audio::SetID3v2TagFromMetadata(self, file.ID3v2Tag());
+		SFB::Audio::SetID3v2TagFromMetadata(metadata, file.ID3v2Tag());
 
-	SFB::Audio::SetXiphCommentFromMetadata(self, file.xiphComment());
+	SFB::Audio::SetXiphCommentFromMetadata(metadata, file.xiphComment());
 
 	if(!file.save()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
 	// Add album art
-	for(SFBAttachedPicture *attachedPicture in self.attachedPictures) {
+	for(SFBAttachedPicture *attachedPicture in metadata.attachedPictures) {
 		SFB::CGImageSource imageSource(CGImageSourceCreateWithData((__bridge CFDataRef)attachedPicture.imageData, nullptr));
 		if(!imageSource)
 			continue;

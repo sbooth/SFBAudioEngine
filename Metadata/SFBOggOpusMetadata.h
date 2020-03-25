@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting Ogg Opus files
-@interface SFBOggOpusMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting Ogg Opus files
+@interface SFBOggOpusMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

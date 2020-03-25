@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting Scream Tracker 3 Module files
-@interface SFBScreamTracker3ModuleMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting Scream Tracker 3 Module files
+@interface SFBScreamTracker3ModuleMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

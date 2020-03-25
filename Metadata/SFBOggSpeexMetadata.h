@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting Ogg Speex files
-@interface SFBOggSpeexMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting Ogg Speex files
+@interface SFBOggSpeexMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

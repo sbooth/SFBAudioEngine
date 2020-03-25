@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting WavPack files
-@interface SFBWavPackMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting WavPack files
+@interface SFBWavPackMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

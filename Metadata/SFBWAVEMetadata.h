@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting WAVE files
-@interface SFBWAVEMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting WAVE files
+@interface SFBWAVEMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

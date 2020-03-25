@@ -68,74 +68,36 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 
 #pragma mark Supported File Formats
 
-+ (NSArray *)supportedFileExtensions
++ (NSSet<NSString *> *)supportedPathExtensions
 {
-	NSMutableArray *supportedFileExtensions = [NSMutableArray array];
-
-	SEL sel = NSSelectorFromString(@"_supportedFileExtensions");
-	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
-		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "%{public}@ is a malformed SFBAudioMetadata subclass: %{public}@ is required but not implemented", NSStringFromClass(subclassInfo.subclass), NSStringFromSelector(sel));
-			continue;
-		}
-		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
-		NSArray *decoderFileExtensions = imp(subclassInfo.subclass, sel);
-		[supportedFileExtensions addObjectsFromArray:decoderFileExtensions];
+	NSMutableSet *result = [NSMutableSet set];
+	for(SFBAudioMetadataInputOutputHandlerInfo *handlerInfo in self.registeredInputOutputHandlers) {
+		NSSet *supportedPathExtensions = [(id <SFBAudioMetadataInputOutputHandling>)handlerInfo.klass supportedPathExtensions];
+		[result unionSet:supportedPathExtensions];
 	}
 
-	return supportedFileExtensions;
+	return result;
 }
 
-+ (NSArray *)supportedMIMETypes
++ (NSSet<NSString *> *)supportedMIMETypes
 {
-	NSMutableArray *supportedMIMETypes = [NSMutableArray array];
-
-	SEL sel = NSSelectorFromString(@"_supportedMIMETypes");
-	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
-		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "%{public}@ is a malformed SFBAudioMetadata subclass: %{public}@ is required but not implemented", NSStringFromClass(subclassInfo.subclass), NSStringFromSelector(sel));
-			continue;
-		}
-		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
-		NSArray *decoderMIMETypes = imp(subclassInfo.subclass, sel);
-		[supportedMIMETypes addObjectsFromArray:decoderMIMETypes];
+	NSMutableSet *result = [NSMutableSet set];
+	for(SFBAudioMetadataInputOutputHandlerInfo *handlerInfo in self.registeredInputOutputHandlers) {
+		NSSet *supportedMIMETypes = [(id <SFBAudioMetadataInputOutputHandling>)handlerInfo.klass supportedMIMETypes];
+		[result unionSet:supportedMIMETypes];
 	}
 
-	return supportedMIMETypes;
+	return result;
 }
 
-+ (BOOL)handlesFilesWithExtension:(NSString *)extension
++ (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
-	NSString *lowercaseExtension = [extension lowercaseString];
-	SEL sel = NSSelectorFromString(@"_supportedFileExtensions");
-	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
-		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "%{public}@ is a malformed SFBAudioMetadata subclass: %{public}@ is required but not implemented", NSStringFromClass(subclassInfo.subclass), NSStringFromSelector(sel));
-			continue;
-		}
-		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
-		NSArray *supportedFileExtensions = imp(subclassInfo.subclass, sel);
-		if([supportedFileExtensions containsObject:lowercaseExtension])
-			return YES;
-	}
-	return NO;
+	return [self.supportedPathExtensions containsObject:extension.lowercaseString];
 }
 
 + (BOOL)handlesMIMEType:(NSString *)mimeType
 {
-	NSString *lowercaseMIMEType = [mimeType lowercaseString];
-	SEL sel = NSSelectorFromString(@"_supportedMIMETypes");
-	for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
-		if(![subclassInfo.subclass respondsToSelector:sel]) {
-			os_log_info(OS_LOG_DEFAULT, "%{public}@ is a malformed SFBAudioMetadata subclass: %{public}@ is required but not implemented", NSStringFromClass(subclassInfo.subclass), NSStringFromSelector(sel));
-			continue;
-		}
-		id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
-		NSArray *supportedMIMETypes = imp(subclassInfo.subclass, sel);
-		if([supportedMIMETypes containsObject:lowercaseMIMEType])
-			return YES;
-	}
-	return NO;
+	return [self.supportedMIMETypes containsObject:mimeType.lowercaseString];
 }
 
 #pragma mark Creation
@@ -144,47 +106,11 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 {
 	NSParameterAssert(url != nil);
 
-	// If this is a file URL, use the extension-based resolvers
-	NSString *scheme = url.scheme;
-
-	// If there is no scheme the URL is invalid
-	if(!scheme) {
-		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+	if(![metadata readFromURL:url error:error])
 		return nil;
-	}
 
-	if([scheme caseInsensitiveCompare:@"file"] == NSOrderedSame) {
-		// Verify the file exists
-		if([url checkResourceIsReachableAndReturnError:error]) {
-			NSString *extension = url.pathExtension.lowercaseString;
-			if(extension) {
-				// Some extensions (.oga for example) support multiple audio codecs (Vorbis, FLAC, Speex)
-
-				SEL sel = NSSelectorFromString(@"_supportedFileExtensions");
-				for(SFBAudioMetadataSubclassInfo *subclassInfo in self.registeredSubclasses) {
-					if(![subclassInfo.subclass respondsToSelector:sel]) {
-						os_log_info(OS_LOG_DEFAULT, "%{public}@ is a malformed SFBAudioMetadata subclass: %{public}@ is required but not implemented", NSStringFromClass(subclassInfo.subclass), NSStringFromSelector(sel));
-						continue;
-					}
-					id (*imp)(Class, SEL) = (id (*)(Class, SEL))objc_msgSend;
-					NSArray *supportedFileExtensions = imp(subclassInfo.subclass, sel);
-					if([supportedFileExtensions containsObject:extension]) {
-						SFBAudioMetadata *instance = [[subclassInfo.subclass alloc] init];
-						instance.url = url;
-						if([instance readMetadata:error])
-							return instance;
-					}
-				}
-			}
-		}
-		else {
-			os_log_debug(OS_LOG_DEFAULT, "The requested URL is not reachable: %{public}@", *error);
-			return nil;
-		}
-	}
-
-	return nil;
+	return metadata;
 }
 
 - (instancetype)init
@@ -198,22 +124,35 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 
 #pragma mark Reading and Writing
 
-- (BOOL)readMetadata:(NSError **)error
+- (BOOL)readFromURL:(NSURL *)url error:(NSError **)error
 {
-	[_metadata reset];
-	[_pictures reset];
-	BOOL result = [self _readMetadata:error];
-	if(result)
-	   [self mergeChanges];
-	return result;
+	NSParameterAssert(url != nil);
+
+	id<SFBAudioMetadataInputOutputHandling> handler = [SFBAudioMetadata inputOutputHandlerForURL:url];
+	SFBAudioMetadata *metadata = [handler readAudioMetadataFromURL:url error:error];
+	if(!metadata)
+		return NO;
+
+	// ivar thievery
+	_metadata = metadata->_metadata;
+	_pictures = metadata->_pictures;
+
+	[self mergeChanges];
+
+	return YES;
 }
 
-- (BOOL)writeMetadata:(NSError **)error
+- (BOOL)writeToURL:(NSURL *)url error:(NSError **)error
 {
-	BOOL result = [self _writeMetadata:error];
-	if(result)
-	   [self mergeChanges];
-	return result;
+	NSParameterAssert(url != nil);
+
+	id<SFBAudioMetadataInputOutputHandling> handler = [SFBAudioMetadata inputOutputHandlerForURL:url];
+	if(![handler writeAudioMetadata:self toURL:url error:error])
+		return NO;
+
+	[self mergeChanges];
+
+	return YES;
 }
 
 #pragma mark External Representations

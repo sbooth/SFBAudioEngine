@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-@interface SFBAudioMetadata (Internal)
+@interface SFBAudioMetadata (SFBAudioMetadataInternal)
 @property (nonatomic, nullable) NSString *formatName;
 @property (nonatomic, nullable) NSNumber *totalFrames;
 @property (nonatomic, nullable) NSNumber *channelsPerFrame;
@@ -33,24 +33,28 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-// Subclass registration support
-@interface SFBAudioMetadataSubclassInfo : NSObject
-@property (nonatomic) Class subclass;
+@protocol SFBAudioMetadataInputOutputHandling
++ (NSSet<NSString *> *)supportedPathExtensions;
++ (NSSet<NSString *> *)supportedMIMETypes;
+- (nullable SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError * _Nullable *)error;
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError * _Nullable *)error;
+@end
+
+
+@interface SFBAudioMetadataInputOutputHandlerInfo : NSObject
+@property (nonatomic) Class klass;
 @property (nonatomic) int priority;
 @end
 
+@interface SFBAudioMetadata (SFBAudioMetadataInputOutputHandling)
++ (void)registerInputOutputHandler:(Class)reader;
++ (void)registerInputOutputHandler:(Class)reader priority:(int)priority;
 
-@interface SFBAudioMetadata (SubclassRegistration)
-+ (void)registerSubclass:(Class)subclass;
-+ (void)registerSubclass:(Class)subclass priority:(int)priority;
-+ (NSArray<SFBAudioMetadataSubclassInfo *> *)registeredSubclasses;
-@end
+@property (nonatomic, class, readonly) NSArray<id<SFBAudioMetadataInputOutputHandling>> *registeredInputOutputHandlers;
 
-
-// Subclasses must implement the following methods
-@interface SFBAudioMetadata (RequiredSubclassMethods)
-- (BOOL)_readMetadata:(NSError * _Nullable *)error;
-- (BOOL)_writeMetadata:(NSError * _Nullable *)error;
++ (nullable id<SFBAudioMetadataInputOutputHandling>)inputOutputHandlerForURL:(NSURL *)url;
++ (nullable id<SFBAudioMetadataInputOutputHandling>)inputOutputHandlerForPathExtension:(NSString *)extension;
++ (nullable id<SFBAudioMetadataInputOutputHandling>)inputOutputHandlerForMIMEType:(NSString *)mimeType;
 @end
 
 NS_ASSUME_NONNULL_END

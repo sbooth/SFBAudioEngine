@@ -19,31 +19,31 @@
 
 + (void)load
 {
-	[SFBAudioMetadata registerSubclass:[self class]];
+	[SFBAudioMetadata registerInputOutputHandler:[self class]];
 }
 
-+ (NSArray *)_supportedFileExtensions
++ (NSSet *)supportedPathExtensions
 {
-	return @[@"dff"];
+	return [NSSet setWithObject:@"dff"];
 }
 
-+ (NSArray *)_supportedMIMETypes
++ (NSSet *)supportedMIMETypes
 {
-	return @[@"audio/dff"];
+	return [NSSet setWithObject:@"audio/dff"];
 }
 
-- (BOOL)_readMetadata:(NSError **)error
+- (SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return NO;
+		return nil;
 	}
 
 	TagLib::DSDIFF::File file(stream.get());
@@ -52,42 +52,43 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not a DSD Interchange file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
+		return nil;
 	}
 
-	self.formatName = @"DSD Interchange";
+	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+	metadata.formatName = @"DSD Interchange";
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
-		[self addAudioPropertiesFromTagLibAudioProperties:properties];
+		[metadata addAudioPropertiesFromTagLibAudioProperties:properties];
 
 		if(properties->bitsPerSample())
-			self.bitsPerChannel = @(properties->bitsPerSample());
+			metadata.bitsPerChannel = @(properties->bitsPerSample());
 		if(properties->sampleCount())
-			self.totalFrames = @(properties->sampleCount());
+			metadata.totalFrames = @(properties->sampleCount());
 	}
 
 	if(file.hasDIINTag())
-		[self addMetadataFromTagLibTag:file.DIINTag()];
+		[metadata addMetadataFromTagLibTag:file.DIINTag()];
 
 	if(file.hasID3v2Tag())
-		[self addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
+		[metadata addMetadataFromTagLibID3v2Tag:file.ID3v2Tag()];
 
-	return YES;
+	return metadata;
 }
 
-- (BOOL)_writeMetadata:(NSError **)error
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
@@ -99,21 +100,21 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD Interchange file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not a DSD Interchange file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
-	SFB::Audio::SetTagFromMetadata(self, file.tag());
-	SFB::Audio::SetID3v2TagFromMetadata(self, file.ID3v2Tag());
+	SFB::Audio::SetTagFromMetadata(metadata, file.tag());
+	SFB::Audio::SetID3v2TagFromMetadata(metadata, file.ID3v2Tag());
 
 	if(!file.save()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;

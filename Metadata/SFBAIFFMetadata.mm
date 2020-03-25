@@ -18,31 +18,31 @@
 
 + (void)load
 {
-	[SFBAudioMetadata registerSubclass:[self class]];
+	[SFBAudioMetadata registerInputOutputHandler:[self class]];
 }
 
-+ (NSArray *)_supportedFileExtensions
++ (NSSet *)supportedPathExtensions
 {
-	return @[@"aiff", @"aif"];
+	return [NSSet setWithArray:@[@"aiff", @"aif"]];
 }
 
-+ (NSArray *)_supportedMIMETypes
++ (NSSet *)supportedMIMETypes
 {
-	return @[@"audio/aiff"];
+	return [NSSet setWithObject:@"audio/aiff"];
 }
 
-- (BOOL)_readMetadata:(NSError **)error
+- (SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return NO;
+		return nil;
 	}
 
 	TagLib::RIFF::AIFF::File file(stream.get());
@@ -51,39 +51,40 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid AIFF file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not an AIFF file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
+		return nil;
 	}
 
-	self.formatName = @"AIFF";
+	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+	metadata.formatName = @"AIFF";
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
-		[self addAudioPropertiesFromTagLibAudioProperties:properties];
+		[metadata addAudioPropertiesFromTagLibAudioProperties:properties];
 
 		if(properties->sampleWidth())
-			self.bitsPerChannel = @(properties->sampleWidth());
+			metadata.bitsPerChannel = @(properties->sampleWidth());
 		if(properties->sampleFrames())
-			self.totalFrames = @(properties->sampleFrames());
+			metadata.totalFrames = @(properties->sampleFrames());
 	}
 
 	if(file.tag())
-		[self addMetadataFromTagLibID3v2Tag:file.tag()];
+		[metadata addMetadataFromTagLibID3v2Tag:file.tag()];
 
-	return YES;
+	return metadata;
 }
 
-- (BOOL)_writeMetadata:(NSError **)error
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
@@ -95,20 +96,20 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid AIFF file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not a AIFF file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
-	SFB::Audio::SetID3v2TagFromMetadata(self, file.tag());
+	SFB::Audio::SetID3v2TagFromMetadata(metadata, file.tag());
 
 	if(!file.save()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;

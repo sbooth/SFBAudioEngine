@@ -18,31 +18,31 @@
 
 + (void)load
 {
-	[SFBAudioMetadata registerSubclass:[self class]];
+	[SFBAudioMetadata registerInputOutputHandler:[self class]];
 }
 
-+ (NSArray *)_supportedFileExtensions
++ (NSSet *)supportedPathExtensions
 {
-	return @[@"ogg", @"oga"];
+	return [NSSet setWithArray:@[@"ogg", @"oga"]];
 }
 
-+ (NSArray *)_supportedMIMETypes
++ (NSSet *)supportedMIMETypes
 {
-	return @[@"audio/ogg"];
+	return [NSSet setWithObject:@"audio/ogg"];
 }
 
-- (BOOL)_readMetadata:(NSError **)error
+- (SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return NO;
+		return nil;
 	}
 
 	TagLib::Ogg::FLAC::File file(stream.get());
@@ -51,37 +51,38 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return NO;
+		return nil;
 	}
 
-	self.formatName = @"Ogg FLAC";
+	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
+	metadata.formatName = @"Ogg FLAC";
 
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
-		[self addAudioPropertiesFromTagLibAudioProperties:properties];
+		[metadata addAudioPropertiesFromTagLibAudioProperties:properties];
 
 		if(properties->sampleWidth())
-			self.bitsPerChannel = @(properties->sampleWidth());
+			metadata.bitsPerChannel = @(properties->sampleWidth());
 	}
 
 	if(file.tag())
-		[self addMetadataFromTagLibXiphComment:file.tag()];
+		[metadata addMetadataFromTagLibXiphComment:file.tag()];
 
-	return YES;
+	return metadata;
 }
 
-- (BOOL)_writeMetadata:(NSError **)error
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
+	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
 		return NO;
@@ -93,20 +94,20 @@
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg FLAC file.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Not an Ogg FLAC file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
 
-	SFB::Audio::SetXiphCommentFromMetadata(self, file.tag());
+	SFB::Audio::SetXiphCommentFromMetadata(metadata, file.tag());
 
 	if(!file.save()) {
 		if(error)
 			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
 											 code:SFBAudioMetadataErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
-											  url:self.url
+											  url:url
 									failureReason:NSLocalizedString(@"Unable to write metadata", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata.h"
+#import "SFBAudioMetadata+Internal.h"
 
-// An SFBAudioMetadata subclass supporting Impulse Tracker Module files
-@interface SFBImpulseTrackerModuleMetadata : SFBAudioMetadata
+// An SFBAudioMetadataInputOutputHandler supporting Impulse Tracker Module files
+@interface SFBImpulseTrackerModuleMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
 @end

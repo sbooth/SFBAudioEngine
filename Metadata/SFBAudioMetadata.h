@@ -103,25 +103,24 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 //@}
 
 
-/*! @brief Base class for all audio metadata reader/writer classes */
+/*! @brief Class supporting audio properties, metadata, and attached pictures with change tracking */
 @interface SFBAudioMetadata : NSObject
 
 /*! @brief Returns an array containing the supported file extensions */
-+ (NSArray<NSString *> *)supportedFileExtensions;
+@property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /*!@brief Returns  an array containing the supported MIME types */
-+ (NSArray<NSString *> *)supportedMIMETypes;
-
+@property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /*! @brief Tests whether a file extension is supported */
-+ (BOOL)handlesFilesWithExtension:(NSString *)extension;
++ (BOOL)handlesPathsWithExtension:(NSString *)extension;
 
 /*! @brief Tests whether a MIME type is supported */
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
 
 /*!
- * @brief Create a new \c SFBAudioMetadata  for the specified URL
+ * @brief Returns a new \c SFBAudioMetadata  object for the specified URL populated with audio properties, metadata, and attached pictures
  * @param url The URL
  * @param error An optional pointer to an \c NSError to receive error information
  * @return An \c SFBAudioMetadata object, or \c nil on failure
@@ -129,23 +128,21 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 + (nullable instancetype)audioMetadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
 
-/*! @brief The URL containing this metadata */
-@property (nonatomic) NSURL *url;
-
-
 /*!
- * @brief Reads the metadata
+ * @brief Reads audio properties, metadata, and attached pictures from the specified URL
+ * @param url The URL
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)readMetadata:(NSError * _Nullable *)error;
+- (BOOL)readFromURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
 /*!
- * @brief Writes the metadata
+ * @brief Writes metadata and attached pictures to the specified URL
+ * @param url The URL
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)writeMetadata:(NSError * _Nullable *)error;
+- (BOOL)writeToURL:(NSURL *)url error:(NSError * _Nullable *)error;
 
 
 /*!
