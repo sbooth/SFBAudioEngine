@@ -11,7 +11,7 @@
 #include <SFBAudioEngine/AudioPlayer.h>
 #include <SFBAudioEngine/AudioDecoder.h>
 
-#import <SFBAudioEngine/SFBAudioMetadata.h>
+#import <SFBAudioEngine/SFBAudioFile.h>
 
 // ========================================
 // Player flags
@@ -240,11 +240,12 @@ enum ePlayerFlags : unsigned int {
 
 	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
 	// but for simplicity's sake it is done here.
-	SFBAudioMetadata *metadata = [SFBAudioMetadata audioMetadataForURL:url error:nil];
-	if(metadata) {
-		NSArray *pictures = metadata.attachedPictures;
+	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:url error:nil];
+	if(audioFile) {
+		SFBAudioMetadata *metadata = audioFile.metadata;
+		NSSet *pictures = metadata.attachedPictures;
 		if([pictures count] > 0)
-			[self.albumArt setImage:[[pictures objectAtIndex:0] image]];
+			[self.albumArt setImage:[[pictures anyObject] image]];
 		else
 			[self.albumArt setImage:nil];
 
