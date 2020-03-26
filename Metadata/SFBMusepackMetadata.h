@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting Musepack files
-@interface SFBMusepackMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting Musepack files
+@interface SFBMusepackMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

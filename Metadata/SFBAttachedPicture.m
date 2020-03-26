@@ -58,6 +58,12 @@ NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
 	return self.imageData.hash ^ self.pictureType;
 }
 
+- (nonnull id)copyWithZone:(nullable NSZone *)zone
+{
+#pragma unused(zone)
+	return self;
+}
+
 - (NSDictionary *)dictionaryRepresentation
 {
 	return @{ SFBAttachedPictureImageDataKey: self.imageData,

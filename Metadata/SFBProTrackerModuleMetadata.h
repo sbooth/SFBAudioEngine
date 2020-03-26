@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting ProTracker moodule files
-@interface SFBProTrackerModuleMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting ProTracker moodule files
+@interface SFBProTrackerModuleMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

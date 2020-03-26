@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting True Audio files
-@interface SFBTrueAudioMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting True Audio files
+@interface SFBTrueAudioMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

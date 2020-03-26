@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting MPEG-4 files
-@interface SFBMP4Metadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting MPEG-4 files
+@interface SFBMP4Metadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

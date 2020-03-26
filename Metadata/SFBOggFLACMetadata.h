@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting Ogg FLAC files
-@interface SFBOggFLACMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting Ogg FLAC files
+@interface SFBOggFLACMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

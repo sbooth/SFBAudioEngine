@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting Ogg Vorbis files
-@interface SFBOggVorbisMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting Ogg Vorbis files
+@interface SFBOggVorbisMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

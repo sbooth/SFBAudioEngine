@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting DFF files
-@interface SFBDSDIFFMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting DFF files
+@interface SFBDSDIFFMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

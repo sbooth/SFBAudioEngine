@@ -7,12 +7,14 @@
 
 #import <taglib/audioproperties.h>
 
-#import "SFBAudioMetadata.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBAudioMetadata (TagLibAudioProperties)
-- (void)addAudioPropertiesFromTagLibAudioProperties:(const TagLib::AudioProperties *)properties;
-@end
+namespace SFB {
+	namespace Audio {
+		void AddAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary);
+	}
+}
 
 NS_ASSUME_NONNULL_END

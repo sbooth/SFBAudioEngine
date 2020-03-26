@@ -9,7 +9,6 @@
 
 #import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "SFBAudioMetadata+Internal.h"
 #import "TagLibStringUtilities.h"
 
 namespace {

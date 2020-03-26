@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting MP3 files
-@interface SFBMP3Metadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting MP3 files
+@interface SFBMP3Metadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

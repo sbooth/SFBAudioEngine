@@ -5,7 +5,6 @@
 
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioMetadata+Internal.h"
 
 @implementation SFBAudioMetadata (TagLibID3v1Tag)
 

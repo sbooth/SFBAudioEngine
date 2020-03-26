@@ -8,7 +8,6 @@
 #import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioMetadata+Internal.h"
 #import "TagLibStringUtilities.h"
 
 @implementation SFBAudioMetadata (TagLibMP4Tag)

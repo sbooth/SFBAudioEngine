@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting AIFF files
-@interface SFBAIFFMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting AIFF files
+@interface SFBAIFFMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end

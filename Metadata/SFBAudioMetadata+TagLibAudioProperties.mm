@@ -4,25 +4,22 @@
  */
 
 #import "SFBAudioMetadata+TagLibAudioProperties.h"
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioProperties.h"
 
-@implementation SFBAudioMetadata (TagLibAudioProperties)
-
-- (void)addAudioPropertiesFromTagLibAudioProperties:(const TagLib::AudioProperties *)properties
+void SFB::Audio::AddAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary)
 {
-	NSParameterAssert(properties != nil);
+	NSCParameterAssert(properties != nil);
+	NSCParameterAssert(dictionary != nil);
 
 	if(properties->length())
-		self.duration = @(properties->length());
+		dictionary[SFBAudioPropertiesDurationKey] = @(properties->length());
 
 	if(properties->channels())
-		self.channelsPerFrame = @(properties->channels());
+		dictionary[SFBAudioPropertiesChannelsPerFrameKey] = @(properties->channels());
 
 	if(properties->sampleRate())
-		self.sampleRate = @(properties->sampleRate());
+		dictionary[SFBAudioPropertiesSampleRateKey] = @(properties->sampleRate());
 
 	if(properties->bitrate())
-		self.bitrate = @(properties->bitrate());
+		dictionary[SFBAudioPropertiesBitrateKey] = @(properties->bitrate());
 }
-
-@end

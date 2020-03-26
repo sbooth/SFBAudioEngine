@@ -9,17 +9,17 @@
 #import <taglib/tfilestream.h>
 
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+Internal.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
+#import "SFBAudioProperties.h"
 #import "SFBMusepackMetadata.h"
 
 @implementation SFBMusepackMetadata
 
 + (void)load
 {
-	[SFBAudioMetadata registerInputOutputHandler:[self class]];
+	[SFBAudioFile registerInputOutputHandler:[self class]];
 }
 
 + (NSSet *)supportedPathExtensions
@@ -32,50 +32,51 @@
 	return [NSSet setWithObject:@"audio/musepack"];
 }
 
-- (SFBAudioMetadata *)readAudioMetadataFromURL:(NSURL *)url error:(NSError **)error
+- (BOOL)readAudioPropertiesAndMetadataFromURL:(NSURL *)url toAudioFile:(SFBAudioFile *)audioFile error:(NSError **)error
 {
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
-											 code:SFBAudioMetadataErrorCodeInputOutput
+			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
 											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file may have been renamed, moved, deleted, or you may not have appropriate permissions.", @"")];
-		return nil;
+		return NO;
 	}
 
 	TagLib::MPC::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
-											 code:SFBAudioMetadataErrorCodeInputOutput
+			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @"")
 											  url:url
 									failureReason:NSLocalizedString(@"Not a Musepack file", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-		return nil;
+		return NO;
+	}
+
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Musepack" forKey:SFBAudioPropertiesFormatNameKey];
+	if(file.audioProperties()) {
+		auto properties = file.audioProperties();
+		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
+
+		if(properties->sampleFrames())
+			propertiesDictionary[SFBAudioPropertiesTotalFramesKey] = @(properties->sampleFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-	metadata.formatName = @"Musepack";
-
-	if(file.audioProperties()) {
-		auto properties = file.audioProperties();
-		[metadata addAudioPropertiesFromTagLibAudioProperties:properties];
-
-		if(properties->sampleFrames())
-			metadata.totalFrames = @(properties->sampleFrames());
-	}
-
 	if(file.hasID3v1Tag())
 		[metadata addMetadataFromTagLibID3v1Tag:file.ID3v1Tag()];
 
 	if(file.hasAPETag())
 		[metadata addMetadataFromTagLibAPETag:file.APETag()];
 
-	return metadata;
+	audioFile.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
+	audioFile.metadata = metadata;
+	return YES;
 }
 
 - (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error
@@ -83,8 +84,8 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
-											 code:SFBAudioMetadataErrorCodeInputOutput
+			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
 											  url:url
 									failureReason:NSLocalizedString(@"Input/output error", @"")
@@ -95,8 +96,8 @@
 	TagLib::MPC::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
-											 code:SFBAudioMetadataErrorCodeInputOutput
+			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @"")
 											  url:url
 									failureReason:NSLocalizedString(@"Not a Musepack file", @"")
@@ -113,8 +114,8 @@
 
 	if(!file.save()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioMetadataErrorDomain
-											 code:SFBAudioMetadataErrorCodeInputOutput
+			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
 											  url:url
 									failureReason:NSLocalizedString(@"Unable to write metadata", @"")

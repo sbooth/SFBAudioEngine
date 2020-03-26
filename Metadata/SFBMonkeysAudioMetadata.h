@@ -5,8 +5,8 @@
 
 #pragma once
 
-#import "SFBAudioMetadata+Internal.h"
+#import "SFBAudioFile+Internal.h"
 
-// An SFBAudioMetadataInputOutputHandler supporting Monkey's Audio files
-@interface SFBMonkeysAudioMetadata : NSObject <SFBAudioMetadataInputOutputHandling>
+// An SFBAudioFileInputOutputHandler supporting Monkey's Audio files
+@interface SFBMonkeysAudioMetadata : NSObject <SFBAudioFileInputOutputHandling>
 @end
