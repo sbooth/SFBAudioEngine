@@ -19,14 +19,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeObject:(ObjectType)object;
 - (void)removeAllObjects;
 
-- (NSUInteger)count;
+@property (nonatomic, readonly) NSUInteger count;
 
-- (NSSet<ObjectType> *)initialObjects;
-- (NSSet<ObjectType> *)addedObjects;
-- (NSSet<ObjectType> *)removedObjects;
-- (NSSet<ObjectType> *)mergedObjects;
+@property (nonatomic, readonly) NSSet<ObjectType> *initialObjects;
+@property (nonatomic, readonly) NSSet<ObjectType> *addedObjects;
+@property (nonatomic, readonly) NSSet<ObjectType> *removedObjects;
+@property (nonatomic, readonly) NSSet<ObjectType> *mergedObjects;
 
-- (BOOL)hasChanges;
+@property (nonatomic, readonly) BOOL hasChanges;
 
 - (void)mergeChanges;
 - (void)revertChanges;

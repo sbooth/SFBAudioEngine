@@ -22,16 +22,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeObjectForKey:(KeyType)key;
 - (void)removeAllObjects;
 
-- (NSUInteger)count;
+@property (nonatomic, readonly) NSUInteger count;
 
-- (NSDictionary<KeyType, ObjectType> *) initialValues;
-- (NSDictionary<KeyType, ObjectType> *) addedValues;
-- (NSDictionary<KeyType, ObjectType> *) removedValues;
-- (NSDictionary<KeyType, ObjectType> *) updatedValues;
+@property (nonatomic, readonly) NSDictionary<KeyType, ObjectType> *initialValues;
+@property (nonatomic, readonly) NSDictionary<KeyType, ObjectType> *addedValues;
+@property (nonatomic, readonly) NSDictionary<KeyType, ObjectType> *removedValues;
+@property (nonatomic, readonly) NSDictionary<KeyType, ObjectType> *updatedValues;
+@property (nonatomic, readonly) NSDictionary<KeyType, ObjectType> *mergedValues;
 
-- (NSDictionary<KeyType, ObjectType> *) mergedValues;
-
-- (BOOL)hasChanges;
+@property (nonatomic, readonly) BOOL hasChanges;
 - (BOOL)hasChangesForKey:(KeyType)key;
 
 - (void)mergeChanges;
