@@ -48,25 +48,25 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  *
  * Most file formats may have more than one attached picture of each type.
  */
-@interface SFBAttachedPicture : NSObject
+@interface SFBAttachedPicture : NSObject <NSCopying>
 
 - (instancetype)init NS_UNAVAILABLE;
 
 /*!
- * @brief Create a new \c SFBAttachedPicture
+ * @brief Returns an initialized \c SFBAttachedPicture object
  * @param imageData The raw image data
  */
 - (instancetype)initWithImageData:(NSData *)imageData;
 
 /*!
- * @brief Create a new \c SFBAttachedPicture
+ * @brief Returns an initialized \c SFBAttachedPicture object
  * @param imageData The raw image data
  * @param type The  artwork type
  */
 - (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type;
 
 /*!
- * @brief Create a new \c SFBAttachedPicture
+ * @brief Returns an initialized \c SFBAttachedPicture object
  * @param imageData The raw image data
  * @param type The  artwork type
  * @param description The  image description
@@ -74,7 +74,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 - (instancetype)initWithImageData:(NSData *)imageData type:(SFBAttachedPictureType)type description:(nullable NSString *)description NS_DESIGNATED_INITIALIZER;
 
 /*!
- * @brief Create a new \c SFBAttachedPicture
+ * @brief Returns an initialized \c SFBAttachedPicture object or \c nil on error
  * @discussion Returns \c nil if \c dictionary does not contain image data
  * @param dictionary A dictionary containing the desired values
  */

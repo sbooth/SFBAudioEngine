@@ -11,19 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*! @brief The \c NSErrorDomain used by \c SFBAudioMetadata and subclasses */
-extern NSErrorDomain const SFBAudioMetadataErrorDomain;
-
-
-/*! @brief Possible \c NSError  error codes used by \c SFBAudioMetadata */
-typedef NS_ENUM(NSUInteger, SFBAudioMetadataErrorCode) {
-	SFBAudioMetadataErrorCodeFileFormatNotRecognized		= 0,	/*!< File format not recognized */
-	SFBAudioMetadataErrorCodeFileFormatNotSupported			= 1,	/*!< File format not supported */
-	SFBAudioMetadataErrorCodeInputOutput					= 2		/*!< Input/output error */
-};
-
-
-/*! @brief Metadata kind bitmask values used in copyMetadataFrom: and removeMetadataOfKind: */
+/*! @brief Metadata kind bitmask values used in copyMetadataOfKind:from: and removeMetadataOfKind: */
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	SFBAudioMetadataKindBasic			= (1u << 0),	/*!< Basic metadata */
 	SFBAudioMetadataKindSorting			= (1u << 1),	/*!< Sorting metadata */
@@ -32,19 +20,7 @@ typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	SFBAudioMetadataKindReplayGain		= (1u << 4)		/*!< Replay gain metadata */
 };
 
-
-/*! @name Audio property dictionary keys */
-//@{
-extern NSString * const SFBAudioMetadataFormatNameKey;					/*!< @brief The name of the audio format */
-extern NSString * const SFBAudioMetadataTotalFramesKey;					/*!< @brief The total number of audio frames (\c NSNumber) */
-extern NSString * const SFBAudioMetadataChannelsPerFrameKey;			/*!< @brief The number of channels (\c NSNumber) */
-extern NSString * const SFBAudioMetadataBitsPerChannelKey;				/*!< @brief The number of bits per channel (\c NSNumber) */
-extern NSString * const SFBAudioMetadataSampleRateKey;					/*!< @brief The sample rate (\c NSNumber) */
-extern NSString * const SFBAudioMetadataDurationKey;					/*!< @brief The duration (\c NSNumber) */
-extern NSString * const SFBAudioMetadataBitrateKey;						/*!< @brief The audio bitrate (\c NSNumber) */
-//@}
-
-/*! @name Metadata dictionary keys */
+/*! @name Basic metadata dictionary keys */
 //@{
 extern NSString * const SFBAudioMetadataTitleKey;						/*!< @brief Title (\c NSString) */
 extern NSString * const SFBAudioMetadataAlbumTitleKey;					/*!< @brief Album title (\c NSString) */
@@ -103,70 +79,128 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 //@}
 
 
-/*! @brief Class supporting audio properties, metadata, and attached pictures with change tracking */
-@interface SFBAudioMetadata : NSObject
+/*! @brief Class supporting commonly-used audio metadata and attached pictures */
+@interface SFBAudioMetadata : NSObject <NSCopying>
 
-/*! @brief Returns an array containing the supported file extensions */
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
-
-/*!@brief Returns  an array containing the supported MIME types */
-@property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
-
-/*! @brief Tests whether a file extension is supported */
-+ (BOOL)handlesPathsWithExtension:(NSString *)extension;
-
-/*! @brief Tests whether a MIME type is supported */
-+ (BOOL)handlesMIMEType:(NSString *)mimeType;
-
+/*! @brief Returns an initialized empty \c SFBAudioMetadata object */
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /*!
- * @brief Returns a new \c SFBAudioMetadata  object for the specified URL populated with audio properties, metadata, and attached pictures
- * @param url The URL
- * @param error An optional pointer to an \c NSError to receive error information
- * @return An \c SFBAudioMetadata object, or \c nil on failure
+ * @brief Returns an initialized \c SFBAudioMetadata object populated with values from \c dictionaryRepresentation
+ * @param dictionaryRepresentation A dictionary containing the desired values
  */
-+ (nullable instancetype)audioMetadataForURL:(NSURL *)url error:(NSError * _Nullable *)error;
+- (instancetype)initWithDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionaryRepresentation;
 
+#pragma mark Basic Metadata
 
-/*!
- * @brief Reads audio properties, metadata, and attached pictures from the specified URL
- * @param url The URL
- * @param error An optional pointer to an \c NSError to receive error information
- * @return \c YES on success, \c NO otherwise
- */
-- (BOOL)readFromURL:(NSURL *)url error:(NSError * _Nullable *)error;
+/*! @brief The title */
+@property (nonatomic, nullable) NSString *title;
 
-/*!
- * @brief Writes metadata and attached pictures to the specified URL
- * @param url The URL
- * @param error An optional pointer to an \c NSError to receive error information
- * @return \c YES on success, \c NO otherwise
- */
-- (BOOL)writeToURL:(NSURL *)url error:(NSError * _Nullable *)error;
+/*! @brief The album title */
+@property (nonatomic, nullable) NSString *albumTitle;
 
+/*! @brief The artist */
+@property (nonatomic, nullable) NSString *artist;
 
-/*!
- * @brief Copy the values contained in this object to a dictionary
- * @return A dictionary containing this object's artwork information
- */
-- (NSDictionary<NSString *, id> *)dictionaryRepresentation;
+/*! @brief The album artist */
+@property (nonatomic, nullable) NSString *albumArtist;
 
-/*!
- * @brief Set the metadata and attached pictures contained in this object from a dictionary
- * @param dictionary A dictionary containing the desired values
- */
-- (void)setFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
+/*! @brief The genre */
+@property (nonatomic, nullable) NSString *genre;
 
+/*! @brief The composer */
+@property (nonatomic, nullable) NSString *composer;
 
-/*! @brief Query the object for unmerged changes */
-- (BOOL)hasChanges;
+/*! @brief The release date */
+@property (nonatomic, nullable) NSString *releaseDate;
 
-/*! @brief Merge changes */
-- (void)mergeChanges;
+/*! @brief The compilation flag */
+@property (nonatomic, nullable) NSNumber *compilation;
 
-/*! @brief Revert unmerged changes */
-- (void)revertChanges;
+/*! @brief The track number */
+@property (nonatomic, nullable) NSNumber *trackNumber;
 
+/*! @brief The track total */
+@property (nonatomic, nullable) NSNumber *trackTotal;
+
+/*! @brief The disc number */
+@property (nonatomic, nullable) NSNumber *discNumber;
+
+/*! @brief The disc total */
+@property (nonatomic, nullable) NSNumber *discTotal;
+
+/*! @brief The lyrics */
+@property (nonatomic, nullable) NSString *lyrics;
+
+/*! @brief The Beats per minute (BPM) */
+@property (nonatomic, nullable) NSNumber *bpm;
+
+/*! @brief The rating */
+@property (nonatomic, nullable) NSNumber *rating;
+
+/*! @brief The comment */
+@property (nonatomic, nullable) NSString *comment;
+
+/*! @brief The Media Catalog Number (MCN) */
+@property (nonatomic, nullable) NSString *mcn;
+
+/*! @brief The International Standard Recording Code (ISRC) */
+@property (nonatomic, nullable) NSString *isrc;
+
+/*! @brief The MusicBrainz release ID */
+@property (nonatomic, nullable) NSString *musicBrainzReleaseID;
+
+/*! @brief The MusicBrainz recording ID */
+@property (nonatomic, nullable) NSString *musicBrainzRecordingID;
+
+#pragma mark Sorting Metadata
+
+/*! @brief The title sort order */
+@property (nonatomic, nullable) NSString *titleSortOrder;
+
+/*! @brief The album title sort order */
+@property (nonatomic, nullable) NSString *albumTitleSortOrder;
+
+/*! @brief The artist sort order */
+@property (nonatomic, nullable) NSString *artistSortOrder;
+
+/*! @brief The album artist sort order */
+@property (nonatomic, nullable) NSString *albumArtistSortOrder;
+
+/*! @brief The composer sort order */
+@property (nonatomic, nullable) NSString *composerSortOrder;
+
+/*! @brief The genre sort order */
+@property (nonatomic, nullable) NSString *genreSortOrder;
+
+#pragma mark Grouping Metadata
+
+/*! @brief The grouping */
+@property (nonatomic, nullable) NSString *grouping;
+
+#pragma mark Additional Metadata
+
+/*! @brief The additional metadata */
+@property (nonatomic, nullable) NSDictionary *additionalMetadata;
+
+#pragma mark ReplayGain Metadata
+
+/*! @brief The replay gain reference loudness */
+@property (nonatomic, nullable) NSNumber *replayGainReferenceLoudness;
+
+/*! @brief The replay gain track gain */
+@property (nonatomic, nullable) NSNumber *replayGainTrackGain;
+
+/*! @brief The replay gain track peak */
+@property (nonatomic, nullable) NSNumber *replayGainTrackPeak;
+
+/*! @brief The replay gain album gain */
+@property (nonatomic, nullable) NSNumber *replayGainAlbumGain;
+
+/*! @brief The replay gain album peak */
+@property (nonatomic, nullable) NSNumber *replayGainAlbumPeak;
+
+#pragma mark Metadata Utilities
 
 /*!
  * @brief Copies all metadata from \c metadata
@@ -203,132 +237,12 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  */
 - (void)removeAllMetadata;
 
+#pragma mark Attached Pictures
 
-/*! @brief Get the name of the audio format */
-@property (nonatomic, nullable, readonly) NSString *formatName;
+/*! @brief Get all attached pictures */
+@property (nonatomic, readonly) NSSet<SFBAttachedPicture *> *attachedPictures;
 
-/*! @brief Get the total number of audio frames */
-@property (nonatomic, nullable, readonly) NSNumber *totalFrames;
-
-/*! @brief Get the number of channels */
-@property (nonatomic, nullable, readonly) NSNumber *channelsPerFrame;
-
-/*! @brief Get the number of bits per channel */
-@property (nonatomic, nullable, readonly) NSNumber *bitsPerChannel;
-
-/*! @brief Get the sample rate in Hz */
-@property (nonatomic, nullable, readonly) NSNumber *sampleRate;
-
-/*! @brief Get the duration in seconds */
-@property (nonatomic, nullable, readonly) NSNumber *duration;
-
-/*! @brief Get the audio bitrate in KiB/sec */
-@property (nonatomic, nullable, readonly) NSNumber *bitrate;
-
-
-/*! @brief Get the title */
-@property (nonatomic, nullable) NSString *title;
-
-/*! @brief Get the album title */
-@property (nonatomic, nullable) NSString *albumTitle;
-
-/*! @brief Get the artist */
-@property (nonatomic, nullable) NSString *artist;
-
-/*! @brief Get the album artist */
-@property (nonatomic, nullable) NSString *albumArtist;
-
-/*! @brief Get the genre */
-@property (nonatomic, nullable) NSString *genre;
-
-/*! @brief Get the composer */
-@property (nonatomic, nullable) NSString *composer;
-
-/*! @brief Get the release date */
-@property (nonatomic, nullable) NSString *releaseDate;
-
-/*! @brief Get the compilation flag */
-@property (nonatomic, nullable) NSNumber *compilation;
-
-/*! @brief Get the track number */
-@property (nonatomic, nullable) NSNumber *trackNumber;
-
-/*! @brief Get the track total */
-@property (nonatomic, nullable) NSNumber *trackTotal;
-
-/*! @brief Get the disc number */
-@property (nonatomic, nullable) NSNumber *discNumber;
-
-/*! @brief Get the disc total */
-@property (nonatomic, nullable) NSNumber *discTotal;
-
-/*! @brief Get the lyrics */
-@property (nonatomic, nullable) NSString *lyrics;
-
-/*! @brief Get the Beats per minute (BPM) */
-@property (nonatomic, nullable) NSNumber *bpm;
-
-/*! @brief Get the rating */
-@property (nonatomic, nullable) NSNumber *rating;
-
-/*! @brief Get the comment */
-@property (nonatomic, nullable) NSString *comment;
-
-/*! @brief Get the Media Catalog Number (MCN) */
-@property (nonatomic, nullable) NSString *mcn;
-
-/*! @brief Get the International Standard Recording Code (ISRC) */
-@property (nonatomic, nullable) NSString *isrc;
-
-/*! @brief Get the MusicBrainz release ID */
-@property (nonatomic, nullable) NSString *musicBrainzReleaseID;
-
-/*! @brief Get the MusicBrainz recording ID */
-@property (nonatomic, nullable) NSString *musicBrainzRecordingID;
-
-
-/*! @brief Get the title sort order */
-@property (nonatomic, nullable) NSString *titleSortOrder;
-
-/*! @brief Get the album title sort order */
-@property (nonatomic, nullable) NSString *albumTitleSortOrder;
-
-/*! @brief Get the artist sort order */
-@property (nonatomic, nullable) NSString *artistSortOrder;
-
-/*! @brief Get the album artist sort order */
-@property (nonatomic, nullable) NSString *albumArtistSortOrder;
-
-/*! @brief Get the composer sort order */
-@property (nonatomic, nullable) NSString *composerSortOrder;
-
-/*! @brief Get the genre sort order */
-@property (nonatomic, nullable) NSString *genreSortOrder;
-
-
-/*! @brief Get the grouping */
-@property (nonatomic, nullable) NSString *grouping;
-
-
-/*! @brief Get the additional metadata */
-@property (nonatomic, nullable) NSDictionary *additionalMetadata;
-
-
-/*! @brief Get the replay gain reference loudness */
-@property (nonatomic, nullable) NSNumber *replayGainReferenceLoudness;
-
-/*! @brief Get the replay gain track gain */
-@property (nonatomic, nullable) NSNumber *replayGainTrackGain;
-
-/*! @brief Get the replay gain track peak */
-@property (nonatomic, nullable) NSNumber *replayGainTrackPeak;
-
-/*! @brief Get the replay gain album gain */
-@property (nonatomic, nullable) NSNumber *replayGainAlbumGain;
-
-/*! @brief Get the replay gain album peak */
-@property (nonatomic, nullable) NSNumber *replayGainAlbumPeak;
-
+#pragma mark Attached Picture Utilities
 
 /*!
  * @brief Copies album artwork from \c metadata
@@ -338,9 +252,6 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
  * @see -copyMetadataFrom:
  */
 - (void)copyAttachedPicturesFrom:(SFBAudioMetadata *)metadata NS_SWIFT_NAME(copyAttachedPicturesFrom(_:));
-
-/*! @brief Get all attached pictures */
-@property (nonatomic, readonly) NSArray<SFBAttachedPicture *> *attachedPictures;
 
 /*! @brief Get all attached pictures of the specified type */
 - (NSArray<SFBAttachedPicture *> *)attachedPicturesOfType:(SFBAttachedPictureType)type NS_SWIFT_NAME(attachedPictures(ofType:));
@@ -356,6 +267,20 @@ extern NSString * const SFBAudioMetadataAttachedPicturesKey;			/*!< @brief Attac
 
 /*! @brief Remove all attached pictures */
 - (void)removeAllAttachedPictures;
+
+#pragma mark External Representation
+
+/*!
+ * @brief Copy the values contained in this object to a dictionary
+ * @return A dictionary containing this object's metadata and attached pictures
+ */
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionaryRepresentation;
+
+/*!
+ * @brief Sets the metadata and attached pictures contained in this object from a dictionary
+ * @param dictionary A dictionary containing the desired values
+ */
+- (void)setFromDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
 
 @end
 
