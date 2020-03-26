@@ -43,7 +43,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioFileErrorCode) {
  * @param error An optional pointer to an \c NSError to receive error information
  * @return An \c SFBAudioFile object or \c nil on failure
  */
-+ (nullable instancetype)audioFileWithURL:(NSURL *)url error:(NSError * _Nullable *)error;
++ (nullable instancetype)audioFileWithURL:(NSURL *)url error:(NSError * _Nullable *)error NS_SWIFT_NAME(init(readingPropertiesAndMetadataFrom:));
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -70,14 +70,14 @@ typedef NS_ENUM(NSUInteger, SFBAudioFileErrorCode) {
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES if successful, \c NO otherwise
  */
-- (BOOL)readPropertiesAndMetadataReturningError:(NSError * _Nullable *)error;
+- (BOOL)readPropertiesAndMetadataReturningError:(NSError * _Nullable *)error NS_SWIFT_NAME(readPropertiesAndMetadata());
 
 /*!
  * @brief Writes metadata
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES if successful, \c NO otherwise
  */
-- (BOOL)writeMetadataReturningError:(NSError * _Nullable *)error;
+- (BOOL)writeMetadataReturningError:(NSError * _Nullable *)error NS_SWIFT_NAME(writeMetadata());
 
 @end
 
