@@ -87,6 +87,11 @@ static NSString * const SFBChangeTrackingDictionaryNullSentinel = @"Null";
 	return count;
 }
 
+- (NSDictionary *)initialValues
+{
+	return _initial;
+}
+
 - (NSDictionary *)addedValues
 {
 	NSMutableDictionary *added = [NSMutableDictionary dictionary];
