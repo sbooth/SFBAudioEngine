@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief A dictionary-like object tracking changes from initial values */
-@interface SFBChangeTrackingDictionary<KeyType, ObjectType> : NSObject
+@interface SFBChangeTrackingDictionary<__covariant KeyType, __covariant ObjectType> : NSObject
 - (instancetype)initWithInitialValues:(NSDictionary<KeyType, ObjectType> *)initialValues;
 
 - (nullable ObjectType)objectForKey:(KeyType)key;

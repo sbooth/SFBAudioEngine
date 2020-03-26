@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief A set-like object tracking changes from initial values */
-@interface SFBChangeTrackingSet<ObjectType> : NSObject
+@interface SFBChangeTrackingSet<__covariant ObjectType> : NSObject
 - (instancetype)initWithInitialObjects:(NSArray<ObjectType> *)initialObjects;
 
 - (void)addObject:(ObjectType)object;
