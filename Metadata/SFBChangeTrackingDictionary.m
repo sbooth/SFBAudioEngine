@@ -87,6 +87,39 @@ static NSString * const SFBChangeTrackingDictionaryNullSentinel = @"Null";
 	return count;
 }
 
+- (NSDictionary *)addedValues
+{
+	NSMutableDictionary *added = [NSMutableDictionary dictionary];
+	for(id key in _changes) {
+		id obj = _changes[key];
+		if(obj != SFBChangeTrackingDictionaryNullSentinel && !_initial[key])
+			[added setObject:obj forKey:key];
+	}
+	return [added copy];
+}
+
+- (NSDictionary *)removedValues
+{
+	NSMutableDictionary *removed = [NSMutableDictionary dictionary];
+	for(id key in _changes) {
+		id obj = _changes[key];
+		if(obj == SFBChangeTrackingDictionaryNullSentinel)
+			[removed setObject:_initial[key] forKey:key];
+	}
+	return [removed copy];
+}
+
+- (NSDictionary *)updatedValues
+{
+	NSMutableDictionary *updated = [NSMutableDictionary dictionary];
+	for(id key in _changes) {
+		id obj = _changes[key];
+		if(obj != SFBChangeTrackingDictionaryNullSentinel && _initial[key])
+			[updated setObject:obj forKey:key];
+	}
+	return [updated copy];
+}
+
 - (NSDictionary *)mergedValues
 {
 	NSMutableDictionary *merged = [_initial mutableCopy];

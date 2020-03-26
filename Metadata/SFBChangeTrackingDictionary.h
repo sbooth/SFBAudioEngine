@@ -24,6 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSUInteger)count;
 
+- (NSDictionary<KeyType, ObjectType> *) initialValues;
+- (NSDictionary<KeyType, ObjectType> *) addedValues;
+- (NSDictionary<KeyType, ObjectType> *) removedValues;
+- (NSDictionary<KeyType, ObjectType> *) updatedValues;
+
 - (NSDictionary<KeyType, ObjectType> *) mergedValues;
 
 - (BOOL)hasChanges;
