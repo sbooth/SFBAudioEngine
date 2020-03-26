@@ -8,8 +8,8 @@
 #import <taglib/dsdifffile.h>
 #import <taglib/tfilestream.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBAudioProperties.h"

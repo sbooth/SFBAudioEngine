@@ -8,8 +8,8 @@
 #import <taglib/speexfile.h>
 #import <taglib/tfilestream.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 #import "SFBAudioProperties.h"
 #import "SFBOggSpeexMetadata.h"

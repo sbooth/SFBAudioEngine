@@ -8,9 +8,9 @@
 #import <taglib/flacfile.h>
 #import <taglib/tfilestream.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "CFWrapper.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"

@@ -8,9 +8,9 @@
 #import <taglib/aifffile.h>
 #import <taglib/tfilestream.h>
 
-#import "NSError+SFBURLPresentation.h"
 #import "SFBAIFFMetadata.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
+#import "NSError+SFBURLPresentation.h"
+#import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioProperties.h"
 

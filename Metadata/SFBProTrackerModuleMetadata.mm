@@ -10,8 +10,8 @@
 #import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBAudioProperties.h"
 #import "SFBProTrackerModuleMetadata.h"

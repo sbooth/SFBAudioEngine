@@ -10,8 +10,8 @@
 #import <taglib/s3mfile.h>
 #import <taglib/tfilestream.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "SFBAudioProperties.h"
 #import "SFBScreamTracker3ModuleMetadata.h"

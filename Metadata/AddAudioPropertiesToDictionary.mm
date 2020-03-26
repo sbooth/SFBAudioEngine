@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
+#import "AddAudioPropertiesToDictionary.h"
 #import "SFBAudioProperties.h"
 
 void SFB::Audio::AddAudioPropertiesToDictionary(const TagLib::AudioProperties *properties, NSMutableDictionary *dictionary)

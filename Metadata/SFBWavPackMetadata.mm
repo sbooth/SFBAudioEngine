@@ -8,9 +8,9 @@
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
 
+#import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
-#import "SFBAudioMetadata+TagLibAudioProperties.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioProperties.h"
 #import "SFBWavPackMetadata.h"
