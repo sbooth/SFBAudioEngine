@@ -6,53 +6,45 @@
 #import "SFBAudioMetadata.h"
 
 // Key names for the metadata dictionary
-NSString * const SFBAudioMetadataFormatNameKey					= @"Format Name";
-NSString * const SFBAudioMetadataTotalFramesKey					= @"Total Frames";
-NSString * const SFBAudioMetadataChannelsPerFrameKey			= @"Channels Per Frame";
-NSString * const SFBAudioMetadataBitsPerChannelKey				= @"Bits Per Channel";
-NSString * const SFBAudioMetadataSampleRateKey					= @"Sample Rate";
-NSString * const SFBAudioMetadataDurationKey					= @"Duration";
-NSString * const SFBAudioMetadataBitrateKey						= @"Bitrate";
+SFBAudioMetadataKey const SFBAudioMetadataKeyTitle							= @"Title";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle						= @"Album Title";
+SFBAudioMetadataKey const SFBAudioMetadataKeyArtist							= @"Artist";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist					= @"Album Artist";
+SFBAudioMetadataKey const SFBAudioMetadataKeyGenre							= @"Genre";
+SFBAudioMetadataKey const SFBAudioMetadataKeyComposer						= @"Composer";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate					= @"Date";
+SFBAudioMetadataKey const SFBAudioMetadataKeyCompilation					= @"Compilation";
+SFBAudioMetadataKey const SFBAudioMetadataKeyTrackNumber					= @"Track Number";
+SFBAudioMetadataKey const SFBAudioMetadataKeyTrackTotal						= @"Track Total";
+SFBAudioMetadataKey const SFBAudioMetadataKeyDiscNumber						= @"Disc Number";
+SFBAudioMetadataKey const SFBAudioMetadataKeyDiscTotal						= @"Disc Total";
+SFBAudioMetadataKey const SFBAudioMetadataKeyLyrics							= @"Lyrics";
+SFBAudioMetadataKey const SFBAudioMetadataKeyBPM							= @"BPM";
+SFBAudioMetadataKey const SFBAudioMetadataKeyRating							= @"Rating";
+SFBAudioMetadataKey const SFBAudioMetadataKeyComment						= @"Comment";
+SFBAudioMetadataKey const SFBAudioMetadataKeyISRC							= @"ISRC";
+SFBAudioMetadataKey const SFBAudioMetadataKeyMCN							= @"MCN";
+SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzReleaseID			= @"MusicBrainz Release ID";
+SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID			= @"MusicBrainz Recording ID";
 
-NSString * const SFBAudioMetadataTitleKey						= @"Title";
-NSString * const SFBAudioMetadataAlbumTitleKey					= @"Album Title";
-NSString * const SFBAudioMetadataArtistKey						= @"Artist";
-NSString * const SFBAudioMetadataAlbumArtistKey					= @"Album Artist";
-NSString * const SFBAudioMetadataGenreKey						= @"Genre";
-NSString * const SFBAudioMetadataComposerKey					= @"Composer";
-NSString * const SFBAudioMetadataReleaseDateKey					= @"Date";
-NSString * const SFBAudioMetadataCompilationKey					= @"Compilation";
-NSString * const SFBAudioMetadataTrackNumberKey					= @"Track Number";
-NSString * const SFBAudioMetadataTrackTotalKey					= @"Track Total";
-NSString * const SFBAudioMetadataDiscNumberKey					= @"Disc Number";
-NSString * const SFBAudioMetadataDiscTotalKey					= @"Disc Total";
-NSString * const SFBAudioMetadataLyricsKey						= @"Lyrics";
-NSString * const SFBAudioMetadataBPMKey							= @"BPM";
-NSString * const SFBAudioMetadataRatingKey						= @"Rating";
-NSString * const SFBAudioMetadataCommentKey						= @"Comment";
-NSString * const SFBAudioMetadataISRCKey						= @"ISRC";
-NSString * const SFBAudioMetadataMCNKey							= @"MCN";
-NSString * const SFBAudioMetadataMusicBrainzReleaseIDKey		= @"MusicBrainz Release ID";
-NSString * const SFBAudioMetadataMusicBrainzRecordingIDKey		= @"MusicBrainz Recording ID";
+SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder					= @"Title Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder			= @"Album Title Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder				= @"Artist Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder			= @"Album Artist Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyComposerSortOrder				= @"Composer Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyGenreSortOrder					= @"Genre Sort Order";
 
-NSString * const SFBAudioMetadataTitleSortOrderKey				= @"Title Sort Order";
-NSString * const SFBAudioMetadataAlbumTitleSortOrderKey			= @"Album Title Sort Order";
-NSString * const SFBAudioMetadataArtistSortOrderKey				= @"Artist Sort Order";
-NSString * const SFBAudioMetadataAlbumArtistSortOrderKey		= @"Album Artist Sort Order";
-NSString * const SFBAudioMetadataComposerSortOrderKey			= @"Composer Sort Order";
-NSString * const SFBAudioMetadataGenreSortOrderKey				= @"Genre Sort Order";
+SFBAudioMetadataKey const SFBAudioMetadataKeyGrouping						= @"Grouping";
 
-NSString * const SFBAudioMetadataGroupingKey					= @"Grouping";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAdditionalMetadata				= @"Additional Metadata";
 
-NSString * const SFBAudioMetadataAdditionalMetadataKey			= @"Additional Metadata";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainReferenceLoudness	= @"Replay Gain Reference Loudness";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackGain			= @"Replay Gain Track Gain";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackPeak			= @"Replay Gain Track Peak";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumGain			= @"Replay Gain Album Gain";
+SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumPeak			= @"Replay Gain Album Peak";
 
-NSString * const SFBAudioMetadataReplayGainReferenceLoudnessKey	= @"Replay Gain Reference Loudness";
-NSString * const SFBAudioMetadataReplayGainTrackGainKey			= @"Replay Gain Track Gain";
-NSString * const SFBAudioMetadataReplayGainTrackPeakKey			= @"Replay Gain Track Peak";
-NSString * const SFBAudioMetadataReplayGainAlbumGainKey			= @"Replay Gain Album Gain";
-NSString * const SFBAudioMetadataReplayGainAlbumPeakKey			= @"Replay Gain Album Peak";
-
-NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
+SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures				= @"Attached Pictures";
 
 @interface SFBAudioMetadata ()
 {
@@ -93,339 +85,339 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 
 - (NSString *)title
 {
-	return [_metadata objectForKey:SFBAudioMetadataTitleKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyTitle];
 }
 
 - (void)setTitle:(NSString *)title
 {
-	[_metadata setObject:title forKey:SFBAudioMetadataTitleKey];
+	[_metadata setObject:title forKey:SFBAudioMetadataKeyTitle];
 }
 
 - (NSString *)albumTitle
 {
-	return [_metadata objectForKey:SFBAudioMetadataAlbumTitleKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitle];
 }
 
 - (void)setAlbumTitle:(NSString *)albumTitle
 {
-	[_metadata setObject:albumTitle forKey:SFBAudioMetadataAlbumTitleKey];
+	[_metadata setObject:albumTitle forKey:SFBAudioMetadataKeyAlbumTitle];
 }
 
 - (NSString *)artist
 {
-	return [_metadata objectForKey:SFBAudioMetadataArtistKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyArtist];
 }
 
 - (void)setArtist:(NSString *)artist
 {
-	[_metadata setObject:artist forKey:SFBAudioMetadataArtistKey];
+	[_metadata setObject:artist forKey:SFBAudioMetadataKeyArtist];
 }
 
 - (NSString *)albumArtist
 {
-	return [_metadata objectForKey:SFBAudioMetadataAlbumArtistKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumArtist];
 }
 
 - (void)setAlbumArtist:(NSString *)albumArtist
 {
-	[_metadata setObject:albumArtist forKey:SFBAudioMetadataAlbumArtistKey];
+	[_metadata setObject:albumArtist forKey:SFBAudioMetadataKeyAlbumArtist];
 }
 
 - (NSString *)genre
 {
-	return [_metadata objectForKey:SFBAudioMetadataGenreKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyGenre];
 }
 
 - (void)setGenre:(NSString *)genre
 {
-	[_metadata setObject:genre forKey:SFBAudioMetadataGenreKey];
+	[_metadata setObject:genre forKey:SFBAudioMetadataKeyGenre];
 }
 
 - (NSString *)composer
 {
-	return [_metadata objectForKey:SFBAudioMetadataComposerKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyComposer];
 }
 
 - (void)setComposer:(NSString *)composer
 {
-	[_metadata setObject:composer forKey:SFBAudioMetadataComposerKey];
+	[_metadata setObject:composer forKey:SFBAudioMetadataKeyComposer];
 }
 
 - (NSString *)releaseDate
 {
-	return [_metadata objectForKey:SFBAudioMetadataReleaseDateKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReleaseDate];
 }
 
 - (void)setReleaseDate:(NSString *)releaseDate
 {
-	[_metadata setObject:releaseDate forKey:SFBAudioMetadataReleaseDateKey];
+	[_metadata setObject:releaseDate forKey:SFBAudioMetadataKeyReleaseDate];
 }
 
 - (NSNumber *)compilation
 {
-	return [_metadata objectForKey:SFBAudioMetadataCompilationKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyCompilation];
 }
 
 - (void)setCompilation:(NSNumber *)compilation
 {
-	[_metadata setObject:compilation forKey:SFBAudioMetadataCompilationKey];
+	[_metadata setObject:compilation forKey:SFBAudioMetadataKeyCompilation];
 }
 
 - (NSNumber *)trackNumber
 {
-	return [_metadata objectForKey:SFBAudioMetadataTrackNumberKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyTrackNumber];
 }
 
 - (void)setTrackNumber:(NSNumber *)trackNumber
 {
-	[_metadata setObject:trackNumber forKey:SFBAudioMetadataTrackNumberKey];
+	[_metadata setObject:trackNumber forKey:SFBAudioMetadataKeyTrackNumber];
 }
 
 - (NSNumber *)trackTotal
 {
-	return [_metadata objectForKey:SFBAudioMetadataTrackTotalKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyTrackTotal];
 }
 
 - (void)setTrackTotal:(NSNumber *)trackTotal
 {
-	[_metadata setObject:trackTotal forKey:SFBAudioMetadataTrackTotalKey];
+	[_metadata setObject:trackTotal forKey:SFBAudioMetadataKeyTrackTotal];
 }
 
 - (NSNumber *)discNumber
 {
-	return [_metadata objectForKey:SFBAudioMetadataDiscNumberKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyDiscNumber];
 }
 
 - (void)setDiscNumber:(NSNumber *)discNumber
 {
-	[_metadata setObject:discNumber forKey:SFBAudioMetadataDiscNumberKey];
+	[_metadata setObject:discNumber forKey:SFBAudioMetadataKeyDiscNumber];
 }
 
 - (NSNumber *)discTotal
 {
-	return [_metadata objectForKey:SFBAudioMetadataDiscTotalKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyDiscTotal];
 }
 
 - (void)setDiscTotal:(NSNumber *)discTotal
 {
-	[_metadata setObject:discTotal forKey:SFBAudioMetadataDiscTotalKey];
+	[_metadata setObject:discTotal forKey:SFBAudioMetadataKeyDiscTotal];
 }
 
 - (NSString *)lyrics
 {
-	return [_metadata objectForKey:SFBAudioMetadataLyricsKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyLyrics];
 }
 
 - (void)setLyrics:(NSString *)lyrics
 {
-	[_metadata setObject:lyrics forKey:SFBAudioMetadataLyricsKey];
+	[_metadata setObject:lyrics forKey:SFBAudioMetadataKeyLyrics];
 }
 
 - (NSNumber *)bpm
 {
-	return [_metadata objectForKey:SFBAudioMetadataBPMKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyBPM];
 }
 
 - (void)setBpm:(NSNumber *)bpm
 {
-	[_metadata setObject:bpm forKey:SFBAudioMetadataBPMKey];
+	[_metadata setObject:bpm forKey:SFBAudioMetadataKeyBPM];
 }
 
 - (NSNumber *)rating
 {
-	return [_metadata objectForKey:SFBAudioMetadataRatingKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyRating];
 }
 
 - (void)setRating:(NSNumber *)rating
 {
-	[_metadata setObject:rating forKey:SFBAudioMetadataRatingKey];
+	[_metadata setObject:rating forKey:SFBAudioMetadataKeyRating];
 }
 
 - (NSString *)comment
 {
-	return [_metadata objectForKey:SFBAudioMetadataCommentKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyComment];
 }
 
 - (void)setComment:(NSString *)comment
 {
-	[_metadata setObject:comment forKey:SFBAudioMetadataCommentKey];
+	[_metadata setObject:comment forKey:SFBAudioMetadataKeyComment];
 }
 
 - (NSString *)isrc
 {
-	return [_metadata objectForKey:SFBAudioMetadataISRCKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyISRC];
 }
 
 - (void)setIsrc:(NSString *)isrc
 {
-	[_metadata setObject:isrc forKey:SFBAudioMetadataISRCKey];
+	[_metadata setObject:isrc forKey:SFBAudioMetadataKeyISRC];
 }
 
 - (NSString *)mcn
 {
-	return [_metadata objectForKey:SFBAudioMetadataMCNKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyMCN];
 }
 
 - (void)setMcn:(NSString *)mcn
 {
-	[_metadata setObject:mcn forKey:SFBAudioMetadataMCNKey];
+	[_metadata setObject:mcn forKey:SFBAudioMetadataKeyMCN];
 }
 
 - (NSString *)musicBrainzReleaseID
 {
-	return [_metadata objectForKey:SFBAudioMetadataMusicBrainzReleaseIDKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyMusicBrainzReleaseID];
 }
 
 - (void)setMusicBrainzReleaseID:(NSString *)musicBrainzReleaseID
 {
-	[_metadata setObject:musicBrainzReleaseID forKey:SFBAudioMetadataMusicBrainzReleaseIDKey];
+	[_metadata setObject:musicBrainzReleaseID forKey:SFBAudioMetadataKeyMusicBrainzReleaseID];
 }
 
 - (NSString *)musicBrainzRecordingID
 {
-	return [_metadata objectForKey:SFBAudioMetadataMusicBrainzRecordingIDKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyMusicBrainzRecordingID];
 }
 
 - (void)setMusicBrainzRecordingID:(NSString *)musicBrainzRecordingID
 {
-	[_metadata setObject:musicBrainzRecordingID forKey:SFBAudioMetadataMusicBrainzRecordingIDKey];
+	[_metadata setObject:musicBrainzRecordingID forKey:SFBAudioMetadataKeyMusicBrainzRecordingID];
 }
 
 #pragma mark Sorting Metadata
 
 - (NSString *)titleSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataTitleSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyTitleSortOrder];
 }
 - (void)setTitleSortOrder:(NSString *)titleSortOrder
 {
-	[_metadata setObject:titleSortOrder forKey:SFBAudioMetadataTitleSortOrderKey];
+	[_metadata setObject:titleSortOrder forKey:SFBAudioMetadataKeyTitleSortOrder];
 }
 
 - (NSString *)albumTitleSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataAlbumTitleSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
 }
 
 - (void)setAlbumTitleSortOrder:(NSString *)albumTitleSortOrder
 {
-	[_metadata setObject:albumTitleSortOrder forKey:SFBAudioMetadataAlbumTitleSortOrderKey];
+	[_metadata setObject:albumTitleSortOrder forKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
 }
 
 - (NSString *)artistSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataArtistSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyArtistSortOrder];
 }
 
 - (void)setArtistSortOrder:(NSString *)artistSortOrder
 {
-	[_metadata setObject:artistSortOrder forKey:SFBAudioMetadataArtistSortOrderKey];
+	[_metadata setObject:artistSortOrder forKey:SFBAudioMetadataKeyArtistSortOrder];
 }
 
 - (NSString *)albumArtistSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataAlbumArtistSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyAlbumArtistSortOrder];
 }
 
 - (void)setAlbumArtistSortOrder:(NSString *)albumArtistSortOrder
 {
-	[_metadata setObject:albumArtistSortOrder forKey:SFBAudioMetadataAlbumArtistSortOrderKey];
+	[_metadata setObject:albumArtistSortOrder forKey:SFBAudioMetadataKeyAlbumArtistSortOrder];
 }
 
 - (NSString *)composerSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataComposerSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyComposerSortOrder];
 }
 
 - (void)setComposerSortOrder:(NSString *)composerSortOrder
 {
-	[_metadata setObject:composerSortOrder forKey:SFBAudioMetadataComposerSortOrderKey];
+	[_metadata setObject:composerSortOrder forKey:SFBAudioMetadataKeyComposerSortOrder];
 }
 
 - (NSString *)genreSortOrder
 {
-	return [_metadata objectForKey:SFBAudioMetadataGenreSortOrderKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyGenreSortOrder];
 }
 
 - (void)setGenreSortOrder:(NSString *)genreSortOrder
 {
-	[_metadata setObject:genreSortOrder forKey:SFBAudioMetadataGenreSortOrderKey];
+	[_metadata setObject:genreSortOrder forKey:SFBAudioMetadataKeyGenreSortOrder];
 }
 
 #pragma mark Grouping Metadata
 
 - (NSString *)grouping
 {
-	return [_metadata objectForKey:SFBAudioMetadataGroupingKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyGrouping];
 }
 
 - (void)setGrouping:(NSString *)grouping
 {
-	[_metadata setObject:grouping forKey:SFBAudioMetadataGroupingKey];
+	[_metadata setObject:grouping forKey:SFBAudioMetadataKeyGrouping];
 }
 
 #pragma mark Additional Metadata
 
 - (NSDictionary *)additionalMetadata
 {
-	return [_metadata objectForKey:SFBAudioMetadataAdditionalMetadataKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyAdditionalMetadata];
 }
 
 - (void)setAdditionalMetadata:(NSDictionary *)additionalMetadata
 {
-	[_metadata setObject:[additionalMetadata copy] forKey:SFBAudioMetadataAdditionalMetadataKey];
+	[_metadata setObject:[additionalMetadata copy] forKey:SFBAudioMetadataKeyAdditionalMetadata];
 }
 
 #pragma mark Replay Gain Metadata
 
 - (NSNumber *)replayGainReferenceLoudness
 {
-	return [_metadata objectForKey:SFBAudioMetadataReplayGainReferenceLoudnessKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainReferenceLoudness];
 }
 
 - (void)setReplayGainReferenceLoudness:(NSNumber *)replayGainReferenceLoudness
 {
-	[_metadata setObject:replayGainReferenceLoudness forKey:SFBAudioMetadataReplayGainReferenceLoudnessKey];
+	[_metadata setObject:replayGainReferenceLoudness forKey:SFBAudioMetadataKeyReplayGainReferenceLoudness];
 }
 
 - (NSNumber *)replayGainTrackGain
 {
-	return [_metadata objectForKey:SFBAudioMetadataReplayGainTrackGainKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainTrackGain];
 }
 
 - (void)setReplayGainTrackGain:(NSNumber *)replayGainTrackGain
 {
-	[_metadata setObject:replayGainTrackGain forKey:SFBAudioMetadataReplayGainTrackGainKey];
+	[_metadata setObject:replayGainTrackGain forKey:SFBAudioMetadataKeyReplayGainTrackGain];
 }
 
 - (NSNumber *)replayGainTrackPeak
 {
-	return [_metadata objectForKey:SFBAudioMetadataReplayGainTrackPeakKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainTrackPeak];
 }
 
 - (void)setReplayGainTrackPeak:(NSNumber *)replayGainTrackPeak
 {
-	[_metadata setObject:replayGainTrackPeak forKey:SFBAudioMetadataReplayGainTrackPeakKey];
+	[_metadata setObject:replayGainTrackPeak forKey:SFBAudioMetadataKeyReplayGainTrackPeak];
 }
 
 - (NSNumber *)replayGainAlbumGain
 {
-	return [_metadata objectForKey:SFBAudioMetadataReplayGainAlbumGainKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainAlbumGain];
 }
 
 - (void)setReplayGainAlbumGain:(NSNumber *)replayGainAlbumGain
 {
-	[_metadata setObject:replayGainAlbumGain forKey:SFBAudioMetadataReplayGainAlbumGainKey];
+	[_metadata setObject:replayGainAlbumGain forKey:SFBAudioMetadataKeyReplayGainAlbumGain];
 }
 
 - (NSNumber *)replayGainAlbumPeak
 {
-	return [_metadata objectForKey:SFBAudioMetadataReplayGainAlbumPeakKey];
+	return [_metadata objectForKey:SFBAudioMetadataKeyReplayGainAlbumPeak];
 }
 
 - (void)setReplayGainAlbumPeak:(NSNumber *)replayGainAlbumPeak
 {
-	[_metadata setObject:replayGainAlbumPeak forKey:SFBAudioMetadataReplayGainAlbumPeakKey];
+	[_metadata setObject:replayGainAlbumPeak forKey:SFBAudioMetadataKeyReplayGainAlbumPeak];
 }
 
 #pragma mark Metadata Utilities
@@ -594,51 +586,51 @@ NSString * const SFBAudioMetadataAttachedPicturesKey			= @"Attached Pictures";
 	NSMutableArray *pictures = [NSMutableArray arrayWithCapacity:_pictures.count];
 	for(SFBAttachedPicture *picture in _pictures)
 		[pictures addObject:picture.dictionaryRepresentation];
-	dictionary[SFBAudioMetadataAttachedPicturesKey] = pictures;
+	dictionary[SFBAudioMetadataKeyAttachedPictures] = pictures;
 	return dictionary;
 }
 
 - (void)setFromDictionaryRepresentation:(NSDictionary *)dictionary
 {
-	self.title = dictionary[SFBAudioMetadataTitleKey];
-	self.albumTitle = dictionary[SFBAudioMetadataAlbumTitleKey];
-	self.artist = dictionary[SFBAudioMetadataArtistKey];
-	self.albumArtist = dictionary[SFBAudioMetadataAlbumArtistKey];
-	self.genre = dictionary[SFBAudioMetadataGenreKey];
-	self.composer = dictionary[SFBAudioMetadataComposerKey];
-	self.releaseDate = dictionary[SFBAudioMetadataReleaseDateKey];
-	self.compilation = dictionary[SFBAudioMetadataCompilationKey];
-	self.trackNumber = dictionary[SFBAudioMetadataTrackNumberKey];
-	self.trackTotal = dictionary[SFBAudioMetadataTrackTotalKey];
-	self.discNumber = dictionary[SFBAudioMetadataDiscNumberKey];
-	self.discTotal = dictionary[SFBAudioMetadataDiscTotalKey];
-	self.lyrics = dictionary[SFBAudioMetadataLyricsKey];
-	self.bpm = dictionary[SFBAudioMetadataBPMKey];
-	self.rating = dictionary[SFBAudioMetadataRatingKey];
-	self.comment = dictionary[SFBAudioMetadataCommentKey];
-	self.isrc = dictionary[SFBAudioMetadataISRCKey];
-	self.mcn = dictionary[SFBAudioMetadataMCNKey];
-	self.musicBrainzReleaseID = dictionary[SFBAudioMetadataMusicBrainzReleaseIDKey];
-	self.musicBrainzRecordingID = dictionary[SFBAudioMetadataMusicBrainzRecordingIDKey];
+	self.title = dictionary[SFBAudioMetadataKeyTitle];
+	self.albumTitle = dictionary[SFBAudioMetadataKeyAlbumTitle];
+	self.artist = dictionary[SFBAudioMetadataKeyArtist];
+	self.albumArtist = dictionary[SFBAudioMetadataKeyAlbumArtist];
+	self.genre = dictionary[SFBAudioMetadataKeyGenre];
+	self.composer = dictionary[SFBAudioMetadataKeyComposer];
+	self.releaseDate = dictionary[SFBAudioMetadataKeyReleaseDate];
+	self.compilation = dictionary[SFBAudioMetadataKeyCompilation];
+	self.trackNumber = dictionary[SFBAudioMetadataKeyTrackNumber];
+	self.trackTotal = dictionary[SFBAudioMetadataKeyTrackTotal];
+	self.discNumber = dictionary[SFBAudioMetadataKeyDiscNumber];
+	self.discTotal = dictionary[SFBAudioMetadataKeyDiscTotal];
+	self.lyrics = dictionary[SFBAudioMetadataKeyLyrics];
+	self.bpm = dictionary[SFBAudioMetadataKeyBPM];
+	self.rating = dictionary[SFBAudioMetadataKeyRating];
+	self.comment = dictionary[SFBAudioMetadataKeyComment];
+	self.isrc = dictionary[SFBAudioMetadataKeyISRC];
+	self.mcn = dictionary[SFBAudioMetadataKeyMCN];
+	self.musicBrainzReleaseID = dictionary[SFBAudioMetadataKeyMusicBrainzReleaseID];
+	self.musicBrainzRecordingID = dictionary[SFBAudioMetadataKeyMusicBrainzRecordingID];
 
-	self.titleSortOrder = dictionary[SFBAudioMetadataTitleSortOrderKey];
-	self.albumTitleSortOrder = dictionary[SFBAudioMetadataAlbumTitleSortOrderKey];
-	self.artistSortOrder = dictionary[SFBAudioMetadataArtistSortOrderKey];
-	self.albumArtistSortOrder = dictionary[SFBAudioMetadataAlbumArtistSortOrderKey];
-	self.composerSortOrder = dictionary[SFBAudioMetadataComposerSortOrderKey];
-	self.genreSortOrder = dictionary[SFBAudioMetadataGenreSortOrderKey];
+	self.titleSortOrder = dictionary[SFBAudioMetadataKeyTitleSortOrder];
+	self.albumTitleSortOrder = dictionary[SFBAudioMetadataKeyAlbumTitleSortOrder];
+	self.artistSortOrder = dictionary[SFBAudioMetadataKeyArtistSortOrder];
+	self.albumArtistSortOrder = dictionary[SFBAudioMetadataKeyAlbumArtistSortOrder];
+	self.composerSortOrder = dictionary[SFBAudioMetadataKeyComposerSortOrder];
+	self.genreSortOrder = dictionary[SFBAudioMetadataKeyGenreSortOrder];
 
-	self.grouping = dictionary[SFBAudioMetadataGroupingKey];
+	self.grouping = dictionary[SFBAudioMetadataKeyGrouping];
 
-	self.additionalMetadata = dictionary[SFBAudioMetadataAdditionalMetadataKey];
+	self.additionalMetadata = dictionary[SFBAudioMetadataKeyAdditionalMetadata];
 
-	self.replayGainReferenceLoudness = dictionary[SFBAudioMetadataReplayGainReferenceLoudnessKey];
-	self.replayGainTrackGain = dictionary[SFBAudioMetadataReplayGainTrackGainKey];
-	self.replayGainTrackPeak = dictionary[SFBAudioMetadataReplayGainTrackPeakKey];
-	self.replayGainAlbumGain = dictionary[SFBAudioMetadataReplayGainAlbumGainKey];
-	self.replayGainAlbumPeak = dictionary[SFBAudioMetadataReplayGainAlbumPeakKey];
+	self.replayGainReferenceLoudness = dictionary[SFBAudioMetadataKeyReplayGainReferenceLoudness];
+	self.replayGainTrackGain = dictionary[SFBAudioMetadataKeyReplayGainTrackGain];
+	self.replayGainTrackPeak = dictionary[SFBAudioMetadataKeyReplayGainTrackPeak];
+	self.replayGainAlbumGain = dictionary[SFBAudioMetadataKeyReplayGainAlbumGain];
+	self.replayGainAlbumPeak = dictionary[SFBAudioMetadataKeyReplayGainAlbumPeak];
 
-	NSArray *pictures = dictionary[SFBAudioMetadataAttachedPicturesKey];
+	NSArray *pictures = dictionary[SFBAudioMetadataKeyAttachedPictures];
 	for(NSDictionary *picture in pictures)
 		[self attachPicture:[[SFBAttachedPicture alloc] initWithDictionaryRepresentation:picture]];
 }
