@@ -57,15 +57,15 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"DSD Stream" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"DSD Stream" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->bitsPerSample())
-			propertiesDictionary[SFBAudioPropertiesBitsPerChannelKey] = @(properties->bitsPerSample());
+			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->bitsPerSample());
 		if(properties->sampleCount())
-			propertiesDictionary[SFBAudioPropertiesTotalFramesKey] = @(properties->sampleCount());
+			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->sampleCount());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

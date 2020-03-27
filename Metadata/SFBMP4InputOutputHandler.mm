@@ -57,19 +57,19 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP4" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"MP4" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->bitsPerSample())
-			propertiesDictionary[SFBAudioPropertiesBitsPerChannelKey] = @(properties->bitsPerSample());
+			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->bitsPerSample());
 		switch(properties->codec()) {
 			case TagLib::MP4::AudioProperties::AAC:
-				propertiesDictionary[SFBAudioPropertiesFormatNameKey] = @"AAC";
+				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"AAC";
 				break;
 			case TagLib::MP4::AudioProperties::ALAC:
-				propertiesDictionary[SFBAudioPropertiesFormatNameKey] = @"Apple Lossless";
+				propertiesDictionary[SFBAudioPropertiesKeyFormatName] = @"Apple Lossless";
 				break;
 			default:
 				break;

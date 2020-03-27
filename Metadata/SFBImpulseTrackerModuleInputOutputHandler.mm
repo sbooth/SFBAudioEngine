@@ -59,7 +59,7 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Impulse Tracker Module" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Impulse Tracker Module" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties())
 		SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 

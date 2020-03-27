@@ -57,7 +57,7 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Ogg Speex" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Ogg Speex" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties())
 		SFB::Audio::AddAudioPropertiesToDictionary(file.audioProperties(), propertiesDictionary);
 

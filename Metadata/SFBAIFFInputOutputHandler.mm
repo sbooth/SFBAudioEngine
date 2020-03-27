@@ -57,15 +57,15 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"AIFF" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"AIFF" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->sampleWidth())
-			propertiesDictionary[SFBAudioPropertiesBitsPerChannelKey] = @(properties->sampleWidth());
+			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->sampleWidth());
 		if(properties->sampleFrames())
-			propertiesDictionary[SFBAudioPropertiesTotalFramesKey] = @(properties->sampleFrames());
+			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->sampleFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

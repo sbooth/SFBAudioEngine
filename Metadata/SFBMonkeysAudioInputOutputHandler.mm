@@ -58,15 +58,15 @@
 		return NO;
 	}
 
-	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Monkey's Audio" forKey:SFBAudioPropertiesFormatNameKey];
+	NSMutableDictionary *propertiesDictionary = [NSMutableDictionary dictionaryWithObject:@"Monkey's Audio" forKey:SFBAudioPropertiesKeyFormatName];
 	if(file.audioProperties()) {
 		auto properties = file.audioProperties();
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->bitsPerSample())
-			propertiesDictionary[SFBAudioPropertiesBitsPerChannelKey] = @(properties->bitsPerSample());
+			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->bitsPerSample());
 		if(properties->sampleFrames())
-			propertiesDictionary[SFBAudioPropertiesTotalFramesKey] = @(properties->sampleFrames());
+			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->sampleFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

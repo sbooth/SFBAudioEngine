@@ -6,13 +6,13 @@
 #import "SFBAudioProperties.h"
 
 // Key names for the properties dictionary
-NSString * const SFBAudioPropertiesFormatNameKey				= @"Format Name";
-NSString * const SFBAudioPropertiesTotalFramesKey				= @"Total Frames";
-NSString * const SFBAudioPropertiesChannelsPerFrameKey			= @"Channels Per Frame";
-NSString * const SFBAudioPropertiesBitsPerChannelKey			= @"Bits Per Channel";
-NSString * const SFBAudioPropertiesSampleRateKey				= @"Sample Rate";
-NSString * const SFBAudioPropertiesDurationKey					= @"Duration";
-NSString * const SFBAudioPropertiesBitrateKey					= @"Bitrate";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName			= @"Format Name";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyTotalFrames		= @"Total Frames";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelsPerFrame	= @"Channels Per Frame";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel		= @"Bits Per Channel";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate			= @"Sample Rate";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration			= @"Duration";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 
 @interface SFBAudioProperties ()
 {
@@ -27,13 +27,13 @@ NSString * const SFBAudioPropertiesBitrateKey					= @"Bitrate";
 {
 	if((self = [super init])) {
 		NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-		dictionary[SFBAudioPropertiesFormatNameKey] 		= dictionaryRepresentation[SFBAudioPropertiesFormatNameKey];
-		dictionary[SFBAudioPropertiesTotalFramesKey] 		= dictionaryRepresentation[SFBAudioPropertiesTotalFramesKey];
-		dictionary[SFBAudioPropertiesChannelsPerFrameKey] 	= dictionaryRepresentation[SFBAudioPropertiesChannelsPerFrameKey];
-		dictionary[SFBAudioPropertiesBitsPerChannelKey] 	= dictionaryRepresentation[SFBAudioPropertiesBitsPerChannelKey];
-		dictionary[SFBAudioPropertiesSampleRateKey] 		= dictionaryRepresentation[SFBAudioPropertiesSampleRateKey];
-		dictionary[SFBAudioPropertiesDurationKey] 			= dictionaryRepresentation[SFBAudioPropertiesDurationKey];
-		dictionary[SFBAudioPropertiesBitrateKey] 			= dictionaryRepresentation[SFBAudioPropertiesBitrateKey];
+		dictionary[SFBAudioPropertiesKeyFormatName] 		= dictionaryRepresentation[SFBAudioPropertiesKeyFormatName];
+		dictionary[SFBAudioPropertiesKeyTotalFrames] 		= dictionaryRepresentation[SFBAudioPropertiesKeyTotalFrames];
+		dictionary[SFBAudioPropertiesKeyChannelsPerFrame] 	= dictionaryRepresentation[SFBAudioPropertiesKeyChannelsPerFrame];
+		dictionary[SFBAudioPropertiesKeyBitsPerChannel] 	= dictionaryRepresentation[SFBAudioPropertiesKeyBitsPerChannel];
+		dictionary[SFBAudioPropertiesKeySampleRate] 		= dictionaryRepresentation[SFBAudioPropertiesKeySampleRate];
+		dictionary[SFBAudioPropertiesKeyDuration] 			= dictionaryRepresentation[SFBAudioPropertiesKeyDuration];
+		dictionary[SFBAudioPropertiesKeyBitrate] 			= dictionaryRepresentation[SFBAudioPropertiesKeyBitrate];
 		_properties = [dictionary copy];
 	}
 	return self;
@@ -47,37 +47,37 @@ NSString * const SFBAudioPropertiesBitrateKey					= @"Bitrate";
 
 - (NSString *)formatName
 {
-	return [_properties objectForKey:SFBAudioPropertiesFormatNameKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyFormatName];
 }
 
 - (NSNumber *)totalFrames
 {
-	return [_properties objectForKey:SFBAudioPropertiesTotalFramesKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyTotalFrames];
 }
 
 - (NSNumber *)channelsPerFrame
 {
-	return [_properties objectForKey:SFBAudioPropertiesChannelsPerFrameKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyChannelsPerFrame];
 }
 
 - (NSNumber *)bitsPerChannel
 {
-	return [_properties objectForKey:SFBAudioPropertiesBitsPerChannelKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyBitsPerChannel];
 }
 
 - (NSNumber *)sampleRate
 {
-	return [_properties objectForKey:SFBAudioPropertiesSampleRateKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeySampleRate];
 }
 
 - (NSNumber *)duration
 {
-	return [_properties objectForKey:SFBAudioPropertiesDurationKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyDuration];
 }
 
 - (NSNumber *)bitrate
 {
-	return [_properties objectForKey:SFBAudioPropertiesBitrateKey];
+	return [_properties objectForKey:SFBAudioPropertiesKeyBitrate];
 }
 
 - (NSDictionary *)dictionaryRepresentation
