@@ -11,9 +11,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /*! @name \c SFBAttachedPicture Dictionary Keys */
 //@{
-extern NSString * const SFBAttachedPictureImageDataKey;		/*!< @brief Raw image data (\c NSData) */
-extern NSString * const SFBAttachedPictureTypeKey;			/*!< @brief Picture type (\c NSNumber) */
-extern NSString * const SFBAttachedPictureDescriptionKey;	/*!< @brief Picture description (\c NSString) */
+typedef NSString * SFBAttachedPictureKey NS_TYPED_ENUM;
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyImageData;		/*!< @brief Raw image data (\c NSData) */
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyType;			/*!< @brief Picture type (\c NSNumber) */
+extern SFBAttachedPictureKey const SFBAttachedPictureKeyDescription;	/*!< @brief Picture description (\c NSString) */
 //@}
 
 
@@ -78,14 +79,14 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  * @discussion Returns \c nil if \c dictionaryRepresentation does not contain image data
  * @param dictionaryRepresentation A dictionary containing the desired values
  */
-- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionaryRepresentation;
+- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<SFBAttachedPictureKey, id> *)dictionaryRepresentation;
 
 
 /*!
  * @brief Copy the values contained in this object to a dictionary
  * @return A dictionary containing this object's artwork information
  */
-@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionaryRepresentation;
+@property (nonatomic, readonly) NSDictionary<SFBAttachedPictureKey, id> *dictionaryRepresentation;
 
 
 /*! @brief The raw image data */

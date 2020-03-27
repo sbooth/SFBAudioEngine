@@ -6,9 +6,9 @@
 #import "SFBAttachedPicture.h"
 
 // Key names for the metadata dictionary
-NSString * const SFBAttachedPictureImageDataKey				= @"Image Data";
-NSString * const SFBAttachedPictureTypeKey					= @"Type";
-NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
+SFBAttachedPictureKey const SFBAttachedPictureKeyImageData		= @"Image Data";
+SFBAttachedPictureKey const SFBAttachedPictureKeyType			= @"Type";
+SFBAttachedPictureKey const SFBAttachedPictureKeyDescription	= @"Description";
 
 @implementation SFBAttachedPicture
 
@@ -36,12 +36,12 @@ NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
 
 - (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation
 {
-	if(!dictionaryRepresentation[SFBAttachedPictureImageDataKey])
+	if(!dictionaryRepresentation[SFBAttachedPictureKeyImageData])
 		return nil;
 
-	return [self initWithImageData:dictionaryRepresentation[SFBAttachedPictureImageDataKey]
-							  type:[dictionaryRepresentation[SFBAttachedPictureTypeKey] unsignedIntegerValue]
-					   description:dictionaryRepresentation[SFBAttachedPictureDescriptionKey]];
+	return [self initWithImageData:dictionaryRepresentation[SFBAttachedPictureKeyImageData]
+							  type:[dictionaryRepresentation[SFBAttachedPictureKeyType] unsignedIntegerValue]
+					   description:dictionaryRepresentation[SFBAttachedPictureKeyDescription]];
 }
 
 - (BOOL)isEqual:(id)object
@@ -66,9 +66,9 @@ NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
 
 - (NSDictionary *)dictionaryRepresentation
 {
-	return @{ SFBAttachedPictureImageDataKey: self.imageData,
-			  SFBAttachedPictureTypeKey: @(self.pictureType),
-			  SFBAttachedPictureDescriptionKey: self.pictureDescription };
+	return @{ SFBAttachedPictureKeyImageData: self.imageData,
+			  SFBAttachedPictureKeyType: @(self.pictureType),
+			  SFBAttachedPictureKeyDescription: self.pictureDescription };
 }
 
 @end
