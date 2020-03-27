@@ -34,14 +34,14 @@ NSString * const SFBAttachedPictureDescriptionKey			= @"Description";
 	return self;
 }
 
-- (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionary
+- (instancetype)initWithDictionaryRepresentation:(NSDictionary *)dictionaryRepresentation
 {
-	if(!dictionary[SFBAttachedPictureImageDataKey])
+	if(!dictionaryRepresentation[SFBAttachedPictureImageDataKey])
 		return nil;
 
-	return [self initWithImageData:dictionary[SFBAttachedPictureImageDataKey]
-							  type:[dictionary[SFBAttachedPictureTypeKey] unsignedIntegerValue]
-					   description:dictionary[SFBAttachedPictureDescriptionKey]];
+	return [self initWithImageData:dictionaryRepresentation[SFBAttachedPictureImageDataKey]
+							  type:[dictionaryRepresentation[SFBAttachedPictureTypeKey] unsignedIntegerValue]
+					   description:dictionaryRepresentation[SFBAttachedPictureDescriptionKey]];
 }
 
 - (BOOL)isEqual:(id)object

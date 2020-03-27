@@ -75,10 +75,10 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 
 /*!
  * @brief Returns an initialized \c SFBAttachedPicture object or \c nil on error
- * @discussion Returns \c nil if \c dictionary does not contain image data
- * @param dictionary A dictionary containing the desired values
+ * @discussion Returns \c nil if \c dictionaryRepresentation does not contain image data
+ * @param dictionaryRepresentation A dictionary containing the desired values
  */
-- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionary;
+- (nullable instancetype)initWithDictionaryRepresentation:(NSDictionary<NSString *, id> *)dictionaryRepresentation;
 
 
 /*!
