@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 extern NSErrorDomain const SFBAudioFileErrorDomain;
 
 /*! @brief Possible \c NSError  error codes used by \c SFBAudioFile */
-typedef NS_ENUM(NSUInteger, SFBAudioFileErrorCode) {
+typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	SFBAudioFileErrorCodeFileFormatNotRecognized		= 0,	/*!< File format not recognized */
 	SFBAudioFileErrorCodeFileFormatNotSupported			= 1,	/*!< File format not supported */
 	SFBAudioFileErrorCodeInputOutput					= 2		/*!< Input/output error */
