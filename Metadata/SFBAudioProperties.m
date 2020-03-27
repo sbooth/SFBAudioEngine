@@ -42,9 +42,7 @@ NSString * const SFBAudioPropertiesBitrateKey					= @"Bitrate";
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
 {
 #pragma unused(zone)
-	SFBAudioProperties *result = [[[self class] alloc] init];
-	result->_properties = _properties;
-	return result;
+	return self;
 }
 
 - (NSString *)formatName
