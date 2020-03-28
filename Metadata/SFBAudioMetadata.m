@@ -52,14 +52,66 @@ SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures				= @"Attached Pi
 	NSMutableDictionary *_metadata;
 	NSMutableSet *_pictures;
 }
++ (id)sharedKeySet;
 @end
 
 @implementation SFBAudioMetadata
 
+static id _sharedKeySet;
+
++ (id)sharedKeySet
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		_sharedKeySet = [NSDictionary sharedKeySetForKeys:@[
+			SFBAudioMetadataKeyTitle,
+			SFBAudioMetadataKeyAlbumTitle,
+			SFBAudioMetadataKeyArtist,
+			SFBAudioMetadataKeyAlbumArtist,
+			SFBAudioMetadataKeyGenre,
+			SFBAudioMetadataKeyComposer,
+			SFBAudioMetadataKeyReleaseDate,
+			SFBAudioMetadataKeyCompilation,
+			SFBAudioMetadataKeyTrackNumber,
+			SFBAudioMetadataKeyTrackTotal,
+			SFBAudioMetadataKeyDiscNumber,
+			SFBAudioMetadataKeyDiscTotal,
+			SFBAudioMetadataKeyLyrics,
+			SFBAudioMetadataKeyBPM,
+			SFBAudioMetadataKeyRating,
+			SFBAudioMetadataKeyComment,
+			SFBAudioMetadataKeyISRC,
+			SFBAudioMetadataKeyMCN,
+			SFBAudioMetadataKeyMusicBrainzReleaseID,
+			SFBAudioMetadataKeyMusicBrainzRecordingID,
+
+			SFBAudioMetadataKeyTitleSortOrder,
+			SFBAudioMetadataKeyAlbumTitleSortOrder,
+			SFBAudioMetadataKeyArtistSortOrder,
+			SFBAudioMetadataKeyAlbumArtistSortOrder,
+			SFBAudioMetadataKeyComposerSortOrder,
+			SFBAudioMetadataKeyGenreSortOrder,
+
+			SFBAudioMetadataKeyGrouping,
+
+			SFBAudioMetadataKeyAdditionalMetadata,
+
+			SFBAudioMetadataKeyReplayGainReferenceLoudness,
+			SFBAudioMetadataKeyReplayGainTrackGain,
+			SFBAudioMetadataKeyReplayGainTrackPeak,
+			SFBAudioMetadataKeyReplayGainAlbumGain,
+			SFBAudioMetadataKeyReplayGainAlbumPeak,
+
+			SFBAudioMetadataKeyAttachedPictures
+		]];
+	});
+	return _sharedKeySet;
+}
+
 - (instancetype)init
 {
 	if((self = [super init])) {
-		_metadata = [NSMutableDictionary dictionary];
+		_metadata = [NSMutableDictionary dictionaryWithSharedKeySet:[SFBAudioMetadata sharedKeySet]];
 		_pictures = [NSMutableSet set];
 	}
 	return self;
