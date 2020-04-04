@@ -353,13 +353,14 @@ namespace {
 
 	// Converter takes ownership of decoder
 	SFB::Audio::Converter converter(std::move(decoder), outputFormat);
-	if(!converter.Open(&err)) {
+
+	const UInt32 bufferSizeFrames = 512;
+	if(!converter.Open(bufferSizeFrames, &err)) {
 		if(error)
 			*error = (__bridge_transfer NSError *)err.Relinquish();
 		return NO;
 	}
 
-	const UInt32 bufferSizeFrames = 512;
 	SFB::Audio::BufferList outputBuffer(outputFormat, bufferSizeFrames);
 
 	bool isStereo = (2 == outputFormat.mChannelsPerFrame);

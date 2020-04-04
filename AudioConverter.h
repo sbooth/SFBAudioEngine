@@ -56,11 +56,12 @@ namespace SFB {
 
 			/*!
 			 * @brief Open the converter's \c Decoder and set up for conversion
+			 * @param preferredBufferSizeFrames The anticipated number of frames to be requested in \c ConvertAudio
 			 * @param error An optional pointer to a \c CFErrorRef to receive error information
 			 * @return \c true on success, \c false otherwise
 			 * @see SFB::Audio::Decoder::Open()
 			 */
-			bool Open(CFErrorRef *error = nullptr);
+			bool Open(UInt32 preferredBufferSizeFrames = 512, CFErrorRef *error = nullptr);
 
 			/*!
 			 * @brief Close the converter
@@ -129,18 +130,19 @@ namespace SFB {
 
 			/*! @cond */
 
-			/*! @internal This class is exposed so it can be used inside C callbacks */
-			class ConverterStateData;
+			/*! @internal This method is exposed so it can be used inside C callbacks */
+			UInt32 DecodeAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
 			/*! @endcond */
 
 		private:
+
 			AudioStreamBasicDescription			mFormat;			/*!< The format produced by this converter */
 			ChannelLayout						mChannelLayout;		/*!< The channel layout of the audio produced by this converter */
 			Decoder::unique_ptr					mDecoder;			/*!< The Decoder providing the audio */
 			AudioConverterRef					mConverter;			/*!< The actual object performing the conversion */
-			std::unique_ptr<ConverterStateData>	mConverterState;	/*!< Internal conversion state */
-			bool								mIsOpen;			/*!< Flag indicating if the mConverter is open */
+			BufferList 							mBufferList;		/*!< Buffer for decoded audio pending conversion */
+			bool								mIsOpen;			/*!< Flag indicating if \c mConverter is open */
 		};
 
 	}

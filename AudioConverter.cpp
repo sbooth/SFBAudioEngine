@@ -14,43 +14,10 @@
 
 #define BUFFER_SIZE_FRAMES 512u
 
-// ========================================
-// State data for conversion
-// ========================================
-class SFB::Audio::Converter::ConverterStateData
-{
-public:
-
-	ConverterStateData() = delete;
-
-	explicit ConverterStateData(Decoder& decoder)
-		: mDecoder(decoder)
-	{}
-
-	ConverterStateData(const ConverterStateData& rhs) = delete;
-	ConverterStateData& operator=(const ConverterStateData& rhs) = delete;
-
-	void AllocateBufferList(UInt32 capacityFrames)
-	{
-		mBufferList.Allocate(mDecoder.GetFormat(), capacityFrames);
-	}
-
-	UInt32 ReadAudio(UInt32 frameCount)
-	{
-		mBufferList.Reset();
-
-		frameCount = std::min(frameCount, mBufferList.GetCapacityFrames());
-		return mDecoder.ReadAudio(mBufferList, frameCount);
-	}
-
-	Decoder&		mDecoder;
-	BufferList		mBufferList;
-};
-
 namespace {
 
 	// AudioConverter input callback
-	OSStatus myAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
+	OSStatus MyAudioConverterComplexInputDataProc(AudioConverterRef				inAudioConverter,
 												  UInt32						*ioNumberDataPackets,
 												  AudioBufferList				*ioData,
 												  AudioStreamPacketDescription	**outDataPacketDescription,
@@ -59,12 +26,8 @@ namespace {
 #pragma unused(inAudioConverter)
 #pragma unused(outDataPacketDescription)
 
-		SFB::Audio::Converter::ConverterStateData *converterStateData = static_cast<SFB::Audio::Converter::ConverterStateData *>(inUserData);
-		UInt32 framesRead = converterStateData->ReadAudio(*ioNumberDataPackets);
-
-		ioData->mNumberBuffers = converterStateData->mBufferList->mNumberBuffers;
-		for(UInt32 bufferIndex = 0; bufferIndex < converterStateData->mBufferList->mNumberBuffers; ++bufferIndex)
-			ioData->mBuffers[bufferIndex] = converterStateData->mBufferList->mBuffers[bufferIndex];
+		SFB::Audio::Converter *converter = static_cast<SFB::Audio::Converter *>(inUserData);
+		UInt32 framesRead = converter->DecodeAudio(ioData, *ioNumberDataPackets);
 
 		*ioNumberDataPackets = framesRead;
 
@@ -73,7 +36,7 @@ namespace {
 }
 
 SFB::Audio::Converter::Converter(Decoder::unique_ptr decoder, const AudioStreamBasicDescription& format, ChannelLayout channelLayout)
-	: mFormat(format), mChannelLayout(std::move(channelLayout)), mDecoder(std::move(decoder)), mConverter(nullptr), mConverterState(nullptr), mIsOpen(false)
+	: mFormat(format), mChannelLayout(channelLayout), mDecoder(std::move(decoder)), mConverter(nullptr), mIsOpen(false)
 {}
 
 SFB::Audio::Converter::~Converter()
@@ -82,7 +45,7 @@ SFB::Audio::Converter::~Converter()
 		Close();
 }
 
-bool SFB::Audio::Converter::Open(CFErrorRef *error)
+bool SFB::Audio::Converter::Open(UInt32 preferredBufferSizeFrames, CFErrorRef *error)
 {
 	if(!mDecoder)
 		return false;
@@ -106,24 +69,40 @@ bool SFB::Audio::Converter::Open(CFErrorRef *error)
 		return false;
 	}
 
-	// TODO: Set kAudioConverterPropertyCalculateInputBufferSize
+	// Calculate input buffer size required for preferred output buffer size
+	UInt32 inputBufferSize = preferredBufferSizeFrames * mFormat.mBytesPerFrame;
+	UInt32 dataSize = sizeof(inputBufferSize);
+	result = AudioConverterGetProperty(mConverter, kAudioConverterPropertyCalculateInputBufferSize, &dataSize, &inputBufferSize);
+	if(noErr != result)
+		os_log_error(OS_LOG_DEFAULT, "AudioConverterGetProperty (kAudioConverterPropertyCalculateInputBufferSize) failed: %d", result);
 
-	mConverterState = std::unique_ptr<ConverterStateData>(new ConverterStateData(*mDecoder));
-	mConverterState->AllocateBufferList(BUFFER_SIZE_FRAMES);
+	UInt32 inputBufferSizeFrames = noErr == result ? (UInt32)mDecoder->GetFormat().ByteCountToFrameCount(inputBufferSize) : preferredBufferSizeFrames;
+	if(!mBufferList.Allocate(mDecoder->GetFormat(), inputBufferSizeFrames)) {
+		os_log_error(OS_LOG_DEFAULT, "Error allocating conversion buffer");
 
-	// Create the channel map
-	if(mChannelLayout) {
-		SInt32 channelMap [ mFormat.mChannelsPerFrame ];
-		UInt32 dataSize = (UInt32)sizeof(channelMap);
+		if(error)
+			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
 
-		const AudioChannelLayout *channelLayouts [] = {
-			mDecoder->GetChannelLayout(),
-			mChannelLayout
-		};
+		return false;
+	}
 
-		result = AudioFormatGetProperty(kAudioFormatProperty_ChannelMap, sizeof(channelLayouts), channelLayouts, &dataSize, channelMap);
+	// Set the channel layouts
+	if(mDecoder->GetChannelLayout()) {
+		result = AudioConverterSetProperty(mConverter, kAudioConverterInputChannelLayout, (UInt32)mDecoder->GetChannelLayout().GetACLSize(), mDecoder->GetChannelLayout().GetACL());
 		if(noErr != result) {
-			os_log_error(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_ChannelMap) failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
+			os_log_error(OS_LOG_DEFAULT, "AudioConverterSetProperty (kAudioConverterInputChannelLayout) failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
+
+			if(error)
+				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
+
+			return false;
+		}
+	}
+
+	if(mChannelLayout) {
+		result = AudioConverterSetProperty(mConverter, kAudioConverterOutputChannelLayout, (UInt32)mChannelLayout.GetACLSize(), mChannelLayout.GetACL());
+		if(noErr != result) {
+			os_log_error(OS_LOG_DEFAULT, "AudioConverterSetProperty (kAudioConverterOutputChannelLayout) failed: %d '%{public}.4s", result, SFBCStringForOSType(result));
 
 			if(error)
 				*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainOSStatus, result, nullptr);
@@ -145,7 +124,6 @@ bool SFB::Audio::Converter::Close(CFErrorRef *error)
 		return true;
 	}
 
-	mConverterState.reset();
 	mDecoder.reset();
 
 	if(mConverter) {
@@ -201,7 +179,7 @@ UInt32 SFB::Audio::Converter::ConvertAudio(AudioBufferList *bufferList, UInt32 f
 	if(!IsOpen() || nullptr == bufferList || 0 == frameCount)
 		return 0;
 
-	OSStatus result = AudioConverterFillComplexBuffer(mConverter, myAudioConverterComplexInputDataProc, mConverterState.get(), &frameCount, bufferList, nullptr);
+	OSStatus result = AudioConverterFillComplexBuffer(mConverter, MyAudioConverterComplexInputDataProc, this, &frameCount, bufferList, nullptr);
 	if(noErr != result)
 		return 0;
 
@@ -220,4 +198,18 @@ bool SFB::Audio::Converter::Reset()
 	}
 
 	return true;
+}
+
+UInt32 SFB::Audio::Converter::DecodeAudio(AudioBufferList *bufferList, UInt32 frameCount)
+{
+	mBufferList.Reset();
+
+	frameCount = std::min(frameCount, mBufferList.GetCapacityFrames());
+	UInt32 framesRead = mDecoder->ReadAudio(mBufferList, frameCount);
+
+	bufferList->mNumberBuffers = mBufferList->mNumberBuffers;
+	for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
+		bufferList->mBuffers[bufferIndex] = mBufferList->mBuffers[bufferIndex];
+
+	return framesRead;
 }
