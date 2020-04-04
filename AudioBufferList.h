@@ -72,6 +72,12 @@ namespace SFB {
 			 */
 			bool Reset();
 
+			/*!
+			 * @brief Empty the \c BufferList
+			 * This will set the \c mDataByteSize of each \c AudioBuffer to 0
+			 */
+			bool Empty();
+
 
 			/*! @brief Get the capacity of this \c BufferList in audio frames */
 			inline UInt32 GetCapacityFrames() const			{ return mCapacityFrames; }

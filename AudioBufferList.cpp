@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2013 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -82,6 +82,17 @@ bool SFB::Audio::BufferList::Reset()
 
 	for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
 		mBufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(mCapacityFrames);
+
+	return true;
+}
+
+bool SFB::Audio::BufferList::Empty()
+{
+	if(!mBufferList)
+		return false;
+
+	for(UInt32 bufferIndex = 0; bufferIndex < mBufferList->mNumberBuffers; ++bufferIndex)
+		mBufferList->mBuffers[bufferIndex].mDataByteSize = 0;
 
 	return true;
 }
