@@ -66,7 +66,7 @@
 		326A98F71392F38A0061A65F /* Semaphore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 326A98F51392F38A0061A65F /* Semaphore.cpp */; };
 		326A98F81392F38A0061A65F /* Semaphore.h in Headers */ = {isa = PBXBuildFile; fileRef = 326A98F61392F38A0061A65F /* Semaphore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326CE06E17E3B023003877AB /* CreateDisplayNameForURL.h in Headers */ = {isa = PBXBuildFile; fileRef = 322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */; };
-		326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* CreateStringForOSType.h */; };
+		326CE06F17E3B027003877AB /* SFBCStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* SFBCStringForOSType.h */; };
 		326D3C94242CE9D1002AEC52 /* SFBAudioProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326D3C95242CE9D1002AEC52 /* SFBAudioProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */; };
 		326D3C98242CF79C002AEC52 /* SFBAudioFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C96242CF79C002AEC52 /* SFBAudioFile.m */; };
@@ -199,7 +199,7 @@
 /* Begin PBXFileReference section */
 		3203A6191346E0ED00A7A22E /* MODDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MODDecoder.h; sourceTree = "<group>"; };
 		3203A61A1346E0ED00A7A22E /* MODDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MODDecoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		320723BC138D521A00007369 /* CreateStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CreateStringForOSType.h; sourceTree = "<group>"; };
+		320723BC138D521A00007369 /* SFBCStringForOSType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBCStringForOSType.h; sourceTree = "<group>"; };
 		3210AB8D17B9BF8000743639 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3219C6152428159000BB1CF1 /* SFBReplayGainAnalyzer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBReplayGainAnalyzer.h; sourceTree = "<group>"; };
@@ -404,31 +404,31 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
-				3230A936182E698900D630CF /* AudioBufferList.cpp */,
 				3230A937182E698900D630CF /* AudioBufferList.h */,
-				32C99D1F18305387004388CF /* AudioChannelLayout.cpp */,
+				3230A936182E698900D630CF /* AudioBufferList.cpp */,
 				32C99D2018305387004388CF /* AudioChannelLayout.h */,
-				32B848E5180E199D00A222C5 /* AudioConverter.cpp */,
+				32C99D1F18305387004388CF /* AudioChannelLayout.cpp */,
 				32B848E6180E199D00A222C5 /* AudioConverter.h */,
-				32B3639518C4127300F2C61F /* AudioFormat.cpp */,
+				32B848E5180E199D00A222C5 /* AudioConverter.cpp */,
 				32B3639618C4127300F2C61F /* AudioFormat.h */,
-				321FCF8F17BF1C3600828C3A /* AudioRingBuffer.cpp */,
+				32B3639518C4127300F2C61F /* AudioFormat.cpp */,
 				3292489018CEAA96004365FF /* AudioRingBuffer.h */,
-				32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */,
+				321FCF8F17BF1C3600828C3A /* AudioRingBuffer.cpp */,
 				32DFA2F114FA7FD400D1FB58 /* CFErrorUtilities.h */,
+				32DFA2F014FA7FD400D1FB58 /* CFErrorUtilities.cpp */,
 				32A5A20117DD1BF80064C5DE /* CFWrapper.h */,
-				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				322D78B1112F9851006676FC /* CreateDisplayNameForURL.h */,
-				320723BC138D521A00007369 /* CreateStringForOSType.h */,
-				32C212D61091116D00BA2493 /* Info.plist */,
+				322D78B0112F9851006676FC /* CreateDisplayNameForURL.cpp */,
 				3219C6192428C61600BB1CF1 /* NSError+SFBURLPresentation.h */,
 				3219C61A2428C61600BB1CF1 /* NSError+SFBURLPresentation.m */,
-				3292489218CEAB48004365FF /* RingBuffer.cpp */,
 				3292489318CEAB48004365FF /* RingBuffer.h */,
-				326A98F51392F38A0061A65F /* Semaphore.cpp */,
+				3292489218CEAB48004365FF /* RingBuffer.cpp */,
 				326A98F61392F38A0061A65F /* Semaphore.h */,
+				326A98F51392F38A0061A65F /* Semaphore.cpp */,
+				320723BC138D521A00007369 /* SFBCStringForOSType.h */,
 				3219C6152428159000BB1CF1 /* SFBReplayGainAnalyzer.h */,
 				3219C6162428159000BB1CF1 /* SFBReplayGainAnalyzer.mm */,
+				32C212D61091116D00BA2493 /* Info.plist */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -661,7 +661,7 @@
 				3219C61B2428C61600BB1CF1 /* NSError+SFBURLPresentation.h in Headers */,
 				325116A224239A4600B02926 /* FileInputSource.h in Headers */,
 				32D429E713E308DB00FA07DE /* AudioPlayer.h in Headers */,
-				326CE06F17E3B027003877AB /* CreateStringForOSType.h in Headers */,
+				326CE06F17E3B027003877AB /* SFBCStringForOSType.h in Headers */,
 				326D3C99242CF79C002AEC52 /* SFBAudioFile.h in Headers */,
 				325116A624239A5D00B02926 /* CoreAudioDecoder.h in Headers */,
 				3219C6172428159000BB1CF1 /* SFBReplayGainAnalyzer.h in Headers */,

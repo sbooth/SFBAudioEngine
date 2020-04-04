@@ -10,9 +10,7 @@
 #include "AudioBufferList.h"
 #include "AudioConverter.h"
 #include "CFWrapper.h"
-#include "CreateStringForOSType.h"
-
-#define BUFFER_SIZE_FRAMES 512u
+#include "SFBCStringForOSType.h"
 
 namespace {
 

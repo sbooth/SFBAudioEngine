@@ -14,8 +14,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "CFErrorUtilities.h"
-#include "CreateStringForOSType.h"
 #include "DSDIFFDecoder.h"
+#include "SFBCStringForOSType.h"
 
 #define BUFFER_CHANNEL_SIZE_BYTES 512u
 

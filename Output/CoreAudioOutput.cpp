@@ -8,7 +8,7 @@
 #include "AudioFormat.h"
 #include "AudioPlayer.h"
 #include "CoreAudioOutput.h"
-#include "CreateStringForOSType.h"
+#include "SFBCStringForOSType.h"
 
 namespace {
 

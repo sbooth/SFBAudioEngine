@@ -15,7 +15,7 @@
 #include "CFErrorUtilities.h"
 #include "CFWrapper.h"
 #include "CoreAudioDecoder.h"
-#include "CreateStringForOSType.h"
+#include "SFBCStringForOSType.h"
 
 namespace {
 

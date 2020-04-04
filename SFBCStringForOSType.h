@@ -5,6 +5,6 @@
 
 #pragma once
 
-/*! @file CreateStringForOSType.h @brief OSType to const char [] conversion */
+/*! @file SFBCStringForOSType.h @brief OSType to const char [] conversion */
 
 #define SFBCStringForOSType(osType) (const char[]){ *(((char *)&osType) + 3), *(((char *)&osType) + 2), *(((char *)&osType) + 1), *(((char *)&osType) + 0), 0 }

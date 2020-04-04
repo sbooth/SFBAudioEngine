@@ -9,8 +9,8 @@
 
 #include "CFErrorUtilities.h"
 #include "CFWrapper.h"
-#include "CreateStringForOSType.h"
 #include "DSFDecoder.h"
+#include "SFBCStringForOSType.h"
 
 namespace {
 

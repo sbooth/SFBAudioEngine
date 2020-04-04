@@ -19,7 +19,7 @@
 #include "AudioBufferList.h"
 #include "CFErrorUtilities.h"
 #include "CreateDisplayNameForURL.h"
-#include "CreateStringForOSType.h"
+#include "SFBCStringForOSType.h"
 
 // ========================================
 // Macros
