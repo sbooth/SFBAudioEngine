@@ -117,7 +117,7 @@ namespace SFB {
 			 * @brief Convert audio into the specified buffer
 			 * @param bufferList A buffer to receive the decoded audio
 			 * @param frameCount The requested number of audio frames
-			 * @return The actual number of frames read, or \c 0 on error
+			 * @return The actual number of frames converted, or \c 0 on error
 			 */
 			UInt32 ConvertAudio(AudioBufferList *bufferList, UInt32 frameCount);
 
