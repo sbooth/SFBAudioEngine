@@ -18,19 +18,27 @@ namespace SFB {
 	namespace Audio {
 
 		/*! @brief Additional audio format IDs */
-		enum {
-			kAudioFormatDoP = 'DoP ',						/*!< DSD over PCM (DoP) */
-			kAudioFormatDirectStreamDigital = 'DSD ',		/*!< Direct Stream Digital (DSD) */
-			kAudioFormatFLAC = 'FLAC',						/*!< Free Lossless Audio Codec (FLAC) */
-			kAudioFormatMOD = 'MOD ',						/*!< MOD */
-			kAudioFormatMonkeysAudio = 'APE ',				/*!< Monkey's Audio (APE) */
-			kAudioFormatMPEG1 = 'MPG1',						/*!< MPEG-1 (Layer I, II, or III) */
-			kAudioFormatMusepack = 'MPC ',					/*!< Musepack */
-			kAudioFormatOpus = 'OPUS',						/*!< Ogg Opus */
-			kAudioFormatSpeex = 'SPX ',						/*!< Ogg Speex */
-			kAudioFormatVorbis = 'OGG ',					/*!< Ogg Vorbis */
-			kAudioFormatTrueAudio = 'TTA ',					/*!< True Audio */
-			kAudioFormatWavpack = 'WV  '					/*!< Wavpack */
+		CF_ENUM(AudioFormatID) {
+			kAudioFormatDirectStreamDigital 	= 'DSD ',	/*!< Direct Stream Digital (DSD) */
+			kAudioFormatDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
+			kAudioFormatFLAC 					= 'FLAC',	/*!< Free Lossless Audio Codec (FLAC) */
+			kAudioFormatMOD 					= 'MOD ',	/*!< MOD */
+			kAudioFormatMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
+			kAudioFormatMPEG1 					= 'MPG1',	/*!< MPEG-1 (Layer I, II, or III) */
+			kAudioFormatMusepack 				= 'MPC ',	/*!< Musepack */
+			kAudioFormatOpus 					= 'OPUS',	/*!< Ogg Opus */
+			kAudioFormatSpeex 					= 'SPX ',	/*!< Ogg Speex */
+			kAudioFormatTrueAudio 				= 'TTA ',	/*!< True Audio */
+			kAudioFormatVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
+			kAudioFormatWavpack 				= 'WV  '	/*!< Wavpack */
+		};
+
+		/*! @brief Common PCM audio formats */
+		typedef CF_ENUM(uint32_t, CommonPCMFormat) {
+			kCommonPCMFormatFloat32 			= 1, 		/*!< Native-endian \c float */
+			kCommonPCMFormatFloat64 			= 2, 		/*!< Native-endian \c double */
+			kCommonPCMFormatInt16 				= 3, 		/*!< Native-endian signed 16-bit integers */
+			kCommonPCMFormatInt32 				= 4, 		/*!< Native-endian signed 32-bit integers */
 		};
 
 		/*! @brief A class extending the functionality of a Core %Audio \c AudioStreamBasicDescription for DSD */
@@ -46,6 +54,9 @@ namespace SFB {
 
 			/*! @brief Create a new \c AudioFormat for the specified \c AudioStreamBasicDescription */
 			AudioFormat(const AudioStreamBasicDescription& format);
+
+			/*! @brief Create a new \c AudioFormat for the speciifed \c CommonPCMFormat */
+			AudioFormat(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved);
 
 			/*! @brief Copy constructor */
 			AudioFormat(const AudioFormat& rhs);
@@ -67,22 +78,22 @@ namespace SFB {
 			//@{
 
 			/*! @brief Query whether this format represents interleaved data */
-			bool IsInterleaved() const;
+			inline bool IsInterleaved() const 		{ return !(kAudioFormatFlagIsNonInterleaved & mFormatFlags); }
 
 			/*! @brief Query whether this format represents PCM audio data */
-			bool IsPCM() const;
+			inline bool IsPCM() const 				{ return kAudioFormatLinearPCM == mFormatID; }
 
 			/*! @brief Query whether this format represents DSD audio data */
-			bool IsDSD() const;
+			inline bool IsDSD() const 				{ return kAudioFormatDirectStreamDigital == mFormatID; }
 
 			/*! @brief Query whether this format represents DoP audio data */
-			bool IsDoP() const;
+			inline bool IsDoP() const 				{ return kAudioFormatDoP == mFormatID; }
 
 			/*! @brief Query whether this format represents big-endian ordered daa */
-			bool IsBigEndian() const;
+			inline bool IsBigEndian() const 		{ return kAudioFormatFlagIsBigEndian & mFormatFlags; }
 
 			/*! @brief Query whether this format represents native-endian ordered daa */
-			bool IsNativeEndian() const;
+			inline bool IsNativeEndian() const 		{ return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags); }
 
 			/*! @brief Convert a frame count to byte count */
 			size_t FrameCountToByteCount(size_t frameCount) const;

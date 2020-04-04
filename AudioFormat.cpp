@@ -5,6 +5,29 @@
 
 #include "AudioFormat.h"
 
+namespace {
+
+	static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved)
+	{
+		return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? ((UInt32)kAudioFormatFlagIsBigEndian) : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? ((UInt32)kAudioFormatFlagIsNonInterleaved) : 0);
+	}
+
+	static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sampleRate, UInt32 channelsPerFrame, UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved)
+	{
+		asbd->mFormatID = kAudioFormatLinearPCM;
+		asbd->mFormatFlags = CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
+
+		asbd->mSampleRate = sampleRate;
+		asbd->mChannelsPerFrame = channelsPerFrame;
+		asbd->mBitsPerChannel = validBitsPerChannel;
+
+		asbd->mBytesPerPacket = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
+		asbd->mFramesPerPacket = 1;
+		asbd->mBytesPerFrame = (isNonInterleaved ? 1 : channelsPerFrame) * (totalBitsPerChannel / 8);
+	}
+
+}
+
 SFB::Audio::AudioFormat::AudioFormat()
 {
     memset(this, 0, sizeof(AudioStreamBasicDescription));
@@ -13,6 +36,29 @@ SFB::Audio::AudioFormat::AudioFormat()
 SFB::Audio::AudioFormat::AudioFormat(const AudioStreamBasicDescription& format)
 {
     memcpy(this, &format, sizeof(AudioStreamBasicDescription));
+}
+
+SFB::Audio::AudioFormat::AudioFormat(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved)
+{
+	assert(0 < sampleRate);
+	assert(0 < channelsPerFrame);
+
+	memset(this, 0, sizeof(AudioStreamBasicDescription));
+
+	switch(format) {
+		case kCommonPCMFormatFloat32:
+			FillOutASBDForLPCM(this, sampleRate, channelsPerFrame, 32, 32, true, kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, !isInterleaved);
+			break;
+		case kCommonPCMFormatFloat64:
+			FillOutASBDForLPCM(this, sampleRate, channelsPerFrame, 64, 64, true, kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, !isInterleaved);
+			break;
+		case kCommonPCMFormatInt16:
+			FillOutASBDForLPCM(this, sampleRate, channelsPerFrame, 16, 16, false, kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, !isInterleaved);
+			break;
+		case kCommonPCMFormatInt32:
+			FillOutASBDForLPCM(this, sampleRate, channelsPerFrame, 32, 32, false, kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, !isInterleaved);
+			break;
+	}
 }
 
 SFB::Audio::AudioFormat::AudioFormat(const AudioFormat& rhs)
@@ -54,36 +100,6 @@ bool SFB::Audio::AudioFormat::operator==(const AudioFormat& rhs) const
 		return false;
 
 	return true;
-}
-
-bool SFB::Audio::AudioFormat::IsInterleaved() const
-{
-	return !(kAudioFormatFlagIsNonInterleaved & mFormatFlags);
-}
-
-bool SFB::Audio::AudioFormat::IsPCM() const
-{
-	return kAudioFormatLinearPCM == mFormatID;
-}
-
-bool SFB::Audio::AudioFormat::IsDSD() const
-{
-	return kAudioFormatDirectStreamDigital == mFormatID;
-}
-
-bool SFB::Audio::AudioFormat::IsDoP() const
-{
-	return kAudioFormatDoP == mFormatID;
-}
-
-bool SFB::Audio::AudioFormat::IsBigEndian() const
-{
-	return kAudioFormatFlagIsBigEndian & mFormatFlags;
-}
-
-bool SFB::Audio::AudioFormat::IsNativeEndian() const
-{
-	return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags);
 }
 
 size_t SFB::Audio::AudioFormat::FrameCountToByteCount(size_t frameCount) const
