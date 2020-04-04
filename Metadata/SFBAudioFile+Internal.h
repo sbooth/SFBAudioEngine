@@ -32,8 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)registerInputOutputHandler:(Class)handler;
 + (void)registerInputOutputHandler:(Class)handler priority:(int)priority;
 
-@property (nonatomic, class, readonly) NSArray<id<SFBAudioFileInputOutputHandling>> *registeredInputOutputHandlers;
-
 + (nullable id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForURL:(NSURL *)url;
 + (nullable id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForPathExtension:(NSString *)extension;
 + (nullable id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForMIMEType:(NSString *)mimeType;
