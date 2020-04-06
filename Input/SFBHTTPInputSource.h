@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBHTTPInputSource : SFBInputSource
+@interface SFBHTTPInputSource : SFBInputSource <NSURLSessionDataDelegate>
 - (instancetype)init NS_UNAVAILABLE;
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError * _Nullable *)error NS_DESIGNATED_INITIALIZER;
 @end
