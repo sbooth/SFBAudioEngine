@@ -94,26 +94,23 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
-#import <algorithm>
-#import <cmath>
-#import <cstring>
-
 #import <Accelerate/Accelerate.h>
 
-#import "AudioBufferList.h"
-#import "AudioConverter.h"
-#import "AudioDecoder.h"
-#import "CFWrapper.h"
 #import "NSError+SFBURLPresentation.h"
+#import "SFBAudioBufferList+Internal.h"
+#import "SFBAudioConverter.h"
+#import "SFBAudioDecoder+Internal.h"
+#import "SFBAudioFormat+Internal.h"
 #import "SFBReplayGainAnalyzer.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
 
-
 // Key names for the metadata dictionary
 NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
 NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
+
+#define BUFFER_SIZE_FRAMES 512
 
 
 // RG constants
@@ -298,18 +295,14 @@ namespace {
 {
 	NSParameterAssert(url != nil);
 
-	SFB::CFError err;
-	auto decoder = SFB::Audio::Decoder::CreateForURL((__bridge CFURLRef)url, &err);
-	if(!decoder || !decoder->Open(&err)) {
-		if(error)
-			*error = (__bridge_transfer NSError *)err.Relinquish();
+	SFBAudioDecoder *decoder = [SFBAudioDecoder audioDecoderForURL:url error:error];
+	if(!decoder || ![decoder openReturningError:error])
 		return NO;
-	}
 
-	AudioStreamBasicDescription inputFormat = decoder->GetFormat();
+	const AudioStreamBasicDescription *inputFormat = decoder.processingFormat.streamDescription;
 
 	// Higher sampling rates aren't natively supported but are handled via resampling
-	NSInteger decoderSampleRate = (NSInteger)inputFormat.mSampleRate;
+	NSInteger decoderSampleRate = (NSInteger)inputFormat->mSampleRate;
 
 	bool validSampleRate = [SFBReplayGainAnalyzer evenMultipleSampleRateIsSupported:decoderSampleRate];
 	if(!validSampleRate) {
@@ -325,56 +318,40 @@ namespace {
 
 	Float64 replayGainSampleRate = [SFBReplayGainAnalyzer bestReplayGainSampleRateForSampleRate:decoderSampleRate];
 
-	if(!(1 == inputFormat.mChannelsPerFrame || 2 == inputFormat.mChannelsPerFrame)) {
+	if(!(1 == inputFormat->mChannelsPerFrame || 2 == inputFormat->mChannelsPerFrame)) {
 		if(error)
-		*error = [NSError sfb_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
-										 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
-				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @"")
-										  url:url
-								failureReason:NSLocalizedString(@"Unsupported number of channels", @"")
-						   recoverySuggestion:NSLocalizedString(@"Only mono and stereo files supported.", @"")];
+			*error = [NSError sfb_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @"")
+											  url:url
+									failureReason:NSLocalizedString(@"Unsupported number of channels", @"")
+							   recoverySuggestion:NSLocalizedString(@"Only mono and stereo files supported.", @"")];
 		return NO;
 	}
 
-	AudioStreamBasicDescription outputFormat = {
-		.mFormatID				= kAudioFormatLinearPCM,
-		.mFormatFlags			= kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved,
-		.mReserved				= 0,
-		.mSampleRate			= replayGainSampleRate,
-		.mChannelsPerFrame		= inputFormat.mChannelsPerFrame,
-		.mBitsPerChannel		= 32,
-		.mBytesPerPacket		= 4,
-		.mBytesPerFrame			= 4,
-		.mFramesPerPacket		= 1
-	};
+	SFBAudioFormat *outputFormat = [[SFBAudioFormat alloc] initWithCommonPCMFormat:SFBAudioFormatCommonPCMFormatFloat32 sampleRate:replayGainSampleRate channels:inputFormat->mChannelsPerFrame interleaved:NO];
 
 	// Will NSAssert() if an invalid sample rate is passed
-	[self setSampleRate:(NSInteger)outputFormat.mSampleRate];
+	[self setSampleRate:(NSInteger)replayGainSampleRate];
 
-	// Converter takes ownership of decoder
-	SFB::Audio::Converter converter(std::move(decoder), outputFormat);
-
-	const UInt32 bufferSizeFrames = 512;
-	if(!converter.Open(bufferSizeFrames, &err)) {
-		if(error)
-			*error = (__bridge_transfer NSError *)err.Relinquish();
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder outputFormat:outputFormat preferredBufferSize:BUFFER_SIZE_FRAMES error:error];
+	if(!converter)
 		return NO;
-	}
 
-	SFB::Audio::BufferList outputBuffer(outputFormat, bufferSizeFrames);
+	SFBAudioBufferList *outputBuffer = [[SFBAudioBufferList alloc] initWithFormat:outputFormat capacityFrames:BUFFER_SIZE_FRAMES];
 
-	bool isStereo = (2 == outputFormat.mChannelsPerFrame);
+	bool isStereo = (2 == outputFormat->_streamDescription.mChannelsPerFrame);
 
 	for(;;) {
-		UInt32 frameCount = converter.ConvertAudio(outputBuffer, bufferSizeFrames);
-		if(0 == frameCount)
+		NSInteger frameCount = 0;
+		if(![converter convertAudio:outputBuffer frameCount:BUFFER_SIZE_FRAMES framesConverted:&frameCount error:nil] || frameCount == 0)
 			break;
 
 		// Find the peak sample magnitude
 		float lpeak, rpeak;
-		vDSP_maxmgv((const float *)outputBuffer->mBuffers[0].mData, 1, &lpeak, frameCount);
+		vDSP_maxmgv((const float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, &lpeak, (vDSP_Length)frameCount);
 		if(isStereo) {
-			vDSP_maxmgv((const float *)outputBuffer->mBuffers[1].mData, 1, &rpeak, frameCount);
+			vDSP_maxmgv((const float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, &rpeak, (vDSP_Length)frameCount);
 			_trackPeak = std::max(_trackPeak, std::max(lpeak, rpeak));
 		}
 		else
@@ -382,13 +359,13 @@ namespace {
 
 		// The replay gain analyzer expects 16-bit sample size passed as floats
 		const float scale = 1u << 15;
-		vDSP_vsmul((const float *)outputBuffer->mBuffers[0].mData, 1, &scale, (float *)outputBuffer->mBuffers[0].mData, 1, frameCount);
+		vDSP_vsmul((const float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, &scale, (float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, (vDSP_Length)frameCount);
 		if(isStereo) {
-			vDSP_vsmul((const float *)outputBuffer->mBuffers[1].mData, 1, &scale, (float *)outputBuffer->mBuffers[1].mData, 1, frameCount);
-			[self analyzeLeftSamples:(const float *)outputBuffer->mBuffers[0].mData rightSamples:(const float *)outputBuffer->mBuffers[1].mData sampleCount:frameCount isStereo:YES];
+			vDSP_vsmul((const float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, &scale, (float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, (vDSP_Length)frameCount);
+			[self analyzeLeftSamples:(const float *)outputBuffer->_bufferList->mBuffers[0].mData rightSamples:(const float *)outputBuffer->_bufferList->mBuffers[1].mData sampleCount:frameCount isStereo:YES];
 		}
 		else
-			[self analyzeLeftSamples:(const float *)outputBuffer->mBuffers[0].mData rightSamples:NULL sampleCount:frameCount isStereo:NO];
+			[self analyzeLeftSamples:(const float *)outputBuffer->_bufferList->mBuffers[0].mData rightSamples:NULL sampleCount:(size_t)frameCount isStereo:NO];
 	}
 
 	_albumPeak = std::max(_albumPeak, _trackPeak);
