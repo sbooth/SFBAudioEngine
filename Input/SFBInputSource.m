@@ -3,11 +3,13 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import "SFBInputSource.h"
+#import "SFBInputSource+Internal.h"
+
 #import "SFBDataInputSource.h"
 #import "SFBFileContentsInputSource.h"
 #import "SFBFileInputSource.h"
 #import "SFBHTTPInputSource.h"
-#import "SFBInputSource+Internal.h"
 #import "SFBMemoryMappedFileInputSource.h"
 
 @implementation SFBInputSource

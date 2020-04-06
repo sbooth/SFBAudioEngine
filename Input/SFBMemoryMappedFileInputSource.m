@@ -3,8 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "SFBInputSource+Internal.h"
 #import "SFBMemoryMappedFileInputSource.h"
+#import "SFBInputSource+Internal.h"
 
 @implementation SFBMemoryMappedFileInputSource
 
