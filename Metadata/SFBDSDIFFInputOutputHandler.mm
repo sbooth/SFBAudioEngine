@@ -8,12 +8,12 @@
 #import <taglib/dsdifffile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBDSDIFFInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBDSDIFFInputOutputHandler.h"
 
 @implementation SFBDSDIFFInputOutputHandler
 

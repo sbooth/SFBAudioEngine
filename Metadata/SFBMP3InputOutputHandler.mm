@@ -9,13 +9,13 @@
 #import <taglib/tfilestream.h>
 #import <taglib/xingheader.h>
 
+#import "SFBMP3InputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBMP3InputOutputHandler.h"
 
 @implementation SFBMP3InputOutputHandler
 

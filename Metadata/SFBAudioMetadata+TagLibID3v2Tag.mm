@@ -10,8 +10,9 @@
 #import <taglib/textidentificationframe.h>
 #import <taglib/unsynchronizedlyricsframe.h>
 
-#import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
+
+#import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 

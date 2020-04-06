@@ -8,12 +8,12 @@
 #import <taglib/mpcfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBMusepackInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBMusepackInputOutputHandler.h"
 
 @implementation SFBMusepackInputOutputHandler
 

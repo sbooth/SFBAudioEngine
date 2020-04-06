@@ -10,11 +10,11 @@
 #import <taglib/itfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBImpulseTrackerModuleInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBImpulseTrackerModuleInputOutputHandler.h"
 
 @implementation SFBImpulseTrackerModuleInputOutputHandler
 

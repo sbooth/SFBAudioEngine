@@ -7,8 +7,9 @@
 
 #import <Security/Security.h>
 
-#import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
+
+#import "CFWrapper.h"
 #import "TagLibStringUtilities.h"
 
 namespace {

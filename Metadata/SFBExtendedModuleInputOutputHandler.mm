@@ -10,11 +10,11 @@
 #import <taglib/tfilestream.h>
 #import <taglib/xmfile.h>
 
+#import "SFBExtendedModuleInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBExtendedModuleInputOutputHandler.h"
 
 @implementation SFBExtendedModuleInputOutputHandler
 

@@ -8,11 +8,11 @@
 #import <taglib/dsffile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBDSFInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBDSFInputOutputHandler.h"
 
 @implementation SFBDSFInputOutputHandler
 

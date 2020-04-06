@@ -9,10 +9,10 @@
 #import <taglib/tfilestream.h>
 
 #import "SFBAIFFInputOutputHandler.h"
-#import "NSError+SFBURLPresentation.h"
+
 #import "AddAudioPropertiesToDictionary.h"
+#import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-#import "SFBAudioProperties.h"
 
 @implementation SFBAIFFInputOutputHandler
 

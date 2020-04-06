@@ -47,6 +47,7 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 		if([supportedPathExtensions containsObject:lowercaseExtension])
 			return YES;
 	}
+
 	return NO;
 }
 
