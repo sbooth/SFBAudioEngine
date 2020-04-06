@@ -10,11 +10,11 @@
 #import <taglib/modfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBProTrackerModuleInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBProTrackerModuleInputOutputHandler.h"
 
 @implementation SFBProTrackerModuleInputOutputHandler
 

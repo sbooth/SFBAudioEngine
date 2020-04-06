@@ -8,14 +8,14 @@
 #import <taglib/flacfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBFLACInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "CFWrapper.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "SFBAudioProperties.h"
-#import "SFBFLACInputOutputHandler.h"
 #import "TagLibStringUtilities.h"
 
 @implementation SFBFLACInputOutputHandler

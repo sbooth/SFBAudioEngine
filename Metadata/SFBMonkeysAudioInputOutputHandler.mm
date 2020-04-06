@@ -8,12 +8,12 @@
 #import <taglib/apefile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBMonkeysAudioInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBMonkeysAudioInputOutputHandler.h"
 
 @implementation SFBMonkeysAudioInputOutputHandler
 

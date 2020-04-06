@@ -8,11 +8,11 @@
 #import <taglib/opusfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBOggOpusInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "SFBAudioProperties.h"
-#import "SFBOggOpusInputOutputHandler.h"
 
 @implementation SFBOggOpusInputOutputHandler
 

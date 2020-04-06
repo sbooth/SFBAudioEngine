@@ -8,12 +8,12 @@
 #import <taglib/tfilestream.h>
 #import <taglib/wavpackfile.h>
 
+#import "SFBWavPackInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibAPETag.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBWavPackInputOutputHandler.h"
 
 @implementation SFBWavPackInputOutputHandler
 

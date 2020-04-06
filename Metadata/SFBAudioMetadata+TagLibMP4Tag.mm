@@ -5,8 +5,9 @@
 
 #import <taglib/mp4coverart.h>
 
-#import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
+
+#import "CFWrapper.h"
 #import "SFBAudioMetadata+TagLibTag.h"
 #import "TagLibStringUtilities.h"
 

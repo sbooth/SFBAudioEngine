@@ -8,12 +8,12 @@
 #import <taglib/tfilestream.h>
 #import <taglib/trueaudiofile.h>
 
+#import "SFBTrueAudioInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v1Tag.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
-#import "SFBAudioProperties.h"
-#import "SFBTrueAudioInputOutputHandler.h"
 
 @implementation SFBTrueAudioInputOutputHandler
 

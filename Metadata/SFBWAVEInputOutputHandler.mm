@@ -8,12 +8,12 @@
 #import <taglib/tfilestream.h>
 #import <taglib/wavfile.h>
 
+#import "SFBWAVEInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBWAVEInputOutputHandler.h"
 
 @implementation SFBWAVEInputOutputHandler
 

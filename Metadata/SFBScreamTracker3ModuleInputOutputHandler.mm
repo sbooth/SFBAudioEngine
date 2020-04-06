@@ -10,11 +10,11 @@
 #import <taglib/s3mfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBScreamTracker3ModuleInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibTag.h"
-#import "SFBAudioProperties.h"
-#import "SFBScreamTracker3ModuleInputOutputHandler.h"
 
 @implementation SFBScreamTracker3ModuleInputOutputHandler
 

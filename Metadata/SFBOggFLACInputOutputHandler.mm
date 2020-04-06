@@ -8,11 +8,11 @@
 #import <taglib/oggflacfile.h>
 #import <taglib/tfilestream.h>
 
+#import "SFBOggFLACInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "SFBAudioProperties.h"
-#import "SFBOggFLACInputOutputHandler.h"
 
 @implementation SFBOggFLACInputOutputHandler
 

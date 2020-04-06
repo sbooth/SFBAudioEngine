@@ -8,11 +8,11 @@
 #import <taglib/tfilestream.h>
 #import <taglib/vorbisfile.h>
 
+#import "SFBOggVorbisInputOutputHandler.h"
+
 #import "AddAudioPropertiesToDictionary.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioMetadata+TagLibXiphComment.h"
-#import "SFBAudioProperties.h"
-#import "SFBOggVorbisInputOutputHandler.h"
 
 @implementation SFBOggVorbisInputOutputHandler
 
