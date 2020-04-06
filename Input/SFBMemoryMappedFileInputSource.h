@@ -9,7 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBMemoryMappedFileInputSource : SFBDataInputSource
-- (instancetype)init NS_UNAVAILABLE;
+- (instancetype)initWithData:(NSData *)data NS_UNAVAILABLE;
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError * _Nullable *)error NS_DESIGNATED_INITIALIZER;
 @end
 
