@@ -308,7 +308,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	bool validSampleRate = [SFBReplayGainAnalyzer evenMultipleSampleRateIsSupported:decoderSampleRate];
 	if(!validSampleRate) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
 											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain audio at a supported sample rate.", @"")
 											  url:url
@@ -321,7 +321,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 	if(!(1 == inputFormat->mChannelsPerFrame || 2 == inputFormat->mChannelsPerFrame)) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
 											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain mono or stereo audio.", @"")
 											  url:url

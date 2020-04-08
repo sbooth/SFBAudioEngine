@@ -83,7 +83,7 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 
 #pragma mark Reading and Writing
 
-- (BOOL)readPropertiesAndMetadataReturningError:(NSError * _Nullable *)error
+- (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
 	id<SFBAudioFileInputOutputHandling> handler = [SFBAudioFile inputOutputHandlerForURL:self.url];
 	return [handler readAudioPropertiesAndMetadataFromURL:self.url toAudioFile:self error:error];

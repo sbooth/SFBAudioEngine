@@ -7,7 +7,7 @@
 
 @implementation NSError (SFBURLDisplayNameMethods)
 
-+ (instancetype)sfb_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion
++ (instancetype)SFB_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion
 {
 	NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
 

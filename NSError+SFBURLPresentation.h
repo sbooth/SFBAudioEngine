@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Utility category
 @interface NSError (SFBURLPresentation)
-+ (instancetype)sfb_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion;
++ (instancetype)SFB_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion;
 @end
 
 NS_ASSUME_NONNULL_END

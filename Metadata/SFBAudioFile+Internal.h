@@ -19,8 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol SFBAudioFileInputOutputHandling
 + (NSSet<NSString *> *)supportedPathExtensions;
 + (NSSet<NSString *> *)supportedMIMETypes;
-- (BOOL)readAudioPropertiesAndMetadataFromURL:(NSURL *)url toAudioFile:(SFBAudioFile *)audioFile error:(NSError * _Nullable *)error;
-- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError * _Nullable *)error;
+- (BOOL)readAudioPropertiesAndMetadataFromURL:(NSURL *)url toAudioFile:(SFBAudioFile *)audioFile error:(NSError **)error;
+- (BOOL)writeAudioMetadata:(SFBAudioMetadata *)metadata toURL:(NSURL *)url error:(NSError **)error;
 @end
 
 @interface SFBAudioFileInputOutputHandlerInfo : NSObject

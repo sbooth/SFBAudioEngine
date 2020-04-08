@@ -38,7 +38,7 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
 											  url:url
@@ -50,7 +50,7 @@
 	TagLib::XM::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid extended module.", @"")
 											  url:url
@@ -78,7 +78,7 @@
 	os_log_error(OS_LOG_DEFAULT, "Writing extended module metadata is not supported");
 
 	if(error)
-		*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 										 code:SFBAudioFileErrorCodeInputOutput
 				descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
 										  url:url
