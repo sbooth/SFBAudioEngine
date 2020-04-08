@@ -36,7 +36,7 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation, true));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for reading.", @"")
 											  url:url
@@ -48,7 +48,7 @@
 	TagLib::Ogg::Vorbis::File file(stream.get());
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @"")
 											  url:url
@@ -75,7 +75,7 @@
 	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(url.fileSystemRepresentation));
 	if(!stream->isOpen()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be opened for writing.", @"")
 											  url:url
@@ -87,7 +87,7 @@
 	TagLib::Ogg::Vorbis::File file(stream.get(), false);
 	if(!file.isValid()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @"")
 											  url:url
@@ -100,7 +100,7 @@
 
 	if(!file.save()) {
 		if(error)
-			*error = [NSError sfb_errorWithDomain:SFBAudioFileErrorDomain
+			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” could not be saved.", @"")
 											  url:url
