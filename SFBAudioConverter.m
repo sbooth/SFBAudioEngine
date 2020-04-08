@@ -167,7 +167,7 @@ static OSStatus SFBAudioConverterComplexInputDataProc(AudioConverterRef				inAud
 
 	NSInteger framesRead;
 	NSError *error;
-	if(![_decoder readAudio:_bufferList frameCount:*ioNumberDataPackets framesRead:&framesRead error:&error]) {
+	if(![_decoder decodeAudio:_bufferList frameCount:*ioNumberDataPackets framesRead:&framesRead error:&error]) {
 		_lastError = error;
 		*ioNumberDataPackets = 0;
 		return kAudioConverterErr_UnspecifiedError;

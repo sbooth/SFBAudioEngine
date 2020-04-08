@@ -45,7 +45,7 @@ extern NSString * const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak v
  * @param error An optional pointer to an \c NSError  to receive error information
  * @return A dictionary of gain and peak information, or \c nil on error
 */
-+ (nullable NSDictionary<NSString *, id> *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError * _Nullable *)error;
++ (nullable NSDictionary<NSString *, id> *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
 
 /*!
  * @brief Analyze the given URL's replay gain
@@ -56,7 +56,7 @@ extern NSString * const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak v
  * @param error An optional pointer to an \c NSError  to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)analyzeTrack:(NSURL *)url error:(NSError * _Nullable *)error;
+- (BOOL)analyzeTrack:(NSURL *)url error:(NSError **)error;
 
 
 /*! @brief The track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error */

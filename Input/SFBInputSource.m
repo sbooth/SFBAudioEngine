@@ -135,7 +135,7 @@
 
 @implementation SFBInputSource (SFBBigEndianReading)
 
-- (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError * _Nullable *)error
+- (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error
 {
 	if(![self readUInt16:ui16 error:error])
 		return NO;
@@ -143,7 +143,7 @@
 	return YES;
 }
 
-- (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError * _Nullable *)error
+- (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error
 {
 	if(![self readUInt32:ui32 error:error])
 		return NO;
@@ -151,7 +151,7 @@
 	return YES;
 }
 
-- (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError * _Nullable *)error
+- (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error
 {
 	if(![self readUInt64:ui64 error:error])
 		return NO;
@@ -163,7 +163,7 @@
 
 @implementation SFBInputSource (SFBLittleEndianReading)
 
-- (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError * _Nullable *)error
+- (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error
 {
 	if(![self readUInt16:ui16 error:error])
 		return NO;
@@ -171,7 +171,7 @@
 	return YES;
 }
 
-- (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError * _Nullable *)error
+- (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error
 {
 	if(![self readUInt32:ui32 error:error])
 		return NO;
@@ -179,7 +179,7 @@
 	return YES;
 }
 
-- (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError * _Nullable *)error
+- (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error
 {
 	if(![self readUInt64:ui64 error:error])
 		return NO;

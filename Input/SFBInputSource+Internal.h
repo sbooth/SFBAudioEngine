@@ -5,9 +5,13 @@
 
 #import "SFBFileInputSource.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface SFBInputSource ()
 {
 @protected
 	NSURL *_url;
 }
 @end
+
+NS_ASSUME_NONNULL_END

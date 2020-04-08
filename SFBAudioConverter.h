@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param outputFormat The desired output format
  * @param error An optional pointer to a \c NSError to receive error information
  */
-- (nullable instancetype)initWithDecoder:(SFBAudioDecoder *)decoder outputFormat:(SFBAudioFormat *)outputFormat error:(NSError * _Nullable *)error;
+- (nullable instancetype)initWithDecoder:(SFBAudioDecoder *)decoder outputFormat:(SFBAudioFormat *)outputFormat error:(NSError **)error;
 
 /*!
  * @brief Returns an initialized  \c SFBAudioConverter object with the specified output format, or \c nil on failure
@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param preferredBufferSize The preferred buffer size, in frames
  * @param error An optional pointer to a \c NSError to receive error information
  */
-- (nullable instancetype)initWithDecoder:(SFBAudioDecoder *)decoder outputFormat:(SFBAudioFormat *)outputFormat preferredBufferSize:(NSInteger)preferredBufferSize error:(NSError * _Nullable *)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDecoder:(SFBAudioDecoder *)decoder outputFormat:(SFBAudioFormat *)outputFormat preferredBufferSize:(NSInteger)preferredBufferSize error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /*!
  * @brief Converts audio into the specified buffer
@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
  * @param error An optional pointer to a \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)convertAudio:(SFBAudioBufferList *)bufferList frameCount:(NSInteger)frameCount framesConverted:(NSInteger *)framesConverted error:(NSError * _Nullable *)error;
+- (BOOL)convertAudio:(SFBAudioBufferList *)bufferList frameCount:(NSInteger)frameCount framesConverted:(NSInteger *)framesConverted error:(NSError **)error;
 
 /*! @brief Reset the \c SFBAudioConverter internal state */
 - (BOOL)reset;

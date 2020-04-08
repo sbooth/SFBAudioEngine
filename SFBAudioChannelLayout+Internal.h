@@ -7,9 +7,13 @@
 
 #import "SFBAudioChannelLayout.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface SFBAudioChannelLayout ()
 {
 @package
 	AudioChannelLayout *_layout;
 }
 @end
+
+NS_ASSUME_NONNULL_END

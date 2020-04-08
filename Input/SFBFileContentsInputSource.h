@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBFileContentsInputSource : SFBDataInputSource
 - (instancetype)initWithData:(NSData *)data NS_UNAVAILABLE;
-- (nullable instancetype)initWithContentsOfURL:(NSURL *)url error:(NSError * _Nullable *)error NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithContentsOfURL:(NSURL *)url error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END
