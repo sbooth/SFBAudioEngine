@@ -9,6 +9,7 @@
 
 #import "SFBAudioBufferList.h"
 #import "SFBAudioBufferList+Internal.h"
+#import "SFBAudioFormat+Internal.h"
 
 static void DeallocateAudioBufferList(AudioBufferList *bufferList)
 {
@@ -26,8 +27,8 @@ static AudioBufferList * AllocateAudioBufferList(SFBAudioFormat *format, NSInteg
 {
 	NSCParameterAssert(capacityFrames > 0);
 
-	UInt32 numBuffers = format.isInterleaved ? 1 : format.streamDescription->mChannelsPerFrame;
-	UInt32 channelsPerBuffer = format.isInterleaved ? format.streamDescription->mChannelsPerFrame : 1;
+	UInt32 numBuffers = format.isInterleaved ? 1 : format->_streamDescription.mChannelsPerFrame;
+	UInt32 channelsPerBuffer = format.isInterleaved ? format->_streamDescription.mChannelsPerFrame : 1;
 
 	AudioBufferList *bufferList = calloc(1, offsetof(AudioBufferList, mBuffers) + (sizeof(AudioBuffer) * numBuffers));
 	if(!bufferList)
