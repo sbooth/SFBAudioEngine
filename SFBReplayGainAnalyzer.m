@@ -296,7 +296,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 {
 	NSParameterAssert(url != nil);
 
-	SFBAudioDecoder *decoder = [SFBAudioDecoder audioDecoderForURL:url error:error];
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder || ![decoder openReturningError:error])
 		return NO;
 
