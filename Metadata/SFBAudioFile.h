@@ -52,7 +52,7 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
  * @discussion Does not read audio properties or metadata
  * @param url The desired URL
  */
-- (instancetype)initWithURL:(NSURL *)url NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithURL:(NSURL *)url NS_DESIGNATED_INITIALIZER;
 
 /*! @brief The URL of the file */
 @property (nonatomic, readonly) NSURL *url;
@@ -62,8 +62,6 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 
 /*! @brief The file's audio metadata */
 @property (nonatomic) SFBAudioMetadata *metadata;
-
-#pragma mark Reading and Writing
 
 /*!
  * @brief Reads audio properties and metadata
@@ -79,6 +77,11 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
  */
 - (BOOL)writeMetadataReturningError:(NSError **)error NS_SWIFT_NAME(writeMetadata());
 
+@end
+
+@interface SFBAudioFile (SFBAudioFileSubclassRegistration)
++ (void)registerSubclass:(Class)subclass;
++ (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 NS_ASSUME_NONNULL_END

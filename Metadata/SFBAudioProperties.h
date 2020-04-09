@@ -22,7 +22,8 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;				/*!< @brief 
 /*! @brief Class providing information on basic audio properties  */
 @interface SFBAudioProperties : NSObject <NSCopying>
 
-- (instancetype)init NS_UNAVAILABLE;
+/*! @brief Returns an initialized an \c SFBAudioProperties object */
+- (instancetype)init NS_DESIGNATED_INITIALIZER;
 
 /*!
  * @brief Returns an initialized an \c SFBAudioProperties object populated with values from \c dictionaryRepresentation

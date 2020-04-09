@@ -13,15 +13,13 @@ NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile
 
 @implementation SFBAudioFile
 
-static NSMutableArray *_registeredInputOutputHandlers = nil;
-
-#pragma mark Supported File Formats
+static NSMutableArray *_registeredSubclasses = nil;
 
 + (NSSet<NSString *> *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedPathExtensions = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedPathExtensions];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		[result unionSet:supportedPathExtensions];
 	}
 
@@ -31,8 +29,8 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 + (NSSet<NSString *> *)supportedMIMETypes
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedMIMETypes = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedMIMETypes];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		[result unionSet:supportedMIMETypes];
 	}
 
@@ -42,8 +40,8 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
 	NSString *lowercaseExtension = extension.lowercaseString;
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedPathExtensions = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedPathExtensions];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		if([supportedPathExtensions containsObject:lowercaseExtension])
 			return YES;
 	}
@@ -54,16 +52,14 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 + (BOOL)handlesMIMEType:(NSString *)mimeType
 {
 	NSString *lowercaseMIMEType = mimeType.lowercaseString;
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedMIMETypes = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedMIMETypes];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:lowercaseMIMEType])
 			return YES;
 	}
 
 	return NO;
 }
-
-#pragma mark Creation
 
 + (instancetype)audioFileWithURL:(NSURL *)url error:(NSError **)error
 {
@@ -76,86 +72,90 @@ static NSMutableArray *_registeredInputOutputHandlers = nil;
 
 - (instancetype)initWithURL:(NSURL *)url
 {
-	if((self = [super init]))
-		self.url = url;
+	NSParameterAssert(url != nil);
+
+	Class subclass = [SFBAudioFile subclassForURL:url];
+	if(!subclass)
+		return nil;
+
+	if((self = [[subclass alloc] init]))
+		_url = url;
 	return self;
 }
 
-#pragma mark Reading and Writing
-
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
-	id<SFBAudioFileInputOutputHandling> handler = [SFBAudioFile inputOutputHandlerForURL:self.url];
-	return [handler readAudioPropertiesAndMetadataFromURL:self.url toAudioFile:self error:error];
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	id<SFBAudioFileInputOutputHandling> handler = [SFBAudioFile inputOutputHandlerForURL:self.url];
-	return [handler writeAudioMetadata:self.metadata toURL:self.url error:error];
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 @end
 
-@implementation SFBAudioFileInputOutputHandlerInfo
+@implementation SFBAudioFileSubclassInfo
 @end
 
-@implementation SFBAudioFile (SFBAudioFileInputOutputHandling)
+@implementation SFBAudioFile (SFBAudioFileSubclassRegistration)
 
-+ (void)registerInputOutputHandler:(Class)handler
++ (void)registerSubclass:(Class)subclass
 {
-	[self registerInputOutputHandler:handler priority:0];
+	[self registerSubclass:subclass priority:0];
 }
 
-+ (void)registerInputOutputHandler:(Class)handler priority:(int)priority
++ (void)registerSubclass:(Class)subclass priority:(int)priority
 {
-	NSAssert([handler conformsToProtocol:NSProtocolFromString(@"SFBAudioFileInputOutputHandling")], @"Unable to register class '%@' as an input/output handler because it does not conform to protocol SFBAudioFileInputOutputHandling", NSStringFromClass(handler));
+//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBAudioFile", NSStringFromClass(subclass));
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		_registeredInputOutputHandlers = [NSMutableArray array];
+		_registeredSubclasses = [NSMutableArray array];
 	});
 
-	SFBAudioFileInputOutputHandlerInfo *handlerInfo = [[SFBAudioFileInputOutputHandlerInfo alloc] init];
-	handlerInfo.klass = handler;
-	handlerInfo.priority = priority;
+	SFBAudioFileSubclassInfo *subclassInfo = [[SFBAudioFileSubclassInfo alloc] init];
+	subclassInfo.klass = subclass;
+	subclassInfo.priority = priority;
 
-	[_registeredInputOutputHandlers addObject:handlerInfo];
-	[_registeredInputOutputHandlers sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-		return ((SFBAudioFileInputOutputHandlerInfo *)obj1).priority < ((SFBAudioFileInputOutputHandlerInfo *)obj2).priority;
+	[_registeredSubclasses addObject:subclassInfo];
+	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+		return ((SFBAudioFileSubclassInfo *)obj1).priority < ((SFBAudioFileSubclassInfo *)obj2).priority;
 	}];
 }
 
-+ (id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForURL:(NSURL *)url
+@end
+
+@implementation SFBAudioFile (SFBAudioFileSubclassLookup)
+
++ (Class)subclassForURL:(NSURL *)url
 {
-	// Use extension-based type resolvers for files
-	NSString *scheme = url.scheme;
-
-	if([scheme caseInsensitiveCompare:@"file"] != NSOrderedSame)
-		return nil;
-
 	// TODO: Handle MIME types?
+	if(url.isFileURL)
+		return [self subclassForPathExtension:url.pathExtension.lowercaseString];
 
-	return [self inputOutputHandlerForPathExtension:url.pathExtension.lowercaseString];
+	return nil;
 }
 
-+ (id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForPathExtension:(NSString *)extension
++ (Class)subclassForPathExtension:(NSString *)extension
 {
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedPathExtensions = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedPathExtensions];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		if([supportedPathExtensions containsObject:extension])
-			return [[handlerInfo.klass alloc] init];
+			return subclassInfo.klass;
 	}
 
 	return nil;
 }
 
-+ (id<SFBAudioFileInputOutputHandling>)inputOutputHandlerForMIMEType:(NSString *)mimeType
++ (Class)subclassForMIMEType:(NSString *)mimeType
 {
-	for(SFBAudioFileInputOutputHandlerInfo *handlerInfo in _registeredInputOutputHandlers) {
-		NSSet *supportedMIMETypes = [(id <SFBAudioFileInputOutputHandling>)handlerInfo.klass supportedMIMETypes];
+	for(SFBAudioFileSubclassInfo *subclassInfo in _registeredSubclasses) {
+		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
-			return [[handlerInfo.klass alloc] init];
+			return subclassInfo.klass;
 	}
 
 	return nil;
