@@ -7,7 +7,7 @@
 #import "SimplePlayerAppDelegate.h"
 #import "PlayerWindowController.h"
 
-#include <SFBAudioEngine/AudioDecoder.h>
+#include <SFBAudioEngine/SFBAudioDecoder.h>
 
 @implementation SimplePlayerAppDelegate
 
@@ -37,7 +37,7 @@
 
 	[openPanel setAllowsMultipleSelection:NO];
 	[openPanel setCanChooseDirectories:NO];
-	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions()];
+	[openPanel setAllowedFileTypes:[[SFBAudioDecoder supportedPathExtensions] allObjects]];
 
 	if(NSModalResponseOK == [openPanel runModal]) {
 		NSArray *URLs = [openPanel URLs];
@@ -58,7 +58,7 @@
 
 	[openPanel setAllowsMultipleSelection:YES];
 	[openPanel setCanChooseDirectories:NO];
-	[openPanel setAllowedFileTypes:(__bridge_transfer NSArray *)SFB::Audio::Decoder::CreateSupportedFileExtensions()];
+	[openPanel setAllowedFileTypes:[[SFBAudioDecoder supportedPathExtensions] allObjects]];
 
 	if(NSModalResponseOK == [openPanel runModal]) {
 		for(NSURL *url in [openPanel URLs])

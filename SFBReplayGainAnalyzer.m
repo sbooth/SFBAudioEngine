@@ -94,15 +94,14 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
+#import <os/log.h>
+
 #import <Accelerate/Accelerate.h>
 
 #import "SFBReplayGainAnalyzer.h"
 
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioBufferList+Internal.h"
-#import "SFBAudioConverter.h"
 #import "SFBAudioDecoder+Internal.h"
-#import "SFBAudioFormat+Internal.h"
 
 // NSError domain for SFBReplayGainAnalyzer
 NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.ReplayGainAnalyzer";
@@ -111,11 +110,11 @@ NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.
 NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
 NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
 
+static inline long SFB_min(long a, long b) { return a < b ? a : b; }
+//static inline long SFB_max(long a, long b) { return a > b ? a : b; }
+static inline float SFB_maxf(float a, float b) { return a > b ? a : b; }
+
 #define BUFFER_SIZE_FRAMES 512
-
-#define sfb_max(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
-#define sfb_min(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
-
 
 // RG constants
 #define YULE_ORDER					10
@@ -330,46 +329,67 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 		return NO;
 	}
 
-	SFBAudioFormat *outputFormat = [[SFBAudioFormat alloc] initWithCommonPCMFormat:SFBAudioFormatCommonPCMFormatFloat32 sampleRate:replayGainSampleRate channels:inputFormat->mChannelsPerFrame interleaved:NO];
+	AVAudioFormat *outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:replayGainSampleRate channels:inputFormat->mChannelsPerFrame interleaved:NO];
 
 	// Will NSAssert() if an invalid sample rate is passed
 	[self setSampleRate:(NSInteger)replayGainSampleRate];
 
-	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder outputFormat:outputFormat preferredBufferSize:BUFFER_SIZE_FRAMES error:error];
+	AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:outputFormat];
 	if(!converter)
 		return NO;
 
-	SFBAudioBufferList *outputBuffer = [[SFBAudioBufferList alloc] initWithFormat:outputFormat capacityFrames:BUFFER_SIZE_FRAMES];
+	AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
+	AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 
-	bool isStereo = (2 == outputFormat->_streamDescription.mChannelsPerFrame);
+	bool isStereo = (2 ==  outputFormat.channelCount);
 
 	for(;;) {
-		NSInteger frameCount = 0;
-		if(![converter convertAudio:outputBuffer frameCount:BUFFER_SIZE_FRAMES framesConverted:&frameCount error:nil] || frameCount == 0)
+		__block NSError *err = nil;
+		AVAudioConverterOutputStatus status = [converter convertToBuffer:outputBuffer error:error withInputFromBlock:^AVAudioBuffer * _Nullable(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus * _Nonnull outStatus) {
+			BOOL result = [decoder decodeIntoBuffer:decodeBuffer frameLength:inNumberOfPackets error:&err];
+			if(!result)
+				os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
+
+			if(result && decodeBuffer.frameLength == 0)
+				*outStatus = AVAudioConverterInputStatus_EndOfStream;
+			else
+				*outStatus = AVAudioConverterInputStatus_HaveData;
+
+			return decodeBuffer;
+		}];
+
+		if(status == AVAudioConverterOutputStatus_Error) {
+			if(error)
+				*error = err;
+			return NO;
+		}
+		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
+
+		AVAudioFrameCount frameCount = outputBuffer.frameLength;
 
 		// Find the peak sample magnitude
 		float lpeak;
-		vDSP_maxmgv((const float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, &lpeak, (vDSP_Length)frameCount);
-		_trackPeak = sfb_max(_trackPeak, lpeak);
+		vDSP_maxmgv(outputBuffer.floatChannelData[0], 1, &lpeak, (vDSP_Length)frameCount);
+		_trackPeak = SFB_maxf(_trackPeak, lpeak);
 		if(isStereo) {
 			float rpeak;
-			vDSP_maxmgv((const float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, &rpeak, (vDSP_Length)frameCount);
-			_trackPeak = sfb_max(_trackPeak, rpeak);
+			vDSP_maxmgv(outputBuffer.floatChannelData[1], 1, &rpeak, (vDSP_Length)frameCount);
+			_trackPeak = SFB_maxf(_trackPeak, rpeak);
 		}
 
 		// The replay gain analyzer expects 16-bit sample size passed as floats
 		const float scale = 1u << 15;
-		vDSP_vsmul((const float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, &scale, (float *)outputBuffer->_bufferList->mBuffers[0].mData, 1, (vDSP_Length)frameCount);
+		vDSP_vsmul(outputBuffer.floatChannelData[0], 1, &scale, outputBuffer.floatChannelData[0], 1, (vDSP_Length)frameCount);
 		if(isStereo) {
-			vDSP_vsmul((const float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, &scale, (float *)outputBuffer->_bufferList->mBuffers[1].mData, 1, (vDSP_Length)frameCount);
-			[self analyzeLeftSamples:(const float *)outputBuffer->_bufferList->mBuffers[0].mData rightSamples:(const float *)outputBuffer->_bufferList->mBuffers[1].mData sampleCount:(size_t)frameCount isStereo:YES];
+			vDSP_vsmul(outputBuffer.floatChannelData[1], 1, &scale, outputBuffer.floatChannelData[1], 1, (vDSP_Length)frameCount);
+			[self analyzeLeftSamples:outputBuffer.floatChannelData[0] rightSamples:outputBuffer.floatChannelData[1] sampleCount:(size_t)frameCount isStereo:YES];
 		}
 		else
-			[self analyzeLeftSamples:(const float *)outputBuffer->_bufferList->mBuffers[0].mData rightSamples:NULL sampleCount:(size_t)frameCount isStereo:NO];
+			[self analyzeLeftSamples:outputBuffer.floatChannelData[0] rightSamples:NULL sampleCount:(size_t)frameCount isStereo:NO];
 	}
 
-	_albumPeak = sfb_max(_albumPeak, _trackPeak);
+	_albumPeak = SFB_maxf(_albumPeak, _trackPeak);
 
 	return YES;
 }
@@ -561,7 +581,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	}
 
 	while(batchsamples > 0) {
-		long cursamples = sfb_min((long)_sampleWindow - (long)_totsamp, batchsamples);
+		long cursamples = SFB_min((long)_sampleWindow - (long)_totsamp, batchsamples);
 		if(cursamplepos < MAX_ORDER) {
 			curleft  = _linpre + cursamplepos;
 			curright = _rinpre + cursamplepos;

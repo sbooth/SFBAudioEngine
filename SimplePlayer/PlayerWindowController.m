@@ -6,20 +6,9 @@
 
 #import "PlayerWindowController.h"
 
-#include <atomic>
-
-#include <SFBAudioEngine/AudioPlayer.h>
-#include <SFBAudioEngine/AudioDecoder.h>
-
+#import <SFBAudioEngine/SFBAudioDecoder.h>
 #import <SFBAudioEngine/SFBAudioFile.h>
-
-// ========================================
-// Player flags
-// ========================================
-enum ePlayerFlags : unsigned int {
-	ePlayerFlagRenderingStarted			= 1u << 0,
-	ePlayerFlagRenderingFinished		= 1u << 1
-};
+#import <SFBAudioEngine/SFBAudioPlayer.h>
 
 @interface SFBAttachedPicture (ImageCreation)
 @property (nonatomic, nullable, readonly) NSImage *image;
@@ -32,8 +21,7 @@ enum ePlayerFlags : unsigned int {
 @interface PlayerWindowController ()
 {
 @private
-	SFB::Audio::Player	*_player;		// The player instance
-	std::atomic_uint	_playerFlags;
+	SFBAudioPlayer 		*_player;
 	dispatch_source_t	_timer;
 }
 @end
@@ -47,75 +35,50 @@ enum ePlayerFlags : unsigned int {
 - (id) init
 {
 	if((self = [super initWithWindowNibName:@"PlayerWindow"])) {
-		try {
-			_player = new SFB::Audio::Player();
-		}
+		_player = [[SFBAudioPlayer alloc] init];
 
-		catch(const std::exception& e) {
-			NSAlert *alert = [[NSAlert alloc] init];
-			[alert setAlertStyle:NSAlertStyleCritical];
-			[alert setMessageText:@"Unable to create audio player"];
-			[alert addButtonWithTitle:@"OK"];
-			/* response = */ [alert runModal];
-			return nil;
-		}
+		__weak typeof(self) weakSelf = self;
 
-		_playerFlags = 0;
+		[_player setRenderingStartedNotificationHandler:^(SFBAudioDecoder * _Nonnull decoder) {
+			NSURL *url = decoder.inputSource.url;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[weakSelf updateWindowUI];
+				if([url isFileURL])
+					[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
+			});
+		}];
 
-		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingStartedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
-			self->_playerFlags.fetch_or(ePlayerFlagRenderingStarted);
-		});
+		[_player setRenderingFinishedNotificationHandler:^(SFBAudioDecoder * _Nonnull decoder) {
+#pragma unused(decoder)
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[weakSelf updateWindowUI];
+			});
+		}];
 
-		// This will be called from the realtime rendering thread and as such MUST NOT BLOCK!!
-		_player->SetRenderingFinishedBlock(^(const SFB::Audio::Decoder& /*decoder*/){
-			self->_playerFlags.fetch_or(ePlayerFlagRenderingFinished);
-		});
+		[_player setErrorNotificationHandler:^(NSError * _Nonnull error) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[NSApp presentError:error];
+			});
+		}];
 
 		// Update the UI 5 times per second
 		_timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
 		dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, NSEC_PER_SEC / 5, NSEC_PER_SEC / 3);
 
 		dispatch_source_set_event_handler(_timer, ^{
-
-			// To avoid blocking the realtime rendering thread, flags are set in the callbacks and subsequently handled here
-			auto flags = self->_playerFlags.load();
-
-			if(ePlayerFlagRenderingStarted & flags) {
-				self->_playerFlags.fetch_and(~ePlayerFlagRenderingStarted);
-
-				[self updateWindowUI];
-
-				NSURL *playingURL = (__bridge NSURL *)self->_player->GetPlayingURL();
-				if([playingURL isFileURL])
-					[[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:playingURL];
-
-				return;
-			}
-			else if(ePlayerFlagRenderingFinished & flags) {
-				self->_playerFlags.fetch_and(~ePlayerFlagRenderingFinished);
-
-				[self updateWindowUI];
-
-				return;
-			}
-
-			if(!self->_player->IsPlaying())
+			if(!self->_player.isPlaying)
 				[self.playButton setTitle:@"Resume"];
 			else
 				[self.playButton setTitle:@"Pause"];
 
-			SInt64 currentFrame, totalFrames;
-			CFTimeInterval currentTime, totalTime;
-
-			if(self->_player->GetPlaybackPositionAndTime(currentFrame, totalFrames, currentTime, totalTime)) {
-				double fractionComplete = static_cast<double>(currentFrame) / static_cast<double>(totalFrames);
-
+			SFBAudioPlayerPlaybackPosition playbackPosition;
+			SFBAudioPlayerPlaybackTime playbackTime;
+			if([self->_player getPlaybackPosition:&playbackPosition andTime:&playbackTime]) {
+				double fractionComplete = (double)playbackPosition.currentFrame / playbackPosition.totalFrames;
 				[self.slider setDoubleValue:fractionComplete];
-				[self.elapsed setDoubleValue:currentTime];
-				[self.remaining setDoubleValue:(-1 * (totalTime - currentTime))];
+				[self.elapsed setDoubleValue:playbackTime.currentTime];
+				[self.remaining setDoubleValue:(-1 * (playbackTime.totalTime - playbackTime.currentTime))];
 			}
-
 		});
 
 		// Start the timer
@@ -123,12 +86,6 @@ enum ePlayerFlags : unsigned int {
 	}
 
 	return self;
-}
-
-- (void) dealloc
-{
-	delete _player;
-	_player = nullptr;
 }
 
 - (void) awakeFromNib
@@ -145,59 +102,59 @@ enum ePlayerFlags : unsigned int {
 - (void) windowWillClose:(NSNotification *)notification
 {
 #pragma unused(notification)
-	_player->Stop();
+	[_player stopReturningError:nil];
 }
 
 - (IBAction) playPause:(id)sender
 {
 #pragma unused(sender)
-	_player->PlayPause();
+	[_player playPauseReturningError:nil];
 }
 
 - (IBAction) seekForward:(id)sender
 {
 #pragma unused(sender)
-	_player->SeekForward();
+	[_player seekForward];
 }
 
 - (IBAction) seekBackward:(id)sender
 {
 #pragma unused(sender)
-	_player->SeekBackward();
+	[_player seekBackward];
 }
 
 - (IBAction) seek:(id)sender
 {
 #pragma unused(sender)
-	_player->SeekToPosition([sender floatValue]);
+	[_player seekToPosition:[sender floatValue]];
 }
 
 - (IBAction) skipToNextTrack:(id)sender
 {
 #pragma unused(sender)
-	_player->SkipToNextTrack();
+	[_player skipToNext];
 }
 
-- (BOOL) playURL:(NSURL *)url
+- (BOOL)playURL:(NSURL *)url
 {
-	return _player->Play((__bridge CFURLRef)url);
+	return [_player playURL:url error:nil];
 }
 
-- (BOOL) enqueueURL:(NSURL *)url
+- (BOOL)enqueueURL:(NSURL *)url
 {
-	return _player->Enqueue((__bridge CFURLRef)url);
+	return [_player enqueueURL:url error:nil];
 }
 
 @end
 
 @implementation PlayerWindowController (Private)
 
-- (void) updateWindowUI
+- (void)updateWindowUI
 {
-	NSURL *url = (__bridge NSURL *)_player->GetPlayingURL();
+	NSURL *url = _player.url;
 
 	// Nothing happening, reset the window
-	if(nullptr == url) {
+	if(!url) {
 		[[self window] setRepresentedURL:nil];
 		[[self window] setTitle:@""];
 
@@ -217,7 +174,7 @@ enum ePlayerFlags : unsigned int {
 		return;
 	}
 
-	bool seekable = _player->SupportsSeeking();
+	BOOL seekable = _player.supportsSeeking;
 
 	// Update the window's title and represented file
 	[[self window] setRepresentedURL:url];
@@ -234,8 +191,7 @@ enum ePlayerFlags : unsigned int {
 	// Show the times
 	[self.elapsed setHidden:NO];
 
-	SInt64 totalFrames;
-	if(_player->GetTotalFrames(totalFrames) && -1 != totalFrames)
+	if(_player.totalFrames != -1)
 		[self.remaining setHidden:NO];
 
 	// Load and display some metadata.  Normally the metadata would be read and stored in the background,
