@@ -9,6 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBDataInputSource : SFBInputSource
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithData:(NSData *)data NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithBytes:(const void *)bytes length:(NSInteger)length;

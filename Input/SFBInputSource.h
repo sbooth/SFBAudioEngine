@@ -52,6 +52,7 @@ typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
  */
 + (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length error:(NSError **)error;
 
+//+ (instancetype)new NS_UNAVAILABLE;
 //- (instancetype)init NS_UNAVAILABLE;
 
 /*! @brief Returns the URL corresponding to this input source or \c nil if none */
