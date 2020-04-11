@@ -151,13 +151,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 - (void)dealloc
 {
 	[self closeReturningError:nil];
-	if(_representedObjectCleanupBlock)
-		_representedObjectCleanupBlock(_representedObject);
-}
-
-- (NSString *)sourceFormatDescription
-{
-	return _sourceFormat.description;
 }
 
 - (BOOL)openReturningError:(NSError **)error

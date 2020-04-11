@@ -6,11 +6,23 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 
-#import "SFBAudioBufferList.h"
-#import "SFBAudioFormat.h"
 #import "SFBInputSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+/*! @brief Additional audio format IDs */
+typedef NS_ENUM(UInt32, SFBAudioFormatID) {
+	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',	/*!< Direct Stream Digital (DSD) */
+	SFBAudioFormatIDDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
+	SFBAudioFormatIDModule 					= 'MOD ',	/*!< Module */
+	SFBAudioFormatIDMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
+	SFBAudioFormatIDMPEG1 					= 'MPG1',	/*!< MPEG-1 (Layer I, II, or III) */
+	SFBAudioFormatIDMusepack 				= 'MPC ',	/*!< Musepack */
+	SFBAudioFormatIDSpeex 					= 'SPX ',	/*!< Ogg Speex */
+	SFBAudioFormatIDTrueAudio 				= 'TTA ',	/*!< True Audio */
+	SFBAudioFormatIDVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
+	SFBAudioFormatIDWavPack 				= 'WV  '	/*!< WavPack */
+};
 
 /*! @brief The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses */
 extern NSErrorDomain const SFBAudioDecoderErrorDomain;
@@ -21,17 +33,8 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	SFBAudioDecoderErrorCodeInputOutput		= 1			/*!< Input/output error */
 };
 
-/*! @brief A decoder's represented object, typically a C struct. If used from the real time thread it must not contain calls to Swift, Objective-C, or CF objects. */
-typedef void *SFBAudioDecoderRepresentedObject;
-
-/*! @brief A block freeing any resources associated with a decoder's represented object*/
-typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepresentedObject);
-
+/*! @brief A decoder providing audio as PCM */
 @interface SFBAudioDecoder : NSObject
-{
-@public
-	SFBAudioDecoderRepresentedObject _representedObject; /*!< This is safe to access directly using \c -> in IOProcs */
-}
 
 /*! @brief Returns a set containing the supported path extensions */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -58,9 +61,7 @@ typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepre
 
 @property (nonatomic, readonly) SFBInputSource *inputSource;
 
-@property (nonatomic, readonly) SFBAudioFormat *sourceFormat;
-@property (nonatomic, readonly) NSString *sourceFormatDescription;
-
+@property (nonatomic, readonly) AVAudioFormat *sourceFormat;
 @property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /*!
@@ -91,8 +92,7 @@ typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepre
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error;
 
-@property (nonatomic, nullable) SFBAudioDecoderRepresentedObject representedObject;
-@property (nonatomic, nullable) SFBAudioDecoderRepresentedObjectCleanupBlock representedObjectCleanupBlock;
+@property (nonatomic, nullable) id representedObject;
 
 @end
 

@@ -10,13 +10,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SFBAudioDecoder ()
 {
 @package
+	// Needs to be accessible to callbacks
 	SFBInputSource *_inputSource;
-	SFBAudioFormat *_sourceFormat;
+@protected
+	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	AVAudioFramePosition _currentFrame;
 	AVAudioFramePosition _totalFrames;
 }
-@property (nonatomic) SFBAudioFormat *sourceFormat;
+@property (nonatomic) AVAudioFormat *sourceFormat;
 @property (nonatomic) AVAudioFormat *processingFormat;
 @end
 

@@ -14,9 +14,7 @@
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioBufferList+Internal.h"
 #import "SFBAudioDecoder+Internal.h"
-#import "SFBAudioFormat+Internal.h"
 
 @interface SFBFLACDecoder ()
 {
@@ -289,7 +287,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 
-	self.sourceFormat = [[SFBAudioFormat alloc] initWithStreamDescription:sourceStreamDescription];
+	self.sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
