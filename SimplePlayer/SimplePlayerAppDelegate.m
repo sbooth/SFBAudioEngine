@@ -4,10 +4,10 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <SFBAudioEngine/SFBAudioDecoder.h>
+
 #import "SimplePlayerAppDelegate.h"
 #import "PlayerWindowController.h"
-
-#include <SFBAudioEngine/SFBAudioDecoder.h>
 
 @implementation SimplePlayerAppDelegate
 

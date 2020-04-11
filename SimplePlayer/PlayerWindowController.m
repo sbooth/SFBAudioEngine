@@ -4,11 +4,10 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "PlayerWindowController.h"
-
-#import <SFBAudioEngine/SFBAudioDecoder.h>
 #import <SFBAudioEngine/SFBAudioFile.h>
 #import <SFBAudioEngine/SFBAudioPlayer.h>
+
+#import "PlayerWindowController.h"
 
 @interface SFBAttachedPicture (ImageCreation)
 @property (nonatomic, nullable, readonly) NSImage *image;
