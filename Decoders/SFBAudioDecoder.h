@@ -3,6 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
 
 #import "SFBAudioBufferList.h"
@@ -44,6 +45,7 @@ typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepre
 /*! @brief Tests whether a MIME type is supported */
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 - (nullable instancetype)initWithURL:(NSURL *)url;
@@ -59,8 +61,7 @@ typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepre
 @property (nonatomic, readonly) SFBAudioFormat *sourceFormat;
 @property (nonatomic, readonly) NSString *sourceFormatDescription;
 
-@property (nonatomic, readonly) SFBAudioFormat *processingFormat;
-@property (nonatomic, readonly) NSString *processingFormatDescription;
+@property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
 /*!
  * @brief Opens the decoder for reading
@@ -79,15 +80,16 @@ typedef void(^SFBAudioDecoderRepresentedObjectCleanupBlock)(SFBAudioDecoderRepre
 /*! @brief Returns \c YES if the decoder is open */
 @property (nonatomic, readonly) BOOL isOpen;
 
-- (BOOL)decodeAudio:(SFBAudioBufferList *)bufferList frameCount:(NSInteger)frameCount framesRead:(NSInteger *)framesRead error:(NSError **)error;
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer error:(NSError **)error NS_SWIFT_NAME(decode(into:));
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
-@property (nonatomic, readonly) NSInteger currentFrame;
-@property (nonatomic, readonly) NSInteger totalFrames;
-@property (nonatomic, readonly) NSInteger framesRemaining;
+@property (nonatomic, readonly) AVAudioFramePosition currentFrame;
+@property (nonatomic, readonly) AVAudioFramePosition totalFrames;
+@property (nonatomic, readonly) AVAudioFramePosition framesRemaining;
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-- (BOOL)seekToFrame:(NSInteger)frame error:(NSError **)error;
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error;
 
 @property (nonatomic, nullable) SFBAudioDecoderRepresentedObject representedObject;
 @property (nonatomic, nullable) SFBAudioDecoderRepresentedObjectCleanupBlock representedObjectCleanupBlock;

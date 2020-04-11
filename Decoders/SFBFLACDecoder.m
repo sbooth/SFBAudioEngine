@@ -12,6 +12,7 @@
 
 #import "SFBFLACDecoder.h"
 
+#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioBufferList+Internal.h"
 #import "SFBAudioDecoder+Internal.h"
@@ -22,7 +23,7 @@
 @private
 	FLAC__StreamDecoder *_flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
-	SFBAudioBufferList *_frameBuffer; // For converting push to pull
+	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
 }
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer;
 - (void)handleFLACMetadata:(const FLAC__StreamDecoder *)decoder metadata:(const FLAC__StreamMetadata *)metadata;
@@ -263,19 +264,19 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 		}
 	}
 
-	SFBAudioChannelLayout *channelLayout = nil;
+	AVAudioChannelLayout *channelLayout = nil;
 	switch(_streamInfo.channels) {
-		case 1:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_Mono];			break;
-		case 2:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_Stereo];			break;
-		case 3:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_MPEG_3_0_A];		break;
-		case 4:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_Quadraphonic];	break;
-		case 5:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_MPEG_5_0_A];		break;
-		case 6:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_MPEG_5_1_A];		break;
-		case 7:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_MPEG_6_1_A];		break;
-		case 8:		channelLayout = [[SFBAudioChannelLayout alloc] initWithTag:kAudioChannelLayoutTag_MPEG_7_1_A];		break;
+		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
+		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
+		case 3:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_3_0_A];		break;
+		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
+		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];		break;
+		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];		break;
+		case 7:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_6_1_A];		break;
+		case 8:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_7_1_A];		break;
 	}
 
-	self.processingFormat = [[SFBAudioFormat alloc] initWithStreamDescription:processingStreamDescription channelLayout:channelLayout];
+	self.processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
@@ -291,7 +292,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	self.sourceFormat = [[SFBAudioFormat alloc] initWithStreamDescription:sourceStreamDescription];
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
-	_frameBuffer = [[SFBAudioBufferList alloc] initWithFormat:_processingFormat capacityFrames:_streamInfo.max_blocksize];
+	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
 	if(!_frameBuffer) {
 		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
 
@@ -306,7 +307,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 		return NO;
 	}
 
-	[_frameBuffer empty];
+	_frameBuffer.frameLength = 0;
 
 	_totalFrames = (NSInteger)_streamInfo.total_samples;
 
@@ -334,48 +335,32 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	return _flac != NULL;
 }
 
-- (BOOL)decodeAudio:(SFBAudioBufferList *)bufferList frameCount:(NSInteger)frameCount framesRead:(NSInteger *)framesRead error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
-	NSParameterAssert(bufferList != nil);
+	NSParameterAssert(buffer != nil);
 
 	// Reset output buffer data size
-	[bufferList empty];
+	buffer.frameLength = 0;
 
-	if(bufferList->_bufferList->mNumberBuffers != _processingFormat->_streamDescription.mChannelsPerFrame) {
-		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
+	if(![buffer.format isEqual:_processingFormat]) {
+		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
-	if(frameCount > bufferList.capacityFrames)
-		frameCount = bufferList.capacityFrames;
+	if(frameLength > buffer.frameCapacity)
+		frameLength = buffer.frameCapacity;
 
-	NSInteger framesProcessed = 0;
+	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
-		NSInteger	framesRemaining	= frameCount - framesProcessed;
-		NSInteger	framesToSkip	= bufferList->_bufferList->mBuffers[0].mDataByteSize / _processingFormat->_streamDescription.mBytesPerFrame;
-		NSInteger	framesInBuffer	= _frameBuffer->_bufferList->mBuffers[0].mDataByteSize / _processingFormat->_streamDescription.mBytesPerFrame;
-		NSInteger	framesToCopy	= SFB_min(framesInBuffer, framesRemaining);
+		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_frameBuffer readOffset:0 frameLength:framesRemaining];
+		[_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
-		// Copy data from the buffer to output
-		for(UInt32 i = 0; i < _frameBuffer->_bufferList->mNumberBuffers; ++i) {
-			unsigned char *buf = (unsigned char *)bufferList->_bufferList->mBuffers[i].mData;
-			memcpy(buf + (framesToSkip * _processingFormat->_streamDescription.mBytesPerFrame), _frameBuffer->_bufferList->mBuffers[i].mData, framesToCopy * _processingFormat->_streamDescription.mBytesPerFrame);
-			bufferList->_bufferList->mBuffers[i].mDataByteSize += framesToCopy * _processingFormat->_streamDescription.mBytesPerFrame;
-
-			// Move remaining data in buffer to beginning
-			if(framesToCopy != framesInBuffer) {
-				buf = (unsigned char *)_frameBuffer->_bufferList->mBuffers[i].mData;
-				memmove(buf, buf + (framesToCopy * _processingFormat->_streamDescription.mBytesPerFrame), (framesInBuffer - framesToCopy) * _processingFormat->_streamDescription.mBytesPerFrame);
-			}
-
-			_frameBuffer->_bufferList->mBuffers[i].mDataByteSize -= (UInt32)(framesToCopy * _processingFormat->_streamDescription.mBytesPerFrame);
-		}
-
-		framesProcessed += framesToCopy;
+		framesProcessed += framesCopied;
 
 		// All requested frames were read or EOS reached
-		if(framesProcessed == frameCount || FLAC__stream_decoder_get_state(_flac) == FLAC__STREAM_DECODER_END_OF_STREAM)
+		if(framesProcessed == frameLength || FLAC__stream_decoder_get_state(_flac) == FLAC__STREAM_DECODER_END_OF_STREAM)
 			break;
 
 		// Grab the next frame
@@ -384,12 +369,13 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	}
 
 	_currentFrame += framesProcessed;
-	*framesRead = framesProcessed;
+
+	NSAssert(buffer.frameLength == framesProcessed, @"postcondition");
 
 	return YES;
 }
 
-- (BOOL)seekToFrame:(NSInteger)frame error:(NSError **)error
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 //	NSParameterAssert(frame <= _totalFrames);
 
@@ -401,7 +387,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 
 	if(result) {
 		_currentFrame = frame;
-		[_frameBuffer empty];
+		_frameBuffer.frameLength = 0;
 	}
 
 	return result != 0;
@@ -411,12 +397,13 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 {
 	NSParameterAssert(decoder != NULL);
 	NSParameterAssert(frame != NULL);
-
-	// Avoid segfaults
-	if(_frameBuffer->_bufferList == NULL || _frameBuffer->_bufferList->mNumberBuffers != frame->header.channels)
+//	NSAssert(_frameBuffer.frameLength == 0, @"_frameBuffer not empty");
+	
+	const AudioBufferList *abl = _frameBuffer.audioBufferList;
+	if(abl->mNumberBuffers != frame->header.channels)
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-	const AudioStreamBasicDescription *format = self.processingFormat.streamDescription;
+	const AudioStreamBasicDescription *format = _frameBuffer.format.streamDescription;
 
 	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
 	UInt32 shift = (format->mFormatFlags & kAudioFormatFlagIsPacked) ? 0 : (8 * format->mBytesPerFrame) - format->mBitsPerChannel;
@@ -425,36 +412,27 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	switch(format->mBytesPerFrame) {
 		case 1: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				char *dst = (char *)_frameBuffer->_bufferList->mBuffers[channel].mData;
-
+				char *dst = (char *)abl->mBuffers[channel].mData;
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
 					*dst++ = (char)(buffer[channel][sample] << shift);
-
-				_frameBuffer->_bufferList->mBuffers[channel].mNumberChannels = 1;
-				_frameBuffer->_bufferList->mBuffers[channel].mDataByteSize = frame->header.blocksize * sizeof(char);
 			}
-
+			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 
 		case 2: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				short *dst = (short *)_frameBuffer->_bufferList->mBuffers[channel].mData;
-
+				short *dst = (short *)abl->mBuffers[channel].mData;
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
 					*dst++ = (short)(buffer[channel][sample] << shift);
-
-				_frameBuffer->_bufferList->mBuffers[channel].mNumberChannels = 1;
-				_frameBuffer->_bufferList->mBuffers[channel].mDataByteSize = frame->header.blocksize * sizeof(short);
 			}
-
+			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 
 		case 3: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				unsigned char *dst = (unsigned char *)_frameBuffer->_bufferList->mBuffers[channel].mData;
-
+				unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
 				FLAC__int32 value;
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
 					value = buffer[channel][sample] << shift;
@@ -470,25 +448,18 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 #  error Unknown OS byte order
 #endif
 				}
-
-				_frameBuffer->_bufferList->mBuffers[channel].mNumberChannels = 1;
-				_frameBuffer->_bufferList->mBuffers[channel].mDataByteSize = frame->header.blocksize * 3 * sizeof(unsigned char);
 			}
-
+			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 
 		case 4: {
 			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int *dst = (int *)_frameBuffer->_bufferList->mBuffers[channel].mData;
-
+				int *dst = (int *)abl->mBuffers[channel].mData;
 				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
 					*dst++ = (int)(buffer[channel][sample] << shift);
-
-				_frameBuffer->_bufferList->mBuffers[channel].mNumberChannels = 1;
-				_frameBuffer->_bufferList->mBuffers[channel].mDataByteSize = frame->header.blocksize * sizeof(int);
 			}
-
+			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 	}

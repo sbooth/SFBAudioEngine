@@ -106,6 +106,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 			_inputSource = inputSource;
 			return self;
 		}
+		os_log_debug(OS_LOG_DEFAULT, "SFBAudioDecoder unsupported MIME type: %{public}@", mimeType);
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
@@ -128,6 +129,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	Class subclass = [SFBAudioDecoder subclassForPathExtension:pathExtension.lowercaseString];
 	if(!subclass) {
+		os_log_debug(OS_LOG_DEFAULT, "SFBAudioDecoder unsupported path extension: %{public}@", pathExtension);
+
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInputOutput
@@ -157,11 +160,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return _sourceFormat.description;
 }
 
-- (NSString *)processingFormatDescription
-{
-	return _processingFormat.description;
-}
-
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(!_inputSource.isOpen)
@@ -184,13 +182,18 @@ static NSMutableArray *_registeredSubclasses = nil;
 	__builtin_unreachable();
 }
 
-- (BOOL)decodeAudio:(SFBAudioBufferList *)bufferList frameCount:(NSInteger)frameCount framesRead:(NSInteger *)framesRead error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer error:(NSError **)error
+{
+	return [self decodeIntoBuffer:buffer frameLength:buffer.frameCapacity error:error];
+}
+
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
 }
 
-- (NSInteger)framesRemaining
+- (AVAudioFramePosition)framesRemaining
 {
 	return _totalFrames - _currentFrame;
 }
@@ -200,7 +203,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return _inputSource.supportsSeeking;
 }
 
-- (BOOL)seekToFrame:(NSInteger)frame error:(NSError **)error
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();

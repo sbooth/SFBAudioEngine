@@ -5,9 +5,6 @@
 
 #import "SFBAudioDecoder.h"
 
-#define SFB_max(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
-#define SFB_min(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
-
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBAudioDecoder ()
@@ -15,12 +12,12 @@ NS_ASSUME_NONNULL_BEGIN
 @package
 	SFBInputSource *_inputSource;
 	SFBAudioFormat *_sourceFormat;
-	SFBAudioFormat *_processingFormat;
-	NSInteger _currentFrame;
-	NSInteger _totalFrames;
+	AVAudioFormat *_processingFormat;
+	AVAudioFramePosition _currentFrame;
+	AVAudioFramePosition _totalFrames;
 }
 @property (nonatomic) SFBAudioFormat *sourceFormat;
-@property (nonatomic) SFBAudioFormat *processingFormat;
+@property (nonatomic) AVAudioFormat *processingFormat;
 @end
 
 @interface SFBAudioDecoderSubclassInfo : NSObject
