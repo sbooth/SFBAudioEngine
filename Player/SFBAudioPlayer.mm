@@ -15,10 +15,6 @@
 #import "Semaphore.h"
 #import "SFBAudioDecoder+Internal.h"
 
-@interface NSURL (SFBDisplayName)
-- (NSString *)SFB_displayName;
-@end
-
 @interface SFBAudioPlayer ()
 - (void *)decoderThreadEntry;
 @end
@@ -659,7 +655,7 @@ namespace {
 				busFormat = [_player outputFormatForBus:0];
 			});
 
-			os_log_info(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [decoderState->mDecoder.inputSource.url SFB_displayName]);
+			os_log_info(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 			os_log_info(OS_LOG_DEFAULT, "Decoder processing format: %{public}@", decoderState->mDecoder.processingFormat);
 			os_log_info(OS_LOG_DEFAULT, "Bus format: %{public}@", busFormat);
 
@@ -674,7 +670,7 @@ namespace {
 			// Decode the audio until complete or stopped
 			while(!(_flags & eAudioPlayerFlagStopDecoding) && !(decoderState->mFlags & eDecoderStateDataFlagStopDecoding)) {
 				if(decoderState->mFlags & eDecoderStateDataFlagDecodingFinished) {
-					os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [decoderState->mDecoder.inputSource.url SFB_displayName]);
+					os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Some formats (MP3) may not know the exact number of frames in advance
 					// without processing the entire file, which is a potentially slow operation
@@ -762,7 +758,7 @@ namespace {
 
 								// Perform the rendering started callback
 								if(decoderState->mFramesRendered == 0 && !(decoderState->mFlags & eDecoderStateDataFlagRenderingStarted)) {
-									os_log_info(OS_LOG_DEFAULT, "Rendering started for \"%{public}@\"", [decoderState->mDecoder.inputSource.url SFB_displayName]);
+									os_log_info(OS_LOG_DEFAULT, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted);
 
@@ -778,7 +774,7 @@ namespace {
 
 								// Perform the rendering finished callback
 								if(decoderState->mFramesRendered == decoderState->mFramesConverted && decoderState->mFlags & eDecoderStateDataFlagDecodingFinished) {
-									os_log_info(OS_LOG_DEFAULT, "Rendering finished for \"%{public}@\"", [decoderState->mDecoder.inputSource.url SFB_displayName]);
+									os_log_info(OS_LOG_DEFAULT, "Rendering finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
 									std::atomic_store(&self->_decoderState, std::shared_ptr<SFBAudioDecoderStateData>{});
@@ -810,33 +806,6 @@ namespace {
 	os_log_info(OS_LOG_DEFAULT, "Decoder thread terminating");
 
 	return nullptr;
-}
-
-@end
-
-@implementation NSURL (SFBDisplayName)
-- (NSString *)SFB_displayName
-{
-	NSString *displayName = nil;
-
-#if !TARGET_OS_IPHONE
-	NSString *scheme = self.scheme.lowercaseString;
-	if(scheme) {
-		if([scheme isEqualToString:@"file"]) {
-			if(![self getResourceValue:&displayName forKey:NSURLLocalizedNameKey error:nil])
-				displayName = self.lastPathComponent;
-		}
-		else
-			displayName = self.absoluteString;
-	}
-	// If scheme is nil the URL is probably invalid, but can still be logged
-	else
-		displayName = self.absoluteString;
-#else
-	displayName = self.absoluteString;
-#endif
-
-	return displayName;
 }
 
 @end
