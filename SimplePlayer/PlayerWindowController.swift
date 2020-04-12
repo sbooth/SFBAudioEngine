@@ -29,7 +29,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 		return "PlayerWindow"
 	}
 
-	override func awakeFromNib() {
+	override func windowDidLoad() {
 		player = SFBAudioPlayer()
 
 		player.renderingStartedNotificationHandler = { decoder in
