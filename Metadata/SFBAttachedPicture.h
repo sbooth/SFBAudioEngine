@@ -51,6 +51,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  */
 @interface SFBAttachedPicture : NSObject <NSCopying>
 
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 /*!
