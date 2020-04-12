@@ -55,7 +55,8 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 // ========================================
 // Player State
 @property (nonatomic, readonly) BOOL isPlaying; //!< Returns \c YES if the AVAudioEngine's AVAudioPlayerNode is playing
-@property (nonatomic, nullable, readonly) NSURL *url; //!< Returns the url of the currently playing track or \c nil if none
+@property (nonatomic, nullable, readonly) NSURL *url; //!< Returns the url of the  rendering decoder's  input source  or \c nil if none
+@property (nonatomic, nullable, readonly) id representedObject; //!< Returns the represented object of the rendering decoder or \c nil if none
 
 // ========================================
 // Playback Properties

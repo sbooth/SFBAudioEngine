@@ -4,8 +4,9 @@
  */
 
 #import <atomic>
+#import <queue>
+#import <stack>
 #import <thread>
-#import <vector>
 
 #import <os/log.h>
 #import <pthread.h>
@@ -21,6 +22,8 @@
 
 namespace {
 
+	// ========================================
+	// Flags
 	enum eDecoderStateDataFlags : unsigned int {
 		eDecoderStateDataFlagStopDecoding		= 1u << 0,
 		eDecoderStateDataFlagDecodingStarted	= 1u << 1,
@@ -33,10 +36,8 @@ namespace {
 		eAudioPlayerFlagStopDecoding			= 1u << 0
 	};
 
-}
-
-namespace {
-
+	// ========================================
+	// Thread Management
 	const integer_t DECODER_THREAD_IMPORTANCE = 6;
 
 	//! Set the calling thread's timesharing to \c false  and importance to \c importance
@@ -80,13 +81,14 @@ namespace {
 		return [player decoderThreadEntry];
 	}
 
-}
-
-namespace {
-
+	// ========================================
+	// Decoder State
 	//! State data for tracking/syncing decoding progress
-	struct SFBAudioDecoderStateData {
-		std::atomic_uint mFlags;
+	struct DecoderStateData {
+		using shared_ptr = std::shared_ptr<DecoderStateData>;
+		using BufferStack = std::stack<AVAudioPCMBuffer *>;
+
+		std::atomic_uint 	mFlags; 			//!< Decoder state data flags
 		std::atomic_int64_t mFramesDecoded; 	//!< The number of frames decoded in the converter's input sample rate
 		std::atomic_int64_t mFramesConverted;	//!< The number of frames converted in the converter's output sample rate
 		std::atomic_int64_t mFramesScheduled;	//!< The number of frames scheduled in the converter's output sample rate
@@ -95,27 +97,21 @@ namespace {
 		std::atomic_int64_t mFrameToSeek;		//!< The desired seek offset, in the converter's output sample rate
 
 //	private:
-		SFBAudioDecoder *mDecoder;
-		AVAudioConverter *mConverter;
+		SFBAudioDecoder 	*mDecoder; 			//!< Decodes audio from the source representation to PCM
+		AVAudioConverter 	*mConverter;		//!< Converts audio from the decoder's processing format to PCM
 	private:
-		AVAudioPCMBuffer *mDecodeBuffer;
-
-		size_t mBufferCount;
-		OSQueueHead mQueue;
-
-		struct Buffer {
-			struct Buffer *mLink;
-			AVAudioPCMBuffer *mBuffer;
-		};
+		AVAudioPCMBuffer 	*mDecodeBuffer;		//!< Buffer used internally for buffering during conversion
+		size_t 				mBufferCount;		//!< The number of buffers to allocate
+		BufferStack 		mBuffers;			//!< Audio buffers for storing converted audio
 
 	public:
-		SFBAudioDecoderStateData(SFBAudioDecoder *decoder, size_t bufferCount = 10)
-			: mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesScheduled(0), mFramesRendered(0), mTotalFrames(0), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil), mBufferCount(bufferCount), mQueue(OS_ATOMIC_QUEUE_INIT)
+		DecoderStateData(SFBAudioDecoder *decoder)
+			: mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesScheduled(0), mFramesRendered(0), mTotalFrames(0), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil), mBufferCount(0)
 		{}
 
-		~SFBAudioDecoderStateData()
+		~DecoderStateData()
 		{
-			DeallocateBuffers();
+			assert(mBuffers.size() == mBufferCount);
 		}
 
 		inline AVAudioFramePosition ApparentFrame() const
@@ -135,7 +131,7 @@ namespace {
 		{
 			__block NSError *err = nil;
 			AVAudioConverterOutputStatus status = [mConverter convertToBuffer:buffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
-				if(this->mFramesDecoded == 0)
+				if(!(mFlags & eDecoderStateDataFlagDecodingStarted))
 					mFlags.fetch_or(eDecoderStateDataFlagDecodingStarted);
 
 				BOOL result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
@@ -165,95 +161,69 @@ namespace {
 			return true;
 		}
 
-		void AllocateBuffers(AVAudioFormat *format, AVAudioFrameCount frameCount = 1024)
+		void AllocateBuffers(AVAudioFormat *format, size_t bufferCount = 10, AVAudioFrameCount frameCapacity = 1024)
 		{
-			DeallocateBuffers();
+			// Deallocate existing buffers
+			while(!mBuffers.empty())
+				mBuffers.pop();
 
 			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
-			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCount);
+			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCapacity);
 			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:conversionBufferLength];
 
-			for(size_t i = 0; i < mBufferCount; ++i) {
-				Buffer *buffer = new Buffer;
-				buffer->mBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.outputFormat frameCapacity:frameCount];
-				OSAtomicEnqueue(&mQueue, buffer, offsetof(Buffer, mLink));
-			}
-		}
-
-		void DeallocateBuffers()
-		{
-			Buffer *buffer;
-			while((buffer = (Buffer *)OSAtomicDequeue(&mQueue, offsetof(Buffer, mLink))))
-				delete buffer;
-
-			mConverter = nil;
-			mDecodeBuffer = nil;
+			mBufferCount = bufferCount;
+			for(size_t i = 0; i < mBufferCount; ++i)
+				mBuffers.push([[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.outputFormat frameCapacity:frameCapacity]);
 		}
 
 		AVAudioPCMBuffer * DequeueBuffer()
 		{
-			Buffer *buffer = (Buffer *)OSAtomicDequeue(&mQueue, offsetof(Buffer, mLink));
-			if(buffer) {
-				AVAudioPCMBuffer *buf = buffer->mBuffer;
-				delete buffer;
-				return buf;
+			if(!mBuffers.empty()) {
+				AVAudioPCMBuffer *buffer = mBuffers.top();
+				mBuffers.pop();
+				return buffer;
 			}
-			return nullptr;
+			return nil;
 		}
 
 		void ReturnBuffer(AVAudioPCMBuffer *buf)
 		{
-			Buffer *buffer = new Buffer;
-			buffer->mBuffer = buf;
-			OSAtomicEnqueue(&mQueue, buffer, offsetof(Buffer, mLink));
+			mBuffers.push(buf);
 		}
 	};
 
-}
-
-namespace {
-
-	//! A single decoder for processing
-	struct SFBAudioPlayerDecoderQueueElement {
-		struct SFBAudioPlayerDecoderQueueElement *mLink;
-		SFBAudioDecoder *mDecoder;
-	};
-
-	static inline void EnqueueElement(OSFifoQueueHead *list, SFBAudioPlayerDecoderQueueElement *element)
-	{
-		OSAtomicFifoEnqueue(list, element, offsetof(SFBAudioPlayerDecoderQueueElement, mLink));
-	}
-
-	static inline SFBAudioPlayerDecoderQueueElement * DequeueElement(OSFifoQueueHead *list)
-	{
-		return (SFBAudioPlayerDecoderQueueElement *)OSAtomicFifoDequeue(list, offsetof(SFBAudioPlayerDecoderQueueElement, mLink));
-	}
+	using DecoderQueue = std::queue<SFBAudioDecoder *>;
 
 }
 
 @interface SFBAudioPlayer ()
 {
 @private
-	AVAudioEngine 			*_engine;
-	AVAudioPlayerNode		*_player;
-	std::atomic_uint		_flags;
-	OSFifoQueueHead			_fifo;
-	dispatch_queue_t		_engineQueue;
-	SFB::Semaphore			_semaphore;
-	std::thread				_decoderThread;
-	std::atomic_uint64_t	_timeStamp;
-
-	std::shared_ptr<SFBAudioDecoderStateData> _decoderState;
+	dispatch_queue_t				_engineQueue;
+	AVAudioEngine 					*_engine;
+	AVAudioPlayerNode				*_player;
+	std::atomic_uint				_flags;
+	dispatch_queue_t				_queue;
+	DecoderQueue 					_queuedDecoders;
+	SFB::Semaphore					_semaphore;
+	std::thread						_decoderThread;
+	DecoderStateData::shared_ptr 	_decoderState;
 }
 
 @end
 
 @implementation SFBAudioPlayer
 
-- (instancetype) init
+- (instancetype)init
 {
 	if((self = [super init])) {
-		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player", DISPATCH_QUEUE_SERIAL);
+		_queue = dispatch_queue_create("org.sbooth.AudioEngine.Player.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
+		if(_queue == NULL) {
+			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			return nil;
+		}
+
+		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.AVAudioEngineAccessQueue", DISPATCH_QUEUE_SERIAL);
 		if(_engineQueue == NULL) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
@@ -290,7 +260,8 @@ namespace {
 		os_log_error(OS_LOG_DEFAULT, "Unable to join decoder thread: %{public}s", e.what());
 	}
 
-	[self clearQueue];
+	while(!_queuedDecoders.empty())
+		_queuedDecoders.pop();
 }
 
 #pragma mark Playlist Management
@@ -313,10 +284,11 @@ namespace {
 	if(![self stopReturningError:error])
 		return NO;
 
-	SFBAudioPlayerDecoderQueueElement *element = new SFBAudioPlayerDecoderQueueElement;
-	element->mDecoder = decoder;
-
-	EnqueueElement(&_fifo, element);
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+		_queuedDecoders.push(decoder);
+	});
 	_semaphore.Signal();
 
 	return [self playReturningError:error];
@@ -337,10 +309,9 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
-	SFBAudioPlayerDecoderQueueElement *element = new SFBAudioPlayerDecoderQueueElement;
-	element->mDecoder = decoder;
-
-	EnqueueElement(&_fifo, element);
+	dispatch_sync(_queue, ^{
+		_queuedDecoders.push(decoder);
+	});
 	_semaphore.Signal();
 
 	return YES;
@@ -366,9 +337,10 @@ namespace {
 
 - (void)clearQueue
 {
-	SFBAudioPlayerDecoderQueueElement *element;
-	while((element = DequeueElement(&_fifo)))
-		delete element;
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+	});
 }
 
 #pragma mark Playback Control
@@ -438,6 +410,12 @@ namespace {
 	return decoderState ? decoderState->mDecoder.inputSource.url : nil;
 }
 
+- (id)representedObject
+{
+	auto decoderState = std::atomic_load(&_decoderState);
+	return decoderState ? decoderState->mDecoder.representedObject : nil;
+}
+
 #pragma mark Playback Properties
 
 - (AVAudioFramePosition)currentFrame
@@ -453,9 +431,8 @@ namespace {
 - (SFBAudioPlayerPlaybackPosition)playbackPosition
 {
 	auto decoderState = std::atomic_load(&_decoderState);
-	if(decoderState) {
+	if(decoderState)
 		return { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->TotalFrames() };
-	}
 	return { .currentFrame = -1, .totalFrames = -1 };
 }
 
@@ -621,19 +598,28 @@ namespace {
 
 	AVAudioFramePosition framePosition = 0;
 
+	dispatch_queue_t bufferStackQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.BufferStackAccessQueue", DISPATCH_QUEUE_SERIAL);
+	if(bufferStackQueue == NULL) {
+		os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+		return NULL;
+	}
+
 	while(!(_flags & eAudioPlayerFlagStopDecoding)) {
 
 		// Dequeue and process the next decoder
-
-		// The element was allocated using new in -playDecoder:error: or -enqueueDecoder:error:
-		// Use a unique_ptr here to assume ownership and ensure deletion
-		std::unique_ptr<SFBAudioPlayerDecoderQueueElement> element(DequeueElement(&_fifo));
-		if(element) {
+		__block SFBAudioDecoder *decoder = nil;
+		dispatch_sync(_queue, ^{
+			if(!_queuedDecoders.empty()) {
+				decoder = _queuedDecoders.front();
+				_queuedDecoders.pop();
+			}
+		});
+		if(decoder) {
 			// Open the decoder if necessary
 			NSError *error;
-			if(!element->mDecoder.isOpen && ![element->mDecoder openReturningError:&error]) {
+			if(!decoder.isOpen && ![decoder openReturningError:&error]) {
 				if(_decodingErrorNotificationHandler)
-					_decodingErrorNotificationHandler(element->mDecoder, error);
+					_decodingErrorNotificationHandler(decoder, error);
 
 				if(error)
 					os_log_error(OS_LOG_DEFAULT, "Error opening decoder: %{public}@", error);
@@ -642,7 +628,7 @@ namespace {
 			}
 
 			// Create the decoder state
-			auto decoderState = std::make_shared<SFBAudioDecoderStateData>(element->mDecoder);
+			auto decoderState = std::make_shared<DecoderStateData>(decoder);
 
 			// NB: The decoder may return an estimate of the total frames
 			decoderState->mTotalFrames = decoderState->mDecoder.totalFrames;
@@ -697,7 +683,10 @@ namespace {
 					double sampleRateRatio = decoderState->mConverter.inputFormat.sampleRate / decoderState->mConverter.outputFormat.sampleRate;
 					AVAudioFramePosition adjustedSeekOffset = (AVAudioFramePosition)(seekOffset * sampleRateRatio);
 
-					os_log_debug(OS_LOG_DEFAULT, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
+					if(adjustedSeekOffset == seekOffset)
+						os_log_debug(OS_LOG_DEFAULT, "Seeking to frame %lld", adjustedSeekOffset);
+					else
+						os_log_debug(OS_LOG_DEFAULT, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
 
 					if([decoderState->mDecoder seekToFrame:adjustedSeekOffset error:nil])
 						// Reset the converter to flush any buffers
@@ -728,21 +717,22 @@ namespace {
 				}
 
 				// Dequeue the next available buffer for scheduling
-				AVAudioPCMBuffer *buf = decoderState->DequeueBuffer();
+				__block AVAudioPCMBuffer *buf = nil;
+				dispatch_sync(bufferStackQueue, ^{
+					buf = decoderState->DequeueBuffer();
+				});
+
 				if(buf) {
 					// Decode audio into the buffer, converting to the bus format in the process
 					if(!decoderState->DecodeAudio(buf, &error)) {
 						os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
-						decoderState->ReturnBuffer(buf);
+						dispatch_sync(bufferStackQueue, ^{
+							decoderState->ReturnBuffer(buf);
+						});
 					}
 
 					// Schedule the buffer for playback
 					if(buf.frameLength) {
-//						__block AVAudioTime *lastRenderTime;
-//						dispatch_sync(_engineQueue, ^{
-//							lastRenderTime = [_player lastRenderTime];
-//						});
-
 						AVAudioTime *time = [[AVAudioTime alloc] initWithSampleTime:framePosition + decoderState->mFramesScheduled atRate:buf.format.sampleRate];
 
 //						os_log_info(OS_LOG_DEFAULT, "Scheduling %d frames at %{public}@", buf.frameLength, time);
@@ -757,7 +747,7 @@ namespace {
 								// The completion handler is called on a dedicated callback queue by AVAudioPlayerNode
 
 								// Perform the rendering started callback
-								if(decoderState->mFramesRendered == 0 && !(decoderState->mFlags & eDecoderStateDataFlagRenderingStarted)) {
+								if(!(decoderState->mFlags & eDecoderStateDataFlagRenderingStarted)) {
 									os_log_info(OS_LOG_DEFAULT, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted);
@@ -777,7 +767,7 @@ namespace {
 									os_log_info(OS_LOG_DEFAULT, "Rendering finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
-									std::atomic_store(&self->_decoderState, std::shared_ptr<SFBAudioDecoderStateData>{});
+									std::atomic_store(&self->_decoderState, DecoderStateData::shared_ptr{});
 
 									// Perform the rendering finished callback
 									if(self->_renderingFinishedNotificationHandler)
@@ -785,7 +775,10 @@ namespace {
 								}
 
 								// Return the buffer to the decoder state for reuse
-								decoderState->ReturnBuffer(buf);
+								dispatch_sync(bufferStackQueue, ^{
+									decoderState->ReturnBuffer(buf);
+								});
+
 								self->_semaphore.Signal();
 							}];
 						});
