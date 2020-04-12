@@ -47,10 +47,10 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
 // ========================================
 // Playback Control
-- (BOOL)playReturningError:(NSError **)error;
-- (BOOL)pauseReturningError:(NSError **)error;
-- (BOOL)stopReturningError:(NSError **)error;
-- (BOOL)playPauseReturningError:(NSError **)error;
+- (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
+- (BOOL)pauseReturningError:(NSError **)error NS_SWIFT_NAME(pause());
+- (BOOL)stopReturningError:(NSError **)error NS_SWIFT_NAME(stop());
+- (BOOL)playPauseReturningError:(NSError **)error NS_SWIFT_NAME(playPause());
 
 // ========================================
 // Player State
