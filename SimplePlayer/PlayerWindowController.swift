@@ -59,10 +59,10 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
 		timer.setEventHandler {
 			if self.player.isPlaying {
-				self.playButton.title = "Resume"
+				self.playButton.title = "Pause"
 			}
 			else {
-				self.playButton.title = "Pause"
+				self.playButton.title = "Resume"
 			}
 
 			let positionAndTime = self.player.positionAndTime
