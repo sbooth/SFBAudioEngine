@@ -65,16 +65,16 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 				self.playButton.title = "Pause"
 			}
 
-			let position = self.player.position
-			if position.current != -1 && position.total != -1 {
-				self.slider.doubleValue = Double(position.current) / Double(position.total)
+			let positionAndTime = self.player.positionAndTime
+
+			if positionAndTime.position.current != -1 && positionAndTime.position.total != -1 {
+				self.slider.doubleValue = Double(positionAndTime.position.current) / Double(positionAndTime.position.total)
 			}
 
-			let time = self.player.time
-			if time.current != -1 {
-				self.elapsed.doubleValue = time.current
-				if time.total != -1 {
-					self.remaining.doubleValue = -1 * (time.total - time.current)
+			if positionAndTime.time.current != -1 {
+				self.elapsed.doubleValue = positionAndTime.time.current
+				if positionAndTime.time.total != -1 {
+					self.remaining.doubleValue = -1 * (positionAndTime.time.total - positionAndTime.time.current)
 				}
 			}
 		}

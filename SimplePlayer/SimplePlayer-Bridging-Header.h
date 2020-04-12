@@ -3,6 +3,4 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <SFBAudioEngine/SFBAudioDecoder.h>
-#import <SFBAudioEngine/SFBAudioPlayer.h>
-#import <SFBAudioEngine/SFBAudioFile.h>
+#import <SFBAudioEngine/SFBAudioEngine.h>
