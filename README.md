@@ -1,7 +1,7 @@
 About SFBAudioEngine
 ====================
 
-SFBAudioEngine is a set of C++ classes enabling macOS (10.13+) and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
+SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS (10.13+) and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
 
 * WAVE
 * AIFF
@@ -19,7 +19,6 @@ SFBAudioEngine is a set of C++ classes enabling macOS (10.13+) and iOS applicati
 * All formats supported by libsndfile
 * All formats supported by Core Audio
 * DSD to PCM conversion for DSD64
-* DSD over PCM (DoP) for DSF and DSDIFF on supported hardware
 
 In addition to playback, SFBAudioEngine supports reading and writing of metadata for most supported formats.
 
@@ -36,9 +35,9 @@ Using SFBAudioEngine
 Playing an audio file is as simple as:
 
 ~~~
-NSURL *u = [NSURL fileURLWithPath:@"example.flac" isDirectory:NO];
-SFB::Audio::Player player;
-player.PlayURL((__bridge CFURLRef)u);
+let u = NSURL(fileURLWithPath: "example.flac")
+let player = SFBAudioPlayer()
+try? player?.play(u)
 ~~~
 
 Documentation
