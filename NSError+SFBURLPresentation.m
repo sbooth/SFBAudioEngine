@@ -5,7 +5,7 @@
 
 #import "NSError+SFBURLPresentation.h"
 
-@implementation NSError (SFBURLDisplayNameMethods)
+@implementation NSError (SFBURLPresentation)
 
 + (instancetype)SFB_errorWithDomain:(NSErrorDomain)domain code:(NSInteger)code descriptionFormatStringForURL:(NSString *)descriptionFormatStringForURL url:(NSURL *)url failureReason:(NSString *)failureReason recoverySuggestion:(NSString *)recoverySuggestion
 {
