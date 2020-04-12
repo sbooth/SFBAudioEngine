@@ -47,7 +47,12 @@ class AppDelegate: NSObject {
 	@IBAction func openURLPanelOpenAction(_ sender: AnyObject?) {
 		openURLPanel.orderOut(sender)
 		if let url = URL(string: openURLPanelTextField.stringValue) {
-			try? playerWindowController.player.play(url)
+			do {
+				try playerWindowController.player.play(url)
+			}
+			catch let error {
+				NSApp.presentError(error)
+			}
 		}
 	}
 
@@ -67,7 +72,12 @@ extension AppDelegate: NSApplicationDelegate {
 
 	func application(_ application: NSApplication, open urls: [URL]) {
 		if let url = urls.first {
-			try? playerWindowController.player.play(url)
+			do {
+				try playerWindowController.player.play(url)
+			}
+			catch let error {
+				NSApp.presentError(error)
+			}
 		}
 	}
 }
