@@ -281,7 +281,7 @@ namespace {
 		}
 
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.AVAudioEngineAccessQueue", DISPATCH_QUEUE_SERIAL);
-		if(_!engineQueue) {
+		if(!_engineQueue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
 		}
