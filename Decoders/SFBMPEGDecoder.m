@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -83,6 +83,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 {
 @private
 	mpg123_handle *_mpg123;
+	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_buffer;
 }
 @end
@@ -181,7 +182,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
 	}
 
-	self.processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:rate interleaved:NO channelLayout:channelLayout];
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:rate interleaved:NO channelLayout:channelLayout];
 
 	size_t bufferSizeBytes = mpg123_outblock(_mpg123);
 	UInt32 framesPerMPEGFrame = (UInt32)(bufferSizeBytes / ((size_t)channels * sizeof(float)));
@@ -196,7 +197,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 	sourceStreamDescription.mFramesPerPacket	= framesPerMPEGFrame;
 
-	self.sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	if(mpg123_scan(_mpg123) != MPG123_OK) {
 		mpg123_close(_mpg123);
@@ -217,8 +218,6 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	_buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:framesPerMPEGFrame];
 	_buffer.frameLength = 0;
 
-	_frameLength = mpg123_length(_mpg123);
-
 	return YES;
 }
 
@@ -236,6 +235,16 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 - (BOOL)isOpen
 {
 	return _mpg123 != NULL;
+}
+
+- (AVAudioFramePosition)framePosition
+{
+	return _framePosition;
+}
+
+- (AVAudioFramePosition)frameLength
+{
+	return mpg123_length(_mpg123);
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
@@ -296,7 +305,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		_buffer.frameLength = framesDecoded;
 	}
 
-	_currentFrame += framesProcessed;
+	_framePosition += framesProcessed;
 
 	return YES;
 }
@@ -305,7 +314,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 {
 	off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
 	if(offset >= 0)
-		_currentFrame = offset;
+		_framePosition = offset;
 	return offset >= 0;
 }
 

@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBMPEGDecoder : SFBAudioDecoder
+@interface SFBCoreAudioDecoder : SFBAudioDecoder
 @end
 
 NS_ASSUME_NONNULL_END

@@ -15,10 +15,13 @@ NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioD
 
 @implementation SFBAudioDecoder
 
+@dynamic framePosition;
+@dynamic frameLength;
+
 // It's probably not worth making this class KVO-compliant
 //+ (NSSet *)keyPathsForValuesAffectingTotalFrames
 //{
-//	return [NSSet setWithObjects:@"currentFrame", @"totalFrames", nil];
+//	return [NSSet setWithObjects:@"framePosition", @"frameLength", nil];
 //}
 
 static NSMutableArray *_registeredSubclasses = nil;
@@ -184,11 +187,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
-}
-
-- (AVAudioFramePosition)framesRemaining
-{
-	return _frameLength - _currentFrame;
 }
 
 - (BOOL)supportsSeeking

@@ -18,6 +18,7 @@
 @private
 	FLAC__StreamDecoder *_flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
+	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
 }
 - (FLAC__StreamDecoderWriteStatus)handleFLACWrite:(const FLAC__StreamDecoder *)decoder frame:(const FLAC__Frame *)frame buffer:(const FLAC__int32 * const [])buffer;
@@ -274,7 +275,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 		case 8:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_7_1_A];		break;
 	}
 
-	self.processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
+	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
@@ -287,13 +288,11 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 
-	self.sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
 	_frameBuffer.frameLength = 0;
-
-	_frameLength = (NSInteger)_streamInfo.total_samples;
 
 	return YES;
 }
@@ -317,6 +316,16 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 - (BOOL)isOpen
 {
 	return _flac != NULL;
+}
+
+- (AVAudioFramePosition)framePosition
+{
+	return _framePosition;
+}
+
+- (AVAudioFramePosition)frameLength
+{
+	return (AVAudioFramePosition)_streamInfo.total_samples;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
@@ -352,7 +361,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 			os_log_error(OS_LOG_DEFAULT, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 	}
 
-	_currentFrame += framesProcessed;
+	_framePosition += framesProcessed;
 
 	return YES;
 }
@@ -368,7 +377,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 		result = FLAC__stream_decoder_flush(_flac);
 
 	if(result) {
-		_currentFrame = frame;
+		_framePosition = frame;
 		_frameBuffer.frameLength = 0;
 	}
 

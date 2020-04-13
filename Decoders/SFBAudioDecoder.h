@@ -81,13 +81,16 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject
 /*! @brief Returns \c YES if the decoder is open */
 @property (nonatomic, readonly) BOOL isOpen;
 
+/*! @brief Returns the decoder's current frame position or \c -1 if unknown */
+@property (nonatomic, readonly) AVAudioFramePosition framePosition;
+
+/*! @brief Returns the decoder's length in frames or \c -1 if unknown */
+@property (nonatomic, readonly) AVAudioFramePosition frameLength;
+
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer error:(NSError **)error NS_SWIFT_NAME(decode(into:));
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
-@property (nonatomic, readonly) AVAudioFramePosition currentFrame;
-@property (nonatomic, readonly) AVAudioFramePosition frameLength;
-@property (nonatomic, readonly) AVAudioFramePosition framesRemaining;
-
+/*! @brief Returns \c YES if the decoder is seekable */
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error;
