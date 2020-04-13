@@ -12,8 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Playback position and time information
 struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerPlaybackPosition {
-	AVAudioFramePosition currentFrame NS_SWIFT_NAME(current);
-	AVAudioFramePosition totalFrames NS_SWIFT_NAME(total);
+	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
+	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerPlaybackPosition SFBAudioPlayerPlaybackPosition;
 
@@ -62,8 +62,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 
 // ========================================
 // Playback Properties
-@property (nonatomic, readonly) AVAudioFramePosition currentFrame;
-@property (nonatomic, readonly) AVAudioFramePosition totalFrames;
+@property (nonatomic, readonly) AVAudioFramePosition framePosition;
+@property (nonatomic, readonly) AVAudioFramePosition frameLength;
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_SWIFT_NAME(position);
 
 @property (nonatomic, readonly) NSTimeInterval currentTime;

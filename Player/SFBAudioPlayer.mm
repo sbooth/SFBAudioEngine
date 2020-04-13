@@ -117,14 +117,14 @@ namespace {
 			assert(mBuffers.size() == mBufferCount);
 		}
 
-		inline AVAudioFramePosition ApparentFrame() const
+		inline AVAudioFramePosition FramePosition() const
 		{
 			int64_t seek = mFrameToSeek.load();
 			int64_t rendered = mFramesRendered.load();
 			return seek == -1 ? rendered : seek;
 		}
 
-		inline AVAudioFramePosition ApparentFrameLength() const
+		inline AVAudioFramePosition FrameLength() const
 		{
 			double inputSampleRate = mConverter.inputFormat.sampleRate;
 			double outputSampleRate = mConverter.outputFormat.sampleRate;
@@ -197,7 +197,7 @@ namespace {
 			else
 				os_log_debug(OS_LOG_DEFAULT, "Error seeking to frame %lld", adjustedSeekOffset);
 
-			AVAudioFramePosition newFrame = mDecoder.currentFrame;
+			AVAudioFramePosition newFrame = mDecoder.framePosition;
 			if(newFrame != adjustedSeekOffset) {
 				os_log_debug(OS_LOG_DEFAULT, "Inaccurate seek to frame %lld, got %lld", adjustedSeekOffset, newFrame);
 				seekOffset = (AVAudioFramePosition)(newFrame / sampleRateRatio);
@@ -501,22 +501,22 @@ namespace {
 
 #pragma mark Playback Properties
 
-- (AVAudioFramePosition)currentFrame
+- (AVAudioFramePosition)framePosition
 {
-	return self.playbackPosition.currentFrame;
+	return self.playbackPosition.framePosition;
 }
 
-- (AVAudioFramePosition)totalFrames
+- (AVAudioFramePosition)frameLength
 {
-	return self.playbackPosition.totalFrames;
+	return self.playbackPosition.frameLength;
 }
 
 - (SFBAudioPlayerPlaybackPosition)playbackPosition
 {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState)
-		return { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->ApparentFrameLength() };
-	return { .currentFrame = -1, .totalFrames = -1 };
+		return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
+	return { .framePosition = -1, .frameLength = -1 };
 }
 
 - (NSTimeInterval)currentTime
@@ -533,10 +533,10 @@ namespace {
 {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
-		int64_t currentFrame = decoderState->ApparentFrame();
-		int64_t totalFrames = decoderState->ApparentFrameLength();
+		int64_t framePosition = decoderState->FramePosition();
+		int64_t frameLength = decoderState->FrameLength();
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		return { .currentTime = currentFrame / sampleRate, .totalTime = totalFrames / sampleRate };
+		return { .currentTime = framePosition / sampleRate, .totalTime = frameLength / sampleRate };
 	}
 
 	return { .currentTime = -1, .totalTime = -1 };
@@ -544,14 +544,14 @@ namespace {
 
 - (BOOL)getPlaybackPosition:(SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerPlaybackTime *)playbackTime
 {
-	SFBAudioPlayerPlaybackPosition currentPlaybackPosition = { .currentFrame = -1, .totalFrames = -1 };
+	SFBAudioPlayerPlaybackPosition currentPlaybackPosition = { .framePosition = -1, .frameLength = -1 };
 	SFBAudioPlayerPlaybackTime currentPlaybackTime = { .currentTime = -1, .totalTime = -1 };
 
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
-		currentPlaybackPosition = { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->ApparentFrameLength() };
+		currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		currentPlaybackTime = { .currentTime = currentPlaybackPosition.currentFrame / sampleRate, .totalTime = currentPlaybackPosition.totalFrames / sampleRate };
+		currentPlaybackTime = { .currentTime = currentPlaybackPosition.framePosition / sampleRate, .totalTime = currentPlaybackPosition.frameLength / sampleRate };
 	}
 
 	if(playbackPosition)
@@ -583,10 +583,10 @@ namespace {
 		return NO;
 
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-	AVAudioFramePosition currentFrame = decoderState->ApparentFrame();
-	AVAudioFramePosition targetFrame = currentFrame + (AVAudioFramePosition)(secondsToSkip * sampleRate);
+	AVAudioFramePosition framePosition = decoderState->FramePosition();
+	AVAudioFramePosition targetFrame = framePosition + (AVAudioFramePosition)(secondsToSkip * sampleRate);
 
-	if(targetFrame >= decoderState->ApparentFrameLength())
+	if(targetFrame >= decoderState->FrameLength())
 		return NO;
 
 	return [self seekToFrame:targetFrame];
@@ -601,8 +601,8 @@ namespace {
 		return NO;
 
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-	AVAudioFramePosition currentFrame = decoderState->ApparentFrame();
-	AVAudioFramePosition targetFrame = currentFrame - (AVAudioFramePosition)(secondsToSkip * sampleRate);
+	AVAudioFramePosition framePosition = decoderState->FramePosition();
+	AVAudioFramePosition targetFrame = framePosition - (AVAudioFramePosition)(secondsToSkip * sampleRate);
 
 	if(targetFrame < 0)
 		return NO;
@@ -621,7 +621,7 @@ namespace {
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 	AVAudioFramePosition targetFrame = (AVAudioFramePosition)(timeInSeconds * sampleRate);
 
-	if(targetFrame >= decoderState->ApparentFrameLength())
+	if(targetFrame >= decoderState->FrameLength())
 		return NO;
 
 	return [self seekToFrame:targetFrame];
@@ -636,8 +636,8 @@ namespace {
 	if(!decoderState)
 		return NO;
 
-	AVAudioFramePosition totalFrames = decoderState->ApparentFrameLength();
-	return [self seekToFrame:(AVAudioFramePosition)(totalFrames * position)];
+	AVAudioFramePosition frameLength = decoderState->FrameLength();
+	return [self seekToFrame:(AVAudioFramePosition)(frameLength * position)];
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
@@ -648,7 +648,7 @@ namespace {
 	if(!decoderState)
 		return NO;
 
-	if(frame >= decoderState->ApparentFrameLength())
+	if(frame >= decoderState->FrameLength())
 		return NO;
 
 	decoderState->RequestSeekToFrame(frame);
