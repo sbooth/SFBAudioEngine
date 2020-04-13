@@ -149,7 +149,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
 		// Show the times
 		elapsed.isHidden = false
-		if player.totalFrames != -1 {
+		if player.frameLength != -1 {
 			remaining.isHidden = false
 		}
 
