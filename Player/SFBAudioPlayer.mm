@@ -13,7 +13,6 @@
 
 #import "SFBAudioPlayer.h"
 
-#import "Semaphore.h"
 #import "SFBAudioDecoder+Internal.h"
 
 @interface SFBAudioPlayer ()
@@ -263,7 +262,7 @@ namespace {
 	std::atomic_uint				_flags;				//!< Player flags
 	dispatch_queue_t				_queue;				//!< The dispatch queue used to access `_queuedDecoders`
 	DecoderQueue 					_queuedDecoders;	//!< AudioDecoders enqueued for playback
-	SFB::Semaphore					_semaphore;			//!< Dispatch semaphore used for communication between threads
+	dispatch_semaphore_t			_semaphore;			//!< Semaphore used for communication between threads
 	std::thread						_decoderThread;		//!< The high-priority decoding thread
 	DecoderStateData::shared_ptr 	_decoderState; 		//!< The currently rendering decoder
 }
@@ -284,6 +283,12 @@ namespace {
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.AVAudioEngineAccessQueue", DISPATCH_QUEUE_SERIAL);
 		if(_engineQueue == NULL) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			return nil;
+		}
+
+		_semaphore = dispatch_semaphore_create(0);
+		if(_semaphore == NULL) {
+			os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
 			return nil;
 		}
 
@@ -312,7 +317,7 @@ namespace {
 - (void)dealloc
 {
 	_flags.fetch_or(eAudioPlayerFlagStopDecoding);
-	_semaphore.Signal();
+	dispatch_semaphore_signal(_semaphore);
 
 	try {
 		_decoderThread.join();
@@ -351,7 +356,7 @@ namespace {
 			_queuedDecoders.pop();
 		_queuedDecoders.push(decoder);
 	});
-	_semaphore.Signal();
+	dispatch_semaphore_signal(_semaphore);
 
 	return [self playReturningError:error];
 }
@@ -374,7 +379,7 @@ namespace {
 	dispatch_sync(_queue, ^{
 		_queuedDecoders.push(decoder);
 	});
-	_semaphore.Signal();
+	dispatch_semaphore_signal(_semaphore);
 
 	return YES;
 }
@@ -384,7 +389,7 @@ namespace {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
 		decoderState->mFlags.fetch_or(eDecoderStateDataFlagStopDecoding);
-		_semaphore.Signal();
+		dispatch_semaphore_signal(_semaphore);
 	}
 
 	dispatch_sync(_engineQueue, ^{
@@ -444,7 +449,7 @@ namespace {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
 		decoderState->mFlags.fetch_or(eDecoderStateDataFlagStopDecoding);
-		_semaphore.Signal();
+		dispatch_semaphore_signal(_semaphore);
 	}
 
 	return YES;
@@ -640,7 +645,7 @@ namespace {
 		return NO;
 
 	decoderState->RequestSeekToFrame(frame);
-	_semaphore.Signal();
+	dispatch_semaphore_signal(_semaphore);
 
 	return YES;
 
@@ -759,7 +764,7 @@ namespace {
 
 				// No buffers available; wait for one
 				if(!buf) {
-					_semaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
+					dispatch_semaphore_wait(_semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
 					continue;
 				}
 
@@ -852,7 +857,7 @@ namespace {
 								decoderState->ReturnBuffer(buf);
 							});
 
-							self->_semaphore.Signal();
+							dispatch_semaphore_signal(self->_semaphore);
 						}];
 					});
 
@@ -893,7 +898,7 @@ namespace {
 		}
 
 		// Wait for another decoder to be enqueued
-		_semaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
+		dispatch_semaphore_wait(_semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 
 		// Check for termination request
 		if(_flags.load() & eAudioPlayerFlagStopDecoding)
