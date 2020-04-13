@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <stdlib.h>
-
 #import <os/log.h>
 
 #import <FLAC/metadata.h>
@@ -14,7 +12,6 @@
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
-#import "SFBAudioDecoder+Internal.h"
 
 @interface SFBFLACDecoder ()
 {
@@ -178,6 +175,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 			os_log_info(OS_LOG_DEFAULT, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		FLAC__stream_decoder_delete(_flac);
+		_flac = NULL;
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -198,6 +196,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 			os_log_info(OS_LOG_DEFAULT, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		FLAC__stream_decoder_delete(_flac);
+		_flac = NULL;
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -249,6 +248,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 				os_log_info(OS_LOG_DEFAULT, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 			FLAC__stream_decoder_delete(_flac);
+			_flac = NULL;
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -291,20 +291,6 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 
 	// Allocate the buffer list (which will convert from FLAC's push model to Core Audio's pull model)
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:_streamInfo.max_blocksize];
-	if(!_frameBuffer) {
-		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
-
-		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(OS_LOG_DEFAULT, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-		FLAC__stream_decoder_delete(_flac);
-
-		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-
-		return NO;
-	}
-
 	_frameBuffer.frameLength = 0;
 
 	_frameLength = (NSInteger)_streamInfo.total_samples;
@@ -367,8 +353,6 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	}
 
 	_currentFrame += framesProcessed;
-
-	NSAssert(buffer.frameLength == framesProcessed, @"postcondition");
 
 	return YES;
 }
