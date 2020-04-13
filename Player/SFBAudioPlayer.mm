@@ -885,7 +885,9 @@ namespace {
 				if(decoderState->mFlags.load() & eDecoderStateDataFlagStopDecoding) {
 					os_log_info(OS_LOG_DEFAULT, "Stopping decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-					std::atomic_store(&_decoderState, DecoderStateData::shared_ptr{});
+					// No atomic_compare_exchange_strong is available without atomic_shared_ptr
+					if(decoderState == std::atomic_load(&_decoderState))
+						std::atomic_store(&_decoderState, DecoderStateData::shared_ptr{});
 					nextSampleTime = 0;
 
 					break;
