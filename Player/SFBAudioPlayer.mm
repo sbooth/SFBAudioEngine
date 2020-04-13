@@ -27,9 +27,11 @@ namespace {
 	enum eDecoderStateDataFlags : unsigned int {
 		eDecoderStateDataFlagStopDecoding		= 1u << 0,
 		eDecoderStateDataFlagDecodingStarted	= 1u << 1,
-		eDecoderStateDataFlagDecodingFinished	= 1u << 2,
+		eDecoderStateDataFlagSchedulingStarted	= 1u << 2,
 		eDecoderStateDataFlagRenderingStarted	= 1u << 3,
-		eDecoderStateDataFlagRenderingFinished	= 1u << 4
+		eDecoderStateDataFlagDecodingFinished	= 1u << 4,
+		eDecoderStateDataFlagSchedulingFinished	= 1u << 5,
+		eDecoderStateDataFlagRenderingFinished	= 1u << 6
 	};
 
 	enum eAudioPlayerFlags : unsigned int {
@@ -89,12 +91,14 @@ namespace {
 		using BufferStack = std::stack<AVAudioPCMBuffer *>;
 
 		std::atomic_uint 	mFlags; 			//!< Decoder state data flags
-		std::atomic_int64_t mFramesDecoded; 	//!< The number of frames decoded in the converter's input sample rate
-		std::atomic_int64_t mFramesConverted;	//!< The number of frames converted in the converter's output sample rate
-		std::atomic_int64_t mFramesScheduled;	//!< The number of frames scheduled in the converter's output sample rate
-		std::atomic_int64_t mFramesRendered;	//!< The number of frames rendered in the converter's output sample rate
-		std::atomic_int64_t mTotalFrames;		//!< The total number of audio frames, in the decoder's sample rate
-		std::atomic_int64_t mFrameToSeek;		//!< The desired seek offset, in the converter's output sample rate
+		std::atomic_int64_t mFramesDecoded; 	//!< The number of frames decoded in the converter's *input* sample rate
+		std::atomic_int64_t mFramesConverted;	//!< The number of frames converted in the converter's *output* sample rate
+		std::atomic_int64_t mFramesScheduled;	//!< The number of frames scheduled in the converter's *output* sample rate
+		std::atomic_int64_t mFramesRendered;	//!< The number of frames rendered in the converter's *output* sample rate
+		std::atomic_int64_t mFrameLength;		//!< The total number of audio frames, in the decoder's sample rate
+		std::atomic_int64_t mFrameToSeek;		//!< The desired seek offset, in the converter's *output* sample rate
+
+//		std::atomic_int64_t mStartTime;			//!< The timestamp when the first frame should be rendered
 
 //	private:
 		SFBAudioDecoder 	*mDecoder; 			//!< Decodes audio from the source representation to PCM
@@ -106,7 +110,7 @@ namespace {
 
 	public:
 		DecoderStateData(SFBAudioDecoder *decoder)
-			: mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesScheduled(0), mFramesRendered(0), mTotalFrames(0), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil), mBufferCount(0)
+			: mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesScheduled(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil), mBufferCount(0)
 		{}
 
 		~DecoderStateData()
@@ -116,29 +120,33 @@ namespace {
 
 		inline AVAudioFramePosition ApparentFrame() const
 		{
-			int64_t seek = mFrameToSeek;
-			int64_t rendered = mFramesRendered;
+			int64_t seek = mFrameToSeek.load();
+			int64_t rendered = mFramesRendered.load();
 			return seek == -1 ? rendered : seek;
 		}
 
-		inline AVAudioFramePosition TotalFrames() const
+		inline AVAudioFramePosition ApparentFrameLength() const
 		{
-			double sampleRateRatio = mConverter.outputFormat.sampleRate / mConverter.inputFormat.sampleRate;
-			return (AVAudioFramePosition)(mTotalFrames * sampleRateRatio);
+			double inputSampleRate = mConverter.inputFormat.sampleRate;
+			double outputSampleRate = mConverter.outputFormat.sampleRate;
+			if(inputSampleRate == outputSampleRate)
+				return mFrameLength.load();
+			else
+				return (AVAudioFramePosition)(mFrameLength.load() * outputSampleRate / inputSampleRate);
 		}
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
 		{
 			__block NSError *err = nil;
 			AVAudioConverterOutputStatus status = [mConverter convertToBuffer:buffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
-				if(!(mFlags & eDecoderStateDataFlagDecodingStarted))
+				if(!(mFlags.load() & eDecoderStateDataFlagDecodingStarted))
 					mFlags.fetch_or(eDecoderStateDataFlagDecodingStarted);
 
 				BOOL result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
 				if(!result && err)
 					os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
 
-				this->mFramesDecoded += mDecodeBuffer.frameLength;
+				this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
 
 				if(result && mDecodeBuffer.frameLength == 0) {
 					mFlags.fetch_or(eDecoderStateDataFlagDecodingFinished);
@@ -150,7 +158,7 @@ namespace {
 				return mDecodeBuffer;
 			}];
 
-			mFramesConverted += buffer.frameLength;
+			mFramesConverted.fetch_add(buffer.frameLength);
 
 			if(status == AVAudioConverterOutputStatus_Error) {
 				if(error)
@@ -159,6 +167,56 @@ namespace {
 			}
 
 			return true;
+		}
+
+		inline bool SeekRequested() const
+		{
+			return mFrameToSeek.load() != -1;
+		}
+
+		inline void RequestSeekToFrame(AVAudioFramePosition frame)
+		{
+			mFrameToSeek.exchange(frame);
+		}
+
+		//! Seeks to the desired frame  in the converter's *output* sample rate
+		bool PerformSeek()
+		{
+			AVAudioFramePosition seekOffset = mFrameToSeek.load();
+
+			double sampleRateRatio = mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate;
+			AVAudioFramePosition adjustedSeekOffset = (AVAudioFramePosition)(seekOffset * sampleRateRatio);
+
+			if(adjustedSeekOffset == seekOffset)
+				os_log_debug(OS_LOG_DEFAULT, "Seeking to frame %lld", adjustedSeekOffset);
+			else
+				os_log_debug(OS_LOG_DEFAULT, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
+
+			if([mDecoder seekToFrame:adjustedSeekOffset error:nil])
+				// Reset the converter to flush any buffers
+				[mConverter reset];
+			else
+				os_log_debug(OS_LOG_DEFAULT, "Error seeking to frame %lld", adjustedSeekOffset);
+
+			AVAudioFramePosition newFrame = mDecoder.currentFrame;
+			if(newFrame != adjustedSeekOffset) {
+				os_log_debug(OS_LOG_DEFAULT, "Inaccurate seek to frame %lld, got %lld", adjustedSeekOffset, newFrame);
+				seekOffset = (AVAudioFramePosition)(newFrame / sampleRateRatio);
+			}
+
+			// Update the seek request
+			mFrameToSeek.exchange(-1);
+
+			// Update the frame counters accordingly
+			// A seek is handled in essentially the same way as initial playback
+			if(newFrame != -1) {
+				mFramesDecoded.exchange(newFrame);
+				mFramesConverted.exchange(seekOffset);
+				mFramesScheduled.exchange(seekOffset);
+				mFramesRendered.exchange(seekOffset);
+			}
+
+			return newFrame != -1;
 		}
 
 		void AllocateBuffers(AVAudioFormat *format, size_t bufferCount = 10, AVAudioFrameCount frameCapacity = 1024)
@@ -186,7 +244,7 @@ namespace {
 			return nil;
 		}
 
-		void ReturnBuffer(AVAudioPCMBuffer *buf)
+		inline void ReturnBuffer(AVAudioPCMBuffer *buf)
 		{
 			mBuffers.push(buf);
 		}
@@ -199,17 +257,17 @@ namespace {
 @interface SFBAudioPlayer ()
 {
 @private
-	dispatch_queue_t				_engineQueue;
-	AVAudioEngine 					*_engine;
-	AVAudioPlayerNode				*_player;
-	std::atomic_uint				_flags;
-	dispatch_queue_t				_queue;
-	DecoderQueue 					_queuedDecoders;
-	SFB::Semaphore					_semaphore;
-	std::thread						_decoderThread;
-	DecoderStateData::shared_ptr 	_decoderState;
+	dispatch_queue_t				_engineQueue;		//!< The dispatch queue used to access `_engine`
+	AVAudioEngine 					*_engine;			//!< The underlying AVAudioEngine instance
+	AVAudioPlayerNode				*_player;			//!< The player from `_engine`
+	std::atomic_uint				_flags;				//!< Player flags
+	dispatch_queue_t				_queue;				//!< The dispatch queue used to access `_queuedDecoders`
+	DecoderQueue 					_queuedDecoders;	//!< AudioDecoders enqueued for playback
+	SFB::Semaphore					_semaphore;			//!< Dispatch semaphore used for communication between threads
+	std::thread						_decoderThread;		//!< The high-priority decoding thread
+	DecoderStateData::shared_ptr 	_decoderState; 		//!< The currently rendering decoder
 }
-
+- (void)audioEngineConfigurationChanged:(NSNotification *)notification;
 @end
 
 @implementation SFBAudioPlayer
@@ -239,10 +297,14 @@ namespace {
 			return nil;
 		}
 
+		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
 		_player = [[AVAudioPlayerNode alloc] init];
 		[_engine attachNode:_player];
 		[_engine connect:_player to:_engine.mainMixerNode format:nil];
+
+		// Register for configuration change notifications
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioEngineConfigurationChanged:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
 	}
 	return self;
 }
@@ -395,6 +457,15 @@ namespace {
 
 #pragma mark Player State
 
+- (BOOL)isRunning
+{
+	__block BOOL isRunning;
+	dispatch_sync(_engineQueue, ^{
+		isRunning = _engine.isRunning;
+	});
+	return isRunning;
+}
+
 - (BOOL)isPlaying
 {
 	__block BOOL isPlaying;
@@ -432,7 +503,7 @@ namespace {
 {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState)
-		return { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->TotalFrames() };
+		return { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->ApparentFrameLength() };
 	return { .currentFrame = -1, .totalFrames = -1 };
 }
 
@@ -451,7 +522,7 @@ namespace {
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
 		int64_t currentFrame = decoderState->ApparentFrame();
-		int64_t totalFrames = decoderState->TotalFrames();
+		int64_t totalFrames = decoderState->ApparentFrameLength();
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		return { .currentTime = currentFrame / sampleRate, .totalTime = totalFrames / sampleRate };
 	}
@@ -466,7 +537,7 @@ namespace {
 
 	auto decoderState = std::atomic_load(&_decoderState);
 	if(decoderState) {
-		currentPlaybackPosition = { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->TotalFrames() };
+		currentPlaybackPosition = { .currentFrame = decoderState->ApparentFrame(), .totalFrames = decoderState->ApparentFrameLength() };
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		currentPlaybackTime = { .currentTime = currentPlaybackPosition.currentFrame / sampleRate, .totalTime = currentPlaybackPosition.totalFrames / sampleRate };
 	}
@@ -503,7 +574,7 @@ namespace {
 	AVAudioFramePosition currentFrame = decoderState->ApparentFrame();
 	AVAudioFramePosition targetFrame = currentFrame + (AVAudioFramePosition)(secondsToSkip * sampleRate);
 
-	if(targetFrame >= decoderState->TotalFrames())
+	if(targetFrame >= decoderState->ApparentFrameLength())
 		return NO;
 
 	return [self seekToFrame:targetFrame];
@@ -538,7 +609,7 @@ namespace {
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 	AVAudioFramePosition targetFrame = (AVAudioFramePosition)(timeInSeconds * sampleRate);
 
-	if(targetFrame >= decoderState->TotalFrames())
+	if(targetFrame >= decoderState->ApparentFrameLength())
 		return NO;
 
 	return [self seekToFrame:targetFrame];
@@ -553,7 +624,7 @@ namespace {
 	if(!decoderState)
 		return NO;
 
-	AVAudioFramePosition totalFrames = decoderState->TotalFrames();
+	AVAudioFramePosition totalFrames = decoderState->ApparentFrameLength();
 	return [self seekToFrame:(AVAudioFramePosition)(totalFrames * position)];
 }
 
@@ -565,10 +636,10 @@ namespace {
 	if(!decoderState)
 		return NO;
 
-	if(frame >= decoderState->TotalFrames())
+	if(frame >= decoderState->ApparentFrameLength())
 		return NO;
 
-	decoderState->mFrameToSeek = frame;
+	decoderState->RequestSeekToFrame(frame);
 	_semaphore.Signal();
 
 	return YES;
@@ -581,7 +652,7 @@ namespace {
 	return decoderState ? decoderState->mDecoder.supportsSeeking : NO;
 }
 
-#pragma mark AVAudioEngine Access
+#pragma mark AVAudioEngine
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
@@ -590,13 +661,20 @@ namespace {
 	});
 }
 
+- (void)audioEngineConfigurationChanged:(NSNotification *)notification
+{
+	// FIXME: Actually do something here
+	os_log_info(OS_LOG_DEFAULT, "Received AVAudioEngineConfigurationChangeNotification");
+}
+
 #pragma mark Decoding Thread
 
 - (void *)decoderThreadEntry
 {
 	os_log_info(OS_LOG_DEFAULT, "Decoder thread starting");
 
-	AVAudioFramePosition framePosition = 0;
+	__block AVAudioFramePosition nextSampleTime = 0;
+	__block DecoderStateData::shared_ptr schedulingDecoderState{};
 
 	dispatch_queue_t bufferStackQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.BufferStackAccessQueue", DISPATCH_QUEUE_SERIAL);
 	if(bufferStackQueue == NULL) {
@@ -604,8 +682,7 @@ namespace {
 		return NULL;
 	}
 
-	while(!(_flags & eAudioPlayerFlagStopDecoding)) {
-
+	for(;;) {
 		// Dequeue and process the next decoder
 		__block SFBAudioDecoder *decoder = nil;
 		dispatch_sync(_queue, ^{
@@ -614,6 +691,7 @@ namespace {
 				_queuedDecoders.pop();
 			}
 		});
+
 		if(decoder) {
 			// Open the decoder if necessary
 			NSError *error;
@@ -629,17 +707,17 @@ namespace {
 
 			// Create the decoder state
 			auto decoderState = std::make_shared<DecoderStateData>(decoder);
-
-			// NB: The decoder may return an estimate of the total frames
-			decoderState->mTotalFrames = decoderState->mDecoder.totalFrames;
+			std::atomic_exchange(&schedulingDecoderState, decoderState);
 
 			// The bus format is the format _player is expected to output
-			// In the even the bus and decoder processing formats don't match, conversion will
-			// be performed in SFBAudioDecoderStateData::DecodeAudio()
+			// In the event the bus format and decoder processing format don't match, conversion will
+			// be performed in DecoderStateData::DecodeAudio()
 			__block AVAudioFormat *busFormat;
 			dispatch_sync(_engineQueue, ^{
 				busFormat = [_player outputFormatForBus:0];
 			});
+
+			// TODO: Add notification for channel count or sample rate mismatch
 
 			os_log_info(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 			os_log_info(OS_LOG_DEFAULT, "Decoder processing format: %{public}@", decoderState->mDecoder.processingFormat);
@@ -654,25 +732,9 @@ namespace {
 //			decoderState->mConverter.sampleRateConverterQuality = AVAudioQualityMax;
 
 			// Decode the audio until complete or stopped
-			while(!(_flags & eAudioPlayerFlagStopDecoding) && !(decoderState->mFlags & eDecoderStateDataFlagStopDecoding)) {
-				if(decoderState->mFlags & eDecoderStateDataFlagDecodingFinished) {
-					os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-
-					// Some formats (MP3) may not know the exact number of frames in advance
-					// without processing the entire file, which is a potentially slow operation
-					decoderState->mTotalFrames = decoderState->mDecoder.totalFrames;
-
-					// Perform the decoding finished callback
-					if(_decodingFinishedNotificationHandler)
-						_decodingFinishedNotificationHandler(decoderState->mDecoder);
-
-					break;
-				}
-
-				AVAudioFramePosition seekOffset = decoderState->mFrameToSeek;
-
-				// Seek to the specified frame
-				if(seekOffset != -1) {
+			for(;;) {
+				// Perform seek if requested
+				if(decoderState->SeekRequested()) {
 					// Stop _player to unschedule any pending buffers
 					__block BOOL wasPlaying;
 					dispatch_sync(_engineQueue, ^{
@@ -680,35 +742,8 @@ namespace {
 						[_player stop];
 					});
 
-					double sampleRateRatio = decoderState->mConverter.inputFormat.sampleRate / decoderState->mConverter.outputFormat.sampleRate;
-					AVAudioFramePosition adjustedSeekOffset = (AVAudioFramePosition)(seekOffset * sampleRateRatio);
-
-					if(adjustedSeekOffset == seekOffset)
-						os_log_debug(OS_LOG_DEFAULT, "Seeking to frame %lld", adjustedSeekOffset);
-					else
-						os_log_debug(OS_LOG_DEFAULT, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
-
-					if([decoderState->mDecoder seekToFrame:adjustedSeekOffset error:nil])
-						// Reset the converter to flush any buffers
-						[decoderState->mConverter reset];
-					else
-						os_log_debug(OS_LOG_DEFAULT, "Error seeking to frame %lld", adjustedSeekOffset);
-
-					AVAudioFramePosition newFrame = decoderState->mDecoder.currentFrame;
-					if(newFrame != adjustedSeekOffset)
-						os_log_debug(OS_LOG_DEFAULT, "Inaccurate seek to frame %lld, got frame %lld", adjustedSeekOffset, newFrame);
-
-					// Update the seek request
-					decoderState->mFrameToSeek = -1;
-
-					// Update the frame counters accordingly
-					// A seek is handled in essentially the same way as initial playback
-					if(newFrame != -1) {
-						decoderState->mFramesDecoded = adjustedSeekOffset;
-						decoderState->mFramesConverted = seekOffset;
-						decoderState->mFramesScheduled = 0;
-						decoderState->mFramesRendered = seekOffset;
-					}
+					if(decoderState->PerformSeek())
+						nextSampleTime = 0;
 
 					if(wasPlaying)
 						dispatch_sync(_engineQueue, ^{
@@ -722,80 +757,150 @@ namespace {
 					buf = decoderState->DequeueBuffer();
 				});
 
-				if(buf) {
-					// Decode audio into the buffer, converting to the bus format in the process
-					if(!decoderState->DecodeAudio(buf, &error)) {
-						os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
-						dispatch_sync(bufferStackQueue, ^{
-							decoderState->ReturnBuffer(buf);
-						});
+				// No buffers available; wait for one
+				if(!buf) {
+					_semaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 2));
+					continue;
+				}
+
+				// Decode audio into the buffer, converting to the bus format in the process
+				if(!decoderState->DecodeAudio(buf, &error)) {
+					os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
+					dispatch_sync(bufferStackQueue, ^{
+						decoderState->ReturnBuffer(buf);
+					});
+				}
+
+				if(decoderState->mFlags.load() & eDecoderStateDataFlagDecodingFinished) {
+					os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+					// Some formats (MP3) may not know the exact number of frames in advance
+					// without processing the entire file, which is a potentially slow operation
+					decoderState->mFrameLength.exchange(decoderState->mDecoder.frameLength);
+
+					// Perform the decoding finished callback
+					if(_decodingFinishedNotificationHandler)
+						_decodingFinishedNotificationHandler(decoderState->mDecoder);
+				}
+
+				// Schedule the buffer for playback
+				if(buf.frameLength) {
+					AVAudioTime *time = [[AVAudioTime alloc] initWithSampleTime:nextSampleTime atRate:buf.format.sampleRate];
+
+					if(!(decoderState->mFlags.load() & eDecoderStateDataFlagSchedulingStarted)) {
+						os_log_info(OS_LOG_DEFAULT, "Scheduling started for \"%{public}@\" at sample time %lld", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], nextSampleTime);
+
+						decoderState->mFlags.fetch_or(eDecoderStateDataFlagSchedulingStarted);
+
+						// Perform the scheduling started callback
+						if(_schedulingStartedNotificationHandler)
+							_schedulingStartedNotificationHandler(decoderState->mDecoder);
 					}
 
-					// Schedule the buffer for playback
-					if(buf.frameLength) {
-						AVAudioTime *time = [[AVAudioTime alloc] initWithSampleTime:framePosition + decoderState->mFramesScheduled atRate:buf.format.sampleRate];
+					// Schedule the buffer on the AVAudioPlayerNode
+					dispatch_sync(_engineQueue, ^{
+						[_player scheduleBuffer:buf
+										 atTime:time
+										options:0
+						 completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack
+							  completionHandler:^(AVAudioPlayerNodeCompletionCallbackType /*callbackType*/) {
+							// The completion handler is called on a dedicated callback queue by AVAudioPlayerNode
 
-//						os_log_info(OS_LOG_DEFAULT, "Scheduling %d frames at %{public}@", buf.frameLength, time);
+							// Perform the rendering started callback
+							if(!(decoderState->mFlags.load() & eDecoderStateDataFlagRenderingStarted)) {
+								os_log_info(OS_LOG_DEFAULT, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-						// Schedule the buffer on the AVAudioPlayerNode
-						dispatch_sync(_engineQueue, ^{
-							[_player scheduleBuffer:buf
-											 atTime:time
-											options:0
-							 completionCallbackType:AVAudioPlayerNodeCompletionDataPlayedBack
-								  completionHandler:^(AVAudioPlayerNodeCompletionCallbackType /*callbackType*/) {
-								// The completion handler is called on a dedicated callback queue by AVAudioPlayerNode
+								decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted);
+
+								// Store the decoder state for communication between threads
+								std::atomic_store(&self->_decoderState, decoderState);
 
 								// Perform the rendering started callback
-								if(!(decoderState->mFlags & eDecoderStateDataFlagRenderingStarted)) {
-									os_log_info(OS_LOG_DEFAULT, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+								if(self->_renderingStartedNotificationHandler)
+									self->_renderingStartedNotificationHandler(decoderState->mDecoder);
+							}
 
-									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingStarted);
+							decoderState->mFramesRendered.fetch_add(buf.frameLength);
 
-									// Store the decoder state for communication between threads
-									std::atomic_store(&self->_decoderState, decoderState);
+							// Perform the rendering finished callback
+							if(decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load() && decoderState->mFlags.load() & eDecoderStateDataFlagDecodingFinished) {
+								os_log_info(OS_LOG_DEFAULT, "Rendering finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-									// Perform the rendering started callback
-									if(self->_renderingStartedNotificationHandler)
-										self->_renderingStartedNotificationHandler(decoderState->mDecoder);
-								}
-
-								decoderState->mFramesRendered += buf.frameLength;
+								decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
+								std::atomic_store(&self->_decoderState, DecoderStateData::shared_ptr{});
 
 								// Perform the rendering finished callback
-								if(decoderState->mFramesRendered == decoderState->mFramesConverted && decoderState->mFlags & eDecoderStateDataFlagDecodingFinished) {
-									os_log_info(OS_LOG_DEFAULT, "Rendering finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+								if(self->_renderingFinishedNotificationHandler)
+									self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
 
-									decoderState->mFlags.fetch_or(eDecoderStateDataFlagRenderingFinished);
-									std::atomic_store(&self->_decoderState, DecoderStateData::shared_ptr{});
+								// If no decoder is being scheduled stop the player and engine
+								if(!std::atomic_load(&schedulingDecoderState)) {
+									os_log_info(OS_LOG_DEFAULT, "Stopping audio engine");
 
-									// Perform the rendering finished callback
-									if(self->_renderingFinishedNotificationHandler)
-										self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
+									nextSampleTime = 0;
+
+									// Stop the audio engine
+									dispatch_async(self->_engineQueue, ^{
+										[self->_player stop];
+										[self->_engine stop];
+									});
 								}
+							}
 
-								// Return the buffer to the decoder state for reuse
-								dispatch_sync(bufferStackQueue, ^{
-									decoderState->ReturnBuffer(buf);
-								});
+							// Return the buffer to the decoder state for reuse
+							dispatch_sync(bufferStackQueue, ^{
+								decoderState->ReturnBuffer(buf);
+							});
 
-								self->_semaphore.Signal();
-							}];
-						});
+							self->_semaphore.Signal();
+						}];
+					});
 
-						decoderState->mFramesScheduled += buf.frameLength;
+					decoderState->mFramesScheduled.fetch_add(buf.frameLength);
+
+					if(decoderState->mFramesConverted.load() == decoderState->mFramesScheduled.load() && (decoderState->mFlags.load() & eDecoderStateDataFlagDecodingFinished) && !(decoderState->mFlags.load() & eDecoderStateDataFlagSchedulingFinished)) {
+						os_log_info(OS_LOG_DEFAULT, "Scheduling finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+						decoderState->mFlags.fetch_or(eDecoderStateDataFlagSchedulingFinished);
+						std::atomic_store(&schedulingDecoderState, DecoderStateData::shared_ptr{});
+
+						// Perform the scheduling finished callback
+						if(_schedulingFinishedNotificationHandler)
+							_schedulingFinishedNotificationHandler(decoderState->mDecoder);
 					}
+
+					nextSampleTime += buf.frameLength;
+
+					// Decoding is finished
+					if(decoderState->mFlags.load() & eDecoderStateDataFlagDecodingFinished)
+						break;
 				}
-				// No buffers available, wait for one to become available
-				else
-					_semaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
+
+				// Stop decoding if requested
+				if(decoderState->mFlags.load() & eDecoderStateDataFlagStopDecoding) {
+					os_log_info(OS_LOG_DEFAULT, "Stopping decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+					std::atomic_store(&_decoderState, DecoderStateData::shared_ptr{});
+					nextSampleTime = 0;
+
+					break;
+				}
 			}
+
+			// Check for termination request
+			if(_flags.load() & eAudioPlayerFlagStopDecoding)
+				goto finito;
 		}
 
-		// Wait for another element to be enqueued
+		// Wait for another decoder to be enqueued
 		_semaphore.TimedWait(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC));
+
+		// Check for termination request
+		if(_flags.load() & eAudioPlayerFlagStopDecoding)
+			goto finito;
 	}
 
+	finito:
 	os_log_info(OS_LOG_DEFAULT, "Decoder thread terminating");
 
 	return nullptr;

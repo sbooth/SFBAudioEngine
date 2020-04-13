@@ -3,21 +3,21 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 
 #import "SFBAudioDecoder.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 // Playback position and time information
-struct SFBAudioPlayerPlaybackPosition {
+struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerPlaybackPosition {
 	AVAudioFramePosition currentFrame NS_SWIFT_NAME(current);
 	AVAudioFramePosition totalFrames NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerPlaybackPosition SFBAudioPlayerPlaybackPosition;
 
-struct SFBAudioPlayerPlaybackTime {
+struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerPlaybackTime {
 	NSTimeInterval currentTime NS_SWIFT_NAME(current);
 	NSTimeInterval totalTime NS_SWIFT_NAME(total);
 };
@@ -30,7 +30,8 @@ typedef void (^SFBAudioPlayerErrorBlock)(NSError *error);
 
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
-@interface SFBAudioPlayer: NSObject
+//! An audio player
+NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 
 - (nullable instancetype)init NS_DESIGNATED_INITIALIZER;
 
@@ -54,7 +55,8 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
 // ========================================
 // Player State
-@property (nonatomic, readonly) BOOL isPlaying; //!< Returns \c YES if the AVAudioEngine's AVAudioPlayerNode is playing
+@property (nonatomic, readonly) BOOL isRunning; //!< Returns \c YES if the AVAudioEngine is running
+@property (nonatomic, readonly) BOOL isPlaying; //!< Returns \c YES if the  AVAudioPlayerNode is playing
 @property (nonatomic, nullable, readonly) NSURL *url; //!< Returns the url of the  rendering decoder's  input source  or \c nil if none
 @property (nonatomic, nullable, readonly) id representedObject; //!< Returns the represented object of the rendering decoder or \c nil if none
 
@@ -88,6 +90,8 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 // Player Event Callbacks
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
+@property (nonatomic, nullable) SFBAudioDecoderEventBlock schedulingStartedNotificationHandler;
+@property (nonatomic, nullable) SFBAudioDecoderEventBlock schedulingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderErrorBlock decodingErrorNotificationHandler;

@@ -5,10 +5,10 @@
 
 import Foundation
 
-extension SFBAudioPlayer {
-	public var positionAndTime: (position: SFBAudioPlayerPlaybackPosition, time: SFBAudioPlayerPlaybackTime) {
-		var position = SFBAudioPlayerPlaybackPosition()
-		var time = SFBAudioPlayerPlaybackTime()
+extension AudioPlayer {
+	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
+		var position = PlaybackPosition()
+		var time = PlaybackTime()
 		__getPlaybackPosition(&position, andTime: &time)
 		return (position: position, time: time)
 	}
