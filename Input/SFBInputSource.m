@@ -35,7 +35,7 @@
 
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error
 {
-	if(bytes == NULL || length <= 0)
+	if(!bytes || length <= 0)
 		return nil;
 
 	return [[SFBDataInputSource alloc] initWithBytes:bytes length:length];
@@ -43,7 +43,7 @@
 
 + (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length error:(NSError **)error
 {
-	if(bytes == NULL || length <= 0)
+	if(!bytes || length <= 0)
 		return nil;
 
 	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length];

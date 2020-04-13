@@ -275,19 +275,19 @@ namespace {
 {
 	if((self = [super init])) {
 		_queue = dispatch_queue_create("org.sbooth.AudioEngine.Player.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
-		if(_queue == NULL) {
+		if(!_queue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
 		}
 
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.AVAudioEngineAccessQueue", DISPATCH_QUEUE_SERIAL);
-		if(_engineQueue == NULL) {
+		if(_!engineQueue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
 		}
 
 		_semaphore = dispatch_semaphore_create(0);
-		if(_semaphore == NULL) {
+		if(!_semaphore) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
 			return nil;
 		}
@@ -689,7 +689,7 @@ namespace {
 	__block DecoderStateData::shared_ptr schedulingDecoderState{};
 
 	dispatch_queue_t bufferStackQueue = dispatch_queue_create("org.sbooth.AudioEngine.Player.BufferStackAccessQueue", DISPATCH_QUEUE_SERIAL);
-	if(bufferStackQueue == NULL) {
+	if(!bufferStackQueue) {
 		os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 		return NULL;
 	}
