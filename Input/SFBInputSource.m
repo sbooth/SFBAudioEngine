@@ -110,25 +110,25 @@
 - (BOOL)readUInt8:(uint8_t *)ui8 error:(NSError **)error
 {
 	NSInteger bytesRead;
-	return [self readBytes:ui8 length:sizeof(ui8) bytesRead:&bytesRead error:error] && bytesRead == sizeof(ui8);
+	return [self readBytes:ui8 length:sizeof(uint8_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint8_t);
 }
 
 - (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error
 {
 	NSInteger bytesRead;
-	return [self readBytes:ui16 length:sizeof(ui16) bytesRead:&bytesRead error:error] && bytesRead == sizeof(ui16);
+	return [self readBytes:ui16 length:sizeof(uint16_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint16_t);
 }
 
 - (BOOL)readUInt32:(uint32_t *)ui32 error:(NSError **)error
 {
 	NSInteger bytesRead;
-	return [self readBytes:ui32 length:sizeof(ui32) bytesRead:&bytesRead error:error] && bytesRead == sizeof(ui32);
+	return [self readBytes:ui32 length:sizeof(uint32_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint32_t);
 }
 
 - (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error
 {
 	NSInteger bytesRead;
-	return [self readBytes:ui64 length:sizeof(ui64) bytesRead:&bytesRead error:error] && bytesRead == sizeof(ui64);
+	return [self readBytes:ui64 length:sizeof(uint64_t) bytesRead:&bytesRead error:error] && bytesRead == sizeof(uint64_t);
 }
 
 @end
