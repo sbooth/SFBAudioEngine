@@ -9,7 +9,6 @@
 
 #import "SFBCoreAudioDecoder.h"
 
-#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 

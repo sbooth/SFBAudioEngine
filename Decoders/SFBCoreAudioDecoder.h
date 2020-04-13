@@ -7,6 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// An SFBAudioDecoder subclass supporting formats handled by ExtAudioFile
 @interface SFBCoreAudioDecoder : SFBAudioDecoder
 @end
 

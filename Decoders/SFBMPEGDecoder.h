@@ -7,6 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// An SFBAudioDecoder subclass supporting MPEG1
 @interface SFBMPEGDecoder : SFBAudioDecoder
 @end
 
