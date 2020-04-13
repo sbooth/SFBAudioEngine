@@ -30,7 +30,7 @@ extern NSString * const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak v
  * @brief A class that calculates replay gain
  * @see http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification
  */
-@interface SFBReplayGainAnalyzer : NSObject
+NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 
 /*! @brief The reference loudness in dB SPL, defined as 89.0 dB */
 @property (class, nonatomic, readonly) float referenceLoudness;

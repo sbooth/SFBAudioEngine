@@ -188,7 +188,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (AVAudioFramePosition)framesRemaining
 {
-	return _totalFrames - _currentFrame;
+	return _frameLength - _currentFrame;
 }
 
 - (BOOL)supportsSeeking

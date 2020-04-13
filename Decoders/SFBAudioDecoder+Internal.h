@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	AVAudioFramePosition _currentFrame;
-	AVAudioFramePosition _totalFrames;
+	AVAudioFramePosition _frameLength;
 }
 @property (nonatomic) AVAudioFormat *sourceFormat;
 @property (nonatomic) AVAudioFormat *processingFormat;

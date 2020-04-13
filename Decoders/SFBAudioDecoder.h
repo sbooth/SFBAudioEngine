@@ -25,7 +25,7 @@ typedef NS_ENUM(UInt32, SFBAudioFormatID) {
 };
 
 /*! @brief The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses */
-extern NSErrorDomain const SFBAudioDecoderErrorDomain;
+extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoderErrorDomain);
 
 /*! @brief Possible \c NSError  error codes used by \c SFBAudioDecoder */
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
@@ -34,7 +34,7 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 };
 
 /*! @brief A decoder providing audio as PCM */
-@interface SFBAudioDecoder : NSObject
+NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject
 
 /*! @brief Returns a set containing the supported path extensions */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
@@ -85,7 +85,7 @@ typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
 @property (nonatomic, readonly) AVAudioFramePosition currentFrame;
-@property (nonatomic, readonly) AVAudioFramePosition totalFrames;
+@property (nonatomic, readonly) AVAudioFramePosition frameLength;
 @property (nonatomic, readonly) AVAudioFramePosition framesRemaining;
 
 @property (nonatomic, readonly) BOOL supportsSeeking;

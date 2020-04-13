@@ -307,7 +307,7 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 
 	_frameBuffer.frameLength = 0;
 
-	_totalFrames = (NSInteger)_streamInfo.total_samples;
+	_frameLength = (NSInteger)_streamInfo.total_samples;
 
 	return YES;
 }

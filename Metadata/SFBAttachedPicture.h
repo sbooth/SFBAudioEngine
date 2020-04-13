@@ -49,7 +49,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  *
  * Most file formats may have more than one attached picture of each type.
  */
-@interface SFBAttachedPicture : NSObject <NSCopying>
+NS_SWIFT_NAME(AttachedPicture) @interface SFBAttachedPicture : NSObject <NSCopying>
 
 - (instancetype)init NS_UNAVAILABLE;
 

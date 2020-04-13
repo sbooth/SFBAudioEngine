@@ -8,7 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief The \c NSErrorDomain used by \c SFBInputSource and subclasses */
-extern NSErrorDomain const SFBInputSourceErrorDomain;
+extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSourceErrorDomain);
 
 /*! @brief Possible \c NSError  error codes used by \c SFBInputSource */
 typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
@@ -16,14 +16,14 @@ typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
 	SFBInputSourceErrorCodeInputOutput		= 1			/*!< Input/output error */
 };
 
-/*! @brief Metadata kind bitmask values used in copyMetadataFrom: and removeMetadataOfKind: */
+/*! @brief Metadata kind bitmask values used in `copyMetadataFrom:` and `removeMetadataOfKind:` */
 typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
 	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,	/*!< Files should be mapped in memory using \c mmap() */
 	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1	/*!< Files should be fully loaded in memory */
 };
 
-/// An input source
-@interface SFBInputSource : NSObject
+//! An input source
+NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 
 /*!
  * Returns an intiailized  \c SFBInputSource object for the given URL or \c nil on failure

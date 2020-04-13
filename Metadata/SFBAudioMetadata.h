@@ -82,7 +82,7 @@ extern SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures;				/*!< @b
 
 
 /*! @brief Class supporting commonly-used audio metadata and attached pictures */
-@interface SFBAudioMetadata : NSObject <NSCopying>
+NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 
 /*! @brief Returns an initialized empty \c SFBAudioMetadata object */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
