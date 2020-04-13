@@ -5,14 +5,14 @@
 
 import Cocoa
 
-extension SFBAttachedPicture {
+extension AttachedPicture {
 	var image: NSImage? {
 		return NSImage(data: imageData)
 	}
 }
 
 class PlayerWindowController: NSWindowController, NSWindowDelegate {
-	var player: SFBAudioPlayer!
+	var player: AudioPlayer!
 	var timer: DispatchSourceTimer!
 
 	@IBOutlet weak var slider: NSSlider!
@@ -30,7 +30,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 	}
 
 	override func windowDidLoad() {
-		player = SFBAudioPlayer()
+		player = AudioPlayer()
 
 		player.renderingStartedNotificationHandler = { decoder in
 			let url = decoder.inputSource.url
@@ -155,7 +155,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
 		// Load and display some metadata.  Normally the metadata would be read and stored in the background,
 		// but for simplicity's sake it is done here.
-		if let audioFile = try? SFBAudioFile(readingPropertiesAndMetadataFrom: url) {
+		if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
 			let metadata = audioFile.metadata
 
 			if let picture = metadata.attachedPictures.randomElement() {

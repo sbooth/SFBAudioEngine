@@ -16,7 +16,7 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = false
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = Array(SFBAudioDecoder.supportedPathExtensions)
+		openPanel.allowedFileTypes = Array(AudioDecoder.supportedPathExtensions)
 
 		if(openPanel.runModal() == .OK) {
 			if let url = openPanel.urls.first {
@@ -35,7 +35,7 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = false
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = Array(SFBAudioDecoder.supportedPathExtensions)
+		openPanel.allowedFileTypes = Array(AudioDecoder.supportedPathExtensions)
 
 		if(openPanel.runModal() == .OK) {
 			if let url = openPanel.urls.first {
