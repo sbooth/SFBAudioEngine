@@ -15,7 +15,7 @@
 
 // ========================================
 // Callbacks
-static OSStatus AudioFileReadProc(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
+static OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requestCount, void *buffer, UInt32 *actualCount)
 {
 	NSCParameterAssert(inClientData != NULL);
 
@@ -42,7 +42,7 @@ static OSStatus AudioFileReadProc(void *inClientData, SInt64 inPosition, UInt32 
 	return noErr;
 }
 
-static SInt64 AudioFileGetSizeProc(void *inClientData)
+static SInt64 get_size_callback(void *inClientData)
 {
 	NSCParameterAssert(inClientData != NULL);
 
@@ -103,7 +103,7 @@ static SInt64 AudioFileGetSizeProc(void *inClientData)
 		return NO;
 
 	// Open the input file
-	OSStatus result = AudioFileOpenWithCallbacks((__bridge void *)self, AudioFileReadProc, NULL, AudioFileGetSizeProc, NULL, 0, &_af);
+	OSStatus result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, NULL, get_size_callback, NULL, 0, &_af);
 	if(result != noErr) {
 		os_log_error(OS_LOG_DEFAULT, "AudioFileOpenWithCallbacks failed: %d", result);
 

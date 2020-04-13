@@ -28,7 +28,7 @@
 
 #pragma mark FLAC Callbacks
 
-static FLAC__StreamDecoderReadStatus FLACReadCallback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
+static FLAC__StreamDecoderReadStatus read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -48,7 +48,7 @@ static FLAC__StreamDecoderReadStatus FLACReadCallback(const FLAC__StreamDecoder 
 	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 }
 
-static FLAC__StreamDecoderSeekStatus FLACSeekCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
+static FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -65,7 +65,7 @@ static FLAC__StreamDecoderSeekStatus FLACSeekCallback(const FLAC__StreamDecoder 
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-static FLAC__StreamDecoderTellStatus FLACTellCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
+static FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -80,7 +80,7 @@ static FLAC__StreamDecoderTellStatus FLACTellCallback(const FLAC__StreamDecoder 
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-static FLAC__StreamDecoderLengthStatus FLACLengthCallback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
+static FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder *decoder, FLAC__uint64 *stream_length, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -95,7 +95,7 @@ static FLAC__StreamDecoderLengthStatus FLACLengthCallback(const FLAC__StreamDeco
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-static FLAC__bool FLACEOFCallback(const FLAC__StreamDecoder *decoder, void *client_data)
+static FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -104,7 +104,7 @@ static FLAC__bool FLACEOFCallback(const FLAC__StreamDecoder *decoder, void *clie
 	return flacDecoder.inputSource.atEOF;
 }
 
-static FLAC__StreamDecoderWriteStatus FLACWriteCallback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
+static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
 {
 #pragma unused(decoder)
 	NSCParameterAssert(client_data != NULL);
@@ -113,7 +113,7 @@ static FLAC__StreamDecoderWriteStatus FLACWriteCallback(const FLAC__StreamDecode
 	return [flacDecoder handleFLACWrite:decoder frame:frame buffer:buffer];
 }
 
-static void FLACMetadataCallback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
+static void metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
 {
 	NSCParameterAssert(client_data != NULL);
 
@@ -121,7 +121,7 @@ static void FLACMetadataCallback(const FLAC__StreamDecoder *decoder, const FLAC_
 	[flacDecoder handleFLACMetadata:decoder metadata:metadata];
 }
 
-static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
+static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
 {
 	NSCParameterAssert(client_data != NULL);
 
@@ -165,9 +165,9 @@ static void FLACErrorCallback(const FLAC__StreamDecoder *decoder, FLAC__StreamDe
 	// Attempt to create a stream decoder based on the file's extension
 	NSString *extension = _inputSource.url.pathExtension.lowercaseString;
 	if([extension isEqualToString:@"flac"])
-		status = FLAC__stream_decoder_init_stream(_flac, FLACReadCallback, FLACSeekCallback, FLACTellCallback, FLACLengthCallback, FLACEOFCallback, FLACWriteCallback, FLACMetadataCallback, FLACErrorCallback, (__bridge void *)self);
+		status = FLAC__stream_decoder_init_stream(_flac, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
 	else if([extension isEqualToString:@"oga"])
-		status = FLAC__stream_decoder_init_ogg_stream(_flac, FLACReadCallback, FLACSeekCallback, FLACTellCallback, FLACLengthCallback, FLACEOFCallback, FLACWriteCallback, FLACMetadataCallback, FLACErrorCallback, (__bridge void *)self);
+		status = FLAC__stream_decoder_init_ogg_stream(_flac, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
 
 	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
 		os_log_error(OS_LOG_DEFAULT, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
