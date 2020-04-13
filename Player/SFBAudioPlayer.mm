@@ -348,8 +348,15 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
-	if(![self stopReturningError:error])
-		return NO;
+	dispatch_sync(_engineQueue, ^{
+		[_player stop];
+		[_engine pause];
+		[_engine reset];
+	});
+
+	auto decoderState = std::atomic_load(&_decoderState);
+	if(decoderState)
+		decoderState->mFlags.fetch_or(eDecoderStateDataFlagStopDecoding);
 
 	dispatch_sync(_queue, ^{
 		while(!_queuedDecoders.empty())
