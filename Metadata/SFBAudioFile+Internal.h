@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#pragma once
-
 #include <objc/runtime.h>
 
 #import "SFBAudioFile.h"
