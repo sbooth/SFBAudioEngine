@@ -37,7 +37,7 @@ static AudioChannelLayout * CreateChannelLayoutWithLabels(UInt32 numberChannelLa
 	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 
 	for(UInt32 i = 0; i < numberChannelLabels; ++i)
-		channelLayout->mChannelDescriptions[i].mChannelLabel = va_arg(ap, UInt32);
+		channelLayout->mChannelDescriptions[i].mChannelLabel = va_arg(ap, AudioChannelLabel);
 
 	return channelLayout;
 }
