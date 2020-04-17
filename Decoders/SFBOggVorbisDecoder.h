@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBAudioDecoder subclass supporting FLAC
+// An SFBAudioDecoder subclass supporting Ogg Vorbis
 @interface SFBOggVorbisDecoder : SFBAudioDecoder
 @end
 

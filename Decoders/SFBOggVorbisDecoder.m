@@ -14,49 +14,8 @@
 
 #import "SFBOggVorbisDecoder.h"
 
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
-
-#define MAX_READ_SIZE_FRAMES 2048u
-
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
-static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
-{
-	return offsetof(AudioChannelLayout, mChannelDescriptions) + (numberChannelDescriptions * sizeof(AudioChannelDescription));
-}
-
-static AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions)
-{
-	size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
-	AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
-	if(!channelLayout)
-		return NULL;
-
-	memset(channelLayout, 0, layoutSize);
-
-	return channelLayout;
-}
-
-static AudioChannelLayout * CreateChannelLayoutWithLabels(UInt32 numberChannelLabels, ...)
-{
-	assert(numberChannelLabels > 0);
-
-	AudioChannelLayout *channelLayout = CreateChannelLayout(numberChannelLabels);
-	if(!channelLayout)
-		return NULL;
-
-	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-
-	va_list args;
-	va_start(args, numberChannelLabels);
-
-	for(UInt32 i = 0; i < numberChannelLabels; ++i)
-		channelLayout->mChannelDescriptions[i].mChannelLabel = va_arg(args, UInt32);
-
-	va_end(args);
-
-	return channelLayout;
-}
 
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
@@ -184,28 +143,18 @@ static long tell_func_callback(void *datasource)
 		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
 		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_C];		break;
 		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_C];		break;
-		case 7: {
-			AudioChannelLayout *layout = CreateChannelLayoutWithLabels(7,
-																	   kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
-																	   kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_CenterSurround,
-																	   kAudioChannelLabel_LFEScreen);
-			if(layout) {
-				channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:layout];
-				free(layout);
-			}
+		case 7:
+			channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:7,
+							 kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_CenterSurround,
+							 kAudioChannelLabel_LFEScreen];
 			break;
-		}
-		case 8: {
-			AudioChannelLayout *layout = CreateChannelLayoutWithLabels(8,
-																	   kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
-																	   kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
-																	   kAudioChannelLabel_LFEScreen);
-			if(layout) {
-				channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:layout];
-				free(layout);
-			}
+		case 8:
+			channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:8,
+							 kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
+							 kAudioChannelLabel_LFEScreen];
 			break;
-		}
 	}
 
 	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:ovInfo->rate interleaved:NO channelLayout:channelLayout];
@@ -267,7 +216,7 @@ static long tell_func_callback(void *datasource)
 
 	while(framesRemaining > 0) {
 		// Decode a chunk of samples from the file
-		long framesRead = ov_read_float(&_vorbisFile, &pcm_channels, (int)SFB_min(MAX_READ_SIZE_FRAMES, framesRemaining), &bitstream);
+		long framesRead = ov_read_float(&_vorbisFile, &pcm_channels, (int)framesRemaining, &bitstream);
 
 		if(framesRead < 0) {
 			os_log_error(OS_LOG_DEFAULT, "Ogg Vorbis decoding error");
@@ -288,7 +237,6 @@ static long tell_func_callback(void *datasource)
 		}
 
 		buffer.frameLength += (AVAudioFrameCount)framesRead;
-
 		framesRemaining -= framesRead;
 	}
 
