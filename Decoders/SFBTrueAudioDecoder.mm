@@ -15,7 +15,7 @@
 
 namespace {
 
-	struct TTACallbacks: TTA_io_callback
+	struct TTACallbacks : TTA_io_callback
 	{
 		SFBAudioDecoder *mDecoder;
 	};
