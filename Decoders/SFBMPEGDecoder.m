@@ -5,8 +5,6 @@
 
 #import <os/log.h>
 
-#import <Accelerate/Accelerate.h>
-
 #import <mpg123/mpg123.h>
 
 #import "SFBMPEGDecoder.h"
@@ -289,17 +287,17 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		}
 
 		// Deinterleave the samples
-		const AudioBufferList *abl = _buffer.audioBufferList;
-		const AudioStreamBasicDescription *asbd = _buffer.format.streamDescription;
+		AVAudioFrameCount framesDecoded = (AVAudioFrameCount)(bytesDecoded / (sizeof(float) * _buffer.format.channelCount));
 
-		UInt32 framesDecoded = (UInt32)(bytesDecoded / (sizeof(float) * asbd->mChannelsPerFrame));
-
-		// In my experiments adding zero using Accelerate.framework is faster than looping through the buffer and copying each sample
-		float zero = 0;
-		for(UInt32 channel = 0; channel < asbd->mChannelsPerFrame; ++channel) {
-			float *inputBuffer = (float *)audioData + channel;
-			float *outputBuffer = (float *)abl->mBuffers[channel].mData;
-			vDSP_vsadd(inputBuffer, (vDSP_Stride)asbd->mChannelsPerFrame, &zero, outputBuffer, 1, framesDecoded);
+		float * const *floatChannelData = _buffer.floatChannelData;
+		AVAudioChannelCount channelCount = _buffer.format.channelCount;
+		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
+			const float *input = (float *)audioData + channel;
+			float *output = floatChannelData[channel];
+			for(AVAudioFrameCount frame = channel; frame < framesDecoded; ++frame) {
+				*output++ = *input;
+				input += channelCount;
+			}
 		}
 
 		_buffer.frameLength = framesDecoded;
