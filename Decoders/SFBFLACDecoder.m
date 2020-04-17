@@ -54,7 +54,7 @@ static FLAC__StreamDecoderSeekStatus seek_callback(const FLAC__StreamDecoder *de
 	NSCParameterAssert(client_data != NULL);
 
 	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	SFBInputSource *inputSource = flacDecoder.inputSource;
+	SFBInputSource *inputSource = flacDecoder->_inputSource;
 
 	if(!inputSource.supportsSeeking)
 		return FLAC__STREAM_DECODER_SEEK_STATUS_UNSUPPORTED;
@@ -73,7 +73,7 @@ static FLAC__StreamDecoderTellStatus tell_callback(const FLAC__StreamDecoder *de
 	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
 	NSInteger offset;
-	if(![flacDecoder.inputSource getOffset:&offset error:nil])
+	if(![flacDecoder->_inputSource getOffset:&offset error:nil])
 		return FLAC__STREAM_DECODER_TELL_STATUS_ERROR;
 
 	*absolute_byte_offset = (FLAC__uint64)offset;
@@ -88,7 +88,7 @@ static FLAC__StreamDecoderLengthStatus length_callback(const FLAC__StreamDecoder
 	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
 
 	NSInteger length;
-	if(![flacDecoder.inputSource getLength:&length error:nil])
+	if(![flacDecoder->_inputSource getLength:&length error:nil])
 		return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
 	*stream_length = (FLAC__uint64)length;
@@ -101,7 +101,7 @@ static FLAC__bool eof_callback(const FLAC__StreamDecoder *decoder, void *client_
 	NSCParameterAssert(client_data != NULL);
 
 	SFBFLACDecoder *flacDecoder = (__bridge SFBFLACDecoder *)client_data;
-	return flacDecoder.inputSource.atEOF;
+	return flacDecoder->_inputSource.atEOF;
 }
 
 static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame, const FLAC__int32 * const buffer[], void *client_data)
