@@ -114,7 +114,7 @@ static inline long SFB_min(long a, long b) { return a < b ? a : b; }
 //static inline long SFB_max(long a, long b) { return a > b ? a : b; }
 static inline float SFB_maxf(float a, float b) { return a > b ? a : b; }
 
-#define BUFFER_SIZE_FRAMES 512
+#define BUFFER_SIZE_FRAMES 2048
 
 // RG constants
 #define YULE_ORDER					10
