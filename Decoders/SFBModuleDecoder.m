@@ -160,6 +160,8 @@ static void close_callback(void *f)
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
+	NSParameterAssert(frame >= 0);
+
 	// DUMB cannot seek backwards, so the decoder must be reset
 	if(frame < _framePosition) {
 		[self closeDecoder];

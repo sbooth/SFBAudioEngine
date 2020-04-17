@@ -312,6 +312,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
+	NSParameterAssert(frame >= 0);
 	off_t offset = mpg123_seek(_mpg123, frame, SEEK_SET);
 	if(offset >= 0)
 		_framePosition = offset;
