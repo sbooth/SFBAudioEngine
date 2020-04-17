@@ -16,8 +16,7 @@
 
 + (instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error
 {
-	if(url == nil)
-		return nil;
+	NSParameterAssert(url != nil);
 
 	if(url.isFileURL) {
 		if(flags & SFBInputSourceFlagsMemoryMapFiles)
