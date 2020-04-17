@@ -233,14 +233,14 @@ namespace {
 		}
 
 		if(!eos) {
-			framesRead = (UInt32)_decoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
+			framesRead = (AVAudioFrameCount)_decoder->process_stream((TTAuint8 *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
 			if(framesRead == 0)
 				eos = true;
 		}
 	}
 	catch(const tta::tta_exception& e) {
 		os_log_error(OS_LOG_DEFAULT, "True Audio decoding error: %d", e.code());
-		return 0;
+		return NO;
 	}
 
 	if(eos)
