@@ -210,7 +210,6 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		return NO;
 	}
 
-
 	// Set up the processing format
 	AudioStreamBasicDescription processingStreamDescription = {0};
 
