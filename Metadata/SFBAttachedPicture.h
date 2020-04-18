@@ -49,6 +49,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  */
 NS_SWIFT_NAME(AttachedPicture) @interface SFBAttachedPicture : NSObject <NSCopying>
 
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 /*!

@@ -43,6 +43,7 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
  */
 + (nullable instancetype)audioFileWithURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(init(readingPropertiesAndMetadataFrom:));
 
++ (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 /*!

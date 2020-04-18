@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 - 2017 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -119,11 +119,11 @@ namespace SFB {
 		size_t Write(const void *sourceBuffer, size_t byteCount);
 
 
-		/*! @brief Advance the read pointer by the specified number of bytes */
-		void ReadAdvance(size_t byteCount);
+		/*! @brief Advance the read position by the specified number of bytes */
+		void AdvanceReadPosition(size_t byteCount);
 
-		/*! @brief Advance the write pointer by the specified number of bytes */
-		void WriteAdvance(size_t byteCount);
+		/*! @brief Advance the write position by the specified number of bytes */
+		void AdvanceWritePosition(size_t byteCount);
 
 
 		/*! @brief A struct wrapping a memory buffer location and capacity */
@@ -162,8 +162,8 @@ namespace SFB {
 		size_t				mCapacityBytes;			/*!< The capacity of \c mBuffer in bytes */
 		size_t				mCapacityBytesMask;		/*!< The capacity of \c mBuffer in bytes minus one */
 
-		volatile size_t		mWritePointer;			/*!< The offset into \c mBuffer of the read location */
-		volatile size_t		mReadPointer;			/*!< The offset into \c mBuffer of the write location */
+		volatile size_t		mWritePosition;			/*!< The offset into \c mBuffer of the read location */
+		volatile size_t		mReadPosition;			/*!< The offset into \c mBuffer of the write location */
 	};
 
 }
