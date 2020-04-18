@@ -30,6 +30,8 @@ static 	int seek_callback(void *stream, opus_int64 offset, int whence)
 	NSCParameterAssert(stream != NULL);
 
 	SFBOggOpusDecoder *decoder = (__bridge SFBOggOpusDecoder *)stream;
+	if(!decoder->_inputSource.supportsSeeking)
+		return -1;
 
 	switch(whence) {
 		case SEEK_SET:
