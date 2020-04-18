@@ -244,13 +244,13 @@
 		speex_decoder_ctl(_decoder, SPEEX_SET_HANDLER, &callback);
 	}
 
-	AVAudioChannelLayout *channelLayout = nil;
-	switch(header->nb_channels) {
-		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
-		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
-			break;
-	}
+//	AVAudioChannelLayout *channelLayout = nil;
+//	switch(header->nb_channels) {
+//		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];			break;
+//		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];		break;
+//	}
 
+	// For mono and stereo the channel layout is assumed
 	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:header->rate channels:(AVAudioChannelCount)header->nb_channels interleaved:NO];
 
 	// Set up the source format
