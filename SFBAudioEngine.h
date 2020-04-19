@@ -4,7 +4,13 @@
  */
 
 #import <SFBAudioEngine/SFBInputSource.h>
+
+#import <SFBAudioEngine/SFBAudioDecoding.h>
+#import <SFBAudioEngine/SFBPCMDecoding.h>
 #import <SFBAudioEngine/SFBAudioDecoder.h>
+#import <SFBAudioEngine/SFBDSDDecoding.h>
+#import <SFBAudioEngine/SFBDSDDecoder.h>
+
 #import <SFBAudioEngine/SFBAudioPlayer.h>
 
 #import <SFBAudioEngine/SFBAudioProperties.h>
