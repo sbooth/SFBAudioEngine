@@ -3,17 +3,22 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <algorithm>
-#include <array>
+#import <os/log.h>
 
-#include <os/log.h>
+#include <vector>
 
 #include <Accelerate/Accelerate.h>
 
-#include "CFErrorUtilities.h"
-#include "DSDPCMDecoder.h"
+#import "SFBDSDPCMDecoder.h"
 
-#define DSD_FRAMES_PER_PCM_FRAME 8
+#import "AVAudioPCMBuffer+SFBBufferUtilities.h"
+#import "NSError+SFBURLPresentation.h"
+#import "SFBDSDDecoder.h"
+
+#define DSD_PACKETS_PER_PCM_FRAME 8
+#define BUFFER_SIZE_PACKETS 16384
+
+static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
 
 namespace {
 
@@ -256,9 +261,6 @@ namespace {
 
 #pragma mark End DSD2PCM
 
-	// Support DSD64 (64x the CD sample rate of 44.1 KHz)
-	static const std::array<Float64, 1> sSupportedSampleRates = { {2822400} };
-
 #pragma mark Initialization
 
 	void SetupDSD2PCM() __attribute__ ((constructor));
@@ -267,238 +269,257 @@ namespace {
 		dsd2pcm_precalc();
 	}
 
-}
-
 #pragma mark DXD
 
-namespace SFB {
-	namespace Audio {
-		class DSDPCMDecoder::DXD {
-		public:
-			DXD()
-				: handle(dsd2pcm_init())
-			{
-				if(nullptr == handle)
-					throw std::bad_alloc();
-			}
+	class DXD {
+	public:
+		DXD()
+			: handle(dsd2pcm_init())
+		{
+			if(nullptr == handle)
+				throw std::bad_alloc();
+		}
 
-			DXD(DXD const& x)
-				: handle(dsd2pcm_clone(x.handle))
-			{
-				if(nullptr == handle)
-					throw std::bad_alloc();
-			}
+		DXD(DXD const& x)
+			: handle(dsd2pcm_clone(x.handle))
+		{
+			if(nullptr == handle)
+				throw std::bad_alloc();
+		}
 
-			~DXD()
-			{
-				dsd2pcm_destroy(handle);
-			}
+		~DXD()
+		{
+			dsd2pcm_destroy(handle);
+		}
 
-			friend void Swap(DXD& a, DXD& b)
-			{
-				std::swap(a.handle, b.handle);
-			}
+		friend void Swap(DXD& a, DXD& b)
+		{
+			std::swap(a.handle, b.handle);
+		}
 
-			DXD& operator=(DXD x)
-			{
-				Swap(*this, x);
-				return *this;
-			}
+		DXD& operator=(DXD x)
+		{
+			Swap(*this, x);
+			return *this;
+		}
 
-			void Translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride)
-			{
-				dsd2pcm_translate(handle, samples, src, src_stride, lsbitfirst, dst, dst_stride);
-			}
+		void Translate(size_t samples, const unsigned char *src, ptrdiff_t src_stride, bool lsbitfirst, float *dst, ptrdiff_t dst_stride)
+		{
+			dsd2pcm_translate(handle, samples, src, src_stride, lsbitfirst, dst, dst_stride);
+		}
 
-		private:
-			dsd2pcm_ctx *handle;
-		};
+	private:
+		dsd2pcm_ctx *handle;
+	};
 
-	}
 }
 
-#pragma mark Factory Methods
-
-SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDPCMDecoder::CreateForURL(CFURLRef url, CFErrorRef *error)
+@interface SFBDSDPCMDecoder ()
 {
-	return CreateForInputSource(InputSource::CreateForURL(url, 0, error), error);
+@private
+	id <SFBDSDDecoding> _decoder;
+	AVAudioFormat *_processingFormat;
+	AVAudioCompressedBuffer *_buffer;
+	std::vector<DXD> _context;
+	float _linearGain;
 }
+@end
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDPCMDecoder::CreateForInputSource(InputSource::unique_ptr inputSource, CFErrorRef *error)
+@implementation SFBDSDPCMDecoder
+
+@synthesize processingFormat = _processingFormat;
+
+- (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
 {
+	NSParameterAssert(url != nil);
+
+	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
 	if(!inputSource)
-		return nullptr;
-
-	return CreateForDecoder(Decoder::CreateForInputSource(std::move(inputSource), error), error);
+		return nil;
+	return [self initWithInputSource:inputSource error:error];
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDPCMDecoder::CreateForDecoder(unique_ptr decoder, CFErrorRef *error)
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource error:(NSError **)error
 {
-#pragma unused(error)
+	NSParameterAssert(inputSource != nil);
 
+	SFBDSDDecoder *decoder = [[SFBDSDDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder)
-		return nullptr;
+		return nil;
 
-	return unique_ptr(new DSDPCMDecoder(std::move(decoder)));
+	return [self initWithDecoder:decoder error:error];
 }
 
-// 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
-SFB::Audio::DSDPCMDecoder::DSDPCMDecoder(Decoder::unique_ptr decoder)
-	: mDecoder(std::move(decoder)), mLinearGain(0x1.fec984p+0)
+- (instancetype)initWithDecoder:(id <SFBDSDDecoding>)decoder error:(NSError **)error
 {
-	assert(nullptr != mDecoder);
+	NSParameterAssert(decoder != nil);
+
+	if((self = [super init])) {
+		_decoder = decoder;
+		// 6 dBFS gain -> powf(10.f, 6.f / 20.f) -> 0x1.fec984p+0 (approximately 1.99526231496888)
+		_linearGain = 0x1.fec984p+0;
+	}
+	return self;
 }
 
-bool SFB::Audio::DSDPCMDecoder::_Open(CFErrorRef *error)
+- (SFBInputSource *)inputSource
 {
-	if(!mDecoder->IsOpen() && !mDecoder->Open(error))
-		return false;
+	return _decoder.inputSource;
+}
 
-	const auto& decoderFormat = mDecoder->GetFormat();
+- (AVAudioFormat *)sourceFormat
+{
+	return _decoder.sourceFormat;
+}
 
-	if(!decoderFormat.IsDSD()) {
-		if(error) {
-			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSD file."), ""));
-			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a DSD file"), ""));
-			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
+- (BOOL)openReturningError:(NSError **)error
+{
+	if(!_decoder.isOpen && ![_decoder openReturningError:error])
+		return NO;
 
-			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
-		}
+	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-		return false;
+	if(!(asbd->mFormatID == SFBAudioFormatIDDirectStreamDigital)) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+											 code:SFBDSDDecoderErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSD file.", @"")
+											  url:_decoder.inputSource.url
+									failureReason:NSLocalizedString(@"Not a DSD file", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return NO;
 	}
 
-	if(std::end(sSupportedSampleRates) == std::find(std::begin(sSupportedSampleRates), std::end(sSupportedSampleRates), decoderFormat.mSampleRate)) {
-		os_log_error(OS_LOG_DEFAULT, "Unsupported sample rate: %f", decoderFormat.mSampleRate);
+	if(asbd->mSampleRate != SFBDSDSampleRateDSD64) {
+		os_log_error(OS_LOG_DEFAULT, "Unsupported DSD sample rate for PCM conversion: %f", asbd->mSampleRate);
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+											 code:SFBDSDDecoderErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not supported.", @"")
+											  url:_decoder.inputSource.url
+									failureReason:NSLocalizedString(@"Unsupported DSD sample rate", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's sample rate is not supported for DSD to PCM conversion.", @"")];
 
-		if(error) {
-			SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not supported."), ""));
-			SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Unsupported DSD sample rate"), ""));
-			SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's sample rate is not supported for DSD to PCM conversion."), ""));
-
-			*error = CreateErrorForURL(Decoder::ErrorDomain, Decoder::InputOutputError, description, GetURL(), failureReason, recoverySuggestion);
-		}
-
-		return false;
+		return NO;
 	}
 
 	// Generate non-interleaved 32-bit float output
-	mFormat.mFormatID			= kAudioFormatLinearPCM;
-	mFormat.mFormatFlags		= kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved;
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / DSD_PACKETS_PER_PCM_FRAME) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
 
-	mFormat.mSampleRate			= decoderFormat.mSampleRate / DSD_FRAMES_PER_PCM_FRAME;
-	mFormat.mChannelsPerFrame	= decoderFormat.mChannelsPerFrame;
-	mFormat.mBitsPerChannel		= 32;
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS];
+	_buffer.packetCount = 0;
 
-	mFormat.mBytesPerPacket		= mFormat.mBitsPerChannel / 8;
-	mFormat.mFramesPerPacket	= 1;
-	mFormat.mBytesPerFrame		= mFormat.mBytesPerPacket * mFormat.mFramesPerPacket;
+	_context.resize(asbd->mChannelsPerFrame);
 
-	mFormat.mReserved			= 0;
-
-	mChannelLayout 				= mDecoder->GetChannelLayout();
-
-	if(!mBufferList.Allocate(decoderFormat, 16384)) {
-		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
-
-		if(error)
-			*error = CFErrorCreate(kCFAllocatorDefault, kCFErrorDomainPOSIX, ENOMEM, nullptr);
-
-		return false;
-	}
-
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-		mBufferList->mBuffers[i].mDataByteSize = 0;
-
-	mContext.resize(mFormat.mChannelsPerFrame);
-
-	return true;
+	return YES;
 }
 
-bool SFB::Audio::DSDPCMDecoder::_Close(CFErrorRef *error)
+- (BOOL)closeReturningError:(NSError **)error
 {
-	if(!mDecoder->Close(error))
-		return false;
-
-	mBufferList.Deallocate();
-	mContext.clear();
-
-	return true;
+	_buffer = nil;
+	_context.clear();
+	return [_decoder closeReturningError:error];
 }
 
-SFB::CFString SFB::Audio::DSDPCMDecoder::_GetSourceFormatDescription() const
+- (BOOL)isOpen
 {
-	return CFString(mDecoder->CreateSourceFormatDescription());
+	return _buffer != nil;
 }
 
-#pragma mark Functionality
-
-UInt32 SFB::Audio::DSDPCMDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+- (AVAudioFramePosition)framePosition
 {
-	// Only multiples of 8 frames can be read
-	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 8) {
-		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
-		return 0;
-	}
+	return _decoder.packetPosition / DSD_PACKETS_PER_PCM_FRAME;
+}
 
-	UInt32 framesRead = 0;
-	const float linearGain = mLinearGain;
+- (AVAudioFramePosition)frameLength
+{
+	return _decoder.packetCount / DSD_PACKETS_PER_PCM_FRAME;
+}
+
+- (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error {
+	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
+		return NO;
+	return [self decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
+}
+
+- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
+{
+	NSParameterAssert(buffer != nil);
 
 	// Reset output buffer data size
-	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
-		bufferList->mBuffers[i].mDataByteSize = 0;
+	buffer.frameLength = 0;
+
+	if(![buffer.format isEqual:_processingFormat]) {
+		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		return NO;
+	}
+
+	if(frameLength > buffer.frameCapacity)
+		frameLength = buffer.frameCapacity;
+
+	AVAudioFrameCount framesRead = 0;
+	const float linearGain = _linearGain;
 
 	for(;;) {
+		AVAudioFrameCount framesRemaining = frameLength - framesRead;
+
 		// Grab the DSD audio
-		UInt32 framesRemaining 		= frameCount - framesRead;
-		UInt32 dsdFramesRemaining 	= DSD_FRAMES_PER_PCM_FRAME * framesRemaining;
-		UInt32 dsdFramesDecoded 	= mDecoder->ReadAudio(mBufferList, std::min(mBufferList.GetCapacityFrames(), dsdFramesRemaining));
-		if(0 == dsdFramesDecoded)
+		_buffer.packetCount = 0;
+		AVAudioFrameCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_PCM_FRAME;
+		if(![_decoder decodeIntoBuffer:_buffer packetCount:SFB_min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
-		UInt32 framesDecoded 		= dsdFramesDecoded / DSD_FRAMES_PER_PCM_FRAME;
+		AVAudioFrameCount dsdPacketsDecoded = _buffer.packetCount;
+		if(dsdPacketsDecoded == 0)
+			break;
+
+		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_PCM_FRAME;
 
 		// Convert to PCM
-		// NB: Currently DSDIFFDecoder and DSFDecoder only produce non-interleaved output
-		for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i) {
-			mContext[i].Translate(framesDecoded,
-								  (const unsigned char *)mBufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize, 1,
-								  !mBufferList.GetFormat().IsBigEndian(),
-								  (float *)bufferList->mBuffers[i].mData, 1);
+		// NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
+
+		float * const *floatChannelData = buffer.floatChannelData;
+		AVAudioChannelCount channelCount = buffer.format.channelCount;
+		bool isBigEndian = _buffer.format.streamDescription->mFormatFlags & kAudioFormatFlagIsBigEndian;
+		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
+			const uint8_t *input = (uint8_t *)_buffer.data + channel;
+			float *output = floatChannelData[channel];
+			_context[channel].Translate(framesDecoded,
+										input, channelCount,
+										!isBigEndian,
+										output, 1);
 
 			// Boost signal by 6 dBFS
-			vDSP_vsmul((float *)bufferList->mBuffers[i].mData, 1, &linearGain, (float *)bufferList->mBuffers[i].mData, 1, framesDecoded);
-
-			bufferList->mBuffers[i].mDataByteSize += mFormat.FrameCountToByteCount(framesDecoded);
+			vDSP_vsmul(output, 1, &linearGain, output, 1, framesDecoded);
 		}
 
+		buffer.frameLength += framesDecoded;
 		framesRead += framesDecoded;
 
 		// All requested frames were read
-		if(framesRead == frameCount)
+		if(framesRead == frameLength)
 			break;
 	}
 
-	return framesRead;
+	return YES;
 }
 
-SInt64 SFB::Audio::DSDPCMDecoder::_GetTotalFrames() const
+- (BOOL)supportsSeeking
 {
-	return mDecoder->GetTotalFrames() / DSD_FRAMES_PER_PCM_FRAME;
+	return _decoder.supportsSeeking;
 }
 
-SInt64 SFB::Audio::DSDPCMDecoder::_GetCurrentFrame() const
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
-	return mDecoder->GetCurrentFrame() / DSD_FRAMES_PER_PCM_FRAME;
+	NSParameterAssert(frame >= 0);
+
+	if(![_decoder seekToPacket:(frame * DSD_PACKETS_PER_PCM_FRAME) error:error])
+		return NO;
+
+	_buffer.packetCount = 0;
+
+	return YES;
 }
 
-SInt64 SFB::Audio::DSDPCMDecoder::_SeekToFrame(SInt64 frame)
-{
-	if(-1 == mDecoder->SeekToFrame(DSD_FRAMES_PER_PCM_FRAME * frame))
-		return -1;
-
-	for(UInt32 i = 0; i < mBufferList->mNumberBuffers; ++i)
-		mBufferList->mBuffers[i].mDataByteSize = 0;
-
-	return _GetCurrentFrame();
-}
+@end
