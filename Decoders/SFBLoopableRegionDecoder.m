@@ -8,14 +8,14 @@
 #import "SFBLoopableRegionDecoder.h"
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBAudioDecoder.h"
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
 
 @interface SFBLoopableRegionDecoder ()
 {
 @private
-	SFBAudioDecoder *_decoder;
+	id <SFBPCMDecoding> _decoder;
 	AVAudioPCMBuffer *_buffer;
 	AVAudioFramePosition _framePosition;
 	AVAudioFramePosition _frameLength;
@@ -35,6 +35,8 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 - (instancetype)initWithURL:(NSURL *)url framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
+	NSParameterAssert(url != nil);
+
 	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
 	if(!inputSource || !inputSource.supportsSeeking)
 		return nil;
@@ -48,13 +50,25 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
-	NSParameterAssert(framePosition >= 0);
-	NSParameterAssert(frameLength >= 0);
-	NSParameterAssert(repeatCount >= 0);
+	NSParameterAssert(inputSource != nil);
 
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithInputSource:inputSource error:error];
 	if(!decoder || !decoder.supportsSeeking)
 		return nil;
+	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength error:error];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
+{
+	return [self initWithDecoder:decoder framePosition:framePosition frameLength:frameLength repeatCount:0 error:error];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
+{
+	NSParameterAssert(decoder != nil);
+	NSParameterAssert(framePosition >= 0);
+	NSParameterAssert(frameLength >= 0);
+	NSParameterAssert(repeatCount >= 0);
 
 	if((self = [super init])) {
 		_decoder = decoder;
@@ -67,17 +81,17 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 - (SFBInputSource *)inputSource
 {
-	return _decoder->_inputSource;
+	return _decoder.inputSource;
 }
 
 - (AVAudioFormat *)processingFormat
 {
-	return _decoder->_processingFormat;
+	return  _decoder.processingFormat;
 }
 
 - (AVAudioFormat *)sourceFormat
 {
-	return _decoder->_sourceFormat;
+	return _decoder.sourceFormat;
 }
 
 - (BOOL)openReturningError:(NSError **)error
@@ -90,7 +104,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 		return NO;
 	}
 
-	_buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_decoder->_processingFormat frameCapacity:512];
+	_buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_decoder.processingFormat frameCapacity:512];
 
 	return YES;
 }
@@ -103,7 +117,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 - (BOOL)isOpen
 {
-	return _decoder.isOpen;
+	return _buffer != nil;
 }
 
 - (AVAudioFramePosition)framePosition
@@ -129,7 +143,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_decoder->_processingFormat]) {
+	if(![buffer.format isEqual:_decoder.processingFormat]) {
 		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
@@ -145,8 +159,8 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	_buffer.frameLength = 0;
 
 	while(framesRemaining > 0) {
-		AVAudioFrameCount framesRemainingInCurrentPass	= (AVAudioFrameCount)(_framePosition + _frameLength - _decoder.framePosition);
-		AVAudioFrameCount framesToDecode				= SFB_min(SFB_min(framesRemaining, framesRemainingInCurrentPass), _buffer.frameCapacity);
+		AVAudioFrameCount framesRemainingInCurrentPass = (AVAudioFrameCount)(_framePosition + _frameLength - _decoder.framePosition);
+		AVAudioFrameCount framesToDecode = SFB_min(SFB_min(framesRemaining, framesRemainingInCurrentPass), _buffer.frameCapacity);
 
 		// Nothing left to read
 		if(framesToDecode == 0)
