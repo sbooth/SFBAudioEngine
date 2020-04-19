@@ -18,7 +18,7 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /*! @brief Returns a set containing the supported path extensions */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/*!@brief Returns  a set containing the supported MIME types */
+/*!@brief Returns a set containing the supported MIME types */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /*! @brief Tests whether a file extension is supported */
