@@ -32,14 +32,13 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-- (nullable instancetype)initWithURL:(NSURL *)url;
+- (nullable instancetype)initWithURL:(NSURL *)url NS_SWIFT_UNAVAILABLE("Use -initWithURL:error: instead");
 - (nullable instancetype)initWithURL:(NSURL *)url error:(NSError **)error;
 - (nullable instancetype)initWithURL:(NSURL *)url mimeType:(nullable NSString *)mimeType error:(NSError **)error;
 
-- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource;
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource error:(NSError **)error;
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
-
 
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
