@@ -7,7 +7,6 @@
 
 static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions);
 static AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions);
-static AudioChannelLayout * CreateChannelLayoutWithLabels(UInt32 numberChannelLabels, va_list ap);
 
 static size_t GetChannelLayoutSize(UInt32 numberChannelDescriptions)
 {
@@ -26,59 +25,72 @@ static AudioChannelLayout * CreateChannelLayout(UInt32 numberChannelDescriptions
 	return channelLayout;
 }
 
-static AudioChannelLayout * CreateChannelLayoutWithLabels(UInt32 numberChannelLabels, va_list ap)
-{
-	assert(numberChannelLabels > 0);
-
-	AudioChannelLayout *channelLayout = CreateChannelLayout(numberChannelLabels);
-	if(!channelLayout)
-		return NULL;
-
-	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-
-	for(UInt32 i = 0; i < numberChannelLabels; ++i)
-		channelLayout->mChannelDescriptions[i].mChannelLabel = va_arg(ap, AudioChannelLabel);
-
-	return channelLayout;
-}
-
 @implementation AVAudioChannelLayout (SFBChannelLabels)
 
-+ (instancetype)layoutWithChannelLabels:(AVAudioChannelCount)numberChannelLabels, ...
++ (instancetype)layoutWithChannelLabels:(AVAudioChannelCount)count, ...
 {
 	va_list ap;
-	va_start(ap, numberChannelLabels);
+	va_start(ap, count);
 
-	AVAudioChannelLayout *layout = [[AVAudioChannelLayout alloc] initWithChannelLabels:numberChannelLabels ap:ap];
+	AVAudioChannelLayout *layout = [[AVAudioChannelLayout alloc] initWithChannelLabels:count ap:ap];
 
 	va_end(ap);
 
 	return layout;
 }
 
-- (instancetype)initWithChannelLabels:(AVAudioChannelCount)numberChannelLabels, ...
++ (instancetype)layoutWithChannelLabels:(AudioChannelLabel *)channelLabels count:(AVAudioChannelCount)count
+{
+	return [[AVAudioChannelLayout alloc] initWithChannelLabels:channelLabels count:count];
+}
+
+- (instancetype)initWithChannelLabels:(AVAudioChannelCount)count, ...
 {
 	va_list ap;
-	va_start(ap, numberChannelLabels);
+	va_start(ap, count);
 
-	self = [self initWithChannelLabels:numberChannelLabels ap:ap];
+	self = [self initWithChannelLabels:count ap:ap];
 
 	va_end(ap);
 
 	return self;
 }
 
-- (instancetype)initWithChannelLabels:(AVAudioChannelCount)numberChannelLabels ap:(va_list)ap
+- (instancetype)initWithChannelLabels:(AVAudioChannelCount)count ap:(va_list)ap
 {
-	NSParameterAssert(numberChannelLabels > 0);
+	NSParameterAssert(count > 0);
 	NSParameterAssert(ap != NULL);
 
-	AudioChannelLayout *layout = CreateChannelLayoutWithLabels(numberChannelLabels, ap);
-	if(!layout)
+	AudioChannelLayout *channelLayout = CreateChannelLayout(count);
+	if(!channelLayout)
 		return nil;
 
-	self = [self initWithLayout:layout];
-	free(layout);
+	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+
+	for(AVAudioChannelCount i = 0; i < count; ++i)
+		channelLayout->mChannelDescriptions[i].mChannelLabel = va_arg(ap, AudioChannelLabel);
+
+	self = [self initWithLayout:channelLayout];
+	free(channelLayout);
+	return self;
+}
+
+- (instancetype)initWithChannelLabels:(AudioChannelLabel *)channelLabels count:(AVAudioChannelCount)count
+{
+	NSParameterAssert(channelLabels != NULL);
+	NSParameterAssert(count > 0);
+
+	AudioChannelLayout *channelLayout = CreateChannelLayout(count);
+	if(!channelLayout)
+		return nil;
+
+	channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+
+	for(AVAudioChannelCount i = 0; i < count; ++i)
+		channelLayout->mChannelDescriptions[i].mChannelLabel = channelLabels[i];
+
+	self = [self initWithLayout:channelLayout];
+	free(channelLayout);
 	return self;
 }
 

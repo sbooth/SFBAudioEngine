@@ -7,8 +7,14 @@
 
 #import <AVFoundation/AVFoundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface AVAudioChannelLayout (SFBChannelLabels)
-+ (instancetype)layoutWithChannelLabels:(AVAudioChannelCount)numberChannelLabels, ...;
-- (instancetype)initWithChannelLabels:(AVAudioChannelCount)numberChannelLabels, ...;
-- (instancetype)initWithChannelLabels:(AVAudioChannelCount)numberChannelLabels ap:(va_list)ap;
++ (nullable instancetype)layoutWithChannelLabels:(AVAudioChannelCount)count, ...;
++ (nullable instancetype)layoutWithChannelLabels:(AudioChannelLabel *)channelLabels count:(AVAudioChannelCount)count;
+- (nullable instancetype)initWithChannelLabels:(AVAudioChannelCount)count, ...;
+- (nullable instancetype)initWithChannelLabels:(AVAudioChannelCount)count ap:(va_list)ap;
+- (nullable instancetype)initWithChannelLabels:(AudioChannelLabel *)channelLabels count:(AVAudioChannelCount)count;
 @end
+
+NS_ASSUME_NONNULL_END
