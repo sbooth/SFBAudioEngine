@@ -28,18 +28,6 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 @implementation SFBLoopableRegionDecoder
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-designated-initializers"
-
-// This is only here because it's the SFBAudioDecoder designated initializer
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
-{
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
-}
-
-#pragma clang diagnostic pop
-
 - (instancetype)initWithURL:(NSURL *)url framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength error:(NSError **)error
 {
 	return [self initWithURL:url framePosition:framePosition frameLength:frameLength repeatCount:0 error:error];
@@ -58,15 +46,6 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	return [self initWithInputSource:inputSource framePosition:framePosition frameLength:frameLength repeatCount:0 error:error];
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-designated-initializers"
-
-// This is not pretty... no call to [super init], but this class is an oddball
-// It might make sense to abtract out the methods from SFBAudioDecoder into
-// a protocol (SFBAudioDecoding), and have this class implement that and not
-// inherit from SFBAudioDecoder.
-// That would drive SFBAudioPlayer changing to accept id <SFBAudioDecoding>
-// instead of an SFBAudioDecoder instance
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource framePosition:(AVAudioFramePosition)framePosition frameLength:(AVAudioFramePosition)frameLength repeatCount:(NSInteger)repeatCount error:(NSError **)error
 {
 	NSParameterAssert(framePosition >= 0);
@@ -77,15 +56,14 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	if(!decoder || !decoder.supportsSeeking)
 		return nil;
 
-	_decoder = decoder;
-	_framePosition = framePosition;
-	_frameLength = frameLength;
-	_repeatCount = repeatCount;
-
+	if((self = [super init])) {
+		_decoder = decoder;
+		_framePosition = framePosition;
+		_frameLength = frameLength;
+		_repeatCount = repeatCount;
+	}
 	return self;
 }
-
-#pragma clang diagnostic pop
 
 - (SFBInputSource *)inputSource
 {
@@ -101,9 +79,6 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 {
 	return _decoder->_sourceFormat;
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
 
 - (BOOL)openReturningError:(NSError **)error
 {
@@ -126,8 +101,6 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	return [_decoder closeReturningError:error];
 }
 
-#pragma clang diagnostic pop
-
 - (BOOL)isOpen
 {
 	return _decoder.isOpen;
@@ -143,6 +116,12 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	return _frameLength * (_repeatCount + 1);
 }
 
+- (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error {
+	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
+		return NO;
+	return [self decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
+}
+
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
@@ -150,7 +129,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
+	if(![buffer.format isEqual:_decoder->_processingFormat]) {
 		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}

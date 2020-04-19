@@ -1,0 +1,71 @@
+/*
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
+ * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
+ */
+
+#import "SFBAudioDecoding.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+/*! @brief DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz) */
+typedef NS_ENUM(NSUInteger, SFBDSDSampleRate) {
+	SFBDSDSampleRateDSD64 	= 2822400, 		/*!< DSD (DSD64) */
+	SFBDSDSampleRateDSD128 	= 5644800,		/*!< Double-rate DSD (DSD128) */
+	SFBDSDSampleRateDSD256 	= 11289600,		/*!< Quad-rate DSD (DSD256) */
+	SFBDSDSampleRateDSD512 	= 22579200		/*!< Octuple-rate DSD (DSD512) */
+};
+
+// A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
+// a clustered frame consisting of one channel byte per channel.
+// From a bit perspective, for stereo one clustered frame looks like LLLLLLLLRRRRRRRR
+// Since DSD audio is CBR, one packet equals one frame
+
+/*! @brief The number of frames in a DSD packet (a clustered frame) */
+#define FRAMES_PER_DSD_PACKET 8
+
+/*! @brief The number of bytes in a DSD packet, per channel (a channel byte) */
+#define BYTES_PER_DSD_PACKET_PER_CHANNEL 1
+
+NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
+
+#pragma mark - Position and Length Information
+
+/*! @brief Returns the decoder's current packet  position or \c -1 if unknown */
+@property (nonatomic, readonly) AVAudioFramePosition packetPosition;
+
+/*! @brief Returns the decoder's length in packets  or \c -1 if unknown */
+@property (nonatomic, readonly) AVAudioFramePosition packetLength;
+
+///*! @brief Returns the decoder's current frame position or \c -1 if unknown */
+//@property (nonatomic, readonly) AVAudioFramePosition framePosition;
+//
+///*! @brief Returns the decoder's length in frames or \c -1 if unknown */
+//@property (nonatomic, readonly) AVAudioFramePosition frameLength;
+
+#pragma mark - Decoding
+
+/*!
+ * @brief Decodes audio
+ * @param buffer A buffer to receive the decoded audio
+ * @param frameLength The desired number of audio frames
+ * @param error An optional pointer to an \c NSError to receive error information
+ * @return \c YES on success, \c NO otherwise
+ */
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
+
+#pragma mark - Seeking
+
+/*! @brief Returns \c YES if the decoder is seekable */
+@property (nonatomic, readonly) BOOL supportsSeeking;
+
+/*!
+ * @brief Seeks to the specified packet
+ * @param packet The desired packet
+ * @param error An optional pointer to an \c NSError to receive error information
+ * @return \c YES on success, \c NO otherwise
+ */
+- (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error;
+
+@end
+
+NS_ASSUME_NONNULL_END

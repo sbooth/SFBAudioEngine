@@ -1,39 +1,33 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2014 - 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
 #import <os/log.h>
 
-#import "SFBAudioDecoder.h"
-#import "SFBAudioDecoder+Internal.h"
+#import "SFBDSDDecoder.h"
+#import "SFBDSDDecoder+Internal.h"
 
 #import "NSError+SFBURLPresentation.h"
 
-// NSError domain for AudioDecoder and subclasses
-NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
+// NSError domain for DSDDecoder and subclasses
+NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
 
-@implementation SFBAudioDecoder
+@implementation SFBDSDDecoder
 
 @synthesize inputSource = _inputSource;
 @synthesize processingFormat = _processingFormat;
 @synthesize sourceFormat = _sourceFormat;
 
-@dynamic framePosition;
-@dynamic frameLength;
-
-// It's probably not worth making this class KVO-compliant
-//+ (NSSet *)keyPathsForValuesAffectingTotalFrames
-//{
-//	return [NSSet setWithObjects:@"framePosition", @"frameLength", nil];
-//}
+@dynamic packetPosition;
+@dynamic packetLength;
 
 static NSMutableArray *_registeredSubclasses = nil;
 
 + (NSSet *)supportedPathExtensions
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		[result unionSet:supportedPathExtensions];
 	}
@@ -43,7 +37,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (NSSet *)supportedMIMETypes
 {
 	NSMutableSet *result = [NSMutableSet set];
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		[result unionSet:supportedMIMETypes];
 	}
@@ -53,7 +47,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
 	NSString *lowercaseExtension = extension.lowercaseString;
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		if([supportedPathExtensions containsObject:lowercaseExtension])
 			return YES;
@@ -64,7 +58,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 + (BOOL)handlesMIMEType:(NSString *)mimeType
 {
 	NSString *lowercaseMIMEType = mimeType.lowercaseString;
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:lowercaseMIMEType])
 			return YES;
@@ -108,12 +102,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	// The MIME type takes precedence over the file extension
 	if(mimeType) {
-		Class subclass = [SFBAudioDecoder subclassForMIMEType:mimeType.lowercaseString];
+		Class subclass = [SFBDSDDecoder subclassForMIMEType:mimeType.lowercaseString];
 		if(subclass && (self = [[subclass alloc] init])) {
 			_inputSource = inputSource;
 			return self;
 		}
-		os_log_debug(OS_LOG_DEFAULT, "SFBAudioDecoder unsupported MIME type: %{public}@", mimeType);
+		os_log_debug(OS_LOG_DEFAULT, "SFBDSDDecoder unsupported MIME type: %{public}@", mimeType);
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
@@ -125,8 +119,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 	NSString *pathExtension = inputSource.url.pathExtension;
 	if(!pathExtension) {
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+											 code:SFBDSDDecoderErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unknown file type", @"")
@@ -134,13 +128,13 @@ static NSMutableArray *_registeredSubclasses = nil;
 		return nil;
 	}
 
-	Class subclass = [SFBAudioDecoder subclassForPathExtension:pathExtension.lowercaseString];
+	Class subclass = [SFBDSDDecoder subclassForPathExtension:pathExtension.lowercaseString];
 	if(!subclass) {
-		os_log_debug(OS_LOG_DEFAULT, "SFBAudioDecoder unsupported path extension: %{public}@", pathExtension);
+		os_log_debug(OS_LOG_DEFAULT, "SFBDSDDecoder unsupported path extension: %{public}@", pathExtension);
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+											 code:SFBDSDDecoderErrorCodeInputOutput
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported file type", @"")
@@ -154,11 +148,22 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	return self;
 }
-
 - (void)dealloc
 {
 	[self closeReturningError:nil];
 }
+
+//- (AVAudioFramePosition)frameLength
+//{
+//	AVAudioFramePosition packetLength = self.packetLength;
+//	return packetLength == -1 ? -1 : packetLength * FRAMES_PER_DSD_PACKET;
+//}
+//
+//- (AVAudioFramePosition)framePosition
+//{
+//	AVAudioFramePosition packetPosition = self.packetPosition;
+//	return packetPosition == -1 ? -1 : packetPosition * FRAMES_PER_DSD_PACKET;
+//}
 
 - (BOOL)openReturningError:(NSError **)error
 {
@@ -184,12 +189,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error
 {
-	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
+	if(![buffer isKindOfClass:[AVAudioCompressedBuffer class]])
 		return NO;
-	return [self decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
+	return [self decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:((AVAudioCompressedBuffer *)buffer).packetCapacity error:error];
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
@@ -200,7 +205,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return _inputSource.supportsSeeking;
 }
 
-- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
+- (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
@@ -208,10 +213,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 @end
 
-@implementation SFBAudioDecoderSubclassInfo
+@implementation SFBDSDDecoderSubclassInfo
 @end
 
-@implementation SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
+@implementation SFBDSDDecoder (SFBDSDDecoderSubclassRegistration)
 
 + (void)registerSubclass:(Class)subclass
 {
@@ -220,26 +225,26 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (void)registerSubclass:(Class)subclass priority:(int)priority
 {
-//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBAudioDecoder", NSStringFromClass(subclass));
+//	NSAssert([subclass isKindOfClass:[self class]], @"Unable to register class '%@' because it is not a subclass of SFBDSDDecoder", NSStringFromClass(subclass));
 
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		_registeredSubclasses = [NSMutableArray array];
 	});
 
-	SFBAudioDecoderSubclassInfo *subclassInfo = [[SFBAudioDecoderSubclassInfo alloc] init];
+	SFBDSDDecoderSubclassInfo *subclassInfo = [[SFBDSDDecoderSubclassInfo alloc] init];
 	subclassInfo.klass = subclass;
 	subclassInfo.priority = priority;
 
 	[_registeredSubclasses addObject:subclassInfo];
 	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-		return ((SFBAudioDecoderSubclassInfo *)obj1).priority < ((SFBAudioDecoderSubclassInfo *)obj2).priority;
+		return ((SFBDSDDecoderSubclassInfo *)obj1).priority < ((SFBDSDDecoderSubclassInfo *)obj2).priority;
 	}];
 }
 
 @end
 
-@implementation SFBAudioDecoder (SFBAudioDecoderSubclassLookup)
+@implementation SFBDSDDecoder (SFBDSDDecoderSubclassLookup)
 
 + (Class)subclassForURL:(NSURL *)url
 {
@@ -252,7 +257,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (Class)subclassForPathExtension:(NSString *)extension
 {
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedPathExtensions = [subclassInfo.klass supportedPathExtensions];
 		if([supportedPathExtensions containsObject:extension])
 			return subclassInfo.klass;
@@ -263,7 +268,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 + (Class)subclassForMIMEType:(NSString *)mimeType
 {
-	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
 			return subclassInfo.klass;
