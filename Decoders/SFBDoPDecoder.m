@@ -49,14 +49,14 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	id <SFBDSDDecoding> _decoder;
 	AVAudioFormat *_processingFormat;
 	AVAudioCompressedBuffer *_buffer;
-	AVAudioFramePosition _framePosition;
-	AVAudioFramePosition _frameLength;
 	uint8_t _marker;
 	BOOL _reverseBits;
 }
 @end
 
 @implementation SFBDoPDecoder
+
+@synthesize processingFormat = _processingFormat;
 
 - (instancetype)initWithURL:(NSURL *)url error:(NSError **)error
 {
@@ -91,11 +91,6 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 - (SFBInputSource *)inputSource
 {
 	return _decoder.inputSource;
-}
-
-- (AVAudioFormat *)processingFormat
-{
-	return  _processingFormat;
 }
 
 - (AVAudioFormat *)sourceFormat
@@ -154,6 +149,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:_decoder.processingFormat.channelLayout];
 
 	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS];
+	_buffer.packetCount = 0;
 
 	return YES;
 }
