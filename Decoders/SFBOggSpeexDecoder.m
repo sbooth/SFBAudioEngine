@@ -12,7 +12,13 @@
 #include <speex/speex_bits.h>
 #include <speex/speex_callbacks.h>
 #include <speex/speex_header.h>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wstrict-prototypes"
+
 #include <speex/speex_stereo.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBOggSpeexDecoder.h"
 
