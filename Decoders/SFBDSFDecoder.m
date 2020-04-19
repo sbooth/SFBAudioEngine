@@ -77,6 +77,13 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	return [NSSet setWithObject:@"audio/dsf"];
 }
 
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
+{
+	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
+		_packetLength = -1;
+	return self;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
@@ -215,8 +222,10 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	_packetLength = sampleCount / FRAMES_PER_DSD_PACKET;
 	NSInteger offset;
-	if(![_inputSource getOffset:&offset error:nil])
+	if(![_inputSource getOffset:&offset error:nil]) {
 		os_log_error(OS_LOG_DEFAULT, "Error getting audio offset");
+		return NO;
+	}
 	_audioOffset = offset;
 
 	// Channel layouts are defined in the DSF file format specification
@@ -371,7 +380,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	_buffer.packetCount = packetsInBuffer - packetsToSkip;
 	_packetPosition = packet;
 
-	return NO;
+	return YES;
 }
 
 // Read input, grouped in DSF as 8 one-bit samples per frame (a single channel byte) in a block

@@ -3,36 +3,24 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <cctype>
+#import <os/log.h>
+
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <os/log.h>
+#import "SFBDSDIFFDecoder.h"
 
-#include <CoreFoundation/CoreFoundation.h>
-
-#include "CFErrorUtilities.h"
-#include "DSDIFFDecoder.h"
-#include "SFBCStringForOSType.h"
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
+#import "NSError+SFBURLPresentation.h"
+#import "SFBCStringForOSType.h"
 
 #define BUFFER_CHANNEL_SIZE_BYTES 512u
 
 namespace {
 
-	void RegisterDSDIFFDecoder() __attribute__ ((constructor));
-	void RegisterDSDIFFDecoder()
-	{
-		SFB::Audio::Decoder::RegisterSubclass<SFB::Audio::DSDIFFDecoder>();
-	}
-
-	// Missing from C++11 (from http://herbsutter.com/gotw/_102/)
-	template<typename T, typename... Args>
-	std::unique_ptr<T> make_unique(Args&&... args)
-	{
-		return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-	}
+	inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
 
 	// Convert a four byte chunk ID to a uint32_t
 	inline uint32_t BytesToID(char bytes [4])
@@ -50,7 +38,7 @@ namespace {
 			return 0;
 
 		if(isspace(two) && isspace(one))
-		   return 0;
+			return 0;
 
 		if(isspace(three) && isspace(two) && isspace(one))
 			return 0;
@@ -62,11 +50,11 @@ namespace {
 	}
 
 	// Read an ID as a uint32_t, performing validation
-	bool ReadID(SFB::InputSource& inputSource, uint32_t& chunkID)
+	bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
 	{
 		char chunkIDBytes [4];
-		auto bytesRead = inputSource.Read(chunkIDBytes, 4);
-		if(4 != bytesRead) {
+		NSInteger bytesRead;
+		if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read chunk ID");
 			return false;
 		}
@@ -174,62 +162,62 @@ namespace {
 
 	// 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
 
-//	// 'DST ' in 'FRM8'
-//	class DSTSoundDataChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'FRTE' in 'DST '
-//	class DSTFrameInformationChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'FRTE' in 'DST '
-//	class DSTFrameDataChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'FRTE' in 'DST '
-//	class DSTFrameCRCChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'DSTI' in 'FRM8'
-//	class DSTSoundIndexChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'COMT' in 'FRM8'
-//	class CommentsChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'DIIN' in 'FRM8'
-//	class EditedMasterInformationChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'EMID' in 'DIIN'
-//	class EditedMasterIDChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'MARK' in 'DIIN'
-//	class MarkerChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'DIAR' in 'DIIN'
-//	class ArtistChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'DITI' in 'DIIN'
-//	class TitleChunk : public DSDIFFChunk
-//	{};
-//
-//	// 'MANF' in 'FRM8'
-//	class ManufacturerSpecificChunk : public DSDIFFChunk
-//	{};
+	//	// 'DST ' in 'FRM8'
+	//	class DSTSoundDataChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'FRTE' in 'DST '
+	//	class DSTFrameInformationChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'FRTE' in 'DST '
+	//	class DSTFrameDataChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'FRTE' in 'DST '
+	//	class DSTFrameCRCChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'DSTI' in 'FRM8'
+	//	class DSTSoundIndexChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'COMT' in 'FRM8'
+	//	class CommentsChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'DIIN' in 'FRM8'
+	//	class EditedMasterInformationChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'EMID' in 'DIIN'
+	//	class EditedMasterIDChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'MARK' in 'DIIN'
+	//	class MarkerChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'DIAR' in 'DIIN'
+	//	class ArtistChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'DITI' in 'DIIN'
+	//	class TitleChunk : public DSDIFFChunk
+	//	{};
+	//
+	//	// 'MANF' in 'FRM8'
+	//	class ManufacturerSpecificChunk : public DSDIFFChunk
+	//	{};
 
 #pragma mark DSDIFF parsing
 
-	bool ReadChunkIDAndDataSize(SFB::InputSource& inputSource, uint32_t& chunkID, uint64_t& chunkDataSize)
+	bool ReadChunkIDAndDataSize(SFBInputSource *inputSource, uint32_t& chunkID, uint64_t& chunkDataSize)
 	{
 		if(!ReadID(inputSource, chunkID))
 			return false;
 
-		if(!inputSource.ReadBE<uint64_t>(chunkDataSize)) {
+		if(![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read chunk data size");
 			return false;
 		}
@@ -237,7 +225,7 @@ namespace {
 		return true;
 	}
 
-	std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('FVER' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FVER' chunk");
@@ -248,9 +236,14 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
-		if(!inputSource.ReadBE<uint32_t>(result->mFormatVersion)) {
+		if(![inputSource readUInt32BigEndian:&result->mFormatVersion error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read format version in 'FVER' chunk");
 			return nullptr;
 		}
@@ -263,7 +256,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('FS  ' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FS  ' chunk");
@@ -274,9 +267,14 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
-		if(!inputSource.ReadBE<uint32_t>(result->mSampleRate)) {
+		if(![inputSource readUInt32BigEndian:&result->mSampleRate error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read sample rate in 'FS  ' chunk");
 			return nullptr;
 		}
@@ -284,7 +282,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('CHNL' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CHNL' chunk");
@@ -295,9 +293,14 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
-		if(!inputSource.ReadBE<uint16_t>(result->mNumberChannels)) {
+		if(![inputSource readUInt16BigEndian:&result->mNumberChannels error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read number channels in 'CHNL' chunk");
 			return nullptr;
 		}
@@ -314,7 +317,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('CMPR' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CMPR' chunk");
@@ -325,7 +328,12 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mCompressionType)) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read compression type in 'CMPR' chunk");
@@ -333,13 +341,14 @@ namespace {
 		}
 
 		uint8_t count;
-		if(!inputSource.ReadBE<uint8_t>(count)) {
+		if(![inputSource readUInt8:&count error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read count in 'CMPR' chunk");
 			return nullptr;
 		}
 
 		char compressionName [count];
-		if(!inputSource.Read(compressionName, count)) {
+		NSInteger bytesRead;
+		if(![inputSource readBytes:compressionName length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read compressionName in 'CMPR' chunk");
 			return nullptr;
 		}
@@ -347,9 +356,14 @@ namespace {
 		result->mCompressionName = std::string(compressionName, count);
 
 		// Chunks always have an even length
-		if(1 == inputSource.GetOffset() % 2) {
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+
+		if(offset % 2) {
 			uint8_t unused;
-			if(!inputSource.Read(&unused, 1)) {
+			if(![inputSource readUInt8:&unused error:nil]) {
 				os_log_error(OS_LOG_DEFAULT, "Unable to read dummy byte in 'CMPR' chunk");
 				return nullptr;
 			}
@@ -359,7 +373,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('ABSS' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'ABSS' chunk");
@@ -370,24 +384,29 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
-		if(!inputSource.ReadBE<uint16_t>(result->mHours)) {
+		if(![inputSource readUInt16BigEndian:&result->mHours error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read hours in 'ABSS' chunk");
 			return nullptr;
 		}
 
-		if(!inputSource.ReadBE<uint8_t>(result->mMinutes)) {
+		if(![inputSource readUInt8:&result->mMinutes error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read minutes in 'ABSS' chunk");
 			return nullptr;
 		}
 
-		if(!inputSource.ReadBE<uint8_t>(result->mSeconds)) {
+		if(![inputSource readUInt8:&result->mSeconds error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read seconds in 'ABSS' chunk");
 			return nullptr;
 		}
 
-		if(!inputSource.ReadBE<uint32_t>(result->mSamples)) {
+		if(![inputSource readUInt32BigEndian:&result->mSamples error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read samples in 'ABSS' chunk");
 			return nullptr;
 		}
@@ -395,7 +414,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('LSCO' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'LSCO' chunk");
@@ -406,9 +425,14 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
-		if(!inputSource.ReadBE<uint16_t>(result->mLoudspeakerConfiguration)) {
+		if(![inputSource readUInt16BigEndian:&result->mLoudspeakerConfiguration error:nil]) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read loudspeaker configuration in 'LSCO' chunk");
 			return nullptr;
 		}
@@ -416,7 +440,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('PROP' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'PROP' chunk");
@@ -427,7 +451,12 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mPropertyType)) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read property type in 'PROP' chunk");
@@ -490,7 +519,16 @@ namespace {
 
 						// Skip unrecognized or ignored chunks
 					default:
-						inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)localChunkDataSize);
+						if(![inputSource getOffset:&offset error:nil]) {
+							os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+							return nullptr;
+						}
+
+						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+							os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+							return nullptr;
+						}
+
 						break;
 				}
 
@@ -506,7 +544,7 @@ namespace {
 		return result;
 	}
 
-	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('DSD ' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'DSD ' chunk");
@@ -517,26 +555,39 @@ namespace {
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
 		// Skip the data
-		inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)chunkDataSize);
+		if(![inputSource seekToOffset:(offset + (NSInteger)chunkDataSize) error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+			return nullptr;
+		}
 
 		return result;
 	}
 
-	std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFB::InputSource& inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
+	std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if('FRM8' != chunkID) {
 			os_log_error(OS_LOG_DEFAULT, "Missing 'FRM8' chunk");
 			return nullptr;
 		}
 
-		auto result = make_unique<FormDSDChunk>();
+		auto result = std::make_unique<FormDSDChunk>();
 
 		result->mChunkID = chunkID;
 		result->mDataSize = chunkDataSize;
-		result->mDataOffset = inputSource.GetOffset();
+		NSInteger offset;
+		if(![inputSource getOffset:&offset error:nil]) {
+			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			return nullptr;
+		}
+		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mFormType)) {
 			os_log_error(OS_LOG_DEFAULT, "Unable to read formType in 'FRM8' chunk");
@@ -583,7 +634,16 @@ namespace {
 
 						// Skip unrecognized or ignored chunks
 					default:
-						inputSource.SeekToOffset(inputSource.GetOffset() + (SInt64)localChunkDataSize);
+						if(![inputSource getOffset:&offset error:nil]) {
+							os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+							return nullptr;
+						}
+
+						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
+							os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+							return nullptr;
+						}
+
 						break;
 				}
 
@@ -599,7 +659,7 @@ namespace {
 		return result;
 	}
 
-	std::unique_ptr<FormDSDChunk> ParseDSDIFF(SFB::InputSource& inputSource)
+	std::unique_ptr<FormDSDChunk> ParseDSDIFF(SFBInputSource *inputSource)
 	{
 		uint32_t chunkID;
 		uint64_t chunkDataSize;
@@ -609,82 +669,64 @@ namespace {
 		return ParseFormDSDChunk(inputSource, chunkID, chunkDataSize);
 	}
 
-	CFErrorRef CreateInvalidDSDIFFFileError(CFURLRef url) CF_RETURNS_RETAINED
+	static NSError * CreateInvalidDSDIFFFileError(NSURL * url)
 	{
-		SFB::CFString description(CFCopyLocalizedString(CFSTR("The file “%@” is not a valid DSDIFF file."), ""));
-		SFB::CFString failureReason(CFCopyLocalizedString(CFSTR("Not a DSDIFF file"), ""));
-		SFB::CFString recoverySuggestion(CFCopyLocalizedString(CFSTR("The file's extension may not match the file's type."), ""));
-
-		return CreateErrorForURL(SFB::Audio::Decoder::ErrorDomain, SFB::Audio::Decoder::InputOutputError, description, url, failureReason, recoverySuggestion);
+		return [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
+									   code:SFBDSDDecoderErrorCodeInputOutput
+			  descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid DSDIFF file.", @"")
+										url:url
+							  failureReason:NSLocalizedString(@"Not a DSDIFF file", @"")
+						 recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 	}
+
 }
 
-#pragma mark Static Methods
 
-CFArrayRef SFB::Audio::DSDIFFDecoder::CreateSupportedFileExtensions()
+@interface SFBDSDIFFDecoder ()
 {
-	CFStringRef supportedExtensions [] = { CFSTR("dff") };
-	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedExtensions, 1, &kCFTypeArrayCallBacks);
+@private
+	AVAudioFramePosition _packetPosition;
+	AVAudioFramePosition _packetLength;
+	int64_t _audioOffset;
+	AVAudioCompressedBuffer *_buffer;
+}
+@end
+
+@implementation SFBDSDIFFDecoder
+
++ (void)load
+{
+	[SFBDSDDecoder registerSubclass:[self class]];
 }
 
-CFArrayRef SFB::Audio::DSDIFFDecoder::CreateSupportedMIMETypes()
++ (NSSet *)supportedPathExtensions
 {
-	CFStringRef supportedMIMETypes [] = { CFSTR("audio/dsdiff") };
-	return CFArrayCreate(kCFAllocatorDefault, (const void **)supportedMIMETypes, 1, &kCFTypeArrayCallBacks);
+	return [NSSet setWithObject:@"dff"];
 }
 
-bool SFB::Audio::DSDIFFDecoder::HandlesFilesWithExtension(CFStringRef extension)
++ (NSSet *)supportedMIMETypes
 {
-	if(nullptr == extension)
-		return false;
-
-	if(kCFCompareEqualTo == CFStringCompare(extension, CFSTR("dff"), kCFCompareCaseInsensitive))
-		return true;
-
-	return false;
+	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
-bool SFB::Audio::DSDIFFDecoder::HandlesMIMEType(CFStringRef mimeType)
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
 {
-	if(nullptr == mimeType)
-		return false;
-
-	if(kCFCompareEqualTo == CFStringCompare(mimeType, CFSTR("audio/dsdiff"), kCFCompareCaseInsensitive))
-		return true;
-
-	return false;
+	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
+		_packetLength = -1;
+	return self;
 }
 
-SFB::Audio::Decoder::unique_ptr SFB::Audio::DSDIFFDecoder::CreateDecoder(InputSource::unique_ptr inputSource)
+- (BOOL)openReturningError:(NSError **)error
 {
-	return unique_ptr(new DSDIFFDecoder(std::move(inputSource)));
-}
+	if(![super openReturningError:error])
+		return NO;
 
-#pragma mark Creation and Destruction
-
-SFB::Audio::DSDIFFDecoder::DSDIFFDecoder(InputSource::unique_ptr inputSource)
-	: Decoder(std::move(inputSource)), mTotalFrames(-1), mCurrentFrame(0), mAudioOffset(0)
-{}
-
-SFB::Audio::DSDIFFDecoder::~DSDIFFDecoder()
-{
-	if(IsOpen())
-		Close();
-}
-
-#pragma mark Functionality
-
-bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
-{
-#pragma unused(error)
-
-	auto chunks = ParseDSDIFF(GetInputSource());
+	auto chunks = ParseDSDIFF(_inputSource);
 	if(!chunks) {
 		os_log_error(OS_LOG_DEFAULT, "Error parsing file");
 		if(error)
-			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
-
-		return false;
+			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
+		return NO;
 	}
 
 	auto propertyChunk = std::static_pointer_cast<PropertyChunk>(chunks->mLocalChunks['PROP']);
@@ -694,145 +736,154 @@ bool SFB::Audio::DSDIFFDecoder::_Open(CFErrorRef *error)
 	if(!propertyChunk || !sampleRateChunk || !channelsChunk) {
 		os_log_error(OS_LOG_DEFAULT, "Missing chunk in file");
 		if(error)
-			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
-
-		return false;
+			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
+		return NO;
 	}
 
-	// Set up the source format
-	mSourceFormat.mFormatID				= kAudioFormatDirectStreamDigital;
-	mSourceFormat.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
-	mSourceFormat.mChannelsPerFrame		= channelsChunk->mNumberChannels;
-
-	// The output format is raw DSD
-	mFormat.mFormatID			= kAudioFormatDirectStreamDigital;
-	mFormat.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
-
-	mFormat.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
-	mFormat.mChannelsPerFrame	= channelsChunk->mNumberChannels;
-	mFormat.mBitsPerChannel		= 1;
-
-	mFormat.mBytesPerPacket		= 1;
-	mFormat.mFramesPerPacket	= 8;
-	mFormat.mBytesPerFrame		= 0;
-
-	mFormat.mReserved			= 0;
-
-
 	// Channel layouts are defined in the DSDIFF file format specification
+	AVAudioChannelLayout *channelLayout = nil;
 	if(2 == channelsChunk->mChannelIDs.size() && 'SLFT' == channelsChunk->mChannelIDs[0] && 'SRGT' == channelsChunk->mChannelIDs[1])
-		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
+		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
 	else if(5 == channelsChunk->mChannelIDs.size() && 'MLFT' == channelsChunk->mChannelIDs[0] && 'MRGT' == channelsChunk->mChannelIDs[1] && 'C   ' == channelsChunk->mChannelIDs[2] && 'LS  ' == channelsChunk->mChannelIDs[3] && 'RS  ' == channelsChunk->mChannelIDs[4])
-		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_0_A);
+		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];
 	else if(6 == channelsChunk->mChannelIDs.size() && 'MLFT' == channelsChunk->mChannelIDs[0] && 'MRGT' == channelsChunk->mChannelIDs[1] && 'C   ' == channelsChunk->mChannelIDs[2] && 'LFE ' == channelsChunk->mChannelIDs[3] && 'LS  ' == channelsChunk->mChannelIDs[4] && 'RS  ' == channelsChunk->mChannelIDs[5])
-		mChannelLayout = ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_MPEG_5_1_A);
+		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];
 	else {
 		std::vector<AudioChannelLabel> labels;
 		for(auto channelID : channelsChunk->mChannelIDs)
 			labels.push_back(DSDIFFChannelIDToCoreAudioChannelLabel(channelID));
-
-		mChannelLayout = ChannelLayout::ChannelLayoutWithChannelLabels(labels);
+		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:&labels[0] count:(AVAudioChannelCount)labels.size()];
 	}
 
+	AudioStreamBasicDescription processingStreamDescription{};
+
+	// The output format is raw DSD
+	processingStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsBigEndian;
+
+	processingStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
+	processingStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
+	processingStreamDescription.mBitsPerChannel		= 1;
+
+	processingStreamDescription.mBytesPerPacket		= BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels;
+	processingStreamDescription.mFramesPerPacket	= FRAMES_PER_DSD_PACKET;
+
+	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
+
+	// Set up the source format
+	AudioStreamBasicDescription sourceStreamDescription{};
+
+	sourceStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+
+	sourceStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
+	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
+
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->mLocalChunks['DSD ']);
 	if(!soundDataChunk) {
 		os_log_error(OS_LOG_DEFAULT, "Missing chunk in file");
 		if(error)
-			*error = CreateInvalidDSDIFFFileError(mInputSource->GetURL());
-
-		return false;
+			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
+		return NO;
 	}
 
-	mAudioOffset = soundDataChunk->mDataOffset;
-	mTotalFrames = (SInt64)mFormat.ByteCountToFrameCount(soundDataChunk->mDataSize - 12) / mFormat.mChannelsPerFrame;
+	_audioOffset = soundDataChunk->mDataOffset;
+	_packetLength = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
 
-	GetInputSource().SeekToOffset(mAudioOffset);
+	if(![_inputSource seekToOffset:_audioOffset error:error])
+		return NO;
 
-	return true;
+	return YES;
 }
 
-bool SFB::Audio::DSDIFFDecoder::_Close(CFErrorRef */*error*/)
+- (BOOL)closeReturningError:(NSError **)error
 {
-	return true;
+	_packetLength = -1;
+	return [super closeReturningError:error];
 }
 
-SFB::CFString SFB::Audio::DSDIFFDecoder::_GetSourceFormatDescription() const
+- (BOOL)isOpen
 {
-	return CFString(nullptr,
-					CFSTR("DSD Interchange File Format, %u channels, %u Hz"),
-					(unsigned int)mSourceFormat.mChannelsPerFrame,
-					(unsigned int)mSourceFormat.mSampleRate);
+	return _packetLength != -1;
 }
 
-UInt32 SFB::Audio::DSDIFFDecoder::_ReadAudio(AudioBufferList *bufferList, UInt32 frameCount)
+- (AVAudioFramePosition)packetPosition
 {
-	// Only multiples of 8 frames can be read (8 frames equals one byte)
-	if(bufferList->mNumberBuffers != mFormat.mChannelsPerFrame || 0 != frameCount % 8) {
-		os_log_debug(OS_LOG_DEFAULT, "_ReadAudio() called with invalid parameters");
-		return 0;
-	}
+	return _packetPosition;
+}
 
-	UInt32 framesRemaining = (UInt32)(mTotalFrames - mCurrentFrame);
-	UInt32 framesToRead = std::min(frameCount, framesRemaining);
-	UInt32 framesRead = 0;
+- (AVAudioFramePosition)packetLength
+{
+	return _packetLength;
+}
+
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error
+{
+	NSParameterAssert(buffer != nil);
 
 	// Reset output buffer data size
-	for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i)
-		bufferList->mBuffers[i].mDataByteSize = 0;
+	buffer.packetCount = 0;
+
+	if(![buffer.format isEqual:_processingFormat]) {
+		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		return NO;
+	}
+
+	if(packetLength > buffer.packetCapacity)
+		packetLength = buffer.packetCapacity;
+
+	AVAudioFrameCount packetsRemaining = (AVAudioFrameCount)(_packetLength - _packetPosition);
+	AVAudioFrameCount packetsToRead = SFB_min(packetLength, packetsRemaining);
+	AVAudioFrameCount packetsRead = 0;
+
+	NSInteger packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
 		// a clustered frame (one channel byte per channel)
-		// From a bit perspective for stereo: LLLLLLLLRRRRRRRRLLLLLLLLRRRRRRRR
-		uint8_t buffer [BUFFER_CHANNEL_SIZE_BYTES * mFormat.mChannelsPerFrame];
-		UInt32 bytesToRead = std::min(BUFFER_CHANNEL_SIZE_BYTES * mFormat.mChannelsPerFrame, (framesToRead / 8) * mFormat.mChannelsPerFrame);
-		auto bytesRead = GetInputSource().Read(buffer, bytesToRead);
 
-		if(bytesRead != bytesToRead) {
-			os_log_debug(OS_LOG_DEFAULT, "Error reading audio: requested %u bytes, got %lld", bytesToRead, bytesRead);
+		uint8_t *buf = (uint8_t *)buffer.data + buffer.byteLength;
+		NSInteger bytesToRead = buffer.byteCapacity - buffer.byteLength;
+
+		NSInteger bytesRead;
+		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
+			os_log_debug(OS_LOG_DEFAULT, "Error reading audio: requested %ld bytes, got %ld", (long)bytesToRead, bytesRead);
 			break;
 		}
+
+		buffer.byteLength = (uint32_t)bytesToRead;
 
 		// Decoding is finished
-		if(0 == bytesRead)
+		if(bytesRead == 0)
 			break;
 
-		// Deinterleave the clustered frames and copy to output
-		for(UInt32 i = 0; i < bufferList->mNumberBuffers; ++i) {
-			uint8_t *dst = (uint8_t *)bufferList->mBuffers[i].mData + bufferList->mBuffers[i].mDataByteSize;
-			for(SInt64 byteIndex = i; byteIndex < bytesRead; byteIndex += mFormat.mChannelsPerFrame)
-				*dst++ = buffer[byteIndex];
-
-			bufferList->mBuffers[i].mNumberChannels	= 1;
-			bufferList->mBuffers[i].mDataByteSize	+= bytesRead / mFormat.mChannelsPerFrame;
-		}
-
-		framesRead += (bytesRead / mFormat.mChannelsPerFrame) * 8;
+		packetsRead += bytesRead / packetSize;
 
 		// All requested frames were read
-		if(framesRead == frameCount)
+		if(packetsRead == packetLength)
 			break;
 
-		framesToRead -= framesRead;
+		packetsToRead -= packetsRead;
 	}
 
-	mCurrentFrame += framesRead;
+	_packetPosition += packetsRead;
 
-	return framesRead;
+	return YES;
 }
 
-SInt64 SFB::Audio::DSDIFFDecoder::_SeekToFrame(SInt64 frame)
+- (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error
 {
-	// Round down to nearest multiple of 8 frames
-	frame = (frame / 8) * 8;
+	NSParameterAssert(packet > 0);
 
-	SInt64 frameOffset = (SInt64)mFormat.FrameCountToByteCount((size_t)frame);
-	if(!GetInputSource().SeekToOffset(mAudioOffset + frameOffset)) {
-		os_log_debug(OS_LOG_DEFAULT, "_SeekToFrame() failed for offset: %lld", mAudioOffset + frameOffset);
-		return -1;
+	NSInteger packetOffset = packet * BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
+		os_log_debug(OS_LOG_DEFAULT, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
+		return NO;
 	}
 
-	mCurrentFrame = frame;
-	return _GetCurrentFrame();
+	_packetPosition = packet;
+	return YES;
 }
+
+@end

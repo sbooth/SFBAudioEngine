@@ -7,9 +7,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBDSDDecoder subclass supporting DSF (DSD stream files)
-// See http://dsd-guide.com/sites/default/files/white-papers/DSFFileFormatSpec_E.pdf
-@interface SFBDSFDecoder : SFBDSDDecoder
+// An SFBDSDDecoder subclass supporting DSDIFF (DSD Interchange File Format)
+// See http://www.sonicstudio.com/pdf/dsd/DSDIFF_1.5_Spec.pdf
+@interface SFBDSDIFFDecoder : SFBDSDDecoder
 @end
 
 NS_ASSUME_NONNULL_END
