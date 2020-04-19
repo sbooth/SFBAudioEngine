@@ -686,7 +686,7 @@ namespace {
 {
 @private
 	AVAudioFramePosition _packetPosition;
-	AVAudioFramePosition _packetLength;
+	AVAudioFramePosition _packetCount;
 	int64_t _audioOffset;
 	AVAudioCompressedBuffer *_buffer;
 }
@@ -712,7 +712,7 @@ namespace {
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
 {
 	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
-		_packetLength = -1;
+		_packetCount = -1;
 	return self;
 }
 
@@ -789,7 +789,7 @@ namespace {
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetLength = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
+	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
@@ -799,13 +799,13 @@ namespace {
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_packetLength = -1;
+	_packetCount = -1;
 	return [super closeReturningError:error];
 }
 
 - (BOOL)isOpen
 {
-	return _packetLength != -1;
+	return _packetCount != -1;
 }
 
 - (AVAudioFramePosition)packetPosition
@@ -813,12 +813,12 @@ namespace {
 	return _packetPosition;
 }
 
-- (AVAudioFramePosition)packetLength
+- (AVAudioFramePosition)packetCount
 {
-	return _packetLength;
+	return _packetCount;
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
 
@@ -830,11 +830,11 @@ namespace {
 		return NO;
 	}
 
-	if(packetLength > buffer.packetCapacity)
-		packetLength = buffer.packetCapacity;
+	if(packetCount > buffer.packetCapacity)
+		packetCount = buffer.packetCapacity;
 
-	AVAudioFrameCount packetsRemaining = (AVAudioFrameCount)(_packetLength - _packetPosition);
-	AVAudioFrameCount packetsToRead = SFB_min(packetLength, packetsRemaining);
+	AVAudioFrameCount packetsRemaining = (AVAudioFrameCount)(_packetCount - _packetPosition);
+	AVAudioFrameCount packetsToRead = SFB_min(packetCount, packetsRemaining);
 	AVAudioFrameCount packetsRead = 0;
 
 	NSInteger packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
@@ -861,7 +861,7 @@ namespace {
 		packetsRead += bytesRead / packetSize;
 
 		// All requested frames were read
-		if(packetsRead == packetLength)
+		if(packetsRead == packetCount)
 			break;
 
 		packetsToRead -= packetsRead;

@@ -53,7 +53,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 {
 @private
 	AVAudioFramePosition _packetPosition;
-	AVAudioFramePosition _packetLength;
+	AVAudioFramePosition _packetCount;
 	int64_t _audioOffset;
 	AVAudioCompressedBuffer *_buffer;
 }
@@ -80,7 +80,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 - (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
 {
 	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
-		_packetLength = -1;
+		_packetCount = -1;
 	return self;
 }
 
@@ -220,7 +220,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		return NO;
 	}
 
-	_packetLength = sampleCount / FRAMES_PER_DSD_PACKET;
+	_packetCount = sampleCount / FRAMES_PER_DSD_PACKET;
 	NSInteger offset;
 	if(![_inputSource getOffset:&offset error:nil]) {
 		os_log_error(OS_LOG_DEFAULT, "Error getting audio offset");
@@ -289,12 +289,12 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	return _packetPosition;
 }
 
-- (AVAudioFramePosition)packetLength
+- (AVAudioFramePosition)packetCount
 {
-	return _packetLength;
+	return _packetCount;
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
 
@@ -306,15 +306,15 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		return NO;
 	}
 
-	if(packetLength > buffer.packetCapacity)
-		packetLength = buffer.packetCapacity;
+	if(packetCount > buffer.packetCapacity)
+		packetCount = buffer.packetCapacity;
 
 	AVAudioFrameCount packetsProcessed = 0;
 
 	size_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 
 	for(;;) {
-		AVAudioFrameCount packetsRemaining = packetLength - packetsProcessed;
+		AVAudioFrameCount packetsRemaining = packetCount - packetsProcessed;
 		AVAudioFrameCount packetsToSkip = buffer.packetCount;
 		AVAudioFrameCount packetsInBuffer = _buffer.packetCount;
 		AVAudioFrameCount packetsToCopy = SFB_min(packetsInBuffer, packetsRemaining);
@@ -333,7 +333,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		packetsProcessed += packetsToCopy;
 
 		// All requested packets were read
-		if(packetsProcessed == packetLength)
+		if(packetsProcessed == packetCount)
 			break;
 
 		// Read  the next block

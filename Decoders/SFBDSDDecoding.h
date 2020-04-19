@@ -34,7 +34,7 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 @property (nonatomic, readonly) AVAudioFramePosition packetPosition;
 
 /*! @brief Returns the decoder's length in packets  or \c -1 if unknown */
-@property (nonatomic, readonly) AVAudioFramePosition packetLength;
+@property (nonatomic, readonly) AVAudioFramePosition packetCount;
 
 ///*! @brief Returns the decoder's current frame position or \c -1 if unknown */
 //@property (nonatomic, readonly) AVAudioFramePosition framePosition;
@@ -47,11 +47,11 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 /*!
  * @brief Decodes audio
  * @param buffer A buffer to receive the decoded audio
- * @param frameLength The desired number of audio frames
+ * @param packetCount The desired number of audio packets
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
 #pragma mark - Seeking
 

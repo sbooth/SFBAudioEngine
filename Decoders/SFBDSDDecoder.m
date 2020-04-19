@@ -20,7 +20,7 @@ NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecod
 @synthesize sourceFormat = _sourceFormat;
 
 @dynamic packetPosition;
-@dynamic packetLength;
+@dynamic packetCount;
 
 static NSMutableArray *_registeredSubclasses = nil;
 
@@ -155,8 +155,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 //- (AVAudioFramePosition)frameLength
 //{
-//	AVAudioFramePosition packetLength = self.packetLength;
-//	return packetLength == -1 ? -1 : packetLength * FRAMES_PER_DSD_PACKET;
+//	AVAudioFramePosition packetCount = self.packetCount;
+//	return packetCount == -1 ? -1 : packetCount * FRAMES_PER_DSD_PACKET;
 //}
 //
 //- (AVAudioFramePosition)framePosition
@@ -191,10 +191,10 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	if(![buffer isKindOfClass:[AVAudioCompressedBuffer class]])
 		return NO;
-	return [self decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:((AVAudioCompressedBuffer *)buffer).packetCapacity error:error];
+	return [self decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:((AVAudioCompressedBuffer *)buffer).packetCapacity error:error];
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetLength:(AVAudioFrameCount)packetLength error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
