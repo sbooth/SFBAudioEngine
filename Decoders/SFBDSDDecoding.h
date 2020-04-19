@@ -31,10 +31,10 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 #pragma mark - Position and Length Information
 
 /*! @brief Returns the decoder's current packet  position or \c -1 if unknown */
-@property (nonatomic, readonly) AVAudioFramePosition packetPosition;
+@property (nonatomic, readonly) AVAudioFramePosition packetPosition NS_SWIFT_NAME(position);
 
 /*! @brief Returns the decoder's length in packets  or \c -1 if unknown */
-@property (nonatomic, readonly) AVAudioFramePosition packetCount;
+@property (nonatomic, readonly) AVAudioFramePosition packetCount NS_SWIFT_NAME(count);
 
 ///*! @brief Returns the decoder's current frame position or \c -1 if unknown */
 //@property (nonatomic, readonly) AVAudioFramePosition framePosition;
@@ -51,7 +51,7 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error NS_SWIFT_NAME(decode(into:count:));
 
 #pragma mark - Seeking
 
@@ -64,7 +64,7 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES on success, \c NO otherwise
  */
-- (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error;
+- (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error NS_SWIFT_NAME(seek(to:));
 
 @end
 
