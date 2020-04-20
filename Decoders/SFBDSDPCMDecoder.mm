@@ -15,7 +15,7 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_PCM_FRAME (FRAMES_PER_DSD_PACKET / 8)
+#define DSD_PACKETS_PER_PCM_FRAME (8 / FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 16384
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
