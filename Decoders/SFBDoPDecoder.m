@@ -11,7 +11,7 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_DOP_FRAME 16
+#define DSD_PACKETS_PER_DOP_FRAME (16 / FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 4096
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
@@ -83,8 +83,10 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
 	NSParameterAssert(decoder != nil);
 
-	if((self = [super init]))
+	if((self = [super init])) {
 		_decoder = decoder;
+		_marker = 0x05;
+	}
 	return self;
 }
 
@@ -132,23 +134,23 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	_reverseBits = !(asbd->mFormatFlags & kAudioFormatFlagIsBigEndian);
 
-	// Generate interleaved 24-bit big endian output
+	// Generate non-interleaved 24-bit big endian output
 	AudioStreamBasicDescription processingStreamDescription = {0};
 
-	processingStreamDescription.mFormatID			= SFBAudioFormatIDDoP;
-	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
+	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*SFBAudioFormatIDDoP*/;
+	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
-	processingStreamDescription.mSampleRate			= asbd->mSampleRate / DSD_PACKETS_PER_DOP_FRAME;
+	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_DOP_FRAME);
 	processingStreamDescription.mChannelsPerFrame	= asbd->mChannelsPerFrame;
 	processingStreamDescription.mBitsPerChannel		= 24;
 
-	processingStreamDescription.mBytesPerPacket		= 3 * processingStreamDescription.mChannelsPerFrame;
+	processingStreamDescription.mBytesPerPacket		= 3;
 	processingStreamDescription.mFramesPerPacket	= 1;
 	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	return YES;
@@ -202,39 +204,42 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 		AVAudioFrameCount framesRemaining = frameLength - framesRead;
 
 		// Grab the DSD audio
-		_buffer.packetCount = 0;
-		AVAudioFrameCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
+		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:SFB_min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
-		AVAudioFrameCount dsdPacketsDecoded = _buffer.packetCount;
+		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
 		if(dsdPacketsDecoded == 0)
 			break;
-
-		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
 		// Convert to DoP
 		// NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
 
-		const uint8_t *src = (const uint8_t *)_buffer.data;
-		uint8_t *dst = (uint8_t *)buffer.audioBufferList->mBuffers[0].mData + buffer.audioBufferList->mBuffers[0].mDataByteSize;
+		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
-		for(AVAudioFrameCount i = 0; i < framesDecoded; ++i) {
-			// Insert the DSD marker
-			*dst++ = _marker;
+		uint8_t marker;
+		AVAudioChannelCount channelCount = _processingFormat.channelCount;
+		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
+			const uint8_t *input = (uint8_t *)_buffer.data + channel;
+			uint8_t *output = (uint8_t *)buffer.audioBufferList->mBuffers[channel].mData + buffer.audioBufferList->mBuffers[channel].mDataByteSize;
 
-			// Copy the DSD bits
-			if(_reverseBits) {
-				*dst++ = sBitReverseTable256[*src++];
-				*dst++ = sBitReverseTable256[*src++];
+			// The DoP marker should match across channels
+			marker = _marker;
+			for(AVAudioFrameCount i = 0; i < framesDecoded; ++i) {
+				// Insert the DoP marker
+				*output++ = marker;
+
+				// Copy the DSD bits
+				*output++ = _reverseBits ? sBitReverseTable256[*input] : *input;
+				input += channelCount;
+				*output++ = _reverseBits ? sBitReverseTable256[*input] : *input;
+				input += channelCount;
+
+				marker = marker == (uint8_t)0x05 ? (uint8_t)0xfa : (uint8_t)0x05;
 			}
-			else {
-				*dst++ = *src++;
-				*dst++ = *src++;
-			}
-
-			_marker = _marker == (uint8_t)0x05 ? (uint8_t)0xfa : (uint8_t)0x05;
 		}
+
+		_marker = marker;
 
 		buffer.frameLength += framesDecoded;
 		framesRead += framesDecoded;
@@ -260,6 +265,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 		return NO;
 
 	_buffer.packetCount = 0;
+	_buffer.byteLength = 0;
 
 	return YES;
 }
