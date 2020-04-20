@@ -10,6 +10,9 @@
 #import <SFBAudioEngine/SFBAudioDecoder.h>
 #import <SFBAudioEngine/SFBDSDDecoding.h>
 #import <SFBAudioEngine/SFBDSDDecoder.h>
+#import <SFBAudioEngine/SFBDSDPCMDecoder.h>
+#import <SFBAudioEngine/SFBDoPDecoder.h>
+#import <SFBAudioEngine/SFBLoopableRegionDecoder.h>
 
 #import <SFBAudioEngine/SFBAudioPlayer.h>
 
