@@ -20,8 +20,6 @@
 
 namespace {
 
-	inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
 	// Convert a four byte chunk ID to a uint32_t
 	inline uint32_t BytesToID(char bytes [4])
 	{
@@ -709,13 +707,6 @@ namespace {
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
-{
-	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
-		_packetCount = -1;
-	return self;
-}
-
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
@@ -777,6 +768,7 @@ namespace {
 
 	sourceStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
 	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
+	sourceStreamDescription.mBitsPerChannel		= 1;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
@@ -805,7 +797,7 @@ namespace {
 
 - (BOOL)isOpen
 {
-	return _packetCount != -1;
+	return _packetCount != 0;
 }
 
 - (AVAudioFramePosition)packetPosition
@@ -818,12 +810,13 @@ namespace {
 	return _packetCount;
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
 
 	// Reset output buffer data size
 	buffer.packetCount = 0;
+	buffer.byteLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
@@ -833,18 +826,18 @@ namespace {
 	if(packetCount > buffer.packetCapacity)
 		packetCount = buffer.packetCapacity;
 
-	AVAudioFrameCount packetsRemaining = (AVAudioFrameCount)(_packetCount - _packetPosition);
-	AVAudioFrameCount packetsToRead = SFB_min(packetCount, packetsRemaining);
-	AVAudioFrameCount packetsRead = 0;
+	AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
+	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
+	AVAudioPacketCount packetsRead = 0;
 
-	NSInteger packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
 		// a clustered frame (one channel byte per channel)
 
 		uint8_t *buf = (uint8_t *)buffer.data + buffer.byteLength;
-		NSInteger bytesToRead = buffer.byteCapacity - buffer.byteLength;
+		NSInteger bytesToRead = std::min(packetsToRead * packetSize, buffer.byteCapacity - buffer.byteLength);
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
@@ -852,13 +845,14 @@ namespace {
 			break;
 		}
 
-		buffer.byteLength = (uint32_t)bytesToRead;
-
 		// Decoding is finished
 		if(bytesRead == 0)
 			break;
 
-		packetsRead += bytesRead / packetSize;
+		packetsRead += (bytesRead / packetSize);
+
+		buffer.packetCount += (AVAudioPacketCount)(bytesRead / packetSize);
+		buffer.byteLength += (uint32_t)bytesRead;
 
 		// All requested frames were read
 		if(packetsRead == packetCount)
