@@ -16,11 +16,11 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = false
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = Array(AudioDecoder.supportedPathExtensions)
+		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
 
 		if(openPanel.runModal() == .OK) {
 			if let url = openPanel.urls.first {
-				try? playerWindowController.player.play(url)
+				playerWindowController.play(url)
 			}
 		}
 	}
@@ -35,11 +35,11 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = false
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = Array(AudioDecoder.supportedPathExtensions)
+		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
 
 		if(openPanel.runModal() == .OK) {
 			if let url = openPanel.urls.first {
-				try? playerWindowController.player.enqueue(url)
+				playerWindowController.enqueue(url)
 			}
 		}
 	}
@@ -47,12 +47,7 @@ class AppDelegate: NSObject {
 	@IBAction func openURLPanelOpenAction(_ sender: AnyObject?) {
 		openURLPanel.orderOut(sender)
 		if let url = URL(string: openURLPanelTextField.stringValue) {
-			do {
-				try playerWindowController.player.play(url)
-			}
-			catch let error {
-				NSApp.presentError(error)
-			}
+			playerWindowController.play(url)
 		}
 	}
 
@@ -72,12 +67,7 @@ extension AppDelegate: NSApplicationDelegate {
 
 	func application(_ application: NSApplication, open urls: [URL]) {
 		if let url = urls.first {
-			do {
-				try playerWindowController.player.play(url)
-			}
-			catch let error {
-				NSApp.presentError(error)
-			}
+			try playerWindowController.play(url)
 		}
 	}
 }

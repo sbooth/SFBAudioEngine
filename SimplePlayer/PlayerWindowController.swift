@@ -110,6 +110,47 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 		player.skipToNext()
 	}
 
+	lazy var supportedPathExtensions: [String] = {
+		var pathExtensions = [String]()
+		pathExtensions.append(contentsOf: AudioDecoder.supportedPathExtensions)
+		pathExtensions.append(contentsOf: DSDDecoder.supportedPathExtensions)
+		return pathExtensions
+	}()
+
+	private func decoder(for url: URL, enableDoP: Bool = false) throws -> PCMDecoding? {
+		let pathExtension = url.pathExtension.lowercased()
+		if AudioDecoder.handlesPaths(withExtension: pathExtension) {
+			return try AudioDecoder(url: url)
+		}
+		else if DSDDecoder.handlesPaths(withExtension: pathExtension) {
+			let dsdDecoder = try DSDDecoder(url: url)
+			return enableDoP ? try DoPDecoder(decoder: dsdDecoder) : try DSDPCMDecoder(decoder: dsdDecoder)
+		}
+		return nil
+	}
+
+	func play(_ url: URL) {
+		do {
+			if let decoder = try decoder(for: url) {
+				try player.play(decoder)
+			}
+		}
+		catch let error {
+			NSApp.presentError(error)
+		}
+	}
+
+	func enqueue(_ url: URL) {
+		do {
+			if let decoder = try decoder(for: url) {
+				try player.enqueue(decoder)
+			}
+		}
+		catch let error {
+			NSApp.presentError(error)
+		}
+	}
+
 	func updateWindow() {
 		// Nothing happening, reset the window
 		guard let url = player.url else {
