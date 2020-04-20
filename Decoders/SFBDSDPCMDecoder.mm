@@ -15,7 +15,7 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_PCM_FRAME 8
+#define DSD_PACKETS_PER_PCM_FRAME (FRAMES_PER_DSD_PACKET / 8)
 #define BUFFER_SIZE_PACKETS 16384
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
@@ -405,9 +405,9 @@ namespace {
 	}
 
 	// Generate non-interleaved 32-bit float output
-	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / DSD_PACKETS_PER_PCM_FRAME) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / (FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_PCM_FRAME)) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	_context.resize(asbd->mChannelsPerFrame);
@@ -465,12 +465,11 @@ namespace {
 		AVAudioFrameCount framesRemaining = frameLength - framesRead;
 
 		// Grab the DSD audio
-		_buffer.packetCount = 0;
-		AVAudioFrameCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_PCM_FRAME;
+		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_PCM_FRAME;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:SFB_min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
-		AVAudioFrameCount dsdPacketsDecoded = _buffer.packetCount;
+		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;
 		if(dsdPacketsDecoded == 0)
 			break;
 
@@ -495,6 +494,7 @@ namespace {
 		}
 
 		buffer.frameLength += framesDecoded;
+
 		framesRead += framesDecoded;
 
 		// All requested frames were read
@@ -518,6 +518,7 @@ namespace {
 		return NO;
 
 	_buffer.packetCount = 0;
+	_buffer.byteLength = 0;
 
 	return YES;
 }
