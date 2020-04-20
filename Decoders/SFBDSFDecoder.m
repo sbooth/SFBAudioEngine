@@ -12,7 +12,7 @@
 
 #define DSF_BLOCK_SIZE_BYTES_PER_CHANNEL 4096
 
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
+static inline AVAudioPacketCount SFB_min(AVAudioPacketCount a, AVAudioPacketCount b) { return a < b ? a : b; }
 
 // Read a four byte chunk ID as a uint32_t
 static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
@@ -21,7 +21,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 
 	char chunkIDBytes [4];
 	NSInteger bytesRead;
-	if(![inputSource readBytes:chunkID length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
+	if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
 		os_log_error(OS_LOG_DEFAULT, "Unable to read chunk ID");
 		return NO;
 	}
@@ -75,13 +75,6 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsf"];
-}
-
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
-{
-	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error]))
-		_packetCount = -1;
-	return self;
 }
 
 - (BOOL)openReturningError:(NSError **)error
@@ -262,12 +255,13 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	sourceStreamDescription.mSampleRate			= (Float64)samplingFrequency;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)channelNum;
+	sourceStreamDescription.mBitsPerChannel		= 1;
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&sourceStreamDescription];
 
 	// Metadata chunk is ignored
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_processingFormat packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL * channelNum)];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_processingFormat packetCapacity:(DSF_BLOCK_SIZE_BYTES_PER_CHANNEL / BYTES_PER_DSD_PACKET_PER_CHANNEL) maximumPacketSize:(BYTES_PER_DSD_PACKET_PER_CHANNEL * channelNum)];
 	_buffer.packetCount = 0;
 
 	return YES;
@@ -294,12 +288,13 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	return _packetCount;
 }
 
-- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioFrameCount)packetCount error:(NSError **)error
+- (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
 
 	// Reset output buffer data size
 	buffer.packetCount = 0;
+	buffer.byteLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
@@ -309,26 +304,30 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	if(packetCount > buffer.packetCapacity)
 		packetCount = buffer.packetCapacity;
 
-	AVAudioFrameCount packetsProcessed = 0;
+	AVAudioPacketCount packetsProcessed = 0;
 
-	size_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 
 	for(;;) {
-		AVAudioFrameCount packetsRemaining = packetCount - packetsProcessed;
-		AVAudioFrameCount packetsToSkip = buffer.packetCount;
-		AVAudioFrameCount packetsInBuffer = _buffer.packetCount;
-		AVAudioFrameCount packetsToCopy = SFB_min(packetsInBuffer, packetsRemaining);
+		AVAudioPacketCount packetsRemaining = packetCount - packetsProcessed;
+		AVAudioPacketCount packetsToSkip = buffer.packetCount;
+		AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
+		AVAudioPacketCount packetsToCopy = SFB_min(packetsInBuffer, packetsRemaining);
 
 		// Copy data from the internal buffer to output
-		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, packetsToCopy * packetSize);
+		uint32_t copySize = packetsToCopy * packetSize;
+		memcpy((uint8_t *)buffer.data + (packetsToSkip * packetSize), _buffer.data, copySize);
 		buffer.packetCount += packetsToCopy;
+		buffer.byteLength += copySize;
 
 		// Move remaining data in buffer to beginning
 		if(packetsToCopy != packetsInBuffer) {
 			uint8_t *dst = (uint8_t *)_buffer.data;
-			memmove(dst, dst + packetsToCopy * packetSize, (packetsInBuffer - packetsToCopy) * packetSize);
+			memmove(dst, dst + copySize, (packetsInBuffer - packetsToCopy) * packetSize);
 		}
+
 		_buffer.packetCount -= packetsToCopy;
+		_buffer.byteLength -= copySize;
 
 		packetsProcessed += packetsToCopy;
 
@@ -368,16 +367,19 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		return NO;
 
 	// Skip ahead in the interleaved audio to the specified packet
-	AVAudioFrameCount packetsInBuffer = _buffer.packetCount;
-	AVAudioFrameCount packetsToSkip	= packet % packetsInBuffer;
+	AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
+	AVAudioPacketCount packetsToSkip = packet % packetsInBuffer;
+	AVAudioPacketCount packetsToMove = packetsInBuffer - packetsToSkip;
 
 	// Move data
-	size_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 	uint8_t *dst = (uint8_t *)_buffer.data;
 	const uint8_t *src = (uint8_t *)_buffer.data + (packetsToSkip * packetSize);
-	memmove(dst, src, (packetsInBuffer - packetsToSkip) * packetSize);
+	memmove(dst, src, packetsToMove * packetSize);
 
-	_buffer.packetCount = packetsInBuffer - packetsToSkip;
+	_buffer.packetCount = packetsToMove;
+	_buffer.byteLength = packetsToMove * packetSize;
+
 	_packetPosition = packet;
 
 	return YES;
@@ -395,11 +397,6 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	uint8_t *buf = (uint8_t *)_buffer.data;
 	uint32_t bufsize = _buffer.byteCapacity;
 
-#if DEBUG
-	if(bufsize != _processingFormat.channelCount * DSF_BLOCK_SIZE_BYTES_PER_CHANNEL)
-		return NO;
-#endif
-
 	NSInteger bytesRead;
 	if(![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error] || bytesRead != bufsize) {
 		os_log_debug(OS_LOG_DEFAULT, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
@@ -407,10 +404,12 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	}
 
 	// Deinterleave the blocks and interleave the samples into clustered frames
+	AVAudioChannelCount channelCount = _processingFormat.channelCount;
 	uint8_t tmp [bufsize];
-	MatrixTransposeNaive(buf, tmp, _processingFormat.channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
-	memcpy(tmp, buf, bufsize);
+	MatrixTransposeNaive(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
+	memcpy(buf, tmp, bufsize);
 
+	_buffer.packetCount = (AVAudioPacketCount)(bytesRead / (BYTES_PER_DSD_PACKET_PER_CHANNEL * channelCount));
 	_buffer.byteLength = (uint32_t)bytesRead;
 
 	return YES;
