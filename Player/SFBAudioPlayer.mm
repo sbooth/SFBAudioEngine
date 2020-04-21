@@ -100,7 +100,7 @@ namespace {
 //		std::atomic_int64_t mStartTime;			//!< The timestamp when the first frame should be rendered
 
 //	private:
-		SFBAudioDecoder 	*mDecoder; 			//!< Decodes audio from the source representation to PCM
+		id <SFBPCMDecoding> mDecoder; 			//!< Decodes audio from the source representation to PCM
 		AVAudioConverter 	*mConverter;		//!< Converts audio from the decoder's processing format to PCM
 	private:
 		AVAudioPCMBuffer 	*mDecodeBuffer;		//!< Buffer used internally for buffering during conversion
@@ -108,7 +108,7 @@ namespace {
 		BufferStack 		mBuffers;			//!< Audio buffers for storing converted audio
 
 	public:
-		DecoderStateData(SFBAudioDecoder *decoder)
+		DecoderStateData(id <SFBPCMDecoding> decoder)
 			: mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesScheduled(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil), mBufferCount(0)
 		{}
 
@@ -249,7 +249,7 @@ namespace {
 		}
 	};
 
-	using DecoderQueue = std::queue<SFBAudioDecoder *>;
+	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 }
 
@@ -308,6 +308,15 @@ namespace {
 		[_engine attachNode:_player];
 		[_engine connect:_player to:_engine.mainMixerNode format:nil];
 
+#if MATCH_FORMATS
+		AVAudioOutputNode *output = _engine.outputNode;
+		AVAudioMixerNode *mixer = _engine.mainMixerNode;
+
+		AVAudioFormat *outputFormat = [output outputFormatForBus:0];
+		[_engine connect:mixer to:output format:outputFormat];
+		[_engine connect:_player to:mixer format:outputFormat];
+#endif
+
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioEngineConfigurationChanged:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
 	}
@@ -344,7 +353,7 @@ namespace {
 	return [self playDecoder:decoder error:error];
 }
 
-- (BOOL)playDecoder:(SFBAudioDecoder *)decoder error:(NSError **)error
+- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -379,7 +388,7 @@ namespace {
 	return [self enqueueDecoder:decoder error:error];
 }
 
-- (BOOL)enqueueDecoder:(SFBAudioDecoder *)decoder error:(NSError **)error
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -496,7 +505,8 @@ namespace {
 - (id)representedObject
 {
 	auto decoderState = std::atomic_load(&_decoderState);
-	return decoderState ? decoderState->mDecoder.representedObject : nil;
+//	return decoderState ? decoderState->mDecoder.representedObject : nil;
+	return nil;
 }
 
 #pragma mark Playback Properties
@@ -675,8 +685,22 @@ namespace {
 
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification
 {
-	// FIXME: Actually do something here
 	os_log_info(OS_LOG_DEFAULT, "Received AVAudioEngineConfigurationChangeNotification");
+
+	AVAudioEngine *engine = [notification object];
+
+	if(engine != _engine)
+		return;
+
+#if MATCH_FORMATS
+	AVAudioOutputNode *output = [engine outputNode];
+	AVAudioMixerNode *mixer = [engine mainMixerNode];
+
+	AVAudioFormat *outputFormat = [output outputFormatForBus:0];
+
+	[engine connect:mixer to:output format:outputFormat];
+	[engine connect:_player to:mixer format:outputFormat];
+#endif
 }
 
 #pragma mark Decoding Thread
@@ -696,7 +720,7 @@ namespace {
 
 	for(;;) {
 		// Dequeue and process the next decoder
-		__block SFBAudioDecoder *decoder = nil;
+		__block id <SFBPCMDecoding> decoder = nil;
 		dispatch_sync(_queue, ^{
 			if(!_queuedDecoders.empty()) {
 				decoder = _queuedDecoders.front();

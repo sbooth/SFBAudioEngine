@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "SFBAudioDecoder.h"
+#import "SFBPCMDecoding.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -24,8 +24,8 @@ struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerPlaybackTime {
 typedef struct SFBAudioPlayerPlaybackTime SFBAudioPlayerPlaybackTime;
 
 // Audio player event types
-typedef void (^SFBAudioDecoderEventBlock)(SFBAudioDecoder *decoder);
-typedef void (^SFBAudioDecoderErrorBlock)(SFBAudioDecoder *decoder, NSError *error);
+typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
+typedef void (^SFBAudioDecoderErrorBlock)(id <SFBPCMDecoding> decoder, NSError *error);
 typedef void (^SFBAudioPlayerErrorBlock)(NSError *error);
 
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
@@ -38,10 +38,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 // ========================================
 // Playlist Management
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
-- (BOOL)playDecoder:(SFBAudioDecoder *)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
-- (BOOL)enqueueDecoder:(SFBAudioDecoder *)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
 - (BOOL)skipToNext;
 - (void)clearQueue;
