@@ -67,7 +67,7 @@ extension AppDelegate: NSApplicationDelegate {
 
 	func application(_ application: NSApplication, open urls: [URL]) {
 		if let url = urls.first {
-			try playerWindowController.play(url)
+			playerWindowController.play(url)
 		}
 	}
 }
