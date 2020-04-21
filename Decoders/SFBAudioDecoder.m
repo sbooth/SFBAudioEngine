@@ -22,12 +22,6 @@ NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioD
 @dynamic framePosition;
 @dynamic frameLength;
 
-// It's probably not worth making this class KVO-compliant
-//+ (NSSet *)keyPathsForValuesAffectingTotalFrames
-//{
-//	return [NSSet setWithObjects:@"framePosition", @"frameLength", nil];
-//}
-
 static NSMutableArray *_registeredSubclasses = nil;
 
 + (NSSet *)supportedPathExtensions
