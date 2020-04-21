@@ -16,8 +16,6 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
-#define BUFFER_CHANNEL_SIZE_BYTES 512u
-
 namespace {
 
 	// Convert a four byte chunk ID to a uint32_t
@@ -50,6 +48,8 @@ namespace {
 	// Read an ID as a uint32_t, performing validation
 	bool ReadID(SFBInputSource *inputSource, uint32_t& chunkID)
 	{
+		NSCParameterAssert(inputSource != nil);
+
 		char chunkIDBytes [4];
 		NSInteger bytesRead;
 		if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
@@ -109,6 +109,7 @@ namespace {
 	// 'FVER' in 'FRM8'
 	struct FormatVersionChunk : public DSDIFFChunk
 	{
+		static const uint32_t kSupportedFormatVersion = 0x01050000;
 		uint32_t mFormatVersion;
 	};
 
@@ -160,53 +161,53 @@ namespace {
 
 	// 'DST ', 'DSTI', 'COMT', 'DIIN', 'MANF' are not handled
 
-	//	// 'DST ' in 'FRM8'
-	//	class DSTSoundDataChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'FRTE' in 'DST '
-	//	class DSTFrameInformationChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'FRTE' in 'DST '
-	//	class DSTFrameDataChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'FRTE' in 'DST '
-	//	class DSTFrameCRCChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'DSTI' in 'FRM8'
-	//	class DSTSoundIndexChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'COMT' in 'FRM8'
-	//	class CommentsChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'DIIN' in 'FRM8'
-	//	class EditedMasterInformationChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'EMID' in 'DIIN'
-	//	class EditedMasterIDChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'MARK' in 'DIIN'
-	//	class MarkerChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'DIAR' in 'DIIN'
-	//	class ArtistChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'DITI' in 'DIIN'
-	//	class TitleChunk : public DSDIFFChunk
-	//	{};
-	//
-	//	// 'MANF' in 'FRM8'
-	//	class ManufacturerSpecificChunk : public DSDIFFChunk
-	//	{};
+//	// 'DST ' in 'FRM8'
+//	class DSTSoundDataChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'FRTE' in 'DST '
+//	class DSTFrameInformationChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'FRTE' in 'DST '
+//	class DSTFrameDataChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'FRTE' in 'DST '
+//	class DSTFrameCRCChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'DSTI' in 'FRM8'
+//	class DSTSoundIndexChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'COMT' in 'FRM8'
+//	class CommentsChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'DIIN' in 'FRM8'
+//	class EditedMasterInformationChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'EMID' in 'DIIN'
+//	class EditedMasterIDChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'MARK' in 'DIIN'
+//	class MarkerChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'DIAR' in 'DIIN'
+//	class ArtistChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'DITI' in 'DIIN'
+//	class TitleChunk : public DSDIFFChunk
+//	{};
+//
+//	// 'MANF' in 'FRM8'
+//	class ManufacturerSpecificChunk : public DSDIFFChunk
+//	{};
 
 #pragma mark DSDIFF parsing
 
@@ -225,7 +226,7 @@ namespace {
 
 	std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('FVER' != chunkID) {
+		if(chunkID != 'FVER') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FVER' chunk");
 			return nullptr;
 		}
@@ -246,7 +247,7 @@ namespace {
 			return nullptr;
 		}
 
-		if(0x01050000 < result->mFormatVersion) {
+		if(result->mFormatVersion > FormatVersionChunk::kSupportedFormatVersion) {
 			os_log_error(OS_LOG_DEFAULT, "Unsupported format version in 'FVER': %u", result->mFormatVersion);
 			return nullptr;
 		}
@@ -256,7 +257,7 @@ namespace {
 
 	std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('FS  ' != chunkID) {
+		if(chunkID != 'FS  ') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FS  ' chunk");
 			return nullptr;
 		}
@@ -282,7 +283,7 @@ namespace {
 
 	std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('CHNL' != chunkID) {
+		if(chunkID != 'CHNL') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CHNL' chunk");
 			return nullptr;
 		}
@@ -317,7 +318,7 @@ namespace {
 
 	std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('CMPR' != chunkID) {
+		if(chunkID != 'CMPR') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CMPR' chunk");
 			return nullptr;
 		}
@@ -373,7 +374,7 @@ namespace {
 
 	std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('ABSS' != chunkID) {
+		if(chunkID != 'ABSS') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'ABSS' chunk");
 			return nullptr;
 		}
@@ -414,7 +415,7 @@ namespace {
 
 	std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('LSCO' != chunkID) {
+		if(chunkID != 'LSCO') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'LSCO' chunk");
 			return nullptr;
 		}
@@ -440,7 +441,7 @@ namespace {
 
 	std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('PROP' != chunkID) {
+		if(chunkID != 'PROP') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'PROP' chunk");
 			return nullptr;
 		}
@@ -461,14 +462,14 @@ namespace {
 			return nullptr;
 		}
 
-		if('SND ' != result->mPropertyType) {
+		if(result->mPropertyType != 'SND ') {
 			os_log_error(OS_LOG_DEFAULT, "Unexpected property type in 'PROP' chunk: %u", result->mPropertyType);
 			return nullptr;
 		}
 
 		// Parse the local chunks
 		auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mPropertyType
-		while(0 < chunkDataSizeRemaining) {
+		while(chunkDataSizeRemaining) {
 
 			uint32_t localChunkID;
 			uint64_t localChunkDataSize;
@@ -544,7 +545,7 @@ namespace {
 
 	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('DSD ' != chunkID) {
+		if(chunkID != 'DSD ') {
 			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'DSD ' chunk");
 			return nullptr;
 		}
@@ -571,7 +572,7 @@ namespace {
 
 	std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
-		if('FRM8' != chunkID) {
+		if(chunkID != 'FRM8') {
 			os_log_error(OS_LOG_DEFAULT, "Missing 'FRM8' chunk");
 			return nullptr;
 		}
@@ -592,14 +593,14 @@ namespace {
 			return nullptr;
 		}
 
-		if('DSD ' != result->mFormType) {
+		if(result->mFormType != 'DSD ') {
 			os_log_error(OS_LOG_DEFAULT, "Unexpected formType in 'FRM8' chunk: '%{public}.4s'", SFBCStringForOSType(result->mFormType));
 			return nullptr;
 		}
 
 		// Parse the local chunks
 		auto chunkDataSizeRemaining = result->mDataSize - 4; // adjust for mFormType
-		while(0 < chunkDataSizeRemaining) {
+		while(chunkDataSizeRemaining) {
 
 			uint32_t localChunkID;
 			uint64_t localChunkDataSize;
@@ -733,11 +734,11 @@ namespace {
 
 	// Channel layouts are defined in the DSDIFF file format specification
 	AVAudioChannelLayout *channelLayout = nil;
-	if(2 == channelsChunk->mChannelIDs.size() && 'SLFT' == channelsChunk->mChannelIDs[0] && 'SRGT' == channelsChunk->mChannelIDs[1])
+	if(channelsChunk->mChannelIDs.size() == 2 && channelsChunk->mChannelIDs[0] == 'SLFT' && channelsChunk->mChannelIDs[1] == 'SRGT')
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];
-	else if(5 == channelsChunk->mChannelIDs.size() && 'MLFT' == channelsChunk->mChannelIDs[0] && 'MRGT' == channelsChunk->mChannelIDs[1] && 'C   ' == channelsChunk->mChannelIDs[2] && 'LS  ' == channelsChunk->mChannelIDs[3] && 'RS  ' == channelsChunk->mChannelIDs[4])
+	else if(channelsChunk->mChannelIDs.size() == 5 && channelsChunk->mChannelIDs[0] == 'MLFT' && channelsChunk->mChannelIDs[1] == 'MRGT' && channelsChunk->mChannelIDs[2] == 'C   ' && channelsChunk->mChannelIDs[3] == 'LS  ' && channelsChunk->mChannelIDs[4] == 'RS  ')
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];
-	else if(6 == channelsChunk->mChannelIDs.size() && 'MLFT' == channelsChunk->mChannelIDs[0] && 'MRGT' == channelsChunk->mChannelIDs[1] && 'C   ' == channelsChunk->mChannelIDs[2] && 'LFE ' == channelsChunk->mChannelIDs[3] && 'LS  ' == channelsChunk->mChannelIDs[4] && 'RS  ' == channelsChunk->mChannelIDs[5])
+	else if(channelsChunk->mChannelIDs.size() == 6 && channelsChunk->mChannelIDs[0] == 'MLFT' && channelsChunk->mChannelIDs[1] == 'MRGT' && channelsChunk->mChannelIDs[2] == 'C   ' && channelsChunk->mChannelIDs[3] == 'LFE ' && channelsChunk->mChannelIDs[4] == 'LS  ' && channelsChunk->mChannelIDs[5] == 'RS  ')
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];
 	else {
 		std::vector<AudioChannelLabel> labels;
