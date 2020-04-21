@@ -29,15 +29,15 @@ static const uint8_t sBitReverseTable256 [256] =
 // as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
 static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
-	if(sampleRate == 2822400)
+	if(sampleRate == SFBDSDSampleRateDSD64)
 		return YES;
-	else if(sampleRate == 5644800)
+	else if(sampleRate == SFBDSDSampleRateDSD128)
 		return YES;
-	else if(sampleRate == 11289600)
+	else if(sampleRate == SFBDSDSampleRateDSD256)
 		return YES;
-	else if(sampleRate == 6144000)
+	else if(sampleRate == SFBDSDSampleRateVariantDSD128)
 		return YES;
-	else if(sampleRate == 12288000)
+	else if(sampleRate == SFBDSDSampleRateVariantDSD256)
 		return YES;
 	else
 		return NO;
