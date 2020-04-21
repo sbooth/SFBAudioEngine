@@ -10,7 +10,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SFBDSDDecoder ()
 {
 @package
-	// Needs to be accessible to callbacks
 	SFBInputSource *_inputSource;
 @protected
 	AVAudioFormat *_sourceFormat;
