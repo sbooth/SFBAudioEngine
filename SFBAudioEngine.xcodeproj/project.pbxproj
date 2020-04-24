@@ -94,6 +94,13 @@
 		325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.m */; };
 		325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */; };
 		325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */; };
+		3268F80F24508A6E006A5911 /* AudioRingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268F80D24508A6D006A5911 /* AudioRingBuffer.cpp */; };
+		3268F81024508A6E006A5911 /* AudioRingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F80E24508A6D006A5911 /* AudioRingBuffer.h */; };
+		3268F81324508BCF006A5911 /* AudioFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F81124508BCF006A5911 /* AudioFormat.h */; };
+		3268F81424508BCF006A5911 /* AudioFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81224508BCF006A5911 /* AudioFormat.cpp */; };
+		3268F81B24509BAF006A5911 /* SFBAudioPlayerNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */; };
+		3268F81C24509BAF006A5911 /* SFBAudioPlayerNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3268F81E245229FD006A5911 /* SFBAudioPlayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */; };
 		326CE06F17E3B027003877AB /* SFBCStringForOSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 320723BC138D521A00007369 /* SFBCStringForOSType.h */; };
 		326D3C94242CE9D1002AEC52 /* SFBAudioProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326D3C95242CE9D1002AEC52 /* SFBAudioProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */; };
@@ -282,6 +289,13 @@
 		325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBCoreAudioDecoder.m; sourceTree = "<group>"; };
 		325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBModuleDecoder.h; sourceTree = "<group>"; };
 		325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBModuleDecoder.m; sourceTree = "<group>"; };
+		3268F80D24508A6D006A5911 /* AudioRingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioRingBuffer.cpp; sourceTree = "<group>"; };
+		3268F80E24508A6D006A5911 /* AudioRingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioRingBuffer.h; sourceTree = "<group>"; };
+		3268F81124508BCF006A5911 /* AudioFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioFormat.h; sourceTree = "<group>"; };
+		3268F81224508BCF006A5911 /* AudioFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioFormat.cpp; sourceTree = "<group>"; };
+		3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBAudioPlayerNode.mm; sourceTree = "<group>"; };
+		3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioPlayerNode.h; sourceTree = "<group>"; };
+		3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioPlayerNode.swift; sourceTree = "<group>"; };
 		326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioProperties.h; sourceTree = "<group>"; };
 		326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioProperties.m; sourceTree = "<group>"; };
 		326D3C96242CF79C002AEC52 /* SFBAudioFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioFile.m; sourceTree = "<group>"; };
@@ -392,6 +406,10 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				3268F81124508BCF006A5911 /* AudioFormat.h */,
+				3268F81224508BCF006A5911 /* AudioFormat.cpp */,
+				3268F80E24508A6D006A5911 /* AudioRingBuffer.h */,
+				3268F80D24508A6D006A5911 /* AudioRingBuffer.cpp */,
 				32129698244A57620008DC93 /* AVAudioChannelLayout+SFBChannelLabels.h */,
 				32129697244A57620008DC93 /* AVAudioChannelLayout+SFBChannelLabels.m */,
 				325A5E4524421F05003138D5 /* AVAudioPCMBuffer+SFBBufferUtilities.h */,
@@ -491,6 +509,9 @@
 		322B5D76108C210400CA9BDE /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */,
+				3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */,
+				3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */,
 				325A5E3D24408C8D003138D5 /* SFBAudioPlayer.h */,
 				325A5E3C24408C8D003138D5 /* SFBAudioPlayer.mm */,
 				325A5E4A24422F6C003138D5 /* SFBAudioPlayer.swift */,
@@ -644,6 +665,7 @@
 				326D3CC2242D2A21002AEC52 /* SFBOggSpeexFile.h in Headers */,
 				3212968D244A20B60008DC93 /* SFBMonkeysAudioDecoder.h in Headers */,
 				321296B2244B45B20008DC93 /* SFBDSDDecoder+Internal.h in Headers */,
+				3268F81C24509BAF006A5911 /* SFBAudioPlayerNode.h in Headers */,
 				326D3CC6242D2A21002AEC52 /* SFBProTrackerModuleFile.h in Headers */,
 				321296DB244C8F700008DC93 /* SFBDoPDecoder.h in Headers */,
 				325A5E0F243F8D8B003138D5 /* SFBFileContentsInputSource.h in Headers */,
@@ -662,6 +684,7 @@
 				326D3CBA242D2A21002AEC52 /* SFBMP4File.h in Headers */,
 				32BC09A424263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h in Headers */,
 				325A5E4D2442691B003138D5 /* CFWrapper.h in Headers */,
+				3268F81324508BCF006A5911 /* AudioFormat.h in Headers */,
 				322859BA242417B10080B500 /* SFBAudioMetadata.h in Headers */,
 				32129695244A3E090008DC93 /* SFBOggOpusDecoder.h in Headers */,
 				321296E0244CAB840008DC93 /* SFBDSDPCMDecoder.h in Headers */,
@@ -689,6 +712,7 @@
 				32BC09AC2426536D008BB695 /* SFBAudioMetadata+TagLibXiphComment.h in Headers */,
 				321296852449FC700008DC93 /* SFBTrueAudioDecoder.h in Headers */,
 				326D3CB6242D2A21002AEC52 /* SFBImpulseTrackerModuleFile.h in Headers */,
+				3268F81024508A6E006A5911 /* AudioRingBuffer.h in Headers */,
 				326D3CB0242D2A21002AEC52 /* SFBDSFFile.h in Headers */,
 				325A5E83244342B5003138D5 /* SFBAudioEngine.h in Headers */,
 				32BC09A924265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.h in Headers */,
@@ -820,6 +844,7 @@
 				325A5E07243F8D8B003138D5 /* SFBDataInputSource.m in Sources */,
 				321296A1244B13950008DC93 /* SFBOggSpeexDecoder.m in Sources */,
 				321296B4244B70F90008DC93 /* SFBDSFDecoder.m in Sources */,
+				3268F81B24509BAF006A5911 /* SFBAudioPlayerNode.mm in Sources */,
 				325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.m in Sources */,
 				326D3CAD242D1D97002AEC52 /* SFBMP3File.mm in Sources */,
 				325A5E17243F8DC0003138D5 /* SFBFLACDecoder.m in Sources */,
@@ -840,6 +865,7 @@
 				322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
 				325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */,
 				325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */,
+				3268F81424508BCF006A5911 /* AudioFormat.cpp in Sources */,
 				326D3CB1242D2A21002AEC52 /* SFBDSFFile.mm in Sources */,
 				326D3CCB242D2A21002AEC52 /* SFBTrueAudioFile.mm in Sources */,
 				325A5E09243F8D8B003138D5 /* SFBFileContentsInputSource.m in Sources */,
@@ -858,6 +884,7 @@
 				326D3CBF242D2A21002AEC52 /* SFBOggFLACFile.mm in Sources */,
 				326D3CB7242D2A21002AEC52 /* SFBImpulseTrackerModuleFile.mm in Sources */,
 				322859D4242554040080B500 /* SFBAudioMetadata+TagLibTag.mm in Sources */,
+				3268F81E245229FD006A5911 /* SFBAudioPlayerNode.swift in Sources */,
 				326D3CC5242D2A21002AEC52 /* SFBOggVorbisFile.mm in Sources */,
 				321296D7244C731B0008DC93 /* SFBDSDIFFDecoder.mm in Sources */,
 				325A5E8024434123003138D5 /* SFBAudioPlayer.swift in Sources */,
@@ -869,6 +896,7 @@
 				321296822449C4B90008DC93 /* SFBWavPackDecoder.m in Sources */,
 				3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */,
 				325A5E1B243F8DC0003138D5 /* SFBAudioDecoder.m in Sources */,
+				3268F80F24508A6E006A5911 /* AudioRingBuffer.cpp in Sources */,
 				32BC09F424278B24008BB695 /* SFBAIFFFile.mm in Sources */,
 				32BC09A824265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.mm in Sources */,
 				326D3CB3242D2A21002AEC52 /* SFBExtendedModuleFile.mm in Sources */,
@@ -1058,7 +1086,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = (
 					"-Wall",
@@ -1110,7 +1138,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				WARNING_CFLAGS = (
 					"-Wall",
