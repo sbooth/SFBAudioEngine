@@ -310,8 +310,6 @@ namespace {
 @interface SFBAudioPlayerNode ()
 {
 @private
-	AVAudioFormat 			*_renderBlockFormat;
-
 	// Decoding
 	std::atomic_uint 		_flags;
 	std::thread 			_decoderThread;
@@ -458,6 +456,15 @@ namespace {
 	};
 
 	if((self = [super initWithFormat:format renderBlock:renderBlock])) {
+#if 0
+		// See the comments in SFBAudioPlayer -setupEngineForGaplessPlaybackOfFormat:
+		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice while 1156 is AVAudioSourceNode's default
+		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * (format.sampleRate / 44100));
+		if(self.AUAudioUnit.maximumFramesToRender < maximumFramesToRender) {
+			os_log_debug(OS_LOG_DEFAULT, "SFBAudioPlayerNode: Setting maximumFramesToRender to %u", maximumFramesToRender);
+			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
+		}
+#endif
 		_queue = dispatch_queue_create("org.sbooth.AudioEngine.PlayerNode.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_queue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
@@ -496,7 +503,7 @@ namespace {
 				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
 					continue;
 
-				os_log_info(OS_LOG_DEFAULT, "Collecting decoder \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+				os_log_debug(OS_LOG_DEFAULT, "Collecting decoder \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 				std::atomic_store(&self->_decoderStateArray[i], DecoderStateData::shared_ptr{});
 			}
 		});
@@ -515,8 +522,8 @@ namespace {
 			return nil;
 		}
 
-		_renderBlockFormat = format;
-		_ringBuffer.Allocate(_renderBlockFormat.streamDescription, kRingBufferFrameCapacity);
+		_renderingFormat = format;
+		_ringBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity);
 	}
 
 	return self;
@@ -533,14 +540,21 @@ namespace {
 		_queuedDecoders.pop();
 }
 
+#pragma mark - Format Information
+
+- (BOOL)supportsFormat:(AVAudioFormat *)format
+{
+	// Gapless playback requires the same number of channels at the same sample rate
+	return format.channelCount == _renderingFormat.channelCount && format.sampleRate == _renderingFormat.sampleRate;
+}
+
 #pragma mark - Playlist Management
 
 - (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
-	// TODO: Relax this restriction?
-	if(![decoder.processingFormat isEqual:_renderBlockFormat])
+	if(![self supportsFormat:decoder.processingFormat])
 		return NO;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
@@ -561,8 +575,7 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
-	// TODO: Relax this restriction?
-	if(![decoder.processingFormat isEqual:_renderBlockFormat])
+	if(![self supportsFormat:decoder.processingFormat])
 		return NO;
 
 	dispatch_sync(_queue, ^{
@@ -791,7 +804,7 @@ namespace {
 
 - (void *)decoderThreadEntry
 {
-	os_log_info(OS_LOG_DEFAULT, "Decoder thread starting");
+	os_log_debug(OS_LOG_DEFAULT, "Decoder thread starting");
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 		// Dequeue and process the next decoder
@@ -804,11 +817,8 @@ namespace {
 		});
 
 		if(decoder) {
-			if(![decoder.processingFormat isEqual:_renderBlockFormat])
-				continue;
-
 			// Create the decoder state
-			auto decoderState = std::make_shared<DecoderStateData>(decoder, self->_renderBlockFormat, kRingBufferChunkSize);
+			auto decoderState = std::make_shared<DecoderStateData>(decoder, self->_renderingFormat, kRingBufferChunkSize);
 
 			// Append the decoder state to the list of active decoders
 			for(size_t i = 0; i < self->_decoderStateArray.size(); ++i) {
@@ -823,13 +833,11 @@ namespace {
 			// In the event the render block output format and decoder processing
 			// format don't match, conversion will be performed in DecoderStateData::DecodeAudio()
 
-			// TODO: Add checks and notification for channel count or sample rate mismatch
+			os_log_debug(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+			os_log_debug(OS_LOG_DEFAULT, "Decoder processing format: %{public}@", decoderState->mDecoder.processingFormat);
+			os_log_debug(OS_LOG_DEFAULT, "Render block format: %{public}@", _renderingFormat);
 
-			os_log_info(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-			os_log_info(OS_LOG_DEFAULT, "Decoder processing format: %{public}@", decoderState->mDecoder.processingFormat);
-			os_log_info(OS_LOG_DEFAULT, "Render block output format: %{public}@", _renderBlockFormat);
-
-			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:decoderState->mDecoder.processingFormat frameCapacity:kRingBufferChunkSize];
+			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self->_renderingFormat frameCapacity:kRingBufferChunkSize];
 
 			while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 				// Reset the ring buffer if required, to prevent audible artifacts
@@ -890,7 +898,7 @@ namespace {
 						os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Write failed");
 
 					if(decoderState->mFlags.load() & DecoderStateData::eDecodingFinishedFlag) {
-						os_log_info(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+						os_log_debug(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						// Some formats (MP3) may not know the exact number of frames in advance
 						// without processing the entire file, which is a potentially slow operation
@@ -906,7 +914,7 @@ namespace {
 					}
 				}
 				else if(decoderState->mFlags.load() & DecoderStateData::eStopDecodingFlag) {
-					os_log_info(OS_LOG_DEFAULT, "Stopping decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+					os_log_debug(OS_LOG_DEFAULT, "Stopping decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
@@ -923,14 +931,14 @@ namespace {
 			dispatch_semaphore_wait(_decoderSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 	}
 
-	os_log_info(OS_LOG_DEFAULT, "Decoder thread terminating");
+	os_log_debug(OS_LOG_DEFAULT, "Decoder thread terminating");
 
 	return nullptr;
 }
 
 - (void *)notifierThreadEntry
 {
-	os_log_info(OS_LOG_DEFAULT, "Notifier thread starting");
+	os_log_debug(OS_LOG_DEFAULT, "Notifier thread starting");
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopNotifierThread)) {
 
@@ -949,7 +957,7 @@ namespace {
 #if DEBUG
 				uint64_t absTime = mach_absolute_time();
 				double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-				os_log_info(OS_LOG_DEFAULT, "Rendering started notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+				os_log_debug(OS_LOG_DEFAULT, "Rendering started notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
 				self->_renderingStartedNotificationHandler(decoderState->mDecoder);
@@ -972,7 +980,7 @@ namespace {
 #if DEBUG
 				uint64_t absTime = mach_absolute_time();
 				double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-				os_log_info(OS_LOG_DEFAULT, "Rendering finished notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+				os_log_debug(OS_LOG_DEFAULT, "Rendering finished notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
 				self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
@@ -982,7 +990,7 @@ namespace {
 		dispatch_semaphore_wait(_notifierSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 	}
 
-	os_log_info(OS_LOG_DEFAULT, "Notifier thread terminating");
+	os_log_debug(OS_LOG_DEFAULT, "Notifier thread terminating");
 
 	return nullptr;
 }

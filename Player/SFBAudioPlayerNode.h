@@ -61,6 +61,11 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 - (instancetype)initWithRenderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
 - (instancetype)initWithFormat:(AVAudioFormat *)format renderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
 
+#pragma mark - Format Information
+
+@property (nonatomic, readonly) AVAudioFormat * renderingFormat;
+- (BOOL)supportsFormat:(AVAudioFormat *)format;
+
 #pragma mark - Playlist Management
 
 - (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
