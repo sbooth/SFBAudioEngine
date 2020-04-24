@@ -16,6 +16,7 @@
 #import "SFBAudioPlayerNode.h"
 
 #import "AudioRingBuffer.h"
+#import "SFBAudioDecoder.h"
 
 @interface SFBAudioPlayerNode ()
 - (void *)decoderThreadEntry;
@@ -550,25 +551,48 @@ namespace {
 
 #pragma mark - Playlist Management
 
-- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
+- (BOOL)playURL:(NSURL *)url error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
+	if(!decoder)
+		return NO;
+
+	return [self playDecoder:decoder error:error];
+}
+
+- (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
 	if(![self supportsFormat:decoder.processingFormat])
 		return NO;
 
+	[self clearQueue];
+
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState)
 		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
 
 	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
 		_queuedDecoders.push(decoder);
 	});
 	dispatch_semaphore_signal(_decoderSemaphore);
 
 	return YES;
+
+}
+
+- (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
+	if(!decoder)
+		return NO;
+
+	return [self enqueueDecoder:decoder error:error];
 }
 
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
@@ -606,10 +630,7 @@ namespace {
 {
 	[super reset];
 
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	[self clearQueue];
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {

@@ -68,8 +68,11 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 
 #pragma mark - Playlist Management
 
-- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+
+- (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
 - (void)skipToNext;
 - (void)clearQueue;
