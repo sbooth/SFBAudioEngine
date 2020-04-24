@@ -602,10 +602,21 @@ namespace {
 	});
 }
 
-//- (void)reset
-//{
-//	[super reset];
-//}
+- (void)reset
+{
+	[super reset];
+
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+	});
+
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	if(decoderState) {
+		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
+		dispatch_semaphore_signal(_decoderSemaphore);
+	}
+}
 
 #pragma mark - Playback Control
 
@@ -627,17 +638,7 @@ namespace {
 - (void)stop
 {
 	_flags.fetch_and(~eAudioPlayerNodeFlagIsPlaying);
-
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
-
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
-	if(decoderState) {
-		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
-		dispatch_semaphore_signal(_decoderSemaphore);
-	}
+	[self reset];
 }
 
 #pragma mark - Player State
