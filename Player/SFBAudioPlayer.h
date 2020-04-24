@@ -6,34 +6,19 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "SFBPCMDecoding.h"
+#import "SFBAudioPlayerNode.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Playback position and time information
-struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerPlaybackPosition {
-	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
-	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
-};
-typedef struct SFBAudioPlayerPlaybackPosition SFBAudioPlayerPlaybackPosition;
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition;
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
+typedef SFBAudioPlayerNodeErrorBlock SFBAudioPlayerErrorBlock;
 
-struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerPlaybackTime {
-	NSTimeInterval currentTime NS_SWIFT_NAME(current);
-	NSTimeInterval totalTime NS_SWIFT_NAME(total);
-};
-typedef struct SFBAudioPlayerPlaybackTime SFBAudioPlayerPlaybackTime;
-
-// Audio player event types
-typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
-typedef void (^SFBAudioDecoderErrorBlock)(id <SFBPCMDecoding> decoder, NSError *error);
-typedef void (^SFBAudioPlayerErrorBlock)(NSError *error);
-
+// Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
-//! An audio player
+/// An audio player
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
-
-- (nullable instancetype)init NS_DESIGNATED_INITIALIZER;
 
 // ========================================
 // Playlist Management
@@ -43,14 +28,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
-- (BOOL)skipToNext;
+- (void)skipToNext;
 - (void)clearQueue;
 
 // ========================================
 // Playback Control
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
-- (BOOL)pauseReturningError:(NSError **)error NS_SWIFT_NAME(pause());
-- (BOOL)stopReturningError:(NSError **)error NS_SWIFT_NAME(stop());
+- (void)pause;
+- (void)stop;
 - (BOOL)playPauseReturningError:(NSError **)error NS_SWIFT_NAME(playPause());
 
 // ========================================
@@ -90,8 +75,6 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 // Player Event Callbacks
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock schedulingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock schedulingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderErrorBlock decodingErrorNotificationHandler;
