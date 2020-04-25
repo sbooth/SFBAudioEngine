@@ -49,7 +49,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 		}
 
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
-		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(300))
+		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
 
 		timer.setEventHandler {
 			if self.player.isPlaying {
