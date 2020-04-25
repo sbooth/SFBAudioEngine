@@ -154,7 +154,7 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 
 	AudioObjectID deviceID = kAudioObjectUnknown;
 	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(deviceUID), (__bridge CFStringRef)deviceUID, &specifierSize, &deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(deviceUID), &deviceUID, &specifierSize, &deviceID);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
