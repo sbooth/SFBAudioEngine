@@ -294,7 +294,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 			const float *input = (float *)audioData + channel;
 			float *output = floatChannelData[channel];
-			for(AVAudioFrameCount frame = channel; frame < framesDecoded; ++frame) {
+			for(AVAudioFrameCount frame = 0; frame < framesDecoded; ++frame) {
 				*output++ = *input;
 				input += channelCount;
 			}
