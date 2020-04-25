@@ -310,7 +310,7 @@ static int can_seek_callback(void *id)
 			for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 				const float *input = (float *)_buffer + channel;
 				float *output = floatChannelData[channel] + buffer.frameLength;
-				for(uint32_t sample = channel; sample < samplesRead; ++sample) {
+				for(uint32_t sample = 0; sample < samplesRead; ++sample) {
 					*output++ = *input;
 					input += channelCount;
 				}
@@ -332,7 +332,7 @@ static int can_seek_callback(void *id)
 				for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 					const int32_t *input = _buffer + channel;
 					int32_t *output = int32ChannelData[channel] + buffer.frameLength;
-					for(uint32_t sample = channel; sample < samplesRead; ++sample) {
+					for(uint32_t sample = 0; sample < samplesRead; ++sample) {
 						*output++ = (*input & mask) << shift;
 						input += channelCount;
 					}
@@ -343,7 +343,7 @@ static int can_seek_callback(void *id)
 				for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 					const int32_t *input = _buffer + channel;
 					int32_t *output = int32ChannelData[channel] + buffer.frameLength;
-					for(uint32_t sample = channel; sample < samplesRead; ++sample) {
+					for(uint32_t sample = 0; sample < samplesRead; ++sample) {
 						*output++ = *input;
 						input += channelCount;
 					}
@@ -362,7 +362,7 @@ static int can_seek_callback(void *id)
 			for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 				const int32_t *input = _buffer + channel;
 				float *output = floatChannelData[channel] + buffer.frameLength;
-				for(uint32_t sample = channel; sample < samplesRead; ++sample) {
+				for(uint32_t sample = 0; sample < samplesRead; ++sample) {
 					*output++ = *input / scaleFactor;
 					input += channelCount;
 				}

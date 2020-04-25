@@ -236,7 +236,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 			const float *input = (float *)frame.buffer + channel;
 			float *output = floatChannelData[channel] + _buffer.frameLength;
-			for(uint32_t sample = channel; sample < frame.samples; ++sample) {
+			for(uint32_t sample = 0; sample < frame.samples; ++sample) {
 				*output++ = *input;
 				input += channelCount;
 			}
