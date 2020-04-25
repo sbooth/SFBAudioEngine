@@ -419,7 +419,7 @@ namespace {
 	AVAudioFormat *outputFormat = [output outputFormatForBus:0];
 
 	[_engine connect:mixer to:output format:outputFormat];
-	[_engine connect:_player to:mixer format:format];
+	[_engine connect:_player to:mixer format:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount]];
 
 #if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
