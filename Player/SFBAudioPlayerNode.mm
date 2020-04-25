@@ -595,7 +595,7 @@ namespace {
 	return [self enqueueDecoder:decoder error:error];
 }
 
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -624,6 +624,15 @@ namespace {
 		while(!_queuedDecoders.empty())
 			_queuedDecoders.pop();
 	});
+}
+
+- (BOOL)queueIsEmpty
+{
+	__block bool empty = true;
+	dispatch_sync(_queue, ^{
+		empty = _queuedDecoders.empty();
+	});
+	return empty;
 }
 
 - (void)reset
@@ -675,11 +684,10 @@ namespace {
 	return decoderState ? decoderState->mDecoder.inputSource.url : nil;
 }
 
-- (id)representedObject
+- (id<SFBPCMDecoding>)decoder
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
-//	return decoderState ? decoderState->mDecoder.representedObject : nil;
-	return nil;
+	return decoderState ? decoderState->mDecoder : nil;
 }
 
 #pragma mark - Playback Properties

@@ -10,8 +10,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// ========================================
-// Playback position and time information
+#pragma mark - Playback position and time information
+
 struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
 	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
@@ -24,28 +24,30 @@ struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerNodePlaybackTime {
 };
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
-// ========================================
-// Event types
+#pragma mark - Event types
+
 typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 typedef void (^SFBAudioDecoderErrorBlock)(id <SFBPCMDecoding> decoder, NSError *error);
 typedef void (^SFBAudioPlayerNodeErrorBlock)(NSError *error);
 
 #pragma mark - SFBAudioPlayerNode
 
-/// @brief An `AVAudioSourceNode` supporting gapless playback for PCM formats
+/// @brief An \c AVAudioSourceNode supporting gapless playback for PCM formats
 ///
-/// `SFBAudioPlayerNode` decodes audio into a ring buffer and renders on demand.
-/// `SFBAudioPlayerNode` supports seeking and playback control for all Decoder subclasses supported by the current Output.
+/// The output format of \c SFBAudioPlayerNode is specified at object creation and cannot be changed.
 ///
-/// Decoding occurs in a high priority (non-realtime) thread which reads audio via a `SFBPCMDecoder` instance and stores it in the ring buffer.
+/// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding  (decoders) and supports audio at the same sample rate
+/// and with the same number of channels as the output format.
+/// \c SFBAudioPlayerNode supports seeking when supported by the decoder's input source.
 ///
-/// Rendering occurs in a realtime thread when the render block is called by the owning `AVAudioEngine`.
+/// \c SFBAudioPlayerNode decodes audio in a high priority (non-realtime) thread into a ring buffer and renders on demand.
+/// Rendering occurs in a realtime thread when the render block is called.
 ///
 /// Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background queue is
 /// used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
 /// rendering is complete, which cannot occur until after decoding is complete.
 ///
-/// `SFBAudioPlayerNode` supports block-based callbacks for the following events:
+/// \c SFBAudioPlayerNode supports block-based callbacks for the following events:
 ///  1. Decoding started
 ///  2. Decoding finished
 ///  3. Rendering started
@@ -77,6 +79,8 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 - (void)skipToNext;
 - (void)clearQueue;
 
+@property (nonatomic, readonly) BOOL queueIsEmpty;
+
 #pragma mark - Playback Control
 
 - (void)play;
@@ -86,9 +90,9 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 
 #pragma mark - State
 
-@property (nonatomic, readonly) BOOL isPlaying;
-@property (nonatomic, nullable, readonly) NSURL *url; //!< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, nullable, readonly) id representedObject; //!< Returns the represented object of the rendering decoder or \c nil if none
+@property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if the SFBAudioPlayerNode is playing
+@property (nonatomic, nullable, readonly) NSURL * url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
+@property (nonatomic, readonly, nullable) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
 
 #pragma mark - Playback Properties
 
