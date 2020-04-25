@@ -3,19 +3,28 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <queue>
+
 #import <os/log.h>
 
 #import "SFBAudioPlayer.h"
 
 #import "SFBAudioDecoder.h"
 
+namespace {
+	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+}
+
 @interface SFBAudioPlayer ()
 {
 @private
 	AVAudioEngine 		*_engine;			//!< The underlying AVAudioEngine instance
 	SFBAudioPlayerNode	*_player;			//!< The player
+	dispatch_queue_t	_queue;				//!< The dispatch queue used to access `_queuedDecoders`
+	DecoderQueue 		_queuedDecoders;	//!< AudioDecoders enqueued for playback
 }
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification;
+- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format;
 @end
 
 @implementation SFBAudioPlayer
@@ -23,6 +32,12 @@
 - (instancetype)init
 {
 	if((self = [super init])) {
+		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
+		if(!_queue) {
+			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			return nil;
+		}
+
 		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
 		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2]];
@@ -33,7 +48,7 @@
 	return self;
 }
 
-#pragma mark Playlist Management
+#pragma mark - Playlist Management
 
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error
 {
@@ -46,7 +61,7 @@
 	return [self playDecoder:decoder error:error];
 }
 
-- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
+- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -58,7 +73,8 @@
 	[_engine pause];
 	[_engine reset];
 
-	// Determine if the current player node supports the decoder's format for gapless join
+	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 	if(![_player supportsFormat:decoder.processingFormat])
 		[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
 
@@ -79,7 +95,7 @@
 	return [self enqueueDecoder:decoder error:error];
 }
 
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -87,21 +103,55 @@
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
+	// If the current SFBAudioPlayerNode doesn't support the decoder's format,
+	// add the decoder to our queue
+	if(![_player supportsFormat:decoder.processingFormat]) {
+		dispatch_sync(_queue, ^{
+			_queuedDecoders.push(decoder);
+		});
+		return YES;
+	}
+
 	// Enqueuing will only succeed if the formats match
 	return [_player enqueueDecoder:decoder error:error];
 }
 
 - (void)skipToNext
 {
-	[_player skipToNext];
+	if(!_player.queueIsEmpty)
+		[_player skipToNext];
+	else {
+		__block id <SFBPCMDecoding> decoder = nil;
+		dispatch_sync(_queue, ^{
+			if(!_queuedDecoders.empty()) {
+				decoder = _queuedDecoders.front();
+				_queuedDecoders.pop();
+			}
+		});
+
+		[self playDecoder:decoder error:nil];
+	}
 }
 
 - (void)clearQueue
 {
 	[_player clearQueue];
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+	});
 }
 
-#pragma mark Playback Control
+- (BOOL)queueIsEmpty
+{
+	__block bool empty = true;
+	dispatch_sync(_queue, ^{
+		empty = _queuedDecoders.empty();
+	});
+	return empty && _player.queueIsEmpty;
+}
+
+#pragma mark - Playback Control
 
 - (BOOL)playReturningError:(NSError **)error
 {
@@ -119,6 +169,7 @@
 
 - (void)stop
 {
+	[self clearQueue];
 	[_player stop];
 	[_engine stop];
 }
@@ -133,7 +184,7 @@
 		return [self playReturningError:error];
 }
 
-#pragma mark Player State
+#pragma mark - Player State
 
 - (BOOL)isRunning
 {
@@ -150,12 +201,12 @@
 	return _player.url;
 }
 
-- (id)representedObject
+- (id<SFBPCMDecoding>)decoder
 {
-	return _player.representedObject;
+	return _player.decoder;
 }
 
-#pragma mark Playback Properties
+#pragma mark - Playback Properties
 
 - (AVAudioFramePosition)framePosition
 {
@@ -192,7 +243,7 @@
 	return [_player getPlaybackPosition:playbackPosition andTime:playbackTime];
 }
 
-#pragma mark Seeking
+#pragma mark - Seeking
 
 - (BOOL)seekForward
 {
@@ -234,12 +285,78 @@
 	return _player.supportsSeeking;
 }
 
-#pragma mark AVAudioEngine
+#pragma mark - Player Event Callbacks
+
+// The {decoding,rendering}Started and decoding finished callbacks are passed directly to the underlying SFBAudioPlayerNode
+// The rendering finished callback is modified to provide continuous but non-gapless playback
+
+- (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
+{
+	return _player.decodingStartedNotificationHandler;
+}
+
+- (void)setDecodingStartedNotificationHandler:(SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
+{
+	_player.decodingStartedNotificationHandler = decodingStartedNotificationHandler;
+}
+
+- (SFBAudioDecoderEventBlock)decodingFinishedNotificationHandler
+{
+	return _player.decodingFinishedNotificationHandler;
+}
+
+- (void)setDecodingFinishedNotificationHandler:(SFBAudioDecoderEventBlock)decodingFinishedNotificationHandler
+{
+	_player.decodingFinishedNotificationHandler = decodingFinishedNotificationHandler;
+}
+
+- (SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
+{
+	return _player.renderingStartedNotificationHandler;
+}
+
+- (void)setRenderingStartedNotificationHandler:(SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
+{
+	_player.renderingStartedNotificationHandler = renderingStartedNotificationHandler;
+}
+
+#pragma mark - Output Device
+
+- (SFBAudioOutputDevice *)outputDevice
+{
+	AudioObjectID deviceID;
+	UInt32 dataSize = sizeof(deviceID);
+	auto result = AudioUnitGetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
+	if(result != noErr) {
+		os_log_error(OS_LOG_DEFAULT, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+		return nil;
+	}
+
+	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
+}
+
+- (void)setOutputDevice:(SFBAudioOutputDevice *)outputDevice
+{
+	if(outputDevice == nil)
+		outputDevice = [SFBAudioDevice defaultOutputDevice];
+
+	AudioObjectID deviceID = outputDevice.deviceID;
+	if(deviceID == kAudioDeviceUnknown)
+		return;
+
+	auto result = AudioUnitSetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
+	if(result != noErr)
+		os_log_error(OS_LOG_DEFAULT, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+}
+
+#pragma mark - AVAudioEngine
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
 	block(_engine);
 }
+
+#pragma mark - Internals
 
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification
 {
@@ -264,15 +381,32 @@
 
 	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 
-	[player setRenderingStartedNotificationHandler:^(id<SFBPCMDecoding> obj) {
-		if(self->_renderingStartedNotificationHandler)
-			self->_renderingStartedNotificationHandler(obj);
-	}];
+	player.decodingStartedNotificationHandler = _player.decodingStartedNotificationHandler;
+	player.decodingFinishedNotificationHandler = _player.decodingFinishedNotificationHandler;
 
-	[player setRenderingFinishedNotificationHandler:^(id<SFBPCMDecoding> obj) {
-		if(self->_renderingFinishedNotificationHandler)
-			self->_renderingFinishedNotificationHandler(obj);
-	}];
+	player.renderingStartedNotificationHandler = _player.renderingStartedNotificationHandler;
+
+	__weak typeof(self) weakSelf = self;
+	player.renderingFinishedNotificationHandler = ^(id<SFBPCMDecoding> obj) {
+		__strong typeof(self) strongSelf = weakSelf;
+
+		if(!strongSelf)
+			return;
+
+		if(strongSelf->_renderingFinishedNotificationHandler)
+			strongSelf->_renderingFinishedNotificationHandler(obj);
+
+		__block id <SFBPCMDecoding> decoder = nil;
+		dispatch_sync(strongSelf->_queue, ^{
+			if(!strongSelf->_queuedDecoders.empty()) {
+				decoder = strongSelf->_queuedDecoders.front();
+				strongSelf->_queuedDecoders.pop();
+			}
+		});
+
+		if(decoder)
+			[strongSelf playDecoder:decoder error:nil];
+	};
 
 	_player = player;
 	[_engine attachNode:_player];

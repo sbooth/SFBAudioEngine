@@ -7,46 +7,51 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "SFBAudioPlayerNode.h"
+#import "SFBAudioOutputDevice.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition;
 typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
-typedef SFBAudioPlayerNodeErrorBlock SFBAudioPlayerErrorBlock;
 
 // Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
-/// An audio player
+/// @brief An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
+///
+/// \c SFBAudioPlayer supports gapless playback for audio with the same sample rate and number of channels.
+/// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 
-// ========================================
-// Playlist Management
+#pragma mark - Playlist Management
+
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
-- (BOOL)playDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
-- (BOOL)enqueueDecoder:(id <SFBPCMDecoding> )decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
 - (void)skipToNext;
 - (void)clearQueue;
 
-// ========================================
-// Playback Control
+@property (nonatomic, readonly) BOOL queueIsEmpty;
+
+#pragma mark - Playback Control
+
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 - (void)pause;
 - (void)stop;
 - (BOOL)playPauseReturningError:(NSError **)error NS_SWIFT_NAME(playPause());
 
-// ========================================
-// Player State
-@property (nonatomic, readonly) BOOL isRunning; //!< Returns \c YES if the AVAudioEngine is running
-@property (nonatomic, readonly) BOOL isPlaying; //!< Returns \c YES if the  AVAudioPlayerNode is playing
-@property (nonatomic, nullable, readonly) NSURL *url; //!< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, nullable, readonly) id representedObject; //!< Returns the represented object of the rendering decoder or \c nil if none
+#pragma mark - Player State
 
-// ========================================
-// Playback Properties
+@property (nonatomic, readonly) BOOL isRunning; ///< Returns \c YES if the \c AVAudioEngine is running
+@property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if the \c SFBAudioPlayerNode is playing
+@property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
+@property (nonatomic, readonly, nullable) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
+
+#pragma mark - Playback Properties
+
 @property (nonatomic, readonly) AVAudioFramePosition framePosition;
 @property (nonatomic, readonly) AVAudioFramePosition frameLength;
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_SWIFT_NAME(position);
@@ -57,8 +62,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 
 - (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerPlaybackTime *)playbackTime NS_REFINED_FOR_SWIFT;
 
-// ========================================
-// Seeking
+#pragma mark - Seeking
+
 - (BOOL)seekForward;
 - (BOOL)seekBackward;
 
@@ -71,17 +76,19 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-// ========================================
-// Player Event Callbacks
+#pragma mark - Player Event Callbacks
+
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderErrorBlock decodingErrorNotificationHandler;
-@property (nonatomic, nullable) SFBAudioPlayerErrorBlock errorNotificationHandler;
 
-// ========================================
-// AVAudioEngine Access
+#pragma mark - Output Device
+
+@property (nonatomic, nonnull) SFBAudioOutputDevice *outputDevice;
+
+#pragma mark - AVAudioEngine Access
+
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 
 @end
