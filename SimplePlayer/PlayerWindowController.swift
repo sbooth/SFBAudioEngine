@@ -48,12 +48,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 			}
 		}
 
-		player.errorNotificationHandler = { error in
-			DispatchQueue.main.async {
-				NSApp.presentError(error)
-			}
-		}
-
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(300))
 
