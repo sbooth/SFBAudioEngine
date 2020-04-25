@@ -344,6 +344,8 @@ namespace {
 	if(deviceID == kAudioDeviceUnknown)
 		return;
 
+	os_log_debug(OS_LOG_DEFAULT, "Setting output device to %{public}@", outputDevice);
+
 	auto result = AudioUnitSetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
 	if(result != noErr)
 		os_log_error(OS_LOG_DEFAULT, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
