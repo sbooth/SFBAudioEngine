@@ -40,11 +40,6 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
-#pragma mark - Represented Object
-
-/*! @brief An arbitrary object to associate with the decoder */
-@property (nonatomic, nullable) id representedObject;
-
 @end
 
 #pragma mark - Subclass Registration
