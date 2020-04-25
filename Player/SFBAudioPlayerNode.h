@@ -27,8 +27,6 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 #pragma mark - Event types
 
 typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
-typedef void (^SFBAudioDecoderErrorBlock)(id <SFBPCMDecoding> decoder, NSError *error);
-typedef void (^SFBAudioPlayerNodeErrorBlock)(NSError *error);
 
 #pragma mark - SFBAudioPlayerNode
 
@@ -52,8 +50,6 @@ typedef void (^SFBAudioPlayerNodeErrorBlock)(NSError *error);
 ///  2. Decoding finished
 ///  3. Rendering started
 ///  4. Rendering finished
-///  6. Decoding errors
-///  7. Other errors
 ///
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
@@ -118,8 +114,6 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderErrorBlock decodingErrorNotificationHandler;
-@property (nonatomic, nullable) SFBAudioPlayerNodeErrorBlock errorNotificationHandler;
 
 @end
 
