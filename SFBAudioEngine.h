@@ -14,6 +14,10 @@
 #import <SFBAudioEngine/SFBDoPDecoder.h>
 #import <SFBAudioEngine/SFBLoopableRegionDecoder.h>
 
+#import <SFBAudioEngine/SFBAudioDevice.h>
+#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
+#import <SFBAudioEngine/SFBAudioOutputDevice.h>
+
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 #import <SFBAudioEngine/SFBAudioPlayer.h>
 
