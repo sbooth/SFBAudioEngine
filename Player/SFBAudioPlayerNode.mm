@@ -17,6 +17,7 @@
 
 #import "AudioRingBuffer.h"
 #import "SFBAudioDecoder.h"
+#import "RingBuffer.h"
 
 @interface SFBAudioPlayerNode ()
 - (void *)decoderThreadEntry;
@@ -39,6 +40,11 @@ namespace {
 	enum eAudioPlayerNodeNotifierFlags : unsigned int {
 		eAudioPlayerNodeNotifierFlagRenderingStarted	= 1u << 1,
 		eAudioPlayerNodeNotifierFlagRenderingFinished	= 1u << 2
+	};
+
+	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
+		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
+		eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished	= 2
 	};
 
 #pragma mark - Thread entry points
@@ -84,7 +90,7 @@ namespace {
 			eMarkedForRemovalFlag 	= 1u << 5
 		};
 
-		const int64_t			mSequenceNumber;	//!< Monotonically increasing instance counter
+		const uint64_t			mSequenceNumber;	//!< Monotonically increasing instance counter
 
 		std::atomic_uint 		mFlags; 			//!< Decoder state data flags
 		std::atomic_int64_t 	mFramesDecoded; 	//!< The number of frames decoded in the converter's *input* sample rate
@@ -93,18 +99,16 @@ namespace {
 		std::atomic_int64_t 	mFrameLength;		//!< The total number of audio frames, in the decoder's sample rate
 		std::atomic_int64_t 	mFrameToSeek;		//!< The desired seek offset, in the converter's *output* sample rate
 
-		std::atomic_uint64_t 	mStartHostTime;		//!< The timestamp when the first frame should be rendered
-
 //	private:
 		id <SFBPCMDecoding> 	mDecoder; 			//!< Decodes audio from the source representation to PCM
 		AVAudioConverter 		*mConverter;		//!< Converts audio from the decoder's processing format to PCM
 	private:
 		AVAudioPCMBuffer 		*mDecodeBuffer;		//!< Buffer used internally for buffering during conversion
-		static int64_t			sSequenceNumber; 	//!< Next sequence number to use
+		static uint64_t			sSequenceNumber; 	//!< Next sequence number to use
 
 	public:
 		DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
-			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(-1), mStartHostTime(0), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
+			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
 		{
 			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCapacity);
@@ -223,7 +227,7 @@ namespace {
 
 	};
 
-	int64_t DecoderStateData::sSequenceNumber = 0;
+	uint64_t DecoderStateData::sSequenceNumber = 0;
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 	/// Returns the element in `decoders` with the smallest sequence number that has not finished rendering
@@ -249,32 +253,9 @@ namespace {
 		return result;
 	}
 
-	/// Returns the element in `decoders` with the smallest sequence number has finished rendering
-	template<size_t N>
-	DecoderStateData::shared_ptr GetInactiveDecoderStateWithSmallestSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray)
-	{
-		DecoderStateData::shared_ptr result;
-		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
-			auto decoderState = std::atomic_load(&decoderStateArray[i]);
-			if(!decoderState)
-				continue;
-
-			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || !(flags & DecoderStateData::eRenderingFinishedFlag))
-				continue;
-
-			if(!result)
-				result = decoderState;
-			else if(decoderState->mSequenceNumber < result->mSequenceNumber)
-				result = decoderState;
-		}
-
-		return result;
-	}
-
 	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not finished rendering
 	template<size_t N>
-	DecoderStateData::shared_ptr GetActiveDecoderStateFollowingSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const int64_t& sequenceNumber)
+	DecoderStateData::shared_ptr GetActiveDecoderStateFollowingSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
 	{
 		DecoderStateData::shared_ptr result;
 		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
@@ -295,6 +276,25 @@ namespace {
 		return result;
 	}
 
+	/// Returns the element in `decoders` with the sequence number equal to `sequenceNumber` that has not been marked for removal
+	template<size_t N>
+	DecoderStateData::shared_ptr GetDecoderStateWithSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
+	{
+		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
+			auto decoderState = std::atomic_load(&decoderStateArray[i]);
+			if(!decoderState)
+				continue;
+
+			if(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag)
+				continue;
+
+			if(decoderState->mSequenceNumber == sequenceNumber)
+				return decoderState;
+		}
+
+		return nullptr;
+	}
+
 #if DEBUG
 	inline uint64_t ConvertHostTimeToNanos(uint64_t t)
 	{
@@ -311,20 +311,22 @@ namespace {
 @interface SFBAudioPlayerNode ()
 {
 @private
-	// Decoding
-	std::atomic_uint 		_flags;
-	std::thread 			_decoderThread;
-	dispatch_semaphore_t	_decoderSemaphore;
 	dispatch_queue_t		_queue;				//!< The dispatch queue used to access `_queuedDecoders`
 	DecoderQueue 			_queuedDecoders;	//!< AudioDecoders enqueued for playback
-	SFB::Audio::RingBuffer	_ringBuffer;
 
-	// Notification
+	// Decoding thread variables
+	std::atomic_uint 		_flags;
+	std::thread 			_decodingThread;
+	dispatch_semaphore_t	_decodingSemaphore;
+
+	// Shared
+	SFB::Audio::RingBuffer	_audioRingBuffer;
+	SFB::RingBuffer			_renderEventsRingBuffer;
+
+	// Notification thread variables
 	std::thread 			_notifierThread;
-	dispatch_queue_t		_notificationQueue;
 	dispatch_semaphore_t	_notifierSemaphore;
-	std::atomic_uint 		_notifierFlags;
-	std::atomic_uint64_t	_notifierEventTimestamp;
+	dispatch_queue_t		_notificationQueue;
 
 	// Collector
 	dispatch_source_t		_collector;
@@ -350,7 +352,7 @@ namespace {
 		if(self->_flags.load() & eAudioPlayerNodeFlagMuteRequested) {
 			self->_flags.fetch_or(eAudioPlayerNodeFlagOutputIsMuted);
 			self->_flags.fetch_and(~eAudioPlayerNodeFlagMuteRequested);
-			dispatch_semaphore_signal(self->_decoderSemaphore);
+			dispatch_semaphore_signal(self->_decodingSemaphore);
 		}
 
 		// ========================================
@@ -358,14 +360,14 @@ namespace {
 
 		// ========================================
 		// 1. Determine how many audio frames are available to read in the ring buffer
-		AVAudioFrameCount framesAvailableToRead = (AVAudioFrameCount)self->_ringBuffer.GetFramesAvailableToRead();
+		AVAudioFrameCount framesAvailableToRead = (AVAudioFrameCount)self->_audioRingBuffer.GetFramesAvailableToRead();
 
 		// ========================================
 		// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
 		if(!(self->_flags.load() & eAudioPlayerNodeFlagIsPlaying) || self->_flags.load() & eAudioPlayerNodeFlagOutputIsMuted || framesAvailableToRead == 0) {
-			size_t byteCountToZero = self->_ringBuffer.GetFormat().FrameCountToByteCount(frameCount);
+			size_t byteCountToZero = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(frameCount);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset(outputData->mBuffers[bufferIndex].mData, self->_ringBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
+				memset(outputData->mBuffers[bufferIndex].mData, self->_audioRingBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
 				outputData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 			}
 
@@ -376,7 +378,7 @@ namespace {
 		// ========================================
 		// 3. Read as many frames as available from the ring buffer
 		AVAudioFrameCount framesToRead = std::min(framesAvailableToRead, frameCount);
-		AVAudioFrameCount framesRead = (AVAudioFrameCount)self->_ringBuffer.Read(outputData, framesToRead);
+		AVAudioFrameCount framesRead = (AVAudioFrameCount)self->_audioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
 			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
@@ -386,18 +388,18 @@ namespace {
 			os_log_debug(OS_LOG_DEFAULT, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
 
 			auto framesOfSilence = frameCount - framesRead;
-			auto byteCountToSkip = self->_ringBuffer.GetFormat().FrameCountToByteCount(framesRead);
-			auto byteCountToZero = self->_ringBuffer.GetFormat().FrameCountToByteCount(framesOfSilence);
+			auto byteCountToSkip = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(framesRead);
+			auto byteCountToZero = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(framesOfSilence);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset((int8_t *)outputData->mBuffers[bufferIndex].mData + byteCountToSkip, self->_ringBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
+				memset((int8_t *)outputData->mBuffers[bufferIndex].mData + byteCountToSkip, self->_audioRingBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
 			}
 		}
 
 		// ========================================
 		// 5. If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		AVAudioFrameCount framesAvailableToWrite = (AVAudioFrameCount)self->_ringBuffer.GetFramesAvailableToWrite();
+		AVAudioFrameCount framesAvailableToWrite = (AVAudioFrameCount)self->_audioRingBuffer.GetFramesAvailableToWrite();
 		if(framesAvailableToWrite >= kRingBufferChunkSize)
-			dispatch_semaphore_signal(self->_decoderSemaphore);
+			dispatch_semaphore_signal(self->_decodingSemaphore);
 
 		// ========================================
 		// Post-rendering actions
@@ -418,31 +420,35 @@ namespace {
 
 		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
 		while(decoderState) {
-			auto sequenceNumber = decoderState->mSequenceNumber;
-
 			AVAudioFrameCount decoderFramesRemaining = (AVAudioFrameCount)(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
 				// Schedule the rendering started notification
-				self->_notifierEventTimestamp.store(timestamp->mHostTime);
-				self->_notifierFlags.fetch_or(eAudioPlayerNodeNotifierFlagRenderingStarted);
+				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
+				uint8_t bytesToWrite [4 + 8 + 8];
+				memcpy(bytesToWrite, &cmd, 4);
+				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
+				memcpy(bytesToWrite + 4 + 8, &timestamp->mHostTime, 8);
+				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
-				decoderState->mStartHostTime.store(timestamp->mHostTime);
 			}
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
 
 			if((decoderState->mFlags.load() & DecoderStateData::eDecodingFinishedFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load())*/) {
 				// Schedule the rendering finished notification
-				self->_notifierEventTimestamp.store(timestamp->mHostTime);
-				self->_notifierFlags.fetch_or(eAudioPlayerNodeNotifierFlagRenderingFinished);
+				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished;
+				uint8_t bytesToWrite [4 + 8 + 8];
+				memcpy(bytesToWrite, &cmd, 4);
+				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
+				memcpy(bytesToWrite + 4 + 8, &timestamp->mHostTime, 8);
+				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingFinishedFlag);
-//				decoderState = nullptr;
 			}
 
 			framesRemainingToDistribute -= framesFromThisDecoder;
@@ -450,7 +456,7 @@ namespace {
 			if(!framesRemainingToDistribute)
 				break;
 
-			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, sequenceNumber);
+			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, decoderState->mSequenceNumber);
 		}
 
 		return noErr;
@@ -478,8 +484,8 @@ namespace {
 			return nil;
 		}
 
-		_decoderSemaphore = dispatch_semaphore_create(0);
-		if(!_decoderSemaphore) {
+		_decodingSemaphore = dispatch_semaphore_create(0);
+		if(!_decodingSemaphore) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
 			return nil;
 		}
@@ -514,7 +520,7 @@ namespace {
 
 		// Launch the threads
 		try {
-			_decoderThread = std::thread(DecoderThreadEntry, (__bridge void *)self);
+			_decodingThread = std::thread(DecoderThreadEntry, (__bridge void *)self);
 			_notifierThread = std::thread(NotifierThreadEntry, (__bridge void *)self);
 		}
 
@@ -524,7 +530,9 @@ namespace {
 		}
 
 		_renderingFormat = format;
-		_ringBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity);
+		_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity);
+
+		_renderEventsRingBuffer.Allocate(256);
 	}
 
 	return self;
@@ -533,9 +541,9 @@ namespace {
 - (void)dealloc
 {
 	_flags.fetch_or(eAudioPlayerNodeFlagStopDecoderThread | eAudioPlayerNodeFlagStopNotifierThread);
-	dispatch_semaphore_signal(_decoderSemaphore);
+	dispatch_semaphore_signal(_decodingSemaphore);
 	dispatch_semaphore_signal(_notifierSemaphore);
-	_decoderThread.join();
+	_decodingThread.join();
 	_notifierThread.join();
 	while(!_queuedDecoders.empty())
 		_queuedDecoders.pop();
@@ -578,7 +586,7 @@ namespace {
 	dispatch_sync(_queue, ^{
 		_queuedDecoders.push(decoder);
 	});
-	dispatch_semaphore_signal(_decoderSemaphore);
+	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
 
@@ -614,7 +622,7 @@ namespace {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
 		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
-		dispatch_semaphore_signal(_decoderSemaphore);
+		dispatch_semaphore_signal(_decodingSemaphore);
 	}
 }
 
@@ -644,7 +652,7 @@ namespace {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
 		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
-		dispatch_semaphore_signal(_decoderSemaphore);
+		dispatch_semaphore_signal(_decodingSemaphore);
 	}
 }
 
@@ -817,7 +825,7 @@ namespace {
 		return NO;
 
 	decoderState->RequestSeekToFrame(frame);
-	dispatch_semaphore_signal(_decoderSemaphore);
+	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
 
@@ -880,7 +888,7 @@ namespace {
 
 						// The rendering thread will clear eAudioPlayerFlagRequestMute when the current render cycle completes
 						while(_flags.load() & eAudioPlayerNodeFlagMuteRequested)
-							dispatch_semaphore_wait(_decoderSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
+							dispatch_semaphore_wait(_decodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 100));
 					}
 					else
 						_flags.fetch_or(eAudioPlayerNodeFlagOutputIsMuted);
@@ -890,14 +898,14 @@ namespace {
 						decoderState->PerformSeek();
 
 					// Reset() is not thread safe but the rendering thread is outputting silence
-					_ringBuffer.Reset();
+					_audioRingBuffer.Reset();
 
 					// Clear the mute flag
 					_flags.fetch_and(~eAudioPlayerNodeFlagOutputIsMuted);
 				}
 
 				// Determine how many frames are available in the ring buffer
-				auto framesAvailableToWrite = _ringBuffer.GetFramesAvailableToWrite();
+				auto framesAvailableToWrite = _audioRingBuffer.GetFramesAvailableToWrite();
 
 				// Force writes to the ring buffer to be at least kRingBufferChunkSize
 				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eStopDecodingFlag)) {
@@ -923,7 +931,7 @@ namespace {
 						os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
 
 					// Write the decoded audio to the ring buffer for rendering
-					auto framesWritten = _ringBuffer.Write(buffer.audioBufferList, buffer.frameLength);
+					auto framesWritten = _audioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 					if(framesWritten != buffer.frameLength)
 						os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Write failed");
 
@@ -953,12 +961,12 @@ namespace {
 				}
 				// Wait for additional space in the ring buffer
 				else
-					dispatch_semaphore_wait(_decoderSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
+					dispatch_semaphore_wait(_decodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC / 10));
 			}
 		}
 		// Wait for another decoder to be enqueued
 		else
-			dispatch_semaphore_wait(_decoderSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
+			dispatch_semaphore_wait(_decodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 	}
 
 	os_log_debug(OS_LOG_DEFAULT, "Decoder thread terminating");
@@ -972,49 +980,70 @@ namespace {
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopNotifierThread)) {
 
-		auto flags = _notifierFlags.load();
-		if(flags & eAudioPlayerNodeNotifierFlagRenderingStarted) {
-			_notifierFlags.fetch_and(~eAudioPlayerNodeNotifierFlagRenderingStarted);
+		if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 4) {
+			uint32_t cmd;
+			/*auto bytesRead =*/ self->_renderEventsRingBuffer.Read(&cmd, 4);
 
-			if(!self->_renderingStartedNotificationHandler)
-				break;
+			switch(cmd) {
+				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
+					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+						uint64_t sequenceNumber, hostTime;
+						self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
+						self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-			auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
+						if(!self->_renderingStartedNotificationHandler)
+							break;
 
-//			dispatch_time_t notificationTime = dispatch_time(_notifierEventTimestamp.load(), (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
-			dispatch_time_t notificationTime = _notifierEventTimestamp.load();
-			dispatch_after(notificationTime, _notificationQueue, ^{
+						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+
+//						dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+						dispatch_time_t notificationTime = hostTime;
+						dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
-				uint64_t absTime = mach_absolute_time();
-				double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-				os_log_debug(OS_LOG_DEFAULT, "Rendering started notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+							uint64_t absTime = mach_absolute_time();
+							double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+							os_log_debug(OS_LOG_DEFAULT, "Rendering started notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-				self->_renderingStartedNotificationHandler(decoderState->mDecoder);
-			});
-		}
+							self->_renderingStartedNotificationHandler(decoderState->mDecoder);
+						});
 
-		if(flags & eAudioPlayerNodeNotifierFlagRenderingFinished) {
-			_notifierFlags.fetch_and(~eAudioPlayerNodeNotifierFlagRenderingFinished);
+					}
+					else
+						os_log_error(OS_LOG_DEFAULT, "Ring buffer command data missing");
+					break;
 
-			// The last action performed with a decoder that has completed rendering is this notification
-			auto decoderState = GetInactiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
-			decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished:
+					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+						uint64_t sequenceNumber, hostTime;
+						self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
+						self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-			if(!self->_renderingFinishedNotificationHandler)
-				break;
+						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+						// The last action performed with a decoder that has completed rendering is this notification
+						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
 
-//			dispatch_time_t notificationTime = dispatch_time(_notifierEventTimestamp.load(), (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
-			dispatch_time_t notificationTime = _notifierEventTimestamp.load();
-			dispatch_after(notificationTime, _notificationQueue, ^{
+						if(!self->_renderingFinishedNotificationHandler)
+							break;
+
+//						dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+						dispatch_time_t notificationTime = hostTime;
+						dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
-				uint64_t absTime = mach_absolute_time();
-				double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-				os_log_debug(OS_LOG_DEFAULT, "Rendering finished notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+							uint64_t absTime = mach_absolute_time();
+							double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+							os_log_debug(OS_LOG_DEFAULT, "Rendering finished notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-				self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
-			});
+							self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
+						});
+
+					}
+					else
+						os_log_error(OS_LOG_DEFAULT, "Ring buffer command data missing");
+					break;
+
+			}
 		}
 
 		dispatch_semaphore_wait(_notifierSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
