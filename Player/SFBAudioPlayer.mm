@@ -125,6 +125,12 @@ namespace {
 	return [_player enqueueDecoder:decoder error:error];
 }
 
+- (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
+{
+	NSParameterAssert(format != nil);
+	return [_player supportsFormat:format];
+}
+
 - (void)skipToNext
 {
 	if(!_player.queueIsEmpty)

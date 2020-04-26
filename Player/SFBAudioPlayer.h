@@ -31,6 +31,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 
+- (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
+
 - (void)skipToNext;
 - (void)clearQueue;
 
