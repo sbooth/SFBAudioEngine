@@ -18,10 +18,11 @@ namespace {
 @interface SFBAudioPlayer ()
 {
 @private
-	AVAudioEngine 		*_engine;			//!< The underlying AVAudioEngine instance
-	SFBAudioPlayerNode	*_player;			//!< The player
-	dispatch_queue_t	_queue;				//!< The dispatch queue used to access `_queuedDecoders`
-	DecoderQueue 		_queuedDecoders;	//!< AudioDecoders enqueued for playback
+	AVAudioEngine 		*_engine;			///< The underlying \c AVAudioEngine instance
+	dispatch_queue_t	_engineQueue;		///< The dispatch queue used to access \c _engine
+	SFBAudioPlayerNode	*_player;			///< The player driving the audio processing graph
+	dispatch_queue_t	_queue;				///< The dispatch queue used to access \c _queuedDecoders
+	DecoderQueue 		_queuedDecoders;	///< Decoders enqueued for non-gapless playback
 }
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification;
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format;
@@ -32,7 +33,13 @@ namespace {
 - (instancetype)init
 {
 	if((self = [super init])) {
-		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
+		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineIsolationQueue", DISPATCH_QUEUE_SERIAL);
+		if(!_engineQueue) {
+			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			return nil;
+		}
+
+		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_queue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
@@ -70,13 +77,15 @@ namespace {
 		return NO;
 
 	[_player stop];
-	[_engine pause];
-	[_engine reset];
+	dispatch_sync(_engineQueue, ^{
+		[_engine pause];
+		[_engine reset];
 
-	// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
-	// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-	if(![_player supportsFormat:decoder.processingFormat])
-		[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
+		if(![_player supportsFormat:decoder.processingFormat])
+			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+	});
 
 	if(![_player playDecoder:decoder error:error])
 		return NO;
@@ -155,8 +164,17 @@ namespace {
 
 - (BOOL)playReturningError:(NSError **)error
 {
-	if(![_engine startAndReturnError:error])
+	__block BOOL startedSuccessfully;
+	__block NSError *err;
+	dispatch_sync(_engineQueue, ^{
+		startedSuccessfully = [_engine startAndReturnError:&err];
+	});
+
+	if(!startedSuccessfully) {
+		if(error)
+			*error = err;
 		return NO;
+	}
 
 	[_player play];
 	return YES;
@@ -171,7 +189,9 @@ namespace {
 {
 	[self clearQueue];
 	[_player stop];
-	[_engine stop];
+	dispatch_sync(_engineQueue, ^{
+		[_engine stop];
+	});
 }
 
 - (BOOL)playPauseReturningError:(NSError **)error
@@ -188,6 +208,8 @@ namespace {
 
 - (BOOL)isRunning
 {
+	// I assume this function is thread-safe, but it isn't documented either way
+	// This assumption is based on the fact that AUGraphIsRunning() is thread-safe
 	return _engine.isRunning;
 }
 
@@ -287,7 +309,7 @@ namespace {
 
 #pragma mark - Player Event Callbacks
 
-// The {decoding,rendering}Started and decoding finished callbacks are passed directly to the underlying SFBAudioPlayerNode
+// Most callbacks are passed directly to the underlying SFBAudioPlayerNode
 // The rendering finished callback is modified to provide continuous but non-gapless playback
 
 - (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
@@ -310,6 +332,16 @@ namespace {
 	_player.decodingFinishedNotificationHandler = decodingFinishedNotificationHandler;
 }
 
+- (SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
+{
+	return _player.decodingCanceledNotificationHandler;
+}
+
+- (void)setDecodingCanceledNotificationHandler:(SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
+{
+	_player.decodingCanceledNotificationHandler = decodingCanceledNotificationHandler;
+}
+
 - (SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
 {
 	return _player.renderingStartedNotificationHandler;
@@ -324,13 +356,16 @@ namespace {
 
 - (SFBAudioOutputDevice *)outputDevice
 {
-	AudioObjectID deviceID;
-	UInt32 dataSize = sizeof(deviceID);
-	auto result = AudioUnitGetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
-	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+	__block AudioObjectID deviceID = kAudioDeviceUnknown;
+	dispatch_sync(_engineQueue, ^{
+		UInt32 dataSize = sizeof(deviceID);
+		auto result = AudioUnitGetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
+		if(result != noErr)
+			os_log_error(OS_LOG_DEFAULT, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+	});
+
+	if(deviceID == kAudioDeviceUnknown)
 		return nil;
-	}
 
 	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
 }
@@ -346,16 +381,20 @@ namespace {
 
 	os_log_debug(OS_LOG_DEFAULT, "Setting output device to %{public}@", outputDevice);
 
-	auto result = AudioUnitSetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
-	if(result != noErr)
-		os_log_error(OS_LOG_DEFAULT, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+	dispatch_sync(_engineQueue, ^{
+		auto result = AudioUnitSetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
+		if(result != noErr)
+			os_log_error(OS_LOG_DEFAULT, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+	});
 }
 
 #pragma mark - AVAudioEngine
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
-	block(_engine);
+	dispatch_sync(_engineQueue, ^{
+		block(_engine);
+	});
 }
 
 #pragma mark - Internals
@@ -370,7 +409,10 @@ namespace {
 		return;
 
 	[_player stop];
-	[self setupEngineForGaplessPlaybackOfFormat:_player.renderingFormat];
+	// AVAudioEngine posts this notification from a dedicated queue
+	dispatch_sync(_engineQueue, ^{
+		[self setupEngineForGaplessPlaybackOfFormat:_player.renderingFormat];
+	});
 }
 
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format
@@ -385,6 +427,7 @@ namespace {
 
 	player.decodingStartedNotificationHandler = _player.decodingStartedNotificationHandler;
 	player.decodingFinishedNotificationHandler = _player.decodingFinishedNotificationHandler;
+	player.decodingCanceledNotificationHandler = _player.decodingCanceledNotificationHandler;
 
 	player.renderingStartedNotificationHandler = _player.renderingStartedNotificationHandler;
 
@@ -392,8 +435,10 @@ namespace {
 	player.renderingFinishedNotificationHandler = ^(id<SFBPCMDecoding> obj) {
 		__strong typeof(self) strongSelf = weakSelf;
 
-		if(!strongSelf)
+		if(!strongSelf) {
+			os_log_error(OS_LOG_DEFAULT, "Weak reference to self in renderingFinishedNotificationHandler was zeroed");
 			return;
+		}
 
 		if(strongSelf->_renderingFinishedNotificationHandler)
 			strongSelf->_renderingFinishedNotificationHandler(obj);
@@ -448,25 +493,25 @@ namespace {
 
 			NSError *error;
 			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error]) {
-				os_log_error(OS_LOG_DEFAULT, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@",error);
+				os_log_error(OS_LOG_DEFAULT, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
 			}
 		}
 	}
 #endif
 
 #if DEBUG
-	os_log_debug(OS_LOG_DEFAULT, "SFBAudioPlayerNode rendering format: %{public}@", _player.renderingFormat);
+	os_log_debug(OS_LOG_DEFAULT, "↑ rendering: %{public}@", _player.renderingFormat);
 	if(![[_player outputFormatForBus:0] isEqual:_player.renderingFormat])
 		os_log_debug(OS_LOG_DEFAULT, "← player out: %{public}@", [_player outputFormatForBus:0]);
 
 	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_player outputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "→ mixer in:   %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
+		os_log_debug(OS_LOG_DEFAULT, "→ mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
 
 	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "← mixer out:  %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
+		os_log_debug(OS_LOG_DEFAULT, "← mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
 
 	if(![[_engine.outputNode inputFormatForBus:0] isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "← output in:  %{public}@", [_engine.outputNode inputFormatForBus:0]);
+		os_log_debug(OS_LOG_DEFAULT, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
 
 	if(![[_engine.outputNode outputFormatForBus:0] isEqual:[_engine.outputNode inputFormatForBus:0]])
 		os_log_debug(OS_LOG_DEFAULT, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
