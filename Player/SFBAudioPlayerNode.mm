@@ -472,7 +472,7 @@ namespace {
 			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
 		}
 #endif
-		_queue = dispatch_queue_create("org.sbooth.AudioEngine.PlayerNode.DecoderQueueAccessQueue", DISPATCH_QUEUE_SERIAL);
+		_queue = dispatch_queue_create("org.sbooth.AudioEngine.PlayerNode.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_queue) {
 			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
 			return nil;
