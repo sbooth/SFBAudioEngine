@@ -48,8 +48,9 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 /// \c SFBAudioPlayerNode supports block-based callbacks for the following events:
 ///  1. Decoding started
 ///  2. Decoding finished
-///  3. Rendering started
-///  4. Rendering finished
+///  3. Decoding canceled
+///  4. Rendering started
+///  5. Rendering finished
 ///
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
@@ -112,6 +113,7 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
 
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
+@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
 

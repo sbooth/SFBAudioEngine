@@ -82,7 +82,7 @@ namespace {
 		static const AVAudioFrameCount kDefaultBufferSize = 1024;
 
 		enum eDecoderStateDataFlags : unsigned int {
-			eStopDecodingFlag		= 1u << 0,
+			eCancelDecodingFlag		= 1u << 0,
 			eDecodingStartedFlag	= 1u << 1,
 			eDecodingFinishedFlag	= 1u << 2,
 			eRenderingStartedFlag	= 1u << 3,
@@ -581,7 +581,7 @@ namespace {
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState)
-		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
+		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 
 	dispatch_sync(_queue, ^{
 		_queuedDecoders.push(decoder);
@@ -621,7 +621,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
-		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
+		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
 	}
 }
@@ -651,7 +651,7 @@ namespace {
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
-		decoderState->mFlags.fetch_or(DecoderStateData::eStopDecodingFlag);
+		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
 	}
 }
@@ -908,7 +908,7 @@ namespace {
 				auto framesAvailableToWrite = _audioRingBuffer.GetFramesAvailableToWrite();
 
 				// Force writes to the ring buffer to be at least kRingBufferChunkSize
-				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eStopDecodingFlag)) {
+				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag)) {
 					// If a seek is pending reset the ring buffer first to prevent artifacts
 					if(decoderState->SeekRequested()) {
 						_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
@@ -951,8 +951,14 @@ namespace {
 						break;
 					}
 				}
-				else if(decoderState->mFlags.load() & DecoderStateData::eStopDecodingFlag) {
-					os_log_debug(OS_LOG_DEFAULT, "Stopping decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+				else if(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag) {
+					os_log_debug(OS_LOG_DEFAULT, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+					// Perform the decoding cancelled notification
+					if(_decodingCanceledNotificationHandler)
+						dispatch_sync(_notificationQueue, ^{
+							_decodingCanceledNotificationHandler(decoderState->mDecoder);
+						});
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
