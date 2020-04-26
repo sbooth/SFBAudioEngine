@@ -48,6 +48,14 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 			}
 		}
 
+		player.decodingCanceledNotificationHandler = { decoder in
+			if !self.player.isRunning {
+				DispatchQueue.main.async {
+					self.updateWindow()
+				}
+			}
+		}
+
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
 
