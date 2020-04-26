@@ -95,7 +95,18 @@
 
 - (NSArray *)dataSources
 {
-	return [super dataSourcesForScope:kAudioDevicePropertyScopeOutput];
+	return [super dataSourcesForScope:kAudioObjectPropertyScopeOutput];
+}
+
+- (NSArray *)activeDataSources
+{
+	return [super activeDataSourcesForScope:kAudioObjectPropertyScopeOutput];
+}
+
+- (void)setActiveDataSources:(NSArray *)activeDataSources
+{
+	NSParameterAssert(activeDataSources != nil);
+	[super setActiveDataSources:activeDataSources forScope:kAudioObjectPropertyScopeOutput];
 }
 
 @end

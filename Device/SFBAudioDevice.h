@@ -35,6 +35,12 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 
 - (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesForScope:(AudioObjectPropertyScope)scope;
 
+- (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesForScope:(AudioObjectPropertyScope)scope;
+- (void)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources forScope:(AudioObjectPropertyScope)scope;
+
+@property (nonatomic) double sampleRate;
+@property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates;
+
 @end
 
 NS_ASSUME_NONNULL_END

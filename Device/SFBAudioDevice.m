@@ -49,12 +49,12 @@ static BOOL DeviceHasBuffersForScope(AudioObjectID deviceID, AudioObjectProperty
 
 static BOOL DeviceSupportsInput(AudioObjectID deviceID)
 {
-	return DeviceHasBuffersForScope(deviceID, kAudioDevicePropertyScopeInput);
+	return DeviceHasBuffersForScope(deviceID, kAudioObjectPropertyScopeInput);
 }
 
 static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 {
-	return DeviceHasBuffersForScope(deviceID, kAudioDevicePropertyScopeOutput);
+	return DeviceHasBuffersForScope(deviceID, kAudioObjectPropertyScopeOutput);
 }
 
 @interface SFBAudioDevice ()
@@ -284,6 +284,149 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 	free(dataSourceIDs);
 
 	return dataSources;
+}
+
+- (NSArray *)activeDataSourcesForScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDataSource,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(_deviceID, &propertyAddress, 0, NULL, &dataSize);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	UInt32 *dataSourceIDs = (UInt32 *)malloc(dataSize);
+	if(!dataSourceIDs) {
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
+		return nil;
+	}
+
+	result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, dataSourceIDs);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		free(dataSourceIDs);
+		return nil;
+	}
+
+	NSMutableArray *dataSources = [NSMutableArray array];
+
+	// Iterate through all the data sources
+	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(UInt32)); ++i) {
+		SFBAudioDeviceDataSource *dataSource = [[SFBAudioDeviceDataSource alloc] initWithAudioDevice:self scope:scope dataSourceID:dataSourceIDs[i]];
+		if(dataSource)
+			[dataSources addObject:dataSource];
+	}
+
+	free(dataSourceIDs);
+
+	return dataSources;
+}
+
+- (void)setActiveDataSources:(NSArray *)activeDataSources forScope:(AudioObjectPropertyScope)scope
+{
+	NSParameterAssert(activeDataSources != nil);
+
+	if(activeDataSources.count == 0)
+		return;
+
+	UInt32 dataSourceIDs [activeDataSources.count];
+	for(NSUInteger i = 0; i < activeDataSources.count; ++i) {
+		SFBAudioDeviceDataSource *dataSource = [activeDataSources objectAtIndex:i];
+		if(dataSource)
+			dataSourceIDs[i] = dataSource.dataSourceID;
+	}
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyDataSource,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, (UInt32)sizeof(dataSourceIDs), dataSourceIDs);
+	if(kAudioHardwareNoError != result)
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+}
+
+- (double)nominalSampleRate
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyNominalSampleRate,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	Float64 sampleRate;
+	UInt32 dataSize = sizeof(sampleRate);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &sampleRate);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return -1;
+	}
+
+	return sampleRate;
+}
+
+- (void)setNominalSampleRate:(double)nominalSampleRate
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyNominalSampleRate,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	Float64 sampleRate = nominalSampleRate;
+	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(sampleRate), &sampleRate);
+	if(kAudioHardwareNoError != result)
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+}
+
+- (NSArray *)availableSampleRates
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyAvailableNominalSampleRates,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(_deviceID, &propertyAddress, 0, NULL, &dataSize);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	AudioValueRange *availableNominalSampleRates = (AudioValueRange *)malloc(dataSize);
+	if(!availableNominalSampleRates) {
+		os_log_error(OS_LOG_DEFAULT, "Unable to allocate memory");
+		return nil;
+	}
+
+	result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, availableNominalSampleRates);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		free(availableNominalSampleRates);
+		return nil;
+	}
+
+	NSMutableArray *availablSampleRates = [NSMutableArray array];
+
+	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioValueRange)); ++i) {
+		AudioValueRange nominalSampleRate = availableNominalSampleRates[i];
+		if(nominalSampleRate.mMinimum == nominalSampleRate.mMaximum)
+			[availablSampleRates addObject:@(nominalSampleRate.mMinimum)];
+		else
+			os_log_error(OS_LOG_DEFAULT, "nominalSampleRate.mMinimum (%.2f Hz) and nominalSampleRate.mMaximum (%.2f Hz) don't match", nominalSampleRate.mMinimum, nominalSampleRate.mMaximum);
+	}
+
+	free(availableNominalSampleRates);
+
+	return availablSampleRates;
 }
 
 - (NSString *)description
