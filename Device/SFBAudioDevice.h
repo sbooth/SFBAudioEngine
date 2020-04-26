@@ -20,13 +20,13 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 @property (class, nonatomic, readonly) SFBAudioOutputDevice *defaultOutputDevice;
 
 /// Register a block to be called when audio devices change
-+ (void)whenAudioDevicesChangePerformBlock:(void(^ __weak)(void))block;
++ (void)whenAudioDevicesChangePerformBlock:(void(^ __weak)(void))block NS_SWIFT_NAME(whenAudioDevicesChange(perform:));
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID;
-- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)deviceID NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, readonly) AudioObjectID deviceID;
 @property (nonatomic, readonly) NSString *deviceUID;
@@ -39,7 +39,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 #pragma mark - Device Properties
 
 @property (nonatomic) double sampleRate;
-@property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates;
+@property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
 

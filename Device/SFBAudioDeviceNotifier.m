@@ -42,10 +42,14 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 		sInstance->_listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses) {
 #pragma unused(inNumberAddresses)
 #pragma unused(inAddresses)
+			// Make a local copy of _blocks to avoid dispatching the callbacks on _blockQueue
+			__block NSArray *blocks = nil;
 			dispatch_sync(sInstance->_blockQueue, ^{
-				for(void(^block)(void) in sInstance->_blocks)
-					block();
+				blocks = sInstance->_blocks.allObjects;
 			});
+
+			for(void(^block)(void) in blocks)
+				block();
 		};
 
 		OSStatus result = AudioObjectAddPropertyListenerBlock(kAudioObjectSystemObject, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), sInstance->_listenerBlock);

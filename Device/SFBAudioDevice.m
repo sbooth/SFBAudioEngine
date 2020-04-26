@@ -185,12 +185,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self initWithAudioObjectID:deviceID];
 }
 
-- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)deviceID
+- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
 {
-	NSParameterAssert(deviceID != kAudioObjectUnknown);
+	NSParameterAssert(audioObjectID != kAudioObjectUnknown);
 
 	if((self = [super init])) {
-		_deviceID = deviceID;
+		_deviceID = audioObjectID;
 		_listenerBlocks = [NSMapTable strongToWeakObjectsMapTable];
 	}
 	return self;
