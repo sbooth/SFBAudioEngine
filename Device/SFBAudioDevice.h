@@ -12,15 +12,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Posted when the available audio devices change
+extern const NSNotificationName SFBAudioDevicesChangedNotification;
+
 NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 
 @property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *allDevices;
 @property (class, nonatomic, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
 
 @property (class, nonatomic, readonly) SFBAudioOutputDevice *defaultOutputDevice;
-
-/// Register a block to be called when audio devices change
-+ (void)whenAudioDevicesChangePerformBlock:(void(^ __weak)(void))block NS_SWIFT_NAME(whenAudioDevicesChange(perform:));
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -48,12 +48,12 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 
 #pragma mark - Device Property Observation
 
-- (void)whenSampleRateChangesPerformBlock:(void (^ __weak)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
-- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ __weak)(void))block;
+- (void)whenSampleRateChangesPerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
+- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
 
-- (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^ __weak)(void))block;
-- (void)whenSelector:(AudioObjectPropertySelector)selector changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ __weak)(void))block;
-- (void)whenSelector:(AudioObjectPropertySelector)selector inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^ __weak)(void))block;
+- (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^)(void))block;
+- (void)whenSelector:(AudioObjectPropertySelector)selector changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
+- (void)whenSelector:(AudioObjectPropertySelector)selector inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block;
 
 @end
 

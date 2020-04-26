@@ -14,9 +14,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
-- (void)addDevicesChangedCallback:(void(^ __weak)(void))block;
-- (void)removeDevicesChangedCallback:(void(^ __weak)(void))block;
-
 @end
 
 NS_ASSUME_NONNULL_END

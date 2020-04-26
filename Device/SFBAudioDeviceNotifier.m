@@ -11,12 +11,12 @@
 
 #import "SFBCStringForOSType.h"
 
+const NSNotificationName SFBAudioDevicesChangedNotification = @"org.sbooth.AudioEngine.SFBAudioDeviceNotifier.ChangedNotification";
+
 @interface SFBAudioDeviceNotifier ()
 {
 @private
 	AudioObjectPropertyListenerBlock _listenerBlock;
-	NSHashTable *_blocks;
-	dispatch_queue_t _blockQueue;
 }
 @end
 
@@ -30,9 +30,6 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 	dispatch_once(&onceToken, ^{
 		sInstance = [[SFBAudioDeviceNotifier alloc] init];
 
-		sInstance->_blockQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioDeviceNotifier.IsolationQueue", DISPATCH_QUEUE_SERIAL);
-		sInstance->_blocks = [NSHashTable weakObjectsHashTable];
-
 		AudioObjectPropertyAddress propertyAddress = {
 			.mSelector	= kAudioHardwarePropertyDevices,
 			.mScope		= kAudioObjectPropertyScopeGlobal,
@@ -42,19 +39,12 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 		sInstance->_listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses) {
 #pragma unused(inNumberAddresses)
 #pragma unused(inAddresses)
-			// Make a local copy of _blocks to avoid dispatching the callbacks on _blockQueue
-			__block NSArray *blocks = nil;
-			dispatch_sync(sInstance->_blockQueue, ^{
-				blocks = sInstance->_blocks.allObjects;
-			});
-
-			for(void(^block)(void) in blocks)
-				block();
+			[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioDevicesChangedNotification object:nil];
 		};
 
 		OSStatus result = AudioObjectAddPropertyListenerBlock(kAudioObjectSystemObject, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), sInstance->_listenerBlock);
 		if(result != kAudioHardwareNoError)
-			os_log_error(OS_LOG_DEFAULT, "AudioObjectAddPropertyListenerBlock (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			os_log_error(OS_LOG_DEFAULT, "AudioObjectAddPropertyListener (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 	});
 
 	return sInstance;
@@ -73,20 +63,6 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 		if(result != kAudioHardwareNoError)
 			os_log_error(OS_LOG_DEFAULT, "AudioObjectRemovePropertyListenerBlock (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 	}
-}
-
-- (void)addDevicesChangedCallback:(void (^)(void))block
-{
-	dispatch_sync(_blockQueue, ^{
-		[_blocks addObject:block];
-	});
-}
-
-- (void)removeDevicesChangedCallback:(void (^)(void))block
-{
-	dispatch_sync(_blockQueue, ^{
-		[_blocks removeObject:block];
-	});
 }
 
 @end

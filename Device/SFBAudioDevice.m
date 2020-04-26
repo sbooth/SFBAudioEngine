@@ -62,7 +62,7 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 {
 @private
 	AudioObjectID _deviceID;
-	NSMapTable *_listenerBlocks;
+	NSMutableDictionary *_listenerBlocks;
 }
 @end
 
@@ -154,11 +154,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
 }
 
-+ (void)whenAudioDevicesChangePerformBlock:(void(^)(void))block
-{
-	[sAudioDeviceNotifier addDevicesChangedCallback:block];
-}
-
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID
 {
 	NSParameterAssert(deviceUID != nil);
@@ -191,14 +186,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	if((self = [super init])) {
 		_deviceID = audioObjectID;
-		_listenerBlocks = [NSMapTable strongToWeakObjectsMapTable];
+		_listenerBlocks = [NSMutableDictionary dictionary];
 	}
 	return self;
 }
 
 - (void)dealloc
 {
-	for(NSValue *propertyAddressAsValue in [_listenerBlocks keyEnumerator]) {
+	for(NSValue *propertyAddressAsValue in [_listenerBlocks allKeys]) {
 		AudioObjectPropertyAddress propertyAddress = {0};
 		[propertyAddressAsValue getValue:&propertyAddress];
 		[self removePropertyListenerForPropertyAddress:&propertyAddress];
@@ -468,7 +463,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
 {
-	[self whenSelector:kAudioDevicePropertyDataSources changesInScope:scope performBlock:block];
+	[self whenSelector:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
 - (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^)(void))block
