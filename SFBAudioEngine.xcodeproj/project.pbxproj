@@ -110,6 +110,7 @@
 		3268F86C2455B527006A5911 /* NSError+SFBURLPresentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8662455B527006A5911 /* NSError+SFBURLPresentation.h */; };
 		3268F86D2455B527006A5911 /* CFWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8672455B527006A5911 /* CFWrapper.h */; };
 		3268F86E2455B527006A5911 /* NSError+SFBURLPresentation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8682455B527006A5911 /* NSError+SFBURLPresentation.m */; };
+		3268F8702455B611006A5911 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3268F86F2455B611006A5911 /* README.md */; };
 		326D3C94242CE9D1002AEC52 /* SFBAudioProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326D3C95242CE9D1002AEC52 /* SFBAudioProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */; };
 		326D3C98242CF79C002AEC52 /* SFBAudioFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C96242CF79C002AEC52 /* SFBAudioFile.m */; };
@@ -310,6 +311,7 @@
 		3268F8662455B527006A5911 /* NSError+SFBURLPresentation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+SFBURLPresentation.h"; sourceTree = "<group>"; };
 		3268F8672455B527006A5911 /* CFWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFWrapper.h; sourceTree = "<group>"; };
 		3268F8682455B527006A5911 /* NSError+SFBURLPresentation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+SFBURLPresentation.m"; sourceTree = "<group>"; };
+		3268F86F2455B611006A5911 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioProperties.h; sourceTree = "<group>"; };
 		326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioProperties.m; sourceTree = "<group>"; };
 		326D3C96242CF79C002AEC52 /* SFBAudioFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioFile.m; sourceTree = "<group>"; };
@@ -418,8 +420,8 @@
 		29B97315FDCFA39411CA2CEA /* Other */ = {
 			isa = PBXGroup;
 			children = (
-				32C212D61091116D00BA2493 /* Info.plist */,
 				325A5E812443420C003138D5 /* SFBAudioEngine.h */,
+				32C212D61091116D00BA2493 /* Info.plist */,
 			);
 			name = Other;
 			sourceTree = "<group>";
@@ -590,6 +592,7 @@
 		32AEB27B1409AC84001F9A60 /* SFBAudioEngine */ = {
 			isa = PBXGroup;
 			children = (
+				3268F86F2455B611006A5911 /* README.md */,
 				325A5E842443839F003138D5 /* LICENSE.txt */,
 				322B5D76108C210400CA9BDE /* Player */,
 				3268F83C24548A81006A5911 /* Device */,
@@ -878,6 +881,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3268F8702455B611006A5911 /* README.md in Resources */,
 				325A5E85244383AD003138D5 /* LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

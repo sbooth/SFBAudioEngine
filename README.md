@@ -1,7 +1,7 @@
 About SFBAudioEngine
 ====================
 
-SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS (10.13+) and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
+SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS (10.15+) and iOS applications to easily play audio.  SFBAudioEngine supports the following formats:
 
 * WAVE
 * AIFF
@@ -26,7 +26,7 @@ Building SFBAudioEngine
 =======================
 
 1. Get the source code: `git clone https://github.com/sbooth/SFBAudioEngine.git`
-2. Download the dependencies and unpack in the project's root: http://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2
+2. Download the dependencies and unpack in the project's root: https://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2
 3. Open the project and build!
 
 Using SFBAudioEngine
@@ -36,9 +36,8 @@ Playing an audio file is as simple as:
 
 ~~~
 import SFBAudioEngine
-let u = NSURL(fileURLWithPath: "example.flac")
 let player = AudioPlayer()
-try? player?.play(u)
+try? player.play(URL(fileURLWithPath: "example.flac"))
 ~~~
 
 Documentation
