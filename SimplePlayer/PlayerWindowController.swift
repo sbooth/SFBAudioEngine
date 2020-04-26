@@ -87,7 +87,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 	}
 
 	func windowWillClose(_ notification: Notification) {
-		try? player.stop()
+		player.stop()
 	}
 
 	@IBAction func playPause(_ sender: AnyObject?) {
