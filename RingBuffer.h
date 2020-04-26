@@ -37,7 +37,7 @@ namespace SFB {
 		RingBuffer();
 
 		/*! @brief Destroy the \c RingBuffer and release all associated resources. */
-		~RingBuffer();
+		inline ~RingBuffer() { Deallocate(); }
 
 		/*! @cond */
 

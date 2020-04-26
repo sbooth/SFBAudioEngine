@@ -35,11 +35,6 @@ SFB::RingBuffer::RingBuffer()
 	: mBuffer(nullptr), mCapacityBytes(0), mCapacityBytesMask(0), mWritePosition(0), mReadPosition(0)
 {}
 
-SFB::RingBuffer::~RingBuffer()
-{
-	Deallocate();
-}
-
 #pragma mark Buffer Management
 
 bool SFB::RingBuffer::Allocate(size_t capacityBytes)
