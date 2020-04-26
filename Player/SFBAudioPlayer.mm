@@ -423,13 +423,17 @@ namespace {
 
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format
 {
+	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
+	if(!player) {
+		os_log_error(OS_LOG_DEFAULT, "Unable to create SFBAudioPlayerNode with format %@", format);
+		return;
+	}
+
 	if(_player) {
 		[_engine disconnectNodeInput:_engine.mainMixerNode];
 		[_engine disconnectNodeOutput:_engine.mainMixerNode];
 		[_engine detachNode:_player];
 	}
-
-	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 
 	player.decodingStartedNotificationHandler = _player.decodingStartedNotificationHandler;
 	player.decodingFinishedNotificationHandler = _player.decodingFinishedNotificationHandler;

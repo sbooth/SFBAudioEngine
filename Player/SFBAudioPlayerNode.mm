@@ -503,6 +503,15 @@ namespace {
 			return nil;
 		}
 
+		_renderingFormat = format;
+		SFB::Audio::Format ringBufferFormat(_renderingFormat.streamDescription);
+		if(!_audioRingBuffer.Allocate(ringBufferFormat, kRingBufferFrameCapacity)) {
+			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Allocate() failed for format %{public}@", ringBufferFormat.Description().Object());
+			return nil;
+		}
+
+		_renderEventsRingBuffer.Allocate(256);
+
 		dispatch_source_set_timer(_collector, DISPATCH_TIME_NOW, NSEC_PER_SEC * 10, NSEC_PER_SEC * 2);
 		dispatch_source_set_event_handler(_collector, ^{
 			for(size_t i = 0; i < self->_decoderStateArray.size(); ++i) {
@@ -528,11 +537,6 @@ namespace {
 			os_log_error(OS_LOG_DEFAULT, "Unable to create thread: %{public}s", e.what());
 			return nil;
 		}
-
-		_renderingFormat = format;
-		_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity);
-
-		_renderEventsRingBuffer.Allocate(256);
 	}
 
 	return self;
