@@ -14,13 +14,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
-
 @property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *allDevices;
 @property (class, nonatomic, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
 
 @property (class, nonatomic, readonly) SFBAudioOutputDevice *defaultOutputDevice;
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID;
 - (nullable instancetype)initWithAudioObjectID:(AudioObjectID)deviceID NS_DESIGNATED_INITIALIZER;
@@ -34,6 +34,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 @property (nonatomic, readonly) BOOL supportsOutput;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesForScope:(AudioObjectPropertyScope)scope;
+- (void)whenDataSourcesChangeForScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesForScope:(AudioObjectPropertyScope)scope;
 - (void)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources forScope:(AudioObjectPropertyScope)scope;
