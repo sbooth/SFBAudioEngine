@@ -995,6 +995,10 @@ namespace {
 							break;
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+						if(!decoderState) {
+							os_log_error(OS_LOG_DEFAULT, "Decoder state with sequence number %llu missing", sequenceNumber);
+							break;
+						}
 
 //						dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 						dispatch_time_t notificationTime = hostTime;
@@ -1020,6 +1024,11 @@ namespace {
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+						if(!decoderState) {
+							os_log_error(OS_LOG_DEFAULT, "Decoder state with sequence number %llu missing", sequenceNumber);
+							break;
+						}
+
 						// The last action performed with a decoder that has completed rendering is this notification
 						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
 
