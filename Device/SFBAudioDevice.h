@@ -19,6 +19,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 
 @property (class, nonatomic, readonly) SFBAudioOutputDevice *defaultOutputDevice;
 
+/// Register a block to be called when audio devices change
++ (void)whenAudioDevicesChangePerformBlock:(void(^ __weak)(void))block;
+
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -33,14 +36,24 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
 @property (nonatomic, readonly) BOOL supportsInput;
 @property (nonatomic, readonly) BOOL supportsOutput;
 
-- (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesForScope:(AudioObjectPropertyScope)scope;
-- (void)whenDataSourcesChangeForScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
-
-- (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesForScope:(AudioObjectPropertyScope)scope;
-- (void)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources forScope:(AudioObjectPropertyScope)scope;
+#pragma mark - Device Properties
 
 @property (nonatomic) double sampleRate;
 @property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates;
+
+- (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
+
+- (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(AudioObjectPropertyScope)scope;
+- (void)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources inScope:(AudioObjectPropertyScope)scope;
+
+#pragma mark - Device Property Observation
+
+- (void)whenSampleRateChangesPerformBlock:(void (^ __weak)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
+- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ __weak)(void))block;
+
+- (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^ __weak)(void))block;
+- (void)whenSelector:(AudioObjectPropertySelector)selector changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ __weak)(void))block;
+- (void)whenSelector:(AudioObjectPropertySelector)selector inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^ __weak)(void))block;
 
 @end
 
