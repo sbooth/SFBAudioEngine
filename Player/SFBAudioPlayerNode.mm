@@ -988,8 +988,8 @@ namespace {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
-						self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
-						self->_renderEventsRingBuffer.Read(&hostTime, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
 						if(!self->_renderingStartedNotificationHandler)
 							break;
@@ -1016,8 +1016,8 @@ namespace {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
-						self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
-						self->_renderEventsRingBuffer.Read(&hostTime, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
 						// The last action performed with a decoder that has completed rendering is this notification
