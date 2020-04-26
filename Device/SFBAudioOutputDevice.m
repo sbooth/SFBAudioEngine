@@ -109,4 +109,9 @@
 	[super setActiveDataSources:activeDataSources inScope:kAudioObjectPropertyScopeOutput];
 }
 
+- (void)whenDataSourcesChangePerformBlock:(void (^)(void))block
+{
+	[self whenDataSourcesChangeInScope:kAudioObjectPropertyScopeOutput performBlock:block];
+}
+
 @end

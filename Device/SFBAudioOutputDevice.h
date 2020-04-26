@@ -20,6 +20,8 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 @property (nonatomic, readonly) NSArray<SFBAudioDeviceDataSource *> *dataSources;
 @property (nonatomic) NSArray<SFBAudioDeviceDataSource *> *activeDataSources;
 
+- (void)whenDataSourcesChangePerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenDataSourcesChange(perform:));;
+
 @end
 
 NS_ASSUME_NONNULL_END
