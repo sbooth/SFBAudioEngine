@@ -51,9 +51,13 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 - (void)whenSampleRateChangesPerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
 - (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
 
-- (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^)(void))block;
-- (void)whenSelector:(AudioObjectPropertySelector)selector changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
-- (void)whenSelector:(AudioObjectPropertySelector)selector inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block;
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property;
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+
+- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(void (^)(void))block;
+- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block;
 
 @end
 

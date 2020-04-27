@@ -456,30 +456,51 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 #pragma mark - Device Property Observation
 
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property
+{
+	return [self hasProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+{
+	return [self hasProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= property,
+		.mScope		= scope,
+		.mElement	= element
+	};
+
+	return (BOOL)AudioObjectHasProperty(_deviceID, &propertyAddress);
+}
+
 - (void)whenSampleRateChangesPerformBlock:(void (^)(void))block
 {
-	[self whenSelector:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
 - (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
 {
-	[self whenSelector:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenSelectorChanges:(AudioObjectPropertySelector)selector performBlock:(void (^)(void))block
+- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(void (^)(void))block
 {
-	[self whenSelector:selector inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenSelector:(AudioObjectPropertySelector)selector changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
+- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
 {
-	[self whenSelector:selector inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	[self whenProperty:property inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenSelector:(AudioObjectPropertySelector)selector inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block
 {
 	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= selector,
+		.mSelector	= property,
 		.mScope		= scope,
 		.mElement	= element
 	};
