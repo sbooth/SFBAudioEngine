@@ -505,9 +505,8 @@ namespace {
 		}
 
 		_renderingFormat = format;
-		SFB::Audio::Format ringBufferFormat(_renderingFormat.streamDescription);
-		if(!_audioRingBuffer.Allocate(ringBufferFormat, kRingBufferFrameCapacity)) {
-			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Allocate() failed for format %{public}@", ringBufferFormat.Description().Object());
+		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
+			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Allocate() failed");
 			return nil;
 		}
 
