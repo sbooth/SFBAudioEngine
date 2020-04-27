@@ -152,7 +152,7 @@
 	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenVolumeForChannel:(AudioObjectPropertyElement)channel changesPerformBlock:(void (^)(void))block
+- (void)whenVolumeForChannelChanges:(AudioObjectPropertyElement)channel performBlock:(void (^)(void))block
 {
 	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:channel performBlock:block];
 }
