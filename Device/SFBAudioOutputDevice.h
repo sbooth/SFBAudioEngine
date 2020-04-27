@@ -24,8 +24,8 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 
 #pragma mark - Device Property Observation
 
-- (void)whenMuteChangesPerformBlock:(void (^)(void))block;
-- (void)whenMasterVolumeChangesPerformBlock:(void (^)(void))block;
+- (void)whenMuteChangesPerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenMuteChanges(perform:));
+- (void)whenMasterVolumeChangesPerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenMasterVolumeChanges(perform:));
 
 - (void)whenVolumeForChannel:(AudioObjectPropertyElement)channel changesPerformBlock:(void (^)(void))block;
 - (void)whenDataSourcesChangePerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenDataSourcesChange(perform:));
