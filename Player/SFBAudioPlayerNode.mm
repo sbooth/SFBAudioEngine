@@ -166,16 +166,6 @@ namespace {
 			return true;
 		}
 
-		inline bool SeekRequested() const
-		{
-			return mFrameToSeek.load() != -1;
-		}
-
-		inline void RequestSeekToFrame(AVAudioFramePosition frame)
-		{
-			mFrameToSeek.store(frame);
-		}
-
 		//! Seeks to the desired frame  in the converter's *output* sample rate
 		bool PerformSeek()
 		{
@@ -213,16 +203,6 @@ namespace {
 			}
 
 			return newFrame != -1;
-		}
-
-		inline bool DecodingFinished() const
-		{
-			return mFlags.load() & eDecodingFinishedFlag;
-		}
-
-		inline bool RenderingFinished() const
-		{
-			return mFlags.load() & eRenderingFinishedFlag;
 		}
 
 	};
@@ -828,7 +808,7 @@ namespace {
 	if(frame >= decoderState->FrameLength())
 		return NO;
 
-	decoderState->RequestSeekToFrame(frame);
+	decoderState->mFrameToSeek.store(frame);
 	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
@@ -898,7 +878,7 @@ namespace {
 						_flags.fetch_or(eAudioPlayerNodeFlagOutputIsMuted);
 
 					// Perform seek if one is pending
-					if(decoderState->SeekRequested())
+					if(decoderState->mFrameToSeek.load() != -1)
 						decoderState->PerformSeek();
 
 					// Reset() is not thread safe but the rendering thread is outputting silence
@@ -914,7 +894,7 @@ namespace {
 				// Force writes to the ring buffer to be at least kRingBufferChunkSize
 				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag)) {
 					// If a seek is pending reset the ring buffer first to prevent artifacts
-					if(decoderState->SeekRequested()) {
+					if(decoderState->mFrameToSeek.load() != -1) {
 						_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 						continue;
 					}
