@@ -100,6 +100,30 @@
 		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, %u) failed: %d", channel, result);
 }
 
+- (NSArray *)preferredStereoChannels
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo,
+		.mScope		= kAudioObjectPropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
+		os_log_debug(OS_LOG_DEFAULT, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) is false");
+		return nil;
+	}
+
+	UInt32 preferredChannels [2];
+	UInt32 dataSize = sizeof(preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		return nil;
+	}
+
+	return @[@(preferredChannels[0]), @(preferredChannels[1])];
+}
+
 - (NSArray *)dataSources
 {
 	return [super dataSourcesInScope:kAudioObjectPropertyScopeOutput];

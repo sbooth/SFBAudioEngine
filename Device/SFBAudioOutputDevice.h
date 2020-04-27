@@ -21,6 +21,8 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
 - (void)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel;
 
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *preferredStereoChannels NS_REFINED_FOR_SWIFT;
+
 @property (nonatomic, readonly) NSArray<SFBAudioDeviceDataSource *> *dataSources;
 @property (nonatomic) NSArray<SFBAudioDeviceDataSource *> *activeDataSources;
 
