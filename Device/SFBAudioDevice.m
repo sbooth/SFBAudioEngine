@@ -487,6 +487,11 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
+- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
+{
+	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
 - (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(void (^)(void))block
 {
 	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];

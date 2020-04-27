@@ -50,6 +50,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 - (void)whenSampleRateChangesPerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
 - (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
+- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
 
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property;
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
