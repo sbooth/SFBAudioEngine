@@ -21,7 +21,7 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 ///
 /// \c SFBAudioPlayer supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
-NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer: NSObject
+NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Playlist Management
 

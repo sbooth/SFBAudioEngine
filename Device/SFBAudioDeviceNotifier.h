@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SFBAudioDeviceNotifier: NSObject
+@interface SFBAudioDeviceNotifier : NSObject
 
 @property (class, nonatomic, readonly) SFBAudioDeviceNotifier *instance;
 

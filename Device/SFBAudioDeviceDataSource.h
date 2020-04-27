@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NS_SWIFT_NAME(AudioDeviceDataSource) @interface SFBAudioDeviceDataSource: NSObject
+NS_SWIFT_NAME(AudioDeviceDataSource) @interface SFBAudioDeviceDataSource : NSObject
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

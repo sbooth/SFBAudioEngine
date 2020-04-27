@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Posted when the available audio devices change
 extern const NSNotificationName SFBAudioDevicesChangedNotification;
 
-NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice: NSObject
+NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 @property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *allDevices;
 @property (class, nonatomic, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;

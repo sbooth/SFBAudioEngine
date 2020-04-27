@@ -54,7 +54,7 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 ///  5. Rendering finished
 ///
 /// All callbacks are performed on a dedicated notification queue.
-NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode: AVAudioSourceNode
+NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 - (instancetype)initWithFormat:(AVAudioFormat *)format NS_DESIGNATED_INITIALIZER;
 
