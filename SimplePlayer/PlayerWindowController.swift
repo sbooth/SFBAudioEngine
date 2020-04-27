@@ -49,7 +49,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 		}
 
 		player.decodingCanceledNotificationHandler = { decoder in
-			if !self.player.isRunning {
+			if self.player.isStopped {
 				DispatchQueue.main.async {
 					self.updateWindow()
 				}

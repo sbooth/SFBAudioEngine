@@ -17,10 +17,21 @@ typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
 // Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
 
+/// The possible playback states for \c SFBAudioPlayer
+typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
+	SFBAudioPlayerPlaybackStatePlaying		= 0,	///<  \c SFBAudioPlayer.engineIsRunning  and \c SFBAudioPlayer.playerNodeIsPlaying
+	SFBAudioPlayerPlaybackStatePaused		= 1,	///<  \c SFBAudioPlayer.engineIsRunning  and \c !SFBAudioPlayer.playerNodeIsPlaying
+	SFBAudioPlayerPlaybackStateStopped		= 2		///<  \c !SFBAudioPlayer.engineIsRunning
+};
+
 /// @brief An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
 ///
 /// \c SFBAudioPlayer supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
+///
+/// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
+/// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
+/// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Playlist Management
@@ -47,8 +58,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Player State
 
-@property (nonatomic, readonly) BOOL isRunning; ///< Returns \c YES if the \c AVAudioEngine is running
-@property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if the \c SFBAudioPlayerNode is playing
+@property (nonatomic, readonly) BOOL engineIsRunning; ///< Returns \c YES if the \c AVAudioEngine is running
+@property (nonatomic, readonly) BOOL playerNodeIsPlaying; ///< Returns \c YES if the \c SFBAudioPlayerNode is playing
+
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState; ///< Returns the current playback state
+@property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if \c engineIsRunning and \c playerNodeIsPlaying
+@property (nonatomic, readonly) BOOL isPaused; ///< Returns \c YES if \c engineIsRunning and \c !playerNodeIsPlaying
+@property (nonatomic, readonly) BOOL isStopped; ///< Returns \c NO if \c engineIsRunning
+
 @property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
 @property (nonatomic, readonly, nullable) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
 

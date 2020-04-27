@@ -204,7 +204,7 @@ namespace {
 
 - (BOOL)playPauseReturningError:(NSError **)error
 {
-	if(self.isPlaying) {
+	if(_player.isPlaying) {
 		[self pause];
 		return YES;
 	}
@@ -214,16 +214,39 @@ namespace {
 
 #pragma mark - Player State
 
-- (BOOL)isRunning
+- (BOOL)engineIsRunning
 {
 	// I assume this function is thread-safe, but it isn't documented either way
 	// This assumption is based on the fact that AUGraphIsRunning() is thread-safe
 	return _engine.isRunning;
 }
 
-- (BOOL)isPlaying
+- (BOOL)playerNodeIsPlaying
 {
 	return _player.isPlaying;
+}
+
+- (SFBAudioPlayerPlaybackState)playbackState
+{
+	if(_engine.isRunning)
+		return _player.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+	else
+		return SFBAudioPlayerPlaybackStateStopped;
+}
+
+- (BOOL)isPlaying
+{
+	return _engine.isRunning && _player.isPlaying;
+}
+
+- (BOOL)isPaused
+{
+	return _engine.isRunning && !_player.isPlaying;
+}
+
+- (BOOL)isStopped
+{
+	return !_engine.isRunning;
 }
 
 - (NSURL *)url
