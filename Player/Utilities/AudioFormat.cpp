@@ -81,6 +81,38 @@ size_t SFB::Audio::Format::ByteCountToFrameCount(size_t byteCount) const
 	}
 }
 
+bool SFB::Audio::Format::GetNonInterleavedEquivalent(Format& format) const
+{
+	if(!IsPCM())
+		return false;
+
+	format = *this;
+
+	if(IsInterleaved()) {
+		format.mFormatFlags |= kAudioFormatFlagIsNonInterleaved;
+		format.mBytesPerPacket /= mChannelsPerFrame;
+		format.mBytesPerFrame /= mChannelsPerFrame;
+	}
+
+	return true;
+}
+
+bool SFB::Audio::Format::GetInterleavedEquivalent(Format& format) const
+{
+	if(!IsPCM())
+		return false;
+
+	format = *this;
+
+	if(!IsInterleaved()) {
+		format.mFormatFlags &= ~kAudioFormatFlagIsNonInterleaved;
+		format.mBytesPerPacket *= mChannelsPerFrame;
+		format.mBytesPerFrame *= mChannelsPerFrame;
+	}
+
+	return true;
+}
+
 // Most of this is stolen from Apple's CAStreamBasicDescription::Print()
 SFB::CFString SFB::Audio::Format::Description() const
 {

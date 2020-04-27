@@ -32,7 +32,8 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 
 /// @brief An \c AVAudioSourceNode supporting gapless playback for PCM formats
 ///
-/// The output format of \c SFBAudioPlayerNode is specified at object creation and cannot be changed.
+/// The output format of \c SFBAudioPlayerNode is specified at object creation and cannot be changed. The output format must be
+/// a flavor of non-interleaved PCM audio.
 ///
 /// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding  (decoders) and supports audio at the same sample rate
 /// and with the same number of channels as the output format.

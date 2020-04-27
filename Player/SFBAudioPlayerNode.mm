@@ -341,6 +341,7 @@ namespace {
 - (instancetype)initWithFormat:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
+	NSParameterAssert(!format.interleaved);
 
 	AVAudioSourceNodeRenderBlock renderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
 

@@ -114,6 +114,8 @@
 		3268F8732455D133006A5911 /* SFBAudioDeviceNotifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */; };
 		3268F8742455D133006A5911 /* SFBAudioDeviceNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8722455D133006A5911 /* SFBAudioDeviceNotifier.h */; };
 		3268F8762455FBF2006A5911 /* SFBAudioDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8752455FBF2006A5911 /* SFBAudioDevice.swift */; };
+		3268F87B2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8792456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.h */; };
+		3268F87C2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3268F87A2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.m */; };
 		326D3C94242CE9D1002AEC52 /* SFBAudioProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		326D3C95242CE9D1002AEC52 /* SFBAudioProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */; };
 		326D3C98242CF79C002AEC52 /* SFBAudioFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D3C96242CF79C002AEC52 /* SFBAudioFile.m */; };
@@ -318,6 +320,8 @@
 		3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioDeviceNotifier.m; sourceTree = "<group>"; };
 		3268F8722455D133006A5911 /* SFBAudioDeviceNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioDeviceNotifier.h; sourceTree = "<group>"; };
 		3268F8752455FBF2006A5911 /* SFBAudioDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioDevice.swift; sourceTree = "<group>"; };
+		3268F8792456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AVAudioFormat+SFBFormatTransformation.h"; sourceTree = "<group>"; };
+		3268F87A2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AVAudioFormat+SFBFormatTransformation.m"; sourceTree = "<group>"; };
 		326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioProperties.h; sourceTree = "<group>"; };
 		326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioProperties.m; sourceTree = "<group>"; };
 		326D3C96242CF79C002AEC52 /* SFBAudioFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioFile.m; sourceTree = "<group>"; };
@@ -561,6 +565,8 @@
 				3268F8502455B3AF006A5911 /* AudioFormat.cpp */,
 				3268F84D2455B3AF006A5911 /* AudioRingBuffer.h */,
 				3268F84C2455B3AF006A5911 /* AudioRingBuffer.cpp */,
+				3268F8792456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.h */,
+				3268F87A2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.m */,
 				3268F8512455B3AF006A5911 /* RingBuffer.h */,
 				3268F84E2455B3AF006A5911 /* RingBuffer.cpp */,
 			);
@@ -788,6 +794,7 @@
 				326D3CB6242D2A21002AEC52 /* SFBImpulseTrackerModuleFile.h in Headers */,
 				3268F8742455D133006A5911 /* SFBAudioDeviceNotifier.h in Headers */,
 				326D3CB0242D2A21002AEC52 /* SFBDSFFile.h in Headers */,
+				3268F87B2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.h in Headers */,
 				325A5E83244342B5003138D5 /* SFBAudioEngine.h in Headers */,
 				32BC09A924265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.h in Headers */,
 				321296AA244B42970008DC93 /* SFBAudioDecoding.h in Headers */,
@@ -922,6 +929,7 @@
 				3268F81B24509BAF006A5911 /* SFBAudioPlayerNode.mm in Sources */,
 				325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.m in Sources */,
 				326D3CAD242D1D97002AEC52 /* SFBMP3File.mm in Sources */,
+				3268F87C2456ED09006A5911 /* AVAudioFormat+SFBFormatTransformation.m in Sources */,
 				325A5E17243F8DC0003138D5 /* SFBFLACDecoder.m in Sources */,
 				32BC09A524263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.mm in Sources */,
 				326D3CC3242D2A21002AEC52 /* SFBOggSpeexFile.mm in Sources */,

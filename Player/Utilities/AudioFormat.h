@@ -106,6 +106,20 @@ namespace SFB {
 
 			//@}
 
+
+			// ========================================
+			/*! @name Format transformation */
+			//@{
+
+			/*! @brief Converts \c this to the equivalent non-interleaved format. Fails for non-PCM formats. */
+			bool GetNonInterleavedEquivalent(Format& format) const;
+
+			/*! @brief Converts \c this to the equivalent interleaved format. Fails for non-PCM formats. */
+			bool GetInterleavedEquivalent(Format& format) const;
+
+			//@}
+
+
 			/*! @brief Returns a string representation of this format suitable for logging */
 			CFString Description() const;
 

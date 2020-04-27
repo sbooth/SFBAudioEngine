@@ -9,6 +9,7 @@
 
 #import "SFBAudioPlayer.h"
 
+#import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
 
 namespace {
@@ -423,6 +424,15 @@ namespace {
 
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format
 {
+	// SFBAudioPlayerNode requires a non-interleaved output format
+	if(format.interleaved) {
+		format = [format nonInterleavedEquivalent];
+		if(!format) {
+			os_log_error(OS_LOG_DEFAULT, "Unable to convert format %@ to non-interleaved", format);
+			return;
+		}
+	}
+
 	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!player) {
 		os_log_error(OS_LOG_DEFAULT, "Unable to create SFBAudioPlayerNode with format %@", format);
