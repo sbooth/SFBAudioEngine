@@ -145,7 +145,8 @@ namespace {
 			}
 		});
 
-		[self playDecoder:decoder error:nil];
+		if(decoder)
+			[self playDecoder:decoder error:nil];
 	}
 }
 
