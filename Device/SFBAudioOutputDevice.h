@@ -11,6 +11,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 
+#pragma mark - Device Properties
+
 @property (nonatomic, getter=isMuted) BOOL mute;
 @property (nonatomic) float masterVolume;
 
@@ -20,7 +22,14 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 @property (nonatomic, readonly) NSArray<SFBAudioDeviceDataSource *> *dataSources;
 @property (nonatomic) NSArray<SFBAudioDeviceDataSource *> *activeDataSources;
 
-- (void)whenDataSourcesChangePerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenDataSourcesChange(perform:));;
+#pragma mark - Device Property Observation
+
+- (void)whenMuteChangesPerformBlock:(void (^)(void))block;
+- (void)whenMasterVolumeChangesPerformBlock:(void (^)(void))block;
+
+- (void)whenVolumeForChannel:(AudioObjectPropertyElement)channel changesPerformBlock:(void (^)(void))block;
+- (void)whenDataSourcesChangePerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenDataSourcesChange(perform:));
+- (void)whenActiveDataSourcesChangePerformBlock:(void (^)(void))block NS_SWIFT_NAME(whenActiveDataSourcesChange(perform:));
 
 @end
 

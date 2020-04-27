@@ -12,6 +12,8 @@
 
 @implementation SFBAudioOutputDevice
 
+#pragma mark - Device Properties
+
 - (BOOL)isMuted
 {
 	AudioObjectPropertyAddress propertyAddress = {
@@ -109,9 +111,31 @@
 	[super setActiveDataSources:activeDataSources inScope:kAudioObjectPropertyScopeOutput];
 }
 
+#pragma mark - Device Property Observation
+
+- (void)whenMuteChangesPerformBlock:(void (^)(void))block
+{
+	[self whenProperty:kAudioDevicePropertyMute inScope:kAudioObjectPropertyScopeOutput changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenMasterVolumeChangesPerformBlock:(void (^)(void))block
+{
+	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenVolumeForChannel:(AudioObjectPropertyElement)channel changesPerformBlock:(void (^)(void))block
+{
+	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:channel performBlock:block];
+}
+
 - (void)whenDataSourcesChangePerformBlock:(void (^)(void))block
 {
 	[self whenDataSourcesChangeInScope:kAudioObjectPropertyScopeOutput performBlock:block];
+}
+
+- (void)whenActiveDataSourcesChangePerformBlock:(void (^)(void))block
+{
+	[self whenActiveDataSourcesChangeInScope:kAudioObjectPropertyScopeOutput performBlock:block];
 }
 
 @end
