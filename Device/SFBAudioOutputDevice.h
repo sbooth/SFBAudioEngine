@@ -14,6 +14,8 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 #pragma mark - Device Properties
 
 @property (nonatomic, getter=isMuted) BOOL mute;
+
+@property (nonatomic, readonly) BOOL hasMasterVolume;
 @property (nonatomic) float masterVolume;
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;

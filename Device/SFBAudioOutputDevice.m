@@ -47,6 +47,11 @@
 		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 }
 
+- (BOOL)hasMasterVolume
+{
+	return [self hasProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput onElement:kAudioObjectPropertyElementMaster];
+}
+
 - (float)masterVolume
 {
 	return [self volumeForChannel:kAudioObjectPropertyElementMaster];
