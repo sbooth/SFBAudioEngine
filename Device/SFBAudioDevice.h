@@ -15,6 +15,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Posted when the available audio devices change
 extern const NSNotificationName SFBAudioDevicesChangedNotification;
 
+float SFBConvertVolumeScalarToDecibels(SFBAudioDevice *device, AudioObjectPropertyScope scope, float volumeScalar);
+float SFBConvertDecibelsToVolumeScalar(SFBAudioDevice *device, AudioObjectPropertyScope scope, float decibels);
+
 NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 @property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *allDevices;
@@ -45,6 +48,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope;
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
+
+- (float)volumeInDecibelsForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope;
+- (BOOL)setVolumeInDecibels:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
 
