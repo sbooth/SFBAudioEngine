@@ -573,7 +573,6 @@ namespace {
 	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
-
 }
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
