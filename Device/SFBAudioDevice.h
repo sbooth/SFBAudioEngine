@@ -38,13 +38,18 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 #pragma mark - Device Properties
 
-@property (nonatomic) double sampleRate;
+@property (nonatomic, readonly) double sampleRate;
+- (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error;
+
 @property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
+
+- (float)volumeForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope;
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
 
 - (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(AudioObjectPropertyScope)scope;
-- (void)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources inScope:(AudioObjectPropertyScope)scope;
+- (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
 
 #pragma mark - Device Property Observation
 

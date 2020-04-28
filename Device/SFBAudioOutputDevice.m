@@ -57,47 +57,19 @@
 	return [self volumeForChannel:kAudioObjectPropertyElementMaster];
 }
 
-- (void)setMasterVolume:(float)masterVolume
+- (BOOL)setMasterVolume:(float)masterVolume error:(NSError **)error
 {
-	[self setVolume:masterVolume forChannel:kAudioObjectPropertyElementMaster];
+	return [self setVolume:masterVolume forChannel:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyVolumeScalar,
-		.mScope		= kAudioObjectPropertyScopeOutput,
-		.mElement	= channel
-	};
-
-	Float32 volume;
-	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, %u) failed: %d", channel, result);
-		return -1;
-	}
-	return volume;
+	return [super volumeForChannel:channel inScope:kAudioObjectPropertyScopeOutput];
 }
 
-- (void)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error
 {
-	os_log_info(OS_LOG_DEFAULT, "Setting device 0x%x channel %u volume to %f", self.deviceID, channel, volume);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyVolumeScalar,
-		.mScope		= kAudioObjectPropertyScopeOutput,
-		.mElement	= channel
-	};
-
-	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
-		os_log_info(OS_LOG_DEFAULT, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, %u) is false", channel);
-		return;
-	}
-
-	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
-	if(result != kAudioHardwareNoError)
-		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, %u) failed: %d", channel, result);
+	return [super setVolume:volume forChannel:channel inScope:kAudioObjectPropertyScopeOutput error:error];
 }
 
 - (NSArray *)preferredStereoChannels
@@ -134,10 +106,10 @@
 	return [super activeDataSourcesInScope:kAudioObjectPropertyScopeOutput];
 }
 
-- (void)setActiveDataSources:(NSArray *)activeDataSources
+- (BOOL)setActiveDataSources:(NSArray *)activeDataSources error:(NSError **)error
 {
 	NSParameterAssert(activeDataSources != nil);
-	[super setActiveDataSources:activeDataSources inScope:kAudioObjectPropertyScopeOutput];
+	return [super setActiveDataSources:activeDataSources inScope:kAudioObjectPropertyScopeOutput error:error];
 }
 
 #pragma mark - Device Property Observation

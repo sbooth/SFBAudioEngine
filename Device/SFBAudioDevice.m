@@ -288,7 +288,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return sampleRate;
 }
 
-- (void)setSampleRate:(double)nominalSampleRate
+- (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyNominalSampleRate,
@@ -296,10 +296,16 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	Float64 sampleRate = nominalSampleRate;
-	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(sampleRate), &sampleRate);
-	if(kAudioHardwareNoError != result)
+	Float64 nominalSampleRate = sampleRate;
+	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(nominalSampleRate), &nominalSampleRate);
+	if(kAudioHardwareNoError != result) {
 		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (NSArray *)availableSampleRates
@@ -343,6 +349,50 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	free(availableNominalSampleRates);
 
 	return availablSampleRates;
+}
+
+- (float)volumeForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyVolumeScalar,
+		.mScope		= scope,
+		.mElement	= channel
+	};
+
+	Float32 volume;
+	UInt32 dataSize = sizeof(volume);
+	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		return -1;
+	}
+	return volume;
+}
+
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
+{
+	os_log_info(OS_LOG_DEFAULT, "Setting device 0x%x '%{public}.4s' channel %u volume to %f", self.deviceID, SFBCStringForOSType(scope), channel, volume);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyVolumeScalar,
+		.mScope		= scope,
+		.mElement	= channel
+	};
+
+	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
+		os_log_info(OS_LOG_DEFAULT, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
+		return NO;
+	}
+
+	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (NSArray *)dataSourcesInScope:(AudioObjectPropertyScope)scope
@@ -429,12 +479,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return dataSources;
 }
 
-- (void)setActiveDataSources:(NSArray *)activeDataSources inScope:(AudioObjectPropertyScope)scope
+- (BOOL)setActiveDataSources:(NSArray *)activeDataSources inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
 	NSParameterAssert(activeDataSources != nil);
 
-	if(activeDataSources.count == 0)
-		return;
+//	if(activeDataSources.count == 0)
+//		return NO;
 
 	UInt32 dataSourceIDs [activeDataSources.count];
 	for(NSUInteger i = 0; i < activeDataSources.count; ++i) {
@@ -450,8 +500,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, (UInt32)sizeof(dataSourceIDs), dataSourceIDs);
-	if(kAudioHardwareNoError != result)
+	if(kAudioHardwareNoError != result) {
 		os_log_error(OS_LOG_DEFAULT, "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 #pragma mark - Device Property Observation
