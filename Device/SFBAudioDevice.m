@@ -58,48 +58,6 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput);
 }
 
-float SFBConvertVolumeScalarToDecibels(SFBAudioDevice *device, AudioObjectPropertyScope scope, float volumeScalar)
-{
-	NSCParameterAssert(device != nil);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyVolumeScalarToDecibels,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	Float32 volume = volumeScalar;
-	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(device.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
-	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalarToDecibels, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
-		return nanf("1");
-	}
-
-	return volume;
-}
-
-float SFBConvertDecibelsToVolumeScalar(SFBAudioDevice *device, AudioObjectPropertyScope scope, float decibels)
-{
-	NSCParameterAssert(device != nil);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyVolumeDecibelsToScalar,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	Float32 volume = decibels;
-	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(device.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
-	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibelsToScalar, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
-		return nanf("1");
-	}
-
-	return volume;
-}
-
 @interface SFBAudioDevice ()
 {
 @private
@@ -493,6 +451,44 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	}
 
 	return YES;
+}
+
+- (float)convertVolumeScalar:(float)volumeScalar toDecibelsInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyVolumeScalarToDecibels,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	Float32 volume = volumeScalar;
+	UInt32 dataSize = sizeof(volume);
+	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	if(result != noErr) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalarToDecibels, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		return nanf("1");
+	}
+
+	return volume;
+}
+
+- (float)convertDecibels:(float)decibels toVolumeScalarInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyVolumeDecibelsToScalar,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	Float32 volume = decibels;
+	UInt32 dataSize = sizeof(volume);
+	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	if(result != noErr) {
+		os_log_error(OS_LOG_DEFAULT, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibelsToScalar, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		return nanf("1");
+	}
+
+	return volume;
 }
 
 - (NSArray *)dataSourcesInScope:(AudioObjectPropertyScope)scope
