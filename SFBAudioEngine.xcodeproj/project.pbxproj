@@ -167,6 +167,7 @@
 		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
 		32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
 		32AE32DA245775EE002BC014 /* SFBAudioOutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */; };
+		32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
 		32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */; };
 		32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32AEB2D61409BA26001F9A60 /* AudioUnit.framework */; };
 		32BC09A424263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BC09A224263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h */; };
@@ -338,6 +339,7 @@
 		329AB89F148B17AA00180506 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioOutputDevice.swift; sourceTree = "<group>"; };
+		32AE32DB245894ED002BC014 /* SFBInputSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBInputSource.swift; sourceTree = "<group>"; };
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32AEB2D71409BA26001F9A60 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
@@ -652,6 +654,7 @@
 				325A5DF8243F8D8B003138D5 /* SFBInputSource.h */,
 				325A5E00243F8D8B003138D5 /* SFBInputSource+Internal.h */,
 				325A5DFB243F8D8B003138D5 /* SFBInputSource.m */,
+				32AE32DB245894ED002BC014 /* SFBInputSource.swift */,
 				325A5E04243F8D8B003138D5 /* SFBDataInputSource.h */,
 				325A5DFA243F8D8B003138D5 /* SFBDataInputSource.m */,
 				325A5E02243F8D8B003138D5 /* SFBFileContentsInputSource.h */,
@@ -995,6 +998,7 @@
 				326D3CB3242D2A21002AEC52 /* SFBExtendedModuleFile.mm in Sources */,
 				326D3CBB242D2A21002AEC52 /* SFBMP4File.mm in Sources */,
 				326D3CB5242D2A21002AEC52 /* SFBFLACFile.mm in Sources */,
+				32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

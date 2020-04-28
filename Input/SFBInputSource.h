@@ -83,16 +83,16 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
  * @param error An optional pointer to an \c NSError to receive error information
  * @return \c YES if any bytes were read, \c NO otherwise
  */
-- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error;
+- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /*! @brief Returns \c YES if the end of input has been reached */
 @property (nonatomic, readonly) BOOL atEOF;
 
 /*! @brief Returns  the current offset in the input, in bytes */
-- (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error NS_SWIFT_NAME(offset());
+- (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /*! @brief Returns the length of the input, in bytes */
-- (BOOL)getLength:(NSInteger *)length error:(NSError **)error NS_SWIFT_NAME(length());
+- (BOOL)getLength:(NSInteger *)length error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /*! @brief Returns \c YES if the input is seekable */
 @property (nonatomic, readonly) BOOL supportsSeeking;
@@ -107,29 +107,29 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 @end
 
 @interface SFBInputSource (SFBSignedIntegerReading)
-- (BOOL)readInt8:(int8_t *)i8 error:(NSError **)error;
-- (BOOL)readInt16:(int16_t *)i16 error:(NSError **)error;
-- (BOOL)readInt32:(int32_t *)i32 error:(NSError **)error;
-- (BOOL)readInt64:(int64_t *)i64 error:(NSError **)error;
+- (BOOL)readInt8:(int8_t *)i8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readInt16:(int16_t *)i16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readInt32:(int32_t *)i32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readInt64:(int64_t *)i64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBUnsignedIntegerReading)
-- (BOOL)readUInt8:(uint8_t *)ui8 error:(NSError **)error;
-- (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error;
-- (BOOL)readUInt32:(uint32_t *)ui32 error:(NSError **)error;
-- (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error;
+- (BOOL)readUInt8:(uint8_t *)ui8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt32:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBBigEndianReading)
-- (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error;
-- (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error;
-- (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error;
+- (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBLittleEndianReading)
-- (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error;
-- (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error;
-- (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error;
+- (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 NS_ASSUME_NONNULL_END
