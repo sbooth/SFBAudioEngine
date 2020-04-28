@@ -81,6 +81,11 @@ namespace {
 		return NO;
 
 	[_player stop];
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+	});
+
 	dispatch_sync(_engineQueue, ^{
 		[_engine pause];
 		[_engine reset];
