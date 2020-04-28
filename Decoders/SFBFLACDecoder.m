@@ -397,26 +397,46 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	const AudioStreamBasicDescription *format = _frameBuffer.format.streamDescription;
 
 	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
-	UInt32 shift = (format->mFormatFlags & kAudioFormatFlagIsPacked) ? 0 : (8 * format->mBytesPerFrame) - format->mBitsPerChannel;
+	uint32_t shift = (format->mFormatFlags & kAudioFormatFlagIsPacked) ? 0 : (8 * format->mBytesPerFrame) - format->mBitsPerChannel;
 
 	// Convert to native endian samples, high-aligned if necessary
 	switch(format->mBytesPerFrame) {
 		case 1: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				char *dst = (char *)abl->mBuffers[channel].mData;
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (char)(buffer[channel][sample] << shift);
+			if(shift) {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					char *dst = (char *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (char)(buffer[channel][sample] << shift);
+				}
 			}
+			else {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					char *dst = (char *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (char)buffer[channel][sample];
+				}
+			}
+			
 			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 
 		case 2: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				short *dst = (short *)abl->mBuffers[channel].mData;
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (short)(buffer[channel][sample] << shift);
+			if(shift) {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					short *dst = (short *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (short)(buffer[channel][sample] << shift);
+				}
 			}
+			else {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					short *dst = (short *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (short)buffer[channel][sample];
+				}
+			}
+
 			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
@@ -445,11 +465,21 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		}
 
 		case 4: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				int *dst = (int *)abl->mBuffers[channel].mData;
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-					*dst++ = (int)(buffer[channel][sample] << shift);
+			if(shift) {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					int *dst = (int *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (int)(buffer[channel][sample] << shift);
+				}
 			}
+			else {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					int *dst = (int *)abl->mBuffers[channel].mData;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+						*dst++ = (int)buffer[channel][sample];
+				}
+			}
+
 			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
