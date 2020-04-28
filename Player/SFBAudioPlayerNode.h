@@ -90,7 +90,7 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 @property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if the SFBAudioPlayerNode is playing
 @property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, readonly, nullable) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
 
 #pragma mark - Playback Properties
 

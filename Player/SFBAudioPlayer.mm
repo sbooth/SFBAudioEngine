@@ -19,11 +19,12 @@ namespace {
 @interface SFBAudioPlayer ()
 {
 @private
-	AVAudioEngine 		*_engine;			///< The underlying \c AVAudioEngine instance
-	dispatch_queue_t	_engineQueue;		///< The dispatch queue used to access \c _engine
-	SFBAudioPlayerNode	*_player;			///< The player driving the audio processing graph
-	dispatch_queue_t	_queue;				///< The dispatch queue used to access \c _queuedDecoders
-	DecoderQueue 		_queuedDecoders;	///< Decoders enqueued for non-gapless playback
+	AVAudioEngine 			*_engine;			///< The underlying \c AVAudioEngine instance
+	dispatch_queue_t		_engineQueue;		///< The dispatch queue used to access \c _engine
+	SFBAudioOutputDevice 	*_outputDevice; 	///< The current output device for \c _engine.outputNode
+	SFBAudioPlayerNode		*_player;			///< The player driving the audio processing graph
+	dispatch_queue_t		_queue;				///< The dispatch queue used to access \c _queuedDecoders
+	DecoderQueue 			_queuedDecoders;	///< Decoders enqueued for non-gapless playback
 }
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification;
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format;
@@ -49,6 +50,8 @@ namespace {
 		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
 		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2]];
+
+		_outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:_engine.outputNode.AUAudioUnit.deviceID];
 
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioEngineConfigurationChanged:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
@@ -338,6 +341,65 @@ namespace {
 	return _player.supportsSeeking;
 }
 
+#pragma mark - Volume Control
+
+- (float)volume
+{
+	return [self volumeForChannel:0];
+}
+
+- (BOOL)setVolume:(float)volume error:(NSError **)error
+{
+	return [self setVolume:volume forChannel:0 error:error];
+}
+
+- (float)volumeForChannel:(AudioObjectPropertyElement)channel
+{
+	__block Float32 volume = -1;
+	dispatch_sync(_engineQueue, ^{
+		AudioUnit au = _engine.outputNode.audioUnit;
+		if(!au)
+			return;
+
+		AudioUnitParameterValue channelVolume;
+		OSStatus result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
+		if(result != noErr) {
+			os_log_debug(OS_LOG_DEFAULT, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			return;
+		}
+
+		volume = channelVolume;
+	});
+
+	return (float)volume;
+}
+
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error
+{
+	__block BOOL success = NO;
+	__block NSError *err = nil;
+	dispatch_sync(_engineQueue, ^{
+		AudioUnit au = _engine.outputNode.audioUnit;
+		if(!au)
+			return;
+
+		AudioUnitParameterValue channelVolume = volume;
+		OSStatus result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
+		if(result != noErr) {
+			os_log_debug(OS_LOG_DEFAULT, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return;
+		}
+
+		success = YES;
+	});
+
+	if(!success && err && error)
+		*error = err;
+
+	return success;
+}
+
 #pragma mark - Player Event Callbacks
 
 // Most callbacks are passed directly to the underlying SFBAudioPlayerNode
@@ -385,38 +447,24 @@ namespace {
 
 #pragma mark - Output Device
 
-- (SFBAudioOutputDevice *)outputDevice
+- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error
 {
-	__block AudioObjectID deviceID = kAudioDeviceUnknown;
-	dispatch_sync(_engineQueue, ^{
-		UInt32 dataSize = sizeof(deviceID);
-		auto result = AudioUnitGetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, &dataSize);
-		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioUnitGetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
-	});
-
-	if(deviceID == kAudioDeviceUnknown)
-		return nil;
-
-	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
-}
-
-- (void)setOutputDevice:(SFBAudioOutputDevice *)outputDevice
-{
-	if(outputDevice == nil)
-		outputDevice = [SFBAudioDevice defaultOutputDevice];
-
-	AudioObjectID deviceID = outputDevice.deviceID;
-	if(deviceID == kAudioDeviceUnknown)
-		return;
+	NSParameterAssert(outputDevice != nil);
 
 	os_log_debug(OS_LOG_DEFAULT, "Setting output device to %{public}@", outputDevice);
 
+	__block BOOL result;
+	__block NSError *err = nil;
 	dispatch_sync(_engineQueue, ^{
-		auto result = AudioUnitSetProperty(_engine.outputNode.audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceID, (UInt32)sizeof(deviceID));
-		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioUnitSetProperty (kAudioOutputUnitProperty_CurrentDevice) failed: %d", result);
+		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.deviceID error:&err];
 	});
+
+	if(result)
+		_outputDevice = outputDevice;
+	else if(err && error)
+		*error = err;
+
+	return result;
 }
 
 #pragma mark - AVAudioEngine

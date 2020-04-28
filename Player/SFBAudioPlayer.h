@@ -67,7 +67,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, readonly) BOOL isStopped; ///< Returns \c NO if \c engineIsRunning
 
 @property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, readonly, nullable) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
 
 #pragma mark - Playback Properties
 
@@ -95,6 +95,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
+#pragma mark - Volume Control
+
+/// Returns \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit or \c -1 on error
+@property (nonatomic, readonly) float volume;
+- (BOOL)setVolume:(float)volume error:(NSError **)error;
+
+/// Returns \c kHALOutputParam_Volume on \c channel for \c AVAudioEngine.outputNode.audioUnit or \c -1 on error
+- (float)volumeForChannel:(AudioObjectPropertyElement)channel;
+- (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error;
+
 #pragma mark - Player Event Callbacks
 
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
@@ -105,7 +115,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - Output Device
 
-@property (nonatomic, nonnull) SFBAudioOutputDevice *outputDevice;
+@property (nonatomic, nonnull, readonly) SFBAudioOutputDevice *outputDevice;
+- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error;
 
 #pragma mark - AVAudioEngine Access
 
