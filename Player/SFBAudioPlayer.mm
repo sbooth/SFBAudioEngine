@@ -355,7 +355,7 @@ namespace {
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel
 {
-	__block Float32 volume = -1;
+	__block float volume = nanf("1");
 	dispatch_sync(_engineQueue, ^{
 		AudioUnit au = _engine.outputNode.audioUnit;
 		if(!au)
@@ -371,7 +371,7 @@ namespace {
 		volume = channelVolume;
 	});
 
-	return (float)volume;
+	return volume;
 }
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error
