@@ -200,6 +200,20 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	}
 }
 
+- (BOOL)isEqual:(id)object
+{
+	if(![object isKindOfClass:[SFBAudioDevice class]])
+		return NO;
+
+	SFBAudioDevice *other = (SFBAudioDevice *)object;
+	return _deviceID == other->_deviceID;
+}
+
+- (NSUInteger)hash
+{
+	return _deviceID;
+}
+
 - (NSString *)deviceUID
 {
 	AudioObjectPropertyAddress propertyAddress = {

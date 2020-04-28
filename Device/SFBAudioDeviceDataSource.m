@@ -33,6 +33,20 @@
 	return self;
 }
 
+- (BOOL)isEqual:(id)object
+{
+	if(![object isKindOfClass:[SFBAudioDeviceDataSource class]])
+		return NO;
+
+	SFBAudioDeviceDataSource *other = (SFBAudioDeviceDataSource *)object;
+	return [_audioDevice isEqual:other->_audioDevice] && _scope == other->_scope && _dataSourceID == other->_dataSourceID;
+}
+
+- (NSUInteger)hash
+{
+	return _audioDevice.hash ^ _scope ^ _dataSourceID;
+}
+
 - (NSString *)name
 {
 	AudioObjectPropertyAddress propertyAddress = {
