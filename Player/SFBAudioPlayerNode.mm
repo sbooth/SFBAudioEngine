@@ -596,6 +596,7 @@ namespace {
 	dispatch_sync(_queue, ^{
 		_queuedDecoders.push(decoder);
 	});
+	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
 }
