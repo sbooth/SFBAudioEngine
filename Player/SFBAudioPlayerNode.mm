@@ -558,6 +558,9 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
+	if(!decoder.isOpen && ![decoder openReturningError:error])
+		return NO;
+
 	if(![self supportsFormat:decoder.processingFormat])
 		return NO;
 
@@ -589,6 +592,9 @@ namespace {
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
+
+	if(!decoder.isOpen && ![decoder openReturningError:error])
+		return NO;
 
 	if(![self supportsFormat:decoder.processingFormat])
 		return NO;
