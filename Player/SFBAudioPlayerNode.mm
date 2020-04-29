@@ -812,7 +812,6 @@ namespace {
 	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;
-
 }
 
 - (BOOL)supportsSeeking
