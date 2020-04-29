@@ -14,8 +14,8 @@
 
 // ========================================
 // Initialization
-void Setupmpg123(void) __attribute__ ((constructor));
-void Setupmpg123()
+static void Setupmpg123(void) __attribute__ ((constructor));
+static void Setupmpg123()
 {
 	// What happens if this fails?
 	int result = mpg123_init();
@@ -23,8 +23,8 @@ void Setupmpg123()
 		os_log_debug(gSFBAudioDecoderLog, "Unable to initialize mpg123: %s", mpg123_plain_strerror(result));
 }
 
-void Teardownmpg123(void) __attribute__ ((destructor));
-void Teardownmpg123()
+static void Teardownmpg123(void) __attribute__ ((destructor));
+static void Teardownmpg123()
 {
 	mpg123_exit();
 }
