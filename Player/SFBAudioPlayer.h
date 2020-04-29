@@ -56,6 +56,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 - (void)stop;
 - (BOOL)playPauseReturningError:(NSError **)error NS_SWIFT_NAME(playPause());
 
+- (void)reset;
+
 #pragma mark - Player State
 
 @property (nonatomic, readonly) BOOL engineIsRunning; ///< Returns \c YES if the \c AVAudioEngine is running

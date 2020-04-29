@@ -80,20 +80,20 @@ namespace {
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
-	[_player stop];
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
-
 	dispatch_sync(_engineQueue, ^{
 		[_engine pause];
 		[_engine reset];
+		[_player reset];
 
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 		if(![_player supportsFormat:decoder.processingFormat])
 			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+	});
+
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
 	});
 
 	if(![_player playDecoder:decoder error:error])
@@ -184,16 +184,14 @@ namespace {
 	__block NSError *err;
 	dispatch_sync(_engineQueue, ^{
 		startedSuccessfully = [_engine startAndReturnError:&err];
+		if(startedSuccessfully)
+			[_player play];
 	});
 
-	if(!startedSuccessfully) {
-		if(error)
-			*error = err;
-		return NO;
-	}
+	if(!startedSuccessfully && err && error)
+		*error = err;
 
-	[_player play];
-	return YES;
+	return startedSuccessfully;
 }
 
 - (void)pause
@@ -203,10 +201,14 @@ namespace {
 
 - (void)stop
 {
-	[self clearQueue];
-	[_player stop];
 	dispatch_sync(_engineQueue, ^{
 		[_engine stop];
+		[_player stop];
+	});
+
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
 	});
 }
 
@@ -218,6 +220,19 @@ namespace {
 	}
 	else
 		return [self playReturningError:error];
+}
+
+- (void)reset
+{
+	dispatch_sync(_engineQueue, ^{
+		[_engine reset];
+		[_player reset];
+	});
+
+	dispatch_sync(_queue, ^{
+		while(!_queuedDecoders.empty())
+			_queuedDecoders.pop();
+	});
 }
 
 #pragma mark - Player State
@@ -492,9 +507,9 @@ namespace {
 	if(engine != _engine)
 		return;
 
-	[_player stop];
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
+		[_player stop];
 		[self setupEngineForGaplessPlaybackOfFormat:_player.renderingFormat];
 	});
 }
