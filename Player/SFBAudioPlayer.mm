@@ -385,7 +385,7 @@ namespace {
 		AudioUnitParameterValue channelVolume;
 		OSStatus result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
 		if(result != noErr) {
-			os_log_debug(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			return;
 		}
 
@@ -407,7 +407,7 @@ namespace {
 		AudioUnitParameterValue channelVolume = volume;
 		OSStatus result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
-			os_log_debug(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 			return;
 		}
@@ -472,7 +472,7 @@ namespace {
 {
 	NSParameterAssert(outputDevice != nil);
 
-	os_log_debug(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
+	os_log_info(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
 
 	__block BOOL result;
 	__block NSError *err = nil;

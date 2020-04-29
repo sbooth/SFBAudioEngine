@@ -441,7 +441,7 @@ namespace {
 	};
 
 	if((self = [super initWithFormat:format renderBlock:renderBlock])) {
-		os_log_debug(_audioPlayerNodeLog, "Render block format: %{public}@", format);
+		os_log_info(_audioPlayerNodeLog, "Render block format: %{public}@", format);
 
 		_renderingFormat = format;
 		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
@@ -557,7 +557,7 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
-	os_log_debug(_audioPlayerNodeLog, "Playing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
+	os_log_info(_audioPlayerNodeLog, "Playing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
 
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
@@ -594,7 +594,7 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
-	os_log_debug(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
+	os_log_info(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
 
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
@@ -614,7 +614,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
-		os_log_debug(_audioPlayerNodeLog, "Skipping \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+		os_log_info(_audioPlayerNodeLog, "Skipping \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
 	}
