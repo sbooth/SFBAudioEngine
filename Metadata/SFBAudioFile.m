@@ -11,6 +11,17 @@
 // NSError domain for AudioFile and subclasses
 NSErrorDomain const SFBAudioFileErrorDomain = @"org.sbooth.AudioEngine.AudioFile";
 
+os_log_t gSFBAudioFileLog = NULL;
+
+static void SFBCreateAudioFileLog(void) __attribute__ ((constructor));
+static void SFBCreateAudioFileLog()
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		gSFBAudioFileLog = os_log_create("org.sbooth.AudioEngine", "AudioFile");
+	});
+}
+
 @implementation SFBAudioFile
 
 static NSMutableArray *_registeredSubclasses = nil;

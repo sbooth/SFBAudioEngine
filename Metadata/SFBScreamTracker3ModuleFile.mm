@@ -74,7 +74,7 @@
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	os_log_error(OS_LOG_DEFAULT, "Writing Scream Tracker 3 module metadata is not supported");
+	os_log_error(gSFBAudioFileLog, "Writing Scream Tracker 3 module metadata is not supported");
 
 	if(error)
 		*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

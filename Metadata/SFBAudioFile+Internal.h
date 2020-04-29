@@ -3,11 +3,14 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <objc/runtime.h>
+#import <objc/runtime.h>
+#import <os/log.h>
 
 #import "SFBAudioFile.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+extern os_log_t gSFBAudioFileLog;
 
 @interface SFBAudioFile ()
 @property (nonatomic) SFBAudioProperties *properties;
