@@ -42,7 +42,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 			}
 		}
 
-		player.renderingFinishedNotificationHandler = { decoder in
+		player.renderingCompleteNotificationHandler = { decoder in
 			DispatchQueue.main.async {
 				self.updateWindow()
 			}
