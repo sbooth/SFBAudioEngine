@@ -75,6 +75,8 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 	AudioObjectID _deviceID;
 	NSMutableDictionary *_listenerBlocks;
 }
+- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(void(^)(void))block;
+- (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress;
 @end
 
 @implementation SFBAudioDevice
@@ -683,9 +685,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	NSParameterAssert(propertyAddress != nil);
 	NSParameterAssert(block != nil);
 
-	[self removePropertyListenerForPropertyAddress:propertyAddress];
-
-	os_log_info(gSFBAudioDeviceLog, "Adding property listener to device 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _deviceID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
+	os_log_info(gSFBAudioDeviceLog, "Adding property listener on device 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _deviceID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
 
 	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
 
@@ -711,6 +711,8 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
 	AudioObjectPropertyListenerBlock listenerBlock = [_listenerBlocks objectForKey:propertyAddressAsValue];
 	if(listenerBlock) {
+		os_log_info(gSFBAudioDeviceLog, "Removing property listener on device 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _deviceID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
+
 		[_listenerBlocks removeObjectForKey:propertyAddressAsValue];
 
 		OSStatus result = AudioObjectRemovePropertyListenerBlock(_deviceID, propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
