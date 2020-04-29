@@ -13,6 +13,8 @@
 
 const NSNotificationName SFBAudioDevicesChangedNotification = @"org.sbooth.AudioEngine.SFBAudioDeviceNotifier.ChangedNotification";
 
+extern os_log_t gSFBAudioDeviceLog;
+
 @interface SFBAudioDeviceNotifier ()
 {
 @private
@@ -44,7 +46,7 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 
 		OSStatus result = AudioObjectAddPropertyListenerBlock(kAudioObjectSystemObject, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), sInstance->_listenerBlock);
 		if(result != kAudioHardwareNoError)
-			os_log_error(OS_LOG_DEFAULT, "AudioObjectAddPropertyListener (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			os_log_error(gSFBAudioDeviceLog, "AudioObjectAddPropertyListener (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 	});
 
 	return sInstance;
@@ -61,7 +63,7 @@ static SFBAudioDeviceNotifier *sInstance = nil;
 
 		OSStatus result = AudioObjectRemovePropertyListenerBlock(kAudioObjectSystemObject, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), _listenerBlock);
 		if(result != kAudioHardwareNoError)
-			os_log_error(OS_LOG_DEFAULT, "AudioObjectRemovePropertyListenerBlock (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			os_log_error(gSFBAudioDeviceLog, "AudioObjectRemovePropertyListenerBlock (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 	}
 }
 
