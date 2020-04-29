@@ -139,7 +139,7 @@ static void close_callback(void *f)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -187,7 +187,7 @@ static void close_callback(void *f)
 
 	_df = dumbfile_open_ex((__bridge void *)self, &_dfs);
 	if(!_df) {
-		os_log_error(OS_LOG_DEFAULT, "dumbfile_open_ex failed");
+		os_log_error(_audioDecoderLog, "dumbfile_open_ex failed");
 		return NO;
 	}
 
@@ -224,7 +224,7 @@ static void close_callback(void *f)
 	// Generate 2-channel audio
 	_dsr = duh_start_sigrenderer(_duh, 0, DUMB_CHANNELS, 0);
 	if(!_dsr) {
-		os_log_error(OS_LOG_DEFAULT, "duh_start_sigrenderer failed");
+		os_log_error(_audioDecoderLog, "duh_start_sigrenderer failed");
 
 		unload_duh(_duh);
 		_duh = NULL;

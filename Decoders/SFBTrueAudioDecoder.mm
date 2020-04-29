@@ -87,7 +87,7 @@ namespace {
 		_decoder->init_get_info(&streamInfo, 0);
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(OS_LOG_DEFAULT, "Error creating True Audio decoder: %d", e.code());
+		os_log_error(_audioDecoderLog, "Error creating True Audio decoder: %d", e.code());
 		return NO;
 	}
 
@@ -144,7 +144,7 @@ namespace {
 
 		default:
 		{
-			os_log_error(OS_LOG_DEFAULT, "Unsupported bit depth: %d", streamInfo.bps);
+			os_log_error(_audioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -207,7 +207,7 @@ namespace {
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -239,7 +239,7 @@ namespace {
 		}
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(OS_LOG_DEFAULT, "True Audio decoding error: %d", e.code());
+		os_log_error(_audioDecoderLog, "True Audio decoding error: %d", e.code());
 		return NO;
 	}
 
@@ -263,7 +263,7 @@ namespace {
 		_decoder->set_position(seconds, &frame_start);
 	}
 	catch(const tta::tta_exception& e) {
-		os_log_error(OS_LOG_DEFAULT, "True Audio seek error: %d", e.code());
+		os_log_error(_audioDecoderLog, "True Audio seek error: %d", e.code());
 		return NO;
 	}
 

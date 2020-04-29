@@ -115,20 +115,20 @@ static long tell_func_callback(void *datasource)
 	}
 
 	if(ov_test_open(&_vorbisFile)) {
-		os_log_error(OS_LOG_DEFAULT, "ov_test_open failed");
+		os_log_error(_audioDecoderLog, "ov_test_open failed");
 
 		if(ov_clear(&_vorbisFile))
-			os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
+			os_log_error(_audioDecoderLog, "ov_clear failed");
 
 		return NO;
 	}
 
 	vorbis_info *ovInfo = ov_info(&_vorbisFile, -1);
 	if(!ovInfo) {
-		os_log_error(OS_LOG_DEFAULT, "ov_info failed");
+		os_log_error(_audioDecoderLog, "ov_info failed");
 
 		if(ov_clear(&_vorbisFile))
-			os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
+			os_log_error(_audioDecoderLog, "ov_clear failed");
 
 		return NO;
 	}
@@ -175,7 +175,7 @@ static long tell_func_callback(void *datasource)
 - (BOOL)closeReturningError:(NSError **)error
 {
 	if(ov_clear(&_vorbisFile))
-		os_log_error(OS_LOG_DEFAULT, "ov_clear failed");
+		os_log_error(_audioDecoderLog, "ov_clear failed");
 
 	return [super closeReturningError:error];
 }
@@ -203,7 +203,7 @@ static long tell_func_callback(void *datasource)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -219,7 +219,7 @@ static long tell_func_callback(void *datasource)
 		long framesRead = ov_read_float(&_vorbisFile, &pcm_channels, (int)framesRemaining, &bitstream);
 
 		if(framesRead < 0) {
-			os_log_error(OS_LOG_DEFAULT, "Ogg Vorbis decoding error");
+			os_log_error(_audioDecoderLog, "Ogg Vorbis decoding error");
 			return NO;
 		}
 
@@ -247,7 +247,7 @@ static long tell_func_callback(void *datasource)
 {
 	NSParameterAssert(frame >= 0);
 	if(ov_pcm_seek(&_vorbisFile, frame)) {
-		os_log_error(OS_LOG_DEFAULT, "Ogg Vorbis seek error");
+		os_log_error(_audioDecoderLog, "Ogg Vorbis seek error");
 		return NO;
 	}
 	return YES;

@@ -9,9 +9,12 @@
 #import "SFBDSDDecoder+Internal.h"
 
 #import "NSError+SFBURLPresentation.h"
+#import "SFBAudioDecoder.h"
 
 // NSError domain for DSDDecoder and subclasses
 NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
+
+os_log_t _dsdDecoderLog = NULL;
 
 @implementation SFBDSDDecoder
 
@@ -23,6 +26,14 @@ NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecod
 @dynamic packetCount;
 
 static NSMutableArray *_registeredSubclasses = nil;
+
++ (void)load
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		_dsdDecoderLog = os_log_create("org.sbooth.AudioEngine", "DSDDecoder");
+	});
+}
 
 + (NSSet *)supportedPathExtensions
 {
@@ -107,7 +118,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 			_inputSource = inputSource;
 			return self;
 		}
-		os_log_debug(OS_LOG_DEFAULT, "SFBDSDDecoder unsupported MIME type: %{public}@", mimeType);
+		os_log_debug(_dsdDecoderLog, "SFBDSDDecoder unsupported MIME type: %{public}@", mimeType);
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
@@ -130,7 +141,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	Class subclass = [SFBDSDDecoder subclassForPathExtension:pathExtension.lowercaseString];
 	if(!subclass) {
-		os_log_debug(OS_LOG_DEFAULT, "SFBDSDDecoder unsupported path extension: %{public}@", pathExtension);
+		os_log_debug(_dsdDecoderLog, "SFBDSDDecoder unsupported path extension: %{public}@", pathExtension);
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain

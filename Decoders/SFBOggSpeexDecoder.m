@@ -326,7 +326,7 @@
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -361,7 +361,7 @@
 				ogg_packet oggPacket;
 				int result = ogg_stream_packetout(&_streamState, &oggPacket);
 				if(result == -1) {
-					os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding error: Ogg loss of streaming");
+					os_log_error(_audioDecoderLog, "Ogg Speex decoding error: Ogg loss of streaming");
 					break;
 				}
 
@@ -401,12 +401,12 @@
 							if(result == -1)
 								break;
 							else if(result == -2) {
-								os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding error: possible corrupted stream");
+								os_log_error(_audioDecoderLog, "Ogg Speex decoding error: possible corrupted stream");
 								break;
 							}
 
 							if(speex_bits_remaining(&_bits) < 0) {
-								os_log_error(OS_LOG_DEFAULT, "Ogg Speex decoding overflow: possible corrupted stream");
+								os_log_error(_audioDecoderLog, "Ogg Speex decoding overflow: possible corrupted stream");
 								break;
 							}
 
@@ -452,7 +452,7 @@
 					// Read bitstream from input file
 					NSInteger bytesRead;
 					if(![_inputSource readBytes:data length:READ_SIZE_BYTES bytesRead:&bytesRead error:nil]) {
-						os_log_error(OS_LOG_DEFAULT, "Unable to read from the input file");
+						os_log_error(_audioDecoderLog, "Unable to read from the input file");
 						break;
 					}
 
@@ -470,7 +470,7 @@
 				// Get the resultant Ogg page
 				int result = ogg_stream_pagein(&_streamState, &_page);
 				if(result) {
-					os_log_error(OS_LOG_DEFAULT, "Error reading Ogg page");
+					os_log_error(_audioDecoderLog, "Error reading Ogg page");
 					break;
 				}
 			}

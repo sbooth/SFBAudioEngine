@@ -53,13 +53,13 @@ namespace {
 		char chunkIDBytes [4];
 		NSInteger bytesRead;
 		if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read chunk ID");
+			os_log_error(_dsdDecoderLog, "Unable to read chunk ID");
 			return false;
 		}
 
 		chunkID = BytesToID(chunkIDBytes);
 		if(0 == chunkID) {
-			os_log_error(OS_LOG_DEFAULT, "Illegal chunk ID");
+			os_log_error(_dsdDecoderLog, "Illegal chunk ID");
 			return false;
 		}
 
@@ -217,7 +217,7 @@ namespace {
 			return false;
 
 		if(![inputSource readUInt64BigEndian:&chunkDataSize error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read chunk data size");
+			os_log_error(_dsdDecoderLog, "Unable to read chunk data size");
 			return false;
 		}
 
@@ -227,7 +227,7 @@ namespace {
 	std::shared_ptr<FormatVersionChunk> ParseFormatVersionChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'FVER') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FVER' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'FVER' chunk");
 			return nullptr;
 		}
 
@@ -237,18 +237,18 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(![inputSource readUInt32BigEndian:&result->mFormatVersion error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read format version in 'FVER' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read format version in 'FVER' chunk");
 			return nullptr;
 		}
 
 		if(result->mFormatVersion > FormatVersionChunk::kSupportedFormatVersion) {
-			os_log_error(OS_LOG_DEFAULT, "Unsupported format version in 'FVER': %u", result->mFormatVersion);
+			os_log_error(_dsdDecoderLog, "Unsupported format version in 'FVER': %u", result->mFormatVersion);
 			return nullptr;
 		}
 
@@ -258,7 +258,7 @@ namespace {
 	std::shared_ptr<SampleRateChunk> ParseSampleRateChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'FS  ') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'FS  ' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'FS  ' chunk");
 			return nullptr;
 		}
 
@@ -268,13 +268,13 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(![inputSource readUInt32BigEndian:&result->mSampleRate error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read sample rate in 'FS  ' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read sample rate in 'FS  ' chunk");
 			return nullptr;
 		}
 
@@ -284,7 +284,7 @@ namespace {
 	std::shared_ptr<ChannelsChunk> ParseChannelsChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'CHNL') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CHNL' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'CHNL' chunk");
 			return nullptr;
 		}
 
@@ -294,20 +294,20 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(![inputSource readUInt16BigEndian:&result->mNumberChannels error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read number channels in 'CHNL' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read number channels in 'CHNL' chunk");
 			return nullptr;
 		}
 
 		for(uint16_t i = 0; i < result->mNumberChannels; ++i) {
 			uint32_t channelID;
 			if(!ReadID(inputSource, channelID)) {
-				os_log_error(OS_LOG_DEFAULT, "Unable to read channel ID in 'CHNL' chunk");
+				os_log_error(_dsdDecoderLog, "Unable to read channel ID in 'CHNL' chunk");
 				return nullptr;
 			}
 			result->mChannelIDs.push_back(channelID);
@@ -319,7 +319,7 @@ namespace {
 	std::shared_ptr<CompressionTypeChunk> ParseCompressionTypeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'CMPR') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'CMPR' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'CMPR' chunk");
 			return nullptr;
 		}
 
@@ -329,26 +329,26 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mCompressionType)) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read compression type in 'CMPR' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read compression type in 'CMPR' chunk");
 			return nullptr;
 		}
 
 		uint8_t count;
 		if(![inputSource readUInt8:&count error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read count in 'CMPR' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read count in 'CMPR' chunk");
 			return nullptr;
 		}
 
 		char compressionName [count];
 		NSInteger bytesRead;
 		if(![inputSource readBytes:compressionName length:count bytesRead:&bytesRead error:nil] || bytesRead != count) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read compressionName in 'CMPR' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read compressionName in 'CMPR' chunk");
 			return nullptr;
 		}
 
@@ -356,14 +356,14 @@ namespace {
 
 		// Chunks always have an even length
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 
 		if(offset % 2) {
 			uint8_t unused;
 			if(![inputSource readUInt8:&unused error:nil]) {
-				os_log_error(OS_LOG_DEFAULT, "Unable to read dummy byte in 'CMPR' chunk");
+				os_log_error(_dsdDecoderLog, "Unable to read dummy byte in 'CMPR' chunk");
 				return nullptr;
 			}
 
@@ -375,7 +375,7 @@ namespace {
 	std::shared_ptr<AbsoluteStartTimeChunk> ParseAbsoluteStartTimeChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'ABSS') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'ABSS' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'ABSS' chunk");
 			return nullptr;
 		}
 
@@ -385,28 +385,28 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(![inputSource readUInt16BigEndian:&result->mHours error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read hours in 'ABSS' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read hours in 'ABSS' chunk");
 			return nullptr;
 		}
 
 		if(![inputSource readUInt8:&result->mMinutes error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read minutes in 'ABSS' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read minutes in 'ABSS' chunk");
 			return nullptr;
 		}
 
 		if(![inputSource readUInt8:&result->mSeconds error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read seconds in 'ABSS' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read seconds in 'ABSS' chunk");
 			return nullptr;
 		}
 
 		if(![inputSource readUInt32BigEndian:&result->mSamples error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read samples in 'ABSS' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read samples in 'ABSS' chunk");
 			return nullptr;
 		}
 
@@ -416,7 +416,7 @@ namespace {
 	std::shared_ptr<LoudspeakerConfigurationChunk> ParseLoudspeakerConfigurationChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'LSCO') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'LSCO' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'LSCO' chunk");
 			return nullptr;
 		}
 
@@ -426,13 +426,13 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(![inputSource readUInt16BigEndian:&result->mLoudspeakerConfiguration error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read loudspeaker configuration in 'LSCO' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read loudspeaker configuration in 'LSCO' chunk");
 			return nullptr;
 		}
 
@@ -442,7 +442,7 @@ namespace {
 	std::shared_ptr<PropertyChunk> ParsePropertyChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'PROP') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'PROP' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'PROP' chunk");
 			return nullptr;
 		}
 
@@ -452,18 +452,18 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mPropertyType)) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read property type in 'PROP' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read property type in 'PROP' chunk");
 			return nullptr;
 		}
 
 		if(result->mPropertyType != 'SND ') {
-			os_log_error(OS_LOG_DEFAULT, "Unexpected property type in 'PROP' chunk: %u", result->mPropertyType);
+			os_log_error(_dsdDecoderLog, "Unexpected property type in 'PROP' chunk: %u", result->mPropertyType);
 			return nullptr;
 		}
 
@@ -519,12 +519,12 @@ namespace {
 						// Skip unrecognized or ignored chunks
 					default:
 						if(![inputSource getOffset:&offset error:nil]) {
-							os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+							os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 							return nullptr;
 						}
 
 						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
-							os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+							os_log_error(_dsdDecoderLog, "Error skipping chunk data");
 							return nullptr;
 						}
 
@@ -535,7 +535,7 @@ namespace {
 				chunkDataSizeRemaining -= localChunkDataSize;
 			}
 			else {
-				os_log_error(OS_LOG_DEFAULT, "Error reading local chunk in 'PROP' chunk");
+				os_log_error(_dsdDecoderLog, "Error reading local chunk in 'PROP' chunk");
 				return nullptr;
 			}
 		}
@@ -546,7 +546,7 @@ namespace {
 	std::shared_ptr<DSDSoundDataChunk> ParseDSDSoundDataChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'DSD ') {
-			os_log_error(OS_LOG_DEFAULT, "Invalid chunk ID for 'DSD ' chunk");
+			os_log_error(_dsdDecoderLog, "Invalid chunk ID for 'DSD ' chunk");
 			return nullptr;
 		}
 
@@ -556,14 +556,14 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		// Skip the data
 		if(![inputSource seekToOffset:(offset + (NSInteger)chunkDataSize) error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+			os_log_error(_dsdDecoderLog, "Error skipping chunk data");
 			return nullptr;
 		}
 
@@ -573,7 +573,7 @@ namespace {
 	std::unique_ptr<FormDSDChunk> ParseFormDSDChunk(SFBInputSource *inputSource, const uint32_t chunkID, const uint64_t chunkDataSize)
 	{
 		if(chunkID != 'FRM8') {
-			os_log_error(OS_LOG_DEFAULT, "Missing 'FRM8' chunk");
+			os_log_error(_dsdDecoderLog, "Missing 'FRM8' chunk");
 			return nullptr;
 		}
 
@@ -583,18 +583,18 @@ namespace {
 		result->mDataSize = chunkDataSize;
 		NSInteger offset;
 		if(![inputSource getOffset:&offset error:nil]) {
-			os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+			os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 			return nullptr;
 		}
 		result->mDataOffset = offset;
 
 		if(!ReadID(inputSource, result->mFormType)) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to read formType in 'FRM8' chunk");
+			os_log_error(_dsdDecoderLog, "Unable to read formType in 'FRM8' chunk");
 			return nullptr;
 		}
 
 		if(result->mFormType != 'DSD ') {
-			os_log_error(OS_LOG_DEFAULT, "Unexpected formType in 'FRM8' chunk: '%{public}.4s'", SFBCStringForOSType(result->mFormType));
+			os_log_error(_dsdDecoderLog, "Unexpected formType in 'FRM8' chunk: '%{public}.4s'", SFBCStringForOSType(result->mFormType));
 			return nullptr;
 		}
 
@@ -634,12 +634,12 @@ namespace {
 						// Skip unrecognized or ignored chunks
 					default:
 						if(![inputSource getOffset:&offset error:nil]) {
-							os_log_error(OS_LOG_DEFAULT, "Error getting chunk data offset");
+							os_log_error(_dsdDecoderLog, "Error getting chunk data offset");
 							return nullptr;
 						}
 
 						if(![inputSource seekToOffset:(offset + (NSInteger)localChunkDataSize) error:nil]) {
-							os_log_error(OS_LOG_DEFAULT, "Error skipping chunk data");
+							os_log_error(_dsdDecoderLog, "Error skipping chunk data");
 							return nullptr;
 						}
 
@@ -650,7 +650,7 @@ namespace {
 				chunkDataSizeRemaining -= localChunkDataSize;
 			}
 			else {
-				os_log_error(OS_LOG_DEFAULT, "Error reading local chunk in 'FRM8' chunk");
+				os_log_error(_dsdDecoderLog, "Error reading local chunk in 'FRM8' chunk");
 				return nullptr;
 			}
 		}
@@ -715,7 +715,7 @@ namespace {
 
 	auto chunks = ParseDSDIFF(_inputSource);
 	if(!chunks) {
-		os_log_error(OS_LOG_DEFAULT, "Error parsing file");
+		os_log_error(_dsdDecoderLog, "Error parsing file");
 		if(error)
 			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 		return NO;
@@ -726,7 +726,7 @@ namespace {
 	auto channelsChunk = std::static_pointer_cast<ChannelsChunk>(propertyChunk->mLocalChunks['CHNL']);
 
 	if(!propertyChunk || !sampleRateChunk || !channelsChunk) {
-		os_log_error(OS_LOG_DEFAULT, "Missing chunk in file");
+		os_log_error(_dsdDecoderLog, "Missing chunk in file");
 		if(error)
 			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 		return NO;
@@ -775,7 +775,7 @@ namespace {
 
 	auto soundDataChunk = std::static_pointer_cast<DSDSoundDataChunk>(chunks->mLocalChunks['DSD ']);
 	if(!soundDataChunk) {
-		os_log_error(OS_LOG_DEFAULT, "Missing chunk in file");
+		os_log_error(_dsdDecoderLog, "Missing chunk in file");
 		if(error)
 			*error = CreateInvalidDSDIFFFileError(_inputSource.url);
 		return NO;
@@ -820,7 +820,7 @@ namespace {
 	buffer.byteLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_dsdDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -842,7 +842,7 @@ namespace {
 
 		NSInteger bytesRead;
 		if(![_inputSource readBytes:buf length:bytesToRead bytesRead:&bytesRead error:error] || bytesRead != bytesToRead) {
-			os_log_debug(OS_LOG_DEFAULT, "Error reading audio: requested %ld bytes, got %ld", (long)bytesToRead, bytesRead);
+			os_log_debug(_dsdDecoderLog, "Error reading audio: requested %ld bytes, got %ld", (long)bytesToRead, bytesRead);
 			break;
 		}
 
@@ -873,7 +873,7 @@ namespace {
 
 	NSInteger packetOffset = packet * BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
-		os_log_debug(OS_LOG_DEFAULT, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
+		os_log_debug(_dsdDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
 		return NO;
 	}
 

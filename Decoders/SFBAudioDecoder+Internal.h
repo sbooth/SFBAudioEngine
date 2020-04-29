@@ -7,6 +7,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern os_log_t _audioDecoderLog;
+
 @interface SFBAudioDecoder ()
 {
 @package

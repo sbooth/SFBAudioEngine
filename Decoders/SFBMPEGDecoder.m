@@ -20,7 +20,7 @@ void Setupmpg123()
 	// What happens if this fails?
 	int result = mpg123_init();
 	if(result != MPG123_OK)
-		os_log_debug(OS_LOG_DEFAULT, "Unable to initialize mpg123: %s", mpg123_plain_strerror(result));
+		os_log_debug(_audioDecoderLog, "Unable to initialize mpg123: %s", mpg123_plain_strerror(result));
 }
 
 void Teardownmpg123(void) __attribute__ ((destructor));
@@ -253,7 +253,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -282,7 +282,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 		if(result == MPG123_DONE)
 			break;
 		else if(result != MPG123_OK) {
-			os_log_error(OS_LOG_DEFAULT, "mpg123_decode_frame failed: %s", mpg123_strerror(_mpg123));
+			os_log_error(_audioDecoderLog, "mpg123_decode_frame failed: %s", mpg123_strerror(_mpg123));
 			break;
 		}
 

@@ -115,7 +115,7 @@ static 	opus_int64 tell_callback(void *stream)
 	}
 
 	if(op_test_open(_opusFile)) {
-		os_log_error(OS_LOG_DEFAULT, "op_test_open failed");
+		os_log_error(_audioDecoderLog, "op_test_open failed");
 		op_free(_opusFile);
 		return NO;
 	}
@@ -194,7 +194,7 @@ static 	opus_int64 tell_callback(void *stream)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -207,7 +207,7 @@ static 	opus_int64 tell_callback(void *stream)
 		int framesRead = op_read_float(_opusFile, buffer.floatChannelData[0] + buffer.frameLength, (int)(framesRemaining * buffer.stride), NULL);
 
 		if(framesRead < 0) {
-			os_log_error(OS_LOG_DEFAULT, "Ogg Opus decoding error");
+			os_log_error(_audioDecoderLog, "Ogg Opus decoding error");
 			return NO;
 		}
 
@@ -226,7 +226,7 @@ static 	opus_int64 tell_callback(void *stream)
 {
 	NSParameterAssert(frame >= 0);
 	if(op_pcm_seek(_opusFile, frame)) {
-		os_log_error(OS_LOG_DEFAULT, "op_pcm_seek() failed");
+		os_log_error(_audioDecoderLog, "op_pcm_seek() failed");
 		return NO;
 	}
 	return YES;

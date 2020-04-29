@@ -75,7 +75,7 @@ static SInt64 get_size_callback(void *inClientData)
 	OSStatus result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 0, NULL, &size, &supportedExtensions);
 
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(_audioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
 	}
 
@@ -89,7 +89,7 @@ static SInt64 get_size_callback(void *inClientData)
 	OSStatus result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 0, NULL, &size, &supportedMIMETypes);
 
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(_audioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
 	}
 
@@ -104,7 +104,7 @@ static SInt64 get_size_callback(void *inClientData)
 	// Open the input file
 	OSStatus result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, NULL, get_size_callback, NULL, 0, &_af);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "AudioFileOpenWithCallbacks failed: %d", result);
+		os_log_error(_audioDecoderLog, "AudioFileOpenWithCallbacks failed: %d", result);
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -119,11 +119,11 @@ static SInt64 get_size_callback(void *inClientData)
 
 	result = ExtAudioFileWrapAudioFileID(_af, false, &_eaf);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileWrapAudioFileID failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d", result);
 
 		result = AudioFileClose(_af);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioFileClose failed: %d", result);
+			os_log_error(_audioDecoderLog, "AudioFileClose failed: %d", result);
 
 		_af = NULL;
 
@@ -143,15 +143,15 @@ static SInt64 get_size_callback(void *inClientData)
 	UInt32 dataSize = sizeof(format);
 	result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d", result);
 
 		result = ExtAudioFileDispose(_eaf);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "ExtAudioFileDispose failed: %d", result);
+			os_log_error(_audioDecoderLog, "ExtAudioFileDispose failed: %d", result);
 
 		result = AudioFileClose(_af);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioFileClose failed: %d", result);
+			os_log_error(_audioDecoderLog, "AudioFileClose failed: %d", result);
 
 		_af = NULL;
 		_eaf = NULL;
@@ -166,17 +166,17 @@ static SInt64 get_size_callback(void *inClientData)
 		AudioChannelLayout *layout = (AudioChannelLayout *)malloc(dataSize);
 		result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
 		if(result != noErr) {
-			os_log_error(OS_LOG_DEFAULT, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
+			os_log_error(_audioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
 
 			free(layout);
 
 			result = ExtAudioFileDispose(_eaf);
 			if(result != noErr)
-				os_log_error(OS_LOG_DEFAULT, "ExtAudioFileDispose failed: %d", result);
+				os_log_error(_audioDecoderLog, "ExtAudioFileDispose failed: %d", result);
 
 			result = AudioFileClose(_af);
 			if(result != noErr)
-				os_log_error(OS_LOG_DEFAULT, "AudioFileClose failed: %d", result);
+				os_log_error(_audioDecoderLog, "AudioFileClose failed: %d", result);
 
 			_af = NULL;
 			_eaf = NULL;
@@ -188,7 +188,7 @@ static SInt64 get_size_callback(void *inClientData)
 		free(layout);
 	}
 	else
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
 
 	// Tell the ExtAudioFile the format in which we'd like our data
 
@@ -226,15 +226,15 @@ static SInt64 get_size_callback(void *inClientData)
 
 	result = ExtAudioFileSetProperty(_eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d", result);
 
 		result = ExtAudioFileDispose(_eaf);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "ExtAudioFileDispose failed: %d", result);
+			os_log_error(_audioDecoderLog, "ExtAudioFileDispose failed: %d", result);
 
 		result = AudioFileClose(_af);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioFileClose failed: %d", result);
+			os_log_error(_audioDecoderLog, "AudioFileClose failed: %d", result);
 
 		_af = NULL;
 		_eaf = NULL;
@@ -250,14 +250,14 @@ static SInt64 get_size_callback(void *inClientData)
 	if(_eaf) {
 		OSStatus result = ExtAudioFileDispose(_eaf);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "ExtAudioFileDispose failed: %d", result);
+			os_log_error(_audioDecoderLog, "ExtAudioFileDispose failed: %d", result);
 		_eaf = NULL;
 	}
 
 	if(_af) {
 		OSStatus result = AudioFileClose(_af);
 		if(result != noErr)
-			os_log_error(OS_LOG_DEFAULT, "AudioFileClose failed: %d", result);
+			os_log_error(_audioDecoderLog, "AudioFileClose failed: %d", result);
 		_af = NULL;
 	}
 
@@ -274,7 +274,7 @@ static SInt64 get_size_callback(void *inClientData)
 	SInt64 currentFrame;
 	OSStatus result = ExtAudioFileTell(_eaf, &currentFrame);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileTell failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileTell failed: %d", result);
 		return -1;
 	}
 	return currentFrame;
@@ -286,7 +286,7 @@ static SInt64 get_size_callback(void *inClientData)
 	UInt32 dataSize = sizeof(frameLength);
 	OSStatus result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d", result);
 		return -1;
 	}
 	return frameLength;
@@ -297,7 +297,7 @@ static SInt64 get_size_callback(void *inClientData)
 	NSParameterAssert(buffer != nil);
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -308,7 +308,7 @@ static SInt64 get_size_callback(void *inClientData)
 
 	OSStatus result = ExtAudioFileRead(_eaf, &frameLength, buffer.mutableAudioBufferList);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileRead failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileRead failed: %d", result);
 		return NO;
 	}
 
@@ -321,7 +321,7 @@ static SInt64 get_size_callback(void *inClientData)
 {
 	OSStatus result = ExtAudioFileSeek(_eaf, frame);
 	if(result != noErr) {
-		os_log_error(OS_LOG_DEFAULT, "ExtAudioFileSeek failed: %d", result);
+		os_log_error(_audioDecoderLog, "ExtAudioFileSeek failed: %d", result);
 		return NO;
 	}
 	return YES;

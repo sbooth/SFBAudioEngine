@@ -13,6 +13,7 @@
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
+#import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
 #define DSD_PACKETS_PER_PCM_FRAME (8 / FRAMES_PER_DSD_PACKET)
@@ -392,7 +393,7 @@ namespace {
 	}
 
 	if(asbd->mSampleRate != SFBDSDSampleRateDSD64) {
-		os_log_error(OS_LOG_DEFAULT, "Unsupported DSD sample rate for PCM conversion: %f", asbd->mSampleRate);
+		os_log_error(_audioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %f", asbd->mSampleRate);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
 											 code:SFBDSDDecoderErrorCodeInputOutput
@@ -451,7 +452,7 @@ namespace {
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(OS_LOG_DEFAULT, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
