@@ -12,6 +12,17 @@
 #import "SFBHTTPInputSource.h"
 #import "SFBMemoryMappedFileInputSource.h"
 
+os_log_t gSFBInputSourceLog = NULL;
+
+static void SFBCreateInputSourceLog(void) __attribute__ ((constructor));
+static void SFBCreateInputSourceLog()
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		gSFBInputSourceLog = os_log_create("org.sbooth.AudioEngine", "InputSource");
+	});
+}
+
 @implementation SFBInputSource
 
 + (instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error

@@ -125,7 +125,7 @@
 {
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
 	NSInteger statusCode = httpResponse.statusCode;
-	os_log_debug(OS_LOG_DEFAULT, "HTTP status: %ld %{public}@", (long)statusCode, [NSHTTPURLResponse localizedStringForStatusCode:statusCode]);
+	os_log_debug(gSFBInputSourceLog, "HTTP status: %ld %{public}@", (long)statusCode, [NSHTTPURLResponse localizedStringForStatusCode:statusCode]);
 	if(statusCode < 200 || statusCode > 299) {
 		completionHandler(NSURLSessionResponseCancel);
 		return;
@@ -147,7 +147,7 @@
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
 	if(error)
-		os_log_error(OS_LOG_DEFAULT, "NSURLSessionData error: %{public}@", error);
+		os_log_error(gSFBInputSourceLog, "NSURLSessionData error: %{public}@", error);
 }
 
 @end
