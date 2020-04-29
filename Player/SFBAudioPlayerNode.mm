@@ -26,6 +26,8 @@
 
 namespace {
 
+	os_log_t _audioPlayerNodeLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayerNode");
+
 #pragma mark - Flags
 
 	enum eAudioPlayerNodeFlags : unsigned int {
@@ -37,21 +39,16 @@ namespace {
 		eAudioPlayerNodeFlagStopNotifierThread			= 1u << 5
 	};
 
-	enum eAudioPlayerNodeNotifierFlags : unsigned int {
-		eAudioPlayerNodeNotifierFlagRenderingStarted	= 1u << 1,
-		eAudioPlayerNodeNotifierFlagRenderingFinished	= 1u << 2
-	};
-
 	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
-		eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished	= 2
+		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2
 	};
 
 #pragma mark - Thread entry points
 
 	void * DecoderThreadEntry(void *arg)
 	{
-		pthread_setname_np("org.sbooth.AudioEngine.PlayerNode.DecoderThread");
+		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.DecoderThread");
 		pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
 
 		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
@@ -60,7 +57,7 @@ namespace {
 
 	void * NotifierThreadEntry(void *arg)
 	{
-		pthread_setname_np("org.sbooth.AudioEngine.PlayerNode.NotifierThread");
+		pthread_setname_np("org.sbooth.AudioEngine.AudioPlayerNode.NotifierThread");
 		pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
 
 		SFBAudioPlayerNode *playerNode = (__bridge SFBAudioPlayerNode *)arg;
@@ -84,9 +81,9 @@ namespace {
 		enum eDecoderStateDataFlags : unsigned int {
 			eCancelDecodingFlag		= 1u << 0,
 			eDecodingStartedFlag	= 1u << 1,
-			eDecodingFinishedFlag	= 1u << 2,
+			eDecodingCompleteFlag	= 1u << 2,
 			eRenderingStartedFlag	= 1u << 3,
-			eRenderingFinishedFlag	= 1u << 4,
+			eRenderingCompleteFlag	= 1u << 4,
 			eMarkedForRemovalFlag 	= 1u << 5
 		};
 
@@ -141,12 +138,12 @@ namespace {
 
 				BOOL result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
 				if(!result && err)
-					os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", err);
+					os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", err);
 
 				this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
 
 				if(result && mDecodeBuffer.frameLength == 0) {
-					mFlags.fetch_or(eDecodingFinishedFlag);
+					mFlags.fetch_or(eDecodingCompleteFlag);
 					*outStatus = AVAudioConverterInputStatus_EndOfStream;
 				}
 				else
@@ -175,19 +172,19 @@ namespace {
 			AVAudioFramePosition adjustedSeekOffset = (AVAudioFramePosition)(seekOffset * sampleRateRatio);
 
 			if(adjustedSeekOffset == seekOffset)
-				os_log_debug(OS_LOG_DEFAULT, "Seeking to frame %lld", adjustedSeekOffset);
+				os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", adjustedSeekOffset);
 			else
-				os_log_debug(OS_LOG_DEFAULT, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
+				os_log_debug(_audioPlayerNodeLog, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
 
 			if([mDecoder seekToFrame:adjustedSeekOffset error:nil])
 				// Reset the converter to flush any buffers
 				[mConverter reset];
 			else
-				os_log_debug(OS_LOG_DEFAULT, "Error seeking to frame %lld", adjustedSeekOffset);
+				os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", adjustedSeekOffset);
 
 			AVAudioFramePosition newFrame = mDecoder.framePosition;
 			if(newFrame != adjustedSeekOffset) {
-				os_log_debug(OS_LOG_DEFAULT, "Inaccurate seek to frame %lld, got %lld", adjustedSeekOffset, newFrame);
+				os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", adjustedSeekOffset, newFrame);
 				seekOffset = (AVAudioFramePosition)(newFrame / sampleRateRatio);
 			}
 
@@ -210,7 +207,7 @@ namespace {
 	uint64_t DecoderStateData::sSequenceNumber = 0;
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
-	/// Returns the element in `decoders` with the smallest sequence number that has not finished rendering
+	/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
 	template<size_t N>
 	DecoderStateData::shared_ptr GetActiveDecoderStateWithSmallestSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray)
 	{
@@ -221,7 +218,7 @@ namespace {
 				continue;
 
 			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingFinishedFlag)
+			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
 				continue;
 
 			if(!result)
@@ -233,7 +230,7 @@ namespace {
 		return result;
 	}
 
-	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not finished rendering
+	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
 	template<size_t N>
 	DecoderStateData::shared_ptr GetActiveDecoderStateFollowingSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
 	{
@@ -244,7 +241,7 @@ namespace {
 				continue;
 
 			auto flags = decoderState->mFlags.load();
-			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingFinishedFlag)
+			if(flags & DecoderStateData::eMarkedForRemovalFlag || flags & DecoderStateData::eRenderingCompleteFlag)
 				continue;
 
 			if(!result && decoderState->mSequenceNumber > sequenceNumber)
@@ -361,12 +358,12 @@ namespace {
 		AVAudioFrameCount framesToRead = std::min(framesAvailableToRead, frameCount);
 		AVAudioFrameCount framesRead = (AVAudioFrameCount)self->_audioRingBuffer.Read(outputData, framesToRead);
 		if(framesRead != framesToRead)
-			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
+			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Read failed: Requested %u frames, got %u", framesToRead, framesRead);
 
 		// ========================================
 		// 4. If the ring buffer didn't contain as many frames as requested fill the remainder with silence
 		if(framesRead != frameCount) {
-			os_log_debug(OS_LOG_DEFAULT, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
+			os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
 
 			auto framesOfSilence = frameCount - framesRead;
 			auto byteCountToSkip = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(framesRead);
@@ -419,9 +416,9 @@ namespace {
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
 
-			if((decoderState->mFlags.load() & DecoderStateData::eDecodingFinishedFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()/* && !(eDecoderStateDataFlagRenderingFinished & decoderState->mFlags.load())*/) {
-				// Schedule the rendering finished notification
-				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished;
+			if((decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
+				// Schedule the rendering complete notification
+				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete;
 				uint8_t bytesToWrite [4 + 8 + 8];
 				memcpy(bytesToWrite, &cmd, 4);
 				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
@@ -429,7 +426,7 @@ namespace {
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
-				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingFinishedFlag);
+				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingCompleteFlag);
 			}
 
 			framesRemainingToDistribute -= framesFromThisDecoder;
@@ -444,53 +441,55 @@ namespace {
 	};
 
 	if((self = [super initWithFormat:format renderBlock:renderBlock])) {
+		os_log_debug(_audioPlayerNodeLog, "Render block format: %{public}@", format);
+
+		_renderingFormat = format;
+		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
+			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
+			return nil;
+		}
+
+		_renderEventsRingBuffer.Allocate(256);
+
 #if 0
 		// See the comments in SFBAudioPlayer -setupEngineForGaplessPlaybackOfFormat:
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice while 1156 is AVAudioSourceNode's default
 		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * (format.sampleRate / 44100));
 		if(self.AUAudioUnit.maximumFramesToRender < maximumFramesToRender) {
-			os_log_debug(OS_LOG_DEFAULT, "SFBAudioPlayerNode: Setting maximumFramesToRender to %u", maximumFramesToRender);
+			os_log_debug(_audioPlayerNodeLog, "Setting maximumFramesToRender to %u", maximumFramesToRender);
 			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
 		}
 #endif
-		_queue = dispatch_queue_create("org.sbooth.AudioEngine.PlayerNode.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
+		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_queue) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
 			return nil;
 		}
 
-		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.PlayerNode.NotificationQueue", DISPATCH_QUEUE_SERIAL);
+		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_notificationQueue) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
 			return nil;
 		}
 
 		_decodingSemaphore = dispatch_semaphore_create(0);
 		if(!_decodingSemaphore) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create failed");
 			return nil;
 		}
 
 		_notifierSemaphore = dispatch_semaphore_create(0);
 		if(!_notifierSemaphore) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_semaphore_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_semaphore_create failed");
 			return nil;
 		}
 
 		// Setup the collector
 		_collector = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
 		if(!_collector) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_source_create failed");
+			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");
 			return nil;
 		}
-
-		_renderingFormat = format;
-		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
-			os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Allocate() failed");
-			return nil;
-		}
-
-		_renderEventsRingBuffer.Allocate(256);
 
 		dispatch_source_set_timer(_collector, DISPATCH_TIME_NOW, NSEC_PER_SEC * 10, NSEC_PER_SEC * 2);
 		dispatch_source_set_event_handler(_collector, ^{
@@ -499,7 +498,7 @@ namespace {
 				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
 					continue;
 
-				os_log_debug(OS_LOG_DEFAULT, "Collecting decoder \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+				os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 				std::atomic_store(&self->_decoderStateArray[i], DecoderStateData::shared_ptr{});
 			}
 		});
@@ -514,7 +513,7 @@ namespace {
 		}
 
 		catch(const std::exception& e) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to create thread: %{public}s", e.what());
+			os_log_error(_audioPlayerNodeLog, "Unable to create thread: %{public}s", e.what());
 			return nil;
 		}
 	}
@@ -558,6 +557,8 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
+	os_log_debug(_audioPlayerNodeLog, "Playing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
+
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
@@ -593,6 +594,8 @@ namespace {
 {
 	NSParameterAssert(decoder != nil);
 
+	os_log_debug(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
+
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
@@ -611,6 +614,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
 	if(decoderState) {
+		os_log_debug(_audioPlayerNodeLog, "Skipping \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
 	}
@@ -831,7 +835,7 @@ namespace {
 
 - (void *)decoderThreadEntry
 {
-	os_log_debug(OS_LOG_DEFAULT, "Decoder thread starting");
+	os_log_debug(_audioPlayerNodeLog, "Decoder thread starting");
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 		// Dequeue and process the next decoder
@@ -860,9 +864,8 @@ namespace {
 			// In the event the render block output format and decoder processing
 			// format don't match, conversion will be performed in DecoderStateData::DecodeAudio()
 
-			os_log_debug(OS_LOG_DEFAULT, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-			os_log_debug(OS_LOG_DEFAULT, "Decoder processing format: %{public}@", decoderState->mDecoder.processingFormat);
-			os_log_debug(OS_LOG_DEFAULT, "Render block format: %{public}@", _renderingFormat);
+			os_log_debug(_audioPlayerNodeLog, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+			os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
 
 			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self->_renderingFormat frameCapacity:kRingBufferChunkSize];
 
@@ -906,10 +909,12 @@ namespace {
 
 					if(!(decoderState->mFlags.load() & DecoderStateData::eDecodingStartedFlag)) {
 						// Perform the decoding started notification
-						if(_decodingStartedNotificationHandler)
+						if(_decodingStartedNotificationHandler) {
+							os_log_debug(_audioPlayerNodeLog, "Decoding started notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 							dispatch_sync(_notificationQueue, ^{
 								_decodingStartedNotificationHandler(decoderState->mDecoder);
 							});
+						}
 
 						decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
 					}
@@ -917,25 +922,27 @@ namespace {
 					// Decode audio into the buffer, converting to the bus format in the process
 					NSError *error;
 					if(!decoderState->DecodeAudio(buffer, &error))
-						os_log_error(OS_LOG_DEFAULT, "Error decoding audio: %{public}@", error);
+						os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
 
 					// Write the decoded audio to the ring buffer for rendering
 					auto framesWritten = _audioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
 					if(framesWritten != buffer.frameLength)
-						os_log_error(OS_LOG_DEFAULT, "SFB::Audio::RingBuffer::Write failed");
+						os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Write() failed");
 
-					if(decoderState->mFlags.load() & DecoderStateData::eDecodingFinishedFlag) {
-						os_log_debug(OS_LOG_DEFAULT, "Decoding finished for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-
+					if(decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) {
 						// Some formats (MP3) may not know the exact number of frames in advance
 						// without processing the entire file, which is a potentially slow operation
 						decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
-						// Perform the decoding finished notification
-						if(_decodingFinishedNotificationHandler)
+						// Perform the decoding complete notification
+						if(_decodingCompleteNotificationHandler) {
+							os_log_debug(_audioPlayerNodeLog, "Decoding complete notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 							dispatch_sync(_notificationQueue, ^{
-								_decodingFinishedNotificationHandler(decoderState->mDecoder);
+								_decodingCompleteNotificationHandler(decoderState->mDecoder);
 							});
+						}
+
+						os_log_debug(_audioPlayerNodeLog, "Decoding complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						break;
 					}
@@ -944,10 +951,12 @@ namespace {
 					os_log_debug(OS_LOG_DEFAULT, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Perform the decoding cancelled notification
-					if(_decodingCanceledNotificationHandler)
+					if(_decodingCanceledNotificationHandler) {
+						os_log_debug(_audioPlayerNodeLog, "Decoding canceled notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 						dispatch_sync(_notificationQueue, ^{
 							_decodingCanceledNotificationHandler(decoderState->mDecoder);
 						});
+					}
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
@@ -964,14 +973,14 @@ namespace {
 			dispatch_semaphore_wait(_decodingSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 	}
 
-	os_log_debug(OS_LOG_DEFAULT, "Decoder thread terminating");
+	os_log_debug(_audioPlayerNodeLog, "Decoder thread terminating");
 
 	return nullptr;
 }
 
 - (void *)notifierThreadEntry
 {
-	os_log_debug(OS_LOG_DEFAULT, "Notifier thread starting");
+	os_log_debug(_audioPlayerNodeLog, "Notifier thread starting");
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopNotifierThread)) {
 
@@ -986,33 +995,37 @@ namespace {
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-						if(!self->_renderingStartedNotificationHandler)
-							break;
-
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
 						if(!decoderState) {
-							os_log_error(OS_LOG_DEFAULT, "Decoder state with sequence number %llu missing", sequenceNumber);
+							os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 							break;
 						}
 
-//						dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
-						dispatch_time_t notificationTime = hostTime;
-						dispatch_after(notificationTime, _notificationQueue, ^{
+						os_log_debug(_audioPlayerNodeLog, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+						if(self->_renderingStartedNotificationHandler) {
+//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
-							uint64_t absTime = mach_absolute_time();
-							double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-							os_log_debug(OS_LOG_DEFAULT, "Rendering started notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+							os_log_debug(_audioPlayerNodeLog, "Scheduling rendering started notification at host time %llu", notificationTime);
+#endif
+							dispatch_after(notificationTime, _notificationQueue, ^{
+								os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+#if DEBUG
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+								os_log_debug(_audioPlayerNodeLog, "Notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-							self->_renderingStartedNotificationHandler(decoderState->mDecoder);
-						});
-
+								self->_renderingStartedNotificationHandler(decoderState->mDecoder);
+							});
+						}
 					}
 					else
-						os_log_error(OS_LOG_DEFAULT, "Ring buffer command data missing");
+						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
 					break;
 
-				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingFinished:
+				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
@@ -1020,31 +1033,35 @@ namespace {
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
 						if(!decoderState) {
-							os_log_error(OS_LOG_DEFAULT, "Decoder state with sequence number %llu missing", sequenceNumber);
+							os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 							break;
 						}
 
-						// The last action performed with a decoder that has completed rendering is this notification
-						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
-
-						if(!self->_renderingFinishedNotificationHandler)
-							break;
-
-//						dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
-						dispatch_time_t notificationTime = hostTime;
-						dispatch_after(notificationTime, _notificationQueue, ^{
+						if(self->_renderingCompleteNotificationHandler) {
+//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
-							uint64_t absTime = mach_absolute_time();
-							double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-							os_log_debug(OS_LOG_DEFAULT, "Rendering finished notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+							os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification at host time %llu", notificationTime);
+#endif
+							dispatch_after(notificationTime, _notificationQueue, ^{
+								os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+#if DEBUG
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+								os_log_debug(_audioPlayerNodeLog, "Notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-							self->_renderingFinishedNotificationHandler(decoderState->mDecoder);
-						});
+								self->_renderingCompleteNotificationHandler(decoderState->mDecoder);
+							});
+						}
 
+						os_log_debug(_audioPlayerNodeLog, "Rendering complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+						// The last action performed with a decoder that has completed rendering is this notification
+						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
 					}
 					else
-						os_log_error(OS_LOG_DEFAULT, "Ring buffer command data missing");
+						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
 					break;
 
 			}
@@ -1053,7 +1070,7 @@ namespace {
 		dispatch_semaphore_wait(_notifierSemaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5));
 	}
 
-	os_log_debug(OS_LOG_DEFAULT, "Notifier thread terminating");
+	os_log_debug(_audioPlayerNodeLog, "Notifier thread terminating");
 
 	return nullptr;
 }
