@@ -864,7 +864,7 @@ namespace {
 			// In the event the render block output format and decoder processing
 			// format don't match, conversion will be performed in DecoderStateData::DecodeAudio()
 
-			os_log_debug(_audioPlayerNodeLog, "Decoding starting for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+			os_log_debug(_audioPlayerNodeLog, "Dequeued decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 			os_log_debug(_audioPlayerNodeLog, "Processing format: %{public}@", decoderState->mDecoder.processingFormat);
 
 			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self->_renderingFormat frameCapacity:kRingBufferChunkSize];
@@ -908,13 +908,13 @@ namespace {
 					}
 
 					if(!(decoderState->mFlags.load() & DecoderStateData::eDecodingStartedFlag)) {
+						os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
 						// Perform the decoding started notification
-						if(_decodingStartedNotificationHandler) {
-							os_log_debug(_audioPlayerNodeLog, "Decoding started notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+						if(_decodingStartedNotificationHandler)
 							dispatch_sync(_notificationQueue, ^{
 								_decodingStartedNotificationHandler(decoderState->mDecoder);
 							});
-						}
 
 						decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
 					}
@@ -935,12 +935,10 @@ namespace {
 						decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
 						// Perform the decoding complete notification
-						if(_decodingCompleteNotificationHandler) {
-							os_log_debug(_audioPlayerNodeLog, "Decoding complete notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+						if(_decodingCompleteNotificationHandler)
 							dispatch_sync(_notificationQueue, ^{
 								_decodingCompleteNotificationHandler(decoderState->mDecoder);
 							});
-						}
 
 						os_log_debug(_audioPlayerNodeLog, "Decoding complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
@@ -951,12 +949,10 @@ namespace {
 					os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Perform the decoding cancelled notification
-					if(_decodingCanceledNotificationHandler) {
-						os_log_debug(_audioPlayerNodeLog, "Decoding canceled notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+					if(_decodingCanceledNotificationHandler)
 						dispatch_sync(_notificationQueue, ^{
 							_decodingCanceledNotificationHandler(decoderState->mDecoder);
 						});
-					}
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
@@ -1007,14 +1003,17 @@ namespace {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
-							os_log_debug(_audioPlayerNodeLog, "Scheduling rendering started notification at host time %llu", notificationTime);
+							{
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
+								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering started notification for \"%{public}@\" for .now() + %.2f msec", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
+							}
 #endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
-								os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 #if DEBUG
 								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-								os_log_debug(_audioPlayerNodeLog, "Notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_MSEC;
+								os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
 								self->_renderingStartedNotificationHandler(decoderState->mDecoder);
@@ -1041,14 +1040,17 @@ namespace {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
-							os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification at host time %llu", notificationTime);
+							{
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
+								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification for \"%{public}@\" for .now() + %.2f msec",  [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
+							}
 #endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
-								os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 #if DEBUG
 								uint64_t absTime = mach_absolute_time();
 								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-								os_log_debug(_audioPlayerNodeLog, "Notification arrived %f sec %s", delta, delta > 0 ? "late" : "early");
+								os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
 								self->_renderingCompleteNotificationHandler(decoderState->mDecoder);
