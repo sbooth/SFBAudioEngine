@@ -14,6 +14,7 @@
 
 namespace {
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
+	os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
 }
 
 @interface SFBAudioPlayer ()
@@ -37,13 +38,13 @@ namespace {
 	if((self = [super init])) {
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_engineQueue) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			os_log_error(_audioPlayerLog, "dispatch_queue_create failed");
 			return nil;
 		}
 
 		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_queue) {
-			os_log_error(OS_LOG_DEFAULT, "dispatch_queue_create failed");
+			os_log_error(_audioPlayerLog, "dispatch_queue_create failed");
 			return nil;
 		}
 
@@ -384,7 +385,7 @@ namespace {
 		AudioUnitParameterValue channelVolume;
 		OSStatus result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
 		if(result != noErr) {
-			os_log_debug(OS_LOG_DEFAULT, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_debug(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			return;
 		}
 
@@ -406,7 +407,7 @@ namespace {
 		AudioUnitParameterValue channelVolume = volume;
 		OSStatus result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
-			os_log_debug(OS_LOG_DEFAULT, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_debug(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 			return;
 		}
@@ -423,7 +424,7 @@ namespace {
 #pragma mark - Player Event Callbacks
 
 // Most callbacks are passed directly to the underlying SFBAudioPlayerNode
-// The rendering finished callback is modified to provide continuous but non-gapless playback
+// The rendering complete callback is modified to provide continuous but non-gapless playback
 
 - (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
 {
@@ -435,14 +436,14 @@ namespace {
 	_player.decodingStartedNotificationHandler = decodingStartedNotificationHandler;
 }
 
-- (SFBAudioDecoderEventBlock)decodingFinishedNotificationHandler
+- (SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
 {
-	return _player.decodingFinishedNotificationHandler;
+	return _player.decodingCompleteNotificationHandler;
 }
 
-- (void)setDecodingFinishedNotificationHandler:(SFBAudioDecoderEventBlock)decodingFinishedNotificationHandler
+- (void)setDecodingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
 {
-	_player.decodingFinishedNotificationHandler = decodingFinishedNotificationHandler;
+	_player.decodingCompleteNotificationHandler = decodingCompleteNotificationHandler;
 }
 
 - (SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
@@ -471,7 +472,7 @@ namespace {
 {
 	NSParameterAssert(outputDevice != nil);
 
-	os_log_debug(OS_LOG_DEFAULT, "Setting output device to %{public}@", outputDevice);
+	os_log_debug(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
 
 	__block BOOL result;
 	__block NSError *err = nil;
@@ -500,7 +501,7 @@ namespace {
 
 - (void)audioEngineConfigurationChanged:(NSNotification *)notification
 {
-	os_log_debug(OS_LOG_DEFAULT, "Received AVAudioEngineConfigurationChangeNotification");
+	os_log_debug(_audioPlayerLog, "Received AVAudioEngineConfigurationChangeNotification");
 
 	AVAudioEngine *engine = [notification object];
 
@@ -520,7 +521,7 @@ namespace {
 	if(format.interleaved) {
 		format = [format nonInterleavedEquivalent];
 		if(!format) {
-			os_log_error(OS_LOG_DEFAULT, "Unable to convert format %@ to non-interleaved", format);
+			os_log_error(_audioPlayerLog, "Unable to convert format %@ to non-interleaved", format);
 			return;
 		}
 	}
@@ -530,7 +531,7 @@ namespace {
 
 	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!player) {
-		os_log_error(OS_LOG_DEFAULT, "Unable to create SFBAudioPlayerNode with format %@", format);
+		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %@", format);
 		return;
 	}
 
@@ -541,22 +542,22 @@ namespace {
 	}
 
 	player.decodingStartedNotificationHandler = _player.decodingStartedNotificationHandler;
-	player.decodingFinishedNotificationHandler = _player.decodingFinishedNotificationHandler;
+	player.decodingCompleteNotificationHandler = _player.decodingCompleteNotificationHandler;
 	player.decodingCanceledNotificationHandler = _player.decodingCanceledNotificationHandler;
 
 	player.renderingStartedNotificationHandler = _player.renderingStartedNotificationHandler;
 
 	__weak typeof(self) weakSelf = self;
-	player.renderingFinishedNotificationHandler = ^(id<SFBPCMDecoding> obj) {
+	player.renderingCompleteNotificationHandler = ^(id<SFBPCMDecoding> obj) {
 		__strong typeof(self) strongSelf = weakSelf;
 
 		if(!strongSelf) {
-			os_log_error(OS_LOG_DEFAULT, "Weak reference to self in renderingFinishedNotificationHandler was zeroed");
+			os_log_error(_audioPlayerLog, "Weak reference to self in renderingCompleteNotificationHandler was zeroed");
 			return;
 		}
 
-		if(strongSelf->_renderingFinishedNotificationHandler)
-			strongSelf->_renderingFinishedNotificationHandler(obj);
+		if(strongSelf->_renderingCompleteNotificationHandler)
+			strongSelf->_renderingCompleteNotificationHandler(obj);
 
 		__block id <SFBPCMDecoding> decoder = nil;
 		dispatch_sync(strongSelf->_queue, ^{
@@ -591,7 +592,7 @@ namespace {
 	// kAudioUnitProperty_MaximumFramesPerSlice to ensure enough audio data is passed per render cycle
 	// See http://lists.apple.com/archives/coreaudio-api/2009/Oct/msg00150.html
 	if(format.sampleRate > outputFormat.sampleRate) {
-		os_log_debug(OS_LOG_DEFAULT, "AVAudioMixerNode input sample rate (%.2f Hz) and output sample rate (%.2f Hz) don't match", format.sampleRate, outputFormat.sampleRate);
+		os_log_debug(_audioPlayerLog, "AVAudioMixerNode input sample rate (%.2f Hz) and output sample rate (%.2f Hz) don't match", format.sampleRate, outputFormat.sampleRate);
 
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice
 		double ratio = format.sampleRate / outputFormat.sampleRate;
@@ -603,33 +604,33 @@ namespace {
 			if(renderResourcesAllocated)
 				[audioUnit deallocateRenderResources];
 
-			os_log_debug(OS_LOG_DEFAULT, "Adjusting SFBAudioPlayerNode's maximumFramesToRender to %u", maximumFramesToRender);
+			os_log_debug(_audioPlayerLog, "Adjusting SFBAudioPlayerNode's maximumFramesToRender to %u", maximumFramesToRender);
 			audioUnit.maximumFramesToRender = maximumFramesToRender;
 
 			NSError *error;
 			if(renderResourcesAllocated && ![audioUnit allocateRenderResourcesAndReturnError:&error]) {
-				os_log_error(OS_LOG_DEFAULT, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
+				os_log_error(_audioPlayerLog, "Error allocating AUAudioUnit render resources for SFBAudioPlayerNode: %{public}@", error);
 			}
 		}
 	}
 #endif
 
 #if DEBUG
-	os_log_debug(OS_LOG_DEFAULT, "↑ rendering: %{public}@", _player.renderingFormat);
+	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _player.renderingFormat);
 	if(![[_player outputFormatForBus:0] isEqual:_player.renderingFormat])
-		os_log_debug(OS_LOG_DEFAULT, "← player out: %{public}@", [_player outputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_player outputFormatForBus:0]);
 
 	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_player outputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "→ mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog, "→ mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
 
 	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "← mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog, "← mixer out: %{public}@", [_engine.mainMixerNode outputFormatForBus:0]);
 
 	if(![[_engine.outputNode inputFormatForBus:0] isEqual:[_engine.mainMixerNode outputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog, "← output in: %{public}@", [_engine.outputNode inputFormatForBus:0]);
 
 	if(![[_engine.outputNode outputFormatForBus:0] isEqual:[_engine.outputNode inputFormatForBus:0]])
-		os_log_debug(OS_LOG_DEFAULT, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
+		os_log_debug(_audioPlayerLog, "→ output out: %{public}@", [_engine.outputNode outputFormatForBus:0]);
 #endif
 
 	[_engine prepare];

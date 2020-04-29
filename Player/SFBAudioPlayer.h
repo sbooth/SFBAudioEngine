@@ -110,10 +110,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 #pragma mark - Player Event Callbacks
 
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingFinishedNotificationHandler;
+@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCompleteNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingFinishedNotificationHandler;
+@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingCompleteNotificationHandler;
 
 #pragma mark - Output Device
 
