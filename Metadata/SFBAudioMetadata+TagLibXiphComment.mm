@@ -19,7 +19,7 @@ namespace {
 		SFB::CFError error;
 		SFB::SecTransform decoder(SecDecodeTransformCreate(kSecBase64Encoding, &error));
 		if(!decoder) {
-			os_log_debug(OS_LOG_DEFAULT, "SecDecodeTransformCreate failed: %{public}@", error.Object());
+			os_log_error(OS_LOG_DEFAULT, "SecDecodeTransformCreate failed: %{public}@", error.Object());
 			return {};
 		}
 
@@ -28,7 +28,7 @@ namespace {
 			return {};
 
 		if(!SecTransformSetAttribute(decoder, kSecTransformInputAttributeName, sourceData, &error)) {
-			os_log_debug(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
+			os_log_error(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
 			return {};
 		}
 
@@ -44,7 +44,7 @@ namespace {
 		SFB::CFError error;
 		SFB::SecTransform encoder(SecEncodeTransformCreate(kSecBase64Encoding, &error));
 		if(!encoder) {
-			os_log_debug(OS_LOG_DEFAULT, "SecEncodeTransformCreate failed: %{public}@", error.Object());
+			os_log_error(OS_LOG_DEFAULT, "SecEncodeTransformCreate failed: %{public}@", error.Object());
 			return {};
 		}
 
@@ -53,13 +53,13 @@ namespace {
 			return {};
 
 		if(!SecTransformSetAttribute(encoder, kSecTransformInputAttributeName, sourceData, &error)) {
-			os_log_debug(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
+			os_log_error(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
 			return {};
 		}
 
 		SFB::CFData encodedData((CFDataRef)SecTransformExecute(encoder, &error));
 		if(!encodedData) {
-			os_log_debug(OS_LOG_DEFAULT, "SecTransformExecute failed: %{public}@", error.Object());
+			os_log_error(OS_LOG_DEFAULT, "SecTransformExecute failed: %{public}@", error.Object());
 			return {};
 		}
 
