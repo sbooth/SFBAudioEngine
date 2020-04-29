@@ -15,6 +15,15 @@ NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioD
 
 os_log_t gSFBAudioDecoderLog = NULL;
 
+static void SFBCreateAudioDecoderLog(void) __attribute__ ((constructor));
+static void SFBCreateAudioDecoderLog()
+{
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
+	});
+}
+
 @implementation SFBAudioDecoder
 
 @synthesize inputSource = _inputSource;
@@ -25,14 +34,6 @@ os_log_t gSFBAudioDecoderLog = NULL;
 @dynamic frameLength;
 
 static NSMutableArray *_registeredSubclasses = nil;
-
-+ (void)load
-{
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
-	});
-}
 
 + (NSSet *)supportedPathExtensions
 {
