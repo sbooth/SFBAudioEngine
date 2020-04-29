@@ -13,7 +13,7 @@
 // NSError domain for AudioDecoder and subclasses
 NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
 
-os_log_t _audioDecoderLog = NULL;
+os_log_t gSFBAudioDecoderLog = NULL;
 
 @implementation SFBAudioDecoder
 
@@ -30,7 +30,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		_audioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
+		gSFBAudioDecoderLog = os_log_create("org.sbooth.AudioEngine", "AudioDecoder");
 	});
 }
 
@@ -117,7 +117,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 			_inputSource = inputSource;
 			return self;
 		}
-		os_log_debug(_audioDecoderLog, "SFBAudioDecoder unsupported MIME type: %{public}@", mimeType);
+		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported MIME type: %{public}@", mimeType);
 	}
 
 	// If no MIME type was specified, use the extension-based resolvers
@@ -140,7 +140,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	Class subclass = [SFBAudioDecoder subclassForPathExtension:pathExtension.lowercaseString];
 	if(!subclass) {
-		os_log_debug(_audioDecoderLog, "SFBAudioDecoder unsupported path extension: %{public}@", pathExtension);
+		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported path extension: %{public}@", pathExtension);
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain

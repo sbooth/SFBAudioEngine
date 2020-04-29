@@ -22,7 +22,7 @@ static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 	char chunkIDBytes [4];
 	NSInteger bytesRead;
 	if(![inputSource readBytes:chunkIDBytes length:4 bytesRead:&bytesRead error:nil] || bytesRead != 4) {
-		os_log_error(_dsdDecoderLog, "Unable to read chunk ID");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read chunk ID");
 		return NO;
 	}
 
@@ -85,7 +85,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	// Read the 'DSD ' chunk
 	uint32_t chunkID;
 	if(!ReadChunkID(_inputSource, &chunkID) || chunkID != 'DSD ') {
-		os_log_error(_dsdDecoderLog, "Unable to read 'DSD ' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
@@ -94,21 +94,21 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	uint64_t chunkSize, fileSize, metadataOffset;
 	// Unlike normal IFF, the chunkSize includes the size of the chunk ID and size
 	if(![_inputSource readUInt64LittleEndian:&chunkSize error:nil] || chunkSize != 28) {
-		os_log_error(_dsdDecoderLog, "Unexpected 'DSD ' chunk size: %llu", chunkSize);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected 'DSD ' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt64LittleEndian:&fileSize error:nil]) {
-		os_log_error(_dsdDecoderLog, "Unable to read file size in 'DSD ' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read file size in 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt64LittleEndian:&metadataOffset error:nil]) {
-		os_log_error(_dsdDecoderLog, "Unable to read metadata offset in 'DSD ' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read metadata offset in 'DSD ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
@@ -117,14 +117,14 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Read the 'fmt ' chunk
 	if(!ReadChunkID(_inputSource, &chunkID) || chunkID != 'fmt ') {
-		os_log_error(_dsdDecoderLog, "Unable to read 'fmt ' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read 'fmt ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt64LittleEndian:&chunkSize error:nil]) {
-		os_log_error(_dsdDecoderLog, "Unexpected 'fmt ' chunk size: %llu", chunkSize);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected 'fmt ' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
@@ -135,63 +135,63 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	uint32_t blockSizePerChannel, reserved;
 
 	if(![_inputSource readUInt32LittleEndian:&formatVersion error:nil] || formatVersion != 1) {
-		os_log_error(_dsdDecoderLog, "Unexpected format version in 'fmt ': %u", formatVersion);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected format version in 'fmt ': %u", formatVersion);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&formatID error:nil] || formatID != 0) {
-		os_log_error(_dsdDecoderLog, "Unexpected format ID in 'fmt ': %{public}.4s", SFBCStringForOSType(formatID));
+		os_log_error(gSFBDSDDecoderLog, "Unexpected format ID in 'fmt ': %{public}.4s", SFBCStringForOSType(formatID));
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&channelType error:nil] || (channelType < 1 || channelType > 7)) {
-		os_log_error(_dsdDecoderLog, "Unexpected channel type in 'fmt ': %u", channelType);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected channel type in 'fmt ': %u", channelType);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&channelNum error:nil] || (channelNum < 1 || channelNum > 6)) {
-		os_log_error(_dsdDecoderLog, "Unexpected channel count in 'fmt ': %u", channelNum);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected channel count in 'fmt ': %u", channelNum);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&samplingFrequency error:nil] || (samplingFrequency != SFBDSDSampleRateDSD64 && samplingFrequency != SFBDSDSampleRateDSD128)) {
-		os_log_error(_dsdDecoderLog, "Unexpected sample rate in 'fmt ': %u", samplingFrequency);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected sample rate in 'fmt ': %u", samplingFrequency);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&bitsPerSample error:nil] || (bitsPerSample != 1 && bitsPerSample != 8)) {
-		os_log_error(_dsdDecoderLog, "Unexpected bits per sample in 'fmt ': %u", bitsPerSample);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected bits per sample in 'fmt ': %u", bitsPerSample);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt64LittleEndian:&sampleCount error:nil]) {
-		os_log_error(_dsdDecoderLog, "Unable to read sample count in 'fmt ' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read sample count in 'fmt ' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&blockSizePerChannel error:nil] || blockSizePerChannel != DSF_BLOCK_SIZE_BYTES_PER_CHANNEL) {
-		os_log_error(_dsdDecoderLog, "Unexpected block size per channel in 'fmt ': %u", blockSizePerChannel);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected block size per channel in 'fmt ': %u", blockSizePerChannel);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt32LittleEndian:&reserved error:nil] || reserved != 0) {
-		os_log_error(_dsdDecoderLog, "Unexpected non-zero value for reserved in 'fmt ': %u", reserved);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected non-zero value for reserved in 'fmt ': %u", reserved);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
@@ -200,14 +200,14 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Read the 'data' chunk
 	if(!ReadChunkID(_inputSource, &chunkID) || chunkID != 'data') {
-		os_log_error(_dsdDecoderLog, "Unable to read 'data' chunk");
+		os_log_error(gSFBDSDDecoderLog, "Unable to read 'data' chunk");
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
 	}
 
 	if(![_inputSource readUInt64LittleEndian:&chunkSize error:nil]) {
-		os_log_error(_dsdDecoderLog, "Unexpected 'data' chunk size: %llu", chunkSize);
+		os_log_error(gSFBDSDDecoderLog, "Unexpected 'data' chunk size: %llu", chunkSize);
 		if(error)
 			*error = CreateInvalidDSFFileError(_inputSource.url);
 		return NO;
@@ -216,7 +216,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	_packetCount = sampleCount / FRAMES_PER_DSD_PACKET;
 	NSInteger offset;
 	if(![_inputSource getOffset:&offset error:nil]) {
-		os_log_error(_dsdDecoderLog, "Error getting audio offset");
+		os_log_error(gSFBDSDDecoderLog, "Error getting audio offset");
 		return NO;
 	}
 	_audioOffset = offset;
@@ -297,7 +297,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	buffer.byteLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(_dsdDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBDSDDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -359,7 +359,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	NSInteger blockOffset = blockNumber * DSF_BLOCK_SIZE_BYTES_PER_CHANNEL * channelCount;
 
 	if(![_inputSource seekToOffset:(_audioOffset + blockOffset) error:error]) {
-		os_log_debug(_dsdDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + blockOffset);
+		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + blockOffset);
 		return NO;
 	}
 
@@ -399,7 +399,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	NSInteger bytesRead;
 	if(![_inputSource readBytes:buf length:bufsize bytesRead:&bytesRead error:error] || bytesRead != bufsize) {
-		os_log_debug(_dsdDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
+		os_log_debug(gSFBDSDDecoderLog, "Error reading audio block: requested %u bytes, got %ld", bufsize, bytesRead);
 		return NO;
 	}
 

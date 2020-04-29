@@ -144,7 +144,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_decoder.processingFormat]) {
-		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 

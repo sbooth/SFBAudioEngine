@@ -251,7 +251,7 @@ namespace {
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -260,7 +260,7 @@ namespace {
 
 	int64_t blocksRead = 0;
 	if(_decompressor->GetData((char *)buffer.audioBufferList->mBuffers[0].mData, (int64_t)frameLength, &blocksRead)) {
-		os_log_error(_audioDecoderLog, "Monkey's Audio invalid checksum");
+		os_log_error(gSFBAudioDecoderLog, "Monkey's Audio invalid checksum");
 		return NO;
 	}
 

@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern os_log_t _dsdDecoderLog;
+extern os_log_t gSFBDSDDecoderLog;
 
 @interface SFBDSDDecoder ()
 {

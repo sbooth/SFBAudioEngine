@@ -187,7 +187,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -213,7 +213,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		frame.buffer = buf;
 
 		if(mpc_demux_decode(_demux, &frame)) {
-			os_log_error(_audioDecoderLog, "Musepack decoding error");
+			os_log_error(gSFBAudioDecoderLog, "Musepack decoding error");
 			break;
 		}
 

@@ -141,7 +141,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 				[pathExtensions addObject:pathExtension];
 		}
 		else
-			os_log_debug(_audioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
+			os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 	}
 
 	return pathExtensions;
@@ -168,7 +168,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	// Open the input file
 	_sndfile = sf_open_virtual(&virtualIO, SFM_READ, &_sfinfo, (__bridge void *)self);
 	if(!_sndfile) {
-		os_log_error(_audioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
+		os_log_error(gSFBAudioDecoderLog, "sf_open_virtual failed: %{public}s", sf_error_number(sf_error(NULL)));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -284,7 +284,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	if(_sndfile) {
 		int result = sf_close(_sndfile);
 		if(result)
-			os_log_error(_audioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
+			os_log_error(gSFBAudioDecoderLog, "sf_close failed: %{public}s", sf_error_number(result));
 		_sndfile = NULL;
 	}
 
@@ -316,7 +316,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -346,7 +346,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 	int result = sf_error(_sndfile);
 	if(result) {
-		os_log_error(_audioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
+		os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
 		return NO;
 	}
 
@@ -359,7 +359,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 	sf_count_t result = sf_seek(_sndfile, frame, SF_SEEK_SET);
 	if(result == -1) {
-		os_log_error(_audioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
+		os_log_error(gSFBAudioDecoderLog, "sf_seek failed: %{public}s", sf_error_number(sf_error(_sndfile)));
 		return NO;
 	}
 	return YES;

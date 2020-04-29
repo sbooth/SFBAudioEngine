@@ -170,10 +170,10 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		status = FLAC__stream_decoder_init_ogg_stream(_flac, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
 
 	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-		os_log_error(_audioDecoderLog, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(_audioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		FLAC__stream_decoder_delete(_flac);
 		_flac = NULL;
@@ -191,10 +191,10 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 	// Process metadata
 	if(!FLAC__stream_decoder_process_until_end_of_metadata(_flac)) {
-		os_log_error(_audioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(_audioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		FLAC__stream_decoder_delete(_flac);
 		_flac = NULL;
@@ -242,10 +242,10 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 			break;
 
 		default: {
-			os_log_error(_audioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
+			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
 
 			if(!FLAC__stream_decoder_finish(_flac))
-				os_log_info(_audioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+				os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 			FLAC__stream_decoder_delete(_flac);
 			_flac = NULL;
@@ -300,7 +300,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 {
 	if(_flac) {
 		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(_audioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 
 		FLAC__stream_decoder_delete(_flac);
 		_flac = NULL;
@@ -335,7 +335,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	buffer.frameLength = 0;
 
 	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(_audioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
 		return NO;
 	}
 
@@ -357,7 +357,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 		// Grab the next frame
 		if(!FLAC__stream_decoder_process_single(_flac))
-			os_log_error(_audioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
 	}
 
 	_framePosition += framesProcessed;
@@ -498,7 +498,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 - (void)handleFLACError:(const FLAC__StreamDecoder *)decoder status:(FLAC__StreamDecoderErrorStatus)status
 {
-	os_log_error(_audioDecoderLog, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
+	os_log_error(gSFBAudioDecoderLog, "FLAC error: %{public}s", FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 @end
