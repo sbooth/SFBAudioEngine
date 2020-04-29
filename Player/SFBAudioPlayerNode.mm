@@ -948,7 +948,7 @@ namespace {
 					}
 				}
 				else if(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag) {
-					os_log_debug(OS_LOG_DEFAULT, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+					os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Perform the decoding cancelled notification
 					if(_decodingCanceledNotificationHandler) {
