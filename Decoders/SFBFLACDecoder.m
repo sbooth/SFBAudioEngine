@@ -442,24 +442,47 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		}
 
 		case 3: {
-			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-				unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
-				FLAC__int32 value;
-				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
-					value = buffer[channel][sample] << shift;
+			if(shift) {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
+					FLAC__int32 value;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
+						value = buffer[channel][sample] << shift;
 #if __BIG_ENDIAN__
-					*dst++ = (unsigned char)((value >> 16) & 0xff);
-					*dst++ = (unsigned char)((value >> 8) & 0xff);
-					*dst++ = (unsigned char)(value & 0xff);
+						*dst++ = (unsigned char)((value >> 16) & 0xff);
+						*dst++ = (unsigned char)((value >> 8) & 0xff);
+						*dst++ = (unsigned char)(value & 0xff);
 #elif __LITTLE_ENDIAN__
-					*dst++ = (unsigned char)(value & 0xff);
-					*dst++ = (unsigned char)((value >> 8) & 0xff);
-					*dst++ = (unsigned char)((value >> 16) & 0xff);
+						*dst++ = (unsigned char)(value & 0xff);
+						*dst++ = (unsigned char)((value >> 8) & 0xff);
+						*dst++ = (unsigned char)((value >> 16) & 0xff);
 #else
 #  error Unknown OS byte order
 #endif
+					}
 				}
 			}
+			else {
+				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+					unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
+					FLAC__int32 value;
+					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
+						value = buffer[channel][sample];
+#if __BIG_ENDIAN__
+						*dst++ = (unsigned char)((value >> 16) & 0xff);
+						*dst++ = (unsigned char)((value >> 8) & 0xff);
+						*dst++ = (unsigned char)(value & 0xff);
+#elif __LITTLE_ENDIAN__
+						*dst++ = (unsigned char)(value & 0xff);
+						*dst++ = (unsigned char)((value >> 8) & 0xff);
+						*dst++ = (unsigned char)((value >> 16) & 0xff);
+#else
+#  error Unknown OS byte order
+#endif
+					}
+				}
+			}
+
 			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
