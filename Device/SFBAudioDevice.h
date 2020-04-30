@@ -59,17 +59,17 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 #pragma mark - Device Property Observation
 
-- (void)whenSampleRateChangesPerformBlock:(void (^ _Nullable)(void))block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
-- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ _Nullable)(void))block;
-- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^ _Nullable)(void))block;
+- (void)whenSampleRateChangesPerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenSampleRateChanges(perform:));
+- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
 
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property;
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 
-- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(void (^ _Nullable)(void))block;
-- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block;
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block;
+- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block;
 
 @end
 

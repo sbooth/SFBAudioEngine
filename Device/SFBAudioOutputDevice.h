@@ -30,12 +30,12 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 
 #pragma mark - Device Property Observation
 
-- (void)whenMuteChangesPerformBlock:(void (^ _Nullable)(void))block NS_SWIFT_NAME(whenMuteChanges(perform:));
-- (void)whenMasterVolumeChangesPerformBlock:(void (^ _Nullable)(void))block NS_SWIFT_NAME(whenMasterVolumeChanges(perform:));
+- (void)whenMuteChangesPerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenMuteChanges(perform:));
+- (void)whenMasterVolumeChangesPerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenMasterVolumeChanges(perform:));
 
-- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel performBlock:(void (^ _Nullable)(void))block;
-- (void)whenDataSourcesChangePerformBlock:(void (^ _Nullable)(void))block NS_SWIFT_NAME(whenDataSourcesChange(perform:));
-- (void)whenActiveDataSourcesChangePerformBlock:(void (^ _Nullable)(void))block NS_SWIFT_NAME(whenActiveDataSourcesChange(perform:));
+- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenDataSourcesChangePerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenDataSourcesChange(perform:));
+- (void)whenActiveDataSourcesChangePerformBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenActiveDataSourcesChange(perform:));
 
 @end
 

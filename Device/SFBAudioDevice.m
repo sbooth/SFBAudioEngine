@@ -75,7 +75,7 @@ static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
 	AudioObjectID _deviceID;
 	NSMutableDictionary *_listenerBlocks;
 }
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(void(^)(void))block;
+- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block;
 - (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress;
 @end
 
@@ -642,32 +642,32 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return (BOOL)AudioObjectHasProperty(_deviceID, &propertyAddress);
 }
 
-- (void)whenSampleRateChangesPerformBlock:(void (^)(void))block
+- (void)whenSampleRateChangesPerformBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
+- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
+- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(void (^)(void))block
+- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(void (^)(void))block
+- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:property inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(void (^)(void))block
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -680,7 +680,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		[self addPropertyListenerForPropertyAddress:&propertyAddress block:block];
 }
 
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(void(^)(void))block
+- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block
 {
 	NSParameterAssert(propertyAddress != nil);
 	NSParameterAssert(block != nil);

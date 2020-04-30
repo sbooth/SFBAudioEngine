@@ -116,27 +116,27 @@ extern os_log_t gSFBAudioDeviceLog;
 
 #pragma mark - Device Property Observation
 
-- (void)whenMuteChangesPerformBlock:(void (^)(void))block
+- (void)whenMuteChangesPerformBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyMute inScope:kAudioObjectPropertyScopeOutput changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenMasterVolumeChangesPerformBlock:(void (^)(void))block
+- (void)whenMasterVolumeChangesPerformBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel performBlock:(void (^)(void))block
+- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:kAudioObjectPropertyScopeOutput changesOnElement:channel performBlock:block];
 }
 
-- (void)whenDataSourcesChangePerformBlock:(void (^)(void))block
+- (void)whenDataSourcesChangePerformBlock:(dispatch_block_t)block
 {
 	[self whenDataSourcesChangeInScope:kAudioObjectPropertyScopeOutput performBlock:block];
 }
 
-- (void)whenActiveDataSourcesChangePerformBlock:(void (^)(void))block
+- (void)whenActiveDataSourcesChangePerformBlock:(dispatch_block_t)block
 {
 	[self whenActiveDataSourcesChangeInScope:kAudioObjectPropertyScopeOutput performBlock:block];
 }
