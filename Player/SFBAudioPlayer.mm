@@ -644,7 +644,12 @@ namespace {
 	[_engine attachNode:_playerNode];
 
 	// Reconnect the player node to its output
-	AVAudioFormat *formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount];
+	AVAudioFormat *formatAsStandard = nil;
+	if(format.channelLayout)
+		formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channelLayout:format.channelLayout];
+	else
+		formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount];
+
 	if(playerNodeOutputConnectionPoint)
 		[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:formatAsStandard];
 	else
