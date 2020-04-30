@@ -11,7 +11,7 @@
 
 #import "SFBCStringForOSType.h"
 
-const NSNotificationName SFBAudioDevicesChangedNotification = @"org.sbooth.AudioEngine.SFBAudioDeviceNotifier.ChangedNotification";
+const NSNotificationName SFBAudioDevicesChangedNotification = @"org.sbooth.AudioEngine.AudioDeviceNotifier.ChangedNotification";
 
 extern os_log_t gSFBAudioDeviceLog;
 
