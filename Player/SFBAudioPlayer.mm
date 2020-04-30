@@ -12,6 +12,8 @@
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
 
+const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification = @"org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineConfigurationChangeNotification";
+
 namespace {
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 	os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
@@ -27,8 +29,8 @@ namespace {
 	dispatch_queue_t		_queue;				///< The dispatch queue used to access \c _queuedDecoders
 	DecoderQueue 			_queuedDecoders;	///< Decoders enqueued for non-gapless playback
 }
-- (void)audioEngineConfigurationChanged:(NSNotification *)notification;
-- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format;
+- (void)handleInterruption:(NSNotification *)notification;
+- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
 
 @implementation SFBAudioPlayer
@@ -50,12 +52,12 @@ namespace {
 
 		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
-		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2]];
+		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO];
 
 		_outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:_engine.outputNode.AUAudioUnit.deviceID];
 
 		// Register for configuration change notifications
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioEngineConfigurationChanged:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
 	}
 	return self;
 }
@@ -89,7 +91,7 @@ namespace {
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 		if(![_playerNode supportsFormat:decoder.processingFormat])
-			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat forceUpdate:NO];
 	});
 
 	dispatch_sync(_queue, ^{
@@ -508,27 +510,32 @@ namespace {
 	dispatch_sync(_engineQueue, ^{
 		block(_engine);
 	});
+
+	// SFBAudioPlayer requires that the mixer node be connected to the output node
+	AVAudioConnectionPoint *outputNodeInputConnectionPoint = [_engine inputConnectionPointForNode:_engine.outputNode inputBus:0];
+	NSAssert(outputNodeInputConnectionPoint.node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
 }
 
 #pragma mark - Internals
 
-- (void)audioEngineConfigurationChanged:(NSNotification *)notification
+- (void)handleInterruption:(NSNotification *)notification
 {
 	os_log_debug(_audioPlayerLog, "Received AVAudioEngineConfigurationChangeNotification");
 
 	AVAudioEngine *engine = [notification object];
-
 	if(engine != _engine)
 		return;
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
 		[_playerNode stop];
-		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat];
+		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
+
+	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
 
-- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format
+- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
 {
 	// SFBAudioPlayerNode requires a non-interleaved output format
 	if(format.interleaved) {
@@ -539,20 +546,41 @@ namespace {
 		}
 	}
 
-	if([format isEqual:_playerNode.renderingFormat])
+	if([format isEqual:_playerNode.renderingFormat] && !forceUpdate)
 		return;
 
 	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!playerNode) {
-		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %@", format);
+		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
 		return;
 	}
 
+	AVAudioOutputNode *outputNode = _engine.outputNode;
+	AVAudioMixerNode *mixerNode = _engine.mainMixerNode;
+
+#if DEBUG
+	// SFBAudioPlayer requires that the mixer node be connected to the output node
+	AVAudioConnectionPoint *outputNodeInputConnectionPoint = [_engine inputConnectionPointForNode:outputNode inputBus:0];
+	NSAssert(outputNodeInputConnectionPoint.node == mixerNode, @"Illegal AVAudioEngine configuration");
+#endif
+
+	AVAudioFormat *outputFormat = [outputNode outputFormatForBus:0];
+	AVAudioFormat *previousOutputFormat = [outputNode inputFormatForBus:0];
+
+	BOOL outputFormatChanged = outputFormat.channelCount != previousOutputFormat.channelCount || outputFormat.sampleRate != previousOutputFormat.sampleRate;
+	if(outputFormatChanged)
+		os_log_debug(_audioPlayerLog, "AVAudioEngine output format changed from %{public}@ to %{public}@", previousOutputFormat, outputFormat);
+
+	AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
 	if(_playerNode) {
-		[_engine disconnectNodeInput:_engine.mainMixerNode];
-		[_engine disconnectNodeOutput:_engine.mainMixerNode];
+		playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
+		[_engine disconnectNodeOutput:_playerNode bus:0];
+		[_engine disconnectNodeInput:playerNodeOutputConnectionPoint.node bus:0];
 		[_engine detachNode:_playerNode];
 	}
+
+	if(outputFormatChanged)
+		[_engine disconnectNodeInput:outputNode bus:0];
 
 	playerNode.decodingStartedNotificationHandler = _playerNode.decodingStartedNotificationHandler;
 	playerNode.decodingCompleteNotificationHandler = _playerNode.decodingCompleteNotificationHandler;
@@ -593,7 +621,7 @@ namespace {
 					[strongSelf->_engine reset];
 					[strongSelf->_playerNode reset];
 					if(![strongSelf->_playerNode supportsFormat:decoder.processingFormat])
-						[strongSelf setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+						[strongSelf setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat forceUpdate:NO];
 				});
 
 				if(![strongSelf->_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
@@ -615,13 +643,16 @@ namespace {
 	_playerNode = playerNode;
 	[_engine attachNode:_playerNode];
 
-	AVAudioOutputNode *output = _engine.outputNode;
-	AVAudioMixerNode *mixer = _engine.mainMixerNode;
+	// Reconnect the player node to its output
+	AVAudioFormat *formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount];
+	if(playerNodeOutputConnectionPoint)
+		[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:formatAsStandard];
+	else
+		[_engine connect:_playerNode to:mixerNode format:formatAsStandard];
 
-	AVAudioFormat *outputFormat = [output outputFormatForBus:0];
-
-	[_engine connect:mixer to:output format:outputFormat];
-	[_engine connect:_playerNode to:mixer format:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount]];
+	// Reconnect the mixer and output nodes using the output device's format
+	if(outputFormatChanged)
+		[_engine connect:mixerNode to:outputNode format:outputFormat];
 
 #if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes

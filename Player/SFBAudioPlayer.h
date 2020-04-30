@@ -11,6 +11,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Posted when the configuration of the underlying \c AVAudioEngine changes
+/// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
+extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
+
 typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition;
 typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
 
@@ -126,6 +130,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 #pragma mark - AVAudioEngine Access
 
+/// Peforms an operation on the underlying \c AVAudioEngine
+/// @note Graph modifications may only be made between \c playerNode and \c engine.mainMixerNode
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
