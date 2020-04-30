@@ -56,6 +56,16 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 			}
 		}
 
+		player.errorNotificationHandler = { error in
+			DispatchQueue.main.async {
+				NSApp.presentError(error)
+			}
+		}
+
+		player.outOfAudioNotificationHandler = {
+			self.player.stop()
+		}
+
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
 
@@ -155,7 +165,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
 	func updateWindow() {
 		// Nothing happening, reset the window
-		guard let url = player.url else {
+		guard let url = player.decoder?.inputSource.url else {
 			window?.representedURL = nil
 			window?.title = ""
 
