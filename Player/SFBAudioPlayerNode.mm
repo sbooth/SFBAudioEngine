@@ -16,8 +16,11 @@
 #import "SFBAudioPlayerNode.h"
 
 #import "AudioRingBuffer.h"
-#import "SFBAudioDecoder.h"
+#import "NSError+SFBURLPresentation.h"
 #import "RingBuffer.h"
+#import "SFBAudioDecoder.h"
+
+NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 @interface SFBAudioPlayerNode ()
 - (void *)decoderThreadEntry;
@@ -41,7 +44,8 @@ namespace {
 
 	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
-		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2
+		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2,
+		eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio			= 3
 	};
 
 #pragma mark - Thread entry points
@@ -207,7 +211,7 @@ namespace {
 	uint64_t DecoderStateData::sSequenceNumber = 0;
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
-	/// Returns the element in `decoders` with the smallest sequence number that has not completed rendering
+	/// Returns the element in \c decoders with the smallest sequence number that has not completed rendering and has not been marked for removal
 	template<size_t N>
 	DecoderStateData::shared_ptr GetActiveDecoderStateWithSmallestSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray)
 	{
@@ -230,7 +234,7 @@ namespace {
 		return result;
 	}
 
-	/// Returns the element in `decoders` with the smallest sequence number greater than `sequenceNumber` that has not completed rendering
+	/// Returns the element in \c decoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
 	template<size_t N>
 	DecoderStateData::shared_ptr GetActiveDecoderStateFollowingSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
 	{
@@ -253,7 +257,7 @@ namespace {
 		return result;
 	}
 
-	/// Returns the element in `decoders` with the sequence number equal to `sequenceNumber` that has not been marked for removal
+	/// Returns the element in \c decoders with the sequence number equal to \c sequenceNumber that has not been marked for removal
 	template<size_t N>
 	DecoderStateData::shared_ptr GetDecoderStateWithSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
 	{
@@ -311,6 +315,7 @@ namespace {
 	// State
 	std::array<DecoderStateData::shared_ptr, kDecoderArraySize> _decoderStateArray;
 }
+- (BOOL)performEnqueue:(id <SFBPCMDecoding>)decoder reset:(BOOL)reset error:(NSError **)error;
 @end
 
 @implementation SFBAudioPlayerNode
@@ -437,6 +442,19 @@ namespace {
 			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, decoderState->mSequenceNumber);
 		}
 
+		// ========================================
+		// 8. If there are no active decoders schedule the out of audio notification
+
+		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
+		if(!decoderState) {
+			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio;
+			uint8_t bytesToWrite [4 + 8];
+			memcpy(bytesToWrite, &cmd, 4);
+			memcpy(bytesToWrite + 4, &timestamp->mHostTime, 8);
+			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8);
+			dispatch_semaphore_signal(self->_notifierSemaphore);
+		}
+
 		return noErr;
 	};
 
@@ -540,9 +558,9 @@ namespace {
 	return format.channelCount == _renderingFormat.channelCount && format.sampleRate == _renderingFormat.sampleRate;
 }
 
-#pragma mark - Playlist Management
+#pragma mark - Queue Management
 
-- (BOOL)playURL:(NSURL *)url error:(NSError **)error
+- (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
@@ -550,33 +568,13 @@ namespace {
 	if(!decoder)
 		return NO;
 
-	return [self playDecoder:decoder error:error];
+	return [self resetAndEnqueueDecoder:decoder error:error];
 }
 
-- (BOOL)playDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
+- (BOOL)resetAndEnqueueDecoder:(id<SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-
-	os_log_info(_audioPlayerNodeLog, "Playing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
-
-	if(!decoder.isOpen && ![decoder openReturningError:error])
-		return NO;
-
-	if(![self supportsFormat:decoder.processingFormat])
-		return NO;
-
-	[self clearQueue];
-
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
-	if(decoderState)
-		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
-
-	dispatch_sync(_queue, ^{
-		_queuedDecoders.push(decoder);
-	});
-	dispatch_semaphore_signal(_decodingSemaphore);
-
-	return YES;
+	return [self performEnqueue:decoder reset:YES error:error];
 }
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error
@@ -593,21 +591,7 @@ namespace {
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
-
-	os_log_info(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
-
-	if(!decoder.isOpen && ![decoder openReturningError:error])
-		return NO;
-
-	if(![self supportsFormat:decoder.processingFormat])
-		return NO;
-
-	dispatch_sync(_queue, ^{
-		_queuedDecoders.push(decoder);
-	});
-	dispatch_semaphore_signal(_decodingSemaphore);
-
-	return YES;
+	return [self performEnqueue:decoder reset:NO error:error];
 }
 
 - (void)skipToNext
@@ -680,10 +664,10 @@ namespace {
 	return (_flags.load() & eAudioPlayerNodeFlagIsPlaying) != 0;
 }
 
-- (NSURL *)url
+- (BOOL)isReady
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
-	return decoderState ? decoderState->mDecoder.inputSource.url : nil;
+	return decoderState ? YES : NO;
 }
 
 - (id<SFBPCMDecoding>)decoder
@@ -832,6 +816,42 @@ namespace {
 
 
 #pragma mark - Internals
+
+- (BOOL)performEnqueue:(id <SFBPCMDecoding>)decoder reset:(BOOL)reset error:(NSError **)error
+{
+	os_log_info(_audioPlayerNodeLog, "Enqueuing \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path]);
+
+	if(!decoder.isOpen && ![decoder openReturningError:error])
+		return NO;
+
+	if(![self supportsFormat:decoder.processingFormat]) {
+		os_log_error(_audioPlayerNodeLog, "Unsupported decoder processing format: %{public}@", decoder.processingFormat);
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioPlayerNodeErrorDomain
+											 code:SFBAudioPlayerNodeErrorFormatNotSupported
+					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
+											  url:decoder.inputSource.url
+									failureReason:NSLocalizedString(@"Unsupported file format", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's format is not supported by this player.", @"")];
+
+		return NO;
+	}
+
+	if(reset) {
+		[self clearQueue];
+		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+		if(decoderState)
+			decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
+	}
+
+	dispatch_sync(_queue, ^{
+		_queuedDecoders.push(decoder);
+	});
+	dispatch_semaphore_signal(_decodingSemaphore);
+
+	return YES;
+}
 
 - (void *)decoderThreadEntry
 {
@@ -1043,7 +1063,7 @@ namespace {
 							{
 								uint64_t absTime = mach_absolute_time();
 								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
-								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification for \"%{public}@\" for .now() + %.2f msec",  [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
+								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification for \"%{public}@\" for .now() + %.2f msec", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
 							}
 #endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
@@ -1066,6 +1086,37 @@ namespace {
 						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
 					break;
 
+				case eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio:
+					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
+						uint64_t hostTime;
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
+
+						os_log_debug(_audioPlayerNodeLog, "Out of audio");
+
+						if(self->_outOfOfAudioNotificationHandler) {
+//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+							dispatch_time_t notificationTime = hostTime;
+#if DEBUG
+							{
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
+								os_log_debug(_audioPlayerNodeLog, "Scheduling out of audio notification for .now() + %.2f msec", delta);
+							}
+#endif
+							dispatch_after(notificationTime, _notificationQueue, ^{
+#if DEBUG
+								uint64_t absTime = mach_absolute_time();
+								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+								os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
+#endif
+
+								self->_outOfOfAudioNotificationHandler();
+							});
+						}
+					}
+					else
+						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
+				break;
 			}
 		}
 

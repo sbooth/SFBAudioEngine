@@ -37,7 +37,7 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 ///
 /// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding  (decoders) and supports audio at the same sample rate
 /// and with the same number of channels as the output format.
-/// \c SFBAudioPlayerNode supports seeking when supported by the decoder's input source.
+/// \c SFBAudioPlayerNode supports seeking when supported by the decoder.
 ///
 /// \c SFBAudioPlayerNode decodes audio in a high priority (non-realtime) thread into a ring buffer and renders on demand.
 /// Rendering occurs in a realtime thread when the render block is called.
@@ -52,6 +52,7 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 ///  3. Decoding canceled
 ///  4. Rendering started
 ///  5. Rendering complete
+///  6. Out of audio
 ///
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
@@ -66,10 +67,10 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 @property (nonatomic, readonly) AVAudioFormat * renderingFormat;
 - (BOOL)supportsFormat:(AVAudioFormat *)format;
 
-#pragma mark - Playlist Management
+#pragma mark - Queue Management
 
-- (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
-- (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
+- (BOOL)resetAndEnqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(resetAndEnqueue(_:));
+- (BOOL)resetAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(resetAndEnqueue(_:));
 
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
@@ -89,8 +90,9 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 #pragma mark - State
 
 @property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if the SFBAudioPlayerNode is playing
-@property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
+
+@property (nonatomic, readonly) BOOL isReady; ///< Returns \c YES if a decoder is available to supply audio for the next render cycle
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the decoder supplying audio for the next render cycle or \c nil if none. @warning Do not change any properties of the returned object
 
 #pragma mark - Playback Properties
 
@@ -117,7 +119,18 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingCompleteNotificationHandler;
+@property (nonatomic, nullable) dispatch_block_t outOfOfAudioNotificationHandler;
 
 @end
+
+#pragma mark - Error Information
+
+/*! @brief The \c NSErrorDomain used by \c SFBAudioPlayerNode */
+extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlayerNodeErrorDomain);
+
+/*! @brief Possible \c NSError  error codes used by \c SFBAudioPlayerNode */
+typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
+	SFBAudioPlayerNodeErrorFormatNotSupported	= 0		/*!< Format not supported */
+};
 
 NS_ASSUME_NONNULL_END
