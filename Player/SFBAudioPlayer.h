@@ -127,6 +127,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 #pragma mark - AVAudioEngine Access
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
+@property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
 @end
 

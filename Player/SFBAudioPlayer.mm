@@ -23,7 +23,7 @@ namespace {
 	AVAudioEngine 			*_engine;			///< The underlying \c AVAudioEngine instance
 	dispatch_queue_t		_engineQueue;		///< The dispatch queue used to access \c _engine
 	SFBAudioOutputDevice 	*_outputDevice; 	///< The current output device for \c _engine.outputNode
-	SFBAudioPlayerNode		*_player;			///< The player driving the audio processing graph
+	SFBAudioPlayerNode		*_playerNode;		///< The player driving the audio processing graph
 	dispatch_queue_t		_queue;				///< The dispatch queue used to access \c _queuedDecoders
 	DecoderQueue 			_queuedDecoders;	///< Decoders enqueued for non-gapless playback
 }
@@ -84,11 +84,11 @@ namespace {
 	dispatch_sync(_engineQueue, ^{
 		[_engine pause];
 		[_engine reset];
-		[_player reset];
+		[_playerNode reset];
 
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		if(![_player supportsFormat:decoder.processingFormat])
+		if(![_playerNode supportsFormat:decoder.processingFormat])
 			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
 	});
 
@@ -97,7 +97,7 @@ namespace {
 			_queuedDecoders.pop();
 	});
 
-	if(![_player resetAndEnqueueDecoder:decoder error:error])
+	if(![_playerNode resetAndEnqueueDecoder:decoder error:error])
 		return NO;
 
 	return [self playReturningError:error];
@@ -124,7 +124,7 @@ namespace {
 
 	// If the current SFBAudioPlayerNode doesn't support the decoder's format,
 	// add the decoder to our queue
-	if(![_player supportsFormat:decoder.processingFormat]) {
+	if(![_playerNode supportsFormat:decoder.processingFormat]) {
 		dispatch_sync(_queue, ^{
 			_queuedDecoders.push(decoder);
 		});
@@ -132,19 +132,19 @@ namespace {
 	}
 
 	// Enqueuing will only succeed if the formats match
-	return [_player enqueueDecoder:decoder error:error];
+	return [_playerNode enqueueDecoder:decoder error:error];
 }
 
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
-	return [_player supportsFormat:format];
+	return [_playerNode supportsFormat:format];
 }
 
 - (void)skipToNext
 {
-	if(!_player.queueIsEmpty)
-		[_player skipToNext];
+	if(!_playerNode.queueIsEmpty)
+		[_playerNode skipToNext];
 	else {
 		__block id <SFBPCMDecoding> decoder = nil;
 		dispatch_sync(_queue, ^{
@@ -161,7 +161,7 @@ namespace {
 
 - (void)clearQueue
 {
-	[_player clearQueue];
+	[_playerNode clearQueue];
 	dispatch_sync(_queue, ^{
 		while(!_queuedDecoders.empty())
 			_queuedDecoders.pop();
@@ -174,7 +174,7 @@ namespace {
 	dispatch_sync(_queue, ^{
 		empty = _queuedDecoders.empty();
 	});
-	return empty && _player.queueIsEmpty;
+	return empty && _playerNode.queueIsEmpty;
 }
 
 #pragma mark - Playback Control
@@ -186,7 +186,7 @@ namespace {
 	dispatch_sync(_engineQueue, ^{
 		startedSuccessfully = [_engine startAndReturnError:&err];
 		if(startedSuccessfully)
-			[_player play];
+			[_playerNode play];
 	});
 
 	if(!startedSuccessfully) {
@@ -200,14 +200,14 @@ namespace {
 
 - (void)pause
 {
-	[_player pause];
+	[_playerNode pause];
 }
 
 - (void)stop
 {
 	dispatch_sync(_engineQueue, ^{
 		[_engine stop];
-		[_player stop];
+		[_playerNode stop];
 	});
 
 	dispatch_sync(_queue, ^{
@@ -218,7 +218,7 @@ namespace {
 
 - (BOOL)playPauseReturningError:(NSError **)error
 {
-	if(_player.isPlaying) {
+	if(_playerNode.isPlaying) {
 		[self pause];
 		return YES;
 	}
@@ -230,7 +230,7 @@ namespace {
 {
 	dispatch_sync(_engineQueue, ^{
 		[_engine reset];
-		[_player reset];
+		[_playerNode reset];
 	});
 
 	dispatch_sync(_queue, ^{
@@ -250,25 +250,25 @@ namespace {
 
 - (BOOL)playerNodeIsPlaying
 {
-	return _player.isPlaying;
+	return _playerNode.isPlaying;
 }
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
 	if(_engine.isRunning)
-		return _player.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
+		return _playerNode.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
 }
 
 - (BOOL)isPlaying
 {
-	return _engine.isRunning && _player.isPlaying;
+	return _engine.isRunning && _playerNode.isPlaying;
 }
 
 - (BOOL)isPaused
 {
-	return _engine.isRunning && !_player.isPlaying;
+	return _engine.isRunning && !_playerNode.isPlaying;
 }
 
 - (BOOL)isStopped
@@ -278,12 +278,12 @@ namespace {
 
 - (BOOL)isReady
 {
-	return _player.isReady;
+	return _playerNode.isReady;
 }
 
 - (id<SFBPCMDecoding>)decoder
 {
-	return _player.decoder;
+	return _playerNode.decoder;
 }
 
 #pragma mark - Playback Properties
@@ -300,7 +300,7 @@ namespace {
 
 - (SFBAudioPlayerPlaybackPosition)playbackPosition
 {
-	return _player.playbackPosition;
+	return _playerNode.playbackPosition;
 }
 
 - (NSTimeInterval)currentTime
@@ -315,12 +315,12 @@ namespace {
 
 - (SFBAudioPlayerPlaybackTime)playbackTime
 {
-	return _player.playbackTime;
+	return _playerNode.playbackTime;
 }
 
 - (BOOL)getPlaybackPosition:(SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerPlaybackTime *)playbackTime
 {
-	return [_player getPlaybackPosition:playbackPosition andTime:playbackTime];
+	return [_playerNode getPlaybackPosition:playbackPosition andTime:playbackTime];
 }
 
 #pragma mark - Seeking
@@ -337,32 +337,32 @@ namespace {
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	return [_player seekForward:secondsToSkip];
+	return [_playerNode seekForward:secondsToSkip];
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	return [_player seekBackward:secondsToSkip];
+	return [_playerNode seekBackward:secondsToSkip];
 }
 
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
 {
-	return [_player seekToTime:timeInSeconds];
+	return [_playerNode seekToTime:timeInSeconds];
 }
 
 - (BOOL)seekToPosition:(float)position
 {
-	return [_player seekToPosition:position];
+	return [_playerNode seekToPosition:position];
 }
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
 {
-	return [_player seekToFrame:frame];
+	return [_playerNode seekToFrame:frame];
 }
 
 - (BOOL)supportsSeeking
 {
-	return _player.supportsSeeking;
+	return _playerNode.supportsSeeking;
 }
 
 #pragma mark - Volume Control
@@ -431,52 +431,52 @@ namespace {
 
 - (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
 {
-	return _player.decodingStartedNotificationHandler;
+	return _playerNode.decodingStartedNotificationHandler;
 }
 
 - (void)setDecodingStartedNotificationHandler:(SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
 {
-	_player.decodingStartedNotificationHandler = decodingStartedNotificationHandler;
+	_playerNode.decodingStartedNotificationHandler = decodingStartedNotificationHandler;
 }
 
 - (SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
 {
-	return _player.decodingCompleteNotificationHandler;
+	return _playerNode.decodingCompleteNotificationHandler;
 }
 
 - (void)setDecodingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
 {
-	_player.decodingCompleteNotificationHandler = decodingCompleteNotificationHandler;
+	_playerNode.decodingCompleteNotificationHandler = decodingCompleteNotificationHandler;
 }
 
 - (SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
 {
-	return _player.decodingCanceledNotificationHandler;
+	return _playerNode.decodingCanceledNotificationHandler;
 }
 
 - (void)setDecodingCanceledNotificationHandler:(SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
 {
-	_player.decodingCanceledNotificationHandler = decodingCanceledNotificationHandler;
+	_playerNode.decodingCanceledNotificationHandler = decodingCanceledNotificationHandler;
 }
 
 - (SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
 {
-	return _player.renderingStartedNotificationHandler;
+	return _playerNode.renderingStartedNotificationHandler;
 }
 
 - (void)setRenderingStartedNotificationHandler:(SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
 {
-	_player.renderingStartedNotificationHandler = renderingStartedNotificationHandler;
+	_playerNode.renderingStartedNotificationHandler = renderingStartedNotificationHandler;
 }
 
 - (SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
 {
-	return _player.renderingCompleteNotificationHandler;
+	return _playerNode.renderingCompleteNotificationHandler;
 }
 
 - (void)setRenderingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
 {
-	_player.renderingCompleteNotificationHandler = renderingCompleteNotificationHandler;
+	_playerNode.renderingCompleteNotificationHandler = renderingCompleteNotificationHandler;
 }
 
 #pragma mark - Output Device
@@ -523,8 +523,8 @@ namespace {
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
-		[_player stop];
-		[self setupEngineForGaplessPlaybackOfFormat:_player.renderingFormat];
+		[_playerNode stop];
+		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat];
 	});
 }
 
@@ -539,30 +539,30 @@ namespace {
 		}
 	}
 
-	if([format isEqual:_player.renderingFormat])
+	if([format isEqual:_playerNode.renderingFormat])
 		return;
 
-	SFBAudioPlayerNode *player = [[SFBAudioPlayerNode alloc] initWithFormat:format];
-	if(!player) {
+	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
+	if(!playerNode) {
 		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %@", format);
 		return;
 	}
 
-	if(_player) {
+	if(_playerNode) {
 		[_engine disconnectNodeInput:_engine.mainMixerNode];
 		[_engine disconnectNodeOutput:_engine.mainMixerNode];
-		[_engine detachNode:_player];
+		[_engine detachNode:_playerNode];
 	}
 
-	player.decodingStartedNotificationHandler = _player.decodingStartedNotificationHandler;
-	player.decodingCompleteNotificationHandler = _player.decodingCompleteNotificationHandler;
-	player.decodingCanceledNotificationHandler = _player.decodingCanceledNotificationHandler;
+	playerNode.decodingStartedNotificationHandler = _playerNode.decodingStartedNotificationHandler;
+	playerNode.decodingCompleteNotificationHandler = _playerNode.decodingCompleteNotificationHandler;
+	playerNode.decodingCanceledNotificationHandler = _playerNode.decodingCanceledNotificationHandler;
 
-	player.renderingStartedNotificationHandler = _player.renderingStartedNotificationHandler;
-	player.renderingCompleteNotificationHandler = _player.renderingCompleteNotificationHandler;
+	playerNode.renderingStartedNotificationHandler = _playerNode.renderingStartedNotificationHandler;
+	playerNode.renderingCompleteNotificationHandler = _playerNode.renderingCompleteNotificationHandler;
 
 	__weak typeof(self) weakSelf = self;
-	player.outOfOfAudioNotificationHandler = ^() {
+	playerNode.outOfOfAudioNotificationHandler = ^() {
 		__strong typeof(self) strongSelf = weakSelf;
 
 		if(!strongSelf) {
@@ -591,12 +591,12 @@ namespace {
 				dispatch_sync(strongSelf->_engineQueue, ^{
 					[strongSelf->_engine pause];
 					[strongSelf->_engine reset];
-					[strongSelf->_player reset];
-					if(![strongSelf->_player supportsFormat:decoder.processingFormat])
+					[strongSelf->_playerNode reset];
+					if(![strongSelf->_playerNode supportsFormat:decoder.processingFormat])
 						[strongSelf setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
 				});
 
-				if(![strongSelf->_player resetAndEnqueueDecoder:decoder error:&error]) {
+				if(![strongSelf->_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
 					os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
 					if(strongSelf->_errorNotificationHandler && error)
 						strongSelf->_errorNotificationHandler(error);
@@ -612,8 +612,8 @@ namespace {
 			strongSelf->_outOfAudioNotificationHandler();
 	};
 
-	_player = player;
-	[_engine attachNode:_player];
+	_playerNode = playerNode;
+	[_engine attachNode:_playerNode];
 
 	AVAudioOutputNode *output = _engine.outputNode;
 	AVAudioMixerNode *mixer = _engine.mainMixerNode;
@@ -621,7 +621,7 @@ namespace {
 	AVAudioFormat *outputFormat = [output outputFormatForBus:0];
 
 	[_engine connect:mixer to:output format:outputFormat];
-	[_engine connect:_player to:mixer format:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount]];
+	[_engine connect:_playerNode to:mixer format:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount]];
 
 #if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
@@ -639,7 +639,7 @@ namespace {
 		double ratio = format.sampleRate / outputFormat.sampleRate;
 		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * ratio);
 
-		AUAudioUnit *audioUnit = _player.AUAudioUnit;
+		AUAudioUnit *audioUnit = _playerNode.AUAudioUnit;
 		if(audioUnit.maximumFramesToRender < maximumFramesToRender) {
 			BOOL renderResourcesAllocated = audioUnit.renderResourcesAllocated;
 			if(renderResourcesAllocated)
@@ -657,11 +657,11 @@ namespace {
 #endif
 
 #if DEBUG
-	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _player.renderingFormat);
-	if(![[_player outputFormatForBus:0] isEqual:_player.renderingFormat])
-		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_player outputFormatForBus:0]);
+	os_log_debug(_audioPlayerLog, "↑ rendering: %{public}@", _playerNode.renderingFormat);
+	if(![[_playerNode outputFormatForBus:0] isEqual:_playerNode.renderingFormat])
+		os_log_debug(_audioPlayerLog, "← player out: %{public}@", [_playerNode outputFormatForBus:0]);
 
-	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_player outputFormatForBus:0]])
+	if(![[_engine.mainMixerNode inputFormatForBus:0] isEqual:[_playerNode outputFormatForBus:0]])
 		os_log_debug(_audioPlayerLog, "→ mixer in: %{public}@", [_engine.mainMixerNode inputFormatForBus:0]);
 
 	if(![[_engine.mainMixerNode outputFormatForBus:0] isEqual:[_engine.mainMixerNode inputFormatForBus:0]])
