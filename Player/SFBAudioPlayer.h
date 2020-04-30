@@ -16,6 +16,7 @@ typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
 
 // Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
+typedef void (^SFBAudioPlayerErrorBlock)(NSError *error);
 
 /// The possible playback states for \c SFBAudioPlayer
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
@@ -68,8 +69,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, readonly) BOOL isPaused; ///< Returns \c YES if \c engineIsRunning and \c !playerNodeIsPlaying
 @property (nonatomic, readonly) BOOL isStopped; ///< Returns \c NO if \c engineIsRunning
 
-@property (nonatomic, nullable, readonly) NSURL *url; ///< Returns the url of the  rendering decoder's  input source  or \c nil if none
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the  rendering decoder  or \c nil if none. @warning Do not change any properties of the returned object
+@property (nonatomic, readonly) BOOL isReady; ///< Returns \c YES if a decoder is available to supply audio for the next render cycle
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the decoder supplying audio for the next render cycle or \c nil if none. @warning Do not change any properties of the returned object
 
 #pragma mark - Playback Properties
 
@@ -114,6 +115,9 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
 @property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingCompleteNotificationHandler;
+@property (nonatomic, nullable) dispatch_block_t outOfAudioNotificationHandler;
+
+@property (nonatomic, nullable) SFBAudioPlayerErrorBlock errorNotificationHandler;
 
 #pragma mark - Output Device
 

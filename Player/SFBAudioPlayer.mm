@@ -97,7 +97,7 @@ namespace {
 			_queuedDecoders.pop();
 	});
 
-	if(![_player playDecoder:decoder error:error])
+	if(![_player resetAndEnqueueDecoder:decoder error:error])
 		return NO;
 
 	return [self playReturningError:error];
@@ -189,8 +189,11 @@ namespace {
 			[_player play];
 	});
 
-	if(!startedSuccessfully && err && error)
-		*error = err;
+	if(!startedSuccessfully) {
+		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
+		if(err && error)
+			*error = err;
+	}
 
 	return startedSuccessfully;
 }
@@ -273,9 +276,9 @@ namespace {
 	return !_engine.isRunning;
 }
 
-- (NSURL *)url
+- (BOOL)isReady
 {
-	return _player.url;
+	return _player.isReady;
 }
 
 - (id<SFBPCMDecoding>)decoder
@@ -424,7 +427,7 @@ namespace {
 #pragma mark - Player Event Callbacks
 
 // Most callbacks are passed directly to the underlying SFBAudioPlayerNode
-// The rendering complete callback is modified to provide continuous but non-gapless playback
+// The end of audio callback is modified to provide continuous but non-gapless playback
 
 - (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
 {
@@ -464,6 +467,16 @@ namespace {
 - (void)setRenderingStartedNotificationHandler:(SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
 {
 	_player.renderingStartedNotificationHandler = renderingStartedNotificationHandler;
+}
+
+- (SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
+{
+	return _player.renderingCompleteNotificationHandler;
+}
+
+- (void)setRenderingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
+{
+	_player.renderingCompleteNotificationHandler = renderingCompleteNotificationHandler;
 }
 
 #pragma mark - Output Device
@@ -546,19 +559,18 @@ namespace {
 	player.decodingCanceledNotificationHandler = _player.decodingCanceledNotificationHandler;
 
 	player.renderingStartedNotificationHandler = _player.renderingStartedNotificationHandler;
+	player.renderingCompleteNotificationHandler = _player.renderingCompleteNotificationHandler;
 
 	__weak typeof(self) weakSelf = self;
-	player.renderingCompleteNotificationHandler = ^(id<SFBPCMDecoding> obj) {
+	player.outOfOfAudioNotificationHandler = ^() {
 		__strong typeof(self) strongSelf = weakSelf;
 
 		if(!strongSelf) {
-			os_log_error(_audioPlayerLog, "Weak reference to self in renderingCompleteNotificationHandler was zeroed");
+			os_log_error(_audioPlayerLog, "Weak reference to self in outOfOfAudioNotificationHandler was zeroed");
 			return;
 		}
 
-		if(strongSelf->_renderingCompleteNotificationHandler)
-			strongSelf->_renderingCompleteNotificationHandler(obj);
-
+		// Dequeue the next decoder
 		__block id <SFBPCMDecoding> decoder = nil;
 		dispatch_sync(strongSelf->_queue, ^{
 			if(!strongSelf->_queuedDecoders.empty()) {
@@ -567,8 +579,37 @@ namespace {
 			}
 		});
 
-		if(decoder)
-			[strongSelf playDecoder:decoder error:nil];
+		if(decoder) {
+			NSError *error = nil;
+			if(!decoder.isOpen && ![decoder openReturningError:&error]) {
+				os_log_error(_audioPlayerLog, "Error opening decoder: %{public}@", error);
+				if(strongSelf->_errorNotificationHandler && error)
+					strongSelf->_errorNotificationHandler(error);
+			}
+
+			if(decoder.isOpen) {
+				dispatch_sync(strongSelf->_engineQueue, ^{
+					[strongSelf->_engine pause];
+					[strongSelf->_engine reset];
+					[strongSelf->_player reset];
+					if(![strongSelf->_player supportsFormat:decoder.processingFormat])
+						[strongSelf setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat];
+				});
+
+				if(![strongSelf->_player resetAndEnqueueDecoder:decoder error:&error]) {
+					os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
+					if(strongSelf->_errorNotificationHandler && error)
+						strongSelf->_errorNotificationHandler(error);
+				}
+
+				if(![strongSelf playReturningError:&error]) {
+					if(strongSelf->_errorNotificationHandler && error)
+						strongSelf->_errorNotificationHandler(error);
+				}
+			}
+		}
+		else if(strongSelf->_outOfAudioNotificationHandler)
+			strongSelf->_outOfAudioNotificationHandler();
 	};
 
 	_player = player;
