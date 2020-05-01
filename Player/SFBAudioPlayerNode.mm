@@ -3,7 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <array>
 #import <atomic>
 #import <queue>
 #import <thread>
@@ -78,7 +77,7 @@ namespace {
 
 	//! State data for tracking/syncing decoding progress
 	struct DecoderStateData {
-		using shared_ptr = std::shared_ptr<DecoderStateData>;
+		using atomic_ptr = std::atomic<DecoderStateData *>;
 
 		static const AVAudioFrameCount kDefaultBufferSize = 1024;
 
@@ -212,12 +211,11 @@ namespace {
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 
 	/// Returns the element in \c decoders with the smallest sequence number that has not completed rendering and has not been marked for removal
-	template<size_t N>
-	DecoderStateData::shared_ptr GetActiveDecoderStateWithSmallestSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray)
+	DecoderStateData * GetActiveDecoderStateWithSmallestSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count)
 	{
-		DecoderStateData::shared_ptr result;
-		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
-			auto decoderState = std::atomic_load(&decoderStateArray[i]);
+		DecoderStateData *result = nullptr;
+		for(size_t i = 0; i < count; ++i) {
+			auto decoderState = decoderStateArray[i].load();
 			if(!decoderState)
 				continue;
 
@@ -235,12 +233,11 @@ namespace {
 	}
 
 	/// Returns the element in \c decoders with the smallest sequence number greater than \c sequenceNumber that has not completed rendering and has not been marked for removal
-	template<size_t N>
-	DecoderStateData::shared_ptr GetActiveDecoderStateFollowingSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
+	DecoderStateData * GetActiveDecoderStateFollowingSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
 	{
-		DecoderStateData::shared_ptr result;
-		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
-			auto decoderState = std::atomic_load(&decoderStateArray[i]);
+		DecoderStateData *result = nullptr;
+		for(size_t i = 0; i < count; ++i) {
+			auto decoderState = decoderStateArray[i].load();
 			if(!decoderState)
 				continue;
 
@@ -258,11 +255,10 @@ namespace {
 	}
 
 	/// Returns the element in \c decoders with the sequence number equal to \c sequenceNumber that has not been marked for removal
-	template<size_t N>
-	DecoderStateData::shared_ptr GetDecoderStateWithSequenceNumber(const std::array<DecoderStateData::shared_ptr, N>& decoderStateArray, const uint64_t& sequenceNumber)
+	DecoderStateData * GetDecoderStateWithSequenceNumber(const DecoderStateData::atomic_ptr *decoderStateArray, const size_t& count, const uint64_t& sequenceNumber)
 	{
-		for(size_t i = 0; i < decoderStateArray.size(); ++i) {
-			auto decoderState = std::atomic_load(&decoderStateArray[i]);
+		for(size_t i = 0; i < count; ++i) {
+			auto decoderState = decoderStateArray[i].load();
 			if(!decoderState)
 				continue;
 
@@ -313,7 +309,7 @@ namespace {
 	dispatch_source_t		_collector;
 
 	// State
-	std::array<DecoderStateData::shared_ptr, kDecoderArraySize> _decoderStateArray;
+	DecoderStateData::atomic_ptr _decoderStateArray [kDecoderArraySize];
 }
 - (BOOL)performEnqueue:(id <SFBPCMDecoding>)decoder reset:(BOOL)reset error:(NSError **)error;
 @end
@@ -401,7 +397,7 @@ namespace {
 
 		AVAudioFrameCount framesRemainingToDistribute = framesRead;
 
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
+		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderArraySize);
 		while(decoderState) {
 			AVAudioFrameCount decoderFramesRemaining = (AVAudioFrameCount)(decoderState->mFramesConverted.load() - decoderState->mFramesRendered.load());
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
@@ -439,13 +435,13 @@ namespace {
 			if(!framesRemainingToDistribute)
 				break;
 
-			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, decoderState->mSequenceNumber);
+			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, kDecoderArraySize, decoderState->mSequenceNumber);
 		}
 
 		// ========================================
 		// 8. If there are no active decoders schedule the out of audio notification
 
-		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray);
+		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderArraySize);
 		if(!decoderState) {
 			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio;
 			uint8_t bytesToWrite [4 + 8];
@@ -461,6 +457,15 @@ namespace {
 	if((self = [super initWithFormat:format renderBlock:renderBlock])) {
 		os_log_info(_audioPlayerNodeLog, "Render block format: %{public}@", format);
 
+		// _flags and _decoderStateArray are used in the render block so must be lock free
+		assert(_flags.is_lock_free());
+		assert(_decoderStateArray[0].is_lock_free());
+
+		// Initialize the decoder array
+		for(size_t i = 0; i < kDecoderArraySize; ++i)
+			_decoderStateArray[i].store(nullptr);
+
+		// Allocate the audio ring buffer and the rendering events ring buffer
 		_renderingFormat = format;
 		if(!_audioRingBuffer.Allocate(_renderingFormat.streamDescription, kRingBufferFrameCapacity)) {
 			os_log_error(_audioPlayerNodeLog, "SFB::Audio::RingBuffer::Allocate() failed");
@@ -511,13 +516,15 @@ namespace {
 
 		dispatch_source_set_timer(_collector, DISPATCH_TIME_NOW, NSEC_PER_SEC * 10, NSEC_PER_SEC * 2);
 		dispatch_source_set_event_handler(_collector, ^{
-			for(size_t i = 0; i < self->_decoderStateArray.size(); ++i) {
-				auto decoderState = std::atomic_load(&self->_decoderStateArray[i]);
+			for(size_t i = 0; i < kDecoderArraySize; ++i) {
+				auto decoderState = self->_decoderStateArray[i].load();
 				if(!decoderState || !(decoderState->mFlags.load() & DecoderStateData::eMarkedForRemovalFlag))
 					continue;
 
-				os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-				std::atomic_store(&self->_decoderStateArray[i], DecoderStateData::shared_ptr{});
+				if(self->_decoderStateArray[i].compare_exchange_strong(decoderState, nullptr)) {
+					os_log_debug(_audioPlayerNodeLog, "Collecting decoder for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+					delete decoderState;
+				}
 			}
 		});
 
@@ -548,6 +555,12 @@ namespace {
 	_notifierThread.join();
 	while(!_queuedDecoders.empty())
 		_queuedDecoders.pop();
+
+	// Force any decoders left hanging by the collector to end
+	for(size_t i = 0; i < kDecoderArraySize; ++i) {
+		if(_decoderStateArray[i])
+			delete _decoderStateArray[i].exchange(nullptr);
+	}
 }
 
 #pragma mark - Format Information
@@ -596,7 +609,7 @@ namespace {
 
 - (void)skipToNext
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(decoderState) {
 		os_log_info(_audioPlayerNodeLog, "Skipping \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
@@ -627,7 +640,7 @@ namespace {
 
 	[self clearQueue];
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(decoderState) {
 		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
@@ -666,13 +679,13 @@ namespace {
 
 - (BOOL)isReady
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	return decoderState ? YES : NO;
 }
 
 - (id<SFBPCMDecoding>)decoder
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	return decoderState ? decoderState->mDecoder : nil;
 }
 
@@ -680,7 +693,7 @@ namespace {
 
 - (SFBAudioPlayerNodePlaybackPosition)playbackPosition
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return { .framePosition = -1, .frameLength = -1 };
 
@@ -689,7 +702,7 @@ namespace {
 
 - (SFBAudioPlayerNodePlaybackTime)playbackTime
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return { .currentTime = -1, .totalTime = -1 };
 
@@ -704,7 +717,7 @@ namespace {
 	SFBAudioPlayerNodePlaybackPosition currentPlaybackPosition = { .framePosition = -1, .frameLength = -1 };
 	SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = -1, .totalTime = -1 };
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(decoderState) {
 		currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
@@ -726,7 +739,7 @@ namespace {
 	if(secondsToSkip <= 0)
 		return NO;
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return NO;
 
@@ -745,7 +758,7 @@ namespace {
 	if(secondsToSkip <= 0)
 		return NO;
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return NO;
 
@@ -764,7 +777,7 @@ namespace {
 	if(timeInSeconds < 0)
 		return NO;
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return NO;
 
@@ -782,7 +795,7 @@ namespace {
 	if(position < 0 || position >= 1)
 		return NO;
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return NO;
 
@@ -795,7 +808,7 @@ namespace {
 	if(frame < 0)
 		return NO;
 
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	if(!decoderState)
 		return NO;
 
@@ -810,7 +823,7 @@ namespace {
 
 - (BOOL)supportsSeeking
 {
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 	return decoderState ? decoderState->mDecoder.supportsSeeking : NO;
 }
 
@@ -840,7 +853,7 @@ namespace {
 
 	if(reset) {
 		[self clearQueue];
-		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray);
+		auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderArraySize);
 		if(decoderState)
 			decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 	}
@@ -869,15 +882,19 @@ namespace {
 
 		if(decoder) {
 			// Create the decoder state
-			auto decoderState = std::make_shared<DecoderStateData>(decoder, self->_renderingFormat, kRingBufferChunkSize);
+			auto decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
 
 			// Append the decoder state to the list of active decoders
-			for(size_t i = 0; i < self->_decoderStateArray.size(); ++i) {
-				auto current = std::atomic_load(&self->_decoderStateArray[i]);
+			for(size_t i = 0; i < kDecoderArraySize; ++i) {
+				auto current = _decoderStateArray[i].load();
 				if(current)
 					continue;
 
-				std::atomic_store(&self->_decoderStateArray[i], decoderState);
+				if(_decoderStateArray[i].compare_exchange_strong(current, decoderState))
+					break;
+				else
+					os_log_debug(_audioPlayerNodeLog, "compare_exchange_strong() failed");
+
 				break;
 			}
 
@@ -1011,7 +1028,7 @@ namespace {
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, kDecoderArraySize, sequenceNumber);
 						if(!decoderState) {
 							os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 							break;
@@ -1050,7 +1067,7 @@ namespace {
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, sequenceNumber);
+						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, kDecoderArraySize, sequenceNumber);
 						if(!decoderState) {
 							os_log_error(_audioPlayerNodeLog, "Decoder state with sequence number %llu missing", sequenceNumber);
 							break;
