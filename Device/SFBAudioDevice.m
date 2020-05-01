@@ -317,6 +317,8 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error
 {
+	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x sample rate to %.2f Hz", _deviceID, sampleRate);
+
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyNominalSampleRate,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
@@ -388,7 +390,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		return nanf("1");
@@ -398,7 +400,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume scalar to %f", self.deviceID, SFBCStringForOSType(scope), channel, volume);
+	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume scalar to %f", _deviceID, SFBCStringForOSType(scope), channel, volume);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalar,
@@ -406,12 +408,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= channel
 	};
 
-	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
+	if(!AudioObjectHasProperty(_deviceID, &propertyAddress)) {
 		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
 		return NO;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		if(error)
@@ -432,7 +434,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		return nanf("1");
@@ -442,7 +444,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setVolumeInDecibels:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume dB to %f", self.deviceID, SFBCStringForOSType(scope), channel, volume);
+	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume dB to %f", _deviceID, SFBCStringForOSType(scope), channel, volume);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeDecibels,
@@ -450,12 +452,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= channel
 	};
 
-	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
+	if(!AudioObjectHasProperty(_deviceID, &propertyAddress)) {
 		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
 		return NO;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		if(error)
@@ -476,7 +478,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume = volumeScalar;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalarToDecibels, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		return nanf("1");
@@ -495,7 +497,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume = decibels;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibelsToScalar, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		return nanf("1");
@@ -591,6 +593,8 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (BOOL)setActiveDataSources:(NSArray *)activeDataSources inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
 	NSParameterAssert(activeDataSources != nil);
+
+	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' active data sources to %{public}@", _deviceID, SFBCStringForOSType(scope), activeDataSources);
 
 //	if(activeDataSources.count == 0)
 //		return NO;
