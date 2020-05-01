@@ -894,8 +894,6 @@ namespace {
 					break;
 				else
 					os_log_debug(_audioPlayerNodeLog, "compare_exchange_strong() failed");
-
-				break;
 			}
 
 			// In the event the render block output format and decoder processing
