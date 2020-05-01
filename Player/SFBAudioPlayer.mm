@@ -90,8 +90,9 @@ namespace {
 
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		if(![_playerNode supportsFormat:decoder.processingFormat])
-			[self setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat forceUpdate:NO];
+		AVAudioFormat *format = decoder.processingFormat;
+		if(![_playerNode supportsFormat:format])
+			[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
 	});
 
 	dispatch_sync(_queue, ^{
@@ -554,7 +555,7 @@ namespace {
 	AVAudioMixerNode *mixerNode = _engine.mainMixerNode;
 
 #if DEBUG
-	// SFBAudioPlayer requires that the mixer node be connected to the output node
+	// SFBAudioPlayer requires that the main mixer node be connected to the output node
 	AVAudioConnectionPoint *outputNodeInputConnectionPoint = [_engine inputConnectionPointForNode:outputNode inputBus:0];
 	NSAssert(outputNodeInputConnectionPoint.node == mixerNode, @"Illegal AVAudioEngine configuration");
 #endif
@@ -570,7 +571,6 @@ namespace {
 	if(_playerNode) {
 		playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
 		[_engine disconnectNodeOutput:_playerNode bus:0];
-		[_engine disconnectNodeInput:playerNodeOutputConnectionPoint.node bus:0];
 		[_engine detachNode:_playerNode];
 	}
 
@@ -615,8 +615,9 @@ namespace {
 					[strongSelf->_engine pause];
 					[strongSelf->_engine reset];
 					[strongSelf->_playerNode reset];
-					if(![strongSelf->_playerNode supportsFormat:decoder.processingFormat])
-						[strongSelf setupEngineForGaplessPlaybackOfFormat:decoder.processingFormat forceUpdate:NO];
+					AVAudioFormat *processingFormat = decoder.processingFormat;
+					if(![strongSelf->_playerNode supportsFormat:processingFormat])
+						[strongSelf setupEngineForGaplessPlaybackOfFormat:processingFormat forceUpdate:NO];
 				});
 
 				if(![strongSelf->_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
