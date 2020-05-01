@@ -184,7 +184,7 @@ namespace {
 - (BOOL)playReturningError:(NSError **)error
 {
 	__block BOOL startedSuccessfully;
-	__block NSError *err;
+	__block NSError *err = nil;
 	dispatch_sync(_engineQueue, ^{
 		startedSuccessfully = [_engine startAndReturnError:&err];
 		if(startedSuccessfully)
@@ -193,7 +193,7 @@ namespace {
 
 	if(!startedSuccessfully) {
 		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
-		if(err && error)
+		if(error)
 			*error = err;
 	}
 
@@ -383,12 +383,8 @@ namespace {
 {
 	__block float volume = nanf("1");
 	dispatch_sync(_engineQueue, ^{
-		AudioUnit au = _engine.outputNode.audioUnit;
-		if(!au)
-			return;
-
 		AudioUnitParameterValue channelVolume;
-		OSStatus result = AudioUnitGetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
+		OSStatus result = AudioUnitGetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
 		if(result != noErr) {
 			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			return;
@@ -405,12 +401,8 @@ namespace {
 	__block BOOL success = NO;
 	__block NSError *err = nil;
 	dispatch_sync(_engineQueue, ^{
-		AudioUnit au = _engine.outputNode.audioUnit;
-		if(!au)
-			return;
-
 		AudioUnitParameterValue channelVolume = volume;
-		OSStatus result = AudioUnitSetParameter(au, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
+		OSStatus result = AudioUnitSetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
 			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
 			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
@@ -420,7 +412,7 @@ namespace {
 		success = YES;
 	});
 
-	if(!success && err && error)
+	if(!success && error)
 		*error = err;
 
 	return success;
@@ -497,8 +489,11 @@ namespace {
 
 	if(result)
 		_outputDevice = outputDevice;
-	else if(err && error)
-		*error = err;
+	else {
+		os_log_error(_audioPlayerLog, "Error setting output device: %{public}@", err);
+		if(error)
+			*error = err;
+	}
 
 	return result;
 }
