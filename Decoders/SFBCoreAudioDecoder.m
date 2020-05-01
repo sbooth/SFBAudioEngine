@@ -79,7 +79,7 @@ static SInt64 get_size_callback(void *inClientData)
 		return [NSSet set];
 	}
 
-	return [NSSet setWithArray:(__bridge NSArray *)supportedExtensions];
+	return [NSSet setWithArray:(__bridge_transfer NSArray *)supportedExtensions];
 }
 
 + (NSSet *)supportedMIMETypes
