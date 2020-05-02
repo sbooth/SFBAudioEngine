@@ -1086,7 +1086,9 @@ namespace {
 #if DEBUG
 								uint64_t absTime = mach_absolute_time();
 								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_MSEC;
-								os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								if(abs(delta) > tolerance)
+									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
 								self->_renderingStartedNotificationHandler(decoderState->mDecoder);
@@ -1123,7 +1125,9 @@ namespace {
 #if DEBUG
 								uint64_t absTime = mach_absolute_time();
 								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-								os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								if(abs(delta) > tolerance)
+									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
 								self->_renderingCompleteNotificationHandler(decoderState->mDecoder);
@@ -1160,7 +1164,9 @@ namespace {
 #if DEBUG
 								uint64_t absTime = mach_absolute_time();
 								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
-								os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
+								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								if(abs(delta) > tolerance)
+									os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
 								self->_outOfOfAudioNotificationHandler();
