@@ -755,25 +755,24 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = README.md \
-                         AudioBufferList.h \
-                         AudioChannelLayout.h \
-                         AudioFormat.h \
-                         AudioRingBuffer.h \
-                         RingBuffer.h \
-                         CFWrapper.h \
-                         Semaphore.h \
-                         Input/InputSource.h \
-                         Decoders/AudioDecoder.h \
-                         Decoders/DoPDecoder.h \
-                         Decoders/LoopableRegionDecoder.h \
-                         Output/AudioOutput.h \
-                         Output/ASIOOutput.h \
-                         Output/CoreAudioOutput.h \
-                         Player/AudioPlayer.h \
-                         Metadata/AudioMetadata.h \
-                         Metadata/AttachedPicture.h \
-                         AudioConverter.h \
-                         ReplayGainAnalyzer.h
+                         Input/SFBInputSource.h \
+                         Decoders/SFBAudioDecoding.h \
+                         Decoders/SFBPCMDecoding.h \
+                         Decoders/SFBAudioDecoder.h \
+                         Decoders/SFBDSDDecoding.h \
+                         Decoders/SFBDSDDecoder.h \
+                         Decoders/SFBDoPDecoder.h \
+                         Decoders/SFBLoopableRegionDecoder.h \
+                         Device/SFBAudioDevice.h \
+                         Device/SFBAudioDeviceDataSource.h \
+                         Device/SFBAudioOutputDevice.h \
+                         Player/SFBAudioPlayerNode.h \
+                         Player/SFBAudioPlayer.h \
+                         Metadata/SFBAudioProperties.h \
+                         Metadata/SFBAttachedPicture.h \
+                         Metadata/SFBAudioMetadata.h \
+                         Metadata/SFBAudioFile.h \
+                         Analysis/SFBReplayGainAnalyzer.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

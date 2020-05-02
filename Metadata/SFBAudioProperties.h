@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#pragma once
-
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -20,7 +18,7 @@ extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;				/*!< @brief
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;				/*!< @brief The audio bitrate (\c NSNumber) */
 
 /*! @brief Class providing information on basic audio properties  */
-@interface SFBAudioProperties : NSObject <NSCopying>
+NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopying>
 
 /*! @brief Returns an initialized an \c SFBAudioProperties object */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;

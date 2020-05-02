@@ -142,7 +142,7 @@ static id _sharedKeySet;
 
 - (void)setTitle:(NSString *)title
 {
-	[_metadata setObject:title forKey:SFBAudioMetadataKeyTitle];
+	[_metadata setValue:title forKey:SFBAudioMetadataKeyTitle];
 }
 
 - (NSString *)albumTitle
@@ -152,7 +152,7 @@ static id _sharedKeySet;
 
 - (void)setAlbumTitle:(NSString *)albumTitle
 {
-	[_metadata setObject:albumTitle forKey:SFBAudioMetadataKeyAlbumTitle];
+	[_metadata setValue:albumTitle forKey:SFBAudioMetadataKeyAlbumTitle];
 }
 
 - (NSString *)artist
@@ -162,7 +162,7 @@ static id _sharedKeySet;
 
 - (void)setArtist:(NSString *)artist
 {
-	[_metadata setObject:artist forKey:SFBAudioMetadataKeyArtist];
+	[_metadata setValue:artist forKey:SFBAudioMetadataKeyArtist];
 }
 
 - (NSString *)albumArtist
@@ -172,7 +172,7 @@ static id _sharedKeySet;
 
 - (void)setAlbumArtist:(NSString *)albumArtist
 {
-	[_metadata setObject:albumArtist forKey:SFBAudioMetadataKeyAlbumArtist];
+	[_metadata setValue:albumArtist forKey:SFBAudioMetadataKeyAlbumArtist];
 }
 
 - (NSString *)genre
@@ -182,7 +182,7 @@ static id _sharedKeySet;
 
 - (void)setGenre:(NSString *)genre
 {
-	[_metadata setObject:genre forKey:SFBAudioMetadataKeyGenre];
+	[_metadata setValue:genre forKey:SFBAudioMetadataKeyGenre];
 }
 
 - (NSString *)composer
@@ -192,7 +192,7 @@ static id _sharedKeySet;
 
 - (void)setComposer:(NSString *)composer
 {
-	[_metadata setObject:composer forKey:SFBAudioMetadataKeyComposer];
+	[_metadata setValue:composer forKey:SFBAudioMetadataKeyComposer];
 }
 
 - (NSString *)releaseDate
@@ -202,7 +202,7 @@ static id _sharedKeySet;
 
 - (void)setReleaseDate:(NSString *)releaseDate
 {
-	[_metadata setObject:releaseDate forKey:SFBAudioMetadataKeyReleaseDate];
+	[_metadata setValue:releaseDate forKey:SFBAudioMetadataKeyReleaseDate];
 }
 
 - (NSNumber *)compilation
@@ -212,7 +212,7 @@ static id _sharedKeySet;
 
 - (void)setCompilation:(NSNumber *)compilation
 {
-	[_metadata setObject:compilation forKey:SFBAudioMetadataKeyCompilation];
+	[_metadata setValue:compilation forKey:SFBAudioMetadataKeyCompilation];
 }
 
 - (NSNumber *)trackNumber
@@ -222,7 +222,7 @@ static id _sharedKeySet;
 
 - (void)setTrackNumber:(NSNumber *)trackNumber
 {
-	[_metadata setObject:trackNumber forKey:SFBAudioMetadataKeyTrackNumber];
+	[_metadata setValue:trackNumber forKey:SFBAudioMetadataKeyTrackNumber];
 }
 
 - (NSNumber *)trackTotal
@@ -232,7 +232,7 @@ static id _sharedKeySet;
 
 - (void)setTrackTotal:(NSNumber *)trackTotal
 {
-	[_metadata setObject:trackTotal forKey:SFBAudioMetadataKeyTrackTotal];
+	[_metadata setValue:trackTotal forKey:SFBAudioMetadataKeyTrackTotal];
 }
 
 - (NSNumber *)discNumber
@@ -242,7 +242,7 @@ static id _sharedKeySet;
 
 - (void)setDiscNumber:(NSNumber *)discNumber
 {
-	[_metadata setObject:discNumber forKey:SFBAudioMetadataKeyDiscNumber];
+	[_metadata setValue:discNumber forKey:SFBAudioMetadataKeyDiscNumber];
 }
 
 - (NSNumber *)discTotal
@@ -252,7 +252,7 @@ static id _sharedKeySet;
 
 - (void)setDiscTotal:(NSNumber *)discTotal
 {
-	[_metadata setObject:discTotal forKey:SFBAudioMetadataKeyDiscTotal];
+	[_metadata setValue:discTotal forKey:SFBAudioMetadataKeyDiscTotal];
 }
 
 - (NSString *)lyrics
@@ -262,7 +262,7 @@ static id _sharedKeySet;
 
 - (void)setLyrics:(NSString *)lyrics
 {
-	[_metadata setObject:lyrics forKey:SFBAudioMetadataKeyLyrics];
+	[_metadata setValue:lyrics forKey:SFBAudioMetadataKeyLyrics];
 }
 
 - (NSNumber *)bpm
@@ -272,7 +272,7 @@ static id _sharedKeySet;
 
 - (void)setBpm:(NSNumber *)bpm
 {
-	[_metadata setObject:bpm forKey:SFBAudioMetadataKeyBPM];
+	[_metadata setValue:bpm forKey:SFBAudioMetadataKeyBPM];
 }
 
 - (NSNumber *)rating
@@ -282,7 +282,7 @@ static id _sharedKeySet;
 
 - (void)setRating:(NSNumber *)rating
 {
-	[_metadata setObject:rating forKey:SFBAudioMetadataKeyRating];
+	[_metadata setValue:rating forKey:SFBAudioMetadataKeyRating];
 }
 
 - (NSString *)comment
@@ -292,7 +292,7 @@ static id _sharedKeySet;
 
 - (void)setComment:(NSString *)comment
 {
-	[_metadata setObject:comment forKey:SFBAudioMetadataKeyComment];
+	[_metadata setValue:comment forKey:SFBAudioMetadataKeyComment];
 }
 
 - (NSString *)isrc
@@ -302,7 +302,7 @@ static id _sharedKeySet;
 
 - (void)setIsrc:(NSString *)isrc
 {
-	[_metadata setObject:isrc forKey:SFBAudioMetadataKeyISRC];
+	[_metadata setValue:isrc forKey:SFBAudioMetadataKeyISRC];
 }
 
 - (NSString *)mcn
@@ -312,7 +312,7 @@ static id _sharedKeySet;
 
 - (void)setMcn:(NSString *)mcn
 {
-	[_metadata setObject:mcn forKey:SFBAudioMetadataKeyMCN];
+	[_metadata setValue:mcn forKey:SFBAudioMetadataKeyMCN];
 }
 
 - (NSString *)musicBrainzReleaseID
@@ -322,7 +322,7 @@ static id _sharedKeySet;
 
 - (void)setMusicBrainzReleaseID:(NSString *)musicBrainzReleaseID
 {
-	[_metadata setObject:musicBrainzReleaseID forKey:SFBAudioMetadataKeyMusicBrainzReleaseID];
+	[_metadata setValue:musicBrainzReleaseID forKey:SFBAudioMetadataKeyMusicBrainzReleaseID];
 }
 
 - (NSString *)musicBrainzRecordingID
@@ -332,7 +332,7 @@ static id _sharedKeySet;
 
 - (void)setMusicBrainzRecordingID:(NSString *)musicBrainzRecordingID
 {
-	[_metadata setObject:musicBrainzRecordingID forKey:SFBAudioMetadataKeyMusicBrainzRecordingID];
+	[_metadata setValue:musicBrainzRecordingID forKey:SFBAudioMetadataKeyMusicBrainzRecordingID];
 }
 
 #pragma mark Sorting Metadata
@@ -343,7 +343,7 @@ static id _sharedKeySet;
 }
 - (void)setTitleSortOrder:(NSString *)titleSortOrder
 {
-	[_metadata setObject:titleSortOrder forKey:SFBAudioMetadataKeyTitleSortOrder];
+	[_metadata setValue:titleSortOrder forKey:SFBAudioMetadataKeyTitleSortOrder];
 }
 
 - (NSString *)albumTitleSortOrder
@@ -353,7 +353,7 @@ static id _sharedKeySet;
 
 - (void)setAlbumTitleSortOrder:(NSString *)albumTitleSortOrder
 {
-	[_metadata setObject:albumTitleSortOrder forKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
+	[_metadata setValue:albumTitleSortOrder forKey:SFBAudioMetadataKeyAlbumTitleSortOrder];
 }
 
 - (NSString *)artistSortOrder
@@ -363,7 +363,7 @@ static id _sharedKeySet;
 
 - (void)setArtistSortOrder:(NSString *)artistSortOrder
 {
-	[_metadata setObject:artistSortOrder forKey:SFBAudioMetadataKeyArtistSortOrder];
+	[_metadata setValue:artistSortOrder forKey:SFBAudioMetadataKeyArtistSortOrder];
 }
 
 - (NSString *)albumArtistSortOrder
@@ -373,7 +373,7 @@ static id _sharedKeySet;
 
 - (void)setAlbumArtistSortOrder:(NSString *)albumArtistSortOrder
 {
-	[_metadata setObject:albumArtistSortOrder forKey:SFBAudioMetadataKeyAlbumArtistSortOrder];
+	[_metadata setValue:albumArtistSortOrder forKey:SFBAudioMetadataKeyAlbumArtistSortOrder];
 }
 
 - (NSString *)composerSortOrder
@@ -383,7 +383,7 @@ static id _sharedKeySet;
 
 - (void)setComposerSortOrder:(NSString *)composerSortOrder
 {
-	[_metadata setObject:composerSortOrder forKey:SFBAudioMetadataKeyComposerSortOrder];
+	[_metadata setValue:composerSortOrder forKey:SFBAudioMetadataKeyComposerSortOrder];
 }
 
 - (NSString *)genreSortOrder
@@ -393,7 +393,7 @@ static id _sharedKeySet;
 
 - (void)setGenreSortOrder:(NSString *)genreSortOrder
 {
-	[_metadata setObject:genreSortOrder forKey:SFBAudioMetadataKeyGenreSortOrder];
+	[_metadata setValue:genreSortOrder forKey:SFBAudioMetadataKeyGenreSortOrder];
 }
 
 #pragma mark Grouping Metadata
@@ -405,7 +405,7 @@ static id _sharedKeySet;
 
 - (void)setGrouping:(NSString *)grouping
 {
-	[_metadata setObject:grouping forKey:SFBAudioMetadataKeyGrouping];
+	[_metadata setValue:grouping forKey:SFBAudioMetadataKeyGrouping];
 }
 
 #pragma mark Additional Metadata
@@ -417,7 +417,7 @@ static id _sharedKeySet;
 
 - (void)setAdditionalMetadata:(NSDictionary *)additionalMetadata
 {
-	[_metadata setObject:[additionalMetadata copy] forKey:SFBAudioMetadataKeyAdditionalMetadata];
+	[_metadata setValue:[additionalMetadata copy] forKey:SFBAudioMetadataKeyAdditionalMetadata];
 }
 
 #pragma mark Replay Gain Metadata
@@ -429,7 +429,7 @@ static id _sharedKeySet;
 
 - (void)setReplayGainReferenceLoudness:(NSNumber *)replayGainReferenceLoudness
 {
-	[_metadata setObject:replayGainReferenceLoudness forKey:SFBAudioMetadataKeyReplayGainReferenceLoudness];
+	[_metadata setValue:replayGainReferenceLoudness forKey:SFBAudioMetadataKeyReplayGainReferenceLoudness];
 }
 
 - (NSNumber *)replayGainTrackGain
@@ -439,7 +439,7 @@ static id _sharedKeySet;
 
 - (void)setReplayGainTrackGain:(NSNumber *)replayGainTrackGain
 {
-	[_metadata setObject:replayGainTrackGain forKey:SFBAudioMetadataKeyReplayGainTrackGain];
+	[_metadata setValue:replayGainTrackGain forKey:SFBAudioMetadataKeyReplayGainTrackGain];
 }
 
 - (NSNumber *)replayGainTrackPeak
@@ -449,7 +449,7 @@ static id _sharedKeySet;
 
 - (void)setReplayGainTrackPeak:(NSNumber *)replayGainTrackPeak
 {
-	[_metadata setObject:replayGainTrackPeak forKey:SFBAudioMetadataKeyReplayGainTrackPeak];
+	[_metadata setValue:replayGainTrackPeak forKey:SFBAudioMetadataKeyReplayGainTrackPeak];
 }
 
 - (NSNumber *)replayGainAlbumGain
@@ -459,7 +459,7 @@ static id _sharedKeySet;
 
 - (void)setReplayGainAlbumGain:(NSNumber *)replayGainAlbumGain
 {
-	[_metadata setObject:replayGainAlbumGain forKey:SFBAudioMetadataKeyReplayGainAlbumGain];
+	[_metadata setValue:replayGainAlbumGain forKey:SFBAudioMetadataKeyReplayGainAlbumGain];
 }
 
 - (NSNumber *)replayGainAlbumPeak
@@ -469,7 +469,7 @@ static id _sharedKeySet;
 
 - (void)setReplayGainAlbumPeak:(NSNumber *)replayGainAlbumPeak
 {
-	[_metadata setObject:replayGainAlbumPeak forKey:SFBAudioMetadataKeyReplayGainAlbumPeak];
+	[_metadata setValue:replayGainAlbumPeak forKey:SFBAudioMetadataKeyReplayGainAlbumPeak];
 }
 
 #pragma mark Metadata Utilities

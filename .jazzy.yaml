@@ -1,0 +1,14 @@
+objc: true
+clean: true
+
+module: SFBAudioEngine
+author: Stephen F. Booth
+author_url: https://sbooth.org
+github_url: https://github.com/sbooth/SFBAudioEngine
+
+copyright: '© 2006 - 2020 [Stephen F. Booth](https://sbooth.org) under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).'
+
+umbrella_header: SFBAudioEngine.h
+framework_root: .
+
+output: docs/

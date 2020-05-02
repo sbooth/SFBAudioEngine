@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#pragma once
-
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -49,7 +47,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
  *
  * Most file formats may have more than one attached picture of each type.
  */
-@interface SFBAttachedPicture : NSObject <NSCopying>
+NS_SWIFT_NAME(AttachedPicture) @interface SFBAttachedPicture : NSObject <NSCopying>
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;

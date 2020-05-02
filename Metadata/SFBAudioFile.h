@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#pragma once
-
 #import <Foundation/Foundation.h>
 
 #import "SFBAudioProperties.h"
@@ -13,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /*! @brief The \c NSErrorDomain used by \c SFBAudioFile and subclasses */
-extern NSErrorDomain const SFBAudioFileErrorDomain;
+extern NSErrorDomain const SFBAudioFileErrorDomain NS_SWIFT_NAME(AudioFileErrorDomain);
 
 /*! @brief Possible \c NSError  error codes used by \c SFBAudioFile */
 typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
@@ -23,7 +21,7 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 };
 
 /*! @brief An audio file  */
-@interface SFBAudioFile : NSObject
+NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 
 /*! @brief Returns an array containing the supported file extensions */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
