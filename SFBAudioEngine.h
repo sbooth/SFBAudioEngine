@@ -3,6 +3,14 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <Foundation/Foundation.h>
+
+//! Project version number for SFBAudioEngine.
+FOUNDATION_EXPORT double SFBAudioEngineVersionNumber;
+
+//! Project version string for SFBAudioEngine.
+FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
+
 #import <SFBAudioEngine/SFBInputSource.h>
 
 #import <SFBAudioEngine/SFBAudioDecoding.h>
@@ -14,9 +22,13 @@
 #import <SFBAudioEngine/SFBDoPDecoder.h>
 #import <SFBAudioEngine/SFBLoopableRegionDecoder.h>
 
+#if TARGET_OS_OSX
+
 #import <SFBAudioEngine/SFBAudioDevice.h>
 #import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
 #import <SFBAudioEngine/SFBAudioOutputDevice.h>
+
+#endif
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 #import <SFBAudioEngine/SFBAudioPlayer.h>
