@@ -3,12 +3,17 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 #import <taglib/attachedpictureframe.h>
 #import <taglib/id3v2frame.h>
 #import <taglib/popularimeterframe.h>
 #import <taglib/relativevolumeframe.h>
 #import <taglib/textidentificationframe.h>
 #import <taglib/unsynchronizedlyricsframe.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBAudioMetadata+TagLibID3v2Tag.h"
 

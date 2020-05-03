@@ -5,8 +5,13 @@
 
 #import <memory>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 #import <taglib/mpcfile.h>
 #import <taglib/tfilestream.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBMusepackFile.h"
 

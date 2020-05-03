@@ -5,7 +5,12 @@
 
 #pragma once
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 #import <taglib/apetag.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBAudioMetadata.h"
 

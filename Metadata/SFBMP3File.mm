@@ -5,9 +5,14 @@
 
 #import <memory>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
+
 #import <taglib/mpegfile.h>
 #import <taglib/tfilestream.h>
 #import <taglib/xingheader.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBMP3File.h"
 
