@@ -24,7 +24,9 @@ namespace {
 @private
 	AVAudioEngine 			*_engine;			///< The underlying \c AVAudioEngine instance
 	dispatch_queue_t		_engineQueue;		///< The dispatch queue used to access \c _engine
+#if TARGET_OS_OSX
 	SFBAudioOutputDevice 	*_outputDevice; 	///< The current output device for \c _engine.outputNode
+#endif
 	SFBAudioPlayerNode		*_playerNode;		///< The player driving the audio processing graph
 	dispatch_queue_t		_queue;				///< The dispatch queue used to access \c _queuedDecoders
 	DecoderQueue 			_queuedDecoders;	///< Decoders enqueued for non-gapless playback
@@ -54,7 +56,9 @@ namespace {
 		_engine = [[AVAudioEngine alloc] init];
 		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO];
 
+#if TARGET_OS_OSX
 		_outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:_engine.outputNode.AUAudioUnit.deviceID];
+#endif
 
 		// Register for configuration change notifications
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleInterruption:) name:AVAudioEngineConfigurationChangeNotification object:_engine];
@@ -368,6 +372,8 @@ namespace {
 	return _playerNode.supportsSeeking;
 }
 
+#if TARGET_OS_OSX
+
 #pragma mark - Volume Control
 
 - (float)volume
@@ -418,6 +424,33 @@ namespace {
 
 	return success;
 }
+
+#pragma mark - Output Device
+
+- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error
+{
+	NSParameterAssert(outputDevice != nil);
+
+	os_log_info(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
+
+	__block BOOL result;
+	__block NSError *err = nil;
+	dispatch_sync(_engineQueue, ^{
+		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.deviceID error:&err];
+	});
+
+	if(result)
+		_outputDevice = outputDevice;
+	else {
+		os_log_error(_audioPlayerLog, "Error setting output device: %{public}@", err);
+		if(error)
+			*error = err;
+	}
+
+	return result;
+}
+
+#endif
 
 #pragma mark - Player Event Callbacks
 
@@ -472,31 +505,6 @@ namespace {
 - (void)setRenderingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
 {
 	_playerNode.renderingCompleteNotificationHandler = renderingCompleteNotificationHandler;
-}
-
-#pragma mark - Output Device
-
-- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error
-{
-	NSParameterAssert(outputDevice != nil);
-
-	os_log_info(_audioPlayerLog, "Setting output device to %{public}@", outputDevice);
-
-	__block BOOL result;
-	__block NSError *err = nil;
-	dispatch_sync(_engineQueue, ^{
-		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.deviceID error:&err];
-	});
-
-	if(result)
-		_outputDevice = outputDevice;
-	else {
-		os_log_error(_audioPlayerLog, "Error setting output device: %{public}@", err);
-		if(error)
-			*error = err;
-	}
-
-	return result;
 }
 
 #pragma mark - AVAudioEngine

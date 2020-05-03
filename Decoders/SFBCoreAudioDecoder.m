@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import OSLog;
+@import os.log;
 
 @import AudioToolbox;
 
@@ -22,7 +22,7 @@ static OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requ
 
 	NSInteger offset;
 	if(![decoder->_inputSource getOffset:&offset error:nil])
-		return ioErr;
+		return kAudioFileUnspecifiedError;
 
 	if(inPosition != offset) {
 		if(!decoder->_inputSource.supportsSeeking || ![decoder->_inputSource seekToOffset:inPosition error:nil])
@@ -31,7 +31,7 @@ static OSStatus read_callback(void *inClientData, SInt64 inPosition, UInt32 requ
 
 	NSInteger bytesRead;
 	if(![decoder->_inputSource readBytes:buffer length:requestCount bytesRead:&bytesRead error:nil])
-		return ioErr;
+		return kAudioFileUnspecifiedError;
 
 	*actualCount = (UInt32)bytesRead;
 

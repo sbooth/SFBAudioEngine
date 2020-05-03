@@ -7,7 +7,9 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "SFBAudioPlayerNode.h"
+#if TARGET_OS_OSX
 #import "SFBAudioOutputDevice.h"
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -102,6 +104,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
+#if TARGET_OS_OSX
+
 #pragma mark - Volume Control
 
 /// Returns \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit or \c -1 on error
@@ -111,6 +115,13 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 /// Returns \c kHALOutputParam_Volume on \c channel for \c AVAudioEngine.outputNode.audioUnit or \c -1 on error
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error;
+
+#pragma mark - Output Device
+
+@property (nonatomic, nonnull, readonly) SFBAudioOutputDevice *outputDevice;
+- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error;
+
+#endif
 
 #pragma mark - Player Event Callbacks
 
@@ -122,11 +133,6 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 @property (nonatomic, nullable) dispatch_block_t outOfAudioNotificationHandler;
 
 @property (nonatomic, nullable) SFBAudioPlayerErrorBlock errorNotificationHandler;
-
-#pragma mark - Output Device
-
-@property (nonatomic, nonnull, readonly) SFBAudioOutputDevice *outputDevice;
-- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error;
 
 #pragma mark - AVAudioEngine Access
 
