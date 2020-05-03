@@ -508,8 +508,7 @@ namespace {
 	});
 
 	// SFBAudioPlayer requires that the mixer node be connected to the output node
-	AVAudioConnectionPoint *outputNodeInputConnectionPoint = [_engine inputConnectionPointForNode:_engine.outputNode inputBus:0];
-	NSAssert(outputNodeInputConnectionPoint.node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
+	NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
 }
 
 #pragma mark - Internals
@@ -554,11 +553,8 @@ namespace {
 	AVAudioOutputNode *outputNode = _engine.outputNode;
 	AVAudioMixerNode *mixerNode = _engine.mainMixerNode;
 
-#if DEBUG
 	// SFBAudioPlayer requires that the main mixer node be connected to the output node
-	AVAudioConnectionPoint *outputNodeInputConnectionPoint = [_engine inputConnectionPointForNode:outputNode inputBus:0];
-	NSAssert(outputNodeInputConnectionPoint.node == mixerNode, @"Illegal AVAudioEngine configuration");
-#endif
+	NSAssert([_engine inputConnectionPointForNode:outputNode inputBus:0].node == mixerNode, @"Illegal AVAudioEngine configuration");
 
 	AVAudioFormat *outputFormat = [outputNode outputFormatForBus:0];
 	AVAudioFormat *previousOutputFormat = [outputNode inputFormatForBus:0];
