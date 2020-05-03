@@ -1052,7 +1052,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@rpath";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -1093,7 +1093,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@rpath";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
