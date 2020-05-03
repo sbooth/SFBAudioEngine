@@ -94,9 +94,9 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
-#import <os/log.h>
+@import OSLog;
 
-#import <Accelerate/Accelerate.h>
+@import Accelerate;
 
 #import "SFBReplayGainAnalyzer.h"
 

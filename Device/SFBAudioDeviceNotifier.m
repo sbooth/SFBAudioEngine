@@ -3,9 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <os/log.h>
+@import OSLog;
 
-#import <CoreAudio/CoreAudio.h>
+@import CoreAudio;
 
 #import "SFBAudioDeviceNotifier.h"
 

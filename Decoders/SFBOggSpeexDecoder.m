@@ -3,9 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <os/log.h>
+@import OSLog;
 
-#include <Accelerate/Accelerate.h>
+@import Accelerate;
 
 #include <ogg/ogg.h>
 #include <speex/speex.h>
