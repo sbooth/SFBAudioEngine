@@ -3,11 +3,16 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <os/log.h>
+@import OSLog;
 
-#import <Accelerate/Accelerate.h>
+@import Accelerate;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 
 #include <mpc/mpcdec.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBMusepackDecoder.h"
 

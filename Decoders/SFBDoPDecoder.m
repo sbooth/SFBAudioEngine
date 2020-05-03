@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <os/log.h>
+@import OSLog;
 
 #import "SFBDoPDecoder.h"
 
@@ -218,7 +218,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_DOP_FRAME;
 
-		uint8_t marker;
+		uint8_t marker = _marker;
 		AVAudioChannelCount channelCount = _processingFormat.channelCount;
 		for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 			const uint8_t *input = (uint8_t *)_buffer.data + channel;

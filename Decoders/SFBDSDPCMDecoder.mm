@@ -225,11 +225,11 @@ namespace {
 	/**
 	 * "translates" a stream of octets to a stream of floats
 	 * (8:1 decimation)
-	 * @param ctx -- pointer to abstract context (buffers)
+	 * @param ptr -- pointer to abstract context (buffers)
 	 * @param samples -- number of octets/samples to "translate"
 	 * @param src -- pointer to first octet (input)
 	 * @param src_stride -- src pointer increment
-	 * @param lsbitfirst -- bitorder, 0=msb first, 1=lsbfirst
+	 * @param lsbf -- bitorder, 0=msb first, 1=lsbfirst
 	 * @param dst -- pointer to first float (output)
 	 * @param dst_stride -- dst pointer increment
 	 */
