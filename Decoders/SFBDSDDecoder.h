@@ -60,7 +60,7 @@ extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoderErro
 typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
 	SFBDSDDecoderErrorCodeFileNotFound		= 0,		/*!< File not found */
 	SFBDSDDecoderErrorCodeInputOutput		= 1			/*!< Input/output error */
-};
+} NS_SWIFT_NAME(DSDDecoderErrorCode);
 
 NS_ASSUME_NONNULL_END
 

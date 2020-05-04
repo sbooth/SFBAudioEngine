@@ -14,13 +14,15 @@ extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain;
 /*! @brief Possible \c NSError  error codes used by \c SFBReplayGainAnalyzer */
 typedef NS_ENUM(NSUInteger, SFBReplayGainAnalyzerErrorCode) {
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,	/*!< File format not supported */
-};
+} NS_SWIFT_NAME(ReplayGainAnalyzerErrorCode);
 
+
+typedef NSString * SFBReplayGainAnalyzerKey NS_TYPED_ENUM;
 
 /*! @name Replay gain  dictionary keys */
 //@{
-extern NSString * const SFBReplayGainAnalyzerGainKey;					/*!< @brief The gain in dB (\c NSNumber) */
-extern NSString * const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak value normalized to [-1, 1) (\c NSNumber) */
+extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;		/*!< @brief The gain in dB (\c NSNumber) */
+extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak value normalized to [-1, 1) (\c NSNumber) */
 //@}
 
 

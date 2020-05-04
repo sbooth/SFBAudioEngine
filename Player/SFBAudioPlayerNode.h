@@ -12,13 +12,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Playback position and time information
 
-struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
+struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
 	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
-struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerNodePlaybackTime {
+struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime) SFBAudioPlayerNodePlaybackTime {
 	NSTimeInterval currentTime NS_SWIFT_NAME(current);
 	NSTimeInterval totalTime NS_SWIFT_NAME(total);
 };
@@ -131,6 +131,6 @@ extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlay
 /*! @brief Possible \c NSError  error codes used by \c SFBAudioPlayerNode */
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
 	SFBAudioPlayerNodeErrorFormatNotSupported	= 0		/*!< Format not supported */
-};
+} NS_SWIFT_NAME(AudioPlayerNodeErrorCode);
 
 NS_ASSUME_NONNULL_END

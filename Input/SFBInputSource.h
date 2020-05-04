@@ -14,13 +14,13 @@ extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSourceEr
 typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
 	SFBInputSourceErrorCodeFileNotFound		= 0,		/*!< File not found */
 	SFBInputSourceErrorCodeInputOutput		= 1			/*!< Input/output error */
-};
+} NS_SWIFT_NAME(InputSourceErrorCode);
 
 /*! @brief Metadata kind bitmask values used in `copyMetadataFrom:` and `removeMetadataOfKind:` */
 typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
 	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,	/*!< Files should be mapped in memory using \c mmap() */
 	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1	/*!< Files should be fully loaded in memory */
-};
+} NS_SWIFT_NAME(InputSourceFlags);
 
 //! An input source
 NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject

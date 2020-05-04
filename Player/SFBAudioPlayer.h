@@ -17,8 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
 extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
 
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition;
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
 
 // Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
@@ -29,7 +29,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	SFBAudioPlayerPlaybackStatePlaying		= 0,	///<  \c SFBAudioPlayer.engineIsRunning  and \c SFBAudioPlayer.playerNodeIsPlaying
 	SFBAudioPlayerPlaybackStatePaused		= 1,	///<  \c SFBAudioPlayer.engineIsRunning  and \c !SFBAudioPlayer.playerNodeIsPlaying
 	SFBAudioPlayerPlaybackStateStopped		= 2		///<  \c !SFBAudioPlayer.engineIsRunning
-};
+} NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// @brief An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
 ///

@@ -61,6 +61,6 @@ extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	SFBAudioDecoderErrorCodeFileNotFound	= 0,		/*!< File not found */
 	SFBAudioDecoderErrorCodeInputOutput		= 1			/*!< Input/output error */
-};
+} NS_SWIFT_NAME(AudioDecoderErrorCode);
 
 NS_ASSUME_NONNULL_END

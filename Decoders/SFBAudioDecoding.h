@@ -24,7 +24,7 @@ typedef NS_ENUM(UInt32, SFBAudioFormatID) {
 	SFBAudioFormatIDTrueAudio 				= 'TTA ',	/*!< True Audio */
 	SFBAudioFormatIDVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
 	SFBAudioFormatIDWavPack 				= 'WV  '	/*!< WavPack */
-};
+} NS_SWIFT_NAME(AudioFormatID);
 
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
