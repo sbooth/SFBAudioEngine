@@ -3,7 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <algorithm>
 #import <atomic>
+#import <cmath>
 #import <queue>
 #import <thread>
 
@@ -734,8 +736,8 @@ namespace {
 
 - (BOOL)seekForward:(NSTimeInterval)secondsToSkip
 {
-	if(secondsToSkip <= 0)
-		return NO;
+	if(secondsToSkip < 0)
+		secondsToSkip = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
@@ -746,15 +748,15 @@ namespace {
 	AVAudioFramePosition targetFrame = framePosition + (AVAudioFramePosition)(secondsToSkip * sampleRate);
 
 	if(targetFrame >= decoderState->FrameLength())
-		return NO;
+		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
 
 	return [self seekToFrame:targetFrame];
 }
 
 - (BOOL)seekBackward:(NSTimeInterval)secondsToSkip
 {
-	if(secondsToSkip <= 0)
-		return NO;
+	if(secondsToSkip < 0)
+		secondsToSkip = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
@@ -765,7 +767,7 @@ namespace {
 	AVAudioFramePosition targetFrame = framePosition - (AVAudioFramePosition)(secondsToSkip * sampleRate);
 
 	if(targetFrame < 0)
-		return NO;
+		targetFrame = 0;
 
 	return [self seekToFrame:targetFrame];
 }
@@ -773,7 +775,7 @@ namespace {
 - (BOOL)seekToTime:(NSTimeInterval)timeInSeconds
 {
 	if(timeInSeconds < 0)
-		return NO;
+		timeInSeconds = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
@@ -783,15 +785,17 @@ namespace {
 	AVAudioFramePosition targetFrame = (AVAudioFramePosition)(timeInSeconds * sampleRate);
 
 	if(targetFrame >= decoderState->FrameLength())
-		return NO;
+		targetFrame = std::max(decoderState->FrameLength() - 1, 0ll);
 
 	return [self seekToFrame:targetFrame];
 }
 
 - (BOOL)seekToPosition:(float)position
 {
-	if(position < 0 || position >= 1)
-		return NO;
+	if(position < 0)
+		position = 0;
+	else if(position >= 1)
+		position = std::nextafter(1.f, 0.f);
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
@@ -804,14 +808,14 @@ namespace {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame
 {
 	if(frame < 0)
-		return NO;
+		frame = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
 		return NO;
 
 	if(frame >= decoderState->FrameLength())
-		return NO;
+		frame = std::max(decoderState->FrameLength() - 1, 0ll);
 
 	decoderState->mFrameToSeek.store(frame);
 	dispatch_semaphore_signal(_decodingSemaphore);
