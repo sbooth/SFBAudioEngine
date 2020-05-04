@@ -4,15 +4,25 @@
 //
 
 import SwiftUI
+import Combine
 
 struct PlayerView: View {
-	@EnvironmentObject private var player: AudioPlayer
 	@State private var currentPlaybackState: AudioPlayer.PlaybackState = .stopped
 	@State private var currentTime: TimeInterval = 0.0
 	@State private var currentTimeString: String = ""
 	@State private var currentPosition: Double = 0.0
 
 //	@State private var currentMetadata: AudioMetadata = AudioMetadata()
+
+	private var player: AudioPlayer
+	private let timePublisher: PassthroughSubject<AudioPlayer.PlaybackTime, Never>
+	private let playbackStatePublisher: NSObject.KeyValueObservingPublisher<AudioPlayer, AudioPlayer.PlaybackState>
+
+	init(_ player: AudioPlayer) {
+		self.player = player
+		timePublisher = player.timePublisher
+		playbackStatePublisher = player.publisher(for: \.playbackState)
+	}
 
 	private var formatter: DateComponentsFormatter = {
 		let formatter = DateComponentsFormatter()
@@ -70,6 +80,7 @@ struct PlayerView: View {
 							}
 
 						}
+						.disabled(self.currentPlaybackState == .stopped)
 
 						Button(action: {
 							self.player.seekForward()
@@ -100,7 +111,7 @@ struct PlayerView: View {
 				}
 			}
 		}
-		.onReceive(player.timePublisher.receive(on: RunLoop.main)) {
+		.onReceive(timePublisher.receive(on: RunLoop.main)) {
 			self.currentTime = $0.current
 			self.currentPosition = $0.current / $0.total
 			if $0.current != -1 {
@@ -110,7 +121,7 @@ struct PlayerView: View {
 				self.currentTimeString = ""
 			}
 		}
-		.onReceive(player.publisher(for: \.playbackState).receive(on: RunLoop.main)) {
+		.onReceive(playbackStatePublisher.receive(on: RunLoop.main)) {
 			self.currentPlaybackState = $0
 		}
 	}
@@ -118,6 +129,6 @@ struct PlayerView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-		PlayerView().environmentObject(AudioPlayer())
+		PlayerView(AudioPlayer())
     }
 }

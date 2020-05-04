@@ -6,15 +6,12 @@
 import UIKit
 import SwiftUI
 
-extension AudioPlayer: ObservableObject {
-}
-
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 	var window: UIWindow?
 
 	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 		let delegate = UIApplication.shared.delegate as! AppDelegate
-		let contentView = PlayerView().environmentObject(delegate.player)
+		let contentView = PlayerView(delegate.player)
 
 		// Use a UIHostingController as window root view controller.
 		if let windowScene = scene as? UIWindowScene {
