@@ -22,7 +22,7 @@ typedef NSString * SFBReplayGainAnalyzerKey NS_TYPED_ENUM;
 /*! @name Replay gain  dictionary keys */
 //@{
 extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;		/*!< @brief The gain in dB (\c NSNumber) */
-extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;					/*!< @brief The peak value normalized to [-1, 1) (\c NSNumber) */
+extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;		/*!< @brief The peak value normalized to [-1, 1) (\c NSNumber) */
 //@}
 
 
