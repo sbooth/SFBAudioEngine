@@ -139,7 +139,7 @@ static SInt64 get_size_callback(void *inClientData)
 	}
 
 	// Query file format
-	AudioStreamBasicDescription format;
+	AudioStreamBasicDescription format = {0};
 	UInt32 dataSize = sizeof(format);
 	result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
 	if(result != noErr) {
@@ -181,11 +181,25 @@ static SInt64 get_size_callback(void *inClientData)
 			_af = NULL;
 			_eaf = NULL;
 
+			if(error)
+				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+												 code:SFBAudioDecoderErrorCodeInputOutput
+						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
+												  url:_inputSource.url
+										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
+								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
 			return NO;
 		}
 
 		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:layout];
 		free(layout);
+
+		// ExtAudioFile occasionally returns empty channel layouts; ignore them
+		if(channelLayout.channelCount != format.mChannelsPerFrame) {
+			os_log_error(gSFBAudioDecoderLog, "Channel count mismatch between AudioStreamBasicDescription (%u) and AVAudioChannelLayout (%u)", format.mChannelsPerFrame, channelLayout.channelCount);
+			channelLayout = nil;
+		}
 	}
 	else
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
@@ -224,6 +238,32 @@ static SInt64 get_size_callback(void *inClientData)
 	else
 		_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:format.mSampleRate interleaved:NO channelLayout:channelLayout];
 
+	// For audio with more than 2 channels AVAudioFormat requires a channel map. Since ExtAudioFile doesn't always return one, there is a
+	// chance that the initialization of _processingFormat failed. If that happened then attempting to set kExtAudioFileProperty_ClientDataFormat
+	// will segfault
+	if(!_processingFormat) {
+		result = ExtAudioFileDispose(_eaf);
+		if(result != noErr)
+			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileDispose failed: %d", result);
+
+		result = AudioFileClose(_af);
+		if(result != noErr)
+			os_log_error(gSFBAudioDecoderLog, "AudioFileClose failed: %d", result);
+
+		_af = NULL;
+		_eaf = NULL;
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
+											  url:_inputSource.url
+									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return NO;
+	}
+
 	result = ExtAudioFileSetProperty(_eaf, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d", result);
@@ -238,6 +278,14 @@ static SInt64 get_size_callback(void *inClientData)
 
 		_af = NULL;
 		_eaf = NULL;
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+											 code:SFBAudioDecoderErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
+											  url:_inputSource.url
+									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 
 		return NO;
 	}
