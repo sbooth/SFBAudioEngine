@@ -60,10 +60,10 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 
 
 /*! @brief The track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error */
-@property (nonatomic, nullable, readonly) NSDictionary<NSString *, NSNumber *>* trackGainAndPeakSample;
+@property (nonatomic, nullable, readonly) NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *>* trackGainAndPeakSample;
 
 /*! @brief The album gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error */
-@property (nonatomic, nullable, readonly) NSDictionary<NSString *, NSNumber *>* albumGainAndPeakSample;
+@property (nonatomic, nullable, readonly) NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *>* albumGainAndPeakSample;
 
 @end
 
