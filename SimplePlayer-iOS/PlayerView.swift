@@ -87,9 +87,10 @@ struct PlayerView: View {
 						.disabled(self.currentPlaybackState == .stopped)
 					}
 
-					Slider(value: self.$currentPosition, onEditingChanged: { _ in
-						self.player.seek(position: Float(self.currentPosition))
-					})
+					Slider(value: Binding(
+						get: { return self.currentPosition },
+						set: { self.player.seek(position: Float($0)) }
+					))
 						.padding(.horizontal, 20.0)
 						.accentColor(.pink)
 						.disabled(self.currentPlaybackState == .stopped)
