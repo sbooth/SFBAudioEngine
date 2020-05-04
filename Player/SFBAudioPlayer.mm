@@ -37,6 +37,18 @@ namespace {
 
 @implementation SFBAudioPlayer
 
++ (NSSet *)keyPathsForValuesAffectingIsPlaying {
+	return [NSSet setWithObject:@"playbackState"];
+}
+
++ (NSSet *)keyPathsForValuesAffectingIsPaused {
+	return [NSSet setWithObject:@"playbackState"];
+}
+
++ (NSSet *)keyPathsForValuesAffectingIsStopped {
+	return [NSSet setWithObject:@"playbackState"];
+}
+
 - (instancetype)init
 {
 	if((self = [super init])) {
@@ -188,6 +200,8 @@ namespace {
 
 - (BOOL)playReturningError:(NSError **)error
 {
+	[self willChangeValueForKey:@"playbackState"];
+
 	__block BOOL startedSuccessfully;
 	__block NSError *err = nil;
 	dispatch_sync(_engineQueue, ^{
@@ -195,6 +209,8 @@ namespace {
 		if(startedSuccessfully)
 			[_playerNode play];
 	});
+
+	[self didChangeValueForKey:@"playbackState"];
 
 	if(!startedSuccessfully) {
 		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
@@ -207,11 +223,15 @@ namespace {
 
 - (void)pause
 {
+	[self willChangeValueForKey:@"playbackState"];
 	[_playerNode pause];
+	[self didChangeValueForKey:@"playbackState"];
 }
 
 - (void)stop
 {
+	[self willChangeValueForKey:@"playbackState"];
+
 	dispatch_sync(_engineQueue, ^{
 		[_engine stop];
 		[_playerNode stop];
@@ -221,6 +241,8 @@ namespace {
 		while(!_queuedDecoders.empty())
 			_queuedDecoders.pop();
 	});
+
+	[self didChangeValueForKey:@"playbackState"];
 }
 
 - (BOOL)playPauseReturningError:(NSError **)error
@@ -529,11 +551,15 @@ namespace {
 	if(engine != _engine)
 		return;
 
+	[self willChangeValueForKey:@"playbackState"];
+
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
 		[_playerNode stop];
 		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
+
+	[self didChangeValueForKey:@"playbackState"];
 
 	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
