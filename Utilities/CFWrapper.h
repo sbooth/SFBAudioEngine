@@ -7,10 +7,7 @@
 
 #include <CFNetwork/CFNetwork.h>
 #include <CoreFoundation/CoreFoundation.h>
-#if !TARGET_OS_IPHONE
-# include <ImageIO/ImageIO.h>
-# include <Security/Security.h>
-#endif
+#include <ImageIO/ImageIO.h>
 
 /*! @file CFWrapper.h @brief A wrapper around a Core Foundation object */
 
@@ -296,12 +293,7 @@ namespace SFB {
 	using CFReadStream = CFWrapper<CFReadStreamRef>;							/*!< @brief A wrapped \c CFReadStream */
 	using CFWriteStream = CFWrapper<CFWriteStreamRef>;							/*!< @brief A wrapped \c CFWriteStream */
 	using CFHTTPMessage = CFWrapper<CFHTTPMessageRef>;							/*!< @brief A wrapped \c CFHTTPMessageRef */
-#if !TARGET_OS_IPHONE
-	using SecKeychainItem = CFWrapper<SecKeychainItemRef>;						/*!< @brief A wrapped \c SecKeychainItemRef */
-	using SecCertificate = CFWrapper<SecCertificateRef>;						/*!< @brief A wrapped \c SecCertificateRef */
-	using SecTransform = CFWrapper<SecTransformRef>;							/*!< @brief A wrapped \c SecTransformRef */
 	using CGImageSource = CFWrapper<CGImageSourceRef>;							/*!< @brief A wrapped \c CGImageSourceRef */
-#endif
 
 }
 
