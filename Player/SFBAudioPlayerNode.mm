@@ -988,9 +988,9 @@ namespace {
 						os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						// Perform the decoding started notification
-						if(_decodingStartedNotificationHandler)
+						if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
 							dispatch_sync(_notificationQueue, ^{
-								_decodingStartedNotificationHandler(decoderState->mDecoder);
+								[_delegate audioPlayerNode:self decodingStarted:decoderState->mDecoder];
 							});
 
 						decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
@@ -1012,9 +1012,9 @@ namespace {
 						decoderState->mFrameLength.store(decoderState->mDecoder.frameLength);
 
 						// Perform the decoding complete notification
-						if(_decodingCompleteNotificationHandler)
+						if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)])
 							dispatch_sync(_notificationQueue, ^{
-								_decodingCompleteNotificationHandler(decoderState->mDecoder);
+								[_delegate audioPlayerNode:self decodingComplete:decoderState->mDecoder];
 							});
 
 						os_log_debug(_audioPlayerNodeLog, "Decoding complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
@@ -1026,9 +1026,9 @@ namespace {
 					os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Perform the decoding cancelled notification
-					if(_decodingCanceledNotificationHandler)
+					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:)])
 						dispatch_sync(_notificationQueue, ^{
-							_decodingCanceledNotificationHandler(decoderState->mDecoder);
+							[_delegate audioPlayerNode:self decodingCanceled:decoderState->mDecoder];
 						});
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
@@ -1076,7 +1076,7 @@ namespace {
 
 						os_log_debug(_audioPlayerNodeLog, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-						if(self->_renderingStartedNotificationHandler) {
+						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingStarted:)]) {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
@@ -1095,7 +1095,7 @@ namespace {
 									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
-								self->_renderingStartedNotificationHandler(decoderState->mDecoder);
+								[self->_delegate audioPlayerNode:self renderingStarted:decoderState->mDecoder];
 							});
 						}
 					}
@@ -1115,7 +1115,7 @@ namespace {
 							break;
 						}
 
-						if(self->_renderingCompleteNotificationHandler) {
+						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingComplete:)]) {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
@@ -1134,7 +1134,7 @@ namespace {
 									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
-								self->_renderingCompleteNotificationHandler(decoderState->mDecoder);
+								[self->_delegate audioPlayerNode:self renderingComplete:decoderState->mDecoder];
 							});
 						}
 
@@ -1154,7 +1154,7 @@ namespace {
 
 						os_log_debug(_audioPlayerNodeLog, "Out of audio");
 
-						if(self->_outOfOfAudioNotificationHandler) {
+						if([_delegate respondsToSelector:@selector(audioPlayerNodeOutOfAudio:)]) {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
 #if DEBUG
@@ -1173,7 +1173,7 @@ namespace {
 									os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-								self->_outOfOfAudioNotificationHandler();
+								[self->_delegate audioPlayerNodeOutOfAudio:self];
 							});
 						}
 					}

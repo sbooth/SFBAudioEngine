@@ -3,6 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#import <cmath>
 #import <queue>
 
 #import <os/log.h>
@@ -410,7 +411,7 @@ namespace {
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel
 {
-	__block float volume = nanf("1");
+	__block float volume = std::nanf("1");
 	dispatch_sync(_engineQueue, ^{
 		AudioUnitParameterValue channelVolume;
 		OSStatus result = AudioUnitGetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
@@ -474,61 +475,6 @@ namespace {
 
 #endif
 
-#pragma mark - Player Event Callbacks
-
-// Most callbacks are passed directly to the underlying SFBAudioPlayerNode
-// The end of audio callback is modified to provide continuous but non-gapless playback
-
-- (SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
-{
-	return _playerNode.decodingStartedNotificationHandler;
-}
-
-- (void)setDecodingStartedNotificationHandler:(SFBAudioDecoderEventBlock)decodingStartedNotificationHandler
-{
-	_playerNode.decodingStartedNotificationHandler = decodingStartedNotificationHandler;
-}
-
-- (SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
-{
-	return _playerNode.decodingCompleteNotificationHandler;
-}
-
-- (void)setDecodingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)decodingCompleteNotificationHandler
-{
-	_playerNode.decodingCompleteNotificationHandler = decodingCompleteNotificationHandler;
-}
-
-- (SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
-{
-	return _playerNode.decodingCanceledNotificationHandler;
-}
-
-- (void)setDecodingCanceledNotificationHandler:(SFBAudioDecoderEventBlock)decodingCanceledNotificationHandler
-{
-	_playerNode.decodingCanceledNotificationHandler = decodingCanceledNotificationHandler;
-}
-
-- (SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
-{
-	return _playerNode.renderingStartedNotificationHandler;
-}
-
-- (void)setRenderingStartedNotificationHandler:(SFBAudioDecoderEventBlock)renderingStartedNotificationHandler
-{
-	_playerNode.renderingStartedNotificationHandler = renderingStartedNotificationHandler;
-}
-
-- (SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
-{
-	return _playerNode.renderingCompleteNotificationHandler;
-}
-
-- (void)setRenderingCompleteNotificationHandler:(SFBAudioDecoderEventBlock)renderingCompleteNotificationHandler
-{
-	_playerNode.renderingCompleteNotificationHandler = renderingCompleteNotificationHandler;
-}
-
 #pragma mark - AVAudioEngine
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
@@ -584,6 +530,8 @@ namespace {
 		return;
 	}
 
+	playerNode.delegate = self;
+
 	AVAudioOutputNode *outputNode = _engine.outputNode;
 	AVAudioMixerNode *mixerNode = _engine.mainMixerNode;
 
@@ -606,65 +554,6 @@ namespace {
 
 	if(outputFormatChanged)
 		[_engine disconnectNodeInput:outputNode bus:0];
-
-	playerNode.decodingStartedNotificationHandler = _playerNode.decodingStartedNotificationHandler;
-	playerNode.decodingCompleteNotificationHandler = _playerNode.decodingCompleteNotificationHandler;
-	playerNode.decodingCanceledNotificationHandler = _playerNode.decodingCanceledNotificationHandler;
-
-	playerNode.renderingStartedNotificationHandler = _playerNode.renderingStartedNotificationHandler;
-	playerNode.renderingCompleteNotificationHandler = _playerNode.renderingCompleteNotificationHandler;
-
-	__weak typeof(self) weakSelf = self;
-	playerNode.outOfOfAudioNotificationHandler = ^() {
-		__strong typeof(self) strongSelf = weakSelf;
-
-		if(!strongSelf) {
-			os_log_error(_audioPlayerLog, "Weak reference to self in outOfOfAudioNotificationHandler was zeroed");
-			return;
-		}
-
-		// Dequeue the next decoder
-		__block id <SFBPCMDecoding> decoder = nil;
-		dispatch_sync(strongSelf->_queue, ^{
-			if(!strongSelf->_queuedDecoders.empty()) {
-				decoder = strongSelf->_queuedDecoders.front();
-				strongSelf->_queuedDecoders.pop();
-			}
-		});
-
-		if(decoder) {
-			NSError *error = nil;
-			if(!decoder.isOpen && ![decoder openReturningError:&error]) {
-				os_log_error(_audioPlayerLog, "Error opening decoder: %{public}@", error);
-				if(strongSelf->_errorNotificationHandler && error)
-					strongSelf->_errorNotificationHandler(error);
-			}
-
-			if(decoder.isOpen) {
-				dispatch_sync(strongSelf->_engineQueue, ^{
-					[strongSelf->_engine pause];
-					[strongSelf->_engine reset];
-					[strongSelf->_playerNode reset];
-					AVAudioFormat *processingFormat = decoder.processingFormat;
-					if(![strongSelf->_playerNode supportsFormat:processingFormat])
-						[strongSelf setupEngineForGaplessPlaybackOfFormat:processingFormat forceUpdate:NO];
-				});
-
-				if(![strongSelf->_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
-					os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
-					if(strongSelf->_errorNotificationHandler && error)
-						strongSelf->_errorNotificationHandler(error);
-				}
-
-				if(![strongSelf playReturningError:&error]) {
-					if(strongSelf->_errorNotificationHandler && error)
-						strongSelf->_errorNotificationHandler(error);
-				}
-			}
-		}
-		else if(strongSelf->_outOfAudioNotificationHandler)
-			strongSelf->_outOfAudioNotificationHandler();
-	};
 
 	_playerNode = playerNode;
 	[_engine attachNode:_playerNode];
@@ -737,6 +626,83 @@ namespace {
 #endif
 
 	[_engine prepare];
+}
+
+#pragma mark - SFBAudioPlayerNodeDelegate
+
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
+		[_delegate audioPlayer:self decodingStarted:decoder];
+}
+
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(nonnull id<SFBPCMDecoding>)decoder
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:decodingComplete:)])
+		[_delegate audioPlayer:self decodingComplete:decoder];
+}
+
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:)])
+		[_delegate audioPlayer:self decodingCanceled:decoder];
+}
+
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(nonnull id<SFBPCMDecoding>)decoder
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
+		[_delegate audioPlayer:self renderingStarted:decoder];
+}
+
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(nonnull id<SFBPCMDecoding>)decoder
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+		[_delegate audioPlayer:self renderingComplete:decoder];
+}
+
+- (void)audioPlayerNodeOutOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
+{
+	// Dequeue the next decoder
+	__block id <SFBPCMDecoding> decoder = nil;
+	dispatch_sync(_queue, ^{
+		if(!_queuedDecoders.empty()) {
+			decoder = _queuedDecoders.front();
+			_queuedDecoders.pop();
+		}
+	});
+
+	if(decoder) {
+		NSError *error = nil;
+		if(!decoder.isOpen && ![decoder openReturningError:&error]) {
+			os_log_error(_audioPlayerLog, "Error opening decoder: %{public}@", error);
+			if(error)
+				[_delegate audioPlayer:self encounteredError:error];
+		}
+
+		if(decoder.isOpen) {
+			dispatch_sync(_engineQueue, ^{
+				[_engine pause];
+				[_engine reset];
+				[_playerNode reset];
+				AVAudioFormat *processingFormat = decoder.processingFormat;
+				if(![_playerNode supportsFormat:processingFormat])
+					[self setupEngineForGaplessPlaybackOfFormat:processingFormat forceUpdate:NO];
+			});
+
+			if(![_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
+				os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
+				if(error)
+					[_delegate audioPlayer:self encounteredError:error];
+			}
+
+			if(![self playReturningError:&error]) {
+				if(error)
+					[_delegate audioPlayer:self encounteredError:error];
+			}
+		}
+	}
+	else if([_delegate respondsToSelector:@selector(audioPlayerOutOfAudio:)])
+		[_delegate audioPlayerOutOfAudio:self];
 }
 
 @end
