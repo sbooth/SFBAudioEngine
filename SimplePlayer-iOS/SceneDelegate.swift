@@ -11,18 +11,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 		let delegate = UIApplication.shared.delegate as! AppDelegate
-		let contentView = PlayerView(delegate.player)
+		let contentView = ContentView(delegate.player)
 
 		// Use a UIHostingController as window root view controller.
 		if let windowScene = scene as? UIWindowScene {
 		    let window = UIWindow(windowScene: windowScene)
-		    window.rootViewController = UIHostingController(rootView: contentView)
+			window.rootViewController = UIHostingController(rootView: contentView)
 		    self.window = window
 		    window.makeKeyAndVisible()
-		}
-
-		if let url = Bundle.main.url(forResource: "test", withExtension: "wav") {
-			try? delegate.player.play(url)
 		}
 	}
 }

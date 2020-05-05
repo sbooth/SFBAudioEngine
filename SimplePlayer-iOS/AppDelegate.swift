@@ -7,16 +7,12 @@ import UIKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
 	/// The global player instance for the app
 	var player: AudioPlayer!
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		player = AudioPlayer()
-		player.outOfAudioNotificationHandler = {
-			self.player.stop()
-		}
-		
+		player.delegate = self
 		return true
 	}
 
@@ -28,5 +24,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
 	}
+}
 
+extension AppDelegate: AudioPlayerDelegate {
+	func audioPlayerOutOfAudio(_ audioPlayer: AudioPlayer) {
+		player.stop()
+	}
 }
