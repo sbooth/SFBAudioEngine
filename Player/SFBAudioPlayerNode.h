@@ -10,23 +10,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol SFBAudioPlayerNodeDelegate;
+
 #pragma mark - Playback position and time information
 
-struct NS_SWIFT_NAME(PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
+struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
 	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
 	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
-struct NS_SWIFT_NAME(PlaybackTime) SFBAudioPlayerNodePlaybackTime {
+struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime) SFBAudioPlayerNodePlaybackTime {
 	NSTimeInterval currentTime NS_SWIFT_NAME(current);
 	NSTimeInterval totalTime NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
-
-#pragma mark - Event types
-
-typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 
 #pragma mark - SFBAudioPlayerNode
 
@@ -46,7 +44,7 @@ typedef void (^SFBAudioDecoderEventBlock)(id <SFBPCMDecoding> decoder);
 /// used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
 /// rendering is complete, which cannot occur until after decoding is complete.
 ///
-/// \c SFBAudioPlayerNode supports block-based callbacks for the following events:
+/// \c SFBAudioPlayerNode supports delegate-based callbacks for the following events:
 ///  1. Decoding started
 ///  2. Decoding complete
 ///  3. Decoding canceled
@@ -112,15 +110,22 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
-#pragma mark - Event Callbacks
+#pragma mark - Delegate
 
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCompleteNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingCompleteNotificationHandler;
-@property (nonatomic, nullable) dispatch_block_t outOfOfAudioNotificationHandler;
+@property (nonatomic, nullable, weak) id<SFBAudioPlayerNodeDelegate> delegate;
 
+@end
+
+#pragma mark - SFBAudioPlayerNodeDelegate
+
+NS_SWIFT_NAME(AudioPlayerNodeDelegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
+@optional
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNodeOutOfAudio:(SFBAudioPlayerNode *)audioPlayerNode NS_SWIFT_NAME(audioPlayerNodeOutOfAudio(_:));
 @end
 
 #pragma mark - Error Information
@@ -131,6 +136,6 @@ extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlay
 /*! @brief Possible \c NSError  error codes used by \c SFBAudioPlayerNode */
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
 	SFBAudioPlayerNodeErrorFormatNotSupported	= 0		/*!< Format not supported */
-};
+} NS_SWIFT_NAME(AudioPlayerNodeErrorCode);
 
 NS_ASSUME_NONNULL_END

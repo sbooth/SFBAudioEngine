@@ -18,7 +18,7 @@ typedef NS_ERROR_ENUM(SFBAudioFileErrorDomain, SFBAudioFileErrorCode) {
 	SFBAudioFileErrorCodeFileFormatNotRecognized		= 0,	/*!< File format not recognized */
 	SFBAudioFileErrorCodeFileFormatNotSupported			= 1,	/*!< File format not supported */
 	SFBAudioFileErrorCodeInputOutput					= 2		/*!< Input/output error */
-};
+} NS_SWIFT_NAME(AudioFileErrorCode);
 
 /*! @brief An audio file  */
 NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject

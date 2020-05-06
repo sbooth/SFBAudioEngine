@@ -7,27 +7,29 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "SFBAudioPlayerNode.h"
+#if TARGET_OS_OSX
 #import "SFBAudioOutputDevice.h"
+#endif
 
 NS_ASSUME_NONNULL_BEGIN
+
+@protocol SFBAudioPlayerDelegate;
 
 /// Posted when the configuration of the underlying \c AVAudioEngine changes
 /// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
 extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
 
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition;
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime;
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
 
-// Event types
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
-typedef void (^SFBAudioPlayerErrorBlock)(NSError *error);
 
 /// The possible playback states for \c SFBAudioPlayer
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	SFBAudioPlayerPlaybackStatePlaying		= 0,	///<  \c SFBAudioPlayer.engineIsRunning  and \c SFBAudioPlayer.playerNodeIsPlaying
 	SFBAudioPlayerPlaybackStatePaused		= 1,	///<  \c SFBAudioPlayer.engineIsRunning  and \c !SFBAudioPlayer.playerNodeIsPlaying
 	SFBAudioPlayerPlaybackStateStopped		= 2		///<  \c !SFBAudioPlayer.engineIsRunning
-};
+} NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// @brief An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
 ///
@@ -37,7 +39,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
 /// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
 /// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
-NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
+NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
 
 #pragma mark - Playlist Management
 
@@ -102,6 +104,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 
 @property (nonatomic, readonly) BOOL supportsSeeking;
 
+#if TARGET_OS_OSX
+
 #pragma mark - Volume Control
 
 /// Returns \c kHALOutputParam_Volume on channel \c 0 for \c AVAudioEngine.outputNode.audioUnit or \c -1 on error
@@ -112,21 +116,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel;
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel error:(NSError **)error;
 
-#pragma mark - Player Event Callbacks
-
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCompleteNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock decodingCanceledNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingStartedNotificationHandler;
-@property (nonatomic, nullable) SFBAudioDecoderEventBlock renderingCompleteNotificationHandler;
-@property (nonatomic, nullable) dispatch_block_t outOfAudioNotificationHandler;
-
-@property (nonatomic, nullable) SFBAudioPlayerErrorBlock errorNotificationHandler;
-
 #pragma mark - Output Device
 
 @property (nonatomic, nonnull, readonly) SFBAudioOutputDevice *outputDevice;
 - (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error;
+
+#endif
+
+#pragma mark - Delegate
+
+@property (nonatomic, nullable, weak) id<SFBAudioPlayerDelegate> delegate;
 
 #pragma mark - AVAudioEngine Access
 
@@ -135,6 +134,19 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block;
 @property (nonatomic, nonnull, readonly) SFBAudioPlayerNode *playerNode;
 
+@end
+
+#pragma mark - SFBAudioPlayerDelegate
+
+NS_SWIFT_NAME(AudioPlayerDelegate) @protocol SFBAudioPlayerDelegate <NSObject>
+@optional
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingStarted:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingStarted:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
+- (void)audioPlayerOutOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerOutOfAudio(_:));
 @end
 
 NS_ASSUME_NONNULL_END

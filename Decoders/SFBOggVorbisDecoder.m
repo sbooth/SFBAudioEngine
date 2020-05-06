@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import OSLog;
+@import os.log;
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"

@@ -94,7 +94,7 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
-@import OSLog;
+@import os.log;
 
 @import Accelerate;
 

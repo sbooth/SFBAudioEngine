@@ -13,7 +13,7 @@ typedef NS_ENUM(NSUInteger, SFBDSDSampleRate) {
 	SFBDSDSampleRateDSD128 	= 5644800,		/*!< Double-rate DSD (DSD128) */
 	SFBDSDSampleRateDSD256 	= 11289600,		/*!< Quad-rate DSD (DSD256) */
 	SFBDSDSampleRateDSD512 	= 22579200		/*!< Octuple-rate DSD (DSD512) */
-};
+} NS_SWIFT_NAME(DSDSampleRate);
 
 /*! @brief DSD sample rate variants based on 48,000 Hz */
 typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
@@ -21,7 +21,7 @@ typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
 	SFBDSDSampleRateVariantDSD128 	= 6144000,		/*!< Double-rate DSD (DSD128) */
 	SFBDSDSampleRateVariantDSD256 	= 12288000,		/*!< Quad-rate DSD (DSD256) */
 	SFBDSDSampleRateVariantDSD512 	= 24576000		/*!< Octuple-rate DSD (DSD512) */
-};
+} NS_SWIFT_NAME(DSDSampleRateVariant);
 
 // A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
 // a clustered frame consisting of one channel byte per channel.

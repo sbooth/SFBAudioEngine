@@ -3,6 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+#include <CoreServices/CoreServices.h>
+
 #import <taglib/mp4coverart.h>
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"

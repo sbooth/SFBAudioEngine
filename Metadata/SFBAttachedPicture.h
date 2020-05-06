@@ -39,7 +39,7 @@ typedef NS_ENUM(NSUInteger, SFBAttachedPictureType) {
 	SFBAttachedPictureTypeIllustration			= 0x12,		/*!< Illustration related to the track */
 	SFBAttachedPictureTypeBandLogo				= 0x13,		/*!< Logo of the band or performer */
 	SFBAttachedPictureTypePublisherLogo			= 0x14		/*!< Logo of the publisher (record company) */
-};
+} NS_SWIFT_NAME(AttachedPictureType);
 
 
 /*!

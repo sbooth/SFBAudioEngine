@@ -40,6 +40,8 @@
 		321296DF244CAB840008DC93 /* SFBDSDPCMDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 321296DD244CAB840008DC93 /* SFBDSDPCMDecoder.mm */; };
 		321296E0244CAB840008DC93 /* SFBDSDPCMDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 321296DE244CAB840008DC93 /* SFBDSDPCMDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		321BDFAF195F2E22006CAB39 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */; };
+		321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 321DB853246369E7004D66AF /* CoreServices.framework */; };
+		321DB85524636A12004D66AF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3296828617B9D69400B3CDB4 /* Foundation.framework */; };
 		322859BA242417B10080B500 /* SFBAudioMetadata.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859B8242417B10080B500 /* SFBAudioMetadata.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		322859BB242417B10080B500 /* SFBAudioMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 322859B9242417B10080B500 /* SFBAudioMetadata.m */; };
 		322859CC2425519A0080B500 /* AddAudioPropertiesToDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859CA2425519A0080B500 /* AddAudioPropertiesToDictionary.h */; };
@@ -159,12 +161,10 @@
 		326D3CCE242D2A21002AEC52 /* SFBWavPackFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859BD24241D780080B500 /* SFBWavPackFile.h */; };
 		326D3CCF242D2A21002AEC52 /* SFBWavPackFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 322859BC24241D780080B500 /* SFBWavPackFile.mm */; };
 		3291CC2A14F5D03C00B34DA4 /* SFBAttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		329392291A81929D00983695 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329392281A81929D00983695 /* Security.framework */; };
 		3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; };
 		3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3294A6FA2445FA2D00841138 /* SFBLoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */; };
-		329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 329AB89F148B17AA00180506 /* ApplicationServices.framework */; };
 		32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
 		32AE32DA245775EE002BC014 /* SFBAudioOutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */; };
 		32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
@@ -203,8 +203,8 @@
 			dstSubfolderSpec = 10;
 			files = (
 				32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */,
-				32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */,
 				3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */,
+				32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */,
 			);
 			name = "Copy Embedded Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -244,6 +244,7 @@
 		321296DA244C8F700008DC93 /* SFBDoPDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDoPDecoder.m; sourceTree = "<group>"; };
 		321296DD244CAB840008DC93 /* SFBDSDPCMDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBDSDPCMDecoder.mm; sourceTree = "<group>"; };
 		321296DE244CAB840008DC93 /* SFBDSDPCMDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDSDPCMDecoder.h; sourceTree = "<group>"; };
+		321DB853246369E7004D66AF /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		322859B8242417B10080B500 /* SFBAudioMetadata.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioMetadata.h; sourceTree = "<group>"; };
 		322859B9242417B10080B500 /* SFBAudioMetadata.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioMetadata.m; sourceTree = "<group>"; };
 		322859BC24241D780080B500 /* SFBWavPackFile.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBWavPackFile.mm; sourceTree = "<group>"; };
@@ -331,19 +332,16 @@
 		326D3C9F242D0291002AEC52 /* SFBAudioFile+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioFile+Internal.h"; sourceTree = "<group>"; };
 		326D3CAA242D1D3C002AEC52 /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
 		3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAttachedPicture.h; sourceTree = "<group>"; };
-		329392281A81929D00983695 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libsndfile.1.dylib"; sourceTree = "<group>"; };
+		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = Libraries/macosx/lib/libsndfile.1.dylib; sourceTree = "<group>"; };
 		3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBLoopableRegionDecoder.h; sourceTree = "<group>"; };
 		3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLoopableRegionDecoder.m; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		329AB89F148B17AA00180506 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioOutputDevice.swift; sourceTree = "<group>"; };
 		32AE32DB245894ED002BC014 /* SFBInputSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBInputSource.swift; sourceTree = "<group>"; };
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
 		32AEB2D61409BA26001F9A60 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		32AEB2D71409BA26001F9A60 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = /System/Library/Frameworks/CoreAudio.framework; sourceTree = "<absolute>"; };
-		32AEB2D81409BA27001F9A60 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		32BC09A224263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioMetadata+TagLibID3v2Tag.h"; sourceTree = "<group>"; };
 		32BC09A324263FCC008BB695 /* SFBAudioMetadata+TagLibID3v2Tag.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "SFBAudioMetadata+TagLibID3v2Tag.mm"; sourceTree = "<group>"; };
 		32BC09A624265040008BB695 /* SFBAudioMetadata+TagLibMP4Tag.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "SFBAudioMetadata+TagLibMP4Tag.mm"; sourceTree = "<group>"; };
@@ -387,8 +385,8 @@
 		32BC09F224278B23008BB695 /* SFBAIFFFile.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBAIFFFile.mm; sourceTree = "<group>"; };
 		32BC09F324278B23008BB695 /* SFBAIFFFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAIFFFile.h; sourceTree = "<group>"; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = "Libraries/macosx-x86_64-clang-libc++/lib/libmpg123.0.dylib"; sourceTree = "<group>"; };
-		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx-x86_64-clang-libc++/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
+		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = Libraries/macosx/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
+		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -405,12 +403,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */,
-				329AB8A0148B17AA00180506 /* ApplicationServices.framework in Frameworks */,
 				32AEB2DA1409BA27001F9A60 /* AudioToolbox.framework in Frameworks */,
 				32AEB2DB1409BA27001F9A60 /* AudioUnit.framework in Frameworks */,
 				325A5E412440960C003138D5 /* AVFoundation.framework in Frameworks */,
+				321DB85524636A12004D66AF /* Foundation.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
-				329392291A81929D00983695 /* Security.framework in Frameworks */,
+				321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */,
 				32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */,
 				3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */,
 				32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */,
@@ -443,18 +441,16 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				32A1012016A50C2400EC1F9C /* Accelerate.framework */,
+				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
+				32AEB2D61409BA26001F9A60 /* AudioUnit.framework */,
 				325A5E402440960C003138D5 /* AVFoundation.framework */,
+				3296828617B9D69400B3CDB4 /* Foundation.framework */,
+				32AEB2D71409BA26001F9A60 /* CoreAudio.framework */,
+				321DB853246369E7004D66AF /* CoreServices.framework */,
 				32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */,
 				3293922B1A81932900983695 /* libsndfile.1.dylib */,
 				32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */,
-				32A1012016A50C2400EC1F9C /* Accelerate.framework */,
-				329AB89F148B17AA00180506 /* ApplicationServices.framework */,
-				32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */,
-				32AEB2D61409BA26001F9A60 /* AudioUnit.framework */,
-				32AEB2D71409BA26001F9A60 /* CoreAudio.framework */,
-				32AEB2D81409BA27001F9A60 /* CoreServices.framework */,
-				3296828617B9D69400B3CDB4 /* Foundation.framework */,
-				329392281A81929D00983695 /* Security.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1050,7 +1046,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1059,7 +1055,7 @@
 					"@loader_path/Frameworks",
 					"@loader_path/Libraries",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -1091,7 +1087,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/include";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1100,7 +1096,7 @@
 					"@loader_path/Frameworks",
 					"@loader_path/Libraries",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx-x86_64-clang-libc++/lib";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",

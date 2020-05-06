@@ -11,7 +11,7 @@ extension AttachedPicture {
 	}
 }
 
-class PlayerWindowController: NSWindowController, NSWindowDelegate {
+class PlayerWindowController: NSWindowController {
 	var player: AudioPlayer!
 	var timer: DispatchSourceTimer!
 
@@ -31,40 +31,7 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 
 	override func windowDidLoad() {
 		player = AudioPlayer()
-
-		player.renderingStartedNotificationHandler = { decoder in
-			let url = decoder.inputSource.url
-			DispatchQueue.main.async {
-				self.updateWindow()
-				if let url = url, url.isFileURL {
-					NSDocumentController.shared.noteNewRecentDocumentURL(url)
-				}
-			}
-		}
-
-		player.renderingCompleteNotificationHandler = { decoder in
-			DispatchQueue.main.async {
-				self.updateWindow()
-			}
-		}
-
-		player.decodingCanceledNotificationHandler = { decoder in
-			if self.player.isStopped {
-				DispatchQueue.main.async {
-					self.updateWindow()
-				}
-			}
-		}
-
-		player.errorNotificationHandler = { error in
-			DispatchQueue.main.async {
-				NSApp.presentError(error)
-			}
-		}
-
-		player.outOfAudioNotificationHandler = {
-			self.player.stop()
-		}
+		player.delegate = self
 
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
@@ -94,10 +61,6 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 		timer.resume()
 
 		updateWindow()
-	}
-
-	func windowWillClose(_ notification: Notification) {
-		player.stop()
 	}
 
 	@IBAction func playPause(_ sender: AnyObject?) {
@@ -225,6 +188,48 @@ class PlayerWindowController: NSWindowController, NSWindowDelegate {
 			albumArt.image = NSImage(named: "NSApplicationIcon")
 			title.stringValue = ""
 			artist.stringValue = ""
+		}
+	}
+}
+
+extension PlayerWindowController: NSWindowDelegate {
+	func windowWillClose(_ notification: Notification) {
+		player.stop()
+	}
+}
+
+extension PlayerWindowController: AudioPlayerDelegate {
+	func audioPlayer(_ audioPlayer: AudioPlayer, decodingCanceled decoder: PCMDecoding) {
+		if self.player.isStopped {
+			DispatchQueue.main.async {
+				self.updateWindow()
+			}
+		}
+	}
+
+	func audioPlayer(_ audioPlayer: AudioPlayer, renderingStarted decoder: PCMDecoding) {
+		let url = decoder.inputSource.url
+		DispatchQueue.main.async {
+			self.updateWindow()
+			if let url = url, url.isFileURL {
+				NSDocumentController.shared.noteNewRecentDocumentURL(url)
+			}
+		}
+	}
+
+	func audioPlayer(_ audioPlayer: AudioPlayer, renderingComplete decoder: PCMDecoding) {
+		DispatchQueue.main.async {
+			self.updateWindow()
+		}
+	}
+
+	func audioPlayerOutOfAudio(_ audioPlayer: AudioPlayer) {
+		self.player.stop()
+	}
+
+	func audioPlayer(_ audioPlayer: AudioPlayer, encounteredError error: Error) {
+		DispatchQueue.main.async {
+			NSApp.presentError(error)
 		}
 	}
 }

@@ -5,7 +5,7 @@
 
 #import <os/log.h>
 
-#import <Security/Security.h>
+#import <CoreServices/CoreServices.h>
 
 #import "SFBAudioMetadata+TagLibXiphComment.h"
 
@@ -16,54 +16,16 @@ namespace {
 
 	TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
 	{
-		SFB::CFError error;
-		SFB::SecTransform decoder(SecDecodeTransformCreate(kSecBase64Encoding, &error));
-		if(!decoder) {
-			os_log_error(OS_LOG_DEFAULT, "SecDecodeTransformCreate failed: %{public}@", error.Object());
-			return {};
-		}
-
-		SFB::CFData sourceData(CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull));
-		if(!sourceData)
-			return {};
-
-		if(!SecTransformSetAttribute(decoder, kSecTransformInputAttributeName, sourceData, &error)) {
-			os_log_error(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
-			return {};
-		}
-
-		SFB::CFData decodedData((CFDataRef)SecTransformExecute(decoder, &error));
-		if(!decodedData)
-			return {};
-
-		return {(const char *)CFDataGetBytePtr((CFDataRef)decodedData), (size_t)CFDataGetLength((CFDataRef)decodedData)};
+		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size()];
+		NSData *decoded = [[NSData alloc] initWithBase64EncodedData:data options:0];
+		return {(const char *)decoded.bytes, (size_t)decoded.length};
 	}
 
 	TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 	{
-		SFB::CFError error;
-		SFB::SecTransform encoder(SecEncodeTransformCreate(kSecBase64Encoding, &error));
-		if(!encoder) {
-			os_log_error(OS_LOG_DEFAULT, "SecEncodeTransformCreate failed: %{public}@", error.Object());
-			return {};
-		}
-
-		SFB::CFData sourceData(CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const UInt8 *)input.data(), (CFIndex)input.size(), kCFAllocatorNull));
-		if(!sourceData)
-			return {};
-
-		if(!SecTransformSetAttribute(encoder, kSecTransformInputAttributeName, sourceData, &error)) {
-			os_log_error(OS_LOG_DEFAULT, "SecTransformSetAttribute failed: %{public}@", error.Object());
-			return {};
-		}
-
-		SFB::CFData encodedData((CFDataRef)SecTransformExecute(encoder, &error));
-		if(!encodedData) {
-			os_log_error(OS_LOG_DEFAULT, "SecTransformExecute failed: %{public}@", error.Object());
-			return {};
-		}
-
-		return {(const char *)CFDataGetBytePtr((CFDataRef)encodedData), (size_t)CFDataGetLength((CFDataRef)encodedData)};
+		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size()];
+		NSData *encoded = [data base64EncodedDataWithOptions:0];
+		return {(const char *)encoded.bytes, (size_t)encoded.length};
 	}
 
 }
