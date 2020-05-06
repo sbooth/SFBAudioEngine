@@ -13,9 +13,9 @@ SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS 
 * Ogg Vorbis
 * Ogg Speex
 * Ogg Opus
-* Musepack (macOS only)
-* Monkey's Audio (macOS only)
-* True Audio (macOS only)
+* Musepack
+* Monkey's Audio
+* True Audio
 * All formats supported by libsndfile
 * All formats supported by Core Audio
 * DSD to PCM conversion for DSD64
@@ -43,6 +43,4 @@ try? player.play(URL(fileURLWithPath: "example.flac"))
 Documentation
 =============
 
-All public headers are documented using doxygen.  If you have doxygen installed, you may create a local copy of the documentation by running `doxygen` in SFBAudioEngine's root.  The HTML files will be saved in `doc/html/`.
-
-The [documentation is also available online](http://sbooth.github.io/SFBAudioEngine/doc/).
+Documentation is sparse at the moment.
