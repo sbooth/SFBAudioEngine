@@ -12,7 +12,7 @@ struct ContentView: View {
 	init(_ player: AudioPlayer) {
 		self.player = player
 		var tracks = [Track]()
-		if let url = Bundle.main.url(forResource: "test", withExtension: "wav") {
+		if let url = Bundle.main.url(forResource: "test", withExtension: "flac") {
 			tracks.append(Track(url))
 		}
 		self.tracks = tracks
