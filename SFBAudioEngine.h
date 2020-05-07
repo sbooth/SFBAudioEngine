@@ -5,10 +5,10 @@
 
 #import <Foundation/Foundation.h>
 
-//! Project version number for SFBAudioEngine.
+/// Project version number for SFBAudioEngine.
 FOUNDATION_EXPORT double SFBAudioEngineVersionNumber;
 
-//! Project version string for SFBAudioEngine.
+/// Project version string for SFBAudioEngine.
 FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 
 #import <SFBAudioEngine/SFBInputSource.h>

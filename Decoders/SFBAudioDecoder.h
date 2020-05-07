@@ -7,21 +7,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*! @brief A decoder providing audio as PCM */
+/// A decoder providing audio as PCM
 NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
 
 #pragma mark - File Format Support
 
-/*! @brief Returns a set containing the supported path extensions */
+/// Returns a set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /*!@brief Returns a set containing the supported MIME types */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
-/*! @brief Tests whether a file extension is supported */
+/// Tests whether a file extension is supported
 + (BOOL)handlesPathsWithExtension:(NSString *)extension;
 
-/*! @brief Tests whether a MIME type is supported */
+/// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
 #pragma mark - Creation
@@ -45,22 +45,22 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 #pragma mark - Subclass Registration
 
 @interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
-/*! @brief Register a subclass with the default priority (\c 0) */
+/// Register a subclass with the default priority (\c 0)
 + (void)registerSubclass:(Class)subclass;
 
-/*! @brief Register a subclass with the specified priority*/
+/// Register a subclass with the specified priority
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 #pragma mark - Error Information
 
-/*! @brief The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses */
-extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoderErrorDomain);
+/// The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses
+extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
 
-/*! @brief Possible \c NSError  error codes used by \c SFBAudioDecoder */
+/// Possible \c NSError  error codes used by \c SFBAudioDecoder
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
-	SFBAudioDecoderErrorCodeFileNotFound	= 0,		/*!< File not found */
-	SFBAudioDecoderErrorCodeInputOutput		= 1			/*!< Input/output error */
-} NS_SWIFT_NAME(AudioDecoderErrorCode);
+	SFBAudioDecoderErrorCodeFileNotFound	= 0,		///< File not found
+	SFBAudioDecoderErrorCodeInputOutput		= 1			///< Input/output error
+} NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END
