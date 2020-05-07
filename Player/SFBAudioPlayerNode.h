@@ -28,7 +28,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 #pragma mark - SFBAudioPlayerNode
 
-/// @brief An \c AVAudioSourceNode supporting gapless playback for PCM formats
+/// An \c AVAudioSourceNode supporting gapless playback for PCM formats
 ///
 /// The output format of \c SFBAudioPlayerNode is specified at object creation and cannot be changed. The output format must be
 /// a flavor of non-interleaved PCM audio.
@@ -118,7 +118,7 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 #pragma mark - SFBAudioPlayerNodeDelegate
 
-NS_SWIFT_NAME(AudioPlayerNodeDelegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
+NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
 @optional
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
@@ -130,12 +130,12 @@ NS_SWIFT_NAME(AudioPlayerNodeDelegate) @protocol SFBAudioPlayerNodeDelegate <NSO
 
 #pragma mark - Error Information
 
-/*! @brief The \c NSErrorDomain used by \c SFBAudioPlayerNode */
-extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlayerNodeErrorDomain);
+/// The \c NSErrorDomain used by \c SFBAudioPlayerNode
+extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlayerNode.ErrorDomain);
 
-/*! @brief Possible \c NSError  error codes used by \c SFBAudioPlayerNode */
+/// Possible \c NSError  error codes used by \c SFBAudioPlayerNode
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
-	SFBAudioPlayerNodeErrorFormatNotSupported	= 0		/*!< Format not supported */
-} NS_SWIFT_NAME(AudioPlayerNodeErrorCode);
+	SFBAudioPlayerNodeErrorFormatNotSupported	= 0		///< Format not supported
+} NS_SWIFT_NAME(AudioPlayerNode.ErrorCode);
 
 NS_ASSUME_NONNULL_END

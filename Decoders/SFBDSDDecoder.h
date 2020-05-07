@@ -7,21 +7,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/*! @brief A decoder providing audio as DSD */
+/// A decoder providing audio as DSD
 NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 
 #pragma mark - File Format Support
 
-/*! @brief Returns a set containing the supported path extensions */
+/// Returns a set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
 /*!@brief Returns  a set containing the supported MIME types */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
-/*! @brief Tests whether a file extension is supported */
+/// Tests whether a file extension is supported
 + (BOOL)handlesPathsWithExtension:(NSString *)extension;
 
-/*! @brief Tests whether a MIME type is supported */
+/// Tests whether a MIME type is supported
 + (BOOL)handlesMIMEType:(NSString *)mimeType;
 
 #pragma mark - Creation
@@ -44,23 +44,23 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 #pragma mark - Subclass Registration
 
 @interface SFBDSDDecoder (SFBDSDDecoderSubclassRegistration)
-/*! @brief Register a subclass with the default priority (\c 0) */
+/// Register a subclass with the default priority (\c 0)
 + (void)registerSubclass:(Class)subclass;
 
-/*! @brief Register a subclass with the specified priority*/
+/// Register a subclass with the specified priority
 + (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 #pragma mark - Error Information
 
-/*! @brief The \c NSErrorDomain used by \c SFBDSDDecoder and subclasses */
-extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoderErrorDomain);
+/// The \c NSErrorDomain used by \c SFBDSDDecoder and subclasses
+extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);
 
-/*! @brief Possible \c NSError  error codes used by \c SFBDSDDecoder */
+/// Possible \c NSError  error codes used by \c SFBDSDDecoder
 typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	SFBDSDDecoderErrorCodeFileNotFound		= 0,		/*!< File not found */
-	SFBDSDDecoderErrorCodeInputOutput		= 1			/*!< Input/output error */
-} NS_SWIFT_NAME(DSDDecoderErrorCode);
+	SFBDSDDecoderErrorCodeFileNotFound		= 0,		///< File not found
+	SFBDSDDecoderErrorCodeInputOutput		= 1			///< Input/output error
+} NS_SWIFT_NAME(DSDDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END
 

@@ -198,7 +198,7 @@ extension PlayerWindowController: NSWindowDelegate {
 	}
 }
 
-extension PlayerWindowController: AudioPlayerDelegate {
+extension PlayerWindowController: AudioPlayer.Delegate {
 	func audioPlayer(_ audioPlayer: AudioPlayer, decodingCanceled decoder: PCMDecoding) {
 		if self.player.isStopped {
 			DispatchQueue.main.async {

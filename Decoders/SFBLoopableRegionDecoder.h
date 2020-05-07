@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-//! A class supporting a repeating segment of a decoder
+/// A class supporting a repeating segment of a decoder
 NS_SWIFT_NAME(LoopableRegionDecoder) @interface SFBLoopableRegionDecoder : NSObject <SFBPCMDecoding>
 
 + (instancetype)new NS_UNAVAILABLE;

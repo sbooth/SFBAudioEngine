@@ -22,7 +22,7 @@ extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNo
 typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
 typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
 
-typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine);
+typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
 
 /// The possible playback states for \c SFBAudioPlayer
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
@@ -31,7 +31,7 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 	SFBAudioPlayerPlaybackStateStopped		= 2		///<  \c !SFBAudioPlayer.engineIsRunning
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
-/// @brief An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
+/// An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode
 ///
 /// \c SFBAudioPlayer supports gapless playback for audio with the same sample rate and number of channels.
 /// For audio with different sample rates or channels, the audio processing graph is automatically reconfigured.
@@ -138,7 +138,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - SFBAudioPlayerDelegate
 
-NS_SWIFT_NAME(AudioPlayerDelegate) @protocol SFBAudioPlayerDelegate <NSObject>
+NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 @optional
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;

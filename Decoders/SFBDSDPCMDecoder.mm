@@ -16,7 +16,7 @@
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_PCM_FRAME (8 / FRAMES_PER_DSD_PACKET)
+#define DSD_PACKETS_PER_PCM_FRAME (8 / SFB_PCM_FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 16384
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
@@ -406,9 +406,9 @@ namespace {
 	}
 
 	// Generate non-interleaved 32-bit float output
-	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / (FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_PCM_FRAME)) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / (SFB_PCM_FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_PCM_FRAME)) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	_context.resize(asbd->mChannelsPerFrame);

@@ -77,7 +77,7 @@ namespace {
 
 #pragma mark - Decoder State
 
-	//! State data for tracking/syncing decoding progress
+	/// State data for tracking/syncing decoding progress
 	struct DecoderStateData {
 		using atomic_ptr = std::atomic<DecoderStateData *>;
 
@@ -92,21 +92,21 @@ namespace {
 			eMarkedForRemovalFlag 	= 1u << 5
 		};
 
-		const uint64_t			mSequenceNumber;	//!< Monotonically increasing instance counter
+		const uint64_t			mSequenceNumber;	///< Monotonically increasing instance counter
 
-		std::atomic_uint 		mFlags; 			//!< Decoder state data flags
-		std::atomic_int64_t 	mFramesDecoded; 	//!< The number of frames decoded in the converter's *input* sample rate
-		std::atomic_int64_t 	mFramesConverted;	//!< The number of frames converted in the converter's *output* sample rate
-		std::atomic_int64_t 	mFramesRendered;	//!< The number of frames rendered in the converter's *output* sample rate
-		std::atomic_int64_t 	mFrameLength;		//!< The total number of audio frames, in the decoder's sample rate
-		std::atomic_int64_t 	mFrameToSeek;		//!< The desired seek offset, in the converter's *output* sample rate
+		std::atomic_uint 		mFlags; 			///< Decoder state data flags
+		std::atomic_int64_t 	mFramesDecoded; 	///< The number of frames decoded in the converter's *input* sample rate
+		std::atomic_int64_t 	mFramesConverted;	///< The number of frames converted in the converter's *output* sample rate
+		std::atomic_int64_t 	mFramesRendered;	///< The number of frames rendered in the converter's *output* sample rate
+		std::atomic_int64_t 	mFrameLength;		///< The total number of audio frames, in the decoder's sample rate
+		std::atomic_int64_t 	mFrameToSeek;		///< The desired seek offset, in the converter's *output* sample rate
 
 //	private:
-		id <SFBPCMDecoding> 	mDecoder; 			//!< Decodes audio from the source representation to PCM
-		AVAudioConverter 		*mConverter;		//!< Converts audio from the decoder's processing format to PCM
+		id <SFBPCMDecoding> 	mDecoder; 			///< Decodes audio from the source representation to PCM
+		AVAudioConverter 		*mConverter;		///< Converts audio from the decoder's processing format to PCM
 	private:
-		AVAudioPCMBuffer 		*mDecodeBuffer;		//!< Buffer used internally for buffering during conversion
-		static uint64_t			sSequenceNumber; 	//!< Next sequence number to use
+		AVAudioPCMBuffer 		*mDecodeBuffer;		///< Buffer used internally for buffering during conversion
+		static uint64_t			sSequenceNumber; 	///< Next sequence number to use
 
 	public:
 		DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
@@ -168,7 +168,7 @@ namespace {
 			return true;
 		}
 
-		//! Seeks to the desired frame  in the converter's *output* sample rate
+		/// Seeks to the desired frame  in the converter's *output* sample rate
 		bool PerformSeek()
 		{
 			AVAudioFramePosition seekOffset = mFrameToSeek.load();

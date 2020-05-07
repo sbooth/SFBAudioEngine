@@ -11,6 +11,10 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
 
+// Constants declared in SFBDSDDecoding.h but defined here
+const NSInteger SFBPCMFramesPerDSDPacket = 8;
+const NSInteger SFBBytesPerDSDPacketPerChannel = 1;
+
 // NSError domain for DSDDecoder and subclasses
 NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
 
@@ -164,18 +168,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	[self closeReturningError:nil];
 }
-
-//- (AVAudioFramePosition)frameLength
-//{
-//	AVAudioFramePosition packetCount = self.packetCount;
-//	return packetCount == -1 ? -1 : packetCount * FRAMES_PER_DSD_PACKET;
-//}
-//
-//- (AVAudioFramePosition)framePosition
-//{
-//	AVAudioFramePosition packetPosition = self.packetPosition;
-//	return packetPosition == -1 ? -1 : packetPosition * FRAMES_PER_DSD_PACKET;
-//}
 
 - (BOOL)openReturningError:(NSError **)error
 {

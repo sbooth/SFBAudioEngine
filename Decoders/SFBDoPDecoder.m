@@ -12,7 +12,7 @@
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_DOP_FRAME (16 / FRAMES_PER_DSD_PACKET)
+#define DSD_PACKETS_PER_DOP_FRAME (16 / SFB_PCM_FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 4096
 
 static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
@@ -141,7 +141,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*SFBAudioFormatIDDoP*/;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
-	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_DOP_FRAME);
+	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (SFB_PCM_FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_DOP_FRAME);
 	processingStreamDescription.mChannelsPerFrame	= asbd->mChannelsPerFrame;
 	processingStreamDescription.mBitsPerChannel		= 24;
 
@@ -151,7 +151,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	return YES;

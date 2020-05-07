@@ -26,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	}
 }
 
-extension AppDelegate: AudioPlayerDelegate {
+extension AppDelegate: AudioPlayer.Delegate {
 	func audioPlayerOutOfAudio(_ audioPlayer: AudioPlayer) {
 		player.stop()
 	}
