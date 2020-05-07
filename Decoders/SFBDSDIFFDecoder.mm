@@ -757,8 +757,8 @@ namespace {
 	processingStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	processingStreamDescription.mBitsPerChannel		= 1;
 
-	processingStreamDescription.mBytesPerPacket		= BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels;
-	processingStreamDescription.mFramesPerPacket	= FRAMES_PER_DSD_PACKET;
+	processingStreamDescription.mBytesPerPacket		= SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels;
+	processingStreamDescription.mFramesPerPacket	= SFB_PCM_FRAMES_PER_DSD_PACKET;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
@@ -782,7 +782,7 @@ namespace {
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
+	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
@@ -831,7 +831,7 @@ namespace {
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsRead = 0;
 
-	uint32_t packetSize = BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
@@ -871,7 +871,7 @@ namespace {
 {
 	NSParameterAssert(packet > 0);
 
-	NSInteger packetOffset = packet * BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	NSInteger packetOffset = packet * SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
 		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
 		return NO;

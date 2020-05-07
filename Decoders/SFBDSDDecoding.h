@@ -29,10 +29,12 @@ typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
 // Since DSD audio is CBR, one packet equals one frame
 
 /// The number of frames in a DSD packet (a clustered frame)
-#define FRAMES_PER_DSD_PACKET 8
+extern const NSInteger SFBPCMFramesPerDSDPacket NS_SWIFT_NAME(PCMFramesPerDSDPacket);
+#define SFB_PCM_FRAMES_PER_DSD_PACKET 8
 
 /// The number of bytes in a DSD packet, per channel (a channel byte)
-#define BYTES_PER_DSD_PACKET_PER_CHANNEL 1
+extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(BytesPerDSDPacketPerChannel);
+#define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL 1
 
 NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 
