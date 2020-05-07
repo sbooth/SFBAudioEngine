@@ -403,13 +403,15 @@ namespace {
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
+				uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 				// Schedule the rendering started notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
-				uint8_t bytesToWrite [4 + 8 + 8];
+				uint8_t bytesToWrite [4 + 8 + 8 + 4];
 				memcpy(bytesToWrite, &cmd, 4);
 				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
 				memcpy(bytesToWrite + 4 + 8, &timestamp->mHostTime, 8);
-				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
+				memcpy(bytesToWrite + 4 + 8 + 8, &frameOffset, 4);
+				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 + 4);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
@@ -443,11 +445,13 @@ namespace {
 
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		if(!decoderState) {
+			uint32_t frameOffset = framesRead;
 			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio;
-			uint8_t bytesToWrite [4 + 8];
+			uint8_t bytesToWrite [4 + 8 + 4];
 			memcpy(bytesToWrite, &cmd, 4);
 			memcpy(bytesToWrite + 4, &timestamp->mHostTime, 8);
-			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8);
+			memcpy(bytesToWrite + 4 + 8, &frameOffset, 4);
+			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 4);
 			dispatch_semaphore_signal(self->_notifierSemaphore);
 		}
 
@@ -1063,10 +1067,12 @@ namespace {
 
 			switch(cmd) {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8 + 4)) {
 						uint64_t sequenceNumber, hostTime;
+						uint32_t frameOffset;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&frameOffset, 4);
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize, sequenceNumber);
 						if(!decoderState) {
@@ -1075,6 +1081,14 @@ namespace {
 						}
 
 						os_log_debug(_audioPlayerNodeLog, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
+						if(frameOffset)
+							hostTime += (uint64_t)((frameOffset * NSEC_PER_SEC) / self->_audioRingBuffer.GetFormat().mSampleRate);
+
+						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
+							dispatch_sync(_notificationQueue, ^{
+								[_delegate audioPlayerNode:self renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
+							});
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingStarted:)]) {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
@@ -1150,9 +1164,14 @@ namespace {
 				case eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
 						uint64_t hostTime;
+						uint32_t frameOffset;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
+						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&frameOffset, 4);
 
 						os_log_debug(_audioPlayerNodeLog, "Out of audio");
+
+						if(frameOffset)
+							hostTime += (uint64_t)((frameOffset * NSEC_PER_SEC) / self->_audioRingBuffer.GetFormat().mSampleRate);
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNodeOutOfAudio:)]) {
 //							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
