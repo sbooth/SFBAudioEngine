@@ -1027,6 +1027,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"SimplePlayer-iOS/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
+				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "SimplePlayer-iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
@@ -1055,6 +1056,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"SimplePlayer-iOS/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
+				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "SimplePlayer-iOS/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
@@ -1083,6 +1085,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/iphoneos/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1092,10 +1095,7 @@
 					"@loader_path/Frameworks",
 					"@loader_path/Libraries",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(SRCROOT)/Libraries/iphoneos/lib",
-					"$(PROJECT_DIR)/Libraries/iphoneos/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/iphoneos/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
@@ -1127,6 +1127,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Libraries/iphoneos/include";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1136,10 +1137,7 @@
 					"@loader_path/Frameworks",
 					"@loader_path/Libraries",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(SRCROOT)/Libraries/iphoneos/lib",
-					"$(PROJECT_DIR)/Libraries/iphoneos/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/iphoneos/lib";
 				OTHER_LDFLAGS = (
 					"-ldumb",
 					"-lFLAC",
