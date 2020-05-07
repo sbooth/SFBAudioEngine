@@ -123,6 +123,7 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(id<SFBPCMDecoding>)decoder;
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayerNode(_:renderingWillStart:at:));
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNodeOutOfAudio:(SFBAudioPlayerNode *)audioPlayerNode NS_SWIFT_NAME(audioPlayerNodeOutOfAudio(_:));
