@@ -118,7 +118,7 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 #pragma mark - SFBAudioPlayerNodeDelegate
 
-NS_SWIFT_NAME(AudioPlayerNodeDelegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
+NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NSObject>
 @optional
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode decodingComplete:(id<SFBPCMDecoding>)decoder;
