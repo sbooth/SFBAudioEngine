@@ -9,10 +9,8 @@
 #import <queue>
 #import <thread>
 
-#import <os/log.h>
-#if DEBUG
 #import <mach/mach_time.h>
-#endif
+#import <os/log.h>
 
 #import "SFBAudioPlayerNode.h"
 
