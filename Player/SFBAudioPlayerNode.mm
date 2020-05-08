@@ -46,7 +46,7 @@ namespace {
 	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2,
-		eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio			= 3
+		eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio			= 3
 	};
 
 #pragma mark - Thread entry points
@@ -480,11 +480,11 @@ namespace {
 		}
 
 		// ========================================
-		// 8. If there are no active decoders schedule the out of audio notification
+		// 8. If there are no active decoders schedule the end of audio notification
 
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		if(!decoderState) {
-			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio;
+			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio;
 			const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / self->_audioRingBuffer.GetFormat().mSampleRate);
 
 			uint8_t bytesToWrite [4 + 8];
@@ -1177,24 +1177,24 @@ namespace {
 						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
 					break;
 
-				case eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio:
+				case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
 						uint64_t hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
-						os_log_debug(_audioPlayerNodeLog, "Player will run out of audio in %.2f msec", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
+						os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
 
-						if([_delegate respondsToSelector:@selector(audioPlayerNodeOutOfAudio:)]) {
+						if([_delegate respondsToSelector:@selector(audioPlayerNodeEndOfAudio:)]) {
 							dispatch_time_t notificationTime = hostTime;
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
-									os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
+									os_log_debug(_audioPlayerNodeLog, "End of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-								[self->_delegate audioPlayerNodeOutOfAudio:self];
+								[self->_delegate audioPlayerNodeEndOfAudio:self];
 							});
 						}
 					}
