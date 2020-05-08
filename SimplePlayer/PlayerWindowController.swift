@@ -223,7 +223,7 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 		}
 	}
 
-	func audioPlayerOutOfAudio(_ audioPlayer: AudioPlayer) {
+	func audioPlayerEndOfAudio(_ audioPlayer: AudioPlayer) {
 		self.player.stop()
 	}
 
