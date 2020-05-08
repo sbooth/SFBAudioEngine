@@ -147,7 +147,7 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingStarted:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
-- (void)audioPlayerOutOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerOutOfAudio(_:));
+- (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
 @end
 
 NS_ASSUME_NONNULL_END

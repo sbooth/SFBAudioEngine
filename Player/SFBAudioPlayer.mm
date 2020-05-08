@@ -666,7 +666,7 @@ namespace {
 		[_delegate audioPlayer:self renderingComplete:decoder];
 }
 
-- (void)audioPlayerNodeOutOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
+- (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
 {
 	// Dequeue the next decoder
 	__block id <SFBPCMDecoding> decoder = nil;
@@ -707,8 +707,8 @@ namespace {
 			}
 		}
 	}
-	else if([_delegate respondsToSelector:@selector(audioPlayerOutOfAudio:)])
-		[_delegate audioPlayerOutOfAudio:self];
+	else if([_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
+		[_delegate audioPlayerEndOfAudio:self];
 }
 
 @end

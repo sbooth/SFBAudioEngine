@@ -46,7 +46,7 @@ namespace {
 	enum eAudioPlayerNodeRenderEventRingBufferCommands : uint32_t {
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted	= 1,
 		eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete	= 2,
-		eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio			= 3
+		eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio			= 3
 	};
 
 #pragma mark - Thread entry points
@@ -274,12 +274,48 @@ namespace {
 		return nullptr;
 	}
 
-#if DEBUG
-	inline uint64_t ConvertHostTimeToNanos(uint64_t t)
+#pragma mark - Time Utilities
+
+	// These functions are probably unnecessarily complicated because
+	// on Intel processors mach_timebase_info is always 1/1. However,
+	// on PPC it is either 1000000000/33333335 or 1000000000/25000000 so
+	// naively multiplying by .numer then dividing by .denom may result in
+	// integer overflow. To avoid the possibility double is used here, but
+	// __int128 would be an alternative.
+
+	double HostTicksPerNano()
 	{
-		static mach_timebase_info_data_t timebase_info;
-		mach_timebase_info(&timebase_info);
-		return (t * timebase_info.numer) / timebase_info.denom;
+		mach_timebase_info_data_t timebase_info;
+		auto result = mach_timebase_info(&timebase_info);
+		assert(result == KERN_SUCCESS);
+		return (double)timebase_info.numer / (double)timebase_info.denom;
+	}
+
+	double NanosPerHostTick()
+	{
+		mach_timebase_info_data_t timebase_info;
+		auto result = mach_timebase_info(&timebase_info);
+		assert(result == KERN_SUCCESS);
+		return (double)timebase_info.denom / (double)timebase_info.numer;
+	}
+
+	const double kHostTicksPerNano = HostTicksPerNano();
+	const double kNanosPerHostTick = NanosPerHostTick();
+
+	inline uint64_t ConvertNanosToHostTicks(double ns)
+	{
+		return (uint64_t)(ns * kNanosPerHostTick);
+	}
+
+	inline uint64_t ConvertSecondsToHostTicks(double s)
+	{
+		return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
+	}
+
+#if DEBUG
+	inline double ConvertHostTicksToNanos(uint64_t t)
+	{
+		return (double)t * kHostTicksPerNano;
 	}
 #endif
 
@@ -403,55 +439,58 @@ namespace {
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
-				uint32_t frameOffset = framesRead - framesRemainingToDistribute;
 				// Schedule the rendering started notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
-				uint8_t bytesToWrite [4 + 8 + 8 + 4];
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.GetFormat().mSampleRate);
+
+				uint8_t bytesToWrite [4 + 8 + 8];
 				memcpy(bytesToWrite, &cmd, 4);
 				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-				memcpy(bytesToWrite + 4 + 8, &timestamp->mHostTime, 8);
-				memcpy(bytesToWrite + 4 + 8 + 8, &frameOffset, 4);
-				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 + 4);
+				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
+				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 );
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
 			}
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
+			framesRemainingToDistribute -= framesFromThisDecoder;
 
 			if((decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
 				// Schedule the rendering complete notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete;
+				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
+				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.GetFormat().mSampleRate);
+
 				uint8_t bytesToWrite [4 + 8 + 8];
 				memcpy(bytesToWrite, &cmd, 4);
 				memcpy(bytesToWrite + 4, &decoderState->mSequenceNumber, 8);
-				memcpy(bytesToWrite + 4 + 8, &timestamp->mHostTime, 8);
+				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
 
 				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingCompleteFlag);
 			}
 
-			framesRemainingToDistribute -= framesFromThisDecoder;
-
-			if(!framesRemainingToDistribute)
+			if(framesRemainingToDistribute == 0)
 				break;
 
 			decoderState = GetActiveDecoderStateFollowingSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize, decoderState->mSequenceNumber);
 		}
 
 		// ========================================
-		// 8. If there are no active decoders schedule the out of audio notification
+		// 8. If there are no active decoders schedule the end of audio notification
 
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		if(!decoderState) {
-			uint32_t frameOffset = framesRead;
-			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio;
-			uint8_t bytesToWrite [4 + 8 + 4];
+			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio;
+			const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / self->_audioRingBuffer.GetFormat().mSampleRate);
+
+			uint8_t bytesToWrite [4 + 8];
 			memcpy(bytesToWrite, &cmd, 4);
-			memcpy(bytesToWrite + 4, &timestamp->mHostTime, 8);
-			memcpy(bytesToWrite + 4 + 8, &frameOffset, 4);
-			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 4);
+			memcpy(bytesToWrite + 4, &hostTime, 8);
+			self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8);
 			dispatch_semaphore_signal(self->_notifierSemaphore);
 		}
 
@@ -1067,12 +1106,10 @@ namespace {
 
 			switch(cmd) {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8 + 4)) {
+					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
-						uint32_t frameOffset;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
-						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&frameOffset, 4);
 
 						auto decoderState = GetDecoderStateWithSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize, sequenceNumber);
 						if(!decoderState) {
@@ -1080,10 +1117,7 @@ namespace {
 							break;
 						}
 
-						os_log_debug(_audioPlayerNodeLog, "Rendering started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-
-						if(frameOffset)
-							hostTime += (uint64_t)((frameOffset * NSEC_PER_SEC) / self->_audioRingBuffer.GetFormat().mSampleRate);
+						os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
 							dispatch_sync(_notificationQueue, ^{
@@ -1091,19 +1125,10 @@ namespace {
 							});
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingStarted:)]) {
-//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
-#if DEBUG
-							{
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
-								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering started notification for \"%{public}@\" for .now() + %.2f msec", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
-							}
-#endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_MSEC;
+								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
 									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
@@ -1129,20 +1154,13 @@ namespace {
 							break;
 						}
 
+						os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
+
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingComplete:)]) {
-//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
 							dispatch_time_t notificationTime = hostTime;
-#if DEBUG
-							{
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
-								os_log_debug(_audioPlayerNodeLog, "Scheduling rendering complete notification for \"%{public}@\" for .now() + %.2f msec", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta);
-							}
-#endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
 									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
@@ -1152,8 +1170,6 @@ namespace {
 							});
 						}
 
-						os_log_debug(_audioPlayerNodeLog, "Rendering complete for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
-
 						// The last action performed with a decoder that has completed rendering is this notification
 						decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
 					}
@@ -1161,38 +1177,24 @@ namespace {
 						os_log_error(_audioPlayerNodeLog, "Ring buffer command data missing");
 					break;
 
-				case eAudioPlayerNodeRenderEventRingBufferCommandOutOfAudio:
+				case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
 					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
 						uint64_t hostTime;
-						uint32_t frameOffset;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
-						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&frameOffset, 4);
 
-						os_log_debug(_audioPlayerNodeLog, "Out of audio");
+						os_log_debug(_audioPlayerNodeLog, "End of audio in %.2f msec", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC);
 
-						if(frameOffset)
-							hostTime += (uint64_t)((frameOffset * NSEC_PER_SEC) / self->_audioRingBuffer.GetFormat().mSampleRate);
-
-						if([_delegate respondsToSelector:@selector(audioPlayerNodeOutOfAudio:)]) {
-//							dispatch_time_t notificationTime = dispatch_time(hostTime, (int64_t)(self.outputPresentationLatency * NSEC_PER_SEC));
+						if([_delegate respondsToSelector:@selector(audioPlayerNodeEndOfAudio:)]) {
 							dispatch_time_t notificationTime = hostTime;
-#if DEBUG
-							{
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(notificationTime) - (double)ConvertHostTimeToNanos(absTime)) / NSEC_PER_MSEC;
-								os_log_debug(_audioPlayerNodeLog, "Scheduling out of audio notification for .now() + %.2f msec", delta);
-							}
-#endif
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
-								uint64_t absTime = mach_absolute_time();
-								double delta = ((double)ConvertHostTimeToNanos(absTime) - (double)ConvertHostTimeToNanos(notificationTime)) / NSEC_PER_SEC;
+								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
-									os_log_debug(_audioPlayerNodeLog, "Out of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
+									os_log_debug(_audioPlayerNodeLog, "End of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
 #endif
 
-								[self->_delegate audioPlayerNodeOutOfAudio:self];
+								[self->_delegate audioPlayerNodeEndOfAudio:self];
 							});
 						}
 					}
