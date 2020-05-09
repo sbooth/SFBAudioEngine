@@ -255,8 +255,7 @@ static const struct ReplayGainFilter ReplayGainFilters [] = {
 
 /* When calling this procedure, make sure that ip[-order] and op[-order] point to real data! */
 
-static void
-Filter(const float *input, float *output, size_t nSamples, const float *a, const float *b, size_t order, uint32_t downsample)
+static void Filter(const float *input, float *output, size_t nSamples, const float *a, const float *b, size_t order, uint32_t downsample)
 {
 	const float *input_head = input;
 	float *output_head = output;
@@ -286,7 +285,6 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	if(elems == 0)
 		return SFBReplayGainAnalyzerInsufficientSamples;
 
-//	int32_t upper = (int32_t)(elems / 20 + ((elems % 20) ? 1 : 0));
 	int32_t upper = (int32_t)ceil(elems * (1. - RMS_PERCENTILE));
 	size_t i = len;
 	while(i-- > 0) {
@@ -366,6 +364,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	if((self = [super init])) {
 		_trackPeak = -FLT_MAX;
 		_albumPeak = -FLT_MAX;
+		_linpre = _linprebuf + MAX_ORDER;
+		_rinpre = _rinprebuf + MAX_ORDER;
 	}
 	return self;
 }
@@ -606,9 +606,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	for(int i = 0; i < MAX_ORDER; ++i)
 		_linprebuf[i] = _lstepbuf[i] = _loutbuf[i] = _rinprebuf[i] = _rstepbuf[i] = _routbuf[i] = 0;
 
-	_lsum				= 0.;
-	_rsum				= 0.;
-	_totsamp			= 0;
+	_lsum = _rsum = 0;
+	_totsamp = 0;
 }
 
 - (void)setupForAnalysisAtSampleRate:(NSInteger)sampleRate
@@ -633,18 +632,14 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	_loutbuf  = reallocf(_loutbuf,  sizeof(float) * (_sampleWindow + MAX_ORDER));
 	_routbuf  = reallocf(_routbuf,  sizeof(float) * (_sampleWindow + MAX_ORDER));
 
+	_lstep = _lstepbuf + MAX_ORDER;
+	_rstep = _rstepbuf + MAX_ORDER;
+	_lout  = _loutbuf  + MAX_ORDER;
+	_rout  = _routbuf  + MAX_ORDER;
+
 	[self resetState];
 
 	memset(_A, 0, sizeof(_A));
-
-	_linpre = _linprebuf + MAX_ORDER;
-	_rinpre = _rinprebuf + MAX_ORDER;
-	_lstep  = _lstepbuf  + MAX_ORDER;
-	_rstep  = _rstepbuf  + MAX_ORDER;
-	_lout   = _loutbuf   + MAX_ORDER;
-	_rout   = _routbuf   + MAX_ORDER;
-
-	memset(_B, 0, sizeof(_B));
 }
 
 - (BOOL)analyzeLeftSamples:(const float *)left_samples rightSamples:(const float *)right_samples sampleCount:(size_t)num_samples isStereo:(BOOL)stereo
