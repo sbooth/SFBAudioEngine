@@ -99,6 +99,7 @@
 		3261E6992461D8F500820613 /* TrackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3261E6982461D8F500820613 /* TrackView.swift */; };
 		3261E69B2461E0F400820613 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3261E69A2461E0F400820613 /* ContentView.swift */; };
 		3261E69D2461F15C00820613 /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3261E69C2461F15C00820613 /* Track.swift */; };
+		3275D99924670DD10055308E /* SFBReplayGainAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3275D99824670DD10055308E /* SFBReplayGainAnalyzer.swift */; };
 		327E4A58245F587A00EF652D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327E4A57245F587A00EF652D /* AppDelegate.swift */; };
 		327E4A5A245F587A00EF652D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327E4A59245F587A00EF652D /* SceneDelegate.swift */; };
 		327E4A5C245F587A00EF652D /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327E4A5B245F587A00EF652D /* PlayerView.swift */; };
@@ -306,6 +307,7 @@
 		3268F9122456F9E6006A5911 /* SFBAudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioDevice.h; sourceTree = "<group>"; };
 		3268F9132456F9E6006A5911 /* SFBAudioOutputDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioOutputDevice.h; sourceTree = "<group>"; };
 		3268F9142456F9E6006A5911 /* SFBAudioDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioDevice.swift; sourceTree = "<group>"; };
+		3275D99824670DD10055308E /* SFBReplayGainAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBReplayGainAnalyzer.swift; sourceTree = "<group>"; };
 		327E4A55245F587A00EF652D /* SimplePlayer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SimplePlayer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		327E4A57245F587A00EF652D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		327E4A59245F587A00EF652D /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -527,6 +529,7 @@
 			children = (
 				3268F8B72456F984006A5911 /* SFBReplayGainAnalyzer.h */,
 				3268F8B62456F984006A5911 /* SFBReplayGainAnalyzer.m */,
+				3275D99824670DD10055308E /* SFBReplayGainAnalyzer.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -950,6 +953,7 @@
 				321DB8172462FCCB004D66AF /* SFBMusepackDecoder.m in Sources */,
 				325393E6246191480098FDBD /* SFBAudioMetadata+TagLibID3v2Tag.mm in Sources */,
 				327E4AEF245F5AAF00EF652D /* SFBAttachedPicture.m in Sources */,
+				3275D99924670DD10055308E /* SFBReplayGainAnalyzer.swift in Sources */,
 				32E8A568245F3EB200E8DC00 /* SFBAudioDecoder.m in Sources */,
 				327E4AEB245F5AAF00EF652D /* SFBAudioProperties.m in Sources */,
 				325393E2246191480098FDBD /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,

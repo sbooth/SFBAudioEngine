@@ -160,6 +160,7 @@
 		326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09B324266158008BB695 /* SFBWAVEFile.mm */; };
 		326D3CCE242D2A21002AEC52 /* SFBWavPackFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859BD24241D780080B500 /* SFBWavPackFile.h */; };
 		326D3CCF242D2A21002AEC52 /* SFBWavPackFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 322859BC24241D780080B500 /* SFBWavPackFile.mm */; };
+		3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */; };
 		3291CC2A14F5D03C00B34DA4 /* SFBAttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; };
 		3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -331,6 +332,7 @@
 		326D3C97242CF79C002AEC52 /* SFBAudioFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioFile.h; sourceTree = "<group>"; };
 		326D3C9F242D0291002AEC52 /* SFBAudioFile+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioFile+Internal.h"; sourceTree = "<group>"; };
 		326D3CAA242D1D3C002AEC52 /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
+		3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBReplayGainAnalyzer.swift; sourceTree = "<group>"; };
 		3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAttachedPicture.h; sourceTree = "<group>"; };
 		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = Libraries/macosx/lib/libsndfile.1.dylib; sourceTree = "<group>"; };
 		3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBLoopableRegionDecoder.h; sourceTree = "<group>"; };
@@ -590,6 +592,7 @@
 			children = (
 				3268F8632455B527006A5911 /* SFBReplayGainAnalyzer.h */,
 				3268F8622455B527006A5911 /* SFBReplayGainAnalyzer.m */,
+				3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */,
 			);
 			path = Analysis;
 			sourceTree = "<group>";
@@ -981,6 +984,7 @@
 				325A5E08243F8D8B003138D5 /* SFBInputSource.m in Sources */,
 				3268F8522455B3AF006A5911 /* AudioRingBuffer.cpp in Sources */,
 				3268F85E2455B451006A5911 /* AVAudioPCMBuffer+SFBBufferUtilities.m in Sources */,
+				3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */,
 				326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */,
 				325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */,
 				32BC09AD2426536D008BB695 /* SFBAudioMetadata+TagLibXiphComment.mm in Sources */,

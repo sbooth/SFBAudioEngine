@@ -29,7 +29,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// @param urls The URLs to analyze
 /// @param error An optional pointer to an \c NSError  to receive error information
 /// @return A dictionary of gain and peak information, or \c nil on error
-+ (nullable NSDictionary<NSString *, id> *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
++ (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Analyze the given URL's replay gain
 ///
@@ -37,15 +37,11 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// resampled to an even multiple sample rate
 /// @param url The URL to analyze
 /// @param error An optional pointer to an \c NSError  to receive error information
-/// @return \c YES on success, \c NO otherwise
-- (BOOL)analyzeTrack:(NSURL *)url error:(NSError **)error;
+/// @return A dictionary containing the track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
+- (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-
-/// The track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
-@property (nonatomic, nullable, readonly) NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *>* trackGainAndPeakSample;
-
-/// The album gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
-@property (nonatomic, nullable, readonly) NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *>* albumGainAndPeakSample;
+/// Returns the album gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
+- (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)albumGainAndPeakSampleReturningError:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
@@ -53,8 +49,9 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorDomain);
 
 /// Possible \c NSError  error codes used by \c SFBReplayGainAnalyzer
-typedef NS_ENUM(NSUInteger, SFBReplayGainAnalyzerErrorCode) {
+typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCode) {
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,	///< File format not supported
+	SFBReplayGainAnalyzerErrorCodeInsufficientSamples			= 1,	///< Insufficient samples in file for analysis
 } NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorCode);
 
 NS_ASSUME_NONNULL_END
