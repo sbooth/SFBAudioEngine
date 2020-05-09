@@ -29,7 +29,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// @param urls The URLs to analyze
 /// @param error An optional pointer to an \c NSError  to receive error information
 /// @return A dictionary of gain and peak information, or \c nil on error
-+ (nullable NSDictionary<NSString *, id> *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
++ (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error;
 
 /// Analyze the given URL's replay gain
 ///
