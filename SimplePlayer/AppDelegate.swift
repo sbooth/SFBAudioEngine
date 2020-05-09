@@ -67,7 +67,7 @@ class AppDelegate: NSObject {
 		if(openPanel.runModal() == .OK) {
 			do {
 				let rg = try ReplayGainAnalyzer.analyzeAlbum(openPanel.urls)
-				os_log("%{public}@", rg.description)
+				os_log("Album gain %.2f dB, peak %.8f; Tracks: [%{public}@]", rg.0.gain, rg.0.peak, rg.1.map({ (url, replayGain) in String(format: "\"%@\" gain %.2f dB, peak %.8f", FileManager.default.displayName(atPath: url.lastPathComponent), replayGain.gain, replayGain.peak) }).joined(separator: ", "))
 				let alert = NSAlert()
 				alert.messageText = "Replay Gain Analysis Complete"
 				alert.informativeText = "Check log for details."
