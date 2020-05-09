@@ -344,18 +344,21 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 + (NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error
 {
-	SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
+
+	SFBReplayGainAnalyzer *analyzer = [[SFBReplayGainAnalyzer alloc] init];
 	for(NSURL *url in urls) {
-		if(![analyzer analyzeTrack:url error:error])
+		NSDictionary *replayGain = [analyzer analyzeTrack:url error:error];
+		if(!replayGain)
 			return nil;
-		result[url] = analyzer.trackGainAndPeakSample;
+		result[url] = replayGain;
 	}
 
-	NSDictionary *albumGainAndPeakSample = analyzer.albumGainAndPeakSample;
-	if(albumGainAndPeakSample)
-		[result addEntriesFromDictionary:albumGainAndPeakSample];
+	NSDictionary *albumGainAndPeakSample = [analyzer albumGainAndPeakSampleReturningError:error];
+	if(!albumGainAndPeakSample)
+		return nil;
 
+	[result addEntriesFromDictionary:albumGainAndPeakSample];
 	return [result copy];
 }
 
@@ -378,13 +381,13 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	free(_routbuf);
 }
 
-- (BOOL)analyzeTrack:(NSURL *)url error:(NSError **)error
+- (NSDictionary *)analyzeTrack:(NSURL *)url error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder || ![decoder openReturningError:error])
-		return NO;
+		return nil;
 
 	const AudioStreamBasicDescription *inputFormat = decoder.processingFormat.streamDescription;
 
@@ -400,7 +403,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 											  url:url
 									failureReason:NSLocalizedString(@"Unsupported sample rate", @"")
 							   recoverySuggestion:NSLocalizedString(@"Only sample rates of 8.0 KHz, 11.025 KHz, 12.0 KHz, 16.0 KHz, 22.05 KHz, 24.0 KHz, 32.0 KHz, 44.1 KHz, 48 KHz and multiples are supported.", @"")];
-		return NO;
+		return nil;
 	}
 
 	NSInteger replayGainSampleRate = [SFBReplayGainAnalyzer bestReplayGainSampleRateForSampleRate:decoderSampleRate];
@@ -413,7 +416,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 											  url:url
 									failureReason:NSLocalizedString(@"Unsupported number of channels", @"")
 							   recoverySuggestion:NSLocalizedString(@"Only mono and stereo files supported.", @"")];
-		return NO;
+		return nil;
 	}
 
 	AVAudioFormat *outputFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:replayGainSampleRate channels:inputFormat->mChannelsPerFrame interleaved:NO];
@@ -422,8 +425,16 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	[self setupForAnalysisAtSampleRate:replayGainSampleRate];
 
 	AVAudioConverter *converter = [[AVAudioConverter alloc] initFromFormat:decoder.processingFormat toFormat:outputFormat];
-	if(!converter)
-		return NO;
+	if(!converter) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
+					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” is not supported.", @"")
+											  url:url
+									failureReason:NSLocalizedString(@"Unsupported file format", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's format is not supported for replay gain analysis.", @"")];
+		return nil;
+	}
 
 	AVAudioPCMBuffer *outputBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.outputFormat frameCapacity:BUFFER_SIZE_FRAMES];
 	AVAudioPCMBuffer *decodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:converter.inputFormat frameCapacity:BUFFER_SIZE_FRAMES];
@@ -448,7 +459,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 		if(status == AVAudioConverterOutputStatus_Error) {
 			if(error)
 				*error = err;
-			return NO;
+			return nil;
 		}
 		else if(status == AVAudioConverterOutputStatus_EndOfStream)
 			break;
@@ -478,11 +489,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 	_albumPeak = SFB_maxf(_albumPeak, _trackPeak);
 
-	return YES;
-}
-
-- (NSDictionary *)trackGainAndPeakSample
-{
+	// Calculate track RG
 	float gain = AnalyzeResult(_A, sizeof(_A) / sizeof(*_A));
 
 	for(uint32_t i = 0; i < sizeof(_A) / sizeof(*_A); ++i) {
@@ -495,21 +502,37 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	float peak = _trackPeak;
 	_trackPeak = 0;
 
-	if(gain == SFBReplayGainAnalyzerInsufficientSamples)
+	if(gain == SFBReplayGainAnalyzerInsufficientSamples) {
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+											 code:SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported
+					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” does not contain sufficient audio for analysis.", @"")
+											  url:url
+									failureReason:NSLocalizedString(@"Insufficient audio samples", @"")
+							   recoverySuggestion:NSLocalizedString(@"The audio is too short for replay gain analysis.", @"")];
 		return nil;
+	}
 
 	return @{ SFBReplayGainAnalyzerGainKey: @(gain), SFBReplayGainAnalyzerPeakKey: @(peak) };
 }
 
-- (NSDictionary *)albumGainAndPeakSample
+- (NSDictionary *)albumGainAndPeakSampleReturningError:(NSError **)error
 {
 	float gain = AnalyzeResult(_B, sizeof(_B) / sizeof(*_B));
 
 	float peak = _albumPeak;
 	_albumPeak = 0;
 
-	if(gain == SFBReplayGainAnalyzerInsufficientSamples)
+	if(gain == SFBReplayGainAnalyzerInsufficientSamples) {
+		if(error)
+			*error = [NSError errorWithDomain:SFBReplayGainAnalyzerErrorDomain
+										 code:SFBReplayGainAnalyzerErrorCodeInsufficientSamples
+									 userInfo:@{
+										 NSLocalizedDescriptionKey: NSLocalizedString(@"The files do not contain sufficient audio for analysis.", @""),
+										 NSLocalizedFailureReasonErrorKey:NSLocalizedString(@"Insufficient audio samples", @""),
+										 NSLocalizedRecoverySuggestionErrorKey:NSLocalizedString(@"The audio is too short for replay gain analysis.", @"")}];
 		return nil;
+	}
 
 	return @{ SFBReplayGainAnalyzerGainKey: @(gain), SFBReplayGainAnalyzerPeakKey: @(peak) };
 }
