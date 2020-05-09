@@ -142,7 +142,7 @@ struct ReplayGainFilter {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wimplicit-float-conversion"
 
-static const struct ReplayGainFilter ReplayGainFilters [] = {
+static const struct ReplayGainFilter sReplayGainFilters [] = {
 
 	{
 		48000, 0, /* ORIGINAL */
@@ -521,8 +521,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	static NSInteger sampleRate = 0;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		for(size_t i = 0; i < sizeof(ReplayGainFilters) / sizeof(ReplayGainFilters[0]); ++i)
-			sampleRate = SFB_max(sampleRate, ReplayGainFilters[i].rate);
+		for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
+			sampleRate = SFB_max(sampleRate, sReplayGainFilters[i].rate);
 	});
 
 	return sampleRate;
@@ -533,8 +533,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	static NSInteger sampleRate = 0;
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		for(size_t i = 0; i < sizeof(ReplayGainFilters) / sizeof(ReplayGainFilters[0]); ++i)
-			sampleRate = SFB_min(sampleRate, ReplayGainFilters[i].rate);
+		for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
+			sampleRate = SFB_min(sampleRate, sReplayGainFilters[i].rate);
 	});
 
 	return sampleRate;
@@ -542,8 +542,8 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 + (BOOL)sampleRateIsSupported:(NSInteger)sampleRate
 {
-	for(size_t i = 0; i < sizeof(ReplayGainFilters) / sizeof(ReplayGainFilters[0]); ++i) {
-		if(ReplayGainFilters[i].rate == sampleRate)
+	for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
+		if(sReplayGainFilters[i].rate == sampleRate)
 			return YES;
 	}
 
@@ -588,9 +588,9 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 
 	// If not an even multiple of a supported rate just resample to the next lower supported rate
 	NSInteger nextLowerSampleRate = 0;
-	for(size_t i = 0; i < sizeof(ReplayGainFilters) / sizeof(ReplayGainFilters[0]); ++i) {
-		if(ReplayGainFilters[i].rate < sampleRate)
-			nextLowerSampleRate = SFB_max(nextLowerSampleRate, ReplayGainFilters[i].rate);
+	for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
+		if(sReplayGainFilters[i].rate < sampleRate)
+			nextLowerSampleRate = SFB_max(nextLowerSampleRate, sReplayGainFilters[i].rate);
 	}
 
 	if(nextLowerSampleRate)
@@ -615,9 +615,9 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	NSParameterAssert([SFBReplayGainAnalyzer sampleRateIsSupported:sampleRate]);
 
 	memset(&_filter, 0, sizeof(_filter));
-	for(size_t i = 0; i < sizeof(ReplayGainFilters) / sizeof(ReplayGainFilters[0]); ++i) {
-		if(ReplayGainFilters[i].rate == sampleRate) {
-			_filter = ReplayGainFilters[i];
+	for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
+		if(sReplayGainFilters[i].rate == sampleRate) {
+			_filter = sReplayGainFilters[i];
 			_filter.downsample = 1;
 			break;
 		}
