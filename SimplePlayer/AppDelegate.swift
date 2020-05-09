@@ -3,6 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
+import os.log
+
 import Cocoa
 
 @NSApplicationMain
@@ -53,6 +55,28 @@ class AppDelegate: NSObject {
 
 	@IBAction func openURLPanelCancelAction(_ sender: AnyObject?) {
 		openURLPanel.orderOut(sender)
+	}
+
+	@IBAction func analyzeFiles(_ sender: AnyObject?) {
+		let openPanel = NSOpenPanel()
+
+		openPanel.allowsMultipleSelection = true
+		openPanel.canChooseDirectories = false
+		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
+
+		if(openPanel.runModal() == .OK) {
+			do {
+				let rg = try ReplayGainAnalyzer.analyzeAlbum(openPanel.urls)
+				os_log("%{public}@", rg.description)
+				let alert = NSAlert()
+				alert.messageText = "Replay Gain Analysis Complete"
+				alert.informativeText = "Check log for details."
+				alert.runModal()
+			}
+			catch let error {
+				NSApp.presentError(error)
+			}
+		}
 	}
 }
 
