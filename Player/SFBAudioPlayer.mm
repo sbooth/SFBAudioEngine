@@ -246,7 +246,7 @@ namespace {
 	[self didChangeValueForKey:@"playbackState"];
 }
 
-- (BOOL)playPauseReturningError:(NSError **)error
+- (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
 	if(_playerNode.isPlaying) {
 		[self pause];
@@ -311,9 +311,9 @@ namespace {
 	return _playerNode.isReady;
 }
 
-- (id<SFBPCMDecoding>)decoder
+- (id<SFBPCMDecoding>)currentDecoder
 {
-	return _playerNode.decoder;
+	return _playerNode.currentDecoder;
 }
 
 #pragma mark - Playback Properties
