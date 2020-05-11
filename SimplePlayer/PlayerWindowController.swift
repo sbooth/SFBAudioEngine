@@ -64,7 +64,7 @@ class PlayerWindowController: NSWindowController {
 	}
 
 	@IBAction func playPause(_ sender: AnyObject?) {
-		try? player.playPause()
+		try? player.togglePlayPause()
 	}
 
 	@IBAction func seekForward(_ sender: AnyObject?) {
@@ -128,7 +128,7 @@ class PlayerWindowController: NSWindowController {
 
 	func updateWindow() {
 		// Nothing happening, reset the window
-		guard let url = player.decoder?.inputSource.url else {
+		guard let url = player.currentDecoder?.inputSource.url else {
 			window?.representedURL = nil
 			window?.title = ""
 

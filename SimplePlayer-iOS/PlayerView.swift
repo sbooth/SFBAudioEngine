@@ -82,7 +82,7 @@ struct PlayerView: View {
 						.disabled(self.currentPlaybackState == .stopped)
 
 						Button(action: {
-							try? self.player.playPause()
+							try? self.player.togglePlayPause()
 						}) {
 							ZStack {
 								Circle()
