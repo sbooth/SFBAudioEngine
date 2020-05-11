@@ -164,7 +164,7 @@ namespace {
 - (void)skipToNext
 {
 	if(!_playerNode.queueIsEmpty)
-		[_playerNode skipToNext];
+		[_playerNode cancelCurrentDecoder];
 	else {
 		__block id <SFBPCMDecoding> decoder = nil;
 		dispatch_sync(_queue, ^{

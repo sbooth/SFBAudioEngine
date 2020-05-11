@@ -67,16 +67,24 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - Player State
 
-@property (nonatomic, readonly) BOOL engineIsRunning; ///< Returns \c YES if the \c AVAudioEngine is running
-@property (nonatomic, readonly) BOOL playerNodeIsPlaying; ///< Returns \c YES if the \c SFBAudioPlayerNode is playing
+ /// Returns \c YES if the \c AVAudioEngine is running
+@property (nonatomic, readonly) BOOL engineIsRunning;
+/// Returns \c YES if the \c SFBAudioPlayerNode is playing
+@property (nonatomic, readonly) BOOL playerNodeIsPlaying;
 
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState; ///< Returns the current playback state
-@property (nonatomic, readonly) BOOL isPlaying; ///< Returns \c YES if \c engineIsRunning and \c playerNodeIsPlaying
-@property (nonatomic, readonly) BOOL isPaused; ///< Returns \c YES if \c engineIsRunning and \c !playerNodeIsPlaying
-@property (nonatomic, readonly) BOOL isStopped; ///< Returns \c NO if \c engineIsRunning
+/// Returns the current playback state
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackState playbackState;
+/// Returns \c YES if \c engineIsRunning and \c playerNodeIsPlaying
+@property (nonatomic, readonly) BOOL isPlaying;
+/// Returns \c YES if \c engineIsRunning and \c !playerNodeIsPlaying
+@property (nonatomic, readonly) BOOL isPaused;
+/// Returns \c NO if \c engineIsRunning
+@property (nonatomic, readonly) BOOL isStopped;
 
-@property (nonatomic, readonly) BOOL isReady; ///< Returns \c YES if a decoder is available to supply audio for the next render cycle
-@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder; ///< Returns the decoder supplying audio for the next render cycle or \c nil if none. @warning Do not change any properties of the returned object
+/// Returns \c YES if a decoder is available to supply audio for the next render cycle
+@property (nonatomic, readonly) BOOL isReady;
+/// Returns the decoder supplying audio for the next render cycle or \c nil if none. @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> decoder;
 
 #pragma mark - Playback Properties
 

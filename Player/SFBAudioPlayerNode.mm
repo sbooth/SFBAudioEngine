@@ -648,7 +648,7 @@ namespace {
 	return [self performEnqueue:decoder reset:NO error:error];
 }
 
-- (void)skipToNext
+- (void)cancelCurrentDecoder
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(decoderState) {
@@ -700,15 +700,15 @@ namespace {
 	_flags.fetch_and(~eAudioPlayerNodeFlagIsPlaying);
 }
 
-- (void)playPause
-{
-	_flags.fetch_xor(eAudioPlayerNodeFlagIsPlaying);
-}
-
 - (void)stop
 {
 	_flags.fetch_and(~eAudioPlayerNodeFlagIsPlaying);
 	[self reset];
+}
+
+- (void)togglePlayPause
+{
+	_flags.fetch_xor(eAudioPlayerNodeFlagIsPlaying);
 }
 
 #pragma mark - Player State
@@ -724,7 +724,7 @@ namespace {
 	return decoderState ? YES : NO;
 }
 
-- (id<SFBPCMDecoding>)decoder
+- (id<SFBPCMDecoding>)currentDecoder
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	return decoderState ? decoderState->mDecoder : nil;
