@@ -37,11 +37,10 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// An \c AVAudioSourceNode supporting gapless playback for PCM formats
 ///
 /// The output format of \c SFBAudioPlayerNode is specified at object initialization and cannot be changed. The output format must be
-/// a flavor of non-interleaved PCM audio.
+/// the standard format, deinterleaved native-endian 32-bit floating point PCM, at any sample rate with any number of channels.
 ///
 /// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding  (decoders) and supports audio at the same sample rate
-/// and with the same number of channels as the output format.
-/// \c SFBAudioPlayerNode supports seeking when supported by the decoder.
+/// and with the same number of channels as the output format. \c SFBAudioPlayerNode supports seeking when supported by the decoder.
 ///
 /// \c SFBAudioPlayerNode maintains a current decoder and a queue of pending decoders. The current decoder is the decoder
 /// that will supply the earliest audio frame in the next render cycle when playing. Pending decoders are automatically dequeued and become current when
@@ -66,8 +65,15 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
+/// Returns an initialized \c SFBAudioPlayerNode object for stereo audio at 44,100 Hz
+- (instancetype)init;
+/// Returns an initialized \c SFBAudioPlayerNode object for audio with a specified number of channels and sample rate
+/// @param sampleRate The sample rate supplied by the render block
+/// @param channels The number of channels supplied by the render block
+/// @return An initialized \c SFBAudioPlayerNode object or \c nil if memory or resource allocation failed
+- (instancetype)initWithSampleRate:(double)sampleRate channels:(AVAudioChannelCount)channels;
 /// Returns an initialized \c SFBAudioPlayerNode object
-/// @note \c format must be non-interleaved PCM
+/// @note \c format must be standard
 /// @param format The format supplied by the render block
 /// @return An initialized \c SFBAudioPlayerNode object or \c nil if memory or resource allocation failed
 - (instancetype)initWithFormat:(AVAudioFormat *)format NS_DESIGNATED_INITIALIZER;
@@ -80,6 +86,8 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 /// Returns the format supplied by this object's render block
 @property (nonatomic, readonly) AVAudioFormat * renderingFormat;
 /// Returns \c YES if audio with \c format can be played
+/// @param format A format to test for support
+/// @return \c YES if \c format has the same number of channels and sample rate as the rendering format
 - (BOOL)supportsFormat:(AVAudioFormat *)format;
 
 #pragma mark - Queue Management

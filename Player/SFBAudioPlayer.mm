@@ -514,17 +514,14 @@ namespace {
 
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
 {
-	// SFBAudioPlayerNode requires a non-interleaved output format
-	if(format.interleaved) {
-		format = [format nonInterleavedEquivalent];
+	// SFBAudioPlayerNode requires the standard format
+	if(!format.isStandard) {
+		format = [format standardEquivalent];
 		if(!format) {
-			os_log_error(_audioPlayerLog, "Unable to convert format %@ to non-interleaved", format);
+			os_log_error(_audioPlayerLog, "Unable to convert format to standard");
 			return;
 		}
 	}
-
-	if([format isEqual:_playerNode.renderingFormat] && !forceUpdate)
-		return;
 
 	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!playerNode) {

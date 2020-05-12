@@ -41,5 +41,15 @@
 	return [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:self.channelLayout];
 }
 
+- (nullable AVAudioFormat *)standardEquivalent
+{
+	if(self.isStandard)
+		return self;
+	else if(self.channelLayout)
+		return [[AVAudioFormat alloc] initStandardFormatWithSampleRate:self.sampleRate channelLayout:self.channelLayout];
+	else
+		return [[AVAudioFormat alloc] initStandardFormatWithSampleRate:self.sampleRate channels:self.channelCount];
+}
+
 @end
 
