@@ -23,7 +23,7 @@ struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition) SFBAudioPlayerNodePlaybac
 };
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
-/// Playback time information for \c SFBAudioPlayerNode 
+/// Playback time information for \c SFBAudioPlayerNode
 struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime) SFBAudioPlayerNodePlaybackTime {
 	/// The current time
 	NSTimeInterval currentTime NS_SWIFT_NAME(current);
@@ -67,10 +67,9 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
 
 /// Returns an initialized \c SFBAudioPlayerNode object
-///
 /// @note \c format must be non-interleaved PCM
-///
 /// @param format The format supplied by the render block
+/// @return An initialized \c SFBAudioPlayerNode object or \c nil if memory or resource allocation failed
 - (instancetype)initWithFormat:(AVAudioFormat *)format NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithRenderBlock:(AVAudioSourceNodeRenderBlock)block NS_UNAVAILABLE;
