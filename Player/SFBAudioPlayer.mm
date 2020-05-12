@@ -523,6 +523,9 @@ namespace {
 		}
 	}
 
+	if([format isEqual:_playerNode.renderingFormat] && !forceUpdate)
+		return;
+
 	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!playerNode) {
 		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
