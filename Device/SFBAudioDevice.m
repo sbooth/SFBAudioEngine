@@ -625,6 +625,21 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 #pragma mark - Device Property Observation
 
+- (void)whenSampleRateChangesPerformBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property
 {
 	return [self hasProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
@@ -644,21 +659,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	return (BOOL)AudioObjectHasProperty(_deviceID, &propertyAddress);
-}
-
-- (void)whenSampleRateChangesPerformBlock:(dispatch_block_t)block
-{
-	[self whenProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
-}
-
-- (void)whenDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
-{
-	[self whenProperty:kAudioDevicePropertyDataSources inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
-}
-
-- (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
-{
-	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
 - (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(dispatch_block_t)block

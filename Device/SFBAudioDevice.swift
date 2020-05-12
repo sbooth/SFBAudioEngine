@@ -6,6 +6,7 @@
 import Foundation
 
 extension AudioDevice {
+	/// Returns an array of available sample rates
 	public var availableSampleRates: [Double] {
 		let sampleRates = __availableSampleRates
 		return sampleRates.map { $0.doubleValue }
