@@ -350,10 +350,20 @@ namespace {
 
 @implementation SFBAudioPlayerNode
 
+- (instancetype)init
+{
+	return [self initWithSampleRate:44100 channels:2];
+}
+
+- (instancetype)initWithSampleRate:(double)sampleRate channels:(AVAudioChannelCount)channels
+{
+	return [self initWithFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:sampleRate channels:channels]];
+}
+
 - (instancetype)initWithFormat:(AVAudioFormat *)format
 {
 	NSParameterAssert(format != nil);
-	NSParameterAssert(!format.interleaved);
+	NSParameterAssert(format.isStandard);
 
 	AVAudioSourceNodeRenderBlock renderBlock = ^OSStatus(BOOL *isSilence, const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, AudioBufferList *outputData) {
 

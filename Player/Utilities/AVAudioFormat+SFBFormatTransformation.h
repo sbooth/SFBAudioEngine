@@ -10,6 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface AVAudioFormat (SFBFormatTransformation)
 - (nullable AVAudioFormat *)nonInterleavedEquivalent;
 - (nullable AVAudioFormat *)interleavedEquivalent;
+- (nullable AVAudioFormat *)standardEquivalent;
 @end
 
 NS_ASSUME_NONNULL_END
