@@ -24,7 +24,7 @@ namespace {
 		assert(x <= ((UINT32_MAX / 2) + 1));
 #endif
 
-		return 1 << (32 - __builtin_clz(x - 1));
+		return (uint32_t)1 << (32 - __builtin_clz(x - 1));
 	}
 
 }
