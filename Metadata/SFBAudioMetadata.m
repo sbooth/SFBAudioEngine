@@ -687,4 +687,41 @@ static id _sharedKeySet;
 		[self attachPicture:[[SFBAttachedPicture alloc] initWithDictionaryRepresentation:picture]];
 }
 
+#pragma mark - Dictionary-Like Interface
+
+- (id)objectForKey:(SFBAudioMetadataKey)key
+{
+	return [_metadata objectForKey:key];
+}
+
+- (void)setObject:(id)obj forKey:(SFBAudioMetadataKey)key
+{
+	[_metadata setObject:obj forKey:key];
+}
+
+- (void)removeObjectForKey:(SFBAudioMetadataKey)key
+{
+	[_metadata removeObjectForKey:key];
+}
+
+- (id)valueForKey:(SFBAudioMetadataKey)key
+{
+	return [_metadata valueForKey:key];
+}
+
+- (void)setValue:(nullable id)obj forKey:(SFBAudioMetadataKey)key
+{
+	[_metadata setValue:obj forKey:key];
+}
+
+- (nullable id)objectForKeyedSubscript:(SFBAudioMetadataKey)key
+{
+	return _metadata[key];
+}
+
+- (void)setObject:(nullable id)obj forKeyedSubscript:(SFBAudioMetadataKey)key
+{
+	_metadata[key] = obj;
+}
+
 @end

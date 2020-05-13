@@ -87,9 +87,28 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 	return [_properties objectForKey:SFBAudioPropertiesKeyBitrate];
 }
 
+#pragma mark - External Representation
+
 - (NSDictionary *)dictionaryRepresentation
 {
 	return _properties;
+}
+
+#pragma mark - Dictionary-Like Interface
+
+- (id)objectForKey:(SFBAudioPropertiesKey)key
+{
+	return [_properties objectForKey:key];
+}
+
+- (id)valueForKey:(SFBAudioPropertiesKey)key
+{
+	return [_properties valueForKey:key];
+}
+
+- (nullable id)objectForKeyedSubscript:(SFBAudioPropertiesKey)key
+{
+	return _properties[key];
 }
 
 @end
