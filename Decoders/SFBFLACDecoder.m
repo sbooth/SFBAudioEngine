@@ -388,53 +388,33 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 {
 	NSParameterAssert(decoder != NULL);
 	NSParameterAssert(frame != NULL);
-//	NSAssert(_frameBuffer.frameLength == 0, @"_frameBuffer not empty");
-	
+
 	const AudioBufferList *abl = _frameBuffer.audioBufferList;
 	if(abl->mNumberBuffers != frame->header.channels)
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-	const AudioStreamBasicDescription *format = _frameBuffer.format.streamDescription;
+	// FLAC hands us 32-bit signed integers with the samples low-aligned
+	uint32_t bytesPerFrame = (frame->header.bits_per_sample + 7) / 8;
+	if(bytesPerFrame != _frameBuffer.format.streamDescription->mBytesPerFrame)
+		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
-	// FLAC hands us 32-bit signed ints with the samples low-aligned; shift them to high alignment
-	uint32_t shift = (format->mFormatFlags & kAudioFormatFlagIsPacked) ? 0 : (8 * format->mBytesPerFrame) - format->mBitsPerChannel;
-
-	// Convert to native endian samples, high-aligned if necessary
-	switch(format->mBytesPerFrame) {
+	switch(bytesPerFrame) {
 		case 1: {
-			if(shift) {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					char *dst = (char *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (char)(buffer[channel][sample] << shift);
-				}
+			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+				int8_t *dst = (int8_t *)abl->mBuffers[channel].mData;
+				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+					*dst++ = (int8_t)buffer[channel][sample];
 			}
-			else {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					char *dst = (char *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (char)buffer[channel][sample];
-				}
-			}
-			
+
 			_frameBuffer.frameLength = frame->header.blocksize;
 			break;
 		}
 
 		case 2: {
-			if(shift) {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					short *dst = (short *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (short)(buffer[channel][sample] << shift);
-				}
-			}
-			else {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					short *dst = (short *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (short)buffer[channel][sample];
-				}
+			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+				int16_t *dst = (int16_t *)abl->mBuffers[channel].mData;
+				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+					*dst++ = (int16_t)buffer[channel][sample];
 			}
 
 			_frameBuffer.frameLength = frame->header.blocksize;
@@ -442,44 +422,13 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		}
 
 		case 3: {
-			if(shift) {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
-					FLAC__int32 value;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
-						value = buffer[channel][sample] << shift;
-#if __BIG_ENDIAN__
-						*dst++ = (unsigned char)((value >> 16) & 0xff);
-						*dst++ = (unsigned char)((value >> 8) & 0xff);
-						*dst++ = (unsigned char)(value & 0xff);
-#elif __LITTLE_ENDIAN__
-						*dst++ = (unsigned char)(value & 0xff);
-						*dst++ = (unsigned char)((value >> 8) & 0xff);
-						*dst++ = (unsigned char)((value >> 16) & 0xff);
-#else
-#  error Unknown OS byte order
-#endif
-					}
-				}
-			}
-			else {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					unsigned char *dst = (unsigned char *)abl->mBuffers[channel].mData;
-					FLAC__int32 value;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
-						value = buffer[channel][sample];
-#if __BIG_ENDIAN__
-						*dst++ = (unsigned char)((value >> 16) & 0xff);
-						*dst++ = (unsigned char)((value >> 8) & 0xff);
-						*dst++ = (unsigned char)(value & 0xff);
-#elif __LITTLE_ENDIAN__
-						*dst++ = (unsigned char)(value & 0xff);
-						*dst++ = (unsigned char)((value >> 8) & 0xff);
-						*dst++ = (unsigned char)((value >> 16) & 0xff);
-#else
-#  error Unknown OS byte order
-#endif
-					}
+			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+				uint8_t *dst = (uint8_t *)abl->mBuffers[channel].mData;
+				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample) {
+					uint32_t value = OSSwapHostToLittleInt32(buffer[channel][sample]);
+					*dst++ = (uint8_t)(value & 0xff);
+					*dst++ = (uint8_t)((value >> 8) & 0xff);
+					*dst++ = (uint8_t)((value >> 16) & 0xff);
 				}
 			}
 
@@ -488,19 +437,10 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		}
 
 		case 4: {
-			if(shift) {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					int *dst = (int *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (int)(buffer[channel][sample] << shift);
-				}
-			}
-			else {
-				for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
-					int *dst = (int *)abl->mBuffers[channel].mData;
-					for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
-						*dst++ = (int)buffer[channel][sample];
-				}
+			for(uint32_t channel = 0; channel < frame->header.channels; ++channel) {
+				int32_t *dst = (int32_t *)abl->mBuffers[channel].mData;
+				for(uint32_t sample = 0; sample < frame->header.blocksize; ++sample)
+					*dst++ = (int32_t)buffer[channel][sample];
 			}
 
 			_frameBuffer.frameLength = frame->header.blocksize;

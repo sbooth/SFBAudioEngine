@@ -320,7 +320,7 @@ static int can_seek_callback(void *id)
 		}
 		// Lossless files will be handed off as integers
 		else if(mode & MODE_LOSSLESS) {
-			// WavPack hands us 32-bit signed ints with the samples low-aligned
+			// WavPack hands us 32-bit signed integers with the samples low-aligned
 			int shift = 8 * (4 - WavpackGetBytesPerSample(_wpc));
 
 			int32_t * const *int32ChannelData = buffer.int32ChannelData;
@@ -328,12 +328,11 @@ static int can_seek_callback(void *id)
 
 			// Deinterleave the 32-bit samples, shifting to high alignment
 			if(shift) {
-				int32_t mask = (1 << (32 - shift)) - 1;
 				for(AVAudioChannelCount channel = 0; channel < channelCount; ++channel) {
 					const int32_t *input = _buffer + channel;
 					int32_t *output = int32ChannelData[channel] + buffer.frameLength;
 					for(uint32_t sample = 0; sample < samplesRead; ++sample) {
-						*output++ = (*input & mask) << shift;
+						*output++ = (int32_t)((uint32_t)*input << shift);
 						input += channelCount;
 					}
 				}
@@ -354,7 +353,7 @@ static int can_seek_callback(void *id)
 		}
 		// Convert lossy files to float
 		else {
-			float scaleFactor = (1 << ((WavpackGetBytesPerSample(_wpc) * 8) - 1));
+			float scaleFactor = ((uint32_t)1 << ((WavpackGetBytesPerSample(_wpc) * 8) - 1));
 
 			// Deinterleave the 32-bit samples and convert to float
 			float * const *floatChannelData = buffer.floatChannelData;
