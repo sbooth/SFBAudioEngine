@@ -66,9 +66,13 @@ SFBAttachedPictureKey const SFBAttachedPictureKeyDescription	= @"Description";
 
 - (NSDictionary *)dictionaryRepresentation
 {
-	return @{ SFBAttachedPictureKeyImageData: self.imageData,
-			  SFBAttachedPictureKeyType: @(self.pictureType),
-			  SFBAttachedPictureKeyDescription: self.pictureDescription };
+	if(self.pictureDescription)
+		return @{ SFBAttachedPictureKeyImageData: self.imageData,
+				  SFBAttachedPictureKeyType: @(self.pictureType),
+				  SFBAttachedPictureKeyDescription: self.pictureDescription };
+	else
+		return @{ SFBAttachedPictureKeyImageData: self.imageData,
+				  SFBAttachedPictureKeyType: @(self.pictureType) };
 }
 
 @end
