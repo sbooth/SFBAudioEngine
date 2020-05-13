@@ -1,7 +1,7 @@
 About SFBAudioEngine
 ====================
 
-SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS (10.15+) and iOS (13.0+) applications to easily play audio.  SFBAudioEngine supports the following formats:
+SFBAudioEngine is a set of Objective-C and Objective-C++ classes enabling macOS (10.15+) and iOS (13.0+) applications to easily play audio. SFBAudioEngine supports the following formats:
 
 * WAVE
 * AIFF

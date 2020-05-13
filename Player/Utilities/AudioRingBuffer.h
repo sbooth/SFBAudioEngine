@@ -94,7 +94,7 @@ namespace SFB {
 			/*! @brief Get the format of this \c BufferList */
 			inline const Format& GetFormat() const						{ return mFormat; }
 
-			/*! @brief  Get the number of frames available for reading */
+			/*! @brief Get the number of frames available for reading */
 			size_t GetFramesAvailableToRead() const;
 
 			/*! @brief Get the free space available for writing in frames */

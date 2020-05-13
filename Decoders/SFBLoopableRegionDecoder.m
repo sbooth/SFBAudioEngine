@@ -86,7 +86,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 - (AVAudioFormat *)processingFormat
 {
-	return  _decoder.processingFormat;
+	return _decoder.processingFormat;
 }
 
 - (AVAudioFormat *)sourceFormat

@@ -48,10 +48,10 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
 
-/// Returns the decoder's current packet  position or \c -1 if unknown
+/// Returns the decoder's current packet position or \c -1 if unknown
 @property (nonatomic, readonly) AVAudioFramePosition packetPosition NS_SWIFT_NAME(position);
 
-/// Returns the decoder's length in packets  or \c -1 if unknown
+/// Returns the decoder's length in packets or \c -1 if unknown
 @property (nonatomic, readonly) AVAudioFramePosition packetCount NS_SWIFT_NAME(count);
 
 #pragma mark - Decoding

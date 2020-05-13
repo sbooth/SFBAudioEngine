@@ -177,7 +177,7 @@ namespace {
 			return true;
 		}
 
-		/// Seeks to the desired frame  in the converter's *output* sample rate
+		/// Seeks to the desired frame in the converter's *output* sample rate
 		bool PerformSeek()
 		{
 			AVAudioFramePosition seekOffset = mFrameToSeek.load();

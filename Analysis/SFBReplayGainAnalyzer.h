@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString * SFBReplayGainAnalyzerKey NS_TYPED_ENUM NS_SWIFT_NAME(ReplayGainAnalyzer.Key);
 
-// Replay gain  dictionary keys
+// Replay gain dictionary keys
 /// The gain in dB (\c NSNumber)
 extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;
 /// The peak value normalized to [-1, 1) (\c NSNumber)
@@ -29,7 +29,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// The returned dictionary will contain the entries returned by \c -albumGainAndPeakSample and the
 /// results of \c -trackGainAndPeakSample keyed by URL
 /// @param urls The URLs to analyze
-/// @param error An optional pointer to an \c NSError  to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return A dictionary of gain and peak information, or \c nil on error
 + (nullable NSDictionary *)analyzeAlbum:(NSArray<NSURL *> *)urls error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
@@ -38,7 +38,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// If the URL's sample rate is not natively supported, the replay gain adjustment will be calculated using audio
 /// resampled to an even multiple sample rate
 /// @param url The URL to analyze
-/// @param error An optional pointer to an \c NSError  to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return A dictionary containing the track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error
 - (nullable NSDictionary<SFBReplayGainAnalyzerKey, NSNumber *> *)analyzeTrack:(NSURL *)url error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
@@ -50,7 +50,7 @@ NS_SWIFT_NAME(ReplayGainAnalyzer) @interface SFBReplayGainAnalyzer : NSObject
 /// The \c NSErrorDomain used by \c SFBReplayGainAnalyzer
 extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorDomain);
 
-/// Possible \c NSError  error codes used by \c SFBReplayGainAnalyzer
+/// Possible \c NSError error codes used by \c SFBReplayGainAnalyzer
 typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCode) {
 	/// File format not supported
 	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,

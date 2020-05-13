@@ -81,7 +81,7 @@ namespace SFB {
 		/*! @brief Get the capacity of this RingBuffer in bytes */
 		inline size_t GetCapacityBytes() const						{ return mCapacityBytes; }
 
-		/*! @brief  Get the number of bytes available for reading */
+		/*! @brief Get the number of bytes available for reading */
 		size_t GetBytesAvailableToRead() const;
 
 		/*! @brief Get the free space available for writing in bytes */

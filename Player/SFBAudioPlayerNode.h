@@ -39,7 +39,7 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// The output format of \c SFBAudioPlayerNode is specified at object initialization and cannot be changed. The output format must be
 /// the standard format, deinterleaved native-endian 32-bit floating point PCM, at any sample rate with any number of channels.
 ///
-/// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding  (decoders) and supports audio at the same sample rate
+/// \c SFBAudioPlayerNode is supplied by objects implementing \c SFBPCMDecoding (decoders) and supports audio at the same sample rate
 /// and with the same number of channels as the output format. \c SFBAudioPlayerNode supports seeking when supported by the decoder.
 ///
 /// \c SFBAudioPlayerNode maintains a current decoder and a queue of pending decoders. The current decoder is the decoder
@@ -51,10 +51,11 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 /// When playback is paused or insufficient audio is available the render block outputs silence.
 ///
 /// Since decoding and rendering are distinct operations performed in separate threads, a GCD timer on the background queue is
-/// used for garbage collection.  This is necessary because state data created in the decoding thread needs to live until
+/// used for garbage collection. This is necessary because state data created in the decoding thread needs to live until
 /// rendering is complete, which cannot occur until after decoding is complete.
 ///
 /// \c SFBAudioPlayerNode supports delegate-based callbacks for the following events:
+///
 ///  1. Decoding started
 ///  2. Decoding complete
 ///  3. Decoding canceled
@@ -220,7 +221,7 @@ NS_SWIFT_NAME(AudioPlayerNode.Delegate) @protocol SFBAudioPlayerNodeDelegate <NS
 /// The \c NSErrorDomain used by \c SFBAudioPlayerNode
 extern NSErrorDomain const SFBAudioPlayerNodeErrorDomain NS_SWIFT_NAME(AudioPlayerNode.ErrorDomain);
 
-/// Possible \c NSError  error codes used by \c SFBAudioPlayerNode
+/// Possible \c NSError error codes used by \c SFBAudioPlayerNode
 typedef NS_ERROR_ENUM(SFBAudioPlayerNodeErrorDomain, SFBAudioPlayerNodeErrorCode) {
 	/// Format not supported
 	SFBAudioPlayerNodeErrorFormatNotSupported	= 0

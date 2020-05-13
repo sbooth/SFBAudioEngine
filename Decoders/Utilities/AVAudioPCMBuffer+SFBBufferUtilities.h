@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface AVAudioPCMBuffer (SFBBufferUtilities)
 - (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer NS_SWIFT_NAME(append(_:));
-- (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength  NS_SWIFT_NAME(append(_:from:length:));
+- (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength NS_SWIFT_NAME(append(_:from:length:));
 
 - (AVAudioFrameCount)copyFromBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength NS_SWIFT_NAME(copy(_:from:length:));
 - (AVAudioFrameCount)copyFromBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength writeOffset:(AVAudioFrameCount)writeOffset NS_SWIFT_NAME(copy(_:from:length:at:));

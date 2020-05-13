@@ -57,7 +57,7 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses
 extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder.ErrorDomain);
 
-/// Possible \c NSError  error codes used by \c SFBAudioDecoder
+/// Possible \c NSError error codes used by \c SFBAudioDecoder
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
 	/// File not found
 	SFBAudioDecoderErrorCodeFileNotFound	= 0,
