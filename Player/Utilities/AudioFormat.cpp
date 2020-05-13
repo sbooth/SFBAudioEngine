@@ -163,9 +163,9 @@ SFB::CFString SFB::Audio::Format::Description() const
 		UInt32 sourceBitDepth = 0;
 		switch(mFormatFlags) {
 			case kAppleLosslessFormatFlag_16BitSourceData:		sourceBitDepth = 16;	break;
-    		case kAppleLosslessFormatFlag_20BitSourceData:		sourceBitDepth = 20;	break;
-    		case kAppleLosslessFormatFlag_24BitSourceData:		sourceBitDepth = 24;	break;
-    		case kAppleLosslessFormatFlag_32BitSourceData:		sourceBitDepth = 32;	break;
+			case kAppleLosslessFormatFlag_20BitSourceData:		sourceBitDepth = 20;	break;
+			case kAppleLosslessFormatFlag_24BitSourceData:		sourceBitDepth = 24;	break;
+			case kAppleLosslessFormatFlag_32BitSourceData:		sourceBitDepth = 32;	break;
 		}
 
 		if(0 != sourceBitDepth)

@@ -15,7 +15,7 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// Returns a set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/*!@brief Returns  a set containing the supported MIME types */
+/*!@brief Returns a set containing the supported MIME types */
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
@@ -56,10 +56,12 @@ NS_SWIFT_NAME(DSDDecoder) @interface SFBDSDDecoder : NSObject <SFBDSDDecoding>
 /// The \c NSErrorDomain used by \c SFBDSDDecoder and subclasses
 extern NSErrorDomain const SFBDSDDecoderErrorDomain NS_SWIFT_NAME(DSDDecoder.ErrorDomain);
 
-/// Possible \c NSError  error codes used by \c SFBDSDDecoder
+/// Possible \c NSError error codes used by \c SFBDSDDecoder
 typedef NS_ERROR_ENUM(SFBDSDDecoderErrorDomain, SFBDSDDecoderErrorCode) {
-	SFBDSDDecoderErrorCodeFileNotFound		= 0,		///< File not found
-	SFBDSDDecoderErrorCodeInputOutput		= 1			///< Input/output error
+	/// File not found
+	SFBDSDDecoderErrorCodeFileNotFound		= 0,
+	/// Input/output error
+	SFBDSDDecoderErrorCodeInputOutput		= 1
 } NS_SWIFT_NAME(DSDDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END

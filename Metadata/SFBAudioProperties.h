@@ -10,13 +10,20 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString * SFBAudioPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioProperties.Key);
 
 // Audio property dictionary keys
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;				///< The name of the audio format
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyTotalFrames;			///< The total number of audio frames (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelsPerFrame;		///< The number of channels (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel;			///< The number of bits per channel (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;				///< The sample rate (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;				///< The duration (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;				///< The audio bitrate (\c NSNumber)
+/// The name of the audio format
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
+/// The total number of audio frames (\c NSNumber
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyTotalFrames;
+/// The number of channels (\c NSNumber)
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelsPerFrame;
+/// The number of bits per channel (\c NSNumber
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel;
+/// The sample rate (\c NSNumber)
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate;
+/// The duration (\c NSNumber)
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration;
+/// The audio bitrate (\c NSNumber)
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate;
 
 /// Class providing information on basic audio properties
 NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopying>

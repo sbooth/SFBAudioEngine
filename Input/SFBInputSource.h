@@ -9,31 +9,33 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Bitmask values used in \c +inputSourceForURL:flags:error:
 typedef NS_OPTIONS(NSUInteger, SFBInputSourceFlags) {
-	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,	///< Files should be mapped in memory using \c mmap()
-	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1	///< Files should be fully loaded in memory
+	/// Files should be mapped in memory using \c mmap()
+	SFBInputSourceFlagsMemoryMapFiles			= 1 << 0,
+	/// Files should be fully loaded in memory
+	SFBInputSourceFlagsLoadFilesInMemory		= 1 << 1
 } NS_SWIFT_NAME(InputSource.Flags);
 
 /// An input source
 NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 
-/// Returns an intiailized  \c SFBInputSource object for the given URL or \c nil on failure
+/// Returns an initialized \c SFBInputSource object for the given URL or \c nil on failure
 /// @param url The URL
 /// @param flags Optional flags affecting how \c url is handled
 /// @param error An optional pointer to a \c NSError to receive error information
 /// @return An initialized \c SFBInputSource object for the specified URL, or \c nil on failure
 + (nullable instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error;
 
-/// Returns an intiailized  \c SFBInputSource for the given byte buffer or \c nil on failure
+/// Returns an initialized \c SFBInputSource for the given byte buffer or \c nil on failure
 /// @param bytes A pointer to the desired byte buffer
 /// @param length The number of bytes in \c bytes
-/// @return An initialized \c SFBInputSource object  or \c nil on faliure
+/// @return An initialized \c SFBInputSource object or \c nil on faliure
 /// @see SFBInputSourceFlags
 + (nullable instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error;
 
-/// Returns an intiailized  \c SFBInputSource for the given byte buffer or \c nil on failure
+/// Returns an initialized \c SFBInputSource for the given byte buffer or \c nil on failure
 /// @param bytes A pointer to the desired byte buffer
 /// @param length The number of bytes in \c bytes
-/// @return An initialized \c SFBInputSource object  or \c nil on faliure
+/// @return An initialized \c SFBInputSource object or \c nil on faliure
 /// @see SFBInputSourceFlags
 + (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length error:(NSError **)error;
 
@@ -44,12 +46,12 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 @property (nonatomic, nullable, readonly) NSURL * url;
 
 /// Opens the input source for reading
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)openReturningError:(NSError **)error NS_SWIFT_NAME(open());
 
 /// Closes the input source
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
@@ -60,14 +62,14 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// @param buffer A buffer to receive data
 /// @param length The maximum number of bytes to read
 /// @param bytesRead The number of bytes actually read
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if any bytes were read, \c NO otherwise
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns \c YES if the end of input has been reached
 @property (nonatomic, readonly) BOOL atEOF;
 
-/// Returns  the current offset in the input, in bytes
+/// Returns the current offset in the input, in bytes
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the length of the input, in bytes
@@ -116,10 +118,12 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// The \c NSErrorDomain used by \c SFBInputSource and subclasses
 extern NSErrorDomain const SFBInputSourceErrorDomain NS_SWIFT_NAME(InputSource.ErrorDomain);
 
-/// Possible \c NSError  error codes used by \c SFBInputSource
+/// Possible \c NSError error codes used by \c SFBInputSource
 typedef NS_ERROR_ENUM(SFBInputSourceErrorDomain, SFBInputSourceErrorCode) {
-	SFBInputSourceErrorCodeFileNotFound		= 0,		///< File not found
-	SFBInputSourceErrorCodeInputOutput		= 1			///< Input/output error
+	/// File not found
+	SFBInputSourceErrorCodeFileNotFound		= 0,
+	/// Input/output error
+	SFBInputSourceErrorCodeInputOutput		= 1
 } NS_SWIFT_NAME(InputSource.ErrorCode);
 
 NS_ASSUME_NONNULL_END

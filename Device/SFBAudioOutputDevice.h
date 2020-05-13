@@ -23,7 +23,7 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 @property (nonatomic, readonly) BOOL hasMasterVolume;
 /// Returns the master volume scalar or \c NaN on error
 /// @note This returns \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
-/// @return The master volume scalar  or \c NaN on error
+/// @return The master volume scalar or \c NaN on error
 @property (nonatomic, readonly) float masterVolume;
 /// Sets the master volume scalar
 /// @note This sets \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }

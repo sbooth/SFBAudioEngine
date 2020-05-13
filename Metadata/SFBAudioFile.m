@@ -132,7 +132,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	subclassInfo.priority = priority;
 
 	[_registeredSubclasses addObject:subclassInfo];
-	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+	[_registeredSubclasses sortUsingComparator:^NSComparisonResult(id _Nonnull obj1, id _Nonnull obj2) {
 		return ((SFBAudioFileSubclassInfo *)obj1).priority < ((SFBAudioFileSubclassInfo *)obj2).priority;
 	}];
 }
