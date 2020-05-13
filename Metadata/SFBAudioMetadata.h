@@ -292,6 +292,38 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 /// @param dictionary A dictionary containing the desired values
 - (void)setFromDictionaryRepresentation:(NSDictionary<SFBAudioMetadataKey, id> *)dictionary NS_SWIFT_NAME(setFrom(_:));
 
+#pragma mark - Dictionary-Like Interface
+
+/// Returns the metadata value for a key
+/// @param key The key for the desired metadata value
+/// @return The metadata value for \c key
+- (nullable id)objectForKey:(SFBAudioMetadataKey)key;
+/// Sets the metadata value for a key
+/// @param obj The metadata value to set
+/// @param key The key for the metadata value
+- (void)setObject:(id)obj forKey:(SFBAudioMetadataKey)key;
+/// Removes the metadata value for a key
+/// @param key The key for the metadata value to remove
+- (void)removeObjectForKey:(SFBAudioMetadataKey)key;
+
+/// Returns the metadata value for a key
+/// @param key The key for the desired metadata value
+/// @return The metadata value for \c key
+- (nullable id)valueForKey:(SFBAudioMetadataKey)key;
+/// Sets or removes a metadata value
+/// @param obj The metadata value to set or \c nil to remove
+/// @param key The key for the metadata value
+- (void)setValue:(nullable id)obj forKey:(SFBAudioMetadataKey)key;
+
+/// Returns the metadata value for a key
+/// @param key The key for the desired metadata value
+/// @return The metadata value for \c key
+- (nullable id)objectForKeyedSubscript:(SFBAudioMetadataKey)key;
+/// Sets or removes a metadata value
+/// @param obj The metadata value to set or \c nil to remove
+/// @param key The key for the metadata value
+- (void)setObject:(nullable id)obj forKeyedSubscript:(SFBAudioMetadataKey)key;
+
 @end
 
 NS_ASSUME_NONNULL_END

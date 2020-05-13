@@ -56,8 +56,27 @@ NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopyi
 /// The audio bitrate in KiB/sec
 @property (nonatomic, nullable, readonly) NSNumber *bitrate;
 
+#pragma mark - External Representation
+
 /// A dictionary containing the audio properties
 @property (nonatomic, readonly) NSDictionary<SFBAudioPropertiesKey, id> *dictionaryRepresentation;
+
+#pragma mark - Dictionary-Like Interface
+
+/// Returns the property value for a key
+/// @param key The key for the desired property value
+/// @return The property value for \c key
+- (nullable id)objectForKey:(SFBAudioPropertiesKey)key;
+
+/// Returns the property value for a key
+/// @param key The key for the desired property value
+/// @return The property value for \c key
+- (nullable id)valueForKey:(SFBAudioPropertiesKey)key;
+
+/// Returns the property value for a key
+/// @param key The key for the desired property value
+/// @return The property value for \c key
+- (nullable id)objectForKeyedSubscript:(SFBAudioPropertiesKey)key;
 
 @end
 
