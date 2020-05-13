@@ -11,60 +11,99 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Metadata kind bitmask values used in copyMetadataOfKind:from: and removeMetadataOfKind:
 typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
-	SFBAudioMetadataKindBasic			= (1u << 0),	///< Basic metadata
-	SFBAudioMetadataKindSorting			= (1u << 1),	///< Sorting metadata
-	SFBAudioMetadataKindGrouping		= (1u << 2),	///< Grouping metadata
-	SFBAudioMetadataKindAdditional		= (1u << 3),	///< Additional metadata
-	SFBAudioMetadataKindReplayGain		= (1u << 4)		///< Replay gain metadata
+	/// Basic metadata
+	SFBAudioMetadataKindBasic			= (1u << 0),
+	/// Sorting metadata
+	SFBAudioMetadataKindSorting			= (1u << 1),
+	/// Grouping metadata
+	SFBAudioMetadataKindGrouping		= (1u << 2),
+	/// Additional metadata
+	SFBAudioMetadataKindAdditional		= (1u << 3),
+	/// Replay gain metadata
+	SFBAudioMetadataKindReplayGain		= (1u << 4)
 } NS_SWIFT_NAME(AudioMetadata.Kind);
 
 typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata.Key);
 
 // Basic metadata dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitle;							///< Title (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;						///< Album title (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtist;							///< Artist (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist;					///< Album artist (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;							///< Genre (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposer;						///< Composer (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate;					///< Release date (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyCompilation;					///< Compilation flag (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackNumber;					///< Track number (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackTotal;						///< Track total (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscNumber;						///< Disc number (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscTotal;						///< Disc total (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyLyrics;							///< Lyrics (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyBPM;							///< Beats per minute (BPM) (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyRating;							///< Rating (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyComment;						///< Comment (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyISRC;							///< International Standard Recording Code (ISRC) (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyMCN;							///< Media Catalog Number (MCN) (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzReleaseID;			///< MusicBrainz release ID (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID;			///< MusicBrainz recording ID (\c NSString)
+/// Title (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitle;
+/// Album title (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitle;
+/// Artist (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtist;
+/// Album artist (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtist;
+/// Genre (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenre;
+/// Composer (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposer;
+/// Release date (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReleaseDate;
+/// Compilation flag (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyCompilation;
+/// Track number (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackNumber;
+/// Track total (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyTrackTotal;
+/// Disc number (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscNumber;
+/// Disc total (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyDiscTotal;
+/// Lyrics (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyLyrics;
+/// Beats per minute (BPM) (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyBPM;
+/// Rating (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyRating;
+/// Comment (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyComment;
+/// International Standard Recording Code (ISRC) (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyISRC;
+/// Media Catalog Number (MCN) (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyMCN;
+/// MusicBrainz release ID (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzReleaseID;
+/// MusicBrainz recording ID (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyMusicBrainzRecordingID;
 
 // Sorting dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder;					///< Title sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;			///< Album title sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder;				///< Artist sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder;			///< Album artist sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposerSortOrder;				///< Composer sort order (\c NSString)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenreSortOrder;					///< Genre sort order (\c NSString)
+/// Title sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyTitleSortOrder;
+/// Album title sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumTitleSortOrder;
+/// Artist sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyArtistSortOrder;
+/// Album artist sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAlbumArtistSortOrder;
+/// Composer sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyComposerSortOrder;
+/// Genre sort order (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyGenreSortOrder;
 
 // Grouping dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyGrouping;						///< Grouping (\c NSString)
+/// Grouping (\c NSString)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyGrouping;
 
 // Additional metadata dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAdditionalMetadata;				///< Additional metadata (\c NSDictionary)
+/// Additional metadata (\c NSDictionary)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAdditionalMetadata;
 
 // Replay gain dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainReferenceLoudness;	///< Replay gain reference loudness (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackGain;			///< Replay gain track gain (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackPeak;			///< Replay gain track peak (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumGain;			///< Replay gain album gain (\c NSNumber)
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumPeak;			///< Replay gain album peak (\c NSNumber)
+/// Replay gain reference loudness (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainReferenceLoudness;
+/// Replay gain track gain (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackGain;
+/// Replay gain track peak (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainTrackPeak;
+/// Replay gain album gain (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumGain;
+/// Replay gain album peak (\c NSNumber)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyReplayGainAlbumPeak;
 
 // Attached Picture dictionary keys
-extern SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures;				///< Attached pictures (\c NSArray of \c NSDictionary)
+/// Attached pictures (\c NSArray of \c NSDictionary)
+extern SFBAudioMetadataKey const SFBAudioMetadataKeyAttachedPictures;
 
 /// Class supporting commonly-used audio metadata and attached pictures
 NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>

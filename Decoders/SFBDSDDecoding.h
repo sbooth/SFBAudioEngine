@@ -9,18 +9,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz)
 typedef NS_ENUM(NSUInteger, SFBDSDSampleRate) {
-	SFBDSDSampleRateDSD64 	= 2822400, 		///< DSD (DSD64)
-	SFBDSDSampleRateDSD128 	= 5644800,		///< Double-rate DSD (DSD128)
-	SFBDSDSampleRateDSD256 	= 11289600,		///< Quad-rate DSD (DSD256)
-	SFBDSDSampleRateDSD512 	= 22579200		///< Octuple-rate DSD (DSD512)
+	/// DSD (DSD64)
+	SFBDSDSampleRateDSD64 	= 2822400,
+	/// Double-rate DSD (DSD128)
+	SFBDSDSampleRateDSD128 	= 5644800,
+	/// Quad-rate DSD (DSD256)
+	SFBDSDSampleRateDSD256 	= 11289600,
+	/// Octuple-rate DSD (DSD512)
+	SFBDSDSampleRateDSD512 	= 22579200
 } NS_SWIFT_NAME(DSDSampleRate);
 
 /// DSD sample rate variants based on 48,000 Hz
 typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
-	SFBDSDSampleRateVariantDSD64 	= 3072000, 		///< DSD (DSD64)
-	SFBDSDSampleRateVariantDSD128 	= 6144000,		///< Double-rate DSD (DSD128)
-	SFBDSDSampleRateVariantDSD256 	= 12288000,		///< Quad-rate DSD (DSD256)
-	SFBDSDSampleRateVariantDSD512 	= 24576000		///< Octuple-rate DSD (DSD512)
+	/// DSD (DSD64)
+	SFBDSDSampleRateVariantDSD64 	= 3072000,
+	/// Double-rate DSD (DSD128)
+	SFBDSDSampleRateVariantDSD128 	= 6144000,
+	/// Quad-rate DSD (DSD256)
+	SFBDSDSampleRateVariantDSD256 	= 12288000,
+	/// Octuple-rate DSD (DSD512)
+	SFBDSDSampleRateVariantDSD512 	= 24576000
 } NS_SWIFT_NAME(DSDSampleRateVariant);
 
 // A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
@@ -51,7 +59,7 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 /// Decodes audio
 /// @param buffer A buffer to receive the decoded audio
 /// @param packetCount The desired number of audio packets
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error NS_SWIFT_NAME(decode(into:count:));
 
@@ -62,7 +70,7 @@ NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 
 /// Seeks to the specified packet
 /// @param packet The desired packet
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error NS_SWIFT_NAME(seek(to:));
 

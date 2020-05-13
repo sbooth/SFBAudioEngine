@@ -22,7 +22,7 @@ NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 /// Decodes audio
 /// @param buffer A buffer to receive the decoded audio
 /// @param frameLength The desired number of audio frames
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error NS_SWIFT_NAME(decode(into:length:));
 
@@ -30,7 +30,7 @@ NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 
 /// Seeks to the specified frame
 /// @param frame The desired frame
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error NS_SWIFT_NAME(seek(to:));
 

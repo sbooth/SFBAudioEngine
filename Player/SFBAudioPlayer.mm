@@ -23,14 +23,20 @@ namespace {
 @interface SFBAudioPlayer ()
 {
 @private
-	AVAudioEngine 			*_engine;			///< The underlying \c AVAudioEngine instance
-	dispatch_queue_t		_engineQueue;		///< The dispatch queue used to access \c _engine
+	/// The underlying \c AVAudioEngine instance
+	AVAudioEngine 			*_engine;
+	/// The dispatch queue used to access \c _engine
+	dispatch_queue_t		_engineQueue;
 #if TARGET_OS_OSX
-	SFBAudioOutputDevice 	*_outputDevice; 	///< The current output device for \c _engine.outputNode
+	/// The current output device for \c _engine.outputNode
+	SFBAudioOutputDevice 	*_outputDevice;
 #endif
-	SFBAudioPlayerNode		*_playerNode;		///< The player driving the audio processing graph
-	dispatch_queue_t		_queue;				///< The dispatch queue used to access \c _queuedDecoders
-	DecoderQueue 			_queuedDecoders;	///< Decoders enqueued for non-gapless playback
+	/// The player driving the audio processing graph
+	SFBAudioPlayerNode		*_playerNode;
+	/// The dispatch queue used to access \c _queuedDecoders
+	dispatch_queue_t		_queue;
+	/// Decoders enqueued for non-gapless playback
+	DecoderQueue 			_queuedDecoders;
 }
 - (void)handleInterruption:(NSNotification *)notification;
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;

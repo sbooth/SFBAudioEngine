@@ -29,9 +29,12 @@ typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT
 
 /// The possible playback states for \c SFBAudioPlayer
 typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
-	SFBAudioPlayerPlaybackStatePlaying		= 0,	///<  \c SFBAudioPlayer.engineIsRunning  and \c SFBAudioPlayer.playerNodeIsPlaying
-	SFBAudioPlayerPlaybackStatePaused		= 1,	///<  \c SFBAudioPlayer.engineIsRunning  and \c !SFBAudioPlayer.playerNodeIsPlaying
-	SFBAudioPlayerPlaybackStateStopped		= 2		///<  \c !SFBAudioPlayer.engineIsRunning
+	/// \c SFBAudioPlayer.engineIsRunning  and \c SFBAudioPlayer.playerNodeIsPlaying
+	SFBAudioPlayerPlaybackStatePlaying		= 0,
+	/// \c SFBAudioPlayer.engineIsRunning  and \c !SFBAudioPlayer.playerNodeIsPlaying
+	SFBAudioPlayerPlaybackStatePaused		= 1,
+	/// \c !SFBAudioPlayer.engineIsRunning
+	SFBAudioPlayerPlaybackStateStopped		= 2
 } NS_SWIFT_NAME(AudioPlayer.PlaybackState);
 
 /// An audio player wrapping an \c AVAudioEngine processing graph supplied by \c SFBAudioPlayerNode

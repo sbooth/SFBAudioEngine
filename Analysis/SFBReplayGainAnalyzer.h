@@ -10,8 +10,10 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NSString * SFBReplayGainAnalyzerKey NS_TYPED_ENUM NS_SWIFT_NAME(ReplayGainAnalyzer.Key);
 
 // Replay gain  dictionary keys
-extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;		///< The gain in dB (\c NSNumber)
-extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;		///< The peak value normalized to [-1, 1) (\c NSNumber)
+/// The gain in dB (\c NSNumber)
+extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerGainKey;
+/// The peak value normalized to [-1, 1) (\c NSNumber)
+extern SFBReplayGainAnalyzerKey const SFBReplayGainAnalyzerPeakKey;
 
 
 /// A class that calculates replay gain
@@ -50,8 +52,10 @@ extern NSErrorDomain const SFBReplayGainAnalyzerErrorDomain NS_SWIFT_NAME(Replay
 
 /// Possible \c NSError  error codes used by \c SFBReplayGainAnalyzer
 typedef NS_ERROR_ENUM(SFBReplayGainAnalyzerErrorDomain, SFBReplayGainAnalyzerErrorCode) {
-	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,	///< File format not supported
-	SFBReplayGainAnalyzerErrorCodeInsufficientSamples			= 1,	///< Insufficient samples in file for analysis
+	/// File format not supported
+	SFBReplayGainAnalyzerErrorCodeFileFormatNotSupported		= 0,
+	/// Insufficient samples in file for analysis
+	SFBReplayGainAnalyzerErrorCodeInsufficientSamples			= 1,
 } NS_SWIFT_NAME(ReplayGainAnalyzer.ErrorCode);
 
 NS_ASSUME_NONNULL_END

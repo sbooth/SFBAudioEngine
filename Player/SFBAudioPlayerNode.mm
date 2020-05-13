@@ -90,21 +90,32 @@ namespace {
 			eMarkedForRemovalFlag 	= 1u << 5
 		};
 
-		const uint64_t			mSequenceNumber;	///< Monotonically increasing instance counter
+		/// Monotonically increasing instance counter
+		const uint64_t			mSequenceNumber;
 
-		std::atomic_uint 		mFlags; 			///< Decoder state data flags
-		std::atomic_int64_t 	mFramesDecoded; 	///< The number of frames decoded in the converter's *input* sample rate
-		std::atomic_int64_t 	mFramesConverted;	///< The number of frames converted in the converter's *output* sample rate
-		std::atomic_int64_t 	mFramesRendered;	///< The number of frames rendered in the converter's *output* sample rate
-		std::atomic_int64_t 	mFrameLength;		///< The total number of audio frames, in the decoder's sample rate
-		std::atomic_int64_t 	mFrameToSeek;		///< The desired seek offset, in the converter's *output* sample rate
+		/// Decoder state data flags
+		std::atomic_uint 		mFlags;
+		/// The number of frames decoded in the converter's *input* sample rate
+		std::atomic_int64_t 	mFramesDecoded;
+		/// The number of frames converted in the converter's *output* sample rate
+		std::atomic_int64_t 	mFramesConverted;
+		/// The number of frames rendered in the converter's *output* sample rate
+		std::atomic_int64_t 	mFramesRendered;
+		/// The total number of audio frames, in the decoder's sample rate
+		std::atomic_int64_t 	mFrameLength;
+		/// The desired seek offset, in the converter's *output* sample rate
+		std::atomic_int64_t 	mFrameToSeek;
 
 //	private:
-		id <SFBPCMDecoding> 	mDecoder; 			///< Decodes audio from the source representation to PCM
-		AVAudioConverter 		*mConverter;		///< Converts audio from the decoder's processing format to PCM
+		/// Decodes audio from the source representation to PCM
+		id <SFBPCMDecoding> 	mDecoder;
+		/// Converts audio from the decoder's processing format to PCM
+		AVAudioConverter 		*mConverter;
 	private:
-		AVAudioPCMBuffer 		*mDecodeBuffer;		///< Buffer used internally for buffering during conversion
-		static uint64_t			sSequenceNumber; 	///< Next sequence number to use
+		/// Buffer used internally for buffering during conversion
+		AVAudioPCMBuffer 		*mDecodeBuffer;
+		/// Next sequence number to use
+		static uint64_t			sSequenceNumber;
 
 	public:
 		DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
@@ -324,8 +335,10 @@ namespace {
 @interface SFBAudioPlayerNode ()
 {
 @private
-	dispatch_queue_t				_queue;				///< The dispatch queue used to access \c _queuedDecoders
-	DecoderQueue 					_queuedDecoders;	///< Decoders enqueued for playback
+	/// The dispatch queue used to access \c _queuedDecoders
+	dispatch_queue_t				_queue;
+	/// Decoders enqueued for playback
+	DecoderQueue 					_queuedDecoders;
 
 	// Decoding thread variables
 	std::thread 					_decodingThread;

@@ -14,16 +14,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Additional audio format IDs
 typedef NS_ENUM(UInt32, SFBAudioFormatID) {
-	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',	///< Direct Stream Digital (DSD)
-	SFBAudioFormatIDDoP 					= 'DoP ',	///< DSD over PCM (DoP)
-	SFBAudioFormatIDModule 					= 'MOD ',	///< Module
-	SFBAudioFormatIDMonkeysAudio 			= 'APE ',	///< Monkey's Audio (APE)
-	SFBAudioFormatIDMPEG1 					= 'MPG1',	///< MPEG-1 (Layer I, II, or III)
-	SFBAudioFormatIDMusepack 				= 'MPC ',	///< Musepack
-	SFBAudioFormatIDSpeex 					= 'SPX ',	///< Ogg Speex
-	SFBAudioFormatIDTrueAudio 				= 'TTA ',	///< True Audio
-	SFBAudioFormatIDVorbis 					= 'OGG ',	///< Ogg Vorbis
-	SFBAudioFormatIDWavPack 				= 'WV  '	///< WavPack
+	/// Direct Stream Digital (DSD)
+	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
+	/// DSD over PCM (DoP)
+	SFBAudioFormatIDDoP 					= 'DoP ',
+	/// Module
+	SFBAudioFormatIDModule 					= 'MOD ',
+	/// Monkey's Audio (APE)
+	SFBAudioFormatIDMonkeysAudio 			= 'APE ',
+	/// MPEG-1 (Layer I, II, or III)
+	SFBAudioFormatIDMPEG1 					= 'MPG1',
+	/// Musepack
+	SFBAudioFormatIDMusepack 				= 'MPC ',
+	/// Ogg Speex
+	SFBAudioFormatIDSpeex 					= 'SPX ',
+	/// True Audio
+	SFBAudioFormatIDTrueAudio 				= 'TTA ',
+	/// Ogg Vorbis
+	SFBAudioFormatIDVorbis 					= 'OGG ',
+	/// WavPack
+	SFBAudioFormatIDWavPack 				= 'WV  '
 } NS_SWIFT_NAME(AudioFormatID);
 
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
@@ -44,12 +54,12 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 #pragma mark - Setup and Teardown
 
 /// Opens the decoder for reading
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)openReturningError:(NSError **)error NS_SWIFT_NAME(open());
 
 /// Closes the decoder
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
 
@@ -60,7 +70,7 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 /// Decodes audio
 /// @param buffer A buffer to receive the decoded audio
-/// @param error An optional pointer to an \c NSError to receive error information
+/// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error NS_SWIFT_NAME(decode(into:));
 
