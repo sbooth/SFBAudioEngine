@@ -34,7 +34,7 @@ Using SFBAudioEngine
 
 Playing an audio file is as simple as:
 
-~~~
+~~~swift
 import SFBAudioEngine
 let player = AudioPlayer()
 try? player.play(URL(fileURLWithPath: "example.flac"))
