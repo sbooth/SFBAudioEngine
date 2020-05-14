@@ -20,6 +20,8 @@
 	userInfo[NSLocalizedFailureReasonErrorKey] = failureReason;
 	userInfo[NSLocalizedRecoverySuggestionErrorKey] = recoverySuggestion;
 
+	userInfo[NSURLErrorKey] = url;
+
 	return [NSError errorWithDomain:domain code:code userInfo:userInfo];
 }
 
