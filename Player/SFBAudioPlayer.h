@@ -19,9 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
 extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
 
-/// Playback position information for \c SFBAudioPlayerNode
+/// Playback position information for \c SFBAudioPlayer
 typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
-/// Playback time information for \c SFBAudioPlayerNode
+/// Playback time information for \c SFBAudioPlayer
 typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
 
 /// A block accepting a single \c AVAudioEngine parameter
@@ -138,8 +138,8 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_SWIFT_NAME(time);
 
 /// Retrieves the playback position and time
-/// @param playbackPosition An optional pointer to an \c SFBAudioPlayerNodePlaybackPosition struct to receive playback position information
-/// @param playbackTime An optional pointer to an \c SFBAudioPlayerNodePlaybackTime struct to receive playback time information
+/// @param playbackPosition An optional pointer to an \c SFBAudioPlayerPlaybackPosition struct to receive playback position information
+/// @param playbackTime An optional pointer to an \c SFBAudioPlayerPlaybackTime struct to receive playback time information
 /// @return \c NO if the current decoder is \c nil
 - (BOOL)getPlaybackPosition:(nullable SFBAudioPlayerPlaybackPosition *)playbackPosition andTime:(nullable SFBAudioPlayerPlaybackTime *)playbackTime NS_REFINED_FOR_SWIFT;
 
