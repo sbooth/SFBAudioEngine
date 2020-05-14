@@ -115,7 +115,14 @@ struct PlayerView: View {
 
 					Slider(value: Binding(
 						get: { return self.currentPosition },
-						set: { self.player.seek(position: Float($0)) }
+						set: {
+							let playbackPosition = self.player.position
+							let current = Double(playbackPosition.current) / Double(playbackPosition.total)
+							let tolerance: Double = 0.01
+							if abs(current - $0) >= tolerance {
+								self.player.seek(position: Float($0))
+							}
+						}
 					))
 						.padding(.horizontal, 20.0)
 						.accentColor(.pink)

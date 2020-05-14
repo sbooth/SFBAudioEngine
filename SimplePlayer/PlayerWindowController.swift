@@ -76,8 +76,13 @@ class PlayerWindowController: NSWindowController {
 	}
 
 	@IBAction func seek(_ sender: AnyObject?) {
-		if let position = sender?.floatValue {
-			player.seek(position: position)
+		if let requested = sender?.floatValue {
+			let playbackPosition = player.position
+			let current = Float(playbackPosition.current) / Float(playbackPosition.total)
+			let tolerance: Float = 0.01
+			if abs(current - requested) >= tolerance {
+				player.seek(position: requested)
+			}
 		}
 	}
 
