@@ -24,10 +24,6 @@
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
 
-	NSData *data = [NSData dataWithContentsOfFile:url.path options:NSDataReadingMappedAlways error:error];
-	if(data == nil)
-		return nil;
-
 	if((self = [super init]))
 		_url = url;
 	return self;
@@ -38,13 +34,13 @@
 	_file = fopen(self.url.fileSystemRepresentation, "r");
 	if(!_file) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 
 	if(fstat(fileno(_file), &_filestats) == -1) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 
@@ -56,7 +52,7 @@
 	if(_file) {
 		if(fclose(_file)) {
 			if(error)
-				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 			return NO;
 		}
 		_file = NULL;
@@ -74,7 +70,7 @@
 	size_t read = fread(buffer, 1, (size_t)length, _file);
 	if(read != (size_t)length && ferror(_file)) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	*bytesRead = (NSInteger)read;
@@ -86,7 +82,7 @@
 	off_t result = ftello(_file);
 	if(result == -1) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	*offset = result;
@@ -113,7 +109,7 @@
 {
 	if(fseeko(_file, offset, SEEK_SET)) {
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 	return YES;
