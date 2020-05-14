@@ -1,5 +1,0 @@
-<map id="SFB::Audio::Output" name="SFB::Audio::Output">
-<area shape="rect" id="node2" href="$class_s_f_b_1_1_audio_1_1_player.html" title="The audio player class. " alt="" coords="5,81,139,106"/>
-<area shape="rect" id="node3" href="$class_s_f_b_1_1_audio_1_1_channel_layout.html" title="A class wrapping a Core Audio AudioChannelLayout. " alt="" coords="163,81,349,106"/>
-<area shape="rect" id="node4" href="$class_s_f_b_1_1_audio_1_1_audio_format.html" title="A class extending the functionality of a Core Audio AudioStreamBasicDescription for DSD..." alt="" coords="435,81,608,106"/>
-</map>

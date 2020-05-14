@@ -1,0 +1,2663 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SFBAudioMetadata Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/objc/Class/SFBAudioMetadata" class="dashAnchor"></a>
+    <a title="SFBAudioMetadata Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (84% documented)</p>
+        <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">SFBAudioEngine Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        SFBAudioMetadata Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioFile.html">SFBAudioFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDDecoder.html">SFBDSDDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDPCMDecoder.html">SFBDSDPCMDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDoPDecoder.html">SFBDoPDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBInputSource.html">SFBInputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBLoopableRegionDecoder.html">SFBLoopableRegionDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBReplayGainAnalyzer.html">SFBReplayGainAnalyzer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Constants.html">Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyDescription">SFBAttachedPictureKeyDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyImageData">SFBAttachedPictureKeyImageData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyType">SFBAttachedPictureKeyType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderErrorDomain">SFBAudioDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionNumber">SFBAudioEngineVersionNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionString">SFBAudioEngineVersionString</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileErrorDomain">SFBAudioFileErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAdditionalMetadata">SFBAudioMetadataKeyAdditionalMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtist">SFBAudioMetadataKeyAlbumArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtistSortOrder">SFBAudioMetadataKeyAlbumArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitle">SFBAudioMetadataKeyAlbumTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitleSortOrder">SFBAudioMetadataKeyAlbumTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtist">SFBAudioMetadataKeyArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtistSortOrder">SFBAudioMetadataKeyArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAttachedPictures">SFBAudioMetadataKeyAttachedPictures</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyBPM">SFBAudioMetadataKeyBPM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComment">SFBAudioMetadataKeyComment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyCompilation">SFBAudioMetadataKeyCompilation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposer">SFBAudioMetadataKeyComposer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposerSortOrder">SFBAudioMetadataKeyComposerSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscNumber">SFBAudioMetadataKeyDiscNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscTotal">SFBAudioMetadataKeyDiscTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenre">SFBAudioMetadataKeyGenre</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenreSortOrder">SFBAudioMetadataKeyGenreSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGrouping">SFBAudioMetadataKeyGrouping</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyISRC">SFBAudioMetadataKeyISRC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyLyrics">SFBAudioMetadataKeyLyrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMCN">SFBAudioMetadataKeyMCN</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzRecordingID">SFBAudioMetadataKeyMusicBrainzRecordingID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzReleaseID">SFBAudioMetadataKeyMusicBrainzReleaseID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyRating">SFBAudioMetadataKeyRating</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReleaseDate">SFBAudioMetadataKeyReleaseDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumGain">SFBAudioMetadataKeyReplayGainAlbumGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumPeak">SFBAudioMetadataKeyReplayGainAlbumPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainReferenceLoudness">SFBAudioMetadataKeyReplayGainReferenceLoudness</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackGain">SFBAudioMetadataKeyReplayGainTrackGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackPeak">SFBAudioMetadataKeyReplayGainTrackPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitle">SFBAudioMetadataKeyTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitleSortOrder">SFBAudioMetadataKeyTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackNumber">SFBAudioMetadataKeyTrackNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackTotal">SFBAudioMetadataKeyTrackTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerAVAudioEngineConfigurationChangeNotification">SFBAudioPlayerAVAudioEngineConfigurationChangeNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerNodeErrorDomain">SFBAudioPlayerNodeErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitrate">SFBAudioPropertiesKeyBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitsPerChannel">SFBAudioPropertiesKeyBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyChannelsPerFrame">SFBAudioPropertiesKeyChannelsPerFrame</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyDuration">SFBAudioPropertiesKeyDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFormatName">SFBAudioPropertiesKeyFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyTotalFrames">SFBAudioPropertiesKeyTotalFrames</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBInputSourceErrorDomain">SFBInputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerGainKey">SFBReplayGainAnalyzerGainKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioDecoderErrorCode.html">SFBAudioDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerNodeErrorCode.html">SFBAudioPlayerNodeErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBReplayGainAnalyzerErrorCode.html">SFBReplayGainAnalyzerErrorCode</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBDSDDecoding.html">SFBDSDDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Type%20Definitions.html">Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackPosition">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackTime">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackPosition">SFBAudioPlayerPlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackTime">SFBAudioPlayerPlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioProperties.h@T@SFBAudioPropertiesKey">SFBAudioPropertiesKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackTime.html">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>SFBAudioMetadata</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioMetadata</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="o">&lt;</span><span class="n">NSCopying</span><span class="o">&gt;</span></code></pre>
+
+                </div>
+              </div>
+            <p>Class supporting commonly-used audio metadata and attached pictures</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)init"></a>
+                    <a name="//apple_ref/objc/Method/-init" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)init">-init</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an initialized empty \c SFBAudioMetadata object</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="n">init</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="nf">init</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)initWithDictionaryRepresentation:"></a>
+                    <a name="//apple_ref/objc/Method/-initWithDictionaryRepresentation:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)initWithDictionaryRepresentation:">-initWithDictionaryRepresentation:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an initialized \c SFBAudioMetadata object populated with values from \c dictionaryRepresentation</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithDictionaryRepresentation</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">,</span> <span class="n">id</span><span class="o">&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dictionaryRepresentation</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">dictionaryRepresentation</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dictionaryRepresentation</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A dictionary containing the desired values</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Basic%20Metadata"></a>
+                <a name="//apple_ref/objc/Section/Basic Metadata" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Basic%20Metadata"></a>
+                  <h3 class="section-name"><p>Basic Metadata</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)title"></a>
+                    <a name="//apple_ref/objc/Property/title" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)title">title</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The title</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">title</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">title</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)albumTitle"></a>
+                    <a name="//apple_ref/objc/Property/albumTitle" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)albumTitle">albumTitle</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The album title</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">albumTitle</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">albumTitle</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)artist"></a>
+                    <a name="//apple_ref/objc/Property/artist" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)artist">artist</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The artist</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">artist</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">artist</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)albumArtist"></a>
+                    <a name="//apple_ref/objc/Property/albumArtist" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)albumArtist">albumArtist</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The album artist</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">albumArtist</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">albumArtist</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)genre"></a>
+                    <a name="//apple_ref/objc/Property/genre" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)genre">genre</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The genre</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">genre</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">genre</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)composer"></a>
+                    <a name="//apple_ref/objc/Property/composer" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)composer">composer</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The composer</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">composer</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">composer</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)releaseDate"></a>
+                    <a name="//apple_ref/objc/Property/releaseDate" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)releaseDate">releaseDate</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The release date</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">releaseDate</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">releaseDate</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)compilation"></a>
+                    <a name="//apple_ref/objc/Property/compilation" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)compilation">compilation</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The compilation flag</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">compilation</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">compilation</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)trackNumber"></a>
+                    <a name="//apple_ref/objc/Property/trackNumber" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)trackNumber">trackNumber</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The track number</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">trackNumber</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">trackNumber</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)trackTotal"></a>
+                    <a name="//apple_ref/objc/Property/trackTotal" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)trackTotal">trackTotal</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The track total</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">trackTotal</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">trackTotal</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)discNumber"></a>
+                    <a name="//apple_ref/objc/Property/discNumber" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)discNumber">discNumber</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The disc number</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">discNumber</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">discNumber</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)discTotal"></a>
+                    <a name="//apple_ref/objc/Property/discTotal" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)discTotal">discTotal</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The disc total</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">discTotal</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">discTotal</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)lyrics"></a>
+                    <a name="//apple_ref/objc/Property/lyrics" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)lyrics">lyrics</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The lyrics</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">lyrics</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">lyrics</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)bpm"></a>
+                    <a name="//apple_ref/objc/Property/bpm" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)bpm">bpm</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The Beats per minute (BPM)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">bpm</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">bpm</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)rating"></a>
+                    <a name="//apple_ref/objc/Property/rating" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)rating">rating</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The rating</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">rating</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">rating</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)comment"></a>
+                    <a name="//apple_ref/objc/Property/comment" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)comment">comment</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The comment</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">comment</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">comment</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)mcn"></a>
+                    <a name="//apple_ref/objc/Property/mcn" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)mcn">mcn</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The Media Catalog Number (MCN)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">mcn</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">mcn</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)isrc"></a>
+                    <a name="//apple_ref/objc/Property/isrc" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)isrc">isrc</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The International Standard Recording Code (ISRC)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">isrc</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isrc</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)musicBrainzReleaseID"></a>
+                    <a name="//apple_ref/objc/Property/musicBrainzReleaseID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)musicBrainzReleaseID">musicBrainzReleaseID</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The MusicBrainz release ID</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">musicBrainzReleaseID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">musicBrainzReleaseID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)musicBrainzRecordingID"></a>
+                    <a name="//apple_ref/objc/Property/musicBrainzRecordingID" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)musicBrainzRecordingID">musicBrainzRecordingID</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The MusicBrainz recording ID</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">musicBrainzRecordingID</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">musicBrainzRecordingID</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Sorting%20Metadata"></a>
+                <a name="//apple_ref/objc/Section/Sorting Metadata" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Sorting%20Metadata"></a>
+                  <h3 class="section-name"><p>Sorting Metadata</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)titleSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/titleSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)titleSortOrder">titleSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The title sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">titleSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">titleSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)albumTitleSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/albumTitleSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)albumTitleSortOrder">albumTitleSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The album title sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">albumTitleSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">albumTitleSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)artistSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/artistSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)artistSortOrder">artistSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The artist sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">artistSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">artistSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)albumArtistSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/albumArtistSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)albumArtistSortOrder">albumArtistSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The album artist sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">albumArtistSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">albumArtistSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)composerSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/composerSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)composerSortOrder">composerSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The composer sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">composerSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">composerSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)genreSortOrder"></a>
+                    <a name="//apple_ref/objc/Property/genreSortOrder" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)genreSortOrder">genreSortOrder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The genre sort order</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">genreSortOrder</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">genreSortOrder</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Grouping%20Metadata"></a>
+                <a name="//apple_ref/objc/Section/Grouping Metadata" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Grouping%20Metadata"></a>
+                  <h3 class="section-name"><p>Grouping Metadata</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)grouping"></a>
+                    <a name="//apple_ref/objc/Property/grouping" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)grouping">grouping</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The grouping</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">grouping</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">grouping</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Additional%20Metadata"></a>
+                <a name="//apple_ref/objc/Section/Additional Metadata" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Additional%20Metadata"></a>
+                  <h3 class="section-name"><p>Additional Metadata</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)additionalMetadata"></a>
+                    <a name="//apple_ref/objc/Property/additionalMetadata" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)additionalMetadata">additionalMetadata</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The additional metadata</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">additionalMetadata</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">additionalMetadata</span><span class="p">:</span> <span class="p">[</span><span class="kt">AnyHashable</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/ReplayGain%20Metadata"></a>
+                <a name="//apple_ref/objc/Section/ReplayGain Metadata" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/ReplayGain%20Metadata"></a>
+                  <h3 class="section-name"><p>ReplayGain Metadata</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)replayGainReferenceLoudness"></a>
+                    <a name="//apple_ref/objc/Property/replayGainReferenceLoudness" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)replayGainReferenceLoudness">replayGainReferenceLoudness</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The replay gain reference loudness</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">replayGainReferenceLoudness</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">replayGainReferenceLoudness</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)replayGainTrackGain"></a>
+                    <a name="//apple_ref/objc/Property/replayGainTrackGain" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)replayGainTrackGain">replayGainTrackGain</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The replay gain track gain</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">replayGainTrackGain</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">replayGainTrackGain</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)replayGainTrackPeak"></a>
+                    <a name="//apple_ref/objc/Property/replayGainTrackPeak" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)replayGainTrackPeak">replayGainTrackPeak</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The replay gain track peak</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">replayGainTrackPeak</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">replayGainTrackPeak</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)replayGainAlbumGain"></a>
+                    <a name="//apple_ref/objc/Property/replayGainAlbumGain" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)replayGainAlbumGain">replayGainAlbumGain</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The replay gain album gain</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">replayGainAlbumGain</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">replayGainAlbumGain</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)replayGainAlbumPeak"></a>
+                    <a name="//apple_ref/objc/Property/replayGainAlbumPeak" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)replayGainAlbumPeak">replayGainAlbumPeak</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The replay gain album peak</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSNumber</span> <span class="o">*</span><span class="n">replayGainAlbumPeak</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">replayGainAlbumPeak</span><span class="p">:</span> <span class="kt">NSNumber</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Metadata%20Utilities"></a>
+                <a name="//apple_ref/objc/Section/Metadata Utilities" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Metadata%20Utilities"></a>
+                  <h3 class="section-name"><p>Metadata Utilities</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)copyMetadataFrom:"></a>
+                    <a name="//apple_ref/objc/Method/-copyMetadataFrom:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)copyMetadataFrom:">-copyMetadataFrom:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies all metadata from \c metadata</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Does not copy album artwork
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -copyMetadataOfKind:from:
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -copyAttachedPictures:
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">copyMetadataFrom</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">SFBAudioMetadata</span> <span class="o">*</span><span class="p">)</span><span class="nv">metadata</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">copyMetadata</span><span class="p">(</span><span class="n">from</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A \c Metadata object containing the metadata to copy</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)copyMetadataOfKind:from:"></a>
+                    <a name="//apple_ref/objc/Method/-copyMetadataOfKind:from:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)copyMetadataOfKind:from:">-copyMetadataOfKind:<wbr>from:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies the values contained in the specified metadata kinds from \c metadata</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Does not copy album artwork
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -copyMetadataFrom:
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -copyAttachedPictures
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">copyMetadataOfKind</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a></span><span class="p">)</span><span class="nv">kind</span>
+                      <span class="nf">from</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">SFBAudioMetadata</span> <span class="o">*</span><span class="p">)</span><span class="nv">metadata</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">copyMetadata</span><span class="p">(</span><span class="n">ofKind</span> <span class="nv">kind</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Kind</span><span class="p">,</span> <span class="n">from</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A \c Metadata object containing the metadata to copy</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>kind</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A bitmask specifying the kinds of metadata to copy</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeMetadataOfKind:"></a>
+                    <a name="//apple_ref/objc/Method/-removeMetadataOfKind:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeMetadataOfKind:">-removeMetadataOfKind:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the values contained in specified metadata kinds to \c nullptr</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -removeAllMetadata
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -removeAllAttachedPictures
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeMetadataOfKind</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a></span><span class="p">)</span><span class="nv">kind</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeMetadata</span><span class="p">(</span><span class="n">ofKind</span> <span class="nv">kind</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Kind</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>kind</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A bitmask specifying the kinds of metadata to remove</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeAllMetadata"></a>
+                    <a name="//apple_ref/objc/Method/-removeAllMetadata" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeAllMetadata">-removeAllMetadata</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets all metadata to \c nullptr</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Leaves album art intact
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -removeMetadataOfKind:
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -removeAllAttachedPictures
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">removeAllMetadata</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeAllMetadata</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Attached%20Pictures"></a>
+                <a name="//apple_ref/objc/Section/Attached Pictures" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Attached%20Pictures"></a>
+                  <h3 class="section-name"><p>Attached Pictures</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)attachedPictures"></a>
+                    <a name="//apple_ref/objc/Property/attachedPictures" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)attachedPictures">attachedPictures</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get all attached pictures</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSSet</span><span class="o">&lt;</span><span class="n"><a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">attachedPictures</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">attachedPictures</span><span class="p">:</span> <span class="kt">Set</span><span class="o">&lt;</span><span class="kt">AttachedPicture</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Attached%20Picture%20Utilities"></a>
+                <a name="//apple_ref/objc/Section/Attached Picture Utilities" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Attached%20Picture%20Utilities"></a>
+                  <h3 class="section-name"><p>Attached Picture Utilities</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)copyAttachedPicturesFrom:"></a>
+                    <a name="//apple_ref/objc/Method/-copyAttachedPicturesFrom:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)copyAttachedPicturesFrom:">-copyAttachedPicturesFrom:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copies album artwork from \c metadata</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This clears existing album artwork
+
+</div><div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    Does not copy metadata
+
+</div><div class="aside aside-see">
+    <p class="aside-title">See</p>
+    -copyMetadataFrom:
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">copyAttachedPicturesFrom</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">SFBAudioMetadata</span> <span class="o">*</span><span class="p">)</span><span class="nv">metadata</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">copyAttachedPicturesFrom</span><span class="p">(</span><span class="n">_</span> <span class="nv">metadata</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metadata</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A \c SFBAudioMetadata object containing the artwork to copy</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)attachedPicturesOfType:"></a>
+                    <a name="//apple_ref/objc/Method/-attachedPicturesOfType:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)attachedPicturesOfType:">-attachedPicturesOfType:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get all attached pictures of the specified type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nf">attachedPicturesOfType</span><span class="p">:</span>
+    <span class="p">(</span><span class="n"><a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a></span><span class="p">)</span><span class="nv">type</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">attachedPictures</span><span class="p">(</span><span class="n">ofType</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="o">.</span><span class="p">`</span><span class="nv">Type</span><span class="p">`)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">AttachedPicture</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)attachPicture:"></a>
+                    <a name="//apple_ref/objc/Method/-attachPicture:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)attachPicture:">-attachPicture:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Attach a picture</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">attachPicture</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">picture</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">attachPicture</span><span class="p">(</span><span class="n">_</span> <span class="nv">picture</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeAttachedPicture:"></a>
+                    <a name="//apple_ref/objc/Method/-removeAttachedPicture:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeAttachedPicture:">-removeAttachedPicture:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Remove an attached picture</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeAttachedPicture</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">picture</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeAttachedPicture</span><span class="p">(</span><span class="n">_</span> <span class="nv">picture</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeAttachedPicturesOfType:"></a>
+                    <a name="//apple_ref/objc/Method/-removeAttachedPicturesOfType:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeAttachedPicturesOfType:">-removeAttachedPicturesOfType:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Remove all attached pictures of the specified type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeAttachedPicturesOfType</span><span class="p">:(</span><span class="n"><a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a></span><span class="p">)</span><span class="nv">type</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeAttachedPicturesOfType</span><span class="p">(</span><span class="n">_</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">AttachedPicture</span><span class="o">.</span><span class="p">`</span><span class="nv">Type</span><span class="p">`)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeAllAttachedPictures"></a>
+                    <a name="//apple_ref/objc/Method/-removeAllAttachedPictures" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeAllAttachedPictures">-removeAllAttachedPictures</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Remove all attached pictures</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">removeAllAttachedPictures</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeAllAttachedPictures</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/External%20Representation"></a>
+                <a name="//apple_ref/objc/Section/External Representation" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/External%20Representation"></a>
+                  <h3 class="section-name"><p>External Representation</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(py)dictionaryRepresentation"></a>
+                    <a name="//apple_ref/objc/Property/dictionaryRepresentation" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(py)dictionaryRepresentation">dictionaryRepresentation</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Copy the values contained in this object to a dictionary</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">,</span> <span class="n">id</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">dictionaryRepresentation</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">dictionaryRepresentation</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A dictionary containing this object&rsquo;s metadata and attached pictures</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)setFromDictionaryRepresentation:"></a>
+                    <a name="//apple_ref/objc/Method/-setFromDictionaryRepresentation:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)setFromDictionaryRepresentation:">-setFromDictionaryRepresentation:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the metadata and attached pictures contained in this object from a dictionary</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setFromDictionaryRepresentation</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">,</span> <span class="n">id</span><span class="o">&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">dictionary</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setFrom</span><span class="p">(</span><span class="n">_</span> <span class="nv">dictionary</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">])</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dictionary</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A dictionary containing the desired values</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Dictionary-Like%20Interface"></a>
+                <a name="//apple_ref/objc/Section/Dictionary-Like Interface" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Dictionary-Like%20Interface"></a>
+                  <h3 class="section-name"><p>Dictionary-Like Interface</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)objectForKey:"></a>
+                    <a name="//apple_ref/objc/Method/-objectForKey:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)objectForKey:">-objectForKey:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the metadata value for a key</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nf">objectForKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">object</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the desired metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The metadata value for \c key</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)setObject:forKey:"></a>
+                    <a name="//apple_ref/objc/Method/-setObject:forKey:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)setObject:forKey:">-setObject:<wbr>forKey:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the metadata value for a key</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setObject</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">id</span><span class="p">)</span><span class="nv">obj</span> <span class="nf">forKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setObject</span><span class="p">(</span><span class="n">_</span> <span class="nv">obj</span><span class="p">:</span> <span class="kt">Any</span><span class="p">,</span> <span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>obj</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The metadata value to set</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)removeObjectForKey:"></a>
+                    <a name="//apple_ref/objc/Method/-removeObjectForKey:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)removeObjectForKey:">-removeObjectForKey:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes the metadata value for a key</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">removeObjectForKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">removeObject</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the metadata value to remove</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)valueForKey:"></a>
+                    <a name="//apple_ref/objc/Method/-valueForKey:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)valueForKey:">-valueForKey:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the metadata value for a key</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nf">valueForKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">value</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the desired metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The metadata value for \c key</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)setValue:forKey:"></a>
+                    <a name="//apple_ref/objc/Method/-setValue:forKey:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)setValue:forKey:">-setValue:<wbr>forKey:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets or removes a metadata value</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setValue</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nv">obj</span> <span class="nf">forKey</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setValue</span><span class="p">(</span><span class="n">_</span> <span class="nv">obj</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?,</span> <span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>obj</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The metadata value to set or \c nil to remove</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)objectForKeyedSubscript:"></a>
+                    <a name="//apple_ref/objc/Method/-objectForKeyedSubscript:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)objectForKeyedSubscript:">-objectForKeyedSubscript:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the metadata value for a key</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nf">objectForKeyedSubscript</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="nf">subscript</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">AudioMetadata</span><span class="o">.</span><span class="kt">Key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Any</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the desired metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The metadata value for \c key</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioMetadata(im)setObject:forKeyedSubscript:"></a>
+                    <a name="//apple_ref/objc/Method/-setObject:forKeyedSubscript:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioMetadata(im)setObject:forKeyedSubscript:">-setObject:<wbr>forKeyedSubscript:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets or removes a metadata value</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">setObject</span><span class="p">:(</span><span class="n">nullable</span> <span class="n">id</span><span class="p">)</span><span class="nv">obj</span>
+    <span class="nf">forKeyedSubscript</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n"><a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a></span><span class="p">)</span><span class="nv">key</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>obj</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The metadata value to set or \c nil to remove</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the metadata value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

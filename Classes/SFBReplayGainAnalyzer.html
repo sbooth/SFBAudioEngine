@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SFBReplayGainAnalyzer Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/objc/Class/SFBReplayGainAnalyzer" class="dashAnchor"></a>
+    <a title="SFBReplayGainAnalyzer Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (84% documented)</p>
+        <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">SFBAudioEngine Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        SFBReplayGainAnalyzer Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioFile.html">SFBAudioFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDDecoder.html">SFBDSDDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDPCMDecoder.html">SFBDSDPCMDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDoPDecoder.html">SFBDoPDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBInputSource.html">SFBInputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBLoopableRegionDecoder.html">SFBLoopableRegionDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBReplayGainAnalyzer.html">SFBReplayGainAnalyzer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Constants.html">Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyDescription">SFBAttachedPictureKeyDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyImageData">SFBAttachedPictureKeyImageData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyType">SFBAttachedPictureKeyType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderErrorDomain">SFBAudioDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionNumber">SFBAudioEngineVersionNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionString">SFBAudioEngineVersionString</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileErrorDomain">SFBAudioFileErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAdditionalMetadata">SFBAudioMetadataKeyAdditionalMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtist">SFBAudioMetadataKeyAlbumArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtistSortOrder">SFBAudioMetadataKeyAlbumArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitle">SFBAudioMetadataKeyAlbumTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitleSortOrder">SFBAudioMetadataKeyAlbumTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtist">SFBAudioMetadataKeyArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtistSortOrder">SFBAudioMetadataKeyArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAttachedPictures">SFBAudioMetadataKeyAttachedPictures</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyBPM">SFBAudioMetadataKeyBPM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComment">SFBAudioMetadataKeyComment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyCompilation">SFBAudioMetadataKeyCompilation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposer">SFBAudioMetadataKeyComposer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposerSortOrder">SFBAudioMetadataKeyComposerSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscNumber">SFBAudioMetadataKeyDiscNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscTotal">SFBAudioMetadataKeyDiscTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenre">SFBAudioMetadataKeyGenre</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenreSortOrder">SFBAudioMetadataKeyGenreSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGrouping">SFBAudioMetadataKeyGrouping</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyISRC">SFBAudioMetadataKeyISRC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyLyrics">SFBAudioMetadataKeyLyrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMCN">SFBAudioMetadataKeyMCN</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzRecordingID">SFBAudioMetadataKeyMusicBrainzRecordingID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzReleaseID">SFBAudioMetadataKeyMusicBrainzReleaseID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyRating">SFBAudioMetadataKeyRating</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReleaseDate">SFBAudioMetadataKeyReleaseDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumGain">SFBAudioMetadataKeyReplayGainAlbumGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumPeak">SFBAudioMetadataKeyReplayGainAlbumPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainReferenceLoudness">SFBAudioMetadataKeyReplayGainReferenceLoudness</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackGain">SFBAudioMetadataKeyReplayGainTrackGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackPeak">SFBAudioMetadataKeyReplayGainTrackPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitle">SFBAudioMetadataKeyTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitleSortOrder">SFBAudioMetadataKeyTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackNumber">SFBAudioMetadataKeyTrackNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackTotal">SFBAudioMetadataKeyTrackTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerAVAudioEngineConfigurationChangeNotification">SFBAudioPlayerAVAudioEngineConfigurationChangeNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerNodeErrorDomain">SFBAudioPlayerNodeErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitrate">SFBAudioPropertiesKeyBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitsPerChannel">SFBAudioPropertiesKeyBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyChannelsPerFrame">SFBAudioPropertiesKeyChannelsPerFrame</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyDuration">SFBAudioPropertiesKeyDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFormatName">SFBAudioPropertiesKeyFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyTotalFrames">SFBAudioPropertiesKeyTotalFrames</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBInputSourceErrorDomain">SFBInputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerGainKey">SFBReplayGainAnalyzerGainKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioDecoderErrorCode.html">SFBAudioDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerNodeErrorCode.html">SFBAudioPlayerNodeErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBReplayGainAnalyzerErrorCode.html">SFBReplayGainAnalyzerErrorCode</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBDSDDecoding.html">SFBDSDDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Type%20Definitions.html">Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackPosition">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackTime">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackPosition">SFBAudioPlayerPlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackTime">SFBAudioPlayerPlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioProperties.h@T@SFBAudioPropertiesKey">SFBAudioPropertiesKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackTime.html">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>SFBReplayGainAnalyzer</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBReplayGainAnalyzer</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>A class that calculates replay gain</p>
+<div class="aside aside-see">
+    <p class="aside-title">See</p>
+    <a href="http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification">http://wiki.hydrogenaudio.org/index.php?title=ReplayGain_specification</a>
+
+</div>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBReplayGainAnalyzer(cpy)referenceLoudness"></a>
+                    <a name="//apple_ref/objc/Property/referenceLoudness" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer(cpy)referenceLoudness">referenceLoudness</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The reference loudness in dB SPL, defined as 89.0 dB</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">class</span><span class="p">,</span> <span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="kt">float</span> <span class="n">referenceLoudness</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="k">var</span> <span class="nv">referenceLoudness</span><span class="p">:</span> <span class="kt">Float</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBReplayGainAnalyzer(cm)analyzeAlbum:error:"></a>
+                    <a name="//apple_ref/objc/Method/+analyzeAlbum:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer(cm)analyzeAlbum:error:">+analyzeAlbum:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Analyze the given album&rsquo;s replay gain</p>
+
+<p>The returned dictionary will contain the entries returned by \c -albumGainAndPeakSample and the
+results of \c -trackGainAndPeakSample keyed by URL</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nf">analyzeAlbum</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSURL</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">urls</span>
+                                  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">__analyzeAlbum</span><span class="p">(</span><span class="n">_</span> <span class="nv">urls</span><span class="p">:</span> <span class="p">[</span><span class="kt">URL</span><span class="p">])</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">AnyHashable</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>urls</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The URLs to analyze</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A dictionary of gain and peak information, or \c nil on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBReplayGainAnalyzer(im)analyzeTrack:error:"></a>
+                    <a name="//apple_ref/objc/Method/-analyzeTrack:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer(im)analyzeTrack:error:">-analyzeTrack:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Analyze the given URL&rsquo;s replay gain</p>
+
+<p>If the URL&rsquo;s sample rate is not natively supported, the replay gain adjustment will be calculated using audio
+resampled to an even multiple sample rate</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a></span><span class="p">,</span> <span class="n">NSNumber</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">analyzeTrack</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
+           <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">__analyzeTrack</span><span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">ReplayGainAnalyzer</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">NSNumber</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The URL to analyze</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A dictionary containing the track gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBReplayGainAnalyzer(im)albumGainAndPeakSampleReturningError:"></a>
+                    <a name="//apple_ref/objc/Method/-albumGainAndPeakSampleReturningError:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBReplayGainAnalyzer(im)albumGainAndPeakSampleReturningError:">-albumGainAndPeakSampleReturningError:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the album gain in dB (\c SFBReplayGainAnalyzerGainKey) and peak sample value normalized to [-1, 1) (\c SFBReplayGainAnalyzerPeakKey), or \c nil on error</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">NSDictionary</span><span class="o">&lt;</span><span class="n"><a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a></span><span class="p">,</span> <span class="n">NSNumber</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span>
+    <span class="nf">albumGainAndPeakSampleReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">__albumGainAndPeakSampleReturningError</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">ReplayGainAnalyzer</span><span class="o">.</span><span class="kt">Key</span> <span class="p">:</span> <span class="kt">NSNumber</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

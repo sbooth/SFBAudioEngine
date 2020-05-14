@@ -1,9 +1,0 @@
-<map id="Output/ASIOOutput.h" name="Output/ASIOOutput.h">
-<area shape="rect" id="node2" href="$_audio_output_8h.html" title="Audio output functionality. " alt="" coords="550,79,657,104"/>
-<area shape="rect" id="node18" href="$_ring_buffer_8h.html" title="A generic ring buffer. " alt="" coords="794,152,888,177"/>
-<area shape="rect" id="node5" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="496,152,612,177"/>
-<area shape="rect" id="node9" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="845,225,949,251"/>
-<area shape="rect" id="node15" href="$_audio_format_8h.html" title="A Core Audio AudioStreamBasicDescription wrapper. " alt="" coords="97,225,206,251"/>
-<area shape="rect" id="node16" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="360,225,516,251"/>
-<area shape="rect" id="node10" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="915,299,1015,324"/>
-</map>

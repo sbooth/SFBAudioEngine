@@ -1,8 +1,0 @@
-<map id="Player" name="Player">
-<area shape="rect" id="node1" href="dir_c049039abd2482638da2b3d05566ace6.html" title="Player" alt="" coords="41,5,113,53"/>
-<area shape="rect" id="node2" href="dir_011e8cc0f5625c8ae8eea0037ff317c7.html" title="Output" alt="" coords="5,101,77,149"/>
-<area shape="rect" id="edge2-headlabel" href="dir_000004_000003.html" title="1" alt="" coords="61,81,68,94"/>
-<area shape="rect" id="node3" href="dir_767d6eb5dd6e0cc3193dfe9d140f7b09.html" title="Decoders" alt="" coords="38,197,117,245"/>
-<area shape="rect" id="edge3-headlabel" href="dir_000004_000000.html" title="1" alt="" coords="90,174,98,188"/>
-<area shape="rect" id="edge1-headlabel" href="dir_000003_000000.html" title="1" alt="" coords="66,171,74,184"/>
-</map>

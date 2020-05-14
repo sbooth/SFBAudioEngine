@@ -1,6 +1,0 @@
-<map id="Decoders/AudioDecoder.h" name="Decoders/AudioDecoder.h">
-<area shape="rect" id="node7" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="250,79,354,104"/>
-<area shape="rect" id="node13" href="$_audio_format_8h.html" title="A Core Audio AudioStreamBasicDescription wrapper. " alt="" coords="763,79,872,104"/>
-<area shape="rect" id="node14" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="481,79,637,104"/>
-<area shape="rect" id="node8" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="242,152,343,177"/>
-</map>

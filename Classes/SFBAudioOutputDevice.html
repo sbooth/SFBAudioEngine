@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SFBAudioOutputDevice Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/objc/Class/SFBAudioOutputDevice" class="dashAnchor"></a>
+    <a title="SFBAudioOutputDevice Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (84% documented)</p>
+        <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">SFBAudioEngine Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        SFBAudioOutputDevice Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioFile.html">SFBAudioFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDDecoder.html">SFBDSDDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDPCMDecoder.html">SFBDSDPCMDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDoPDecoder.html">SFBDoPDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBInputSource.html">SFBInputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBLoopableRegionDecoder.html">SFBLoopableRegionDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBReplayGainAnalyzer.html">SFBReplayGainAnalyzer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Constants.html">Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyDescription">SFBAttachedPictureKeyDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyImageData">SFBAttachedPictureKeyImageData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyType">SFBAttachedPictureKeyType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderErrorDomain">SFBAudioDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionNumber">SFBAudioEngineVersionNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionString">SFBAudioEngineVersionString</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileErrorDomain">SFBAudioFileErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAdditionalMetadata">SFBAudioMetadataKeyAdditionalMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtist">SFBAudioMetadataKeyAlbumArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtistSortOrder">SFBAudioMetadataKeyAlbumArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitle">SFBAudioMetadataKeyAlbumTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitleSortOrder">SFBAudioMetadataKeyAlbumTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtist">SFBAudioMetadataKeyArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtistSortOrder">SFBAudioMetadataKeyArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAttachedPictures">SFBAudioMetadataKeyAttachedPictures</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyBPM">SFBAudioMetadataKeyBPM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComment">SFBAudioMetadataKeyComment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyCompilation">SFBAudioMetadataKeyCompilation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposer">SFBAudioMetadataKeyComposer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposerSortOrder">SFBAudioMetadataKeyComposerSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscNumber">SFBAudioMetadataKeyDiscNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscTotal">SFBAudioMetadataKeyDiscTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenre">SFBAudioMetadataKeyGenre</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenreSortOrder">SFBAudioMetadataKeyGenreSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGrouping">SFBAudioMetadataKeyGrouping</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyISRC">SFBAudioMetadataKeyISRC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyLyrics">SFBAudioMetadataKeyLyrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMCN">SFBAudioMetadataKeyMCN</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzRecordingID">SFBAudioMetadataKeyMusicBrainzRecordingID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzReleaseID">SFBAudioMetadataKeyMusicBrainzReleaseID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyRating">SFBAudioMetadataKeyRating</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReleaseDate">SFBAudioMetadataKeyReleaseDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumGain">SFBAudioMetadataKeyReplayGainAlbumGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumPeak">SFBAudioMetadataKeyReplayGainAlbumPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainReferenceLoudness">SFBAudioMetadataKeyReplayGainReferenceLoudness</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackGain">SFBAudioMetadataKeyReplayGainTrackGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackPeak">SFBAudioMetadataKeyReplayGainTrackPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitle">SFBAudioMetadataKeyTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitleSortOrder">SFBAudioMetadataKeyTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackNumber">SFBAudioMetadataKeyTrackNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackTotal">SFBAudioMetadataKeyTrackTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerAVAudioEngineConfigurationChangeNotification">SFBAudioPlayerAVAudioEngineConfigurationChangeNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerNodeErrorDomain">SFBAudioPlayerNodeErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitrate">SFBAudioPropertiesKeyBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitsPerChannel">SFBAudioPropertiesKeyBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyChannelsPerFrame">SFBAudioPropertiesKeyChannelsPerFrame</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyDuration">SFBAudioPropertiesKeyDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFormatName">SFBAudioPropertiesKeyFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyTotalFrames">SFBAudioPropertiesKeyTotalFrames</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBInputSourceErrorDomain">SFBInputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerGainKey">SFBReplayGainAnalyzerGainKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioDecoderErrorCode.html">SFBAudioDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerNodeErrorCode.html">SFBAudioPlayerNodeErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBReplayGainAnalyzerErrorCode.html">SFBReplayGainAnalyzerErrorCode</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBDSDDecoding.html">SFBDSDDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Type%20Definitions.html">Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackPosition">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackTime">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackPosition">SFBAudioPlayerPlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackTime">SFBAudioPlayerPlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioProperties.h@T@SFBAudioPropertiesKey">SFBAudioPropertiesKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackTime.html">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>SFBAudioOutputDevice</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBAudioOutputDevice</span> <span class="p">:</span> <span class="nc"><a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Undocumented</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Device%20Properties"></a>
+                <a name="//apple_ref/objc/Section/Device Properties" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Device%20Properties"></a>
+                  <h3 class="section-name"><p>Device Properties</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)mute"></a>
+                    <a name="//apple_ref/objc/Property/mute" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)mute">mute</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Mutes or unmutes the output device</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This is the property \c { kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">getter</span><span class="o">=</span><span class="n">isMuted</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">mute</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isMuted</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)hasMasterVolume"></a>
+                    <a name="//apple_ref/objc/Property/hasMasterVolume" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)hasMasterVolume">hasMasterVolume</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns \c YES if the device has a master volume</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This queries \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">hasMasterVolume</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">hasMasterVolume</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if the device has a master volume</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)masterVolume"></a>
+                    <a name="//apple_ref/objc/Property/masterVolume" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)masterVolume">masterVolume</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the master volume scalar or \c NaN on error</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This returns \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="kt">float</span> <span class="n">masterVolume</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">masterVolume</span><span class="p">:</span> <span class="kt">Float</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The master volume scalar or \c NaN on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)setMasterVolume:error:"></a>
+                    <a name="//apple_ref/objc/Method/-setMasterVolume:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)setMasterVolume:error:">-setMasterVolume:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the master volume scalar</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This sets \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setMasterVolume</span><span class="p">:(</span><span class="kt">float</span><span class="p">)</span><span class="nv">masterVolume</span>
+                  <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setMasterVolume</span><span class="p">(</span><span class="n">_</span> <span class="nv">masterVolume</span><span class="p">:</span> <span class="kt">Float</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>masterVolume</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired master volume scalar</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if the master volume was set successfully</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)volumeForChannel:"></a>
+                    <a name="//apple_ref/objc/Method/-volumeForChannel:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)volumeForChannel:">-volumeForChannel:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the volume scalar of the specified channel or \c NaN on error</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This is the value returned by \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, channel }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="nf">volumeForChannel</span><span class="p">:(</span><span class="n">AudioObjectPropertyElement</span><span class="p">)</span><span class="nv">channel</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">volume</span><span class="p">(</span><span class="n">forChannel</span> <span class="nv">channel</span><span class="p">:</span> <span class="kt">AudioObjectPropertyElement</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Float</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>channel</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired channel</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The volume scalar of the specified channel or \c NaN on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)setVolume:forChannel:error:"></a>
+                    <a name="//apple_ref/objc/Method/-setVolume:forChannel:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)setVolume:forChannel:error:">-setVolume:<wbr>forChannel:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the volume scalar of the specified channel</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This sets \c { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, channel }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setVolume</span><span class="p">:(</span><span class="kt">float</span><span class="p">)</span><span class="nv">volume</span>
+       <span class="nf">forChannel</span><span class="p">:(</span><span class="n">AudioObjectPropertyElement</span><span class="p">)</span><span class="nv">channel</span>
+            <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setVolume</span><span class="p">(</span><span class="n">_</span> <span class="nv">volume</span><span class="p">:</span> <span class="kt">Float</span><span class="p">,</span> <span class="n">forChannel</span> <span class="nv">channel</span><span class="p">:</span> <span class="kt">AudioObjectPropertyElement</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>volume</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired volume scalar</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>channel</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired channel</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if the volume was set successfully</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)preferredStereoChannels"></a>
+                    <a name="//apple_ref/objc/Property/preferredStereoChannels" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)preferredStereoChannels">preferredStereoChannels</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the preferred stereo channels for the device</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This is the property \c { kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n">NSNumber</span> <span class="o">*&gt;</span> <span class="o">*</span><span class="n">preferredStereoChannels</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">__preferredStereoChannels</span><span class="p">:</span> <span class="p">[</span><span class="kt">NSNumber</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)dataSources"></a>
+                    <a name="//apple_ref/objc/Property/dataSources" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)dataSources">dataSources</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an array of \c SFBAudioDeviceDataSource objects</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This consists of all values returned by \c { kAudioDevicePropertyDataSources, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">dataSources</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">dataSources</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioDeviceDataSource</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>An array containing the data sources or \c nil on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(py)activeDataSources"></a>
+                    <a name="//apple_ref/objc/Property/activeDataSources" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(py)activeDataSources">activeDataSources</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an array of active \c SFBAudioDeviceDataSource objects</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This consists of all values returned by \c { kAudioDevicePropertyDataSource, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="n">_Nonnull</span> <span class="n">activeDataSources</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">activeDataSources</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioDeviceDataSource</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>An array containing the active data sources or \c nil on error</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)setActiveDataSources:error:"></a>
+                    <a name="//apple_ref/objc/Method/-setActiveDataSources:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)setActiveDataSources:error:">-setActiveDataSources:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the active data sources</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This consists of all values returned by \c { kAudioDevicePropertyDataSource, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">setActiveDataSources</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">nonnull</span> <span class="n">NSArray</span><span class="o">&lt;</span><span class="n"><a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a></span> <span class="o">*&gt;</span> <span class="o">*</span><span class="p">)</span><span class="nv">activeDataSources</span>
+                       <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">setActiveDataSources</span><span class="p">(</span><span class="n">_</span> <span class="nv">activeDataSources</span><span class="p">:</span> <span class="p">[</span><span class="kt">AudioDeviceDataSource</span><span class="p">])</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>activeDataSources</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An array of \c SFBAudioDeviceDataSource objects to make active for the specified scope</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if the data sources were set successfully</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Device%20Property%20Observation"></a>
+                <a name="//apple_ref/objc/Section/Device Property Observation" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Device%20Property%20Observation"></a>
+                  <h3 class="section-name"><p>Device Property Observation</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)whenMuteChangesPerformBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-whenMuteChangesPerformBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)whenMuteChangesPerformBlock:">-whenMuteChangesPerformBlock:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs a block when the device mute changes</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This observes \c { kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">whenMuteChangesPerformBlock</span><span class="p">:(</span><span class="n">dispatch_block_t</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">whenMuteChanges</span><span class="p">(</span><span class="n">perform</span> <span class="nv">block</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block to invoke when the device mute changes or \c nil to remove the previous value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)whenMasterVolumeChangesPerformBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-whenMasterVolumeChangesPerformBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)whenMasterVolumeChangesPerformBlock:">-whenMasterVolumeChangesPerformBlock:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs a block when the device master volume changes</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This observes \c { kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">whenMasterVolumeChangesPerformBlock</span><span class="p">:(</span><span class="n">dispatch_block_t</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">whenMasterVolumeChanges</span><span class="p">(</span><span class="n">perform</span> <span class="nv">block</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block to invoke when the device master volume changes or \c nil to remove the previous value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)whenVolumeChangesForChannel:performBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-whenVolumeChangesForChannel:performBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)whenVolumeChangesForChannel:performBlock:">-whenVolumeChangesForChannel:<wbr>performBlock:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs a block when the volume for a channel changes</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This observes \c { kAudioDevicePropertyDataSources, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">whenVolumeChangesForChannel</span><span class="p">:(</span><span class="n">AudioObjectPropertyElement</span><span class="p">)</span><span class="nv">channel</span>
+                       <span class="nf">performBlock</span><span class="p">:(</span><span class="n">dispatch_block_t</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">whenVolumeChanges</span><span class="p">(</span><span class="n">forChannel</span> <span class="nv">channel</span><span class="p">:</span> <span class="kt">AudioObjectPropertyElement</span><span class="p">,</span> <span class="n">perform</span> <span class="nv">block</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>channel</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired channel</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block to invoke when the volume on the specified channel changes or \c nil to remove the previous value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)whenDataSourcesChangePerformBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-whenDataSourcesChangePerformBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)whenDataSourcesChangePerformBlock:">-whenDataSourcesChangePerformBlock:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs a block when the device data sources change</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This observes \c { kAudioDevicePropertyDataSources, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">whenDataSourcesChangePerformBlock</span><span class="p">:(</span><span class="n">dispatch_block_t</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">whenDataSourcesChange</span><span class="p">(</span><span class="n">perform</span> <span class="nv">block</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block to invoke when the data sources change or \c nil to remove the previous value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBAudioOutputDevice(im)whenActiveDataSourcesChangePerformBlock:"></a>
+                    <a name="//apple_ref/objc/Method/-whenActiveDataSourcesChangePerformBlock:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBAudioOutputDevice(im)whenActiveDataSourcesChangePerformBlock:">-whenActiveDataSourcesChangePerformBlock:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Performs a block when the active device data sources change</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    This observes \c { kAudioDevicePropertyDataSource, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">whenActiveDataSourcesChangePerformBlock</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">dispatch_block_t</span> <span class="n">_Nullable</span><span class="p">)</span><span class="nv">block</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">whenActiveDataSourcesChange</span><span class="p">(</span><span class="n">perform</span> <span class="nv">block</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>block</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A block to invoke when the active data sources change or \c nil to remove the previous value</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.3</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

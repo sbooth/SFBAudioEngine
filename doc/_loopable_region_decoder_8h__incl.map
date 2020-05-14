@@ -1,7 +1,0 @@
-<map id="Decoders/LoopableRegionDecoder.h" name="Decoders/LoopableRegionDecoder.h">
-<area shape="rect" id="node2" href="$_audio_decoder_8h.html" title="Support for decoding audio to PCM. " alt="" coords="558,79,674,104"/>
-<area shape="rect" id="node8" href="$_input_source_8h.html" title="Support for arbitrary bytestream input to AudioDecoder. " alt="" coords="250,152,354,177"/>
-<area shape="rect" id="node14" href="$_audio_format_8h.html" title="A Core Audio AudioStreamBasicDescription wrapper. " alt="" coords="763,152,872,177"/>
-<area shape="rect" id="node15" href="$_audio_channel_layout_8h.html" title="A Core Audio AudioChannelLayout wrapper. " alt="" coords="481,152,637,177"/>
-<area shape="rect" id="node9" href="$_c_f_wrapper_8h.html" title="A wrapper around a Core Foundation object. " alt="" coords="242,225,343,251"/>
-</map>
