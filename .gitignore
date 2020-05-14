@@ -1,7 +1,7 @@
-doc/
+docs/
 build/
-Frameworks/
 Libraries/
+SFBAudioEngine
 
 *.pbxuser
 *.mode1v3
