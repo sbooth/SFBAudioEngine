@@ -1,6 +1,5 @@
-doc/
+docs/
 build/
-Frameworks/
 Libraries/
 
 *.pbxuser
