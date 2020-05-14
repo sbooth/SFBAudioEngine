@@ -13,7 +13,7 @@
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
 
-	NSData *data = [NSData dataWithContentsOfFile:url.path options:0 error:error];
+	NSData *data = [NSData dataWithContentsOfURL:url options:0 error:error];
 	if(data == nil)
 		return nil;
 	
