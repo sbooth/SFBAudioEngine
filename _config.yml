@@ -2,7 +2,7 @@ title: SFBAudioEngine
 description: A powerful audio playback engine for Mac OS X and iOS
 google_analytics: 
 show_downloads: true
-theme: jekyll-theme-hacker
+theme: jekyll-theme-cayman
 
 gems:
   - jekyll-mentions
