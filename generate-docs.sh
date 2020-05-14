@@ -1,8 +1,6 @@
 #!/bin/sh
 
-SQLITE_ARCHIVE=sqlite-src-3310100.zip
-SQLITE_DOWNLOAD_URL=https://sqlite.org/2020/$SQLITE_ARCHIVE
-SQLITE_DIR=$(basename "$SQLITE_ARCHIVE" .zip)
+JAZZY_FRAMEWORK_ROOT=SFBAudioEngine
 
 if ! [ -x "$(command -v jazzy)" ]; then
 	echo "Error: jazzy not present"
@@ -11,8 +9,9 @@ fi
 
 xcodebuild -project ./SFBAudioEngine.xcodeproj -configuration Debug
 
-/bin/ln -s ./build/Debug/SFBAudioEngine.framework/Headers ./SFBAudioEngine
+# jazzy doesn't like headers in multiple directories
+/bin/ln -s ./build/Debug/SFBAudioEngine.framework/Headers ./$JAZZY_FRAMEWORK_ROOT
 
 jazzy
 
-/bin/rm ./SFBAudioEngine
+/bin/rm ./$JAZZY_FRAMEWORK_ROOT

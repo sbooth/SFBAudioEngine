@@ -1,7 +1,6 @@
 docs/
 build/
 Libraries/
-SFBAudioEngine
 
 *.pbxuser
 *.mode1v3
