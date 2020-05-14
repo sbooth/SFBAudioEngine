@@ -1011,6 +1011,10 @@ namespace {
 			AVAudioPCMBuffer *buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:self->_renderingFormat frameCapacity:kRingBufferChunkSize];
 
 			while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
+				// If a seek is pending reset the ring buffer
+				if(decoderState->mFrameToSeek.load() != -1)
+					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
+
 				// Reset the ring buffer if required, to prevent audible artifacts
 				if(_flags.load() & eAudioPlayerNodeFlagRingBufferNeedsReset) {
 					_flags.fetch_and(~eAudioPlayerNodeFlagRingBufferNeedsReset);
@@ -1042,12 +1046,6 @@ namespace {
 
 				// Force writes to the ring buffer to be at least kRingBufferChunkSize
 				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag)) {
-					// If a seek is pending reset the ring buffer first to prevent artifacts
-					if(decoderState->mFrameToSeek.load() != -1) {
-						_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
-						continue;
-					}
-
 					if(!(decoderState->mFlags.load() & DecoderStateData::eDecodingStartedFlag)) {
 						os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
