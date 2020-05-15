@@ -230,22 +230,45 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 @optional
-/// Called before \c audioPlayer decodes the first frame of audio from \c decoder
+/// Called to notify the delegate before decoding the first frame of audio
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which decoding started
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingStarted:(id<SFBPCMDecoding>)decoder;
-/// Called after \c audioPlayer decodes the final frame of audio from \c decoder
+/// Called to notify the delegate after decoding the final frame of audio
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which decoding is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called when \c audioPlayer cancels decoding for \c decoder
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder;
-/// Called to notify the delegate that \c audioPlayer will begin rendering audio from \c decoder at \c hostTime
+/// Called to notify the delegate that decoding has been canceled
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which decoding is canceled
+/// @param partiallyRendered \c YES if any audio frames from \c decoder were rendered
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer decodingCanceled:(id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered;
+/// Called to notify the delegate that audio will soon begin rendering
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which rendering is about to start
+/// @param hostTime The host time at which the first audio frame from \c decoder will reach the device
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime NS_SWIFT_NAME(audioPlayer(_:renderingWillStart:at:));
-/// Called when \c audioPlayer renders the first frame of audio from \c decoder
+/// Called to notify the delegate when rendering the first frame of audio
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing decoder
+/// @param decoder The decoder for which rendering started
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingStarted:(id<SFBPCMDecoding>)decoder;
-/// Called when \c audioPlayer renders the final frame of audio from \c decoder
+/// Called to notify the delegate when rendering the final frame of audio
+/// @warning Do not change any properties of \c decoder
+/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
+/// @param decoder The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
-/// Called when \c audioPlayer encounters an asynchronous error
-- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
-/// Called when \c audioPlayer has completed rendered for all available decoders
+/// Called to notify the delegate when rendering is complete for all available decoders
+/// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// Called to notify the delegate when an asynchronous error occurs
+/// @param audioPlayer The \c SFBAudioPlayer object
+/// @param error The error
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
 @end
 
 NS_ASSUME_NONNULL_END

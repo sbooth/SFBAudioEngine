@@ -204,7 +204,7 @@ extension PlayerWindowController: NSWindowDelegate {
 }
 
 extension PlayerWindowController: AudioPlayer.Delegate {
-	func audioPlayer(_ audioPlayer: AudioPlayer, decodingCanceled decoder: PCMDecoding) {
+	func audioPlayer(_ audioPlayer: AudioPlayer, decodingCanceled decoder: PCMDecoding, partiallyRendered: Bool) {
 		if self.player.isStopped {
 			DispatchQueue.main.async {
 				self.updateWindow()

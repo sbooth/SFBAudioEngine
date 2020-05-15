@@ -675,7 +675,6 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(decoderState) {
-		os_log_info(_audioPlayerNodeLog, "Skipping \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 		dispatch_semaphore_signal(_decodingSemaphore);
 	}
@@ -701,14 +700,8 @@ namespace {
 - (void)reset
 {
 	[super reset];
-
 	[self clearQueue];
-
-	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
-	if(decoderState) {
-		decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
-		dispatch_semaphore_signal(_decodingSemaphore);
-	}
+	[self cancelCurrentDecoder];
 }
 
 #pragma mark - Playback Control
@@ -1088,9 +1081,9 @@ namespace {
 					os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 					// Perform the decoding cancelled notification
-					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:)])
+					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
 						dispatch_sync(_notificationQueue, ^{
-							[_delegate audioPlayerNode:self decodingCanceled:decoderState->mDecoder];
+							[_delegate audioPlayerNode:self decodingCanceled:decoderState->mDecoder partiallyRendered:(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag) ? YES : NO];
 						});
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);

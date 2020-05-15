@@ -650,10 +650,10 @@ namespace {
 		[_delegate audioPlayer:self decodingComplete:decoder];
 }
 
-- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder
+- (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
 {
-	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:)])
-		[_delegate audioPlayer:self decodingCanceled:decoder];
+	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
+		[_delegate audioPlayer:self decodingCanceled:decoder partiallyRendered:partiallyRendered];
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
