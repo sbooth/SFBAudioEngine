@@ -265,6 +265,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
+/// Called to notify the delegate when an asynchronous error occurs
+/// @param audioPlayer The \c SFBAudioPlayer object
+/// @param error The error
+- (void)audioPlayer:(SFBAudioPlayer *)audioPlayer encounteredError:(NSError *)error;
 @end
 
 NS_ASSUME_NONNULL_END
