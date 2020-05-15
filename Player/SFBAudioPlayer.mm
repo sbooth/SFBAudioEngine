@@ -207,6 +207,9 @@ namespace {
 
 - (BOOL)playReturningError:(NSError **)error
 {
+	if(_engine.isRunning && _playerNode.isPlaying)
+		return YES;
+
 	[self willChangeValueForKey:@"playbackState"];
 
 	__block BOOL startedSuccessfully;
@@ -230,6 +233,9 @@ namespace {
 
 - (void)pause
 {
+	if(!_playerNode.isPlaying)
+		return;
+
 	[self willChangeValueForKey:@"playbackState"];
 	[_playerNode pause];
 	[self didChangeValueForKey:@"playbackState"];
@@ -237,6 +243,9 @@ namespace {
 
 - (void)stop
 {
+	if(!_engine.isRunning)
+		return;
+
 	[self willChangeValueForKey:@"playbackState"];
 
 	dispatch_sync(_engineQueue, ^{
@@ -254,7 +263,7 @@ namespace {
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
-	if(_playerNode.isPlaying) {
+	if(_engine.isRunning && _playerNode.isPlaying) {
 		[self pause];
 		return YES;
 	}
@@ -505,7 +514,11 @@ namespace {
 	if(engine != _engine)
 		return;
 
-	[self willChangeValueForKey:@"playbackState"];
+	// AVAudioEngine stops itself when interrupted
+	BOOL playerNodeWasPlaying = _playerNode.isPlaying;
+
+	if(playerNodeWasPlaying)
+		[self willChangeValueForKey:@"playbackState"];
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
@@ -513,7 +526,8 @@ namespace {
 		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
 
-	[self didChangeValueForKey:@"playbackState"];
+	if(playerNodeWasPlaying)
+		[self didChangeValueForKey:@"playbackState"];
 
 	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
