@@ -6,6 +6,7 @@
 #import <algorithm>
 #import <atomic>
 #import <cmath>
+#import <mutex>
 #import <queue>
 #import <thread>
 
@@ -18,6 +19,7 @@
 #import "NSError+SFBURLPresentation.h"
 #import "RingBuffer.h"
 #import "SFBAudioDecoder.h"
+#import "UnfairLock.h"
 
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
@@ -335,8 +337,8 @@ namespace {
 @interface SFBAudioPlayerNode ()
 {
 @private
-	/// The dispatch queue used to access \c _queuedDecoders
-	dispatch_queue_t				_queue;
+	/// The lock used to protect access to \c _queuedDecoders
+	SFB::UnfairLock					_queueLock;
 	/// Decoders enqueued for playback
 	DecoderQueue 					_queuedDecoders;
 
@@ -547,12 +549,6 @@ namespace {
 			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
 		}
 #endif
-		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
-		if(!_queue) {
-			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
-			return nil;
-		}
-
 		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_notificationQueue) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
@@ -682,30 +678,25 @@ namespace {
 
 - (void)clearQueue
 {
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	while(!_queuedDecoders.empty())
+		_queuedDecoders.pop();
 }
 
 - (BOOL)queueIsEmpty
 {
-	__block bool empty = true;
-	dispatch_sync(_queue, ^{
-		empty = _queuedDecoders.empty();
-	});
-	return empty;
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	return _queuedDecoders.empty();
 }
 
 - (id <SFBPCMDecoding>)dequeueDecoder
 {
-	__block id <SFBPCMDecoding> decoder = nil;
-	dispatch_sync(_queue, ^{
-		if(!_queuedDecoders.empty()) {
-			decoder = _queuedDecoders.front();
-			_queuedDecoders.pop();
-		}
-	});
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	id <SFBPCMDecoding> decoder = nil;
+	if(!_queuedDecoders.empty()) {
+		decoder = _queuedDecoders.front();
+		_queuedDecoders.pop();
+	}
 	return decoder;
 }
 
@@ -929,9 +920,11 @@ namespace {
 			decoderState->mFlags.fetch_or(DecoderStateData::eCancelDecodingFlag);
 	}
 
-	dispatch_sync(_queue, ^{
+	{
+		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 		_queuedDecoders.push(decoder);
-	});
+	}
+
 	dispatch_semaphore_signal(_decodingSemaphore);
 
 	return YES;

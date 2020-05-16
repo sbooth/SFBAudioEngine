@@ -4,6 +4,7 @@
  */
 
 #import <cmath>
+#import <mutex>
 #import <queue>
 
 #import <os/log.h>
@@ -12,6 +13,7 @@
 
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
+#import "UnfairLock.h"
 
 const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification = @"org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineConfigurationChangeNotification";
 
@@ -35,11 +37,13 @@ namespace {
 #endif
 	/// The player driving the audio processing graph
 	SFBAudioPlayerNode		*_playerNode;
-	/// The dispatch queue used to access \c _queuedDecoders
-	dispatch_queue_t		_queue;
+	/// The lock used to protect access to \c _queuedDecoders
+	SFB::UnfairLock			_queueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			_queuedDecoders;
 }
+- (void)clearInternalDecoderQueue;
+- (id <SFBPCMDecoding>)dequeueDecoder;
 - (void)handleInterruption:(NSNotification *)notification;
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
@@ -63,12 +67,6 @@ namespace {
 	if((self = [super init])) {
 		_engineQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineIsolationQueue", DISPATCH_QUEUE_SERIAL);
 		if(!_engineQueue) {
-			os_log_error(_audioPlayerLog, "dispatch_queue_create failed");
-			return nil;
-		}
-
-		_queue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayer.DecoderQueueIsolationQueue", DISPATCH_QUEUE_SERIAL);
-		if(!_queue) {
 			os_log_error(_audioPlayerLog, "dispatch_queue_create failed");
 			return nil;
 		}
@@ -121,10 +119,7 @@ namespace {
 			[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
 	});
 
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	[self clearInternalDecoderQueue];
 
 	if(![_playerNode resetAndEnqueueDecoder:decoder error:error])
 		return NO;
@@ -154,9 +149,8 @@ namespace {
 	// If the current SFBAudioPlayerNode doesn't support the decoder's format,
 	// add the decoder to our queue
 	if(![_playerNode supportsFormat:decoder.processingFormat]) {
-		dispatch_sync(_queue, ^{
-			_queuedDecoders.push(decoder);
-		});
+		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+		_queuedDecoders.push(decoder);
 		return YES;
 	}
 
@@ -175,14 +169,7 @@ namespace {
 	if(!_playerNode.queueIsEmpty)
 		[_playerNode cancelCurrentDecoder];
 	else {
-		__block id <SFBPCMDecoding> decoder = nil;
-		dispatch_sync(_queue, ^{
-			if(!_queuedDecoders.empty()) {
-				decoder = _queuedDecoders.front();
-				_queuedDecoders.pop();
-			}
-		});
-
+		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder)
 			[self playDecoder:decoder error:nil];
 	}
@@ -191,18 +178,16 @@ namespace {
 - (void)clearQueue
 {
 	[_playerNode clearQueue];
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	[self clearInternalDecoderQueue];
 }
 
 - (BOOL)queueIsEmpty
 {
-	__block bool empty = true;
-	dispatch_sync(_queue, ^{
+	bool empty = true;
+	{
+		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 		empty = _queuedDecoders.empty();
-	});
+	}
 	return empty && _playerNode.queueIsEmpty;
 }
 
@@ -256,10 +241,7 @@ namespace {
 		[_playerNode stop];
 	});
 
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	[self clearInternalDecoderQueue];
 
 	[self didChangeValueForKey:@"playbackState"];
 }
@@ -281,10 +263,7 @@ namespace {
 		[_playerNode reset];
 	});
 
-	dispatch_sync(_queue, ^{
-		while(!_queuedDecoders.empty())
-			_queuedDecoders.pop();
-	});
+	[self clearInternalDecoderQueue];
 }
 
 #pragma mark - Player State
@@ -510,6 +489,24 @@ namespace {
 
 #pragma mark - Internals
 
+- (void)clearInternalDecoderQueue
+{
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	while(!_queuedDecoders.empty())
+		_queuedDecoders.pop();
+}
+
+- (id <SFBPCMDecoding>)dequeueDecoder
+{
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	id <SFBPCMDecoding> decoder = nil;
+	if(!_queuedDecoders.empty()) {
+		decoder = _queuedDecoders.front();
+		_queuedDecoders.pop();
+	}
+	return decoder;
+}
+
 - (void)handleInterruption:(NSNotification *)notification
 {
 	os_log_debug(_audioPlayerLog, "Received AVAudioEngineConfigurationChangeNotification");
@@ -697,14 +694,7 @@ namespace {
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
 {
 	// Dequeue the next decoder
-	__block id <SFBPCMDecoding> decoder = nil;
-	dispatch_sync(_queue, ^{
-		if(!_queuedDecoders.empty()) {
-			decoder = _queuedDecoders.front();
-			_queuedDecoders.pop();
-		}
-	});
-
+	id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 	if(decoder) {
 		NSError *error = nil;
 		if(!decoder.isOpen && ![decoder openReturningError:&error]) {
