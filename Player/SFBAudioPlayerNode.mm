@@ -462,6 +462,8 @@ namespace {
 			AVAudioFrameCount framesFromThisDecoder = std::min(decoderFramesRemaining, framesRead);
 
 			if(!(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag)) {
+				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
+
 				// Schedule the rendering started notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
@@ -473,14 +475,14 @@ namespace {
 				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8 );
 				dispatch_semaphore_signal(self->_notifierSemaphore);
-
-				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingStartedFlag);
 			}
 
 			decoderState->mFramesRendered.fetch_add(framesFromThisDecoder);
 			framesRemainingToDistribute -= framesFromThisDecoder;
 
 			if((decoderState->mFlags.load() & DecoderStateData::eDecodingCompleteFlag) && decoderState->mFramesRendered.load() == decoderState->mFramesConverted.load()) {
+				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingCompleteFlag);
+
 				// Schedule the rendering complete notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete;
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
@@ -492,8 +494,6 @@ namespace {
 				memcpy(bytesToWrite + 4 + 8, &hostTime, 8);
 				self->_renderEventsRingBuffer.Write(bytesToWrite, 4 + 8 + 8);
 				dispatch_semaphore_signal(self->_notifierSemaphore);
-
-				decoderState->mFlags.fetch_or(DecoderStateData::eRenderingCompleteFlag);
 			}
 
 			if(framesRemainingToDistribute == 0)
@@ -1040,13 +1040,13 @@ namespace {
 					if(!(decoderState->mFlags.load() & DecoderStateData::eDecodingStartedFlag)) {
 						os_log_debug(_audioPlayerNodeLog, "Decoding started for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
+						decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
+
 						// Perform the decoding started notification
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
 							dispatch_sync(_notificationQueue, ^{
 								[_delegate audioPlayerNode:self decodingStarted:decoderState->mDecoder];
 							});
-
-						decoderState->mFlags.fetch_or(DecoderStateData::eDecodingStartedFlag);
 					}
 
 					// Decode audio into the buffer, converting to the bus format in the process
@@ -1078,14 +1078,17 @@ namespace {
 				else if(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag) {
 					os_log_debug(_audioPlayerNodeLog, "Canceling decoding for \"%{public}@\"", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
-					// Perform the decoding cancelled notification
-					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
-						dispatch_sync(_notificationQueue, ^{
-							[_delegate audioPlayerNode:self decodingCanceled:decoderState->mDecoder partiallyRendered:(decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag) ? YES : NO];
-						});
+					BOOL partiallyRendered = (decoderState->mFlags.load() & DecoderStateData::eRenderingStartedFlag) ? YES : NO;
+					id<SFBPCMDecoding> canceledDecoder = decoderState->mDecoder;
 
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 					decoderState->mFlags.fetch_or(DecoderStateData::eMarkedForRemovalFlag);
+
+					// Perform the decoding cancelled notification
+					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
+						dispatch_sync(_notificationQueue, ^{
+							[_delegate audioPlayerNode:self decodingCanceled:canceledDecoder partiallyRendered:partiallyRendered];
+						});
 
 					break;
 				}
