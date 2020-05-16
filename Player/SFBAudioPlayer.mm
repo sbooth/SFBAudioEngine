@@ -27,6 +27,8 @@ namespace {
 	AVAudioEngine 			*_engine;
 	/// The dispatch queue used to access \c _engine
 	dispatch_queue_t		_engineQueue;
+	/// Cached value of \c _engine.isRunning
+	BOOL 					_engineIsRunning;
 #if TARGET_OS_OSX
 	/// The current output device for \c _engine.outputNode
 	SFBAudioOutputDevice 	*_outputDevice;
@@ -108,6 +110,7 @@ namespace {
 
 	dispatch_sync(_engineQueue, ^{
 		[_engine pause];
+		_engineIsRunning = NO;
 		[_engine reset];
 		[_playerNode reset];
 
@@ -207,29 +210,34 @@ namespace {
 
 - (BOOL)playReturningError:(NSError **)error
 {
+	if(self.isPlaying)
+		return YES;
+
 	[self willChangeValueForKey:@"playbackState"];
 
-	__block BOOL startedSuccessfully;
 	__block NSError *err = nil;
 	dispatch_sync(_engineQueue, ^{
-		startedSuccessfully = [_engine startAndReturnError:&err];
-		if(startedSuccessfully)
+		_engineIsRunning = [_engine startAndReturnError:&err];
+		if(_engineIsRunning)
 			[_playerNode play];
 	});
 
 	[self didChangeValueForKey:@"playbackState"];
 
-	if(!startedSuccessfully) {
+	if(!_engineIsRunning) {
 		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
 		if(error)
 			*error = err;
 	}
 
-	return startedSuccessfully;
+	return _engineIsRunning;
 }
 
 - (void)pause
 {
+	if(!self.isPlaying)
+		return;
+
 	[self willChangeValueForKey:@"playbackState"];
 	[_playerNode pause];
 	[self didChangeValueForKey:@"playbackState"];
@@ -237,10 +245,14 @@ namespace {
 
 - (void)stop
 {
+	if(self.isStopped)
+		return;
+
 	[self willChangeValueForKey:@"playbackState"];
 
 	dispatch_sync(_engineQueue, ^{
 		[_engine stop];
+		_engineIsRunning = NO;
 		[_playerNode stop];
 	});
 
@@ -254,7 +266,7 @@ namespace {
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
-	if(_playerNode.isPlaying) {
+	if(self.isPlaying) {
 		[self pause];
 		return YES;
 	}
@@ -493,6 +505,7 @@ namespace {
 
 	// SFBAudioPlayer requires that the mixer node be connected to the output node
 	NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
+	NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 }
 
 #pragma mark - Internals
@@ -505,7 +518,13 @@ namespace {
 	if(engine != _engine)
 		return;
 
-	[self willChangeValueForKey:@"playbackState"];
+	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
+	// running before this notification was issued unless the state is cached
+	BOOL engineStateChanged = _engineIsRunning;
+	_engineIsRunning = NO;
+
+	if(engineStateChanged)
+		[self willChangeValueForKey:@"playbackState"];
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	dispatch_sync(_engineQueue, ^{
@@ -513,7 +532,8 @@ namespace {
 		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
 
-	[self didChangeValueForKey:@"playbackState"];
+	if(engineStateChanged)
+		[self didChangeValueForKey:@"playbackState"];
 
 	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
@@ -696,6 +716,7 @@ namespace {
 		if(decoder.isOpen) {
 			dispatch_sync(_engineQueue, ^{
 				[_engine pause];
+				_engineIsRunning = NO;
 				[_engine reset];
 				[_playerNode reset];
 				AVAudioFormat *processingFormat = decoder.processingFormat;
