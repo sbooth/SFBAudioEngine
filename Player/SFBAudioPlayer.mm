@@ -233,7 +233,7 @@ namespace {
 
 - (void)pause
 {
-	if(!_playerNode.isPlaying)
+	if(!(_engine.isRunning && _playerNode.isPlaying))
 		return;
 
 	[self willChangeValueForKey:@"playbackState"];
