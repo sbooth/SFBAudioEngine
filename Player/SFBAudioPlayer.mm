@@ -717,12 +717,14 @@ namespace {
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 		[_delegate audioPlayer:self renderingComplete:decoder];
 
-	[self willChangeValueForKey:@"nowPlaying"];
-	{
-		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-		_nowPlaying = nil;
+	if(!_playerNode.currentDecoder) {
+		[self willChangeValueForKey:@"nowPlaying"];
+		{
+			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+			_nowPlaying = nil;
+		}
+		[self didChangeValueForKey:@"nowPlaying"];
 	}
-	[self didChangeValueForKey:@"nowPlaying"];
 }
 
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
