@@ -125,6 +125,9 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 /// Returns \c YES if the decoder queue is empty
 @property (nonatomic, readonly) BOOL queueIsEmpty;
+/// Removes and returns the next decoder from the decoder queue
+/// @return The next decoder from the decoder queue or \c nil if none
+- (nullable id <SFBPCMDecoding>)dequeueDecoder;
 
 #pragma mark - Playback Control
 

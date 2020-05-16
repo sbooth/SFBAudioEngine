@@ -697,6 +697,18 @@ namespace {
 	return empty;
 }
 
+- (id <SFBPCMDecoding>)dequeueDecoder
+{
+	__block id <SFBPCMDecoding> decoder = nil;
+	dispatch_sync(_queue, ^{
+		if(!_queuedDecoders.empty()) {
+			decoder = _queuedDecoders.front();
+			_queuedDecoders.pop();
+		}
+	});
+	return decoder;
+}
+
 - (void)reset
 {
 	[super reset];
@@ -931,14 +943,7 @@ namespace {
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 		// Dequeue and process the next decoder
-		__block id <SFBPCMDecoding> decoder = nil;
-		dispatch_sync(_queue, ^{
-			if(!_queuedDecoders.empty()) {
-				decoder = _queuedDecoders.front();
-				_queuedDecoders.pop();
-			}
-		});
-
+		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder) {
 			// Create the decoder state
 			auto decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
