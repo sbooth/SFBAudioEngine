@@ -120,6 +120,9 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
 /// @warning Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+/// Returns the decoder that has already renderered at least one audio frame supplying the earliest audio frame for the next render cycle or \c nil if none
+/// @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
 
 #pragma mark - Playback Properties
 

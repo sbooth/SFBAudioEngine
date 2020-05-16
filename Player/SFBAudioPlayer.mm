@@ -41,6 +41,11 @@ namespace {
 	SFB::UnfairLock			_queueLock;
 	/// Decoders enqueued for non-gapless playback
 	DecoderQueue 			_queuedDecoders;
+	/// The lock used to protect access to \c _nowPlaying
+	SFB::UnfairLock			_nowPlayingLock;
+	/// The currently rendering decoder
+	id <SFBPCMDecoding> 	_nowPlaying;
+
 }
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
@@ -311,6 +316,12 @@ namespace {
 - (id<SFBPCMDecoding>)currentDecoder
 {
 	return _playerNode.currentDecoder;
+}
+
+- (id<SFBPCMDecoding>)nowPlaying
+{
+	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+	return _nowPlaying;
 }
 
 #pragma mark - Playback Properties
@@ -671,6 +682,15 @@ namespace {
 {
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
 		[_delegate audioPlayer:self decodingCanceled:decoder partiallyRendered:partiallyRendered];
+
+	if(partiallyRendered) {
+		[self willChangeValueForKey:@"nowPlaying"];
+		{
+			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+			_nowPlaying = nil;
+		}
+		[self didChangeValueForKey:@"nowPlaying"];
+	}
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
@@ -683,12 +703,26 @@ namespace {
 {
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 		[_delegate audioPlayer:self renderingStarted:decoder];
+
+	[self willChangeValueForKey:@"nowPlaying"];
+	{
+		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+		_nowPlaying = decoder;
+	}
+	[self didChangeValueForKey:@"nowPlaying"];
 }
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(nonnull id<SFBPCMDecoding>)decoder
 {
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 		[_delegate audioPlayer:self renderingComplete:decoder];
+
+	[self willChangeValueForKey:@"nowPlaying"];
+	{
+		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+		_nowPlaying = nil;
+	}
+	[self didChangeValueForKey:@"nowPlaying"];
 }
 
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
