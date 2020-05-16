@@ -27,7 +27,7 @@ namespace {
 	AVAudioEngine 			*_engine;
 	/// The dispatch queue used to access \c _engine
 	dispatch_queue_t		_engineQueue;
-	/// Cached value of \c AVAudioEngine.isRunning
+	/// Cached value of \c _engine.isRunning
 	BOOL 					_engineIsRunning;
 #if TARGET_OS_OSX
 	/// The current output device for \c _engine.outputNode
