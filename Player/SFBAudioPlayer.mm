@@ -207,7 +207,7 @@ namespace {
 
 - (BOOL)playReturningError:(NSError **)error
 {
-	if(_engine.isRunning && _playerNode.isPlaying)
+	if(self.isPlaying)
 		return YES;
 
 	[self willChangeValueForKey:@"playbackState"];
@@ -233,7 +233,7 @@ namespace {
 
 - (void)pause
 {
-	if(!(_engine.isRunning && _playerNode.isPlaying))
+	if(!self.isPlaying)
 		return;
 
 	[self willChangeValueForKey:@"playbackState"];
@@ -243,7 +243,7 @@ namespace {
 
 - (void)stop
 {
-	if(!_engine.isRunning)
+	if(self.isStopped)
 		return;
 
 	[self willChangeValueForKey:@"playbackState"];
@@ -263,7 +263,7 @@ namespace {
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
-	if(_engine.isRunning && _playerNode.isPlaying) {
+	if(self.isPlaying) {
 		[self pause];
 		return YES;
 	}
