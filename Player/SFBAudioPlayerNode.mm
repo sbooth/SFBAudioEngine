@@ -205,14 +205,14 @@ namespace {
 			}
 
 			// Update the seek request
-			mFrameToSeek.exchange(-1);
+			mFrameToSeek.store(-1);
 
 			// Update the frame counters accordingly
 			// A seek is handled in essentially the same way as initial playback
 			if(newFrame != -1) {
-				mFramesDecoded.exchange(newFrame);
-				mFramesConverted.exchange(seekOffset);
-				mFramesRendered.exchange(seekOffset);
+				mFramesDecoded.store(newFrame);
+				mFramesConverted.store(seekOffset);
+				mFramesRendered.store(seekOffset);
 			}
 
 			return newFrame != -1;
@@ -973,7 +973,7 @@ namespace {
 					// The default frame capacity for _audioRingBuffer is 16384. With 8 slots available in
 					// _decoderStateArray, the average number of frames a decoder needs to contain for
 					// all slots to be full is 2048. For audio at 8000 Hz that equates to 0.26 sec and at
-					// 44,100 Hz 2048 frames equates 0.05 sec.
+					// 44,100 Hz 2048 frames equates to 0.05 sec.
 					// This code elects to wait for a slot to open up instead of failing.
 					// This isn't a concern in practice since the main use case for this class is music, not
 					// sequential buffers of 0.05 sec. In normal use it's expected that slots 0 and 1 will
