@@ -43,10 +43,7 @@ namespace SFB {
 		/*!@brief Lock the lock. */
 		inline void lock() noexcept 		{ os_unfair_lock_lock(&mLock); }
 
-		/*!
-		 * @brief Free the resources used by this \c RingBuffer
-		 * @note This method is not thread safe.
-		 */
+		/*!@brief Unlock the lock. */
 		inline void unlock() noexcept 		{ os_unfair_lock_unlock(&mLock); }
 
 		/*!
