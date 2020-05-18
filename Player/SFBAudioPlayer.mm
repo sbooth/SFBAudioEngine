@@ -57,6 +57,7 @@ namespace {
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
 - (void)handleInterruption:(NSNotification *)notification;
+- (BOOL)setupForPlaybackOfDecoder:(id<SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error;
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
 
@@ -118,29 +119,8 @@ namespace {
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
-	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
-
-	dispatch_sync(_engineQueue, ^{
-		[_engine pause];
-		_engineIsRunning = NO;
-		[_engine reset];
-		[_playerNode reset];
-
-		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
-		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		AVAudioFormat *format = decoder.processingFormat;
-		if(![_playerNode supportsFormat:format])
-			[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
-	});
-
-	[self clearInternalDecoderQueue];
-
-	if(![_playerNode resetAndEnqueueDecoder:decoder error:error]) {
-		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-		if(self.nowPlaying)
-			self.nowPlaying = nil;
+	if(![self setupForPlaybackOfDecoder:decoder clearInternalDecoderQueue:YES error:error])
 		return NO;
-	}
 
 	return [self playReturningError:error];
 }
@@ -190,8 +170,21 @@ namespace {
 	}
 	else {
 		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
-		if(decoder)
-			[self playDecoder:decoder error:nil];
+		if(decoder) {
+			BOOL wasPlaying = self.isPlaying;
+
+			NSError *error = nil;
+			if(![self setupForPlaybackOfDecoder:decoder clearInternalDecoderQueue:NO error:&error]) {
+				if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+					[_delegate audioPlayer:self encounteredError:error];
+				return;
+			}
+
+			if(wasPlaying && ![self playReturningError:&error]) {
+				if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+					[_delegate audioPlayer:self encounteredError:error];
+			}
+		}
 	}
 }
 
@@ -567,6 +560,36 @@ namespace {
 	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
 
+- (BOOL)setupForPlaybackOfDecoder:(id<SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
+{
+	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
+
+	dispatch_sync(_engineQueue, ^{
+		[_engine pause];
+		_engineIsRunning = NO;
+		[_engine reset];
+		[_playerNode reset];
+
+		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
+		AVAudioFormat *format = decoder.processingFormat;
+		if(![_playerNode supportsFormat:format])
+			[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
+	});
+
+	if(clearInternalDecoderQueue)
+		[self clearInternalDecoderQueue];
+
+	if(![_playerNode resetAndEnqueueDecoder:decoder error:error]) {
+		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+		if(self.nowPlaying)
+			self.nowPlaying = nil;
+		return NO;
+	}
+
+	return YES;
+}
+
 - (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
 {
 	// SFBAudioPlayerNode requires the standard format
@@ -689,7 +712,7 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
-	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && self.isPaused)
+	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying)
 		self.nowPlaying = decoder;
 	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 
@@ -755,7 +778,7 @@ namespace {
 		NSError *error = nil;
 		if(!decoder.isOpen && ![decoder openReturningError:&error]) {
 			os_log_error(_audioPlayerLog, "Error opening decoder: %{public}@", error);
-			if(error)
+			if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 				[_delegate audioPlayer:self encounteredError:error];
 		}
 
@@ -772,12 +795,12 @@ namespace {
 
 			if(![_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
 				os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
-				if(error)
+				if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[_delegate audioPlayer:self encounteredError:error];
 			}
 
 			if(![self playReturningError:&error]) {
-				if(error)
+				if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 					[_delegate audioPlayer:self encounteredError:error];
 			}
 		}
