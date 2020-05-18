@@ -53,6 +53,7 @@ namespace {
 	/// Flags
 	std::atomic_uint		_flags;
 }
+@property (nonatomic, nullable) id <SFBPCMDecoding> nowPlaying;
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
 - (void)handleInterruption:(NSNotification *)notification;
@@ -136,22 +137,8 @@ namespace {
 
 	if(![_playerNode resetAndEnqueueDecoder:decoder error:error]) {
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-
-		__block bool hadNowPlaying = false;
-		{
-			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-			hadNowPlaying = _nowPlaying != nil;
-		}
-
-		if(hadNowPlaying) {
-			[self willChangeValueForKey:@"nowPlaying"];
-			{
-				std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-				_nowPlaying = nil;
-			}
-			[self didChangeValueForKey:@"nowPlaying"];
-		}
-
+		if(self.nowPlaying)
+			self.nowPlaying = nil;
 		return NO;
 	}
 
@@ -350,6 +337,12 @@ namespace {
 {
 	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 	return _nowPlaying;
+}
+
+- (void)setNowPlaying:(id<SFBPCMDecoding>)nowPlaying
+{
+	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+	_nowPlaying = nowPlaying;
 }
 
 #pragma mark - Playback Properties
@@ -696,6 +689,8 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
+	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && self.isPaused)
+		self.nowPlaying = decoder;
 	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
@@ -712,17 +707,13 @@ namespace {
 {
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
 
+	if((partiallyRendered || self.isStopped) && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) {
+		if(self.nowPlaying)
+			self.nowPlaying = nil;
+	}
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
 		[_delegate audioPlayer:self decodingCanceled:decoder partiallyRendered:partiallyRendered];
-
-	if(partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) {
-		[self willChangeValueForKey:@"nowPlaying"];
-		{
-			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-			_nowPlaying = nil;
-		}
-		[self didChangeValueForKey:@"nowPlaying"];
-	}
 }
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
@@ -737,31 +728,23 @@ namespace {
 {
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
 
+	if(self.nowPlaying != decoder)
+		self.nowPlaying = decoder;
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 		[_delegate audioPlayer:self renderingStarted:decoder];
-
-	[self willChangeValueForKey:@"nowPlaying"];
-	{
-		std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-		_nowPlaying = decoder;
-	}
-	[self didChangeValueForKey:@"nowPlaying"];
 }
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingComplete:(nonnull id<SFBPCMDecoding>)decoder
 {
-	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
-		[_delegate audioPlayer:self renderingComplete:decoder];
-
 	auto flags = _flags.load();
 	if(!(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder)) {
-		[self willChangeValueForKey:@"nowPlaying"];
-		{
-			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
-			_nowPlaying = nil;
-		}
-		[self didChangeValueForKey:@"nowPlaying"];
+		if(self.nowPlaying)
+			self.nowPlaying = nil;
 	}
+
+	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
+		[_delegate audioPlayer:self renderingComplete:decoder];
 }
 
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
