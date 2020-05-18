@@ -801,6 +801,8 @@ namespace {
 	}
 	else if([_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
 		[_delegate audioPlayerEndOfAudio:self];
+	else
+		[self stop];
 }
 
 @end
