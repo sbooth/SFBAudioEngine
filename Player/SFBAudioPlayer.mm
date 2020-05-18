@@ -20,6 +20,11 @@ const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotificat
 namespace {
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 	os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
+
+	enum eAudioPlayerFlags : unsigned int {
+		eAudioPlayerFlagRenderingImminent				= 1u << 0,
+		eAudioPlayerFlagHavePendingDecoder				= 1u << 1
+	};
 }
 
 @interface SFBAudioPlayer ()
@@ -45,7 +50,8 @@ namespace {
 	SFB::UnfairLock			_nowPlayingLock;
 	/// The currently rendering decoder
 	id <SFBPCMDecoding> 	_nowPlaying;
-
+	/// Flags
+	std::atomic_uint		_flags;
 }
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
@@ -111,6 +117,8 @@ namespace {
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
+	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
+
 	dispatch_sync(_engineQueue, ^{
 		[_engine pause];
 		_engineIsRunning = NO;
@@ -126,8 +134,26 @@ namespace {
 
 	[self clearInternalDecoderQueue];
 
-	if(![_playerNode resetAndEnqueueDecoder:decoder error:error])
+	if(![_playerNode resetAndEnqueueDecoder:decoder error:error]) {
+		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+
+		__block bool hadNowPlaying = false;
+		{
+			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+			hadNowPlaying = _nowPlaying != nil;
+		}
+
+		if(hadNowPlaying) {
+			[self willChangeValueForKey:@"nowPlaying"];
+			{
+				std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
+				_nowPlaying = nil;
+			}
+			[self didChangeValueForKey:@"nowPlaying"];
+		}
+
 		return NO;
+	}
 
 	return [self playReturningError:error];
 }
@@ -171,8 +197,10 @@ namespace {
 
 - (void)skipToNext
 {
-	if(!_playerNode.queueIsEmpty)
+	if(!_playerNode.queueIsEmpty) {
+		_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
 		[_playerNode cancelCurrentDecoder];
+	}
 	else {
 		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder)
@@ -668,6 +696,8 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
+	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
 		[_delegate audioPlayer:self decodingStarted:decoder];
 }
@@ -680,10 +710,12 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
 {
+	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
 		[_delegate audioPlayer:self decodingCanceled:decoder partiallyRendered:partiallyRendered];
 
-	if(partiallyRendered) {
+	if(partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) {
 		[self willChangeValueForKey:@"nowPlaying"];
 		{
 			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
@@ -695,12 +727,16 @@ namespace {
 
 - (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode renderingWillStart:(id<SFBPCMDecoding>)decoder atHostTime:(uint64_t)hostTime
 {
+	_flags.fetch_or(eAudioPlayerFlagRenderingImminent);
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingWillStart:atHostTime:)])
 		[_delegate audioPlayer:self renderingWillStart:decoder atHostTime:hostTime];
 }
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
+	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
+
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 		[_delegate audioPlayer:self renderingStarted:decoder];
 
@@ -717,7 +753,8 @@ namespace {
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])
 		[_delegate audioPlayer:self renderingComplete:decoder];
 
-	if(!_playerNode.currentDecoder) {
+	auto flags = _flags.load();
+	if(!(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder)) {
 		[self willChangeValueForKey:@"nowPlaying"];
 		{
 			std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
