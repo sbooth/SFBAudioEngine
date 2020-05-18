@@ -45,6 +45,8 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
 /// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
 /// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
+///
+/// This class is key-value observing compliant for \c playbackState and \c nowPlaying.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
 
 #pragma mark - Playlist Management
@@ -120,8 +122,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
 /// @warning Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
-/// Returns the decoder that has already renderered at least one audio frame supplying the earliest audio frame for the next render cycle or \c nil if none
+/// Returns the decoder approximating what a user would expect to see as the "now playing" item- the decoder that is
+/// currently rendering audio.
 /// @warning Do not change any properties of the returned object
+/// In a typical gapless playback situation where decoder transitions are between enqueued decoders with the same sample rates and
+/// channel counts, this returns the decoder that  has already renderered at least one audio frame supplying the earliest
+/// audio frame for the next render cycle.
+///
+/// In non-gapless situations (due to either gaps in decoder availability or decoder transitions where the channel counts or sample rates differ),
+/// when a decoder is pending playback while waiting for audio processing graph reconfiguration or start, this may return a decoder which
+/// has already rendered the last frame to avoid a momentary \c nil value.
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
 
 #pragma mark - Playback Properties
