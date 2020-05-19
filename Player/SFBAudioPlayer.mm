@@ -91,39 +91,17 @@ namespace {
 {
 	NSParameterAssert(url != nil);
 
-	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
-	if(!decoder)
+	if(![self enqueueURL:url forImmediatePlayback:YES error:error])
 		return NO;
-
-	return [self playDecoder:decoder error:error];
+	return [self playReturningError:error];
 }
 
 - (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
-	// Open the decoder if necessary
-	if(!decoder.isOpen && ![decoder openReturningError:error])
+	if(![self enqueueDecoder:decoder forImmediatePlayback:YES error:error])
 		return NO;
-
-	dispatch_sync(_engineQueue, ^{
-		[_engine pause];
-		_engineIsRunning = NO;
-		[_engine reset];
-		[_playerNode reset];
-
-		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
-		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-		AVAudioFormat *format = decoder.processingFormat;
-		if(![_playerNode supportsFormat:format])
-			[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
-	});
-
-	[self clearInternalDecoderQueue];
-
-	if(![_playerNode resetAndEnqueueDecoder:decoder error:error])
-		return NO;
-
 	return [self playReturningError:error];
 }
 
@@ -131,14 +109,28 @@ namespace {
 {
 	NSParameterAssert(url != nil);
 
+	return [self enqueueURL:url forImmediatePlayback:NO error:error];
+}
+
+- (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
 
-	return [self enqueueDecoder:decoder error:error];
+	return [self enqueueDecoder:decoder forImmediatePlayback:forImmediatePlayback error:error];
 }
 
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error
+{
+	NSParameterAssert(decoder != nil);
+
+	return [self enqueueDecoder:decoder forImmediatePlayback:NO error:error];
+}
+
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error
 {
 	NSParameterAssert(decoder != nil);
 
@@ -146,15 +138,31 @@ namespace {
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;
 
-	// If the current SFBAudioPlayerNode doesn't support the decoder's format,
+	// Reconfigure the audio processing graph for the decoder's processing format if requested
+	if(forImmediatePlayback) {
+		dispatch_sync(_engineQueue, ^{
+			[_playerNode reset];
+			[_engine reset];
+
+			// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+			// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
+			AVAudioFormat *format = decoder.processingFormat;
+			if(![_playerNode supportsFormat:format])
+				[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
+		});
+
+		[self clearInternalDecoderQueue];
+	}
+
+	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
 	// add the decoder to our queue
-	if(![_playerNode supportsFormat:decoder.processingFormat]) {
+	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
 		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 		_queuedDecoders.push(decoder);
 		return YES;
 	}
 
-	// Enqueuing will only succeed if the formats match
+	// Enqueuing is expected to succeed since the formats are compatible
 	return [_playerNode enqueueDecoder:decoder error:error];
 }
 
@@ -162,17 +170,6 @@ namespace {
 {
 	NSParameterAssert(format != nil);
 	return [_playerNode supportsFormat:format];
-}
-
-- (void)skipToNext
-{
-	if(!_playerNode.queueIsEmpty)
-		[_playerNode cancelCurrentDecoder];
-	else {
-		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
-		if(decoder)
-			[self playDecoder:decoder error:nil];
-	}
 }
 
 - (void)clearQueue
@@ -705,16 +702,14 @@ namespace {
 
 		if(decoder.isOpen) {
 			dispatch_sync(_engineQueue, ^{
-				[_engine pause];
-				_engineIsRunning = NO;
-				[_engine reset];
 				[_playerNode reset];
+				[_engine reset];
 				AVAudioFormat *processingFormat = decoder.processingFormat;
 				if(![_playerNode supportsFormat:processingFormat])
 					[self setupEngineForGaplessPlaybackOfFormat:processingFormat forceUpdate:NO];
 			});
 
-			if(![_playerNode resetAndEnqueueDecoder:decoder error:&error]) {
+			if(![_playerNode enqueueDecoder:decoder error:&error]) {
 				os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
 				if(error)
 					[_delegate audioPlayer:self encounteredError:error];
@@ -728,6 +723,8 @@ namespace {
 	}
 	else if([_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
 		[_delegate audioPlayerEndOfAudio:self];
+	else
+		[self stop];
 }
 
 @end
