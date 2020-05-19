@@ -119,7 +119,6 @@ namespace {
 	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:url error:error];
 	if(!decoder)
 		return NO;
-
 	return [self enqueueDecoder:decoder forImmediatePlayback:forImmediatePlayback error:error];
 }
 
@@ -153,7 +152,6 @@ namespace {
 
 		[self clearInternalDecoderQueue];
 	}
-
 	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
 	// add the decoder to our queue
 	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
