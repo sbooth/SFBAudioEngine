@@ -18,11 +18,11 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = false
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
+		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
 
 		if(openPanel.runModal() == .OK) {
 			if let url = openPanel.urls.first {
-				playerWindowController.play(url)
+				playerWindowController.play(url: url)
 			}
 		}
 	}
@@ -32,24 +32,22 @@ class AppDelegate: NSObject {
 		openURLPanel.makeKeyAndOrderFront(sender)
 	}
 
-	@IBAction func enqueueFiles(_ sender: AnyObject?) {
+	@IBAction func addFiles(_ sender: AnyObject?) {
 		let openPanel = NSOpenPanel()
 
-		openPanel.allowsMultipleSelection = false
+		openPanel.allowsMultipleSelection = true
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
+		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
 
 		if(openPanel.runModal() == .OK) {
-			if let url = openPanel.urls.first {
-				playerWindowController.enqueue(url)
-			}
+			playerWindowController.addToPlaylist(urls: openPanel.urls)
 		}
 	}
 
 	@IBAction func openURLPanelOpenAction(_ sender: AnyObject?) {
 		openURLPanel.orderOut(sender)
 		if let url = URL(string: openURLPanelTextField.stringValue) {
-			playerWindowController.play(url)
+			playerWindowController.play(url: url)
 		}
 	}
 
@@ -62,7 +60,7 @@ class AppDelegate: NSObject {
 
 		openPanel.allowsMultipleSelection = true
 		openPanel.canChooseDirectories = false
-		openPanel.allowedFileTypes = playerWindowController.supportedPathExtensions
+		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
 
 		if(openPanel.runModal() == .OK) {
 			do {
@@ -80,6 +78,7 @@ class AppDelegate: NSObject {
 	}
 }
 
+// MARK: - NSApplicationDelegate
 extension AppDelegate: NSApplicationDelegate {
 	func applicationDidFinishLaunching(_ aNotification: Notification) {
 		playerWindowController.showWindow(self)
@@ -91,7 +90,7 @@ extension AppDelegate: NSApplicationDelegate {
 
 	func application(_ application: NSApplication, open urls: [URL]) {
 		if let url = urls.first {
-			playerWindowController.play(url)
+			playerWindowController.play(url: url)
 		}
 	}
 }
