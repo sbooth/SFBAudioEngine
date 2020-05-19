@@ -228,10 +228,6 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 		}
 	}
 
-	func audioPlayerEndOfAudio(_ audioPlayer: AudioPlayer) {
-		self.player.stop()
-	}
-
 	func audioPlayer(_ audioPlayer: AudioPlayer, encounteredError error: Error) {
 		DispatchQueue.main.async {
 			NSApp.presentError(error)
