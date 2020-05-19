@@ -54,6 +54,7 @@ namespace {
 	std::atomic_uint		_flags;
 }
 @property (nonatomic, nullable) id <SFBPCMDecoding> nowPlaying;
+- (BOOL)internalDecoderQueueIsEmpty;
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
 - (void)handleInterruption:(NSNotification *)notification;
@@ -205,12 +206,7 @@ namespace {
 
 - (BOOL)queueIsEmpty
 {
-	bool empty = true;
-	{
-		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-		empty = _queuedDecoders.empty();
-	}
-	return empty && _playerNode.queueIsEmpty;
+	return _playerNode.queueIsEmpty && self.internalDecoderQueueIsEmpty;
 }
 
 #pragma mark - Playback Control
@@ -522,6 +518,12 @@ namespace {
 }
 
 #pragma mark - Internals
+
+- (BOOL)internalDecoderQueueIsEmpty
+{
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	return _queuedDecoders.empty();
+}
 
 - (void)clearInternalDecoderQueue
 {
