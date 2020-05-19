@@ -172,6 +172,17 @@ namespace {
 	return [_playerNode supportsFormat:format];
 }
 
+- (void)skipToNext
+{
+	if(!_playerNode.queueIsEmpty)
+		[_playerNode cancelCurrentDecoder];
+	else {
+		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
+		if(decoder)
+			[self playDecoder:decoder error:nil];
+	}
+}
+
 - (void)clearQueue
 {
 	[_playerNode clearQueue];
