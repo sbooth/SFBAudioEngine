@@ -50,29 +50,44 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - Playlist Management
 
 /// Cancels the current decoder, clears any queued decoders, creates and enqueues a decoder, and starts playback
-/// @note This is equivalent to creating an \c SFBAudioDecoder object for \c url and passing that object to \c -playDecoder:error:
+/// @note This is equivalent to \c -enqueueURL:forImmediatePlayback:error: with \c YES for \c forImmediatePlayback followed by \c -playReturningError:
 /// @param url The URL to play
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if a decoder was created and enqueued and playback started successfully
 - (BOOL)playURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(play(_:));
 /// Cancels the current decoder, clears any queued decoders, enqueues a decoder, and starts playback
-/// @note This is equivalent to \c -reset followed by \c -enqueueDecoder:error: and \c -playReturningError:
+/// @note This is equivalent to \c -enqueueDecoder:forImmediatePlayback:error: with \c YES for \c forImmediatePlayback followed by \c -playReturningError:
 /// @param decoder The decoder to play
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the decoder was enqueued and playback started successfully
 - (BOOL)playDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(play(_:));
 
 /// Creates and enqueues a decoder for subsequent playback
-/// @note This is equivalent to creating an \c SFBAudioDecoder object for \c url and passing that object to \c -enqueueDecoder:error:
+/// @note This is equivalent to \c -enqueueURL:forImmediatePlayback:error: with \c NO for \c forImmediatePlayback
 /// @param url The URL to enqueue
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if a decoder was created and enqueued successfully
 - (BOOL)enqueueURL:(NSURL *)url error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+/// Creates and enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
+/// @note This is equivalent to creating an \c SFBAudioDecoder object for \c url and passing that object to \c -enqueueDecoder:forImmediatePlayback:error:
+/// @param url The URL to enqueue
+/// @param forImmediatePlayback If \c YES the current decoder is canceled and any queued decoders are cleared before enqueuing
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if a decoder was created and enqueued successfully
+- (BOOL)enqueueURL:(NSURL *)url forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 /// Enqueues a decoder for subsequent playback
+/// @note This is equivalent to \c -enqueueDecoder:forImmediatePlayback:error: with \c NO for \c forImmediatePlayback
 /// @param decoder The decoder to enqueue
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the decoder was enqueued successfully
 - (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder error:(NSError **)error NS_SWIFT_NAME(enqueue(_:));
+/// Enqueues a decoder for subsequent playback, optionally canceling the current decoder and clearing any queued decoders
+/// @note If \c forImmediatePlayback is \c YES, the audio processing graph is reconfigured for \c decoder.processingFormat if necessary
+/// @param decoder The decoder to enqueue
+/// @param forImmediatePlayback If \c YES the current decoder is canceled and any queued decoders are cleared before enqueuing
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the decoder was enqueued successfully
+- (BOOL)enqueueDecoder:(id <SFBPCMDecoding>)decoder forImmediatePlayback:(BOOL)forImmediatePlayback error:(NSError **)error NS_SWIFT_NAME(enqueue(_:immediate:));
 
 /// Returns \c YES if audio with \c format will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;

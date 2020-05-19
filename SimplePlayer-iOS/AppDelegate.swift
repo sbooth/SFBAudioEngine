@@ -12,7 +12,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		player = AudioPlayer()
-		player.delegate = self
 		return true
 	}
 
@@ -23,11 +22,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	}
 
 	func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-	}
-}
-
-extension AppDelegate: AudioPlayer.Delegate {
-	func audioPlayerEndOfAudio(_ audioPlayer: AudioPlayer) {
-		player.stop()
 	}
 }
