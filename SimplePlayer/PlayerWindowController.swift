@@ -130,7 +130,7 @@ class PlayerWindowController: NSWindowController {
 
 		timer.resume()
 
-		updateForNowPlayingChange()
+		disableUI()
 	}
 
 	// MARK: - Actions
@@ -184,42 +184,14 @@ class PlayerWindowController: NSWindowController {
 		guard let item = nextItem else {
 			return
 		}
-
-		let wasPlaying = player.isPlaying
-		player.pause()
-
-		do {
-			if wasPlaying {
-				try player.play(item.url)
-			}
-			else {
-				try player.enqueue(item.url, immediate: true)
-			}
-		}
-		catch let error {
-			NSApp.presentError(error)
-		}
+		sequence(item: item)
 	}
 
 	@IBAction func playPreviousItem(_ sender: AnyObject?) {
 		guard let item = previousItem else {
 			return
 		}
-
-		let wasPlaying = player.isPlaying
-		player.pause()
-
-		do {
-			if wasPlaying {
-				try player.play(item.url)
-			}
-			else {
-				try player.enqueue(item.url, immediate: true)
-			}
-		}
-		catch let error {
-			NSApp.presentError(error)
-		}
+		sequence(item: item)
 	}
 
 	@IBAction func playlistDoubleAction(_ sender: AnyObject?) {
