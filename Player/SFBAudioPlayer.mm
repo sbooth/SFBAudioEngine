@@ -524,7 +524,7 @@ namespace {
 		[self willChangeValueForKey:@"playbackState"];
 
 	// AVAudioEngine posts this notification from a dedicated queue
-	__block BOOL success = YES;
+	__block BOOL success;
 	dispatch_sync(_engineQueue, ^{
 		[_playerNode stop];
 		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
