@@ -97,12 +97,6 @@ class PlayerWindowController: NSWindowController {
 
 		// Observe the player's `nowPlaying` property and when it changes update our UI accordingly
 		nowPlayingKVObservation = player.observe(\.nowPlaying) { (player, change) in
-			if let np = player.nowPlaying {
-				print("NOW PLAYING CHANGED TO \(FileManager.default.displayName(atPath: np.inputSource.url!.path))")
-			}
-			else {
-				print("NOW PLAYING NIL")
-			}
 			DispatchQueue.main.async {
 				self.updateForNowPlayingChange()
 			}
