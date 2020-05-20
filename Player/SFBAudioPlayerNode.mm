@@ -541,7 +541,7 @@ namespace {
 		_renderEventsRingBuffer.Allocate(256);
 
 #if 0
-		// See the comments in SFBAudioPlayer -setupEngineForGaplessPlaybackOfFormat:
+		// See the comments in SFBAudioPlayer -configureEngineForGaplessPlaybackOfFormat:
 		// 512 is the nominal "standard" value for kAudioUnitProperty_MaximumFramesPerSlice while 1156 is AVAudioSourceNode's default
 		AVAudioFrameCount maximumFramesToRender = (AVAudioFrameCount)ceil(512 * (format.sampleRate / 44100));
 		if(self.AUAudioUnit.maximumFramesToRender < maximumFramesToRender) {
@@ -567,7 +567,7 @@ namespace {
 			return nil;
 		}
 
-		// Setup the collector
+		// Set up the collector
 		_collector = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0));
 		if(!_collector) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_source_create failed");

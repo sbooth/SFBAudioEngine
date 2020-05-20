@@ -46,7 +46,8 @@ namespace {
 - (void)clearInternalDecoderQueue;
 - (id <SFBPCMDecoding>)dequeueDecoder;
 - (void)handleInterruption:(NSNotification *)notification;
-- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
+- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error;
+- (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
 @end
 
 @implementation SFBAudioPlayer
@@ -74,7 +75,10 @@ namespace {
 
 		// Create the audio processing graph
 		_engine = [[AVAudioEngine alloc] init];
-		[self setupEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO];
+		if(![self configureEngineForGaplessPlaybackOfFormat:[[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100 channels:2] forceUpdate:NO]) {
+			os_log_error(_audioPlayerLog, "Unable to create audio processing graph for 44.1 kHz stereo");
+			return nil;
+		}
 
 #if TARGET_OS_OSX
 		_outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:_engine.outputNode.AUAudioUnit.deviceID];
@@ -139,20 +143,8 @@ namespace {
 		return NO;
 
 	// Reconfigure the audio processing graph for the decoder's processing format if requested
-	if(forImmediatePlayback) {
-		dispatch_sync(_engineQueue, ^{
-			[_playerNode reset];
-			[_engine reset];
-
-			// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
-			// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
-			AVAudioFormat *format = decoder.processingFormat;
-			if(![_playerNode supportsFormat:format])
-				[self setupEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
-		});
-
-		[self clearInternalDecoderQueue];
-	}
+	if(forImmediatePlayback)
+		return [self configureForAndEnqueueDecoder:decoder clearInternalDecoderQueue:YES error:error];
 	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
 	// add the decoder to our queue
 	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
@@ -532,35 +524,72 @@ namespace {
 		[self willChangeValueForKey:@"playbackState"];
 
 	// AVAudioEngine posts this notification from a dedicated queue
+	__block BOOL success = YES;
 	dispatch_sync(_engineQueue, ^{
 		[_playerNode stop];
-		[self setupEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
+		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
 
 	if(engineStateChanged)
 		[self didChangeValueForKey:@"playbackState"];
 
+	if(!success) {
+		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
+		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
+			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
+			[_delegate audioPlayer:self encounteredError:error];
+		}
+		return;
+	}
+
 	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
 }
 
-- (void)setupEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
+- (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
+{
+	__block BOOL success = YES;
+	dispatch_sync(_engineQueue, ^{
+		[_playerNode reset];
+		[_engine reset];
+
+		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
+		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
+		AVAudioFormat *format = decoder.processingFormat;
+		if(![_playerNode supportsFormat:format])
+			success = [self configureEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
+	});
+
+	if(!success) {
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
+		return NO;
+	}
+
+	if(clearInternalDecoderQueue)
+		[self clearInternalDecoderQueue];
+
+	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
+	return [_playerNode enqueueDecoder:decoder error:error];
+}
+
+- (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate
 {
 	// SFBAudioPlayerNode requires the standard format
 	if(!format.isStandard) {
 		format = [format standardEquivalent];
 		if(!format) {
 			os_log_error(_audioPlayerLog, "Unable to convert format to standard");
-			return;
+			return NO;
 		}
 	}
 
 	if([format isEqual:_playerNode.renderingFormat] && !forceUpdate)
-		return;
+		return YES;
 
 	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
 	if(!playerNode) {
 		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
-		return;
+		return NO;
 	}
 
 	playerNode.delegate = self;
@@ -659,6 +688,7 @@ namespace {
 #endif
 
 	[_engine prepare];
+	return YES;
 }
 
 #pragma mark - SFBAudioPlayerNodeDelegate
@@ -705,31 +735,15 @@ namespace {
 	id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 	if(decoder) {
 		NSError *error = nil;
-		if(!decoder.isOpen && ![decoder openReturningError:&error]) {
-			os_log_error(_audioPlayerLog, "Error opening decoder: %{public}@", error);
-			if(error)
+		if(![self configureForAndEnqueueDecoder:decoder clearInternalDecoderQueue:NO error:&error]) {
+			if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 				[_delegate audioPlayer:self encounteredError:error];
+			return;
 		}
 
-		if(decoder.isOpen) {
-			dispatch_sync(_engineQueue, ^{
-				[_playerNode reset];
-				[_engine reset];
-				AVAudioFormat *processingFormat = decoder.processingFormat;
-				if(![_playerNode supportsFormat:processingFormat])
-					[self setupEngineForGaplessPlaybackOfFormat:processingFormat forceUpdate:NO];
-			});
-
-			if(![_playerNode enqueueDecoder:decoder error:&error]) {
-				os_log_error(_audioPlayerLog, "Error enqueuing decoder: %{public}@", error);
-				if(error)
-					[_delegate audioPlayer:self encounteredError:error];
-			}
-
-			if(![self playReturningError:&error]) {
-				if(error)
-					[_delegate audioPlayer:self encounteredError:error];
-			}
+		if(![self playReturningError:&error]) {
+			if(error)
+				[_delegate audioPlayer:self encounteredError:error];
 		}
 	}
 	else if([_delegate respondsToSelector:@selector(audioPlayerEndOfAudio:)])
