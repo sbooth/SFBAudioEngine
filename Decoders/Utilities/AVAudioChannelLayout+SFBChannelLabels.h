@@ -3,7 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-
 #import <AVFoundation/AVFoundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
