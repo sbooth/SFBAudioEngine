@@ -222,6 +222,16 @@ namespace {
 	[self didChangeValueForKey:@"playbackState"];
 }
 
+- (void)resume
+{
+	if(!self.isPaused)
+		return;
+
+	[self willChangeValueForKey:@"playbackState"];
+	[_playerNode play];
+	[self didChangeValueForKey:@"playbackState"];
+}
+
 - (void)stop
 {
 	if(self.isStopped)
@@ -242,12 +252,16 @@ namespace {
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
 {
-	if(self.isPlaying) {
-		[self pause];
-		return YES;
+	switch(self.playbackState) {
+		case SFBAudioPlayerPlaybackStatePlaying:
+			[self pause];
+			return YES;
+		case SFBAudioPlayerPlaybackStatePaused:
+			[self resume];
+			return YES;
+		case SFBAudioPlayerPlaybackStateStopped:
+			return [self playReturningError:error];
 	}
-	else
-		return [self playReturningError:error];
 }
 
 - (void)reset
