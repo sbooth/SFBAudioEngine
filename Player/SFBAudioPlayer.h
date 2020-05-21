@@ -103,15 +103,29 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - Playback Control
 
 /// Starts the underlying \c AVAudioEngine and plays the \c SFBAudioPlayerNode
+/// @note If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePlaying this method has no effect
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if the underlying \c AVAudioEngine was successfully started
 - (BOOL)playReturningError:(NSError **)error NS_SWIFT_NAME(play());
 /// Pauses the \c SFBAudioPlayerNode
+/// @note If the current \c playbackState is not \c SFBAudioPlayerPlaybackStatePlaying this method has no effect
 - (void)pause;
+/// Plays the \c SFBAudioPlayerNode
+/// @note If the current \c playbackState is not \c SFBAudioPlayerPlaybackStatePaused this method has no effect
+- (void)resume;
 /// Stops both the underlying \c AVAudioEngine and \c SFBAudioPlayerNode
+/// @note This method cancels the current decoder and clears any queued decoders
+/// @note If the current \c playbackState is \c SFBAudioPlayerPlaybackStateStopped this method has no effect
 - (void)stop;
-/// Toggles the player between playing and paused
+/// Toggles the player between playing and paused states, starting playback if stopped
+///
+/// If the current \c playbackState is \c SFBAudioPlayerPlaybackStateStopped this method sends \c -playReturningError:
+/// If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePlaying this method sends \c -pause
+/// If the current \c playbackState is \c SFBAudioPlayerPlaybackStatePaused this method sends \c -resume
 - (BOOL)togglePlayPauseReturningError:(NSError **)error NS_SWIFT_NAME(togglePlayPause());
 
 /// Resets both the underlying \c AVAudioEngine and \c SFBAudioPlayerNode
+/// @note This method cancels the current decoder and clears any queued decoders
 - (void)reset;
 
 #pragma mark - Player State
