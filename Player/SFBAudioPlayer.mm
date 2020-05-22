@@ -44,7 +44,8 @@ namespace {
 }
 - (BOOL)internalDecoderQueueIsEmpty;
 - (void)clearInternalDecoderQueue;
-- (id <SFBPCMDecoding>)dequeueDecoder;
+- (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
+- (id <SFBPCMDecoding>)popDecoderFromInternalQueue;
 - (void)handleInterruption:(NSNotification *)notification;
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error;
 - (BOOL)configureEngineForGaplessPlaybackOfFormat:(AVAudioFormat *)format forceUpdate:(BOOL)forceUpdate;
@@ -148,8 +149,7 @@ namespace {
 	// If the current SFBAudioPlayerNode doesn't support the decoder's processing format,
 	// add the decoder to our queue
 	else if(![_playerNode supportsFormat:decoder.processingFormat]) {
-		std::lock_guard<SFB::UnfairLock> lock(_queueLock);
-		_queuedDecoders.push(decoder);
+		[self pushDecoderToInternalQueue:decoder];
 		return YES;
 	}
 
@@ -168,7 +168,7 @@ namespace {
 	if(!_playerNode.queueIsEmpty)
 		[_playerNode cancelCurrentDecoder];
 	else {
-		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
+		id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue];
 		if(decoder)
 			[self playDecoder:decoder error:nil];
 	}
@@ -495,7 +495,7 @@ namespace {
 	NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 }
 
-#pragma mark - Internals
+#pragma mark - Decoder Queue
 
 - (BOOL)internalDecoderQueueIsEmpty
 {
@@ -510,7 +510,13 @@ namespace {
 		_queuedDecoders.pop();
 }
 
-- (id <SFBPCMDecoding>)dequeueDecoder
+- (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder
+{
+	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
+	_queuedDecoders.push(decoder);
+}
+
+- (id <SFBPCMDecoding>)popDecoderFromInternalQueue
 {
 	std::lock_guard<SFB::UnfairLock> lock(_queueLock);
 	id <SFBPCMDecoding> decoder = nil;
@@ -520,6 +526,8 @@ namespace {
 	}
 	return decoder;
 }
+
+#pragma mark - Internals
 
 - (void)handleInterruption:(NSNotification *)notification
 {
@@ -746,7 +754,7 @@ namespace {
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
 {
 	// Dequeue the next decoder
-	id <SFBPCMDecoding> decoder = [self dequeueDecoder];
+	id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue];
 	if(decoder) {
 		NSError *error = nil;
 		if(![self configureForAndEnqueueDecoder:decoder clearInternalDecoderQueue:NO error:&error]) {
