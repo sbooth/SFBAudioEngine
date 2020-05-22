@@ -267,8 +267,8 @@ namespace {
 - (void)reset
 {
 	dispatch_sync(_engineQueue, ^{
-		[_engine reset];
 		[_playerNode reset];
+		[_engine reset];
 	});
 
 	[self clearInternalDecoderQueue];
