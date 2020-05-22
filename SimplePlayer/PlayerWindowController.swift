@@ -404,8 +404,7 @@ class PlayerWindowController: NSWindowController {
 				try player.play(item.url)
 			}
 			else {
-				player.reset()
-				try player.enqueue(item.url)
+				try player.enqueue(item.url, immediate: true)
 			}
 		}
 		catch let error {
