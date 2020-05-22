@@ -23,7 +23,8 @@ namespace {
 
 	enum eAudioPlayerFlags : unsigned int {
 		eAudioPlayerFlagRenderingImminent				= 1u << 0,
-		eAudioPlayerFlagHavePendingDecoder				= 1u << 1
+		eAudioPlayerFlagHavePendingDecoder				= 1u << 1,
+		eAudioPlayerFlagPendingDecoderBecameActive		= 1u << 2
 	};
 }
 
@@ -745,8 +746,10 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
-	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying)
+	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
+		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
 		self.nowPlaying = decoder;
+	}
 	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingStarted:)])
@@ -761,9 +764,9 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode decodingCanceled:(nonnull id<SFBPCMDecoding>)decoder partiallyRendered:(BOOL)partiallyRendered
 {
-	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
+	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
-	if((partiallyRendered || self.isStopped) && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) {
+	if((partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) || self.isStopped) {
 		if(self.nowPlaying)
 			self.nowPlaying = nil;
 	}
@@ -782,10 +785,9 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
-	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent);
-
-	if(self.nowPlaying != decoder)
+	if(!(_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive))
 		self.nowPlaying = decoder;
+	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
 		[_delegate audioPlayer:self renderingStarted:decoder];
