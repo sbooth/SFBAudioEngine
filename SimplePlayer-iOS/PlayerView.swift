@@ -118,9 +118,9 @@ struct PlayerView: View {
 						set: {
 							let playbackPosition = self.player.position
 							let current = Double(playbackPosition.current) / Double(playbackPosition.total)
-							let tolerance: Double = 0.01
+							let tolerance = 0.01
 							if abs(current - $0) >= tolerance {
-								self.player.seek(position: Float($0))
+								self.player.seek(position: $0)
 							}
 						}
 					))
