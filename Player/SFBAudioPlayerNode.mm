@@ -549,7 +549,8 @@ namespace {
 			self.AUAudioUnit.maximumFramesToRender = maximumFramesToRender;
 		}
 #endif
-		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", DISPATCH_QUEUE_SERIAL);
+		dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0);
+		_notificationQueue = dispatch_queue_create("org.sbooth.AudioEngine.AudioPlayerNode.NotificationQueue", attr);
 		if(!_notificationQueue) {
 			os_log_error(_audioPlayerNodeLog, "dispatch_queue_create failed");
 			return nil;
@@ -889,7 +890,6 @@ namespace {
 	return decoderState ? decoderState->mDecoder.supportsSeeking : NO;
 }
 
-
 #pragma mark - Internals
 
 - (BOOL)performEnqueue:(id <SFBPCMDecoding>)decoder reset:(BOOL)reset error:(NSError **)error
@@ -1044,7 +1044,7 @@ namespace {
 
 						// Perform the decoding started notification
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingStarted:)])
-							dispatch_sync(_notificationQueue, ^{
+							dispatch_async_and_wait(_notificationQueue, ^{
 								[_delegate audioPlayerNode:self decodingStarted:decoderState->mDecoder];
 							});
 					}
@@ -1066,7 +1066,7 @@ namespace {
 
 						// Perform the decoding complete notification
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingComplete:)])
-							dispatch_sync(_notificationQueue, ^{
+							dispatch_async_and_wait(_notificationQueue, ^{
 								[_delegate audioPlayerNode:self decodingComplete:decoderState->mDecoder];
 							});
 
@@ -1086,7 +1086,7 @@ namespace {
 
 					// Perform the decoding cancelled notification
 					if([_delegate respondsToSelector:@selector(audioPlayerNode:decodingCanceled:partiallyRendered:)])
-						dispatch_sync(_notificationQueue, ^{
+						dispatch_async_and_wait(_notificationQueue, ^{
 							[_delegate audioPlayerNode:self decodingCanceled:canceledDecoder partiallyRendered:partiallyRendered];
 						});
 
@@ -1133,7 +1133,7 @@ namespace {
 						os_log_debug(_audioPlayerNodeLog, "Rendering will start in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingWillStart:atHostTime:)])
-							dispatch_sync(_notificationQueue, ^{
+							dispatch_async_and_wait(_notificationQueue, ^{
 								[_delegate audioPlayerNode:self renderingWillStart:decoderState->mDecoder atHostTime:hostTime];
 							});
 

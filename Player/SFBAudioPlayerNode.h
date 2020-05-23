@@ -59,9 +59,10 @@ typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 ///  1. Decoding started
 ///  2. Decoding complete
 ///  3. Decoding canceled
-///  4. Rendering started
-///  5. Rendering complete
-///  6. End of audio
+///  4. Rendering will start
+///  5. Rendering started
+///  6. Rendering complete
+///  7. End of audio
 ///
 /// All callbacks are performed on a dedicated notification queue.
 NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNode
