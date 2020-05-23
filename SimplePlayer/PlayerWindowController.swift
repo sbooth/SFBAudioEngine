@@ -107,11 +107,15 @@ class PlayerWindowController: NSWindowController {
 		timer.schedule(deadline: DispatchTime.now(), repeating: .milliseconds(200), leeway: .milliseconds(100))
 
 		timer.setEventHandler {
-			if self.player.isPlaying {
+			switch self.player.playbackState {
+			case .playing:
 				self.playButton.title = "Pause"
-			}
-			else {
+			case .paused:
 				self.playButton.title = "Resume"
+			case .stopped:
+				self.playButton.title = "Stopped"
+			@unknown default:
+				fatalError()
 			}
 
 			let positionAndTime = self.player.positionAndTime
@@ -131,6 +135,15 @@ class PlayerWindowController: NSWindowController {
 		timer.resume()
 
 		disableUI()
+
+		if let urls = UserDefaults.standard.object(forKey: "playlistURLs") as? [String] {
+			for url in urls {
+				if let u = URL(string: url) {
+					let item = PlaylistItem(u)
+					playlist.append(item)
+				}
+			}
+		}
 	}
 
 	// MARK: - Actions
@@ -483,6 +496,9 @@ extension PlayerWindowController: NSMenuItemValidation {
 extension PlayerWindowController: NSWindowDelegate {
 	func windowWillClose(_ notification: Notification) {
 		player.stop()
+
+		let urls = playlist.map({ $0.url.absoluteString })
+		UserDefaults.standard.set(urls, forKey: "playlistURLs")
 	}
 }
 
