@@ -872,7 +872,7 @@ namespace {
 		frame = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return NO;
 
 	if(frame >= decoderState->FrameLength())
