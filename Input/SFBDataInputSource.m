@@ -35,12 +35,12 @@
 	return [self initWithData:data];
 }
 
-- (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length
+- (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
 {
 	NSParameterAssert(bytes != NULL);
 	NSParameterAssert(length > 0);
 
-	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length];
+	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
 	if(data == nil)
 		return nil;
 	return [self initWithData:data];
