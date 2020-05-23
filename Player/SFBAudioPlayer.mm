@@ -490,11 +490,10 @@ namespace {
 {
 	dispatch_async_and_wait(_engineQueue, ^{
 		block(_engine);
+		// SFBAudioPlayer requires that the mixer node be connected to the output node
+		NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
+		NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 	});
-
-	// SFBAudioPlayer requires that the mixer node be connected to the output node
-	NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
-	NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 }
 
 #pragma mark - Decoder Queue
