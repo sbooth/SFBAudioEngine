@@ -30,7 +30,7 @@ namespace {
 	/// The dispatch queue used to access \c _engine
 	dispatch_queue_t		_engineQueue;
 	/// Cached value of \c _engine.isRunning
-	BOOL 					_engineIsRunning;
+	std::atomic_bool		_engineIsRunning;
 #if TARGET_OS_OSX
 	/// The current output device for \c _engine.outputNode
 	SFBAudioOutputDevice 	*_outputDevice;
@@ -195,7 +195,7 @@ namespace {
 	[self willChangeValueForKey:@"playbackState"];
 
 	__block NSError *err = nil;
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		_engineIsRunning = [_engine startAndReturnError:&err];
 		if(_engineIsRunning)
 			[_playerNode play];
@@ -239,7 +239,7 @@ namespace {
 
 	[self willChangeValueForKey:@"playbackState"];
 
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		[_engine stop];
 		_engineIsRunning = NO;
 		[_playerNode stop];
@@ -266,7 +266,7 @@ namespace {
 
 - (void)reset
 {
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode reset];
 		[_engine reset];
 	});
@@ -278,9 +278,11 @@ namespace {
 
 - (BOOL)engineIsRunning
 {
-	// I assume this function is thread-safe, but it isn't documented either way
-	// This assumption is based on the fact that AUGraphIsRunning() is thread-safe
-	return _engine.isRunning;
+	__block BOOL isRunning;
+	dispatch_async_and_wait(_engineQueue, ^{
+		isRunning = _engine.isRunning;
+	});
+	return isRunning;
 }
 
 - (BOOL)playerNodeIsPlaying
@@ -290,7 +292,7 @@ namespace {
 
 - (SFBAudioPlayerPlaybackState)playbackState
 {
-	if(_engine.isRunning)
+	if(_engineIsRunning)
 		return _playerNode.isPlaying ? SFBAudioPlayerPlaybackStatePlaying : SFBAudioPlayerPlaybackStatePaused;
 	else
 		return SFBAudioPlayerPlaybackStateStopped;
@@ -298,17 +300,17 @@ namespace {
 
 - (BOOL)isPlaying
 {
-	return _engine.isRunning && _playerNode.isPlaying;
+	return _engineIsRunning && _playerNode.isPlaying;
 }
 
 - (BOOL)isPaused
 {
-	return _engine.isRunning && !_playerNode.isPlaying;
+	return _engineIsRunning && !_playerNode.isPlaying;
 }
 
 - (BOOL)isStopped
 {
-	return !_engine.isRunning;
+	return !_engineIsRunning;
 }
 
 - (BOOL)isReady
@@ -417,7 +419,7 @@ namespace {
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel
 {
 	__block float volume = std::nanf("1");
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		AudioUnitParameterValue channelVolume;
 		OSStatus result = AudioUnitGetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
 		if(result != noErr) {
@@ -437,7 +439,7 @@ namespace {
 
 	__block BOOL success = NO;
 	__block NSError *err = nil;
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		AudioUnitParameterValue channelVolume = volume;
 		OSStatus result = AudioUnitSetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
@@ -465,7 +467,7 @@ namespace {
 
 	__block BOOL result;
 	__block NSError *err = nil;
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.deviceID error:&err];
 	});
 
@@ -486,13 +488,12 @@ namespace {
 
 - (void)withEngine:(SFBAudioPlayerAVAudioEngineBlock)block
 {
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		block(_engine);
+		// SFBAudioPlayer requires that the mixer node be connected to the output node
+		NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
+		NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 	});
-
-	// SFBAudioPlayer requires that the mixer node be connected to the output node
-	NSAssert([_engine inputConnectionPointForNode:_engine.outputNode inputBus:0].node == _engine.mainMixerNode, @"Illegal AVAudioEngine configuration");
-	NSAssert(_engine.isRunning == _engineIsRunning, @"AVAudioEngine may not be started or stopped outside of SFBAudioPlayer");
 }
 
 #pragma mark - Decoder Queue
@@ -547,7 +548,7 @@ namespace {
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode stop];
 		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 	});
@@ -570,7 +571,7 @@ namespace {
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
 {
 	__block BOOL success = YES;
-	dispatch_sync(_engineQueue, ^{
+	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode reset];
 		[_engine reset];
 
