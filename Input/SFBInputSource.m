@@ -51,12 +51,12 @@ static void SFBCreateInputSourceLog()
 	return [[SFBDataInputSource alloc] initWithBytes:bytes length:length];
 }
 
-+ (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length error:(NSError **)error
++ (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone error:(NSError **)error
 {
 	if(!bytes || length <= 0)
 		return nil;
 
-	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length];
+	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
 }
 
 - (BOOL)openReturningError:(NSError **)error

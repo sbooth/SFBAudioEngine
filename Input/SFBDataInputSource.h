@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithData:(NSData *)data NS_DESIGNATED_INITIALIZER;
 - (nullable instancetype)initWithBytes:(const void *)bytes length:(NSInteger)length;
-- (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length;
+- (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone;
 @end
 
 NS_ASSUME_NONNULL_END

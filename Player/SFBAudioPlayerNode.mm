@@ -851,12 +851,12 @@ namespace {
 	return [self seekToFrame:targetFrame];
 }
 
-- (BOOL)seekToPosition:(float)position
+- (BOOL)seekToPosition:(double)position
 {
 	if(position < 0)
 		position = 0;
 	else if(position >= 1)
-		position = std::nextafter(1.f, 0.f);
+		position = std::nextafter(1.0, 0.0);
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)

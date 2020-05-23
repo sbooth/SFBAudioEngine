@@ -402,7 +402,7 @@ namespace {
 	return [_playerNode seekToTime:timeInSeconds];
 }
 
-- (BOOL)seekToPosition:(float)position
+- (BOOL)seekToPosition:(double)position
 {
 	return [_playerNode seekToPosition:position];
 }

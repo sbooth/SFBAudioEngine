@@ -16,14 +16,14 @@ namespace {
 
 	TagLib::ByteVector DecodeBase64(const TagLib::ByteVector& input)
 	{
-		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size()];
+		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size() freeWhenDone:NO];
 		NSData *decoded = [[NSData alloc] initWithBase64EncodedData:data options:0];
 		return {(const char *)decoded.bytes, (size_t)decoded.length};
 	}
 
 	TagLib::ByteVector EncodeBase64(const TagLib::ByteVector& input)
 	{
-		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size()];
+		NSData *data = [NSData dataWithBytesNoCopy:(void *)input.data() length:(NSUInteger)input.size() freeWhenDone:NO];
 		NSData *encoded = [data base64EncodedDataWithOptions:0];
 		return {(const char *)encoded.bytes, (size_t)encoded.length};
 	}

@@ -201,7 +201,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Seeks to the specified positioni n the current decoder
 /// @param position The desired position in the interval \c [0, 1)
 /// @return \c NO if the current decoder is \c nil
-- (BOOL)seekToPosition:(float)position NS_SWIFT_NAME(seek(position:));
+- (BOOL)seekToPosition:(double)position NS_SWIFT_NAME(seek(position:));
 /// Seeks to the specified audio frame in the current decoder
 /// @param frame The desired audio frame
 /// @return \c NO if the current decoder is \c nil
