@@ -323,12 +323,10 @@ namespace {
 		return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
 	}
 
-#if DEBUG
 	inline double ConvertHostTicksToNanos(uint64_t t)
 	{
 		return (double)t * kHostTicksPerNano;
 	}
-#endif
 
 }
 
