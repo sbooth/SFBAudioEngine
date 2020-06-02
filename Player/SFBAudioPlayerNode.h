@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Playback position information for \c SFBAudioPlayerNode
 struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
-	/// The current frame position or \c SFBUnknownFramePosition
+	/// The current frame position or \c SFBUnknownFramePosition if unknown
 	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
 	/// The total number of frames or \c SFBUnknownFrameLength if unknown
 	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
