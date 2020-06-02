@@ -16,18 +16,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Playback position information for \c SFBAudioPlayerNode
 struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackPosition) SFBAudioPlayerNodePlaybackPosition {
-	/// The current frame position
+	/// The current frame position or \c SFBUnknownFramePosition if unknown
 	AVAudioFramePosition framePosition NS_SWIFT_NAME(current);
-	/// The total number of frames or \c -1 if unknown
+	/// The total number of frames or \c SFBUnknownFrameLength if unknown
 	AVAudioFramePosition frameLength NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
+/// Value representing an invalid or unknown time
+extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(UnknownTime);
+#define SFB_UNKNOWN_TIME ((NSTimeInterval)-1)
+
 /// Playback time information for \c SFBAudioPlayerNode
 struct NS_SWIFT_NAME(AudioPlayerNode.PlaybackTime) SFBAudioPlayerNodePlaybackTime {
-	/// The current time
+	/// The current time or \c SFBUnknownTime if unknown
 	NSTimeInterval currentTime NS_SWIFT_NAME(current);
-	/// The total time or \c -1 if unknown
+	/// The total time or \c SFBUnknownTime if unknown
 	NSTimeInterval totalTime NS_SWIFT_NAME(total);
 };
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
@@ -154,9 +158,9 @@ NS_SWIFT_NAME(AudioPlayerNode ) @interface SFBAudioPlayerNode : AVAudioSourceNod
 
 #pragma mark - Playback Properties
 
-/// Returns the playback position in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, \c SFBUnknownFrameLength} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerNodePlaybackPosition playbackPosition NS_SWIFT_NAME(position);
-/// Returns the playback time in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the playback time in the current decoder or \c {SFBUnknownTime, \c SFBUnknownTime} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerNodePlaybackTime playbackTime NS_SWIFT_NAME(time);
 
 /// Retrieves the playback position and time

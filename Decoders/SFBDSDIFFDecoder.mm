@@ -684,6 +684,7 @@ namespace {
 @interface SFBDSDIFFDecoder ()
 {
 @private
+	BOOL _isOpen;
 	AVAudioFramePosition _packetPosition;
 	AVAudioFramePosition _packetCount;
 	int64_t _audioOffset;
@@ -787,18 +788,20 @@ namespace {
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
 
+	_isOpen = YES;
+
 	return YES;
 }
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_packetCount = -1;
+	_isOpen = NO;
 	return [super closeReturningError:error];
 }
 
 - (BOOL)isOpen
 {
-	return _packetCount != 0;
+	return _isOpen;
 }
 
 - (AVAudioFramePosition)packetPosition

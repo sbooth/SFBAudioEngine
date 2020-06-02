@@ -68,24 +68,13 @@
 	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-
-- (instancetype)init
-{
-	if((self = [super init])) {
-		_frameLength = -1;
-		_serialNumber = -1;
-	}
-	return self;
-}
-
-#pragma clang diagnostic pop
-
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
 		return NO;
+
+	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_serialNumber = -1;
 
 	// Initialize Ogg data struct
 	ogg_sync_init(&_syncState);
@@ -288,6 +277,9 @@
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_serialNumber = -1;
+
 	// Speex cleanup
 	if(_stereoState) {
 		speex_stereo_state_destroy(_stereoState);
