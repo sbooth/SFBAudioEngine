@@ -6,7 +6,7 @@
 import Foundation
 
 extension AudioPlayer {
-	/// Returns the playback position and time in the current decoder or `((-1, -1), (-1, -1))` if the current decoder is `nil`
+	/// Returns the playback position and time in the current decoder or `((UnknownFramePosition, UnknownFrameLength), (UnknownTime, UnknownTime))` if the current decoder is `nil`
 	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
 		var position = PlaybackPosition()
 		var time = PlaybackTime()
