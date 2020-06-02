@@ -74,7 +74,7 @@
 - (instancetype)init
 {
 	if((self = [super init])) {
-		_frameLength = -1;
+		_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
 		_serialNumber = -1;
 	}
 	return self;
@@ -288,6 +288,9 @@
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_serialNumber = -1;
+
 	// Speex cleanup
 	if(_stereoState) {
 		speex_stereo_state_destroy(_stereoState);

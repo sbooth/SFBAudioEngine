@@ -708,6 +708,20 @@ namespace {
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
+
+- (instancetype)init
+{
+	if((self = [super init])) {
+		_packetPosition = SFB_UNKNOWN_PACKET_POSITION;
+		_packetCount = SFB_UNKNOWN_PACKET_COUNT;
+	}
+	return self;
+}
+
+#pragma clang diagnostic pop
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
@@ -792,13 +806,14 @@ namespace {
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_packetCount = -1;
+	_packetPosition = SFB_UNKNOWN_PACKET_POSITION;
+	_packetCount = SFB_UNKNOWN_PACKET_COUNT;
 	return [super closeReturningError:error];
 }
 
 - (BOOL)isOpen
 {
-	return _packetCount != 0;
+	return _packetCount != SFB_UNKNOWN_PACKET_COUNT;
 }
 
 - (AVAudioFramePosition)packetPosition

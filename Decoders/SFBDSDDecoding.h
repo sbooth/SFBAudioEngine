@@ -44,14 +44,22 @@ extern const NSInteger SFBPCMFramesPerDSDPacket NS_SWIFT_NAME(PCMFramesPerDSDPac
 extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(BytesPerDSDPacketPerChannel);
 #define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL 1
 
+/// Value representing an invalid or unknown audio packet position
+extern const AVAudioFramePosition SFBUnknownPacketPosition NS_SWIFT_NAME(UnknownPacketPosition);
+#define SFB_UNKNOWN_PACKET_POSITION ((AVAudioFramePosition)-1)
+
+/// Value representing an invalid or unknown audio packet count
+extern const AVAudioFramePosition SFBUnknownPacketCount NS_SWIFT_NAME(UnknownPacketCount);
+#define SFB_UNKNOWN_PACKET_COUNT ((AVAudioFramePosition)-1)
+
 NS_SWIFT_NAME(DSDDecoding) @protocol SFBDSDDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
 
-/// Returns the decoder's current packet position or \c -1 if unknown
+/// Returns the decoder's current packet position or \c SFBUnknownPacketPosition if unknown
 @property (nonatomic, readonly) AVAudioFramePosition packetPosition NS_SWIFT_NAME(position);
 
-/// Returns the decoder's length in packets or \c -1 if unknown
+/// Returns the decoder's length in packets or \c SFBUnknownPacketCount if unknown
 @property (nonatomic, readonly) AVAudioFramePosition packetCount NS_SWIFT_NAME(count);
 
 #pragma mark - Decoding
