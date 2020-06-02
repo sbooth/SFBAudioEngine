@@ -187,12 +187,18 @@ static long tell_func_callback(void *datasource)
 
 - (AVAudioFramePosition)framePosition
 {
-	return ov_pcm_tell(&_vorbisFile);
+	ogg_int64_t framePosition = ov_pcm_tell(&_vorbisFile);
+	if(framePosition == OV_EINVAL)
+		return SFB_UNKNOWN_FRAME_POSITION;
+	return framePosition;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return ov_pcm_total(&_vorbisFile, -1);
+	ogg_int64_t frameLength = ov_pcm_total(&_vorbisFile, -1);
+	if(frameLength == OV_EINVAL)
+		return SFB_UNKNOWN_FRAME_LENGTH;
+	return frameLength;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
