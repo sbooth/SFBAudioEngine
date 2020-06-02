@@ -68,14 +68,19 @@
 	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
+
+- (instancetype)init
 {
-	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error])) {
+	if((self = [super init])) {
 		_frameLength = -1;
 		_serialNumber = -1;
 	}
 	return self;
 }
+
+#pragma clang diagnostic pop
 
 - (BOOL)openReturningError:(NSError **)error
 {
