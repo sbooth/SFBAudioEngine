@@ -684,6 +684,7 @@ namespace {
 @interface SFBDSDIFFDecoder ()
 {
 @private
+	BOOL _isOpen;
 	AVAudioFramePosition _packetPosition;
 	AVAudioFramePosition _packetCount;
 	int64_t _audioOffset;
@@ -707,20 +708,6 @@ namespace {
 {
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-
-- (instancetype)init
-{
-	if((self = [super init])) {
-		_packetPosition = SFB_UNKNOWN_PACKET_POSITION;
-		_packetCount = SFB_UNKNOWN_PACKET_COUNT;
-	}
-	return self;
-}
-
-#pragma clang diagnostic pop
 
 - (BOOL)openReturningError:(NSError **)error
 {
@@ -801,19 +788,20 @@ namespace {
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
 
+	_isOpen = YES;
+
 	return YES;
 }
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_packetPosition = SFB_UNKNOWN_PACKET_POSITION;
-	_packetCount = SFB_UNKNOWN_PACKET_COUNT;
+	_isOpen = NO;
 	return [super closeReturningError:error];
 }
 
 - (BOOL)isOpen
 {
-	return _packetCount != SFB_UNKNOWN_PACKET_COUNT;
+	return _isOpen;
 }
 
 - (AVAudioFramePosition)packetPosition
