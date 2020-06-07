@@ -549,29 +549,14 @@ namespace {
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
 	dispatch_async_and_wait(_engineQueue, ^{
-		SFBAudioPlayerNode *previousPlayerNode = _playerNode;
-		BOOL playerNodeWasPlaying = previousPlayerNode.isPlaying;
-
+		BOOL playerNodeWasPlaying = _playerNode.isPlaying;
 		[_playerNode pause];
+
 		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
-
 		if(success) {
-			NSError *error = nil;
-
-			// Transfer the current decoder and decoder queue from the old SFBAudioPlayerNode to the new one
-			id <SFBPCMDecoding> decoder = previousPlayerNode.currentDecoder;
-			if(decoder) {
-				if(![_playerNode enqueueDecoder:decoder error:&error])
-					os_log_error(_audioPlayerLog, "Unable to transfer SFBAudioPlayerNode current decoder: %{public}@", error);
-			}
-
-			while((decoder = previousPlayerNode.dequeueDecoder)) {
-				if(![_playerNode enqueueDecoder:decoder error:&error])
-					os_log_error(_audioPlayerLog, "Unable to transfer decoder from SFBAudioPlayerNode queue: %{public}@", error);
-			}
-
 			// Restart AVAudioEngine if previously running
 			if(engineStateChanged) {
+				NSError *error = nil;
 				_engineIsRunning = [_engine startAndReturnError:&error];
 				if(_engineIsRunning) {
 					if(playerNodeWasPlaying)
@@ -637,16 +622,21 @@ namespace {
 		}
 	}
 
-	if([format isEqual:_playerNode.renderingFormat] && !forceUpdate)
+	BOOL formatsEqual = [format isEqual:_playerNode.renderingFormat];
+	if(formatsEqual && !forceUpdate)
 		return YES;
 
-	SFBAudioPlayerNode *playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
-	if(!playerNode) {
-		os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
-		return NO;
-	}
+	// Avoid creating a new SFBAudioPlayerNode if not necessary
+	SFBAudioPlayerNode *playerNode = nil;
+	if(!formatsEqual) {
+		playerNode = [[SFBAudioPlayerNode alloc] initWithFormat:format];
+		if(!playerNode) {
+			os_log_error(_audioPlayerLog, "Unable to create SFBAudioPlayerNode with format %{public}@", format);
+			return NO;
+		}
 
-	playerNode.delegate = self;
+		playerNode.delegate = self;
+	}
 
 	AVAudioOutputNode *outputNode = _engine.outputNode;
 	AVAudioMixerNode *mixerNode = _engine.mainMixerNode;
@@ -661,34 +651,30 @@ namespace {
 	if(outputFormatChanged)
 		os_log_debug(_audioPlayerLog, "AVAudioEngine output format changed from %{public}@ to %{public}@", previousOutputFormat, outputFormat);
 
-	AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
-	if(_playerNode) {
-		playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
-		[_engine disconnectNodeOutput:_playerNode bus:0];
-		[_engine detachNode:_playerNode];
-	}
-
-	if(outputFormatChanged)
+	if(outputFormatChanged) {
 		[_engine disconnectNodeInput:outputNode bus:0];
 
-	_playerNode = playerNode;
-	[_engine attachNode:_playerNode];
-
-	// Reconnect the player node to its output
-	AVAudioFormat *formatAsStandard = nil;
-	if(format.channelLayout)
-		formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channelLayout:format.channelLayout];
-	else
-		formatAsStandard = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:format.sampleRate channels:format.channelCount];
-
-	if(playerNodeOutputConnectionPoint)
-		[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:formatAsStandard];
-	else
-		[_engine connect:_playerNode to:mixerNode format:formatAsStandard];
-
-	// Reconnect the mixer and output nodes using the output device's format
-	if(outputFormatChanged)
+		// Reconnect the mixer and output nodes using the output device's format
 		[_engine connect:mixerNode to:outputNode format:outputFormat];
+	}
+
+	if(playerNode) {
+		AVAudioConnectionPoint *playerNodeOutputConnectionPoint = nil;
+		if(_playerNode) {
+			playerNodeOutputConnectionPoint = [[_engine outputConnectionPointsForNode:_playerNode outputBus:0] firstObject];
+			[_engine disconnectNodeOutput:_playerNode bus:0];
+			[_engine detachNode:_playerNode];
+		}
+
+		_playerNode = playerNode;
+		[_engine attachNode:_playerNode];
+
+		// Reconnect the player node to its output
+		if(playerNodeOutputConnectionPoint)
+			[_engine connect:_playerNode to:playerNodeOutputConnectionPoint.node format:format];
+		else
+			[_engine connect:_playerNode to:mixerNode format:format];
+	}
 
 #if 1
 	// AVAudioMixerNode handles sample rate conversion, but it may require input buffer sizes
