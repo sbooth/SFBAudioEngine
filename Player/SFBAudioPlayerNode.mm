@@ -128,6 +128,15 @@ namespace {
 			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCapacity);
 			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:conversionBufferLength];
+
+			AVAudioFramePosition framePosition = decoder.framePosition;
+			if(framePosition != 0) {
+				double sampleRateRatio = mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate;
+				AVAudioFramePosition adjustedPosition = (AVAudioFramePosition)(framePosition / sampleRateRatio);
+				mFramesDecoded.store(framePosition);
+				mFramesConverted.store(adjustedPosition);
+				mFramesRendered.store(adjustedPosition);
+			}
 		}
 
 		inline AVAudioFramePosition FramePosition() const
