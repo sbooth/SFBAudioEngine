@@ -549,13 +549,44 @@ namespace {
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
 	dispatch_async_and_wait(_engineQueue, ^{
-		[_playerNode stop];
+		SFBAudioPlayerNode *previousPlayerNode = _playerNode;
+		BOOL playerNodeWasPlaying = previousPlayerNode.isPlaying;
+
+		[_playerNode pause];
 		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
+
+		if(success) {
+			NSError *error = nil;
+
+			// Transfer the current decoder and decoder queue from the old SFBAudioPlayerNode to the new one
+			id <SFBPCMDecoding> decoder = previousPlayerNode.currentDecoder;
+			if(decoder) {
+				if(![_playerNode enqueueDecoder:decoder error:&error])
+					os_log_error(_audioPlayerLog, "Unable to transfer SFBAudioPlayerNode current decoder: %{public}@", error);
+			}
+
+			while((decoder = previousPlayerNode.dequeueDecoder)) {
+				if(![_playerNode enqueueDecoder:decoder error:&error])
+					os_log_error(_audioPlayerLog, "Unable to transfer decoder from SFBAudioPlayerNode queue: %{public}@", error);
+			}
+
+			// Restart AVAudioEngine if previously running
+			if(engineStateChanged) {
+				_engineIsRunning = [_engine startAndReturnError:&error];
+				if(_engineIsRunning) {
+					if(playerNodeWasPlaying)
+						[_playerNode play];
+				}
+				else
+					os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
+			}
+		}
 	});
 
 	if(engineStateChanged)
 		[self didChangeValueForKey:@"playbackState"];
 
+	// Success in this context means the graph is in a working state
 	if(!success) {
 		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
