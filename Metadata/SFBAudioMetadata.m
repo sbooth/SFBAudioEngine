@@ -714,7 +714,7 @@ static id _sharedKeySet;
 	[_metadata setValue:obj forKey:key];
 }
 
-- (nullable id)objectForKeyedSubscript:(SFBAudioMetadataKey)key
+- (id)objectForKeyedSubscript:(SFBAudioMetadataKey)key
 {
 	return _metadata[key];
 }

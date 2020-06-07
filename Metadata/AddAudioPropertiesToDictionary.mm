@@ -15,7 +15,7 @@ void SFB::Audio::AddAudioPropertiesToDictionary(const TagLib::AudioProperties *p
 		dictionary[SFBAudioPropertiesKeyDuration] = @(properties->length());
 
 	if(properties->channels())
-		dictionary[SFBAudioPropertiesKeyChannelsPerFrame] = @(properties->channels());
+		dictionary[SFBAudioPropertiesKeyChannelCount] = @(properties->channels());
 
 	if(properties->sampleRate())
 		dictionary[SFBAudioPropertiesKeySampleRate] = @(properties->sampleRate());

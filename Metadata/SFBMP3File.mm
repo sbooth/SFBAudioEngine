@@ -98,7 +98,7 @@
 #endif
 
 		if(properties->xingHeader() && properties->xingHeader()->totalFrames())
-			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->xingHeader()->totalFrames());
+			propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->xingHeader()->totalFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

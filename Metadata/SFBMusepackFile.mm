@@ -69,7 +69,7 @@
 		SFB::Audio::AddAudioPropertiesToDictionary(properties, propertiesDictionary);
 
 		if(properties->sampleFrames())
-			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->sampleFrames());
+			propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

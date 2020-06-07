@@ -13,9 +13,9 @@ typedef NSString * SFBAudioPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioProper
 /// The name of the audio format
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
 /// The total number of audio frames (\c NSNumber
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyTotalFrames;
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
 /// The number of channels (\c NSNumber)
-extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelsPerFrame;
+extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;
 /// The number of bits per channel (\c NSNumber
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel;
 /// The sample rate (\c NSNumber)
@@ -39,10 +39,10 @@ NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopyi
 @property (nonatomic, nullable, readonly) NSString *formatName;
 
 /// The total number of audio frames
-@property (nonatomic, nullable, readonly) NSNumber *totalFrames;
+@property (nonatomic, nullable, readonly) NSNumber *frameLength;
 
 /// The number of channels
-@property (nonatomic, nullable, readonly) NSNumber *channelsPerFrame;
+@property (nonatomic, nullable, readonly) NSNumber *channelCount;
 
 /// The number of bits per channel
 @property (nonatomic, nullable, readonly) NSNumber *bitsPerChannel;

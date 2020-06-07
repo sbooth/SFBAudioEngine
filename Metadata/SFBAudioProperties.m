@@ -7,8 +7,8 @@
 
 // Key names for the properties dictionary
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName			= @"Format Name";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyTotalFrames		= @"Total Frames";
-SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelsPerFrame	= @"Channels Per Frame";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength		= @"Frame Length";
+SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount		= @"Channel Count";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitsPerChannel		= @"Bits Per Channel";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeySampleRate			= @"Sample Rate";
 SFBAudioPropertiesKey const SFBAudioPropertiesKeyDuration			= @"Duration";
@@ -35,8 +35,8 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 	if((self = [super init])) {
 		NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
 		dictionary[SFBAudioPropertiesKeyFormatName] 		= dictionaryRepresentation[SFBAudioPropertiesKeyFormatName];
-		dictionary[SFBAudioPropertiesKeyTotalFrames] 		= dictionaryRepresentation[SFBAudioPropertiesKeyTotalFrames];
-		dictionary[SFBAudioPropertiesKeyChannelsPerFrame] 	= dictionaryRepresentation[SFBAudioPropertiesKeyChannelsPerFrame];
+		dictionary[SFBAudioPropertiesKeyFrameLength] 		= dictionaryRepresentation[SFBAudioPropertiesKeyFrameLength];
+		dictionary[SFBAudioPropertiesKeyChannelCount] 	= dictionaryRepresentation[SFBAudioPropertiesKeyChannelCount];
 		dictionary[SFBAudioPropertiesKeyBitsPerChannel] 	= dictionaryRepresentation[SFBAudioPropertiesKeyBitsPerChannel];
 		dictionary[SFBAudioPropertiesKeySampleRate] 		= dictionaryRepresentation[SFBAudioPropertiesKeySampleRate];
 		dictionary[SFBAudioPropertiesKeyDuration] 			= dictionaryRepresentation[SFBAudioPropertiesKeyDuration];
@@ -57,14 +57,14 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 	return [_properties objectForKey:SFBAudioPropertiesKeyFormatName];
 }
 
-- (NSNumber *)totalFrames
+- (NSNumber *)frameLength
 {
-	return [_properties objectForKey:SFBAudioPropertiesKeyTotalFrames];
+	return [_properties objectForKey:SFBAudioPropertiesKeyFrameLength];
 }
 
-- (NSNumber *)channelsPerFrame
+- (NSNumber *)channelCount
 {
-	return [_properties objectForKey:SFBAudioPropertiesKeyChannelsPerFrame];
+	return [_properties objectForKey:SFBAudioPropertiesKeyChannelCount];
 }
 
 - (NSNumber *)bitsPerChannel
@@ -106,7 +106,7 @@ SFBAudioPropertiesKey const SFBAudioPropertiesKeyBitrate			= @"Bitrate";
 	return [_properties valueForKey:key];
 }
 
-- (nullable id)objectForKeyedSubscript:(SFBAudioPropertiesKey)key
+- (id)objectForKeyedSubscript:(SFBAudioPropertiesKey)key
 {
 	return _properties[key];
 }
