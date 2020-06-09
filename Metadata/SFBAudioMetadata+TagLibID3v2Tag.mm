@@ -112,16 +112,16 @@
 		if(TagLib::String::npos() != pos) {
 			int discNum = s.substr(0, pos).toInt(&ok);
 			if(ok)
-				self.trackNumber = @(discNum);
+				self.discNumber = @(discNum);
 
 			int discTotal = s.substr(pos + 1).toInt(&ok);
 			if(ok)
-				self.trackNumber = @(discTotal);
+				self.discTotal = @(discTotal);
 		}
 		else if(s.length()) {
 			int discNum = s.toInt(&ok);
 			if(ok)
-				self.trackNumber = @(discNum);
+				self.discNumber = @(discNum);
 		}
 	}
 
