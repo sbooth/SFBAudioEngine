@@ -120,14 +120,14 @@ class PlayerWindowController: NSWindowController {
 
 			let positionAndTime = self.player.positionAndTime
 
-			if positionAndTime.position.current != -1 && positionAndTime.position.total != -1 {
+			if positionAndTime.position.current != UnknownFramePosition && positionAndTime.position.total != UnknownFrameLength {
 				self.slider.doubleValue = Double(positionAndTime.position.current) / Double(positionAndTime.position.total)
 			}
 
-			if positionAndTime.time.current != -1 {
+			if positionAndTime.time.current != UnknownTime {
 				self.elapsed.doubleValue = positionAndTime.time.current
-				if positionAndTime.time.total != -1 {
-					self.remaining.doubleValue = -1 * (positionAndTime.time.total - positionAndTime.time.current)
+				if positionAndTime.time.total != UnknownTime {
+					self.remaining.doubleValue = UnknownTime * (positionAndTime.time.total - positionAndTime.time.current)
 				}
 			}
 		}
@@ -348,7 +348,7 @@ class PlayerWindowController: NSWindowController {
 		forwardButton.isEnabled = seekable
 
 		elapsed.isHidden = false
-		if player.frameLength != -1 {
+		if player.frameLength != UnknownFrameLength {
 			remaining.isHidden = false
 		}
 

@@ -68,19 +68,13 @@
 	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
 }
 
-- (instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(NSString *)mimeType error:(NSError **)error
-{
-	if((self = [super initWithInputSource:inputSource mimeType:mimeType error:error])) {
-		_frameLength = -1;
-		_serialNumber = -1;
-	}
-	return self;
-}
-
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
 		return NO;
+
+	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_serialNumber = -1;
 
 	// Initialize Ogg data struct
 	ogg_sync_init(&_syncState);
@@ -283,6 +277,9 @@
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_serialNumber = -1;
+
 	// Speex cleanup
 	if(_stereoState) {
 		speex_stereo_state_destroy(_stereoState);

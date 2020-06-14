@@ -21,6 +21,7 @@
 #import "SFBAudioDecoder.h"
 #import "UnfairLock.h"
 
+const NSTimeInterval SFBUnknownTime = SFB_UNKNOWN_TIME;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 @interface SFBAudioPlayerNode ()
@@ -74,6 +75,7 @@ namespace {
 	const AVAudioFrameCount 	kRingBufferFrameCapacity 	= 16384;
 	const AVAudioFrameCount 	kRingBufferChunkSize 		= 2048;
 	const size_t 				kDecoderStateArraySize		= 8;
+	const int64_t				kInvalidFramePosition 		= -1;
 
 #pragma mark - Decoder State
 
@@ -121,18 +123,27 @@ namespace {
 
 	public:
 		DecoderStateData(id <SFBPCMDecoding> decoder, AVAudioFormat *format, AVAudioFrameCount frameCapacity = kDefaultBufferSize)
-			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(-1), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
+			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(kInvalidFramePosition), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
 		{
 			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
 			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCapacity);
 			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:conversionBufferLength];
+
+			AVAudioFramePosition framePosition = decoder.framePosition;
+			if(framePosition != 0) {
+				double sampleRateRatio = mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate;
+				AVAudioFramePosition adjustedPosition = (AVAudioFramePosition)(framePosition / sampleRateRatio);
+				mFramesDecoded.store(framePosition);
+				mFramesConverted.store(adjustedPosition);
+				mFramesRendered.store(adjustedPosition);
+			}
 		}
 
 		inline AVAudioFramePosition FramePosition() const
 		{
 			int64_t seek = mFrameToSeek.load();
 			int64_t rendered = mFramesRendered.load();
-			return seek == -1 ? rendered : seek;
+			return seek == kInvalidFramePosition ? rendered : seek;
 		}
 
 		inline AVAudioFramePosition FrameLength() const
@@ -205,17 +216,17 @@ namespace {
 			}
 
 			// Update the seek request
-			mFrameToSeek.store(-1);
+			mFrameToSeek.store(kInvalidFramePosition);
 
 			// Update the frame counters accordingly
 			// A seek is handled in essentially the same way as initial playback
-			if(newFrame != -1) {
+			if(newFrame != kInvalidFramePosition) {
 				mFramesDecoded.store(newFrame);
 				mFramesConverted.store(seekOffset);
 				mFramesRendered.store(seekOffset);
 			}
 
-			return newFrame != -1;
+			return newFrame != kInvalidFramePosition;
 		}
 
 	};
@@ -323,12 +334,10 @@ namespace {
 		return ConvertNanosToHostTicks(s * NSEC_PER_SEC);
 	}
 
-#if DEBUG
 	inline double ConvertHostTicksToNanos(uint64_t t)
 	{
 		return (double)t * kHostTicksPerNano;
 	}
-#endif
 
 }
 
@@ -756,7 +765,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .framePosition = -1, .frameLength = -1 };
+		return { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
 
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
@@ -765,24 +774,40 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .currentTime = -1, .totalTime = -1 };
+		return { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+
+	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
 
 	int64_t framePosition = decoderState->FramePosition();
 	int64_t frameLength = decoderState->FrameLength();
+
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-	return { .currentTime = framePosition / sampleRate, .totalTime = frameLength / sampleRate };
+	if(sampleRate > 0) {
+		if(framePosition != SFB_UNKNOWN_FRAME_POSITION)
+			playbackTime.currentTime = framePosition / sampleRate;
+		if(frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+			playbackTime.totalTime = frameLength / sampleRate;
+	}
+
+	return playbackTime;
 }
 
 - (BOOL)getPlaybackPosition:(SFBAudioPlayerNodePlaybackPosition *)playbackPosition andTime:(SFBAudioPlayerNodePlaybackTime *)playbackTime
 {
-	SFBAudioPlayerNodePlaybackPosition currentPlaybackPosition = { .framePosition = -1, .frameLength = -1 };
-	SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = -1, .totalTime = -1 };
+	SFBAudioPlayerNodePlaybackPosition currentPlaybackPosition = { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
+	SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(decoderState) {
 		currentPlaybackPosition = { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
+
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
-		currentPlaybackTime = { .currentTime = currentPlaybackPosition.framePosition / sampleRate, .totalTime = currentPlaybackPosition.frameLength / sampleRate };
+		if(sampleRate > 0) {
+			if(currentPlaybackPosition.framePosition != SFB_UNKNOWN_FRAME_POSITION)
+				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
+			if(currentPlaybackPosition.frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+				currentPlaybackTime.totalTime = currentPlaybackPosition.frameLength / sampleRate;
+		}
 	}
 
 	if(playbackPosition)
@@ -872,7 +897,7 @@ namespace {
 		frame = 0;
 
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
-	if(!decoderState)
+	if(!decoderState || !decoderState->mDecoder.supportsSeeking)
 		return NO;
 
 	if(frame >= decoderState->FrameLength())
@@ -1003,7 +1028,7 @@ namespace {
 
 			while(!(_flags.load() & eAudioPlayerNodeFlagStopDecoderThread)) {
 				// If a seek is pending reset the ring buffer
-				if(decoderState->mFrameToSeek.load() != -1)
+				if(decoderState->mFrameToSeek.load() != kInvalidFramePosition)
 					_flags.fetch_or(eAudioPlayerNodeFlagRingBufferNeedsReset);
 
 				// Reset the ring buffer if required, to prevent audible artifacts
@@ -1022,7 +1047,7 @@ namespace {
 						_flags.fetch_or(eAudioPlayerNodeFlagOutputIsMuted);
 
 					// Perform seek if one is pending
-					if(decoderState->mFrameToSeek.load() != -1)
+					if(decoderState->mFrameToSeek.load() != kInvalidFramePosition)
 						decoderState->PerformSeek();
 
 					// Reset() is not thread safe but the rendering thread is outputting silence

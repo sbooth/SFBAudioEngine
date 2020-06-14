@@ -156,18 +156,18 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - Playback Properties
 
-/// Returns the frame position in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the frame position in the current decoder or \c SFBUnknownFramePosition if the current decoder is \c nil
 @property (nonatomic, readonly) AVAudioFramePosition framePosition;
-/// Returns the frame length of the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the frame length of the current decoder or \c SFBUnknownFrameLength if the current decoder is \c nil
 @property (nonatomic, readonly) AVAudioFramePosition frameLength;
-/// Returns the playback position in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, \c SFBUnknownFrameLength} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_SWIFT_NAME(position);
 
-/// Returns the current time in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the current time in the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval currentTime;
-/// Returns the total time of the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the total time of the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval totalTime;
-/// Returns the playback time in the current decoder or \c {-1, \c -1} if the current decoder is \c nil
+/// Returns the playback time in the current decoder or \c {SFBUnknownTime, \c SFBUnknownTime} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_SWIFT_NAME(time);
 
 /// Retrieves the playback position and time

@@ -327,7 +327,7 @@ static SInt64 get_size_callback(void *inClientData)
 	OSStatus result = ExtAudioFileTell(_eaf, &currentFrame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d", result);
-		return -1;
+		return SFB_UNKNOWN_FRAME_POSITION;
 	}
 	return currentFrame;
 }
@@ -339,7 +339,7 @@ static SInt64 get_size_callback(void *inClientData)
 	OSStatus result = ExtAudioFileGetProperty(_eaf, kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d", result);
-		return -1;
+		return SFB_UNKNOWN_FRAME_LENGTH;
 	}
 	return frameLength;
 }

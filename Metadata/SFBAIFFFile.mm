@@ -70,7 +70,7 @@
 		if(properties->sampleWidth())
 			propertiesDictionary[SFBAudioPropertiesKeyBitsPerChannel] = @(properties->sampleWidth());
 		if(properties->sampleFrames())
-			propertiesDictionary[SFBAudioPropertiesKeyTotalFrames] = @(properties->sampleFrames());
+			propertiesDictionary[SFBAudioPropertiesKeyFrameLength] = @(properties->sampleFrames());
 	}
 
 	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];

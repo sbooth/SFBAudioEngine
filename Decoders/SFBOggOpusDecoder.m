@@ -178,12 +178,18 @@ static 	opus_int64 tell_callback(void *stream)
 
 - (AVAudioFramePosition)framePosition
 {
-	return op_pcm_tell(_opusFile);
+	ogg_int64_t framePosition = op_pcm_tell(_opusFile);
+	if(framePosition == OP_EINVAL)
+		return SFB_UNKNOWN_FRAME_POSITION;
+	return framePosition;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return op_pcm_total(_opusFile, -1);
+	ogg_int64_t frameLength = op_pcm_total(_opusFile, -1);
+	if(frameLength == OP_EINVAL)
+		return SFB_UNKNOWN_FRAME_LENGTH;
+	return frameLength;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
