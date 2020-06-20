@@ -147,7 +147,7 @@ namespace {
 		// Remove the existing item with this name
 		tag->removeItem(key);
 
-		if(value)
+		if(value != nil)
 			tag->setItem(key, TagLib::MP4::Item(value.intValue));
 	}
 
@@ -168,7 +168,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		if(!value)
+		if(value == nil)
 			tag->removeItem(key);
 		else
 			tag->setItem(key, TagLib::MP4::Item((int)value.boolValue));
@@ -179,7 +179,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SetMP4Item(tag, key, value ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+		SetMP4Item(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
 	}
 
 }
