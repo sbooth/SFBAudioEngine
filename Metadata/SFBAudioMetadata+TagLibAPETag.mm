@@ -152,7 +152,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		if(!value)
+		if(value == nil)
 			SetAPETag(tag, key, nil);
 		else
 			SetAPETag(tag, key, value.boolValue ? @"1" : @"0");
@@ -163,7 +163,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SetAPETag(tag, key, value ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+		SetAPETag(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
 	}
 
 }

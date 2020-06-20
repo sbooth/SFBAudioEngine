@@ -6,9 +6,11 @@
 import Foundation
 
 extension AudioDevice {
-	/// Returns an array of available sample rates
+	/// Returns an array of available sample rates or `[]` on error
 	public var availableSampleRates: [Double] {
-		let sampleRates = __availableSampleRates
+		guard let sampleRates = __availableSampleRates else {
+			return []
+		}
 		return sampleRates.map { $0.doubleValue }
 	}
 }

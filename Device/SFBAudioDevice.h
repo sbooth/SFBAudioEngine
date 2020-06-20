@@ -20,13 +20,13 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 /// Returns an array of all available audio devices or \c nil on error
 /// @note This returns \c { kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementWildcard }
-@property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *allDevices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *allDevices;
 /// Returns an array of available audio devices supporting output or \c nil on error
 /// @note A device supports output if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
-@property (class, nonatomic, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
 
-/// Returns the default output device
-@property (class, nonatomic, readonly) SFBAudioOutputDevice *defaultOutputDevice;
+/// Returns the default output device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultOutputDevice;
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
@@ -42,8 +42,8 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 
 /// Returns the device ID
 @property (nonatomic, readonly) AudioObjectID deviceID;
-/// Returns the device UID
-@property (nonatomic, readonly) NSString *deviceUID;
+/// Returns the device UID or \c nil on error
+@property (nonatomic, nullable, readonly) NSString *deviceUID;
 /// Returns the device name
 @property (nonatomic, nullable, readonly) NSString *name;
 /// Returns the device manufacturer
@@ -68,9 +68,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 /// @return \c YES if the sample rate was set successfully
 - (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error;
 
-/// Returns an array of available sample rates
+/// Returns an array of available sample rates or \c nil on error
 /// @note This returns \c { kAudioDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
 
 /// Returns the volume scalar of the specified channel or \c NaN on error
 /// @note This returns \c { kAudioDevicePropertyVolumeScalar, scope, channel }
@@ -119,13 +119,13 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 /// @note This returns \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
 /// @param scope The desired scope
 /// @return An array containing the data sources or \c nil on error
-- (NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
+- (nullable NSArray<SFBAudioDeviceDataSource *> *)dataSourcesInScope:(AudioObjectPropertyScope)scope;
 
 /// Returns an array of active \c SFBAudioDeviceDataSource objects for the specified scope
 /// @note This returns \c { kAudioDevicePropertyDataSource, scope, kAudioObjectPropertyElementMaster }
 /// @param scope The desired scope
 /// @return An array containing the active data sources or \c nil on error
-- (NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(AudioObjectPropertyScope)scope;
+- (nullable NSArray<SFBAudioDeviceDataSource *> *)activeDataSourcesInScope:(AudioObjectPropertyScope)scope;
 /// Sets the active data sources for the specified scope
 /// @note This sets \c { kAudioDevicePropertyDataSource, scope, kAudioObjectPropertyElementMaster }
 /// @param activeDataSources An array of \c SFBAudioDeviceDataSource objects to make active for the specified scope

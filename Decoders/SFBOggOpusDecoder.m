@@ -144,6 +144,9 @@ static 	opus_int64 tell_callback(void *stream)
 							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
 							 kAudioChannelLabel_LFEScreen];
 			break;
+		default:
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)header->channel_count)];
+			break;
 	}
 
 	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:OPUS_SAMPLE_RATE interleaved:NO channelLayout:channelLayout];

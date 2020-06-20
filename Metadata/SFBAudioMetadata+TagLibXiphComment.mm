@@ -165,7 +165,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		if(!value)
+		if(value == nil)
 			SetXiphComment(tag, key, nil);
 		else
 			SetXiphComment(tag, key, value.boolValue ? @"1" : @"0");
@@ -176,7 +176,7 @@ namespace {
 		assert(nullptr != tag);
 		assert(nullptr != key);
 
-		SetXiphComment(tag, key, value ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
+		SetXiphComment(tag, key, value != nil ? [NSString stringWithFormat:(format ?: @"%f"), value.doubleValue] : nil);
 	}
 
 }
