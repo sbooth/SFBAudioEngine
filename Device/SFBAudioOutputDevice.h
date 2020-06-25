@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "SFBAudioDevice.h"
+#import <SFBAudioEngine/SFBAudioDevice.h>
 
 @class SFBAudioDeviceDataSource;
 

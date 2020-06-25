@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudio.h>
 
-#import "SFBAudioDeviceDataSource.h"
+#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
 
 @class SFBAudioOutputDevice;
 
