@@ -21,12 +21,10 @@ namespace SFB {
 		CF_ENUM(AudioFormatID) {
 			kAudioFormatDirectStreamDigital 	= 'DSD ',	/*!< Direct Stream Digital (DSD) */
 			kAudioFormatDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
-//			kAudioFormatFLAC 					= 'FLAC',	/*!< Free Lossless Audio Codec (FLAC) */
 			kAudioFormatMOD 					= 'MOD ',	/*!< MOD */
 			kAudioFormatMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
 			kAudioFormatMPEG1 					= 'MPG1',	/*!< MPEG-1 (Layer I, II, or III) */
 			kAudioFormatMusepack 				= 'MPC ',	/*!< Musepack */
-			kAudioFormatOpus 					= 'OPUS',	/*!< Ogg Opus */
 			kAudioFormatSpeex 					= 'SPX ',	/*!< Ogg Speex */
 			kAudioFormatTrueAudio 				= 'TTA ',	/*!< True Audio */
 			kAudioFormatVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
@@ -111,10 +109,10 @@ namespace SFB {
 			/*! @name Format transformation */
 			//@{
 
-			/*! @brief Converts \c this to the equivalent non-interleaved format. Fails for non-PCM formats. */
+			/*! @brief Sets \c format to the equivalent non-interleaved format of \c this. Fails for non-PCM formats. */
 			bool GetNonInterleavedEquivalent(Format& format) const;
 
-			/*! @brief Converts \c this to the equivalent interleaved format. Fails for non-PCM formats. */
+			/*! @brief Sets \c format to the equivalent interleaved format of \c this. Fails for non-PCM formats. */
 			bool GetInterleavedEquivalent(Format& format) const;
 
 			//@}
