@@ -12,7 +12,7 @@
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
-	/*! @brief A wrapper around @c os_unfair_lock implementing C++ Lockable*/
+	/*! @brief A wrapper around @c os_unfair_lock implementing C++ Lockable */
 	class UnfairLock
 	{
 	public:
