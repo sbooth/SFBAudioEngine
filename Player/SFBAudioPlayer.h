@@ -6,9 +6,9 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "SFBAudioPlayerNode.h"
+#import <SFBAudioEngine/SFBAudioPlayerNode.h>
 #if TARGET_OS_OSX
-#import "SFBAudioOutputDevice.h"
+#import <SFBAudioEngine/SFBAudioOutputDevice.h>
 #endif
 
 NS_ASSUME_NONNULL_BEGIN

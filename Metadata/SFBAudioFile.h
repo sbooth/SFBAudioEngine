@@ -5,8 +5,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "SFBAudioProperties.h"
-#import "SFBAudioMetadata.h"
+#import <SFBAudioEngine/SFBAudioProperties.h>
+#import <SFBAudioEngine/SFBAudioMetadata.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
