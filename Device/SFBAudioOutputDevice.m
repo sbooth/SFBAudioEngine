@@ -122,6 +122,7 @@ extern os_log_t gSFBAudioDeviceLog;
 	result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
 	if(kAudioHardwareNoError != result) {
 		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		free(preferredChannelLayout);
 		return nil;
 	}
 
