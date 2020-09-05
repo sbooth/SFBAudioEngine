@@ -98,6 +98,39 @@ extern os_log_t gSFBAudioDeviceLog;
 	return @[@(preferredChannels[0]), @(preferredChannels[1])];
 }
 
+- (AVAudioChannelLayout *)preferredChannelLayout
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelLayout,
+		.mScope		= kAudioObjectPropertyScopeOutput,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
+		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) is false");
+		return nil;
+	}
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(self.deviceID, &propertyAddress, 0, NULL, &dataSize);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		return nil;
+	}
+
+	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
+	result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		return nil;
+	}
+
+	AVAudioChannelLayout *channelLayout = [AVAudioChannelLayout layoutWithLayout:preferredChannelLayout];
+	free(preferredChannelLayout);
+
+	return channelLayout;
+}
+
 - (NSArray *)dataSources
 {
 	return [super dataSourcesInScope:kAudioObjectPropertyScopeOutput];
