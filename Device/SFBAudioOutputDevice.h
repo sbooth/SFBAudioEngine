@@ -3,7 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "SFBAudioDevice.h"
+#import <AVFoundation/AVFoundation.h>
+
+#import <SFBAudioEngine/SFBAudioDevice.h>
 
 @class SFBAudioDeviceDataSource;
 
@@ -48,6 +50,10 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 /// Returns the preferred stereo channels for the device
 /// @note This is the property \c { kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
 @property (nonatomic, nullable, readonly) NSArray<NSNumber *> *preferredStereoChannels NS_REFINED_FOR_SWIFT;
+
+/// Returns the preferred channel layout for the device
+/// @note This corresponds to the property \c { kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+@property (nonatomic, nullable, readonly) AVAudioChannelLayout *preferredChannelLayout;
 
 /// Returns an array of \c SFBAudioDeviceDataSource objects
 /// @note This consists of all values returned by \c { kAudioDevicePropertyDataSources, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }

@@ -5,7 +5,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "SFBAttachedPicture.h"
+#import <SFBAudioEngine/SFBAttachedPicture.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

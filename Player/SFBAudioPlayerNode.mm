@@ -1163,16 +1163,17 @@ namespace {
 							});
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingStarted:)]) {
+							id<SFBPCMDecoding> decoder = decoderState->mDecoder;
 							dispatch_time_t notificationTime = hostTime;
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
-									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
-								[self->_delegate audioPlayerNode:self renderingStarted:decoderState->mDecoder];
+								[self->_delegate audioPlayerNode:self renderingStarted:decoder];
 							});
 						}
 					}
@@ -1195,16 +1196,21 @@ namespace {
 						os_log_debug(_audioPlayerNodeLog, "Rendering will complete in %.2f msec for \"%{public}@\"", (ConvertHostTicksToNanos(hostTime) - ConvertHostTicksToNanos(mach_absolute_time())) / NSEC_PER_MSEC, [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path]);
 
 						if([_delegate respondsToSelector:@selector(audioPlayerNode:renderingComplete:)]) {
+							// Store a strong reference to `decoderState->mDecoder` for use in the notification block
+							// Otherwise the collector could collect `decoderState` before the block is invoked
+							// resulting in a `nil` decoder being passed in -audioPlayerNode:renderingComplete:
+							// with a possible subsequent EXC_BAD_ACCESS from messaging a non-optional `nil` object
+							id<SFBPCMDecoding> decoder = decoderState->mDecoder;
 							dispatch_time_t notificationTime = hostTime;
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
 								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
 								if(abs(delta) > tolerance)
-									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoderState->mDecoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
+									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
 
-								[self->_delegate audioPlayerNode:self renderingComplete:decoderState->mDecoder];
+								[self->_delegate audioPlayerNode:self renderingComplete:decoder];
 							});
 						}
 

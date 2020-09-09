@@ -155,6 +155,9 @@ static long tell_func_callback(void *datasource)
 							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
 							 kAudioChannelLabel_LFEScreen];
 			break;
+		default:
+			channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:(kAudioChannelLayoutTag_Unknown | (UInt32)ovInfo->channels)];
+			break;
 	}
 
 	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:ovInfo->rate interleaved:NO channelLayout:channelLayout];

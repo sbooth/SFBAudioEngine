@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "SFBInputSource.h"
+#import <SFBAudioEngine/SFBInputSource.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

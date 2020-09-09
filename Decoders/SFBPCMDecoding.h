@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import "SFBAudioDecoding.h"
+#import <SFBAudioEngine/SFBAudioDecoding.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
