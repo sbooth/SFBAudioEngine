@@ -507,7 +507,7 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 	func audioPlayer(_ audioPlayer: AudioPlayer, decodingComplete decoder: PCMDecoding) {
 		if let url = decoder.inputSource.url, let index = itemIndex(of: url) {
 			let nextIndex = playlist.index(after: index)
-			if playlist.count >= nextIndex {
+			if playlist.count > nextIndex {
 				do {
 					try player.enqueue(playlist[nextIndex].url)
 				}
