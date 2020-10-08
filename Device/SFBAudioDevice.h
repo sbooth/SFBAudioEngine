@@ -134,6 +134,27 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 /// @return \c YES if the data sources were set successfully
 - (BOOL)setActiveDataSources:(NSArray<SFBAudioDeviceDataSource *> *)activeDataSources inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
 
+/// Returns \c YES if the device is hogged for the specified scope
+/// @note This queries \c { kAudioDevicePropertyHogMode, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return \c YES if the device is hogged or \c NO if the device is not hogged or an error occurs
+- (BOOL)isHoggedInScope:(AudioObjectPropertyScope)scope;
+/// Returns \c YES if the device is hogged for the specified scope and the current process is the owner
+/// @note This queries \c { kAudioDevicePropertyHogMode, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return \c YES if the device is hogged and the current process is the owner or \c NO if the device is not hogged or an error occurs
+- (BOOL)isHogOwnerInScope:(AudioObjectPropertyScope)scope;
+/// Takes hog mode for the specified scope
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if hog mode was taken successfully
+- (BOOL)startHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
+/// Releases hog mode for the specified scope
+/// @param scope The desired scope
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if hog mode was released successfully
+- (BOOL)stopHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
+
 #pragma mark - Device Property Observation
 
 /// Performs a block when the device sample rate changes
