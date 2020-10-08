@@ -623,6 +623,123 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return YES;
 }
 
+- (BOOL)isHoggedInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyHogMode,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	pid_t hogPID = (pid_t)-1;
+	UInt32 dataSize = sizeof(hogPID);
+
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return hogPID != (pid_t)-1;
+}
+
+- (BOOL)isHogOwnerInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyHogMode,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	pid_t hogPID = (pid_t)-1;
+	UInt32 dataSize = sizeof(hogPID);
+
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return hogPID == getpid();
+}
+
+- (BOOL)startHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error
+{
+	os_log_info(gSFBAudioDeviceLog, "Taking hog mode for device 0x%x '%{public}.4s'", _deviceID, SFBCStringForOSType(scope));
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyHogMode,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	pid_t hogPID = (pid_t)-1;
+	UInt32 dataSize = sizeof(hogPID);
+
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	// The device is already hogged
+	if(hogPID != (pid_t)-1)
+		os_log_error(gSFBAudioDeviceLog, "Device is already hogged by pid: %d", hogPID);
+
+	hogPID = getpid();
+
+	result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
+}
+
+- (BOOL)stopHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error
+{
+	os_log_info(gSFBAudioDeviceLog, "Releasing hog mode for device 0x%x '%{public}.4s'", _deviceID, SFBCStringForOSType(scope));
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyHogMode,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	pid_t hogPID = (pid_t)-1;
+	UInt32 dataSize = sizeof(hogPID);
+
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	// If we don't own hog mode we can't release it
+	if(hogPID != getpid())
+		os_log_error(gSFBAudioDeviceLog, "Device is hogged by pid: %d", hogPID);
+
+	// Release hog mode.
+	hogPID = (pid_t)-1;
+
+	result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
+}
+
 #pragma mark - Device Property Observation
 
 - (void)whenSampleRateChangesPerformBlock:(dispatch_block_t)block
