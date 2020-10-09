@@ -358,7 +358,6 @@ namespace {
 	// Notification thread variables
 	std::thread 					_notifierThread;
 	dispatch_semaphore_t			_notifierSemaphore;
-	dispatch_queue_t				_notificationQueue;
 
 	// Collector
 	dispatch_source_t				_collector;
