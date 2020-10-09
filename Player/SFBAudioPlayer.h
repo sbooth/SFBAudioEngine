@@ -15,10 +15,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
-/// Posted when the configuration of the underlying \c AVAudioEngine changes
-/// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
-extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
-
 /// Playback position information for \c SFBAudioPlayer
 typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
 /// Playback time information for \c SFBAudioPlayer
@@ -299,6 +295,10 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// Called to notify the delegate when the playback state changes
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
+/// Called to notify the delegate when the configuration of the underlying \c AVAudioEngine changes
+/// @note Use this instead of listening for \c AVAudioEngineConfigurationChangeNotification
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));

@@ -15,8 +15,6 @@
 #import "SFBAudioDecoder.h"
 #import "UnfairLock.h"
 
-const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification = @"org.sbooth.AudioEngine.AudioPlayer.AVAudioEngineConfigurationChangeNotification";
-
 namespace {
 	using DecoderQueue = std::queue<id <SFBPCMDecoding>>;
 	os_log_t _audioPlayerLog = os_log_create("org.sbooth.AudioEngine", "AudioPlayer");
@@ -599,7 +597,10 @@ namespace {
 		return;
 	}
 
-	[[NSNotificationCenter defaultCenter] postNotificationName:SFBAudioPlayerAVAudioEngineConfigurationChangeNotification object:self];
+	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
+		});
 }
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
