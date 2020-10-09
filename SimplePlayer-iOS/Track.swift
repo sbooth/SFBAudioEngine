@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct Track: Identifiable {
-	var id = UUID()
+	let id = UUID()
 	let url: URL
 	let metadata: AudioMetadata
 

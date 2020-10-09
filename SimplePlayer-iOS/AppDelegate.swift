@@ -8,10 +8,10 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 	/// The global player instance for the app
-	var player: AudioPlayer!
+	var playerController: PlayerController!
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-		player = AudioPlayer()
+		playerController = PlayerController()
 		return true
 	}
 
