@@ -7,8 +7,16 @@ import SwiftUI
 import Combine
 
 struct PlayerView: View {
-	@State private var currentPlaybackState: AudioPlayer.PlaybackState = .stopped
+	@State private var currentPlaybackState: AudioPlayer.PlaybackState = .stopped {
+		didSet {
+			if currentPlaybackState == .stopped {
+				self.presentationMode.wrappedValue.dismiss()
+			}
+		}
+	}
 	@State private var currentPosition: Double = 0.0
+
+	@Environment(\.presentationMode) var presentationMode
 
 	private var title: String = "[title]"
 	private var artist: String = "[artist]"
