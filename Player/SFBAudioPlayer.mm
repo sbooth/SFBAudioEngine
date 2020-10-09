@@ -194,9 +194,7 @@ namespace {
 	}
 
 	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerPlaybackStateChanged:self];
-		});
+		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	return YES;
 }
@@ -209,9 +207,7 @@ namespace {
 	[_playerNode pause];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerPlaybackStateChanged:self];
-		});
+		[_delegate audioPlayerPlaybackStateChanged:self];
 }
 
 - (void)resume
@@ -222,9 +218,7 @@ namespace {
 	[_playerNode play];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerPlaybackStateChanged:self];
-		});
+		[_delegate audioPlayerPlaybackStateChanged:self];
 }
 
 - (void)stop
@@ -241,9 +235,7 @@ namespace {
 	[self clearInternalDecoderQueue];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerPlaybackStateChanged:self];
-		});
+		[_delegate audioPlayerPlaybackStateChanged:self];
 }
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
@@ -555,9 +547,7 @@ namespace {
 	_engineIsRunning = NO;
 
 	if(engineStateChanged && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerPlaybackStateChanged:self];
-		});
+		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
@@ -575,9 +565,7 @@ namespace {
 					if(playerNodeWasPlaying)
 						[_playerNode play];
 					if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-						dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-							[_delegate audioPlayerPlaybackStateChanged:self];
-						});
+						[_delegate audioPlayerPlaybackStateChanged:self];
 				}
 				else
 					os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
@@ -590,17 +578,13 @@ namespace {
 		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
-			dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-				[_delegate audioPlayer:self encounteredError:error];
-			});
+			[_delegate audioPlayer:self encounteredError:error];
 		}
 		return;
 	}
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
-		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-			[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
-		});
+		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
 }
 
 - (BOOL)configureForAndEnqueueDecoder:(id <SFBPCMDecoding>)decoder clearInternalDecoderQueue:(BOOL)clearInternalDecoderQueue error:(NSError **)error
@@ -626,9 +610,7 @@ namespace {
 		if(self.nowPlaying) {
 			self.nowPlaying = nil;
 			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-					[_delegate audioPlayerNowPlayingChanged:self];
-				});
+				[_delegate audioPlayerNowPlayingChanged:self];
 		}
 		return NO;
 	}
@@ -642,9 +624,7 @@ namespace {
 		if(self.nowPlaying) {
 			self.nowPlaying = nil;
 			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
-				dispatch_async_and_wait(_playerNode.notificationQueue, ^{
-					[_delegate audioPlayerNowPlayingChanged:self];
-				});
+				[_delegate audioPlayerNowPlayingChanged:self];
 		}
 		return NO;
 	}

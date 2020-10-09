@@ -41,6 +41,22 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
 /// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
 /// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
+///
+/// \c SFBAudioPlayer supports delegate-based callbacks for the following events:
+///
+///  1. Decoding started
+///  2. Decoding complete
+///  3. Decoding canceled
+///  4. Rendering will start
+///  5. Rendering started
+///  6. Rendering complete
+///  7. Now playing changed
+///  8. Playback state changed
+///  9. AVAudioEngineConfigurationChange notification received
+///  10. End of audio
+///  11. Asynchronous error encountered
+///
+/// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
 
 #pragma mark - Playlist Management
