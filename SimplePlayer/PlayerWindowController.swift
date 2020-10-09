@@ -85,8 +85,6 @@ class PlayerWindowController: NSWindowController {
 	private var timer: DispatchSourceTimer!
 	/// The list of items managed by this object
 	var playlist: [PlaylistItem] = []
-	/// Observed `player.nowPlaying` for UI updates
-	private var nowPlayingKVObservation: NSKeyValueObservation?
 
 	override var windowNibName: NSNib.Name? {
 		return "PlayerWindow"
@@ -94,13 +92,6 @@ class PlayerWindowController: NSWindowController {
 
 	override func windowDidLoad() {
 		player.delegate = self
-
-		// Observe the player's `nowPlaying` property and when it changes update our UI accordingly
-		nowPlayingKVObservation = player.observe(\.nowPlaying) { (player, change) in
-			DispatchQueue.main.async {
-				self.updateForNowPlayingChange()
-			}
-		}
 
 		// Create a repeating timer to update the UI with the player's playback position
 		timer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
@@ -515,6 +506,12 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 					NSApp.presentError(error)
 				}
 			}
+		}
+	}
+
+	func audioPlayerNowPlayingChanged(_ audioPlayer: AudioPlayer) {
+		DispatchQueue.main.async {
+			self.updateForNowPlayingChange()
 		}
 	}
 

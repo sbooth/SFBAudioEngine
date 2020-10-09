@@ -54,7 +54,6 @@ namespace {
 	/// Flags
 	std::atomic_uint		_flags;
 }
-@property (nonatomic, nullable) id <SFBPCMDecoding> nowPlaying;
 - (BOOL)internalDecoderQueueIsEmpty;
 - (void)clearInternalDecoderQueue;
 - (void)pushDecoderToInternalQueue:(id <SFBPCMDecoding>)decoder;
@@ -65,18 +64,6 @@ namespace {
 @end
 
 @implementation SFBAudioPlayer
-
-+ (NSSet *)keyPathsForValuesAffectingIsPlaying {
-	return [NSSet setWithObject:@"playbackState"];
-}
-
-+ (NSSet *)keyPathsForValuesAffectingIsPaused {
-	return [NSSet setWithObject:@"playbackState"];
-}
-
-+ (NSSet *)keyPathsForValuesAffectingIsStopped {
-	return [NSSet setWithObject:@"playbackState"];
-}
 
 - (instancetype)init
 {
@@ -194,8 +181,6 @@ namespace {
 	if(self.isPlaying)
 		return YES;
 
-	[self willChangeValueForKey:@"playbackState"];
-
 	__block NSError *err = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
 		_engineIsRunning = [_engine startAndReturnError:&err];
@@ -203,15 +188,19 @@ namespace {
 			[_playerNode play];
 	});
 
-	[self didChangeValueForKey:@"playbackState"];
-
 	if(!_engineIsRunning) {
 		os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", err);
 		if(error)
 			*error = err;
+		return NO;
 	}
 
-	return _engineIsRunning;
+	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerPlaybackStateChanged:self];
+		});
+
+	return YES;
 }
 
 - (void)pause
@@ -219,9 +208,12 @@ namespace {
 	if(!self.isPlaying)
 		return;
 
-	[self willChangeValueForKey:@"playbackState"];
 	[_playerNode pause];
-	[self didChangeValueForKey:@"playbackState"];
+
+	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerPlaybackStateChanged:self];
+		});
 }
 
 - (void)resume
@@ -229,17 +221,18 @@ namespace {
 	if(!self.isPaused)
 		return;
 
-	[self willChangeValueForKey:@"playbackState"];
 	[_playerNode play];
-	[self didChangeValueForKey:@"playbackState"];
+
+	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerPlaybackStateChanged:self];
+		});
 }
 
 - (void)stop
 {
 	if(self.isStopped)
 		return;
-
-	[self willChangeValueForKey:@"playbackState"];
 
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_engine stop];
@@ -249,7 +242,10 @@ namespace {
 
 	[self clearInternalDecoderQueue];
 
-	[self didChangeValueForKey:@"playbackState"];
+	if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerPlaybackStateChanged:self];
+		});
 }
 
 - (BOOL)togglePlayPauseReturningError:(NSError **)error
@@ -283,6 +279,9 @@ namespace {
 	__block BOOL isRunning;
 	dispatch_async_and_wait(_engineQueue, ^{
 		isRunning = _engine.isRunning;
+#if DEBUG
+		NSAssert(_engineIsRunning == isRunning, @"Cached value for _engine.isRunning invalid");
+#endif
 	});
 	return isRunning;
 }
@@ -335,7 +334,7 @@ namespace {
 {
 	std::lock_guard<SFB::UnfairLock> lock(_nowPlayingLock);
 #if DEBUG
-	NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change emitted");
+	NSAssert(_nowPlaying != nowPlaying, @"Unnecessary _nowPlaying change");
 #endif
 	_nowPlaying = nowPlaying;
 }
@@ -549,19 +548,18 @@ namespace {
 
 - (void)handleInterruption:(NSNotification *)notification
 {
+	NSAssert([notification object] == _engine, @"AVAudioEngineConfigurationChangeNotification received for incorrect AVAudioEngine instance");
 	os_log_debug(_audioPlayerLog, "Received AVAudioEngineConfigurationChangeNotification");
-
-	AVAudioEngine *engine = [notification object];
-	if(engine != _engine)
-		return;
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
 	BOOL engineStateChanged = _engineIsRunning;
 	_engineIsRunning = NO;
 
-	if(engineStateChanged)
-		[self willChangeValueForKey:@"playbackState"];
+	if(engineStateChanged && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+			[_delegate audioPlayerPlaybackStateChanged:self];
+		});
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
@@ -578,6 +576,10 @@ namespace {
 				if(_engineIsRunning) {
 					if(playerNodeWasPlaying)
 						[_playerNode play];
+					if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+						dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+							[_delegate audioPlayerPlaybackStateChanged:self];
+						});
 				}
 				else
 					os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
@@ -585,15 +587,14 @@ namespace {
 		}
 	});
 
-	if(engineStateChanged)
-		[self didChangeValueForKey:@"playbackState"];
-
 	// Success in this context means the graph is in a working state
 	if(!success) {
 		os_log_error(_audioPlayerLog, "Unable to create audio processing graph for %{public}@", _playerNode.renderingFormat);
 		if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)]) {
 			NSError *error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
-			[_delegate audioPlayer:self encounteredError:error];
+			dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+				[_delegate audioPlayer:self encounteredError:error];
+			});
 		}
 		return;
 	}
@@ -621,8 +622,13 @@ namespace {
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioPlayerNodeErrorDomain code:SFBAudioPlayerNodeErrorFormatNotSupported userInfo:nil];
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-		if(self.nowPlaying)
+		if(self.nowPlaying) {
 			self.nowPlaying = nil;
+			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+				dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+					[_delegate audioPlayerNowPlayingChanged:self];
+				});
+		}
 		return NO;
 	}
 
@@ -632,8 +638,13 @@ namespace {
 	// Failure is unlikely since the audio processing graph was reconfigured for the decoder's processing format
 	if(![_playerNode enqueueDecoder:decoder error:error]) {
 		_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
-		if(self.nowPlaying)
+		if(self.nowPlaying) {
 			self.nowPlaying = nil;
+			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+				dispatch_async_and_wait(_playerNode.notificationQueue, ^{
+					[_delegate audioPlayerNowPlayingChanged:self];
+				});
+		}
 		return NO;
 	}
 
@@ -767,6 +778,8 @@ namespace {
 	if((_flags.load() & eAudioPlayerFlagHavePendingDecoder) && !self.isPlaying) {
 		_flags.fetch_or(eAudioPlayerFlagPendingDecoderBecameActive);
 		self.nowPlaying = decoder;
+		if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+			[_delegate audioPlayerNowPlayingChanged:self];
 	}
 	_flags.fetch_and(~eAudioPlayerFlagHavePendingDecoder);
 
@@ -785,8 +798,11 @@ namespace {
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
 	if((partiallyRendered && !(_flags.load() & eAudioPlayerFlagHavePendingDecoder)) || self.isStopped) {
-		if(self.nowPlaying)
+		if(self.nowPlaying) {
 			self.nowPlaying = nil;
+			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+				[_delegate audioPlayerNowPlayingChanged:self];
+		}
 	}
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:decodingCanceled:partiallyRendered:)])
@@ -803,8 +819,11 @@ namespace {
 
 - (void)audioPlayerNode:(nonnull SFBAudioPlayerNode *)audioPlayerNode renderingStarted:(nonnull id<SFBPCMDecoding>)decoder
 {
-	if(!(_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive))
+	if(!(_flags.load() & eAudioPlayerFlagPendingDecoderBecameActive)) {
 		self.nowPlaying = decoder;
+		if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+			[_delegate audioPlayerNowPlayingChanged:self];
+	}
 	_flags.fetch_and(~eAudioPlayerFlagRenderingImminent & ~eAudioPlayerFlagPendingDecoderBecameActive);
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingStarted:)])
@@ -815,8 +834,11 @@ namespace {
 {
 	auto flags = _flags.load();
 	if(!(flags & eAudioPlayerFlagRenderingImminent) && !(flags & eAudioPlayerFlagHavePendingDecoder) && self.internalDecoderQueueIsEmpty) {
-		if(self.nowPlaying)
+		if(self.nowPlaying) {
 			self.nowPlaying = nil;
+			if([_delegate respondsToSelector:@selector(audioPlayerNowPlayingChanged:)])
+				[_delegate audioPlayerNowPlayingChanged:self];
+		}
 	}
 
 	if([_delegate respondsToSelector:@selector(audioPlayer:renderingComplete:)])

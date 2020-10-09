@@ -45,8 +45,6 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
 /// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
 /// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
-///
-/// This class is key-value observing compliant for \c playbackState and \c nowPlaying.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
 
 #pragma mark - Playlist Management
@@ -295,6 +293,12 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
 /// @param decoder The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
+/// Called to notify the delegate when the now playing item changes
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerNowPlayingChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerNowPlayingChanged(_:));
+/// Called to notify the delegate when the playback state changes
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
