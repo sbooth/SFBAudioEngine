@@ -839,7 +839,7 @@ namespace {
 		}
 
 		if(![self playReturningError:&error]) {
-			if(error)
+			if(error && [_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
 				[_delegate audioPlayer:self encounteredError:error];
 		}
 	}
