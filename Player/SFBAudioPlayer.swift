@@ -10,7 +10,7 @@ extension AudioPlayer {
 	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
 
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackPosition: PlaybackPosition? {
+	public var position: PlaybackPosition? {
 		var position = SFBAudioPlayerPlaybackPosition()
 		guard __getPlaybackPosition(&position, andTime: nil) else {
 			return nil
@@ -19,7 +19,7 @@ extension AudioPlayer {
 	}
 
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
-	public var playbackTime: PlaybackTime? {
+	public var time: PlaybackTime? {
 		var time = SFBAudioPlayerPlaybackTime()
 		guard __getPlaybackPosition(nil, andTime: &time) else {
 			return nil
