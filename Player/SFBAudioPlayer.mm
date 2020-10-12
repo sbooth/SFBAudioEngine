@@ -591,6 +591,7 @@ namespace {
 {
 	_flags.fetch_or(eAudioPlayerFlagHavePendingDecoder);
 
+	__block auto playbackStateChanged = false;
 	__block BOOL success = YES;
 	dispatch_async_and_wait(_engineQueue, ^{
 		[_playerNode reset];
@@ -599,8 +600,10 @@ namespace {
 		// If the current SFBAudioPlayerNode doesn't support the decoder's format (required for gapless join),
 		// reconfigure AVAudioEngine with a new SFBAudioPlayerNode with the correct format
 		AVAudioFormat *format = decoder.processingFormat;
-		if(![_playerNode supportsFormat:format])
+		if(![_playerNode supportsFormat:format]) {
 			success = [self configureEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
+			playbackStateChanged = true;
+		}
 	});
 
 	if(!success) {
@@ -628,6 +631,9 @@ namespace {
 		}
 		return NO;
 	}
+
+	if(playbackStateChanged && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	return YES;
 }
