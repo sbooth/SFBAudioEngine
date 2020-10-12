@@ -347,7 +347,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error
 {
-	NSParameterAssert(packet > 0);
+	NSParameterAssert(packet >= 0);
 
 	AVAudioChannelCount channelCount = _processingFormat.channelCount;
 

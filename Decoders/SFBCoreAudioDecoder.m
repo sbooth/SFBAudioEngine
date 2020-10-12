@@ -371,6 +371,7 @@ static SInt64 get_size_callback(void *inClientData)
 
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
+	NSParameterAssert(frame >= 0);
 	OSStatus result = ExtAudioFileSeek(_eaf, frame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d", result);

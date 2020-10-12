@@ -872,7 +872,7 @@ namespace {
 
 - (BOOL)seekToPacket:(AVAudioFramePosition)packet error:(NSError **)error
 {
-	NSParameterAssert(packet > 0);
+	NSParameterAssert(packet >= 0);
 
 	NSInteger packetOffset = packet * SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
