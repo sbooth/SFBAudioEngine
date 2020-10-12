@@ -41,7 +41,7 @@ extension AudioPlayerNode {
 	}
 
 	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
-	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
+	public var playbackPositionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
 		var position = SFBAudioPlayerNodePlaybackPosition()
 		var time = SFBAudioPlayerNodePlaybackTime()
 		guard __getPlaybackPosition(&position, andTime: &time) else {
