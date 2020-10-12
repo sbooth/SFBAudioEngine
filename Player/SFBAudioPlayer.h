@@ -16,9 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol SFBAudioPlayerDelegate;
 
 /// Playback position information for \c SFBAudioPlayer
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackPosition instead")*/;
 /// Playback time information for \c SFBAudioPlayer
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackTime instead")*/;
 
 /// A block accepting a single \c AVAudioEngine parameter
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
@@ -171,14 +171,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns the frame length of the current decoder or \c SFBUnknownFrameLength if the current decoder is \c nil
 @property (nonatomic, readonly) AVAudioFramePosition frameLength;
 /// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, \c SFBUnknownFrameLength} if the current decoder is \c nil
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_SWIFT_NAME(position);
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
 
 /// Returns the current time in the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval currentTime;
 /// Returns the total time of the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval totalTime;
 /// Returns the playback time in the current decoder or \c {SFBUnknownTime, \c SFBUnknownTime} if the current decoder is \c nil
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_SWIFT_NAME(time);
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
 
 /// Retrieves the playback position and time
 /// @param playbackPosition An optional pointer to an \c SFBAudioPlayerPlaybackPosition struct to receive playback position information

@@ -6,12 +6,35 @@
 import Foundation
 
 extension AudioPlayer {
-	/// Returns the playback position and time in the current decoder or `((UnknownFramePosition, UnknownFrameLength), (UnknownTime, UnknownTime))` if the current decoder is `nil`
-	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
-		var position = PlaybackPosition()
-		var time = PlaybackTime()
-		__getPlaybackPosition(&position, andTime: &time)
-		return (position: position, time: time)
+	public typealias PlaybackPosition = AudioPlayerNode.PlaybackPosition
+	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
+
+	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
+	public var playbackPosition: PlaybackPosition? {
+		var position = SFBAudioPlayerPlaybackPosition()
+		guard __getPlaybackPosition(&position, andTime: nil) else {
+			return nil
+		}
+		return PlaybackPosition(position)
+	}
+
+	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
+	public var playbackTime: PlaybackTime? {
+		var time = SFBAudioPlayerPlaybackTime()
+		guard __getPlaybackPosition(nil, andTime: &time) else {
+			return nil
+		}
+		return PlaybackTime(time)
+	}
+
+	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
+	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
+		var position = SFBAudioPlayerPlaybackPosition()
+		var time = SFBAudioPlayerPlaybackTime()
+		guard __getPlaybackPosition(&position, andTime: &time) else {
+			return nil
+		}
+		return (position: PlaybackPosition(position), time: PlaybackTime(time))
 	}
 }
 
