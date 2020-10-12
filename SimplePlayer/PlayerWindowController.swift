@@ -109,16 +109,16 @@ class PlayerWindowController: NSWindowController {
 				fatalError()
 			}
 
-			let positionAndTime = self.player.positionAndTime
+			if let time = self.player.time {
+				if let progress = time.progress {
+					self.slider.doubleValue = progress
+				}
 
-			if positionAndTime.position.current != UnknownFramePosition && positionAndTime.position.total != UnknownFrameLength {
-				self.slider.doubleValue = Double(positionAndTime.position.current) / Double(positionAndTime.position.total)
-			}
-
-			if positionAndTime.time.current != UnknownTime {
-				self.elapsed.doubleValue = positionAndTime.time.current
-				if positionAndTime.time.total != UnknownTime {
-					self.remaining.doubleValue = UnknownTime * (positionAndTime.time.total - positionAndTime.time.current)
+				if let current = time.current {
+					self.elapsed.doubleValue = current
+					if let remaining = time.remaining {
+						self.remaining.doubleValue = -1 * remaining
+					}
 				}
 			}
 		}
@@ -174,9 +174,7 @@ class PlayerWindowController: NSWindowController {
 	}
 
 	@IBAction func seek(_ sender: AnyObject?) {
-		if let requested = sender?.doubleValue {
-			let playbackPosition = player.position
-			let current = Double(playbackPosition.current) / Double(playbackPosition.total)
+		if let requested = sender?.doubleValue, let current = player.position?.progress {
 			let tolerance = 0.01
 			if abs(current - requested) >= tolerance {
 				player.seek(position: requested)

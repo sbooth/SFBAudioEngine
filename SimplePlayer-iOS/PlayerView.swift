@@ -121,11 +121,11 @@ struct PlayerView: View {
 					Slider(value: Binding(
 						get: { return currentPosition },
 						set: {
-							let playbackPosition = playerController.player.position
-							let current = Double(playbackPosition.current) / Double(playbackPosition.total)
-							let tolerance = 0.01
-							if abs(current - $0) >= tolerance {
-								playerController.player.seek(position: $0)
+							if let current = playerController.player.position?.progress {
+								let tolerance = 0.01
+								if abs(current - $0) >= tolerance {
+									playerController.player.seek(position: $0)
+								}
 							}
 						}
 					))
@@ -136,8 +136,9 @@ struct PlayerView: View {
 			}
 		}
 		.onReceive(displayLinkPublisher.receive(on: RunLoop.main)) { _ in
-			let time = playerController.player.time
-			currentPosition = time.current / time.total
+			if let progress = playerController.player.time?.progress {
+				currentPosition = progress
+			}
 		}
 		.onReceive(playerController.playbackStatePublisher.receive(on: RunLoop.main)) {
 			currentPlaybackState = $0
