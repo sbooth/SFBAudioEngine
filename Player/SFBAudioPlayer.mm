@@ -602,7 +602,7 @@ namespace {
 		AVAudioFormat *format = decoder.processingFormat;
 		if(![_playerNode supportsFormat:format]) {
 			success = [self configureEngineForGaplessPlaybackOfFormat:format forceUpdate:NO];
-			playbackStateChanged = true;
+			playbackStateChanged = _engineIsRunning;
 		}
 	});
 
