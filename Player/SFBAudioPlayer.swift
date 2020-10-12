@@ -14,3 +14,18 @@ extension AudioPlayer {
 		return (position: position, time: time)
 	}
 }
+
+extension AudioPlayer.PlaybackState: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		switch self {
+		case .playing:
+			return ".playing"
+		case .paused:
+			return ".paused"
+		case .stopped:
+			return ".stopped"
+		@unknown default:
+			fatalError()
+		}
+	}
+}
