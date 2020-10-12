@@ -9,7 +9,7 @@ struct TrackView: View {
 	@State var track: Track
 
 	var body: some View {
-		HStack(spacing: 8) {
+		VStack(alignment: .leading, spacing: 2) {
 			Text(track.metadata.title ?? track.url.lastPathComponent)
 				.font(Font.system(.title).bold())
 

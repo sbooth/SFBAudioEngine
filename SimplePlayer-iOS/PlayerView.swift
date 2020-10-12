@@ -7,21 +7,26 @@ import SwiftUI
 import Combine
 
 struct PlayerView: View {
-	@State private var currentPlaybackState: AudioPlayer.PlaybackState = .stopped
+	@State private var currentPlaybackState: AudioPlayer.PlaybackState = .stopped {
+		didSet {
+			if currentPlaybackState == .stopped {
+				self.presentationMode.wrappedValue.dismiss()
+			}
+		}
+	}
 	@State private var currentPosition: Double = 0.0
+
+	@Environment(\.presentationMode) var presentationMode
 
 	private var title: String = "[title]"
 	private var artist: String = "[artist]"
 	private var image: UIImage? = nil
 
-	private let player: AudioPlayer
-	private let timePublisher: PassthroughSubject<AudioPlayer.PlaybackTime, Never>
-	private let playbackStatePublisher: NSObject.KeyValueObservingPublisher<AudioPlayer, AudioPlayer.PlaybackState>
+	private let playerController: PlayerController
+	private let displayLinkPublisher = DisplayLinkPublisher()
 
-	init(_ player: AudioPlayer, track: Track) {
-		self.player = player
-		timePublisher = player.timePublisher
-		playbackStatePublisher = player.publisher(for: \.playbackState)
+	init(_ playerController: PlayerController, track: Track) {
+		self.playerController = playerController
 
 		self.title = track.metadata.title ?? "[title]"
 		self.artist = track.metadata.artist ?? "[artist]"
@@ -42,8 +47,8 @@ struct PlayerView: View {
     var body: some View {
 		GeometryReader { geometry in
 			VStack(spacing: 16) {
-				if self.image != nil {
-					Image(uiImage: self.image!)
+				if image != nil {
+					Image(uiImage: image!)
 						.resizable()
 						.frame(width: geometry.size.width - 48, height: geometry.size.width - 48)
 						.cornerRadius(20)
@@ -58,16 +63,16 @@ struct PlayerView: View {
 				}
 
 				VStack(spacing: 8) {
-					Text(self.title)
+					Text(title)
 						.font(Font.system(.title).bold())
-					Text(self.artist)
+					Text(artist)
 						.font(.system(.headline))
 				}
 
 				VStack(spacing: 8) {
 					HStack(spacing: 40) {
 						Button(action: {
-							self.player.seekBackward()
+							playerController.player.seekBackward()
 						}) {
 							ZStack {
 								Circle()
@@ -79,26 +84,26 @@ struct PlayerView: View {
 									.font(.system(.title))
 							}
 						}
-						.disabled(self.currentPlaybackState == .stopped)
+						.disabled(currentPlaybackState == .stopped)
 
 						Button(action: {
-							try? self.player.togglePlayPause()
+							try? playerController.player.togglePlayPause()
 						}) {
 							ZStack {
 								Circle()
 									.frame(width: 80, height: 80)
 									.accentColor(.pink)
 									.shadow(radius: 10)
-								Image(systemName: self.currentPlaybackState == .playing ? "pause.fill" : "play.fill")
+								Image(systemName: currentPlaybackState == .playing ? "pause.fill" : "play.fill")
 									.foregroundColor(.white)
 									.font(.system(.title))
 							}
 
 						}
-						.disabled(self.currentPlaybackState == .stopped)
+						.disabled(currentPlaybackState == .stopped)
 
 						Button(action: {
-							self.player.seekForward()
+							playerController.player.seekForward()
 						}) {
 							ZStack {
 								Circle()
@@ -110,37 +115,39 @@ struct PlayerView: View {
 									.font(.system(.title))
 							}
 						}
-						.disabled(self.currentPlaybackState == .stopped)
+						.disabled(currentPlaybackState == .stopped)
 					}
 
 					Slider(value: Binding(
-						get: { return self.currentPosition },
+						get: { return currentPosition },
 						set: {
-							let playbackPosition = self.player.position
-							let current = Double(playbackPosition.current) / Double(playbackPosition.total)
-							let tolerance = 0.01
-							if abs(current - $0) >= tolerance {
-								self.player.seek(position: $0)
+							if let current = playerController.player.position?.progress {
+								let tolerance = 0.01
+								if abs(current - $0) >= tolerance {
+									playerController.player.seek(position: $0)
+								}
 							}
 						}
 					))
 						.padding(.horizontal, 20.0)
 						.accentColor(.pink)
-						.disabled(self.currentPlaybackState == .stopped)
+						.disabled(currentPlaybackState == .stopped)
 				}
 			}
 		}
-		.onReceive(timePublisher.receive(on: RunLoop.main)) {
-			self.currentPosition = $0.current / $0.total
+		.onReceive(displayLinkPublisher.receive(on: RunLoop.main)) { _ in
+			if let progress = playerController.player.time?.progress {
+				currentPosition = progress
+			}
 		}
-		.onReceive(playbackStatePublisher.receive(on: RunLoop.main)) {
-			self.currentPlaybackState = $0
+		.onReceive(playerController.playbackStatePublisher.receive(on: RunLoop.main)) {
+			currentPlaybackState = $0
 		}
 	}
 }
 
 struct PlayerView_Previews: PreviewProvider {
     static var previews: some View {
-		PlayerView(AudioPlayer(), track: Track(URL(fileURLWithPath: "fnord")))
+		PlayerView(PlayerController(), track: Track(URL(fileURLWithPath: "fnord")))
     }
 }

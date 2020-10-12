@@ -41,8 +41,21 @@
                                     <action selector="hide:" target="-1" id="367"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Hide Others" keyEquivalent="h" id="145">
+                            <menuItem title="Hide Others" id="145">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                <menu key="submenu" id="Ffm-If-zb9">
+                                    <items>
+                                        <menuItem title="Item 1" id="VCE-wj-59E">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Item 2" id="54a-n7-G8E">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                        <menuItem title="Item 3" id="Jmr-aG-g8u">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        </menuItem>
+                                    </items>
+                                </menu>
                                 <connections>
                                     <action selector="hideOtherApplications:" target="-1" id="368"/>
                                 </connections>
@@ -66,23 +79,18 @@
                 <menuItem title="File" id="83">
                     <menu key="submenu" title="File" id="81">
                         <items>
-                            <menuItem title="New" keyEquivalent="n" id="82">
-                                <connections>
-                                    <action selector="newDocument:" target="-1" id="373"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Open…" keyEquivalent="o" id="72">
+                            <menuItem title="Play…" keyEquivalent="o" id="72">
                                 <connections>
                                     <action selector="openFile:" target="494" id="541"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Open URL…" keyEquivalent="O" id="542">
+                            <menuItem title="Play URL…" keyEquivalent="O" id="542">
                                 <connections>
                                     <action selector="openURL:" target="494" id="544"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Open Recent" id="124">
-                                <menu key="submenu" title="Open Recent" systemMenu="recentDocuments" id="125">
+                            <menuItem title="Play Recent" id="124">
+                                <menu key="submenu" title="Play Recent" systemMenu="recentDocuments" id="125">
                                     <items>
                                         <menuItem title="Clear Menu" id="126">
                                             <connections>
@@ -95,16 +103,10 @@
                             <menuItem isSeparatorItem="YES" id="79">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Enqueue…" keyEquivalent="o" id="oUU-Fl-vzU">
+                            <menuItem title="Add to Playlist…" keyEquivalent="o" id="oUU-Fl-vzU">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>
-                                    <action selector="enqueueFiles:" target="494" id="9NO-dG-w2Q"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Skip Track" id="56f-uA-Ae9">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="skipToNextTrack:" target="538" id="19V-Hv-cjz"/>
+                                    <action selector="addFiles:" target="494" id="9NO-dG-w2Q"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="FHR-F5-ZcM">
@@ -122,37 +124,6 @@
                             <menuItem title="Close" keyEquivalent="w" id="73">
                                 <connections>
                                     <action selector="performClose:" target="-1" id="193"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Save" keyEquivalent="s" id="75">
-                                <connections>
-                                    <action selector="saveDocument:" target="-1" id="362"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Save As…" keyEquivalent="S" id="80">
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
-                                <connections>
-                                    <action selector="saveDocumentAs:" target="-1" id="363"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Revert to Saved" id="112">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="revertDocumentToSaved:" target="-1" id="364"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="74">
-                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
-                            </menuItem>
-                            <menuItem title="Page Setup..." keyEquivalent="P" id="77">
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
-                                <connections>
-                                    <action selector="runPageLayout:" target="-1" id="87"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Print…" keyEquivalent="p" id="78">
-                                <connections>
-                                    <action selector="print:" target="-1" id="86"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -197,6 +168,9 @@
                                 </connections>
                             </menuItem>
                             <menuItem title="Delete" id="202">
+                                <string key="keyEquivalent" base64-UTF8="YES">
+CA
+</string>
                                 <connections>
                                     <action selector="delete:" target="-1" id="235"/>
                                 </connections>
@@ -355,6 +329,34 @@
                                         </menuItem>
                                     </items>
                                 </menu>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+                <menuItem title="Controls" id="9OP-KK-0qk">
+                    <menu key="submenu" title="Controls" id="OGq-hi-t3z">
+                        <items>
+                            <menuItem title="Play" id="S08-KM-M8P">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="playPause:" target="-1" id="vZf-jm-PiG"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Stop" keyEquivalent="." id="6Oa-6N-ZYa">
+                                <connections>
+                                    <action selector="stop:" target="-1" id="2eV-pZ-GEP"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="eDC-rb-yOx"/>
+                            <menuItem title="Previous" keyEquivalent="" id="yoa-5x-VLE">
+                                <connections>
+                                    <action selector="playPreviousItem:" target="-1" id="KaU-aa-Txs"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Next" keyEquivalent="" id="weF-qg-tfu">
+                                <connections>
+                                    <action selector="playNextItem:" target="-1" id="lDm-cg-RHs"/>
+                                </connections>
                             </menuItem>
                         </items>
                     </menu>

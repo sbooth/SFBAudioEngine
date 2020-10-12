@@ -117,6 +117,8 @@
 		327E4AEF245F5AAF00EF652D /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E4A7D245F59EB00EF652D /* SFBAttachedPicture.m */; };
 		327E4AF2245F62DF00EF652D /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E8A545245F3DCD00E8DC00 /* SFBAudioEngine.framework */; };
 		32A2B0B52470202A009517C8 /* UnfairLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A2B0B42470202A009517C8 /* UnfairLock.h */; };
+		32B2209D25308F4F00A0909B /* PlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B2209C25308F4F00A0909B /* PlayerController.swift */; };
+		32B220A6253094E400A0909B /* DisplayLinkPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B220A5253094E400A0909B /* DisplayLinkPublisher.swift */; };
 		32E8A54D245F3E6D00E8DC00 /* SFBAudioPlayerNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8D42456F984006A5911 /* SFBAudioPlayerNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32E8A54E245F3E6D00E8DC00 /* SFBAudioPlayerNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8C82456F984006A5911 /* SFBAudioPlayerNode.mm */; };
 		32E8A54F245F3E6D00E8DC00 /* SFBAudioPlayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8D32456F984006A5911 /* SFBAudioPlayerNode.swift */; };
@@ -381,6 +383,8 @@
 		327E4AA7245F59EB00EF652D /* SFBOggFLACFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggFLACFile.h; sourceTree = "<group>"; };
 		327E4AF3245F631A00EF652D /* SimplePlayer-iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SimplePlayer-iOS-Bridging-Header.h"; sourceTree = "<group>"; };
 		32A2B0B42470202A009517C8 /* UnfairLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnfairLock.h; sourceTree = "<group>"; };
+		32B2209C25308F4F00A0909B /* PlayerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerController.swift; sourceTree = "<group>"; };
+		32B220A5253094E400A0909B /* DisplayLinkPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLinkPublisher.swift; sourceTree = "<group>"; };
 		32E8A545245F3DCD00E8DC00 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32E8A5BD245F407900E8DC00 /* SFBAudioEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioEngine.h; sourceTree = "<group>"; };
 		32E8A5BF245F41DD00E8DC00 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -607,10 +611,12 @@
 			children = (
 				327E4A57245F587A00EF652D /* AppDelegate.swift */,
 				327E4A59245F587A00EF652D /* SceneDelegate.swift */,
+				32B2209C25308F4F00A0909B /* PlayerController.swift */,
 				3261E69A2461E0F400820613 /* ContentView.swift */,
 				3261E6982461D8F500820613 /* TrackView.swift */,
 				327E4A5B245F587A00EF652D /* PlayerView.swift */,
 				3261E69C2461F15C00820613 /* Track.swift */,
+				32B220A5253094E400A0909B /* DisplayLinkPublisher.swift */,
 				321DB85824636A95004D66AF /* test.flac */,
 				327E4A5D245F587B00EF652D /* Assets.xcassets */,
 				327E4A62245F587B00EF652D /* LaunchScreen.storyboard */,
@@ -863,7 +869,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1140;
+				LastUpgradeCheck = 1220;
 				ORGANIZATIONNAME = sbooth.org;
 				TargetAttributes = {
 					327E4A54245F587A00EF652D = {
@@ -925,8 +931,10 @@
 				3261E69B2461E0F400820613 /* ContentView.swift in Sources */,
 				327E4A5A245F587A00EF652D /* SceneDelegate.swift in Sources */,
 				3261E6992461D8F500820613 /* TrackView.swift in Sources */,
+				32B2209D25308F4F00A0909B /* PlayerController.swift in Sources */,
 				327E4A5C245F587A00EF652D /* PlayerView.swift in Sources */,
 				3261E69D2461F15C00820613 /* Track.swift in Sources */,
+				32B220A6253094E400A0909B /* DisplayLinkPublisher.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1197,6 +1205,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
@@ -1272,6 +1281,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;

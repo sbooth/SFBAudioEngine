@@ -11,7 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 		let delegate = UIApplication.shared.delegate as! AppDelegate
-		let contentView = ContentView(delegate.player)
+		let contentView = ContentView(delegate.playerController)
 
 		// Use a UIHostingController as window root view controller.
 		if let windowScene = scene as? UIWindowScene {

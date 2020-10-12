@@ -6,75 +6,49 @@
 import Foundation
 
 extension AudioPlayer {
-	/// Returns the playback position and time in the current decoder or `((UnknownFramePosition, UnknownFrameLength), (UnknownTime, UnknownTime))` if the current decoder is `nil`
-	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime) {
-		var position = PlaybackPosition()
-		var time = PlaybackTime()
-		__getPlaybackPosition(&position, andTime: &time)
-		return (position: position, time: time)
+	public typealias PlaybackPosition = AudioPlayerNode.PlaybackPosition
+	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
+
+	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
+	public var position: PlaybackPosition? {
+		var position = SFBAudioPlayerPlaybackPosition()
+		guard __getPlaybackPosition(&position, andTime: nil) else {
+			return nil
+		}
+		return PlaybackPosition(position)
+	}
+
+	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
+	public var time: PlaybackTime? {
+		var time = SFBAudioPlayerPlaybackTime()
+		guard __getPlaybackPosition(nil, andTime: &time) else {
+			return nil
+		}
+		return PlaybackTime(time)
+	}
+
+	/// Returns the playback position and time in the current decoder or `nil` if the current decoder is `nil`
+	public var positionAndTime: (position: PlaybackPosition, time: PlaybackTime)? {
+		var position = SFBAudioPlayerPlaybackPosition()
+		var time = SFBAudioPlayerPlaybackTime()
+		guard __getPlaybackPosition(&position, andTime: &time) else {
+			return nil
+		}
+		return (position: PlaybackPosition(position), time: PlaybackTime(time))
 	}
 }
 
-#if os(iOS)
-
-import Combine
-
-/// Class implementing publishers for a player's time and position using CADisplayLink
-private class AudioPlayerObserver {
-	weak var player: AudioPlayer?
-
-	let timePublisher = PassthroughSubject<AudioPlayer.PlaybackTime, Never>()
-	let positionPublisher = PassthroughSubject<AudioPlayer.PlaybackPosition, Never>()
-
-	private var displayLink: CADisplayLink!
-
-	init(_ player: AudioPlayer) {
-		self.player = player
-		displayLink = CADisplayLink(target: self, selector: #selector(step))
-		displayLink?.add(to: .main, forMode: .common)
-	}
-
-	deinit {
-		displayLink?.invalidate()
-	}
-
-	@objc private func step() {
-		if let player = self.player, player.engineIsRunning {
-			let positionAndTime = player.positionAndTime
-			timePublisher.send(positionAndTime.time)
-			positionPublisher.send(positionAndTime.position)
+extension AudioPlayer.PlaybackState: CustomDebugStringConvertible {
+	public var debugDescription: String {
+		switch self {
+		case .playing:
+			return ".playing"
+		case .paused:
+			return ".paused"
+		case .stopped:
+			return ".stopped"
+		@unknown default:
+			fatalError()
 		}
 	}
 }
-
-private var associatedObjectKey: Void?
-
-extension AudioPlayer {
-	/// Returns a publisher for the player's playback time
-	public var timePublisher: PassthroughSubject<PlaybackTime, Never> {
-		return observer().timePublisher
-	}
-
-	/// Returns a publisher for the player's playback position
-	public var positionPublisher: PassthroughSubject<PlaybackPosition, Never> {
-		return observer().positionPublisher
-	}
-
-	// Since class extensions can't have computed properties, emulate with associated objects
-
-//	private lazy var observer: AudioPlayerObserver = {
-//		return AudioPlayerObserver(self)
-//	}()
-
-	private func observer() -> AudioPlayerObserver {
-		if let observer = objc_getAssociatedObject(self, &associatedObjectKey) as? AudioPlayerObserver {
-			return observer
-		}
-
-		let observer = AudioPlayerObserver(self)
-		objc_setAssociatedObject(self, &associatedObjectKey, observer, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		return observer
-	}
-}
-
-#endif

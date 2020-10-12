@@ -6,11 +6,11 @@
 import SwiftUI
 
 struct ContentView: View {
-	let player: AudioPlayer
+	let playerController: PlayerController
 	let tracks: [Track]
 
-	init(_ player: AudioPlayer) {
-		self.player = player
+	init(_ playerController: PlayerController) {
+		self.playerController = playerController
 		var tracks = [Track]()
 		if let url = Bundle.main.url(forResource: "test", withExtension: "flac") {
 			tracks.append(Track(url))
@@ -21,9 +21,9 @@ struct ContentView: View {
 	var body: some View {
 		return NavigationView {
 			List(tracks) { track in
-				NavigationLink(destination: PlayerView(self.player, track: track)
-					.onAppear(perform: { try? self.player.play(track.url) })
-					.onDisappear(perform: { self.player.stop() })) {
+				NavigationLink(destination: PlayerView(playerController, track: track)
+					.onAppear(perform: { try? playerController.player.play(track.url) })
+					.onDisappear(perform: { playerController.player.stop() })) {
 					TrackView(track: track)
 				}
 			}.navigationBarTitle("Select a track")
@@ -32,6 +32,6 @@ struct ContentView: View {
 }
 struct ContentView_Previews: PreviewProvider {
 	static var previews: some View {
-		ContentView(AudioPlayer())
+		ContentView(PlayerController())
 	}
 }

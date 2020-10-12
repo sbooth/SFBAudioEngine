@@ -15,14 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol SFBAudioPlayerDelegate;
 
-/// Posted when the configuration of the underlying \c AVAudioEngine changes
-/// @note Use this instead of \c AVAudioEngineConfigurationChangeNotification
-extern const NSNotificationName SFBAudioPlayerAVAudioEngineConfigurationChangeNotification;
-
 /// Playback position information for \c SFBAudioPlayer
-typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition NS_SWIFT_NAME(AudioPlayer.PlaybackPosition);
+typedef SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerPlaybackPosition /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackPosition instead")*/;
 /// Playback time information for \c SFBAudioPlayer
-typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime NS_SWIFT_NAME(AudioPlayer.PlaybackTime);
+typedef SFBAudioPlayerNodePlaybackTime SFBAudioPlayerPlaybackTime /*NS_SWIFT_UNAVAILABLE("Use AudioPlayer.PlaybackTime instead")*/;
 
 /// A block accepting a single \c AVAudioEngine parameter
 typedef void (^SFBAudioPlayerAVAudioEngineBlock)(AVAudioEngine *engine) NS_SWIFT_NAME(AudioPlayer.AVAudioEngineClosure);
@@ -45,6 +41,22 @@ typedef NS_ENUM(NSUInteger, SFBAudioPlayerPlaybackState) {
 /// An \c SFBAudioPlayer may be in one of three playback states: playing, paused, or stopped. These states are
 /// based on whether the underlying \c AVAudioEngine is running (\c SFBAudioPlayer.engineIsRunning)
 /// and the \c SFBAudioPlayerNode is playing (\c SFBAudioPlayer.playerNodeIsPlaying).
+///
+/// \c SFBAudioPlayer supports delegate-based callbacks for the following events:
+///
+///  1. Decoding started
+///  2. Decoding complete
+///  3. Decoding canceled
+///  4. Rendering will start
+///  5. Rendering started
+///  6. Rendering complete
+///  7. Now playing changed
+///  8. Playback state changed
+///  9. AVAudioEngineConfigurationChange notification received
+///  10. End of audio
+///  11. Asynchronous error encountered
+///
+/// The dispatch queue on which callbacks are performed is not specified.
 NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerNodeDelegate>
 
 #pragma mark - Playlist Management
@@ -92,8 +104,6 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns \c YES if audio with \c format will be played gaplessly
 - (BOOL)formatWillBeGaplessIfEnqueued:(AVAudioFormat *)format;
 
-/// Cancels the current decoder and dequeues the next decoder for playback
-- (void)skipToNext;
 /// Empties the decoder queue
 - (void)clearQueue;
 
@@ -149,6 +159,10 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns the decoder supplying the earliest audio frame for the next render cycle or \c nil if none
 /// @warning Do not change any properties of the returned object
 @property (nonatomic, nullable, readonly) id <SFBPCMDecoding> currentDecoder;
+/// Returns the decoder approximating what a user would expect to see as the "now playing" item- the decoder that is
+/// currently rendering audio.
+/// @warning Do not change any properties of the returned object
+@property (nonatomic, nullable, readonly) id <SFBPCMDecoding> nowPlaying;
 
 #pragma mark - Playback Properties
 
@@ -157,14 +171,14 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 /// Returns the frame length of the current decoder or \c SFBUnknownFrameLength if the current decoder is \c nil
 @property (nonatomic, readonly) AVAudioFramePosition frameLength;
 /// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, \c SFBUnknownFrameLength} if the current decoder is \c nil
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_SWIFT_NAME(position);
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
 
 /// Returns the current time in the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval currentTime;
 /// Returns the total time of the current decoder or \c SFBUnknownTime if the current decoder is \c nil
 @property (nonatomic, readonly) NSTimeInterval totalTime;
 /// Returns the playback time in the current decoder or \c {SFBUnknownTime, \c SFBUnknownTime} if the current decoder is \c nil
-@property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_SWIFT_NAME(time);
+@property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
 
 /// Retrieves the playback position and time
 /// @param playbackPosition An optional pointer to an \c SFBAudioPlayerPlaybackPosition struct to receive playback position information
@@ -291,6 +305,16 @@ NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 /// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder
 /// @param decoder The decoder for which rendering is complete
 - (void)audioPlayer:(SFBAudioPlayer *)audioPlayer renderingComplete:(id<SFBPCMDecoding>)decoder;
+/// Called to notify the delegate when the now playing item changes
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerNowPlayingChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerNowPlayingChanged(_:));
+/// Called to notify the delegate when the playback state changes
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerPlaybackStateChanged:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerPlaybackStateChanged(_:));
+/// Called to notify the delegate when the configuration of the underlying \c AVAudioEngine changes
+/// @note Use this instead of listening for \c AVAudioEngineConfigurationChangeNotification
+/// @param audioPlayer The \c SFBAudioPlayer object
+- (void)audioPlayerAVAudioEngineConfigurationChange:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerAVAudioEngineConfigurationChange(_:));
 /// Called to notify the delegate when rendering is complete for all available decoders
 /// @param audioPlayer The \c SFBAudioPlayer object
 - (void)audioPlayerEndOfAudio:(SFBAudioPlayer *)audioPlayer NS_SWIFT_NAME(audioPlayerEndOfAudio(_:));
