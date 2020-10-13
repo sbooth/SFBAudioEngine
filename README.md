@@ -37,6 +37,22 @@ let player = AudioPlayer()
 try? player.play(URL(fileURLWithPath: "example.flac"))
 ~~~
 
+## Sample Audio Players
+
+Two versions of SimplePlayer, one for macOS and one for iOS, are provided illustrate the usage of SFBAudioEngine.
+
+### macOS
+
+![Image of an audio player window](SimplePlayer/screenshot.png)
+
+[SimplePlayer](SimplePlayer/) for macOS is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](SimplePlayer/PlayerWindowController.swift).
+
+### iOS
+
+![Image of audio file playback progress](SimplePlayer-iOS/screenshot.png)
+
+[SimplePlayer](SimplePlayer-iOS/) for iOS is written in Swift using SwiftUI and supports playback of a single item selected from a list.
+
 ## License
 
 SFBAudioEngine is released under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).
