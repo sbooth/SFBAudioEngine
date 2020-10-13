@@ -543,29 +543,26 @@ namespace {
 
 	// AVAudioEngine stops itself when interrupted and there is no way to determine if the engine was
 	// running before this notification was issued unless the state is cached
-	BOOL engineStateChanged = _engineIsRunning;
+	BOOL engineWasRunning = _engineIsRunning;
 	_engineIsRunning = NO;
 
-	if(engineStateChanged && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-		[_delegate audioPlayerPlaybackStateChanged:self];
+	// Attempt to preserve the playback state
+	BOOL playerNodeWasPlaying = _playerNode.isPlaying;
 
 	// AVAudioEngine posts this notification from a dedicated queue
 	__block BOOL success;
 	dispatch_async_and_wait(_engineQueue, ^{
-		BOOL playerNodeWasPlaying = _playerNode.isPlaying;
 		[_playerNode pause];
 
 		success = [self configureEngineForGaplessPlaybackOfFormat:_playerNode.renderingFormat forceUpdate:YES];
 		if(success) {
 			// Restart AVAudioEngine if previously running
-			if(engineStateChanged) {
+			if(engineWasRunning) {
 				NSError *error = nil;
 				_engineIsRunning = [_engine startAndReturnError:&error];
 				if(_engineIsRunning) {
 					if(playerNodeWasPlaying)
 						[_playerNode play];
-					if([_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
-						[_delegate audioPlayerPlaybackStateChanged:self];
 				}
 				else
 					os_log_error(_audioPlayerLog, "Error starting AVAudioEngine: %{public}@", error);
@@ -582,6 +579,9 @@ namespace {
 		}
 		return;
 	}
+
+	if((engineWasRunning != _engineIsRunning || playerNodeWasPlaying != _playerNode.isPlaying) && [_delegate respondsToSelector:@selector(audioPlayerPlaybackStateChanged:)])
+		[_delegate audioPlayerPlaybackStateChanged:self];
 
 	if([_delegate respondsToSelector:@selector(audioPlayerAVAudioEngineConfigurationChange:)])
 		[_delegate audioPlayerAVAudioEngineConfigurationChange:self];
