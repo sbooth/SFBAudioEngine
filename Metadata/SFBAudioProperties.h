@@ -39,22 +39,22 @@ NS_SWIFT_NAME(AudioProperties) @interface SFBAudioProperties : NSObject <NSCopyi
 @property (nonatomic, nullable, readonly) NSString *formatName;
 
 /// The total number of audio frames
-@property (nonatomic, nullable, readonly) NSNumber *frameLength;
+@property (nonatomic, nullable, readonly) NSNumber *frameLength NS_REFINED_FOR_SWIFT;
 
 /// The number of channels
-@property (nonatomic, nullable, readonly) NSNumber *channelCount;
+@property (nonatomic, nullable, readonly) NSNumber *channelCount NS_REFINED_FOR_SWIFT;
 
 /// The number of bits per channel
-@property (nonatomic, nullable, readonly) NSNumber *bitsPerChannel;
+@property (nonatomic, nullable, readonly) NSNumber *bitsPerChannel NS_REFINED_FOR_SWIFT;
 
 /// The sample rate in Hz
-@property (nonatomic, nullable, readonly) NSNumber *sampleRate;
+@property (nonatomic, nullable, readonly) NSNumber *sampleRate NS_REFINED_FOR_SWIFT;
 
 /// The duration in seconds
-@property (nonatomic, nullable, readonly) NSNumber *duration;
+@property (nonatomic, nullable, readonly) NSNumber *duration NS_REFINED_FOR_SWIFT;
 
 /// The audio bitrate in KiB/sec
-@property (nonatomic, nullable, readonly) NSNumber *bitrate;
+@property (nonatomic, nullable, readonly) NSNumber *bitrate NS_REFINED_FOR_SWIFT;
 
 #pragma mark - External Representation
 
