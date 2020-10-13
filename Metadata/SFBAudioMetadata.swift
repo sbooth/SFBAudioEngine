@@ -7,7 +7,7 @@ import Foundation
 
 extension AudioMetadata {
 	/// The compilation flag
-	var compilation: Bool? {
+	public var compilation: Bool? {
 		get {
 			__compilation?.boolValue
 		}
@@ -17,7 +17,7 @@ extension AudioMetadata {
 	}
 
 	/// The track number
-	var trackNumber: Int? {
+	public var trackNumber: Int? {
 		get {
 			__trackNumber?.intValue
 		}
@@ -27,7 +27,7 @@ extension AudioMetadata {
 	}
 
 	/// The track total
-	var trackTotal: Int? {
+	public var trackTotal: Int? {
 		get {
 			__trackTotal?.intValue
 		}
@@ -37,7 +37,7 @@ extension AudioMetadata {
 	}
 
 	/// The disc number
-	var discNumber: Int? {
+	public var discNumber: Int? {
 		get {
 			__discNumber?.intValue
 		}
@@ -47,7 +47,7 @@ extension AudioMetadata {
 	}
 
 	/// The disc total
-	var discTotal: Int? {
+	public var discTotal: Int? {
 		get {
 			__discTotal?.intValue
 		}
@@ -57,7 +57,7 @@ extension AudioMetadata {
 	}
 
 	/// The Beats per minute (BPM)
-	var bpm: Int? {
+	public var bpm: Int? {
 		get {
 			__bpm?.intValue
 		}
@@ -67,7 +67,7 @@ extension AudioMetadata {
 	}
 
 	/// The rating
-	var rating: Int? {
+	public var rating: Int? {
 		get {
 			__rating?.intValue
 		}
@@ -77,7 +77,7 @@ extension AudioMetadata {
 	}
 
 	/// The replay gain reference loudness
-	var replayGainReferenceLoudness: Double? {
+	public var replayGainReferenceLoudness: Double? {
 		get {
 			__replayGainReferenceLoudness?.doubleValue
 		}
@@ -87,7 +87,7 @@ extension AudioMetadata {
 	}
 
 	/// The replay gain track gain
-	var replayGainTrackGain: Double? {
+	public var replayGainTrackGain: Double? {
 		get {
 			__replayGainTrackGain?.doubleValue
 		}
@@ -97,7 +97,7 @@ extension AudioMetadata {
 	}
 
 	/// The replay gain track peak
-	var replayGainTrackPeak: Double? {
+	public var replayGainTrackPeak: Double? {
 		get {
 			__replayGainTrackPeak?.doubleValue
 		}
@@ -107,7 +107,7 @@ extension AudioMetadata {
 	}
 
 	/// The replay gain album gain
-	var replayGainAlbumGain: Double? {
+	public var replayGainAlbumGain: Double? {
 		get {
 			__replayGainAlbumGain?.doubleValue
 		}
@@ -117,7 +117,7 @@ extension AudioMetadata {
 	}
 
 	/// The replay gain album peak
-	var replayGainAlbumPeak: Double? {
+	public var replayGainAlbumPeak: Double? {
 		get {
 			__replayGainAlbumPeak?.doubleValue
 		}

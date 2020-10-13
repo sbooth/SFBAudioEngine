@@ -7,31 +7,31 @@ import Foundation
 
 extension AudioProperties {
 	/// The total number of audio frames
-	var frameLength: AVAudioFramePosition? {
+	public var frameLength: AVAudioFramePosition? {
 		__frameLength?.int64Value
 	}
 	/// The number of channels
-	var channelCount: AVAudioChannelCount? {
+	public var channelCount: AVAudioChannelCount? {
 		__channelCount?.uint32Value
 	}
 
 	/// The number of bits per channel
-	var bitsPerChannel: Int? {
+	public var bitsPerChannel: Int? {
 		__bitsPerChannel?.intValue
 	}
 
 	/// The sample rate in Hz
-	var sampleRate: Double? {
+	public var sampleRate: Double? {
 		__sampleRate?.doubleValue
 	}
 
 	/// The duration in seconds
-	var duration: TimeInterval? {
+	public var duration: TimeInterval? {
 		__duration?.doubleValue
 	}
 
 	/// The audio bitrate in KiB/sec
-	var bitrate: Double? {
+	public var bitrate: Double? {
 		__bitrate?.doubleValue
 	}
 }
