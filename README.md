@@ -34,7 +34,18 @@ Playing an audio file is as simple as:
 ~~~swift
 import SFBAudioEngine
 let player = AudioPlayer()
-try? player.play(URL(fileURLWithPath: "example.flac"))
+let url = URL(fileURLWithPath: "example.flac")
+try? player.play(url)
+~~~
+
+Reading audio properties and metadata is similarly trivial:
+
+~~~swift
+if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
+    let sampleRate = audioFile.properties.sampleRate
+    let title = audioFile.metadata.title
+}
+
 ~~~
 
 ## Sample Audio Players
