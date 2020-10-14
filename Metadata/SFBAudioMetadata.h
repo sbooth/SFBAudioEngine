@@ -139,28 +139,28 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 @property (nonatomic, nullable) NSString *releaseDate;
 
 /// The compilation flag
-@property (nonatomic, nullable) NSNumber *compilation;
+@property (nonatomic, nullable) NSNumber *compilation NS_REFINED_FOR_SWIFT;
 
 /// The track number
-@property (nonatomic, nullable) NSNumber *trackNumber;
+@property (nonatomic, nullable) NSNumber *trackNumber NS_REFINED_FOR_SWIFT;
 
 /// The track total
-@property (nonatomic, nullable) NSNumber *trackTotal;
+@property (nonatomic, nullable) NSNumber *trackTotal NS_REFINED_FOR_SWIFT;
 
 /// The disc number
-@property (nonatomic, nullable) NSNumber *discNumber;
+@property (nonatomic, nullable) NSNumber *discNumber NS_REFINED_FOR_SWIFT;
 
 /// The disc total
-@property (nonatomic, nullable) NSNumber *discTotal;
+@property (nonatomic, nullable) NSNumber *discTotal NS_REFINED_FOR_SWIFT;
 
 /// The lyrics
 @property (nonatomic, nullable) NSString *lyrics;
 
 /// The Beats per minute (BPM)
-@property (nonatomic, nullable) NSNumber *bpm;
+@property (nonatomic, nullable) NSNumber *bpm NS_REFINED_FOR_SWIFT;
 
 /// The rating
-@property (nonatomic, nullable) NSNumber *rating;
+@property (nonatomic, nullable) NSNumber *rating NS_REFINED_FOR_SWIFT;
 
 /// The comment
 @property (nonatomic, nullable) NSString *comment;
@@ -210,19 +210,19 @@ NS_SWIFT_NAME(AudioMetadata) @interface SFBAudioMetadata : NSObject <NSCopying>
 #pragma mark - ReplayGain Metadata
 
 /// The replay gain reference loudness
-@property (nonatomic, nullable) NSNumber *replayGainReferenceLoudness;
+@property (nonatomic, nullable) NSNumber *replayGainReferenceLoudness NS_REFINED_FOR_SWIFT;
 
 /// The replay gain track gain
-@property (nonatomic, nullable) NSNumber *replayGainTrackGain;
+@property (nonatomic, nullable) NSNumber *replayGainTrackGain NS_REFINED_FOR_SWIFT;
 
 /// The replay gain track peak
-@property (nonatomic, nullable) NSNumber *replayGainTrackPeak;
+@property (nonatomic, nullable) NSNumber *replayGainTrackPeak NS_REFINED_FOR_SWIFT;
 
 /// The replay gain album gain
-@property (nonatomic, nullable) NSNumber *replayGainAlbumGain;
+@property (nonatomic, nullable) NSNumber *replayGainAlbumGain NS_REFINED_FOR_SWIFT;
 
 /// The replay gain album peak
-@property (nonatomic, nullable) NSNumber *replayGainAlbumPeak;
+@property (nonatomic, nullable) NSNumber *replayGainAlbumPeak NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Metadata Utilities
 

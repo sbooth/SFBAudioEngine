@@ -180,6 +180,8 @@
 		32BC09AD2426536D008BB695 /* SFBAudioMetadata+TagLibXiphComment.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09AB2426536C008BB695 /* SFBAudioMetadata+TagLibXiphComment.mm */; };
 		32BC09F424278B24008BB695 /* SFBAIFFFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09F224278B23008BB695 /* SFBAIFFFile.mm */; };
 		32BC09F524278B24008BB695 /* SFBAIFFFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BC09F324278B23008BB695 /* SFBAIFFFile.h */; };
+		32DA679025360B94004BE933 /* SFBAudioProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DA678F25360B94004BE933 /* SFBAudioProperties.swift */; };
+		32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DA679225360D8A004BE933 /* SFBAudioMetadata.swift */; };
 		32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; };
 		32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; };
 		32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -389,6 +391,8 @@
 		32BC09F224278B23008BB695 /* SFBAIFFFile.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBAIFFFile.mm; sourceTree = "<group>"; };
 		32BC09F324278B23008BB695 /* SFBAIFFFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAIFFFile.h; sourceTree = "<group>"; };
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32DA678F25360B94004BE933 /* SFBAudioProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioProperties.swift; sourceTree = "<group>"; };
+		32DA679225360D8A004BE933 /* SFBAudioMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioMetadata.swift; sourceTree = "<group>"; };
 		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = Libraries/macosx/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
 		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -679,8 +683,10 @@
 				326D3C96242CF79C002AEC52 /* SFBAudioFile.m */,
 				326D3C92242CE9D1002AEC52 /* SFBAudioProperties.h */,
 				326D3C93242CE9D1002AEC52 /* SFBAudioProperties.m */,
+				32DA678F25360B94004BE933 /* SFBAudioProperties.swift */,
 				322859B8242417B10080B500 /* SFBAudioMetadata.h */,
 				322859B9242417B10080B500 /* SFBAudioMetadata.m */,
+				32DA679225360D8A004BE933 /* SFBAudioMetadata.swift */,
 				3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */,
 				325116CB2423B15200B02926 /* SFBAttachedPicture.m */,
 				32BC09F324278B23008BB695 /* SFBAIFFFile.h */,
@@ -960,6 +966,7 @@
 				325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */,
 				3268F84524548A81006A5911 /* SFBAudioDevice.m in Sources */,
 				326D3CB1242D2A21002AEC52 /* SFBDSFFile.mm in Sources */,
+				32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */,
 				3268F8542455B3AF006A5911 /* RingBuffer.cpp in Sources */,
 				3268F84424548A81006A5911 /* SFBAudioOutputDevice.m in Sources */,
 				326D3CCB242D2A21002AEC52 /* SFBTrueAudioFile.mm in Sources */,
@@ -973,6 +980,7 @@
 				325A5E0B243F8D8B003138D5 /* SFBMemoryMappedFileInputSource.m in Sources */,
 				326D3CCF242D2A21002AEC52 /* SFBWavPackFile.mm in Sources */,
 				326D3CC7242D2A21002AEC52 /* SFBProTrackerModuleFile.mm in Sources */,
+				32DA679025360B94004BE933 /* SFBAudioProperties.swift in Sources */,
 				32129696244A3E090008DC93 /* SFBOggOpusDecoder.m in Sources */,
 				32129692244A2AD80008DC93 /* SFBOggVorbisDecoder.m in Sources */,
 				325A5E0C243F8D8B003138D5 /* SFBHTTPInputSource.m in Sources */,
