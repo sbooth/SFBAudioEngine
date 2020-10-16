@@ -498,10 +498,14 @@ extension PlayerWindowController: AudioPlayer.Delegate {
 			let nextIndex = playlist.index(after: index)
 			if playlist.count > nextIndex {
 				do {
-					try player.enqueue(playlist[nextIndex].url)
+					if let decoder = try playlist[nextIndex].decoder() {
+						try player.enqueue(decoder)
+					}
 				}
 				catch let error {
-					NSApp.presentError(error)
+					DispatchQueue.main.async {
+						NSApp.presentError(error)
+					}
 				}
 			}
 		}
