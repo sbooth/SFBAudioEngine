@@ -99,21 +99,21 @@ namespace {
 
 		/// Decoder state data flags
 		std::atomic_uint 		mFlags;
-		/// The number of frames decoded in the converter's *input* sample rate
+		/// The number of frames decoded
 		std::atomic_int64_t 	mFramesDecoded;
-		/// The number of frames converted in the converter's *output* sample rate
+		/// The number of frames converted
 		std::atomic_int64_t 	mFramesConverted;
-		/// The number of frames rendered in the converter's *output* sample rate
+		/// The number of frames rendered
 		std::atomic_int64_t 	mFramesRendered;
-		/// The total number of audio frames, in the decoder's sample rate
+		/// The total number of audio frames
 		std::atomic_int64_t 	mFrameLength;
-		/// The desired seek offset, in the converter's *output* sample rate
+		/// The desired seek offset
 		std::atomic_int64_t 	mFrameToSeek;
 
 //	private:
 		/// Decodes audio from the source representation to PCM
 		id <SFBPCMDecoding> 	mDecoder;
-		/// Converts audio from the decoder's processing format to PCM
+		/// Converts audio from the decoder's processing format to another PCM variant at the same sample rate
 		AVAudioConverter 		*mConverter;
 	private:
 		/// Buffer used internally for buffering during conversion
@@ -126,16 +126,15 @@ namespace {
 			: mSequenceNumber(sSequenceNumber++), mFlags(0), mFramesDecoded(0), mFramesConverted(0), mFramesRendered(0), mFrameLength(decoder.frameLength), mFrameToSeek(kInvalidFramePosition), mDecoder(decoder), mConverter(nil), mDecodeBuffer(nil)
 		{
 			mConverter = [[AVAudioConverter alloc] initFromFormat:mDecoder.processingFormat toFormat:format];
-			AVAudioFrameCount conversionBufferLength = (AVAudioFrameCount)((mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate) * frameCapacity);
-			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:conversionBufferLength];
+			// The logic in this class assumes no SRC is performed by mConverter
+			assert(mConverter.inputFormat.sampleRate == mConverter.outputFormat.sampleRate);
+			mDecodeBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:mConverter.inputFormat frameCapacity:frameCapacity];
 
 			AVAudioFramePosition framePosition = decoder.framePosition;
 			if(framePosition != 0) {
-				double sampleRateRatio = mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate;
-				AVAudioFramePosition adjustedPosition = (AVAudioFramePosition)(framePosition / sampleRateRatio);
 				mFramesDecoded.store(framePosition);
-				mFramesConverted.store(adjustedPosition);
-				mFramesRendered.store(adjustedPosition);
+				mFramesConverted.store(framePosition);
+				mFramesRendered.store(framePosition);
 			}
 		}
 
@@ -148,12 +147,8 @@ namespace {
 
 		inline AVAudioFramePosition FrameLength() const
 		{
-			double inputSampleRate = mConverter.inputFormat.sampleRate;
-			double outputSampleRate = mConverter.outputFormat.sampleRate;
-			if(inputSampleRate == outputSampleRate)
-				return mFrameLength.load();
-			else
-				return (AVAudioFramePosition)(mFrameLength.load() * outputSampleRate / inputSampleRate);
+			auto frameLength = mFrameLength.load();
+			return frameLength == SFB_UNKNOWN_FRAME_LENGTH ? SFB_UNKNOWN_FRAME_LENGTH : frameLength;
 		}
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
@@ -190,29 +185,23 @@ namespace {
 			return true;
 		}
 
-		/// Seeks to the desired frame in the converter's *output* sample rate
+		/// Seeks to the frame specified by \c mFrameToSeek
 		bool PerformSeek()
 		{
 			AVAudioFramePosition seekOffset = mFrameToSeek.load();
 
-			double sampleRateRatio = mConverter.inputFormat.sampleRate / mConverter.outputFormat.sampleRate;
-			AVAudioFramePosition adjustedSeekOffset = (AVAudioFramePosition)(seekOffset * sampleRateRatio);
+			os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", seekOffset);
 
-			if(adjustedSeekOffset == seekOffset)
-				os_log_debug(_audioPlayerNodeLog, "Seeking to frame %lld", adjustedSeekOffset);
-			else
-				os_log_debug(_audioPlayerNodeLog, "Seek to frame %lld requested, actually seeking to frame %lld", seekOffset, adjustedSeekOffset);
-
-			if([mDecoder seekToFrame:adjustedSeekOffset error:nil])
+			if([mDecoder seekToFrame:seekOffset error:nil])
 				// Reset the converter to flush any buffers
 				[mConverter reset];
 			else
-				os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", adjustedSeekOffset);
+				os_log_debug(_audioPlayerNodeLog, "Error seeking to frame %lld", seekOffset);
 
 			AVAudioFramePosition newFrame = mDecoder.framePosition;
-			if(newFrame != adjustedSeekOffset) {
-				os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", adjustedSeekOffset, newFrame);
-				seekOffset = (AVAudioFramePosition)(newFrame / sampleRateRatio);
+			if(newFrame != seekOffset) {
+				os_log_debug(_audioPlayerNodeLog, "Inaccurate seek to frame %lld, got %lld", seekOffset, newFrame);
+				seekOffset = newFrame;
 			}
 
 			// Update the seek request
