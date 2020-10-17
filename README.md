@@ -27,7 +27,7 @@ In addition to playback, SFBAudioEngine supports reading and writing of metadata
 2. Download the [dependencies](https://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2) and decompress in the project's root
 3. Open the project, build, and play something using SimplePlayer!
 
-## Using SFBAudioEngine
+## Quick Start
 
 Playing an audio file is as simple as:
 
@@ -45,8 +45,27 @@ if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
     let sampleRate = audioFile.properties.sampleRate
     let title = audioFile.metadata.title
 }
-
 ~~~
+
+## Design
+
+### [Audio Decoders](Decoders/)
+
+Audio decoders in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [`SFBInputSource`](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
+
+All audio decoders in SFBAudioEngine implement the [`SFBAudioDecoding`](Decoders/SFBAudioDecoding.h) protocol. PCM decoders additionally implement [`SFBPCMDecoding`](Decoders/SFBPCMDecoding.h) while DSD decoders implement [`SFBDSDDecoding`](Decoders/SFBDSDDecoding.h). Three special decoder subclasses that wrap an audio decoder are also provided: [`SFBLoopableRegionDecoder`](Decoders/SFBLoopableRegionDecoder.h), [`SFBDoPDecoder`](Decoders/SFBDoPDecoder.h), and [`SFBDSDPCMDecoder`](Decoders/SFBDSDPCMDecoder.h). For seekable inputs, [`SFBLoopableRegionDecoder`](Decoders/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [`SFBDoPDecoder`](Decoders/SFBDoPDecoder.h) and [`SFBDSDPCMDecoder`](Decoders/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
+
+### [`SFBAudioPlayerNode`](Player/SFBAudioPlayerNode.h)
+
+`SFBAudioPlayerNode` is a subclass of [`AVAudioSourceNode`](https://developer.apple.com/documentation/avfoundation/avaudiosourcenode) that provides rich playback functionality within an [`AVAudioEngine`](https://developer.apple.com/documentation/avfoundation/avaudioengine) processing graph. `SFBAudioPlayerNode` supports gapless playback and rich status notifications through delegate callbacks.
+
+### [`SFBAudioPlayer`](Player/SFBAudioPlayer.h)
+
+`SFBAudioPlayer` wraps an `AVAudioEngine` processing graph driven by `SFBAudioPlayerNode`. `SFBAudioPlayer` provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through delegate callbacks.
+
+### [Audio Properties and Metadata](Metadata/)
+
+Audio properties and metadata are accessed from instances of [`SFBAudioFile`](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/AudioMetada.h) is writable for most formats.
 
 ## Sample Audio Players
 
