@@ -12,27 +12,14 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
-//#define MAGIC                 "ajkg"
-//#define FORMAT_VERSION        2
 #define MIN_SUPPORTED_VERSION 1
 #define MAX_SUPPORTED_VERSION 3
-//#define MAX_VERSION           7
 
-//#define UNDEFINED_UINT     -1
 #define DEFAULT_BLOCK_SIZE  256
 #define DEFAULT_V0NMEAN     0
 #define DEFAULT_V2NMEAN     4
 #define DEFAULT_MAXNLPC     0
-#define DEFAULT_NCHAN       1
-#define DEFAULT_NSKIP       0
-#define DEFAULT_NDISCARD    0
-#define NBITPERLONG         32
-#define DEFAULT_MINSNR      256
-#define DEFAULT_MAXRESNSTR  "32.0"
-#define DEFAULT_QUANTERROR  0
-#define MINBITRATE          2.5
 
-#define MAX_LPC_ORDER 64
 #define CHANSIZE      0
 #define ENERGYSIZE    3
 #define BITSHIFTSIZE  2
@@ -72,13 +59,7 @@
 #define TYPE_AU2            8  /* new ulaw with zero mapping                */
 #define TYPE_AU3            9  /* lossless alaw                             */
 #define TYPE_ALAW          10  /* lossy alaw: internal conversion to linear */
-//#define TYPE_RIFF_WAVE     11  /* Microsoft .WAV files                      */
-//#define TYPE_AIFF          12  /* Apple .AIFF files                         */
-//#define TYPE_EOF           13
-//#define TYPE_GENERIC_ULAW 128
-//#define TYPE_GENERIC_ALAW 129
 
-//#define POSITIVE_ULAW_ZERO 0xff
 #define NEGATIVE_ULAW_ZERO 0x7f
 
 #define SEEK_TABLE_REVISION 1
