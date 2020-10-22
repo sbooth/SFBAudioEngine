@@ -877,26 +877,64 @@ namespace {
 		return NO;
 	}
 
-	// Skip unknown chunks, looking for 'fmt '
-	while((chunkID = chunkData.ReadBE32()) != 'fmt ') {
+	bool sawFormatChunk = false;
+	uint32_t dataChunkSize = 0;
+	uint16_t blockAlign = 0;
+
+	while((chunkID = chunkData.ReadBE32())) {
 		auto len = chunkData.ReadLE32();
-		chunkData.Skip(len);
-		if(chunkData.Remaining() < 16) {
-			os_log_error(gSFBAudioDecoderLog, "Missing 'fmt ' chunk");
-			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
-						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
-												  url:_inputSource.url
-										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
-								   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-			return NO;
+		switch(chunkID) {
+			case 'fmt ':
+			{
+				if(len < 16) {
+					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", len);
+					if(error)
+						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+														 code:SFBAudioDecoderErrorCodeInputOutput
+								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
+														  url:_inputSource.url
+												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
+										   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+					return NO;
+				}
+
+				auto format_tag = chunkData.ReadLE16();
+				if(format_tag != WAVE_FORMAT_PCM) {
+					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
+					if(error)
+						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
+														 code:SFBAudioDecoderErrorCodeInputOutput
+								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
+														  url:_inputSource.url
+												failureReason:NSLocalizedString(@"Unsupported WAVE format tag", @"")
+										   recoverySuggestion:NSLocalizedString(@"The file's WAVE format tag is not supported.", @"")];
+					return NO;
+				}
+
+				auto channels = chunkData.ReadLE16();
+				if(_nchan != channels)
+					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _nchan, channels);
+				_sampleRate = chunkData.ReadLE32();
+				chunkData.Skip(4); // average bytes per second
+				blockAlign = chunkData.ReadLE16();
+				_bitsPerSample = chunkData.ReadLE16();
+
+				if(len > 16)
+					os_log_info(gSFBAudioDecoderLog, "%u bytes in 'fmt ' chunk not parsed", len - 16);
+
+				sawFormatChunk = true;
+
+				break;
+			}
+
+			case 'data':
+				dataChunkSize = len;
+				break;
 		}
 	}
 
-	auto len = chunkData.ReadLE32();
-	if(len < 16) {
-		os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", len);
+	if(!sawFormatChunk) {
+		os_log_error(gSFBAudioDecoderLog, "Missing 'fmt ' chunk");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInputOutput
@@ -907,29 +945,8 @@ namespace {
 		return NO;
 	}
 
-	auto format_tag = chunkData.ReadLE16();
-	if(format_tag != WAVE_FORMAT_PCM) {
-		os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
-		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
-					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
-											  url:_inputSource.url
-									failureReason:NSLocalizedString(@"Unsupported WAVE format tag", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's WAVE format tag is not supported.", @"")];
-		return NO;
-	}
-
-	auto channels = chunkData.ReadLE16();
-	if(_nchan != channels)
-		os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _nchan, channels);
-	_sampleRate = chunkData.ReadLE32();
-	chunkData.Skip(4); // average bytes per second
-	chunkData.Skip(2); // block align
-	_bitsPerSample = chunkData.ReadLE16();
-
-	if(len > 16)
-		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'fmt ' chunk not parsed", len - 16);
+	if(dataChunkSize && blockAlign)
+		_frameLength = dataChunkSize / blockAlign;
 
 	return YES;
 }
@@ -984,7 +1001,7 @@ namespace {
 	if(_nchan != channels)
 		os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _nchan, channels);
 
-	chunkData.Skip(4); // numSampleFrames
+	_frameLength = chunkData.ReadBE32();
 
 	_bitsPerSample = chunkData.ReadBE16();
 
