@@ -402,11 +402,13 @@ class PlayerWindowController: NSWindowController {
 		let wasPlaying = player.isPlaying
 		player.pause()
 		do {
-			if wasPlaying {
-				try player.play(item.url)
-			}
-			else {
-				try player.enqueue(item.url, immediate: true)
+			if let decoder = try item.decoder() {
+				if wasPlaying {
+					try player.play(decoder)
+				}
+				else {
+					try player.enqueue(decoder, immediate: true)
+				}
 			}
 		}
 		catch let error {
