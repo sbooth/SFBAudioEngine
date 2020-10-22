@@ -15,6 +15,7 @@ SFBAudioEngine is a framework for macOS and iOS audio playback using Swift or Ob
 * Musepack
 * Monkey's Audio
 * True Audio
+* Shorten
 * All formats supported by libsndfile
 * All formats supported by Core Audio
 * DSD to PCM conversion for DSD64
