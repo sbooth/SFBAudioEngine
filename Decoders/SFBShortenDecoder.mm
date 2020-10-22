@@ -139,6 +139,12 @@ namespace {
 		return result;
 	}
 
+	/// Clips values to the interval [lower, upper]
+	template <typename T>
+	T clip(const T& n, const T& lower, const T& upper) {
+		return std::max(lower, std::min(n, upper));
+	}
+
 	void fix_bitshift(int32_t *buffer, int nitem, int bitshift, int ftype)
 	{
 		int i;
@@ -517,10 +523,6 @@ namespace {
 	AudioStreamBasicDescription processingStreamDescription;
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
-	switch(_internal_ftype) {
-		case TYPE_S8:
-			break;
-	}
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
 	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
@@ -581,14 +583,14 @@ namespace {
 	// Initialize offset
 	int32_t mean = 0;
 	switch(_internal_ftype) {
-		case TYPE_AU1:
+//		case TYPE_AU1:
 		case TYPE_S8:
 		case TYPE_S16HL:
 		case TYPE_S16LH:
-		case TYPE_ULAW:
-		case TYPE_AU2:
-		case TYPE_AU3:
-		case TYPE_ALAW:
+//		case TYPE_ULAW:
+//		case TYPE_AU2:
+//		case TYPE_AU3:
+//		case TYPE_ALAW:
 			mean = 0;
 			break;
 		case TYPE_U8:
@@ -599,7 +601,7 @@ namespace {
 			mean = 0x8000;
 			break;
 		default:
-//			update_exit(1, "unknown file type: %d\n", ftype);
+			os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", _internal_ftype);
 			return NO;
 	}
 
@@ -1294,20 +1296,51 @@ namespace {
 				if(chan == _nchan - 1) {
 					switch(_internal_ftype) {
 						case TYPE_U8:
+						{
+							auto abl = _frameBuffer.audioBufferList;
+							for(auto channel = 0; channel < _nchan; ++channel) {
+								auto channel_buf = (uint8_t *)abl->mBuffers[channel].mData;
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									channel_buf[sample] = (uint8_t)clip(_buffer[channel][sample], 0, UINT8_MAX);
+								}
+							}
+							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
+						}
 						case TYPE_S8:
 						{
+							auto abl = _frameBuffer.audioBufferList;
+							for(auto channel = 0; channel < _nchan; ++channel) {
+								auto channel_buf = (int8_t *)abl->mBuffers[channel].mData;
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									channel_buf[sample] = (int8_t)clip(_buffer[channel][sample], INT16_MIN, INT16_MAX);
+								}
+							}
+							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
 						}
 						case TYPE_U16HL:
 						case TYPE_U16LH:
+						{
+							auto abl = _frameBuffer.audioBufferList;
+							for(auto channel = 0; channel < _nchan; ++channel) {
+								auto channel_buf = (uint16_t *)abl->mBuffers[channel].mData;
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									channel_buf[sample] = (uint16_t)clip(_buffer[channel][sample], 0, UINT16_MAX);
+								}
+							}
+							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
+						}
 						case TYPE_S16HL:
 						case TYPE_S16LH:
 						{
-							auto buf = _frameBuffer.int16ChannelData;
-							for(auto i = 0; i < _nchan; ++i) {
-								memcpy(buf[i], _buffer[i], (size_t)_blocksize * 2);
+							auto abl = _frameBuffer.audioBufferList;
+							for(auto channel = 0; channel < _nchan; ++channel) {
+								auto channel_buf = (int16_t *)abl->mBuffers[channel].mData;
+								for(auto sample = 0; sample < _blocksize; ++sample) {
+									channel_buf[sample] = (int16_t)clip(_buffer[channel][sample], INT16_MIN, INT16_MAX);
+								}
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
 							break;
