@@ -33,7 +33,9 @@ typedef NS_ENUM(UInt32, SFBAudioFormatID) {
 	/// Ogg Vorbis
 	SFBAudioFormatIDVorbis 					= 'OGG ',
 	/// WavPack
-	SFBAudioFormatIDWavPack 				= 'WV  '
+	SFBAudioFormatIDWavPack 				= 'WV  ',
+	/// Shorten
+	SFBAudioFormatIDShorten					= 'SHN '
 } NS_SWIFT_NAME(AudioFormatID);
 
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding

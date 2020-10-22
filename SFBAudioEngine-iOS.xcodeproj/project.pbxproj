@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		321378BB2541F046008252D7 /* SFBShortenDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 321378B92541F046008252D7 /* SFBShortenDecoder.h */; };
+		321378BC2541F046008252D7 /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 321378BA2541F046008252D7 /* SFBShortenDecoder.mm */; };
 		321DB80C2462D467004D66AF /* SFBFLACDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8A02456F984006A5911 /* SFBFLACDecoder.h */; };
 		321DB80D2462D467004D66AF /* SFBFLACDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3268F8842456F984006A5911 /* SFBFLACDecoder.m */; };
 		321DB80E2462D471004D66AF /* SFBOggVorbisDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F8A92456F984006A5911 /* SFBOggVorbisDecoder.h */; };
@@ -209,6 +211,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		321378B92541F046008252D7 /* SFBShortenDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBShortenDecoder.h; sourceTree = "<group>"; };
+		321378BA2541F046008252D7 /* SFBShortenDecoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBShortenDecoder.mm; sourceTree = "<group>"; };
 		321DB82624630EAA004D66AF /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = Libraries/iphoneos/lib/libsndfile.1.dylib; sourceTree = "<group>"; };
 		321DB83024632AF8004D66AF /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = Libraries/iphoneos/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
 		321DB83F2463615A004D66AF /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/iphoneos/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
@@ -504,6 +508,8 @@
 				3268F8AF2456F984006A5911 /* SFBOggSpeexDecoder.m */,
 				3268F8A92456F984006A5911 /* SFBOggVorbisDecoder.h */,
 				3268F88D2456F984006A5911 /* SFBOggVorbisDecoder.m */,
+				321378B92541F046008252D7 /* SFBShortenDecoder.h */,
+				321378BA2541F046008252D7 /* SFBShortenDecoder.mm */,
 				3268F8B02456F984006A5911 /* SFBTrueAudioDecoder.h */,
 				3268F88F2456F984006A5911 /* SFBTrueAudioDecoder.mm */,
 				3268F8932456F984006A5911 /* SFBWavPackDecoder.h */,
@@ -781,6 +787,7 @@
 				32E8A56B245F3EB200E8DC00 /* SFBLoopableRegionDecoder.h in Headers */,
 				325393E3246191480098FDBD /* SFBAudioMetadata+TagLibID3v1Tag.h in Headers */,
 				32E8A5A5245F3EE800E8DC00 /* SFBCStringForOSType.h in Headers */,
+				321378BB2541F046008252D7 /* SFBShortenDecoder.h in Headers */,
 				32E8A596245F3EE800E8DC00 /* SFBDataInputSource.h in Headers */,
 				32E8A585245F3EB200E8DC00 /* SFBDSDDecoding.h in Headers */,
 				32E8A58B245F3EB200E8DC00 /* SFBDSFDecoder.h in Headers */,
@@ -956,6 +963,7 @@
 				32E8A551245F3E6D00E8DC00 /* SFBAudioPlayer.mm in Sources */,
 				321DB80F2462D471004D66AF /* SFBOggVorbisDecoder.m in Sources */,
 				32E8A595245F3EE800E8DC00 /* SFBInputSource.m in Sources */,
+				321378BC2541F046008252D7 /* SFBShortenDecoder.mm in Sources */,
 				32E8A58C245F3EB200E8DC00 /* SFBDSFDecoder.m in Sources */,
 				32539403246191500098FDBD /* SFBOggFLACFile.mm in Sources */,
 				32E8A590245F3EB700E8DC00 /* AVAudioChannelLayout+SFBChannelLabels.m in Sources */,
