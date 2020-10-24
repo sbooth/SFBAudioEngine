@@ -64,6 +64,8 @@ namespace SFB {
 		typename std::enable_if<std::is_integral<T>::value, bool>::type Read(T& value)
 		{
 			auto valueSize = sizeof(value);
+			if(valueSize > Remaining())
+				return false;
 			auto bytesRead = Read(&value, valueSize);
 			return bytesRead == valueSize;
 		}
@@ -76,6 +78,8 @@ namespace SFB {
 		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadLE(T& value)
 		{
 			auto valueSize = sizeof(value);
+			if(valueSize > Remaining())
+				return false;
 			auto bytesRead = Read(&value, valueSize);
 			if(valueSize != bytesRead)
 				return false;
@@ -97,6 +101,8 @@ namespace SFB {
 		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadBE(T& value)
 		{
 			auto valueSize = sizeof(value);
+			if(valueSize > Remaining())
+				return false;
 			auto bytesRead = Read(&value, valueSize);
 			if(valueSize != bytesRead)
 				return false;
@@ -118,6 +124,8 @@ namespace SFB {
 		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadSwapped(T& value)
 		{
 			auto valueSize = sizeof(value);
+			if(valueSize > Remaining())
+				return false;
 			auto bytesRead = Read(&value, valueSize);
 			if(valueSize != bytesRead)
 				return false;
@@ -187,9 +195,10 @@ namespace SFB {
 		/// Advances the read position
 		/// @param count The number of bytes to skip
 		/// @return The number of bytes actually skipped
-		inline size_t Skip(size_t count)
+		size_t Skip(size_t count)
 		{
-			return Read(nullptr, count);
+			mReadPosition = std::min(count, mBufferLength - mReadPosition);
+			return mReadPosition;
 		}
 
 		/// Rewinds the read position
