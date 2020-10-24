@@ -197,7 +197,7 @@ namespace SFB {
 		/// @return The number of bytes actually skipped
 		size_t Skip(size_t count)
 		{
-			mReadPosition = std::min(count, mBufferLength - mReadPosition);
+			mReadPosition += std::min(count, mBufferLength - mReadPosition);
 			return mReadPosition;
 		}
 
