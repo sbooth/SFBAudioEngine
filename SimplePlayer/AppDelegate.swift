@@ -62,7 +62,7 @@ class AppDelegate: NSObject {
 		openPanel.canChooseDirectories = false
 		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
 
-		if(openPanel.runModal() == .OK) {
+		if openPanel.runModal() == .OK {
 			do {
 				let rg = try ReplayGainAnalyzer.analyzeAlbum(openPanel.urls)
 				os_log("Album gain %.2f dB, peak %.8f; Tracks: [%{public}@]", rg.0.gain, rg.0.peak, rg.1.map({ (url, replayGain) in String(format: "\"%@\" gain %.2f dB, peak %.8f", FileManager.default.displayName(atPath: url.lastPathComponent), replayGain.gain, replayGain.peak) }).joined(separator: ", "))
@@ -70,6 +70,23 @@ class AppDelegate: NSObject {
 				alert.messageText = "Replay Gain Analysis Complete"
 				alert.informativeText = "Check log for details."
 				alert.runModal()
+			}
+			catch let error {
+				NSApp.presentError(error)
+			}
+		}
+	}
+
+	@IBAction func exportWAVEFile(_ sender: AnyObject?) {
+		let openPanel = NSOpenPanel()
+
+		openPanel.allowsMultipleSelection = false
+		openPanel.canChooseDirectories = false
+		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
+
+		if openPanel.runModal() == .OK, let url = openPanel.url {
+			do {
+				try AudioExporter.export(url, to: url.deletingPathExtension().appendingPathExtension("wav"))
 			}
 			catch let error {
 				NSApp.presentError(error)
