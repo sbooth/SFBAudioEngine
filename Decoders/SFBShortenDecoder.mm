@@ -6,10 +6,12 @@
 #import <os/log.h>
 
 #import <algorithm>
+#import <vector>
 
 #import "SFBShortenDecoder.h"
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
+#import "ByteStream.h"
 #import "NSError+SFBURLPresentation.h"
 
 #define MIN_SUPPORTED_VERSION 1
@@ -108,15 +110,15 @@ namespace {
 	public:
 		/// Creates a new \c VariableLengthInput object with an internal buffer of the specified size
 		VariableLengthInput(size_t size = 512)
-			: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBuffer(0), mBitsAvailable(0)
+			: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
 		{
-			mBuf = new uint8_t [(size_t)mSize];
-			mPos = mBuf;
+			mByteBuffer = new uint8_t [mSize];
+			mByteBufferPosition = mByteBuffer;
 		}
 
 		~VariableLengthInput()
 		{
-			delete [] mBuf;
+			delete [] mByteBuffer;
 		}
 
 		/// Input callback type
@@ -132,15 +134,15 @@ namespace {
 		bool uvar_get(int32_t& i32, size_t bin)
 		{
 			if(mBitsAvailable == 0) {
-				if(!word_get(mBuffer))
+				if(!word_get(mBitBuffer))
 					return false;
 				mBitsAvailable = 32;
 			}
 
 			int32_t result;
-			for(result = 0; !(mBuffer & (1L << --mBitsAvailable)); ++result) {
+			for(result = 0; !(mBitBuffer & (1L << --mBitsAvailable)); ++result) {
 				if(mBitsAvailable == 0) {
-					if(!word_get(mBuffer))
+					if(!word_get(mBitBuffer))
 						return false;
 					mBitsAvailable = 32;
 				}
@@ -148,14 +150,14 @@ namespace {
 
 			while(bin != 0) {
 				if(mBitsAvailable >= bin) {
-					result = (result << bin) | (int32_t)((mBuffer >> (mBitsAvailable - bin)) & sMaskTable[bin]);
+					result = (result << bin) | (int32_t)((mBitBuffer >> (mBitsAvailable - bin)) & sMaskTable[bin]);
 					mBitsAvailable -= bin;
 					bin = 0;
 				}
 				else {
-					result = (result << mBitsAvailable) | (int32_t)(mBuffer & sMaskTable[mBitsAvailable]);
+					result = (result << mBitsAvailable) | (int32_t)(mBitBuffer & sMaskTable[mBitsAvailable]);
 					bin -= mBitsAvailable;
-					if(!word_get(mBuffer))
+					if(!word_get(mBitBuffer))
 						return false;
 					mBitsAvailable = 32;
 				}
@@ -208,36 +210,69 @@ namespace {
 				return ulong_get(ui32);
 		}
 
+		static size_t sizeof_uvar(uint32_t val, size_t nbin)
+		{
+			return (val >> nbin) + nbin;
+		}
+
+		static size_t sizeof_var(int32_t val, size_t nbin)
+		{
+			return (uint32_t)(labs(val) >> nbin) + nbin + 1;
+		}
+
+		void Reset()
+		{
+			mByteBufferPosition = mByteBuffer;
+			mBytesAvailable = 0;
+			mBitsAvailable = 0;
+		}
+
+		bool Refill()
+		{
+			size_t bytesRead = 0;
+			if(!mInputBlock || !mInputBlock(mByteBuffer, mSize, bytesRead) || bytesRead < 4)
+				return false;
+			mBytesAvailable += bytesRead;
+			mByteBufferPosition = mByteBuffer;
+			return true;
+		}
+
+		bool SetState(uint16_t byteBufferPosition, uint16_t bytesAvailable, uint32_t bitBuffer, uint16_t bitsAvailable)
+		{
+			if(byteBufferPosition > mBytesAvailable || bytesAvailable > mBytesAvailable - byteBufferPosition || bitsAvailable > 32)
+				return false;
+			mByteBufferPosition = mByteBuffer + byteBufferPosition;
+			mBytesAvailable = bytesAvailable;
+			mBitBuffer = bitBuffer;
+			mBitsAvailable = bitsAvailable;
+			return true;
+		}
+
 	private:
 		/// Input callback
 		InputBlock mInputBlock;
-		/// Size of \c mBuf in bytes
+		/// Size of \c mByteBuffer in bytes
 		size_t mSize;
 		/// Byte buffer
-		uint8_t *mBuf;
-		/// Current position in mBuf
-		uint8_t *mPos;
-		/// Bytes available in \c mPos
+		uint8_t *mByteBuffer;
+		/// Current position in \c mByteBuffer
+		uint8_t *mByteBufferPosition;
+		/// Bytes available in \c mByteBuffer
 		size_t mBytesAvailable;
 		/// Bit buffer
-		uint32_t mBuffer;
+		uint32_t mBitBuffer;
 		/// Bits available in \c mBuffer
 		size_t mBitsAvailable;
 
 		/// Reads a single \c uint32_t from the byte buffer, refilling if necessary
 		bool word_get(uint32_t& ui32)
 		{
-			if(mBytesAvailable < 4) {
-				size_t bytesRead = 0;
-				if(!mInputBlock || !mInputBlock(mBuf, mSize, bytesRead) || bytesRead < 4)
-					return false;
-				mBytesAvailable += bytesRead;
-				mPos = mBuf;
-			}
+			if(mBytesAvailable < 4 && !Refill())
+				return false;
 
-			ui32 = (uint32_t)((((int32_t)mPos[0]) << 24) | (((int32_t)mPos[1]) << 16) | (((int32_t)mPos[2]) << 8) | ((int32_t)mPos[3]));
+			ui32 = (uint32_t)((((int32_t)mByteBufferPosition[0]) << 24) | (((int32_t)mByteBufferPosition[1]) << 16) | (((int32_t)mByteBufferPosition[2]) << 8) | ((int32_t)mByteBufferPosition[3]));
 
-			mPos += 4;
+			mByteBufferPosition += 4;
 			mBytesAvailable -= 4;
 
 			return true;
@@ -245,132 +280,54 @@ namespace {
 
 	};
 
-	class ByteStream {
-	public:
-		ByteStream(const void *buf, size_t len)
-			: mBuf(buf), mLen(len), mPos(0)
-		{}
-
-		bool ReadLE16(uint16_t& ui16)
-		{
-			if((mPos + 2) > mLen)
-				return false;
-			ui16 = OSReadLittleInt16(mBuf, mPos);
-			mPos += 2;
-			return true;
-		}
-
-		uint16_t ReadLE16()
-		{
-			uint16_t result = 0;
-			if(!ReadLE16(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool ReadLE32(uint32_t& ui32)
-		{
-			if((mPos + 4) > mLen)
-				return false;
-			ui32 = OSReadLittleInt32(mBuf, mPos);
-			mPos += 4;
-			return true;
-		}
-
-		uint32_t ReadLE32()
-		{
-			uint32_t result = 0;
-			if(!ReadLE32(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool ReadLE64(uint64_t& ui64)
-		{
-			if((mPos + 8) > mLen)
-				return false;
-			ui64 = OSReadLittleInt64(mBuf, mPos);
-			mPos += 8;
-			return true;
-		}
-
-		uint64_t ReadLE64()
-		{
-			uint64_t result = 0;
-			if(!ReadLE64(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool ReadBE16(uint16_t& ui16)
-		{
-			if((mPos + 2) > mLen)
-				return false;
-			ui16 = OSReadBigInt16(mBuf, mPos);
-			mPos += 2;
-			return true;
-		}
-
-		uint16_t ReadBE16()
-		{
-			uint16_t result = 0;
-			if(!ReadBE16(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool ReadBE32(uint32_t& ui32)
-		{
-			if((mPos + 4) > mLen)
-				return false;
-			ui32 = OSReadBigInt32(mBuf, mPos);
-			mPos += 4;
-			return true;
-		}
-
-		uint32_t ReadBE32()
-		{
-			uint32_t result = 0;
-			if(!ReadBE32(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool ReadBE64(uint64_t& ui64)
-		{
-			if((mPos + 8) > mLen)
-				return false;
-			ui64 = OSReadBigInt64(mBuf, mPos);
-			mPos += 8;
-			return true;
-		}
-
-		uint64_t ReadBE64()
-		{
-			uint64_t result = 0;
-			if(!ReadBE64(result))
-				mPos = mLen;
-			return result;
-		}
-
-		bool Skip(size_t count)
-		{
-			if((mPos + count) > mLen)
-				return false;
-			mPos += count;
-			return true;
-		}
-
-		inline size_t Remaining() const
-		{
-			return mLen - mPos;
-		}
-
-	private:
-		const void *mBuf;
-		size_t mLen;
-		size_t mPos;
+	/// Shorten seek table header
+	struct SeekTableHeader
+	{
+		int8_t mSignature [4];
+		uint32_t mVersion;
+		uint32_t mFileSize;
 	};
+
+	/// Shorten seek table trailer
+	struct SeekTableTrailer
+	{
+		uint32_t mSeekTableSize;
+		int8_t mSignature [8];
+	};
+
+	/// A Shorten seek table entry
+	struct SeekTableEntry
+	{
+		uint32_t mFrameNumber;
+		uint32_t mByteOffsetInFile;
+		uint32_t mLastBufferReadPosition;
+		uint16_t mBytesAvailable;
+		uint16_t mByteBufferPosition;
+		uint16_t mBitBufferPosition;
+		uint32_t mBitBuffer;
+		uint16_t mBitshift;
+		int32_t mCBuf0 [3];
+		int32_t mCBuf1 [3];
+		int32_t mOffset0 [4];
+		int32_t mOffset1 [4];
+	};
+
+	/// Locates the most suitable seek table entry for \c frame
+	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::iterator begin, std::vector<SeekTableEntry>::iterator end, AVAudioFramePosition frame)
+	{
+		if(begin == end)
+			return begin;
+
+		auto difference = end - begin;
+		if(difference == 1)
+			return end->mFrameNumber > frame ? begin : end;
+
+		auto middle = begin + (difference / 2);
+		if(middle->mFrameNumber > frame)
+			return FindSeekTableEntry(begin, --middle, frame);
+		else
+			return FindSeekTableEntry(++begin, middle, frame);
+	}
 }
 
 @interface SFBShortenDecoder ()
@@ -395,14 +352,16 @@ namespace {
 	int _bitshift;
 
 	bool _eos;
+	std::vector<SeekTableEntry> _seekTableEntries;
 
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 	AVAudioFramePosition _frameLength;
 }
 - (BOOL)parseShortenHeaderReturningError:(NSError **)error;
-- (BOOL)parseRIFFChunk:(ByteStream&)chunkData error:(NSError **)error;
-- (BOOL)parseFORMChunk:(ByteStream&)chunkData error:(NSError **)error;
+- (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
+- (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
+- (BOOL)scanForSeekTableReturningError:(NSError **)error;
 @end
 
 @implementation SFBShortenDecoder
@@ -451,6 +410,9 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file's bit depth and audio type is not supported.", @"")];
 		return NO;
 	}
+
+	if(![self scanForSeekTableReturningError:error])
+		return NO;
 
 	// Set up the processing format
 	AudioStreamBasicDescription processingStreamDescription;
@@ -831,8 +793,8 @@ namespace {
 		header_bytes[i] = (int8_t)byte;
 	}
 
-	ByteStream chunkData{header_bytes, (size_t)header_size};
-	auto chunkID = chunkData.ReadBE32();
+	SFB::ByteStream chunkData{header_bytes, (size_t)header_size};
+	auto chunkID = chunkData.ReadBE<uint32_t>();
 
 	// Skip chunk size
 	chunkData.Skip(4);
@@ -862,9 +824,9 @@ namespace {
 	return YES;
 }
 
-- (BOOL)parseRIFFChunk:(ByteStream&)chunkData error:(NSError **)error
+- (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error
 {
-	auto chunkID = chunkData.ReadBE32();
+	auto chunkID = chunkData.ReadBE<uint32_t>();
 	if(chunkID != 'WAVE') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'WAVE' in 'RIFF' chunk");
 		if(error)
@@ -881,8 +843,8 @@ namespace {
 	uint32_t dataChunkSize = 0;
 	uint16_t blockAlign = 0;
 
-	while((chunkID = chunkData.ReadBE32())) {
-		auto len = chunkData.ReadLE32();
+	while((chunkID = chunkData.ReadBE<uint32_t>())) {
+		auto len = chunkData.ReadLE<uint32_t>();
 		switch(chunkID) {
 			case 'fmt ':
 			{
@@ -898,7 +860,7 @@ namespace {
 					return NO;
 				}
 
-				auto format_tag = chunkData.ReadLE16();
+				auto format_tag = chunkData.ReadLE<uint16_t>();
 				if(format_tag != WAVE_FORMAT_PCM) {
 					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
 					if(error)
@@ -911,13 +873,13 @@ namespace {
 					return NO;
 				}
 
-				auto channels = chunkData.ReadLE16();
+				auto channels = chunkData.ReadLE<uint16_t>();
 				if(_nchan != channels)
 					os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'fmt ' chunk (%u)", _nchan, channels);
-				_sampleRate = chunkData.ReadLE32();
+				_sampleRate = chunkData.ReadLE<uint32_t>();
 				chunkData.Skip(4); // average bytes per second
-				blockAlign = chunkData.ReadLE16();
-				_bitsPerSample = chunkData.ReadLE16();
+				blockAlign = chunkData.ReadLE<uint16_t>();
+				_bitsPerSample = chunkData.ReadLE<uint16_t>();
 
 				if(len > 16)
 					os_log_info(gSFBAudioDecoderLog, "%u bytes in 'fmt ' chunk not parsed", len - 16);
@@ -951,9 +913,9 @@ namespace {
 	return YES;
 }
 
-- (BOOL)parseFORMChunk:(ByteStream&)chunkData error:(NSError **)error
+- (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error
 {
-	auto chunkID = chunkData.ReadBE32();
+	auto chunkID = chunkData.ReadBE<uint32_t>();
 	if(chunkID != 'AIFF' && chunkID != 'AIFC') {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'AIFF' or 'AIFC' in 'FORM' chunk");
 		if(error)
@@ -967,8 +929,8 @@ namespace {
 	}
 
 	// Skip unknown chunks, looking for 'COMM'
-	while((chunkID = chunkData.ReadBE32()) != 'COMM') {
-		auto len = chunkData.ReadBE32();
+	while((chunkID = chunkData.ReadBE<uint32_t>()) != 'COMM') {
+		auto len = chunkData.ReadBE<uint32_t>();
 		// pad byte not included in ckLen
 		if((int32_t)len < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
 			os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
@@ -984,7 +946,7 @@ namespace {
 		chunkData.Skip(len + (len & 1));
 	}
 
-	auto len = chunkData.ReadBE32();
+	auto len = chunkData.ReadBE<uint32_t>();
 	if((int32_t)len < 18) {
 		os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", len);
 		if(error)
@@ -997,16 +959,16 @@ namespace {
 		return NO;
 	}
 
-	auto channels = chunkData.ReadBE16();
+	auto channels = chunkData.ReadBE<uint16_t>();
 	if(_nchan != channels)
 		os_log_info(gSFBAudioDecoderLog, "Channel count mismatch between Shorten (%d) and 'COMM' chunk (%u)", _nchan, channels);
 
-	_frameLength = chunkData.ReadBE32();
+	_frameLength = chunkData.ReadBE<uint32_t>();
 
-	_bitsPerSample = chunkData.ReadBE16();
+	_bitsPerSample = chunkData.ReadBE<uint16_t>();
 
 	// sample rate is IEEE 754 80-bit extended float (16-bit exponent, 1-bit integer part, 63-bit fraction)
-	auto exp = (int16_t)chunkData.ReadBE16() - 16383 - 63;
+	auto exp = (int16_t)chunkData.ReadBE<uint16_t>() - 16383 - 63;
 	if(exp < -63 || exp > 63) {
 		os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
 		if(error)
@@ -1019,7 +981,7 @@ namespace {
 		return NO;
 	}
 
-	auto frac = chunkData.ReadBE64();
+	auto frac = chunkData.ReadBE<uint64_t>();
 	if(exp >= 0)
 		_sampleRate = (uint32_t)(frac << exp);
 	else
@@ -1379,6 +1341,106 @@ namespace {
 				return NO;
 		}
 	}
+
+	return YES;
+}
+
+- (BOOL)scanForSeekTableReturningError:(NSError **)error
+{
+	// Non-seekable input source; not an error
+	if(!_inputSource.supportsSeeking)
+		return YES;
+
+	NSInteger startOffset;
+	if(![_inputSource getOffset:&startOffset error:error])
+		return NO;
+
+	NSInteger fileLength;
+	if(![_inputSource getLength:&fileLength error:error] || ![_inputSource seekToOffset:(fileLength - SEEK_TRAILER_SIZE) error:error])
+		return NO;
+
+	SeekTableTrailer trailer;
+	NSInteger bytesRead;
+	if(![_inputSource readBytes:&trailer length:SEEK_TRAILER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_TRAILER_SIZE)
+		return NO;
+//	trailer.mSeekTableSize = OSSwapLittleToHostInt32(trailer.mSeekTableSize);
+
+	// No seek table found; not an error
+	if(memcmp("SHNAMPSK", trailer.mSignature, 8))
+		return YES;
+
+	if(![_inputSource seekToOffset:(fileLength - trailer.mSeekTableSize) error:error])
+		return NO;
+
+	SeekTableHeader header;
+	if(![_inputSource readBytes:&header length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_HEADER_SIZE)
+		return NO;
+//	header.mFileSize = OSSwapLittleToHostInt32(header.mFileSize);
+//	header.mVersion = OSSwapLittleToHostInt32(header.mVersion);
+
+	// A corrupt seek table is an error, however YES is returned to try and permit decoding to continue
+	if(memcmp("SEEK", header.mSignature, 4)) {
+		os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.mSignature);
+		if(![_inputSource seekToOffset:startOffset error:error])
+			return NO;
+		return YES;
+	}
+
+	std::vector<SeekTableEntry> entries;
+
+	auto count = (trailer.mSeekTableSize - SEEK_TRAILER_SIZE - SEEK_HEADER_SIZE) / SEEK_ENTRY_SIZE;
+	for(uint32_t i = 0; i < count; ++i) {
+		SeekTableEntry entry;
+		if(![_inputSource readBytes:&entry length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_ENTRY_SIZE)
+			return NO;
+//		entry.mFrameNumber = OSSwapLittleToHostInt32(entry.mFrameNumber);
+//		entry.mByteOffsetInFile = OSSwapLittleToHostInt32(entry.mByteOffsetInFile);
+//		entry.mLastBufferReadPosition = OSSwapLittleToHostInt32(entry.mLastBufferReadPosition);
+//		entry.mBytesAvailable = OSSwapLittleToHostInt16(entry.mBytesAvailable);
+//		entry.mByteBufferPosition = OSSwapLittleToHostInt16(entry.mByteBufferPosition);
+//		entry.mBitBufferPosition = OSSwapLittleToHostInt16(entry.mBitBufferPosition);
+//		entry.mBitBuffer = OSSwapLittleToHostInt32(entry.mBitBuffer);
+//		entry.mBitshift = OSSwapLittleToHostInt16(entry.mBitshift);
+//		for(auto j = 0; j < 3; ++j) {
+//			entry.mCBuf0[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mCBuf0[j]);
+//			entry.mCBuf1[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mCBuf1[j]);
+//		}
+//		for(auto j = 0; j < 4; ++j) {
+//			entry.mOffset0[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mOffset0[j]);
+//			entry.mOffset1[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mOffset1[j]);
+//		}
+		entries.push_back(entry);
+	}
+
+	// Reset file marker
+	if(![_inputSource seekToOffset:startOffset error:error])
+		return NO;
+
+	// Verify seek table; disable seeking if discrepancies detected
+	if(!entries.empty()) {
+		if(startOffset != entries[0].mByteOffsetInFile) {
+			os_log_error(gSFBAudioDecoderLog, "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)", (long)startOffset, entries[0].mByteOffsetInFile);
+			return YES;
+		}
+		else if(_bitshift != entries[0].mBitshift) {
+			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].mBitshift);
+			return YES;
+		}
+		else if(_nchan != 1 && _nchan != 2) {
+			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _nchan);
+			return YES;
+		}
+		else if(_maxnlpc > 3) {
+			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxnlpc);
+			return YES;
+		}
+		else if(_nmean > 4) {
+			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid nmean (%d); [0, 4] required", _nmean);
+			return YES;
+		}
+	}
+
+	_seekTableEntries = entries;
 
 	return YES;
 }
