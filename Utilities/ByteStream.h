@@ -9,6 +9,7 @@
 #import <type_traits>
 
 namespace SFB {
+
 	/// A \c ByteStream provides heterogeneous typed access to an untyped buffer.
 	class ByteStream {
 	public:
@@ -241,6 +242,7 @@ namespace SFB {
 		}
 
 	private:
+		
 		/// The wrapped buffer
 		const void *mBuffer;
 		/// The number of bytes in \c mBuffer
@@ -248,4 +250,5 @@ namespace SFB {
 		/// The current read position
 		size_t mReadPosition;
 	};
+	
 }
