@@ -109,6 +109,7 @@ namespace {
 	class VariableLengthInput {
 	public:
 		/// Creates a new \c VariableLengthInput object with an internal buffer of the specified size
+		/// @warning Sizes other than \c 512 will break seeking
 		VariableLengthInput(size_t size = 512)
 			: mInputBlock(nil), mSize(size), mBytesAvailable(0), mBitBuffer(0), mBitsAvailable(0)
 		{
@@ -348,20 +349,20 @@ namespace {
 		entry.mBitBufferPosition = byteStream.ReadLE<uint16_t>();
 		entry.mBitBuffer = byteStream.ReadLE<uint32_t>();
 		entry.mBitshift = byteStream.ReadLE<uint16_t>();
-		for(auto j = 0; j < 3; ++j) {
-			entry.mCBuf0[j] = (int32_t)byteStream.ReadLE<uint32_t>();
-			entry.mCBuf1[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+		for(auto i = 0; i < 3; ++i) {
+			entry.mCBuf0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
+			entry.mCBuf1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
 		}
-		for(auto j = 0; j < 4; ++j) {
-			entry.mOffset0[j] = (int32_t)byteStream.ReadLE<uint32_t>();
-			entry.mOffset1[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+		for(auto i = 0; i < 4; ++i) {
+			entry.mOffset0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
+			entry.mOffset1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
 		}
 
 		return entry;
 	}
 
 	/// Locates the most suitable seek table entry for \c frame
-	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::iterator begin, std::vector<SeekTableEntry>::iterator end, AVAudioFramePosition frame)
+	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
 	{
 		if(begin == end)
 			return begin;
@@ -642,11 +643,15 @@ namespace {
 	if(frame >= self.frameLength)
 		return NO;
 
-	auto entry = FindSeekTableEntry(_seekTableEntries.begin(), _seekTableEntries.end(), frame);
+	auto entry = FindSeekTableEntry(_seekTableEntries.cbegin(), _seekTableEntries.cend(), frame);
 	if(entry == _seekTableEntries.end()) {
 		os_log_error(gSFBAudioDecoderLog, "No seek table entry for frame %lld", frame);
 		return NO;
 	}
+
+#if DEBUG
+	os_log_debug(gSFBAudioDecoderLog, "Using seek table entry %ld for frame %d to seek to frame %lld", std::distance(_seekTableEntries.cbegin(), entry), entry->mFrameNumber, frame);
+#endif
 
 	if(![_inputSource seekToOffset:entry->mLastBufferReadPosition error:error])
 		return NO;
@@ -655,14 +660,19 @@ namespace {
 	if(!_input.Refill() || !_input.SetState(entry->mByteBufferPosition, entry->mBytesAvailable, entry->mBitBuffer, entry->mBitBufferPosition))
 		return NO;
 
-	for(auto channel = 0; channel < _nchan; ++channel) {
-		for(auto j = 0; j < 3; ++j) {
-//			_buffer[channel][j - 3] = shn_uchar_to_slong_le(seek_info->data+32 + 12*channel - 4*j);
-//			_buffer[channel][j - 3] = entry->mCBuf0[j];
-		}
-		for(auto j = 0; j < std::max(1, _nmean); ++j) {
-//			_offset[channel][j] = shn_uchar_to_slong_le(seek_info->data+48 + 16*channel + 4*j);
-		}
+	_buffer[0][-1] = entry->mCBuf0[0];
+	_buffer[0][-2] = entry->mCBuf0[1];
+	_buffer[0][-3] = entry->mCBuf0[2];
+	if(_nchan == 2) {
+		_buffer[1][-1] = entry->mCBuf1[0];
+		_buffer[1][-2] = entry->mCBuf1[1];
+		_buffer[1][-3] = entry->mCBuf1[2];
+	}
+
+	for(auto i = 0; i < std::max(1, _nmean); ++i) {
+		_offset[0][i] = entry->mOffset0[i];
+		if(_nchan == 2)
+			_offset[1][i] = entry->mOffset1[i];
 	}
 
 	_bitshift = entry->mBitshift;
