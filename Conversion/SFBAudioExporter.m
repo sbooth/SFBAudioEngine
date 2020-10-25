@@ -26,7 +26,7 @@ NSErrorDomain const SFBAudioExporterErrorDomain = @"org.sbooth.AudioEngine.Audio
 	return [self exportDecoder:decoder toURL:targetURL error:error];
 }
 
-+ (BOOL)exportDecoder:(SFBAudioDecoder *)decoder toURL:(NSURL *)targetURL error:(NSError **)error
++ (BOOL)exportDecoder:(id<SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error
 {
 	if(!decoder.isOpen && ![decoder openReturningError:error])
 		return NO;

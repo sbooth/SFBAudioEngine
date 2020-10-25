@@ -5,7 +5,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class SFBAudioDecoder;
+@protocol SFBPCMDecoding;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,7 +26,7 @@ NS_SWIFT_NAME(AudioExporter) @interface SFBAudioExporter : NSObject
 /// @param targetURL The destination URL
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-+ (BOOL)exportDecoder:(SFBAudioDecoder *)decoder toURL:(NSURL *)targetURL error:(NSError **)error;
++ (BOOL)exportDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)targetURL error:(NSError **)error;
 
 @end
 
