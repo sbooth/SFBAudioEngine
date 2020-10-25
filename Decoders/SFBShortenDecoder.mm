@@ -288,12 +288,35 @@ namespace {
 		uint32_t mFileSize;
 	};
 
+	SeekTableHeader ParseSeekTableHeader(const void *buf)
+	{
+		SFB::ByteStream byteStream(buf, SEEK_HEADER_SIZE);
+
+		SeekTableHeader header;
+		byteStream.Read(header.mSignature, 4);
+		header.mVersion = byteStream.ReadLE<uint32_t>();
+		header.mFileSize = byteStream.ReadLE<uint32_t>();
+
+		return header;
+	}
+
 	/// Shorten seek table trailer
 	struct SeekTableTrailer
 	{
 		uint32_t mSeekTableSize;
 		int8_t mSignature [8];
 	};
+
+	SeekTableTrailer ParseSeekTableTrailer(const void *buf)
+	{
+		SFB::ByteStream byteStream(buf, SEEK_TRAILER_SIZE);
+
+		SeekTableTrailer trailer;
+		trailer.mSeekTableSize = byteStream.ReadLE<uint32_t>();
+		byteStream.Read(trailer.mSignature, 8);
+
+		return trailer;
+	}
 
 	/// A Shorten seek table entry
 	struct SeekTableEntry
@@ -311,6 +334,31 @@ namespace {
 		int32_t mOffset0 [4];
 		int32_t mOffset1 [4];
 	};
+
+	SeekTableEntry ParseSeekTableEntry(const void *buf)
+	{
+		SFB::ByteStream byteStream(buf, SEEK_ENTRY_SIZE);
+
+		SeekTableEntry entry;
+		entry.mFrameNumber = byteStream.ReadLE<uint32_t>();
+		entry.mByteOffsetInFile = byteStream.ReadLE<uint32_t>();
+		entry.mLastBufferReadPosition = byteStream.ReadLE<uint32_t>();
+		entry.mBytesAvailable = byteStream.ReadLE<uint16_t>();
+		entry.mByteBufferPosition = byteStream.ReadLE<uint16_t>();
+		entry.mBitBufferPosition = byteStream.ReadLE<uint16_t>();
+		entry.mBitBuffer = byteStream.ReadLE<uint32_t>();
+		entry.mBitshift = byteStream.ReadLE<uint16_t>();
+		for(auto j = 0; j < 3; ++j) {
+			entry.mCBuf0[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+			entry.mCBuf1[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+		}
+		for(auto j = 0; j < 4; ++j) {
+			entry.mOffset0[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+			entry.mOffset1[j] = (int32_t)byteStream.ReadLE<uint32_t>();
+		}
+
+		return entry;
+	}
 
 	/// Locates the most suitable seek table entry for \c frame
 	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::iterator begin, std::vector<SeekTableEntry>::iterator end, AVAudioFramePosition frame)
@@ -362,6 +410,8 @@ namespace {
 - (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
 - (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
 - (BOOL)scanForSeekTableReturningError:(NSError **)error;
+- (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url;
+- (BOOL)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset;
 @end
 
 @implementation SFBShortenDecoder
@@ -582,8 +632,45 @@ namespace {
 
 - (BOOL)supportsSeeking
 {
-	// FIXME: Seek table support
-	return NO;
+	return !_seekTableEntries.empty();
+}
+
+- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
+{
+	NSParameterAssert(frame >= 0);
+
+	if(frame >= self.frameLength)
+		return NO;
+
+	auto entry = FindSeekTableEntry(_seekTableEntries.begin(), _seekTableEntries.end(), frame);
+	if(entry == _seekTableEntries.end()) {
+		os_log_error(gSFBAudioDecoderLog, "No seek table entry for frame %lld", frame);
+		return NO;
+	}
+
+	if(![_inputSource seekToOffset:entry->mLastBufferReadPosition error:error])
+		return NO;
+
+	_input.Reset();
+	if(!_input.Refill() || !_input.SetState(entry->mByteBufferPosition, entry->mBytesAvailable, entry->mBitBuffer, entry->mBitBufferPosition))
+		return NO;
+
+	for(auto channel = 0; channel < _nchan; ++channel) {
+		for(auto j = 0; j < 3; ++j) {
+//			_buffer[channel][j - 3] = shn_uchar_to_slong_le(seek_info->data+32 + 12*channel - 4*j);
+//			_buffer[channel][j - 3] = entry->mCBuf0[j];
+		}
+		for(auto j = 0; j < std::max(1, _nmean); ++j) {
+//			_offset[channel][j] = shn_uchar_to_slong_le(seek_info->data+48 + 16*channel + 4*j);
+		}
+	}
+
+	_bitshift = entry->mBitshift;
+
+	_framePosition = entry->mFrameNumber;
+	_frameBuffer.frameLength = 0;
+
+	return YES;
 }
 
 - (BOOL)parseShortenHeaderReturningError:(NSError **)error
@@ -1345,6 +1432,7 @@ namespace {
 	return YES;
 }
 
+// A return value of YES indicates that decoding may continue, not that no errors exist with the seek table itself
 - (BOOL)scanForSeekTableReturningError:(NSError **)error
 {
 	// Non-seekable input source; not an error
@@ -1360,23 +1448,37 @@ namespace {
 		return NO;
 
 	SeekTableTrailer trailer;
-	NSInteger bytesRead;
-	if(![_inputSource readBytes:&trailer length:SEEK_TRAILER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_TRAILER_SIZE)
-		return NO;
-//	trailer.mSeekTableSize = OSSwapLittleToHostInt32(trailer.mSeekTableSize);
+	{
+		uint8_t buf [SEEK_TRAILER_SIZE];
+		NSInteger bytesRead;
+		if(![_inputSource readBytes:buf length:SEEK_TRAILER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_TRAILER_SIZE)
+			return NO;
+		trailer = ParseSeekTableTrailer(buf);
+	}
 
-	// No seek table found; not an error
-	if(memcmp("SHNAMPSK", trailer.mSignature, 8))
+	// No appended seek table found; not an error
+	if(memcmp("SHNAMPSK", trailer.mSignature, 8)) {
+		// Check for separate seek table
+		NSURL *externalSeekTableURL = [_inputSource.url.URLByDeletingPathExtension URLByAppendingPathExtension:@"skt"];
+		if([externalSeekTableURL checkResourceIsReachableAndReturnError:nil]) {
+			auto entries = [self parseExternalSeekTable:externalSeekTableURL];
+			if(!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset])
+				_seekTableEntries = entries;
+		}
 		return YES;
+	}
 
 	if(![_inputSource seekToOffset:(fileLength - trailer.mSeekTableSize) error:error])
 		return NO;
 
 	SeekTableHeader header;
-	if(![_inputSource readBytes:&header length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_HEADER_SIZE)
-		return NO;
-//	header.mFileSize = OSSwapLittleToHostInt32(header.mFileSize);
-//	header.mVersion = OSSwapLittleToHostInt32(header.mVersion);
+	{
+		uint8_t buf [SEEK_HEADER_SIZE];
+		NSInteger bytesRead;
+		if(![_inputSource readBytes:buf length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_HEADER_SIZE)
+			return NO;
+		header = ParseSeekTableHeader(buf);
+	}
 
 	// A corrupt seek table is an error, however YES is returned to try and permit decoding to continue
 	if(memcmp("SEEK", header.mSignature, 4)) {
@@ -1390,25 +1492,12 @@ namespace {
 
 	auto count = (trailer.mSeekTableSize - SEEK_TRAILER_SIZE - SEEK_HEADER_SIZE) / SEEK_ENTRY_SIZE;
 	for(uint32_t i = 0; i < count; ++i) {
-		SeekTableEntry entry;
-		if(![_inputSource readBytes:&entry length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_ENTRY_SIZE)
+		uint8_t buf [SEEK_ENTRY_SIZE];
+		NSInteger bytesRead;
+		if(![_inputSource readBytes:buf length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:error] || bytesRead != SEEK_ENTRY_SIZE)
 			return NO;
-//		entry.mFrameNumber = OSSwapLittleToHostInt32(entry.mFrameNumber);
-//		entry.mByteOffsetInFile = OSSwapLittleToHostInt32(entry.mByteOffsetInFile);
-//		entry.mLastBufferReadPosition = OSSwapLittleToHostInt32(entry.mLastBufferReadPosition);
-//		entry.mBytesAvailable = OSSwapLittleToHostInt16(entry.mBytesAvailable);
-//		entry.mByteBufferPosition = OSSwapLittleToHostInt16(entry.mByteBufferPosition);
-//		entry.mBitBufferPosition = OSSwapLittleToHostInt16(entry.mBitBufferPosition);
-//		entry.mBitBuffer = OSSwapLittleToHostInt32(entry.mBitBuffer);
-//		entry.mBitshift = OSSwapLittleToHostInt16(entry.mBitshift);
-//		for(auto j = 0; j < 3; ++j) {
-//			entry.mCBuf0[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mCBuf0[j]);
-//			entry.mCBuf1[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mCBuf1[j]);
-//		}
-//		for(auto j = 0; j < 4; ++j) {
-//			entry.mOffset0[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mOffset0[j]);
-//			entry.mOffset1[j] = (int32_t)OSSwapLittleToHostInt32((uint32_t)entry.mOffset1[j]);
-//		}
+
+		auto entry = ParseSeekTableEntry(buf);
 		entries.push_back(entry);
 	}
 
@@ -1416,31 +1505,82 @@ namespace {
 	if(![_inputSource seekToOffset:startOffset error:error])
 		return NO;
 
-	// Verify seek table; disable seeking if discrepancies detected
-	if(!entries.empty()) {
-		if(startOffset != entries[0].mByteOffsetInFile) {
-			os_log_error(gSFBAudioDecoderLog, "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)", (long)startOffset, entries[0].mByteOffsetInFile);
-			return YES;
+	if(!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset])
+		_seekTableEntries = entries;
+
+	return YES;
+}
+
+- (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url
+{
+	NSParameterAssert(url != nil);
+
+	NSError *error;
+	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:&error];
+	if(!inputSource || ![inputSource openReturningError:&error]) {
+		os_log_error(gSFBAudioDecoderLog, "Error opening external seek table: %{public}@", error);
+		return {};
+	}
+
+	{
+		uint8_t buf [SEEK_HEADER_SIZE];
+		NSInteger bytesRead;
+		if(![inputSource readBytes:buf length:SEEK_HEADER_SIZE bytesRead:&bytesRead error:&error] || bytesRead != SEEK_HEADER_SIZE) {
+			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table header: %{public}@", error);
+			return {};
 		}
-		else if(_bitshift != entries[0].mBitshift) {
-			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].mBitshift);
-			return YES;
-		}
-		else if(_nchan != 1 && _nchan != 2) {
-			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _nchan);
-			return YES;
-		}
-		else if(_maxnlpc > 3) {
-			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxnlpc);
-			return YES;
-		}
-		else if(_nmean > 4) {
-			os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid nmean (%d); [0, 4] required", _nmean);
-			return YES;
+
+		auto header = ParseSeekTableHeader(buf);
+		if(memcmp("SEEK", header.mSignature, 4)) {
+			os_log_error(gSFBAudioDecoderLog, "Unexpected seek table header signature: %{public}.4s", header.mSignature);
+			return {};
 		}
 	}
 
-	_seekTableEntries = entries;
+	std::vector<SeekTableEntry> entries;
+
+	for(;;) {
+		uint8_t buf [SEEK_ENTRY_SIZE];
+		NSInteger bytesRead;
+		if(![inputSource readBytes:buf length:SEEK_ENTRY_SIZE bytesRead:&bytesRead error:&error] || bytesRead != SEEK_ENTRY_SIZE) {
+			os_log_error(gSFBAudioDecoderLog, "Error reading external seek table entry: %{public}@", error);
+			return {};
+		}
+
+		auto entry = ParseSeekTableEntry(buf);
+		entries.push_back(entry);
+
+		if(inputSource.atEOF)
+			break;
+	}
+
+	return entries;
+}
+
+- (BOOL)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset
+{
+	if(entries.empty())
+		return NO;
+	else if(startOffset != entries[0].mByteOffsetInFile) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Mismatch between actual data start (%ld) and start in first seek table entry (%d)", (long)startOffset, entries[0].mByteOffsetInFile);
+		return NO;
+	}
+	else if(_bitshift != entries[0].mBitshift) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid bitshift (%d) in first seek table entry", entries[0].mBitshift);
+		return NO;
+	}
+	else if(_nchan != 1 && _nchan != 2) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid channel count (%d); mono or stereo required", _nchan);
+		return NO;
+	}
+	else if(_maxnlpc > 3) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid maxnlpc (%d); [0, 3] required", _maxnlpc);
+		return NO;
+	}
+	else if(_nmean > 4) {
+		os_log_error(gSFBAudioDecoderLog, "Seek table error: Invalid nmean (%d); [0, 4] required", _nmean);
+		return NO;
+	}
 
 	return YES;
 }
