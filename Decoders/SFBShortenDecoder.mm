@@ -373,9 +373,9 @@ namespace {
 
 		auto middle = begin + (difference / 2);
 		if(middle->mFrameNumber > frame)
-			return FindSeekTableEntry(begin, --middle, frame);
+			return FindSeekTableEntry(begin, middle, frame);
 		else
-			return FindSeekTableEntry(++begin, middle, frame);
+			return FindSeekTableEntry(middle, end, frame);
 	}
 }
 
