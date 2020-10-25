@@ -1326,7 +1326,7 @@ namespace {
 							for(auto channel = 0; channel < _nchan; ++channel) {
 								auto channel_buf = (int8_t *)abl->mBuffers[channel].mData;
 								for(auto sample = 0; sample < _blocksize; ++sample) {
-									channel_buf[sample] = (int8_t)clip(_buffer[channel][sample], INT16_MIN, INT16_MAX);
+									channel_buf[sample] = (int8_t)clip(_buffer[channel][sample], INT8_MIN, INT8_MAX);
 								}
 							}
 							_frameBuffer.frameLength = (AVAudioFrameCount)_blocksize;
