@@ -113,6 +113,16 @@ bool SFB::Audio::Format::GetInterleavedEquivalent(Format& format) const
 	return true;
 }
 
+bool SFB::Audio::Format::GetStandardEquivalent(Format& format) const
+{
+	if(!IsPCM())
+		return false;
+
+	FillOutASBDForLPCM(&format, mSampleRate, mChannelsPerFrame, 32, 32, true, kAudioFormatFlagIsBigEndian == kAudioFormatFlagsNativeEndian, true);
+	
+	return true;
+}
+
 // Most of this is stolen from Apple's CAStreamBasicDescription::Print()
 SFB::CFString SFB::Audio::Format::Description() const
 {

@@ -28,7 +28,8 @@ namespace SFB {
 			kAudioFormatSpeex 					= 'SPX ',	/*!< Ogg Speex */
 			kAudioFormatTrueAudio 				= 'TTA ',	/*!< True Audio */
 			kAudioFormatVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
-			kAudioFormatWavpack 				= 'WV  '	/*!< Wavpack */
+			kAudioFormatWavpack 				= 'WV  ',	/*!< Wavpack */
+			kAudioFormatShorten 				= 'SHN '	/*!< Shorten */
 		};
 
 		/*! @brief Common PCM audio formats */
@@ -90,11 +91,26 @@ namespace SFB {
 			/*! @brief Query whether this format represents DoP audio data */
 			inline bool IsDoP() const 										{ return kAudioFormatDoP == mFormatID; }
 
-			/*! @brief Query whether this format represents big-endian ordered daa */
+			/*! @brief Query whether this format represents big-endian ordered data */
 			inline bool IsBigEndian() const 								{ return kAudioFormatFlagIsBigEndian & mFormatFlags; }
 
-			/*! @brief Query whether this format represents native-endian ordered daa */
+			/*! @brief Query whether this format represents little-endian ordered data */
+			inline bool IsLittleEndian() const 								{ return !IsBigEndian(); }
+
+			/*! @brief Query whether this format represents native-endian ordered data */
 			inline bool IsNativeEndian() const 								{ return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags); }
+
+			/*! @brief Query whether this format represents floating-point data */
+			inline bool IsFloat() const 									{ return kAudioFormatFlagIsFloat & mFormatFlags; }
+
+			/*! @brief Query whether this format represents signed integer data */
+			inline bool IsSignedInteger() const 							{ return kAudioFormatFlagIsSignedInteger & mFormatFlags; }
+
+			/*! @brief Query whether this format represents packed data */
+			inline bool IsPacked() const 									{ return kAudioFormatFlagIsPacked & mFormatFlags; }
+
+			/*! @brief Query whether this format is high-aligned */
+			inline bool IsAlignedHigh() const 								{ return kAudioFormatFlagIsAlignedHigh & mFormatFlags; }
 
 			/*! @brief Convert a frame count to byte count */
 			size_t FrameCountToByteCount(size_t frameCount) const;
@@ -114,6 +130,9 @@ namespace SFB {
 
 			/*! @brief Sets \c format to the equivalent interleaved format of \c this. Fails for non-PCM formats. */
 			bool GetInterleavedEquivalent(Format& format) const;
+
+			/*! @brief Sets \c format to the equivalent standard format of \c this. Fails for non-PCM formats. */
+			bool GetStandardEquivalent(Format& format) const;
 
 			//@}
 
