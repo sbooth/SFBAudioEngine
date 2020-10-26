@@ -48,10 +48,8 @@
 	[propertiesDictionary setObject:@(decoder.frameLength) forKey:SFBAudioPropertiesKeyFrameLength];
 	[propertiesDictionary setObject:@(decoder.frameLength / format.sampleRate) forKey:SFBAudioPropertiesKeyDuration];
 
-	SFBAudioMetadata *metadata = [[SFBAudioMetadata alloc] init];
-
 	self.properties = [[SFBAudioProperties alloc] initWithDictionaryRepresentation:propertiesDictionary];
-	self.metadata = metadata;
+	self.metadata = [[SFBAudioMetadata alloc] init];
 	return YES;
 }
 
