@@ -118,6 +118,8 @@
 		327E4AEE245F5AAF00EF652D /* SFBAttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E4A93245F59EB00EF652D /* SFBAttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		327E4AEF245F5AAF00EF652D /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E4A7D245F59EB00EF652D /* SFBAttachedPicture.m */; };
 		327E4AF2245F62DF00EF652D /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32E8A545245F3DCD00E8DC00 /* SFBAudioEngine.framework */; };
+		3288A9972546E63C00A006EB /* SFBShortenFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 3288A9952546E63C00A006EB /* SFBShortenFile.m */; };
+		3288A9982546E63C00A006EB /* SFBShortenFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 3288A9962546E63C00A006EB /* SFBShortenFile.h */; };
 		328DDD342544765C00B6A093 /* ByteStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 328DDD332544765C00B6A093 /* ByteStream.h */; };
 		328DDD582544E6E600B6A093 /* SFBAudioExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = 328DDD562544E6E600B6A093 /* SFBAudioExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		328DDD592544E6E600B6A093 /* SFBAudioExporter.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDD572544E6E600B6A093 /* SFBAudioExporter.m */; };
@@ -391,6 +393,8 @@
 		327E4AA6245F59EB00EF652D /* SFBMusepackFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBMusepackFile.h; sourceTree = "<group>"; };
 		327E4AA7245F59EB00EF652D /* SFBOggFLACFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggFLACFile.h; sourceTree = "<group>"; };
 		327E4AF3245F631A00EF652D /* SimplePlayer-iOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SimplePlayer-iOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		3288A9952546E63C00A006EB /* SFBShortenFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBShortenFile.m; sourceTree = "<group>"; };
+		3288A9962546E63C00A006EB /* SFBShortenFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBShortenFile.h; sourceTree = "<group>"; };
 		328DDD332544765C00B6A093 /* ByteStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ByteStream.h; sourceTree = "<group>"; };
 		328DDD562544E6E600B6A093 /* SFBAudioExporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioExporter.h; sourceTree = "<group>"; };
 		328DDD572544E6E600B6A093 /* SFBAudioExporter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioExporter.m; sourceTree = "<group>"; };
@@ -698,6 +702,8 @@
 				327E4A98245F59EB00EF652D /* SFBProTrackerModuleFile.mm */,
 				327E4A8F245F59EB00EF652D /* SFBScreamTracker3ModuleFile.h */,
 				327E4A92245F59EB00EF652D /* SFBScreamTracker3ModuleFile.mm */,
+				3288A9962546E63C00A006EB /* SFBShortenFile.h */,
+				3288A9952546E63C00A006EB /* SFBShortenFile.m */,
 				327E4A85245F59EB00EF652D /* SFBTrueAudioFile.h */,
 				327E4A70245F59EB00EF652D /* SFBTrueAudioFile.mm */,
 				327E4A9A245F59EB00EF652D /* SFBWAVEFile.h */,
@@ -784,6 +790,7 @@
 				327E4AEA245F5AAF00EF652D /* SFBAudioProperties.h in Headers */,
 				32539412246191500098FDBD /* SFBWavPackFile.h in Headers */,
 				327E4AEE245F5AAF00EF652D /* SFBAttachedPicture.h in Headers */,
+				3288A9982546E63C00A006EB /* SFBShortenFile.h in Headers */,
 				325393FC246191500098FDBD /* SFBMP3File.h in Headers */,
 				32E8A589245F3EB200E8DC00 /* SFBDSDIFFDecoder.h in Headers */,
 				32539402246191500098FDBD /* SFBOggFLACFile.h in Headers */,
@@ -978,6 +985,7 @@
 				32E8A5A4245F3EE800E8DC00 /* NSError+SFBURLPresentation.m in Sources */,
 				325393EA246191480098FDBD /* SFBAudioMetadata+TagLibTag.mm in Sources */,
 				325393F9246191500098FDBD /* SFBImpulseTrackerModuleFile.mm in Sources */,
+				3288A9972546E63C00A006EB /* SFBShortenFile.m in Sources */,
 				325393E0246191480098FDBD /* AddAudioPropertiesToDictionary.mm in Sources */,
 				32E8A551245F3E6D00E8DC00 /* SFBAudioPlayer.mm in Sources */,
 				321DB80F2462D471004D66AF /* SFBOggVorbisDecoder.m in Sources */,
