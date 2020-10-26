@@ -686,6 +686,26 @@ namespace {
 	_framePosition = entry->mFrameNumber;
 	_frameBuffer.frameLength = 0;
 
+	AVAudioFrameCount framesToSkip = (AVAudioFrameCount)(frame - entry->mFrameNumber);
+	AVAudioFrameCount framesSkipped = 0;
+
+	for(;;) {
+		// Decode the next _blocksize frames
+		if(![self decodeBlockReturningError:error])
+			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
+
+		AVAudioFrameCount framesToTrim = std::min(framesToSkip - framesSkipped, _frameBuffer.frameLength);
+		[_frameBuffer trimAtOffset:0 frameLength:framesToTrim];
+
+		framesSkipped += framesToTrim;
+
+		// All requested frames were skipped or EOS reached
+		if(framesSkipped == framesToSkip || _eos)
+			break;
+	}
+
+	_framePosition += framesSkipped;
+
 	return YES;
 }
 
