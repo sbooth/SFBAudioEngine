@@ -368,18 +368,10 @@ namespace {
 	/// Locates the most suitable seek table entry for \c frame
 	std::vector<SeekTableEntry>::const_iterator FindSeekTableEntry(std::vector<SeekTableEntry>::const_iterator begin, std::vector<SeekTableEntry>::const_iterator end, AVAudioFramePosition frame)
 	{
-		if(begin == end)
-			return begin;
-
-		auto difference = end - begin;
-		if(difference == 1)
-			return end->mFrameNumber > frame ? begin : end;
-
-		auto middle = begin + (difference / 2);
-		if(middle->mFrameNumber > frame)
-			return FindSeekTableEntry(begin, middle, frame);
-		else
-			return FindSeekTableEntry(middle, end, frame);
+		auto it = std::upper_bound(begin, end, frame, [](AVAudioFramePosition value, const SeekTableEntry& entry) {
+			return value < entry.mFrameNumber;
+		});
+		return it == begin ? end : --it;
 	}
 }
 
