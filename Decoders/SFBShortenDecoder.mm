@@ -351,10 +351,14 @@ namespace {
 		entry.mBitshift = byteStream.ReadLE<uint16_t>();
 		for(auto i = 0; i < 3; ++i) {
 			entry.mCBuf0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
+		}
+		for(auto i = 0; i < 3; ++i) {
 			entry.mCBuf1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
 		}
 		for(auto i = 0; i < 4; ++i) {
 			entry.mOffset0[i] = (int32_t)byteStream.ReadLE<uint32_t>();
+		}
+		for(auto i = 0; i < 4; ++i) {
 			entry.mOffset1[i] = (int32_t)byteStream.ReadLE<uint32_t>();
 		}
 
@@ -406,10 +410,12 @@ namespace {
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 	AVAudioFramePosition _frameLength;
+	uint64_t _blocksDecoded;
 }
 - (BOOL)parseShortenHeaderReturningError:(NSError **)error;
 - (BOOL)parseRIFFChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
 - (BOOL)parseFORMChunk:(SFB::ByteStream&)chunkData error:(NSError **)error;
+- (BOOL)decodeBlockReturningError:(NSError **)error;
 - (BOOL)scanForSeekTableReturningError:(NSError **)error;
 - (std::vector<SeekTableEntry>)parseExternalSeekTable:(NSURL *)url;
 - (BOOL)seekTableIsValid:(std::vector<SeekTableEntry>)entries startOffset:(NSInteger)startOffset;
@@ -621,9 +627,9 @@ namespace {
 		if(framesProcessed == frameLength || _eos)
 			break;
 
-		// Grab the next frame
-		if(![self decodeFrameReturningError:error])
-			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten frame");
+		// Decode the next _blocksize frames
+		if(![self decodeBlockReturningError:error])
+			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
 	}
 
 	_framePosition += framesProcessed;
@@ -1090,7 +1096,7 @@ namespace {
 	return YES;
 }
 
-- (BOOL)decodeFrameReturningError:(NSError **)error
+- (BOOL)decodeBlockReturningError:(NSError **)error
 {
 	int chan = 0;
 	for(;;) {
@@ -1360,6 +1366,7 @@ namespace {
 						}
 					}
 
+					++_blocksDecoded;
 					return YES;
 				}
 				chan = (chan + 1) % _nchan;
