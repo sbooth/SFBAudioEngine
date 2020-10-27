@@ -834,6 +834,10 @@ namespace {
 
 - (void)audioPlayerNodeEndOfAudio:(SFBAudioPlayerNode *)audioPlayerNode
 {
+	auto flags = _flags.load();
+	if((flags & eAudioPlayerFlagRenderingImminent) || (flags & eAudioPlayerFlagHavePendingDecoder))
+		return;
+
 	// Dequeue the next decoder
 	id <SFBPCMDecoding> decoder = [self popDecoderFromInternalQueue];
 	if(decoder) {
