@@ -30,8 +30,8 @@ static void SFBCreateAudioDecoderLog()
 @implementation SFBAudioDecoder
 
 @synthesize inputSource = _inputSource;
-@synthesize processingFormat = _processingFormat;
 @synthesize sourceFormat = _sourceFormat;
+@synthesize processingFormat = _processingFormat;
 
 @dynamic framePosition;
 @dynamic frameLength;
