@@ -43,19 +43,23 @@ static void SFBCreateInputSourceLog()
 	return nil;
 }
 
++ (instancetype)inputSourceWithData:(NSData *)data error:(NSError **)error
+{
+	NSParameterAssert(data != nil);
+	return [[SFBDataInputSource alloc] initWithData:data];
+}
+
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error
 {
-	if(!bytes || length <= 0)
-		return nil;
-
+	NSParameterAssert(bytes != nil);
+	NSParameterAssert(length > 0);
 	return [[SFBDataInputSource alloc] initWithBytes:bytes length:length];
 }
 
 + (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone error:(NSError **)error
 {
-	if(!bytes || length <= 0)
-		return nil;
-
+	NSParameterAssert(bytes != nil);
+	NSParameterAssert(length > 0);
 	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
 }
 
@@ -147,6 +151,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error
 {
+	NSParameterAssert(ui16 != nil);
 	if(![self readUInt16:ui16 error:error])
 		return NO;
 	*ui16 = OSSwapHostToBigInt16(*ui16);
@@ -155,6 +160,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error
 {
+	NSParameterAssert(ui32 != nil);
 	if(![self readUInt32:ui32 error:error])
 		return NO;
 	*ui32 = OSSwapHostToBigInt32(*ui32);
@@ -163,6 +169,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error
 {
+	NSParameterAssert(ui64 != nil);
 	if(![self readUInt64:ui64 error:error])
 		return NO;
 	*ui64 = OSSwapHostToBigInt64(*ui64);
@@ -175,6 +182,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error
 {
+	NSParameterAssert(ui16 != nil);
 	if(![self readUInt16:ui16 error:error])
 		return NO;
 	*ui16 = OSSwapHostToLittleInt16(*ui16);
@@ -183,6 +191,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error
 {
+	NSParameterAssert(ui32 != nil);
 	if(![self readUInt32:ui32 error:error])
 		return NO;
 	*ui32 = OSSwapHostToLittleInt32(*ui32);
@@ -191,6 +200,7 @@ static void SFBCreateInputSourceLog()
 
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error
 {
+	NSParameterAssert(ui64 != nil);
 	if(![self readUInt64:ui64 error:error])
 		return NO;
 	*ui64 = OSSwapHostToLittleInt64(*ui64);

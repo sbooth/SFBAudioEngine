@@ -5,7 +5,7 @@
 
 #import <os/log.h>
 
-#import "SFBFileInputSource.h"
+#import "SFBInputSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

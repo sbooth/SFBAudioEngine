@@ -67,7 +67,9 @@
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
+	NSParameterAssert(buffer != NULL);
 	NSParameterAssert(length > 0);
+	NSParameterAssert(bytesRead != NULL);
 
 	NSUInteger count = (NSUInteger)length;
 	NSUInteger remaining = _data.length - _pos;

@@ -64,7 +64,9 @@
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
+	NSParameterAssert(buffer != NULL);
 	NSParameterAssert(length > 0);
+	NSParameterAssert(bytesRead != NULL);
 
 	NSUInteger count = (NSUInteger)length;
 	NSUInteger remaining = _data.length - _pos;
@@ -80,6 +82,7 @@
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
+	NSParameterAssert(offset != NULL);
 	*offset = (NSInteger)_pos;
 	return YES;
 }
@@ -91,6 +94,7 @@
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error
 {
+	NSParameterAssert(length != NULL);
 	*length = (NSInteger)_data.length;
 	return YES;
 }
@@ -103,8 +107,7 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	NSParameterAssert(offset >= 0);
-
-	if((NSUInteger)offset > _data.length)
+	if((NSUInteger)offset >= _data.length)
 		return NO;
 
 	_pos = (NSUInteger)offset;

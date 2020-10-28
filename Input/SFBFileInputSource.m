@@ -67,6 +67,10 @@
 
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
+	NSParameterAssert(buffer != NULL);
+	NSParameterAssert(length > 0);
+	NSParameterAssert(bytesRead != NULL);
+
 	size_t read = fread(buffer, 1, (size_t)length, _file);
 	if(read != (size_t)length && ferror(_file)) {
 		if(error)
@@ -79,6 +83,7 @@
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
+	NSParameterAssert(offset != NULL);
 	off_t result = ftello(_file);
 	if(result == -1) {
 		if(error)
@@ -96,6 +101,7 @@
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error
 {
+	NSParameterAssert(length != NULL);
 	*length = _filestats.st_size;
 	return YES;
 }
