@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -87,6 +87,22 @@
 		325A5E8D2444B931003138D5 /* SFBCoreAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.m */; };
 		325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */; };
 		325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */; };
+		3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; };
+		32677252254B6C4D0041B063 /* wavpack.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267724B254B6BB80041B063 /* wavpack.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3267747D254BA7570041B063 /* tta++.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; };
+		3267747E254BA77D0041B063 /* tta++.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267747C254BA7570041B063 /* tta++.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3267793B254C421F0041B063 /* MAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; };
+		3267793C254C421F0041B063 /* mpg123.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; };
+		3267793D254C423E0041B063 /* MAC.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677939254C421F0041B063 /* MAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3267793E254C42430041B063 /* mpg123.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3267793A254C421F0041B063 /* mpg123.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		32677BA5254C79260041B063 /* sndfile.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; };
+		32677BA6254C79310041B063 /* sndfile.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677BA4254C79260041B063 /* sndfile.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		32677C9B254CC4410041B063 /* mpc.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677C9A254CC4410041B063 /* mpc.xcframework */; };
+		32677C9C254CC4520041B063 /* mpc.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677C9A254CC4410041B063 /* mpc.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		32677E29254D11AD0041B063 /* dumb.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; };
+		32677E2A254D11B80041B063 /* dumb.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32677E28254D11AD0041B063 /* dumb.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		326782F3254E66900041B063 /* taglib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; };
+		326782F4254E66AB0041B063 /* taglib.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 326782F2254E66900041B063 /* taglib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3268F81B24509BAF006A5911 /* SFBAudioPlayerNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */; };
 		3268F81C24509BAF006A5911 /* SFBAudioPlayerNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3268F81E245229FD006A5911 /* SFBAudioPlayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */; };
@@ -160,6 +176,15 @@
 		326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32BC09B324266158008BB695 /* SFBWAVEFile.mm */; };
 		326D3CCE242D2A21002AEC52 /* SFBWavPackFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859BD24241D780080B500 /* SFBWavPackFile.h */; };
 		326D3CCF242D2A21002AEC52 /* SFBWavPackFile.mm in Sources */ = {isa = PBXBuildFile; fileRef = 322859BC24241D780080B500 /* SFBWavPackFile.mm */; };
+		3271423E254F10AA00029BD7 /* FLAC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271423D254F10AA00029BD7 /* FLAC.xcframework */; };
+		3271423F254F10B700029BD7 /* FLAC.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271423D254F10AA00029BD7 /* FLAC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3271448D254F1FCD00029BD7 /* vorbis.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; };
+		3271448E254F1FED00029BD7 /* vorbis.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271448C254F1FCD00029BD7 /* vorbis.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3271464F254F261C00029BD7 /* speex.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; };
+		32714650254F262C00029BD7 /* speex.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 3271464E254F261C00029BD7 /* speex.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		32714B24255042D000029BD7 /* opus.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B23255042D000029BD7 /* opus.xcframework */; };
+		32714B262550430A00029BD7 /* ogg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714B252550430A00029BD7 /* ogg.xcframework */; };
+		32714B272550431D00029BD7 /* opus.xcframework in Copy XCFrameworks */ = {isa = PBXBuildFile; fileRef = 32714B23255042D000029BD7 /* opus.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */; };
 		327D7887254711000026C26C /* SFBDummyClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 327D7882254710470026C26C /* SFBDummyClass.m */; };
 		328DDD2E2544676600B6A093 /* ByteStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 328DDD2D2544676600B6A093 /* ByteStream.h */; };
@@ -168,8 +193,6 @@
 		328DDD79254676A300B6A093 /* SFBShortenFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 328DDD77254676A300B6A093 /* SFBShortenFile.h */; };
 		328DDD7A254676A300B6A093 /* SFBShortenFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDD78254676A300B6A093 /* SFBShortenFile.m */; };
 		3291CC2A14F5D03C00B34DA4 /* SFBAttachedPicture.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; };
-		3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 3293922B1A81932900983695 /* libsndfile.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3294A6FA2445FA2D00841138 /* SFBLoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */; };
 		32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
@@ -190,10 +213,6 @@
 		32C09BDF253B4EFB00A1932C /* SFBShortenDecoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 32C09BDD253B4EFB00A1932C /* SFBShortenDecoder.mm */; };
 		32DA679025360B94004BE933 /* SFBAudioProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DA678F25360B94004BE933 /* SFBAudioProperties.swift */; };
 		32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32DA679225360D8A004BE933 /* SFBAudioMetadata.swift */; };
-		32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; };
-		32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; };
-		32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */ = {isa = PBXBuildFile; fileRef = 32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -214,11 +233,30 @@
 			dstPath = ../Libraries;
 			dstSubfolderSpec = 10;
 			files = (
-				32DADE161C0E9A510058B2B7 /* libmpg123.0.dylib in Copy Embedded Libraries */,
-				3293922E1A81933900983695 /* libsndfile.1.dylib in Copy Embedded Libraries */,
-				32DADE1E1C0E9A510058B2B7 /* libtta++.0.dylib in Copy Embedded Libraries */,
 			);
 			name = "Copy Embedded Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32677251254B6C370041B063 /* Copy XCFrameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				32677E2A254D11B80041B063 /* dumb.xcframework in Copy XCFrameworks */,
+				3271423F254F10B700029BD7 /* FLAC.xcframework in Copy XCFrameworks */,
+				3267793D254C423E0041B063 /* MAC.xcframework in Copy XCFrameworks */,
+				32677C9C254CC4520041B063 /* mpc.xcframework in Copy XCFrameworks */,
+				3267793E254C42430041B063 /* mpg123.xcframework in Copy XCFrameworks */,
+				32714B272550431D00029BD7 /* opus.xcframework in Copy XCFrameworks */,
+				32677BA6254C79310041B063 /* sndfile.xcframework in Copy XCFrameworks */,
+				32714650254F262C00029BD7 /* speex.xcframework in Copy XCFrameworks */,
+				326782F4254E66AB0041B063 /* taglib.xcframework in Copy XCFrameworks */,
+				3267747E254BA77D0041B063 /* tta++.xcframework in Copy XCFrameworks */,
+				3271448E254F1FED00029BD7 /* vorbis.xcframework in Copy XCFrameworks */,
+				32677252254B6C4D0041B063 /* wavpack.xcframework in Copy XCFrameworks */,
+			);
+			name = "Copy XCFrameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -306,6 +344,14 @@
 		325A5E8B2444B931003138D5 /* SFBCoreAudioDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBCoreAudioDecoder.m; sourceTree = "<group>"; };
 		325A5E8E2444D868003138D5 /* SFBModuleDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBModuleDecoder.h; sourceTree = "<group>"; };
 		325A5E8F2444D868003138D5 /* SFBModuleDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBModuleDecoder.m; sourceTree = "<group>"; };
+		3267724B254B6BB80041B063 /* wavpack.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = wavpack.xcframework; sourceTree = "<group>"; };
+		3267747C254BA7570041B063 /* tta++.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = "tta++.xcframework"; sourceTree = "<group>"; };
+		32677939254C421F0041B063 /* MAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = MAC.xcframework; sourceTree = "<group>"; };
+		3267793A254C421F0041B063 /* mpg123.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = mpg123.xcframework; sourceTree = "<group>"; };
+		32677BA4254C79260041B063 /* sndfile.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = sndfile.xcframework; sourceTree = "<group>"; };
+		32677C9A254CC4410041B063 /* mpc.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = mpc.xcframework; sourceTree = "<group>"; };
+		32677E28254D11AD0041B063 /* dumb.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = dumb.xcframework; sourceTree = "<group>"; };
+		326782F2254E66900041B063 /* taglib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = taglib.xcframework; sourceTree = "<group>"; };
 		3268F81924509BAF006A5911 /* SFBAudioPlayerNode.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SFBAudioPlayerNode.mm; sourceTree = "<group>"; };
 		3268F81A24509BAF006A5911 /* SFBAudioPlayerNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioPlayerNode.h; sourceTree = "<group>"; };
 		3268F81D245229FD006A5911 /* SFBAudioPlayerNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioPlayerNode.swift; sourceTree = "<group>"; };
@@ -343,6 +389,11 @@
 		326D3C97242CF79C002AEC52 /* SFBAudioFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioFile.h; sourceTree = "<group>"; };
 		326D3C9F242D0291002AEC52 /* SFBAudioFile+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioFile+Internal.h"; sourceTree = "<group>"; };
 		326D3CAA242D1D3C002AEC52 /* TagLibStringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagLibStringUtilities.h; sourceTree = "<group>"; };
+		3271423D254F10AA00029BD7 /* FLAC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = FLAC.xcframework; sourceTree = "<group>"; };
+		3271448C254F1FCD00029BD7 /* vorbis.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = vorbis.xcframework; sourceTree = "<group>"; };
+		3271464E254F261C00029BD7 /* speex.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = speex.xcframework; sourceTree = "<group>"; };
+		32714B23255042D000029BD7 /* opus.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = opus.xcframework; sourceTree = "<group>"; };
+		32714B252550430A00029BD7 /* ogg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ogg.xcframework; sourceTree = "<group>"; };
 		3275D9962466F3D90055308E /* SFBReplayGainAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBReplayGainAnalyzer.swift; sourceTree = "<group>"; };
 		327D7881254710470026C26C /* SFBDummyClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDummyClass.h; sourceTree = "<group>"; };
 		327D7882254710470026C26C /* SFBDummyClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDummyClass.m; sourceTree = "<group>"; };
@@ -352,7 +403,6 @@
 		328DDD77254676A300B6A093 /* SFBShortenFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBShortenFile.h; sourceTree = "<group>"; };
 		328DDD78254676A300B6A093 /* SFBShortenFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBShortenFile.m; sourceTree = "<group>"; };
 		3291CC2714F5D03C00B34DA4 /* SFBAttachedPicture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAttachedPicture.h; sourceTree = "<group>"; };
-		3293922B1A81932900983695 /* libsndfile.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsndfile.1.dylib; path = Libraries/macosx/lib/libsndfile.1.dylib; sourceTree = "<group>"; };
 		3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBLoopableRegionDecoder.h; sourceTree = "<group>"; };
 		3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLoopableRegionDecoder.m; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -410,8 +460,6 @@
 		32C212D61091116D00BA2493 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32DA678F25360B94004BE933 /* SFBAudioProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioProperties.swift; sourceTree = "<group>"; };
 		32DA679225360D8A004BE933 /* SFBAudioMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFBAudioMetadata.swift; sourceTree = "<group>"; };
-		32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = Libraries/macosx/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
-		32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libtta++.0.dylib"; path = "Libraries/macosx/lib/libtta++.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -434,9 +482,19 @@
 				321DB85524636A12004D66AF /* Foundation.framework in Frameworks */,
 				3210AB8417B9BF0F00743639 /* CoreAudio.framework in Frameworks */,
 				321DB854246369E7004D66AF /* CoreServices.framework in Frameworks */,
-				32DADE041C0E0BD60058B2B7 /* libmpg123.0.dylib in Frameworks */,
-				3293922C1A81932900983695 /* libsndfile.1.dylib in Frameworks */,
-				32DADE0C1C0E0BD60058B2B7 /* libtta++.0.dylib in Frameworks */,
+				32677E29254D11AD0041B063 /* dumb.xcframework in Frameworks */,
+				3271423E254F10AA00029BD7 /* FLAC.xcframework in Frameworks */,
+				3267793B254C421F0041B063 /* MAC.xcframework in Frameworks */,
+				32677C9B254CC4410041B063 /* mpc.xcframework in Frameworks */,
+				3267793C254C421F0041B063 /* mpg123.xcframework in Frameworks */,
+				32714B262550430A00029BD7 /* ogg.xcframework in Frameworks */,
+				32714B24255042D000029BD7 /* opus.xcframework in Frameworks */,
+				326782F3254E66900041B063 /* taglib.xcframework in Frameworks */,
+				32677BA5254C79260041B063 /* sndfile.xcframework in Frameworks */,
+				3271464F254F261C00029BD7 /* speex.xcframework in Frameworks */,
+				3267747D254BA7570041B063 /* tta++.xcframework in Frameworks */,
+				3271448D254F1FCD00029BD7 /* vorbis.xcframework in Frameworks */,
+				3267724D254B6BB80041B063 /* wavpack.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -449,6 +507,7 @@
 				32AEB27B1409AC84001F9A60 /* SFBAudioEngine */,
 				3252E83610CC9E3000F1AA23 /* SimplePlayer */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				32677249254B6BB80041B063 /* Frameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
 			);
 			name = CFPlayer;
@@ -473,9 +532,6 @@
 				3296828617B9D69400B3CDB4 /* Foundation.framework */,
 				32AEB2D71409BA26001F9A60 /* CoreAudio.framework */,
 				321DB853246369E7004D66AF /* CoreServices.framework */,
-				32DADDF51C0E0BD60058B2B7 /* libmpg123.0.dylib */,
-				3293922B1A81932900983695 /* libsndfile.1.dylib */,
-				32DADDFD1C0E0BD60058B2B7 /* libtta++.0.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -569,6 +625,26 @@
 				327D7882254710470026C26C /* SFBDummyClass.m */,
 			);
 			path = SimplePlayer;
+			sourceTree = "<group>";
+		};
+		32677249254B6BB80041B063 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				32677E28254D11AD0041B063 /* dumb.xcframework */,
+				3271423D254F10AA00029BD7 /* FLAC.xcframework */,
+				32677939254C421F0041B063 /* MAC.xcframework */,
+				32677C9A254CC4410041B063 /* mpc.xcframework */,
+				3267793A254C421F0041B063 /* mpg123.xcframework */,
+				32714B252550430A00029BD7 /* ogg.xcframework */,
+				32714B23255042D000029BD7 /* opus.xcframework */,
+				32677BA4254C79260041B063 /* sndfile.xcframework */,
+				3271464E254F261C00029BD7 /* speex.xcframework */,
+				326782F2254E66900041B063 /* taglib.xcframework */,
+				3267747C254BA7570041B063 /* tta++.xcframework */,
+				3271448C254F1FCD00029BD7 /* vorbis.xcframework */,
+				3267724B254B6BB80041B063 /* wavpack.xcframework */,
+			);
+			path = Frameworks;
 			sourceTree = "<group>";
 		};
 		3268F83C24548A81006A5911 /* Device */ = {
@@ -891,6 +967,7 @@
 				32C212D21091116D00BA2493 /* Sources */,
 				32C212D31091116D00BA2493 /* Frameworks */,
 				325560ED1092B38700580566 /* Copy Embedded Libraries */,
+				32677251254B6C370041B063 /* Copy XCFrameworks */,
 			);
 			buildRules = (
 			);
@@ -1114,21 +1191,6 @@
 					"@loader_path/Libraries",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/lib";
-				OTHER_LDFLAGS = (
-					"-ldumb",
-					"-lFLAC",
-					"-lMAC",
-					"-lmpcdec",
-					"-logg",
-					"-lopus",
-					"-lopusfile",
-					"-lspeex",
-					"-ltag",
-					"-lvorbis",
-					"-lvorbisfile",
-					"-lwavpack",
-					"-lz",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine;
 				PRODUCT_NAME = SFBAudioEngine;
 				SKIP_INSTALL = YES;
@@ -1155,21 +1217,6 @@
 					"@loader_path/Libraries",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/Libraries/macosx/lib";
-				OTHER_LDFLAGS = (
-					"-ldumb",
-					"-lFLAC",
-					"-lMAC",
-					"-lmpcdec",
-					"-logg",
-					"-lopus",
-					"-lopusfile",
-					"-lspeex",
-					"-ltag",
-					"-lvorbis",
-					"-lvorbisfile",
-					"-lwavpack",
-					"-lz",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine;
 				PRODUCT_NAME = SFBAudioEngine;
 				SKIP_INSTALL = YES;
