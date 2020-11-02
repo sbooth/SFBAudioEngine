@@ -5,7 +5,12 @@
 
 #pragma once
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+
 #import <taglib/audioproperties.h>
+
+#pragma clang diagnostic pop
 
 #import <Foundation/Foundation.h>
 

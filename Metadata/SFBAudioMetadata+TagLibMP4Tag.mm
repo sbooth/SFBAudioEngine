@@ -5,7 +5,12 @@
 
 #include <CoreServices/CoreServices.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+
 #import <taglib/mp4coverart.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBAudioMetadata+TagLibMP4Tag.h"
 
