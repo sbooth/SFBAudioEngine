@@ -7,6 +7,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #include <vorbis/vorbisfile.h>
 
