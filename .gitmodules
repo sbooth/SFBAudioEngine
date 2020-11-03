@@ -1,0 +1,3 @@
+[submodule "XCFrameworks"]
+	path = XCFrameworks
+	url = git@github.com:sbooth/AudioXCFrameworks.git

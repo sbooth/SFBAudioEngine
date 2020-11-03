@@ -14,8 +14,9 @@
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
+#define DUMB_BUF_FRAMES		512
 
-static int skip_callback(void *f, long n)
+static int skip_callback(void *f, dumb_off_t n)
 {
 	NSCParameterAssert(f != NULL);
 
@@ -40,14 +41,14 @@ static int getc_callback(void *f)
 	return (int)value;
 }
 
-static long getnc_callback(char *ptr, long n, void *f)
+static dumb_ssize_t getnc_callback(char *ptr, size_t n, void *f)
 {
 	NSCParameterAssert(f != NULL);
 
 	SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
 
 	NSInteger bytesRead;
-	if(![decoder->_inputSource readBytes:ptr length:n bytesRead:&bytesRead error:nil])
+	if(![decoder->_inputSource readBytes:ptr length:(NSInteger)n bytesRead:&bytesRead error:nil])
 		return -1;
 	return bytesRead;
 }
@@ -57,6 +58,30 @@ static void close_callback(void *f)
 #pragma unused(f)
 }
 
+static int seek_callback(void *f, dumb_off_t offset)
+{
+	NSCParameterAssert(f != NULL);
+
+	SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
+
+	if(![decoder->_inputSource seekToOffset:offset error:nil])
+		return -1;
+	return 0;
+}
+
+static dumb_off_t get_size_callback(void *f)
+{
+	NSCParameterAssert(f != NULL);
+
+	SFBModuleDecoder *decoder = (__bridge SFBModuleDecoder *)f;
+
+	NSInteger length;
+	if(![decoder->_inputSource getLength:&length error:nil])
+		return -1;
+	return length;
+}
+
+
 @interface SFBModuleDecoder ()
 {
 @private
@@ -64,6 +89,7 @@ static void close_callback(void *f)
 	DUMBFILE *_df;
 	DUH *_duh;
 	DUH_SIGRENDERER *_dsr;
+	sample_t **_samples;
 	AVAudioFramePosition _framePosition;
 	AVAudioFramePosition _frameLength;
 }
@@ -80,11 +106,12 @@ static void close_callback(void *f)
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"it", @"xm", @"s3m", @"mod"]];
+	return [NSSet setWithArray:@[@"it", @"xm", @"s3m", @"stm", @"mod", @"ptm", @"669", @"psm", @"mtm", /*@"riff",*/ @"asy", @"amf", @"okt"]];
 }
 
 + (NSSet *)supportedMIMETypes
 {
+	// FIXME: Add additional MIME types?
 	return [NSSet setWithArray:@[@"audio/it", @"audio/xm", @"audio/s3m", @"audio/mod", @"audio/x-mod"]];
 }
 
@@ -146,14 +173,26 @@ static void close_callback(void *f)
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
 
-	// EOF reached
-	if(duh_sigrenderer_get_position(_dsr) > _frameLength)
-		return YES;
+	AVAudioFrameCount framesProcessed = 0;
 
-	long framesRendered = duh_render(_dsr, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, frameLength, buffer.int16ChannelData[0]);
+	for(;;) {
+		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
+		AVAudioFrameCount framesToCopy = MIN(framesRemaining, DUMB_BUF_FRAMES);
 
-	_framePosition += framesRendered;
-	buffer.frameLength = (AVAudioFrameCount)framesRendered;
+		long samplesSize = framesToCopy;
+		long framesCopied = duh_render_int(_dsr, &_samples, &samplesSize, DUMB_BIT_DEPTH, 0, 1, 65536.0f / DUMB_SAMPLE_RATE, framesToCopy, buffer.int16ChannelData[0] + (framesProcessed * DUMB_CHANNELS));
+		if(framesCopied != framesToCopy)
+			os_log_error(gSFBAudioDecoderLog, "duh_render_int() returned short frame count: requested %d, got %ld", framesToCopy, framesCopied);
+
+		framesProcessed += framesCopied;
+
+		// All requested frames were read or EOS reached
+		if(framesProcessed == frameLength || framesCopied == 0 || duh_sigrenderer_get_position(_dsr) > _frameLength)
+			break;
+	}
+
+	_framePosition += framesProcessed;
+	buffer.frameLength = (AVAudioFrameCount)framesProcessed;
 
 	return YES;
 }
@@ -184,6 +223,8 @@ static void close_callback(void *f)
 	_dfs.getc = getc_callback;
 	_dfs.getnc = getnc_callback;
 	_dfs.close = close_callback;
+	_dfs.seek = seek_callback;
+	_dfs.get_size = get_size_callback;
 
 	_df = dumbfile_open_ex((__bridge void *)self, &_dfs);
 	if(!_df) {
@@ -191,18 +232,7 @@ static void close_callback(void *f)
 		return NO;
 	}
 
-	NSString *pathExtension = _inputSource.url.pathExtension.lowercaseString;
-
-	// Attempt to create the appropriate decoder based on the file's extension
-	if([pathExtension isEqualToString:@"it"])
-		_duh = dumb_read_it(_df);
-	else if([pathExtension isEqualToString:@"xm"])
-		_duh = dumb_read_xm(_df);
-	else if([pathExtension isEqualToString:@"s3m"])
-		_duh = dumb_read_s3m(_df);
-	else if([pathExtension isEqualToString:@"mod"])
-		_duh = dumb_read_mod(_df);
-
+	_duh = dumb_read_any(_df, 0, 0);
 	if(!_duh) {
 		dumbfile_close(_df);
 		_df = NULL;
@@ -243,6 +273,13 @@ static void close_callback(void *f)
 		return NO;
 	}
 
+	_samples = allocate_sample_buffer(DUMB_CHANNELS, DUMB_BUF_FRAMES);
+	if(!_samples) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+		return NO;
+	}
+
 	return YES;
 }
 
@@ -261,6 +298,11 @@ static void close_callback(void *f)
 	if(_df) {
 		dumbfile_close(_df);
 		_df = NULL;
+	}
+
+	if(_samples) {
+		destroy_sample_buffer(_samples);
+		_samples = NULL;
 	}
 }
 
