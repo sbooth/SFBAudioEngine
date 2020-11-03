@@ -1,6 +1,5 @@
 docs/
 build/
-XCFrameworks/
 
 *.pbxuser
 *.mode1v3
