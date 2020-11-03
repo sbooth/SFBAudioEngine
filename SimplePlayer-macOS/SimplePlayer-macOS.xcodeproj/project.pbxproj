@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */; };
-		3252E86510CC9F4200F1AA23 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3252E86410CC9F4200F1AA23 /* MainMenu.xib */; };
-		325A5E7E2442A816003138D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E7B2442A816003138D5 /* AppDelegate.swift */; };
-		325A5E7F2442A816003138D5 /* PlayerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 325A5E7C2442A816003138D5 /* PlayerWindowController.swift */; };
-		32714C8A2551DD1F00029BD7 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714C842551D85900029BD7 /* SFBAudioEngine.framework */; };
-		32714C8B2551DD1F00029BD7 /* SFBAudioEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 32714C842551D85900029BD7 /* SFBAudioEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		327D7887254711000026C26C /* SFBDummyClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 327D7882254710470026C26C /* SFBDummyClass.m */; };
+		32714CC12551FED700029BD7 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32714CB92551FED700029BD7 /* MainMenu.xib */; };
+		32714CC32551FED700029BD7 /* SFBDummyClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 32714CBC2551FED700029BD7 /* SFBDummyClass.m */; };
+		32714CC42551FED700029BD7 /* PlayerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32714CBD2551FED700029BD7 /* PlayerWindow.xib */; };
+		32714CC52551FED700029BD7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32714CBE2551FED700029BD7 /* AppDelegate.swift */; };
+		32714CC62551FED700029BD7 /* PlayerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32714CC02551FED700029BD7 /* PlayerWindowController.swift */; };
+		32714CEC2551FF9400029BD7 /* SFBAudioEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32714CB62551FE8200029BD7 /* SFBAudioEngine.framework */; };
+		32714CED2551FF9400029BD7 /* SFBAudioEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 32714CB62551FE8200029BD7 /* SFBAudioEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		32714C832551D85900029BD7 /* PBXContainerItemProxy */ = {
+		32714CB52551FE8200029BD7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 3210AB9017B9C05A00743639;
 			remoteInfo = macOS;
 		};
-		32714C852551D85900029BD7 /* PBXContainerItemProxy */ = {
+		32714CB72551FE8200029BD7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */;
 			proxyType = 2;
@@ -40,7 +40,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				32714C8B2551DD1F00029BD7 /* SFBAudioEngine.framework in Embed Frameworks */,
+				32714CED2551FF9400029BD7 /* SFBAudioEngine.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -50,16 +50,16 @@
 /* Begin PBXFileReference section */
 		3210AB8D17B9BF8000743639 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		321DB853246369E7004D66AF /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		3252E84610CC9EBA00F1AA23 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PlayerWindow.xib; sourceTree = "<group>"; };
-		3252E86410CC9F4200F1AA23 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		325A5E402440960C003138D5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		325A5E7B2442A816003138D5 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		325A5E7C2442A816003138D5 /* PlayerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerWindowController.swift; sourceTree = "<group>"; };
-		325A5E7D2442A816003138D5 /* Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
-		32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = SFBAudioEngine.xcodeproj; sourceTree = "<group>"; };
-		327D7881254710470026C26C /* SFBDummyClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDummyClass.h; sourceTree = "<group>"; };
-		327D7882254710470026C26C /* SFBDummyClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDummyClass.m; sourceTree = "<group>"; };
+		32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SFBAudioEngine.xcodeproj; path = ../SFBAudioEngine.xcodeproj; sourceTree = "<group>"; };
+		32714CB92551FED700029BD7 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
+		32714CBA2551FED700029BD7 /* SimplePlayer-macOS-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SimplePlayer-macOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		32714CBB2551FED700029BD7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32714CBC2551FED700029BD7 /* SFBDummyClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDummyClass.m; sourceTree = "<group>"; };
+		32714CBD2551FED700029BD7 /* PlayerWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PlayerWindow.xib; sourceTree = "<group>"; };
+		32714CBE2551FED700029BD7 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		32714CBF2551FED700029BD7 /* SFBDummyClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDummyClass.h; sourceTree = "<group>"; };
+		32714CC02551FED700029BD7 /* PlayerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerWindowController.swift; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		32AEB2D51409BA25001F9A60 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
@@ -72,7 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32714C8A2551DD1F00029BD7 /* SFBAudioEngine.framework in Frameworks */,
+				32714CEC2551FF9400029BD7 /* SFBAudioEngine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,7 +83,14 @@
 			isa = PBXGroup;
 			children = (
 				32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */,
-				3252E83610CC9E3000F1AA23 /* SimplePlayer */,
+				32714CBE2551FED700029BD7 /* AppDelegate.swift */,
+				32714CC02551FED700029BD7 /* PlayerWindowController.swift */,
+				32714CBD2551FED700029BD7 /* PlayerWindow.xib */,
+				32714CB92551FED700029BD7 /* MainMenu.xib */,
+				32714CBB2551FED700029BD7 /* Info.plist */,
+				32714CBA2551FED700029BD7 /* SimplePlayer-macOS-Bridging-Header.h */,
+				32714CBF2551FED700029BD7 /* SFBDummyClass.h */,
+				32714CBC2551FED700029BD7 /* SFBDummyClass.m */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				3210AB8E17B9BF8000743639 /* Products */,
 			);
@@ -112,26 +119,11 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		3252E83610CC9E3000F1AA23 /* SimplePlayer */ = {
+		32714CB12551FE8200029BD7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				325A5E7B2442A816003138D5 /* AppDelegate.swift */,
-				325A5E7C2442A816003138D5 /* PlayerWindowController.swift */,
-				3252E86410CC9F4200F1AA23 /* MainMenu.xib */,
-				3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */,
-				325A5E7D2442A816003138D5 /* Bridging-Header.h */,
-				3252E84610CC9EBA00F1AA23 /* Info.plist */,
-				327D7881254710470026C26C /* SFBDummyClass.h */,
-				327D7882254710470026C26C /* SFBDummyClass.m */,
-			);
-			path = SimplePlayer;
-			sourceTree = "<group>";
-		};
-		32714C7F2551D85900029BD7 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				32714C842551D85900029BD7 /* SFBAudioEngine.framework */,
-				32714C862551D85900029BD7 /* SFBAudioEngine.framework */,
+				32714CB62551FE8200029BD7 /* SFBAudioEngine.framework */,
+				32714CB82551FE8200029BD7 /* SFBAudioEngine.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -184,7 +176,7 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 32714C7F2551D85900029BD7 /* Products */;
+					ProductGroup = 32714CB12551FE8200029BD7 /* Products */;
 					ProjectRef = 32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */;
 				},
 			);
@@ -196,18 +188,18 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		32714C842551D85900029BD7 /* SFBAudioEngine.framework */ = {
+		32714CB62551FE8200029BD7 /* SFBAudioEngine.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = SFBAudioEngine.framework;
-			remoteRef = 32714C832551D85900029BD7 /* PBXContainerItemProxy */;
+			remoteRef = 32714CB52551FE8200029BD7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		32714C862551D85900029BD7 /* SFBAudioEngine.framework */ = {
+		32714CB82551FE8200029BD7 /* SFBAudioEngine.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = SFBAudioEngine.framework;
-			remoteRef = 32714C852551D85900029BD7 /* PBXContainerItemProxy */;
+			remoteRef = 32714CB72551FE8200029BD7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -217,8 +209,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3252E85C10CC9EFD00F1AA23 /* PlayerWindow.xib in Resources */,
-				3252E86510CC9F4200F1AA23 /* MainMenu.xib in Resources */,
+				32714CC12551FED700029BD7 /* MainMenu.xib in Resources */,
+				32714CC42551FED700029BD7 /* PlayerWindow.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,9 +221,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				325A5E7F2442A816003138D5 /* PlayerWindowController.swift in Sources */,
-				327D7887254711000026C26C /* SFBDummyClass.m in Sources */,
-				325A5E7E2442A816003138D5 /* AppDelegate.swift in Sources */,
+				32714CC62551FED700029BD7 /* PlayerWindowController.swift in Sources */,
+				32714CC52551FED700029BD7 /* AppDelegate.swift in Sources */,
+				32714CC32551FED700029BD7 /* SFBDummyClass.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,7 +237,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = "SimplePlayer-macOS/Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
@@ -254,7 +246,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-macOS";
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -266,7 +258,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = "SimplePlayer-macOS/Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
@@ -275,7 +267,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbooth.AudioEngine.SimplePlayer-macOS";
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
