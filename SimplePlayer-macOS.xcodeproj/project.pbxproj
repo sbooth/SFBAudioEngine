@@ -50,13 +50,13 @@
 /* Begin PBXFileReference section */
 		3210AB8D17B9BF8000743639 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		321DB853246369E7004D66AF /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "SimplePlayer-Info.plist"; sourceTree = "<group>"; };
+		3252E84610CC9EBA00F1AA23 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PlayerWindow.xib; sourceTree = "<group>"; };
 		3252E86410CC9F4200F1AA23 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		325A5E402440960C003138D5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		325A5E7B2442A816003138D5 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		325A5E7C2442A816003138D5 /* PlayerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerWindowController.swift; sourceTree = "<group>"; };
-		325A5E7D2442A816003138D5 /* SimplePlayer-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SimplePlayer-Bridging-Header.h"; sourceTree = "<group>"; };
+		325A5E7D2442A816003138D5 /* Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		32714C7E2551D85900029BD7 /* SFBAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = SFBAudioEngine.xcodeproj; sourceTree = "<group>"; };
 		327D7881254710470026C26C /* SFBDummyClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBDummyClass.h; sourceTree = "<group>"; };
 		327D7882254710470026C26C /* SFBDummyClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDummyClass.m; sourceTree = "<group>"; };
@@ -119,8 +119,8 @@
 				325A5E7C2442A816003138D5 /* PlayerWindowController.swift */,
 				3252E86410CC9F4200F1AA23 /* MainMenu.xib */,
 				3252E85610CC9EFD00F1AA23 /* PlayerWindow.xib */,
-				325A5E7D2442A816003138D5 /* SimplePlayer-Bridging-Header.h */,
-				3252E84610CC9EBA00F1AA23 /* SimplePlayer-Info.plist */,
+				325A5E7D2442A816003138D5 /* Bridging-Header.h */,
+				3252E84610CC9EBA00F1AA23 /* Info.plist */,
 				327D7881254710470026C26C /* SFBDummyClass.h */,
 				327D7882254710470026C26C /* SFBDummyClass.m */,
 			);
@@ -245,7 +245,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = "SimplePlayer-macOS/SimplePlayer-Info.plist";
+				INFOPLIST_FILE = "SimplePlayer-macOS/Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
@@ -254,7 +254,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/SimplePlayer-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -266,7 +266,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
-				INFOPLIST_FILE = "SimplePlayer-macOS/SimplePlayer-Info.plist";
+				INFOPLIST_FILE = "SimplePlayer-macOS/Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
@@ -275,7 +275,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbooth.AudioEngine.SimplePlayer;
 				PRODUCT_NAME = SimplePlayer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/SimplePlayer-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SimplePlayer-macOS/Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
