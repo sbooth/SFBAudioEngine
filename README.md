@@ -32,9 +32,9 @@ macOS 10.15+ or iOS 14.0+
 2. `cd SFBAudioEngine`
 3. `make -C XCFrameworks install`
 
-[SFBAudioEngine.xcodeproj](SFBAudioEngine.xcodeproj) contains targets for macOS and iOS frameworks.
+The project file contains targets for macOS and iOS frameworks.
 
-The included [Makefile](Makefile) may also be used to create the build products:
+The included `Makefile` may also be used to create the build products:
 
 ### macOS Framework Build
 
@@ -58,7 +58,7 @@ The included [Makefile](Makefile) may also be used to create the build products:
 
 ### SimplePlayer
 
-Open [SimplePlayer](SimplePlayer-macOS/SimplePlayer-macOS.xcodeproj), build, and play something!
+Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
 
 ## Quick Start
 
