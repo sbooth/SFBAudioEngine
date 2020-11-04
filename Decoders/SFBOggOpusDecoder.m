@@ -7,7 +7,6 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-#pragma clang diagnostic ignored "-Wincomplete-umbrella"
 
 #include <opus/opusfile.h>
 

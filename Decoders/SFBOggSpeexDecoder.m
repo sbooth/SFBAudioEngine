@@ -12,7 +12,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wstrict-prototypes"
 #pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
-#pragma clang diagnostic ignored "-Wincomplete-umbrella"
 
 #include <speex/speex.h>
 #include <speex/speex_bits.h>
