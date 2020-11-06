@@ -32,7 +32,7 @@ macOS 10.15+ or iOS 14.0+
 2. `cd SFBAudioEngine`
 3. `make -C XCFrameworks install`
 
-The project file contains targets for macOS and iOS frameworks.
+The project file contains targets for macOS and iOS frameworks. You will more than likely need to select a Team for Signing when using SFBAudioEngine in your own projects.
 
 The included `Makefile` may also be used to create the build products:
 
