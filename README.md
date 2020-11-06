@@ -40,7 +40,7 @@ The included `Makefile` may also be used to create the build products:
 
 `make archive/macOS.xcarchive`
 
-### macOS-Catalyst Framework Build
+### macOS Catalyst Framework Build
 
 `make archive/macOS-Catalyst.xcarchive`
 
@@ -48,7 +48,7 @@ The included `Makefile` may also be used to create the build products:
 
 `make archive/iOS.xcarchive`
 
-### iOS-Simulator Framework Build
+### iOS Simulator Framework Build
 
 `make archive/iOS-Simulator.xcarchive`
 
