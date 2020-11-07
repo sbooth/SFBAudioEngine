@@ -620,8 +620,10 @@ namespace {
 			break;
 
 		// Decode the next _blocksize frames
-		if(![self decodeBlockReturningError:error])
+		if(![self decodeBlockReturningError:error]) {
 			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
+			return NO;
+		}
 	}
 
 	_framePosition += framesProcessed;
