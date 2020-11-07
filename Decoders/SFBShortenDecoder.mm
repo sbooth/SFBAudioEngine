@@ -390,6 +390,7 @@ namespace {
 
 	uint32_t _sampleRate;
 	uint32_t _bitsPerSample;
+	bool _bigEndian;
 
 	int32_t **_buffer;
 	int32_t **_offset;
@@ -468,7 +469,9 @@ namespace {
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
-	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	// Apparently *16HL isn't true for 'AIFF'
+//	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
 	if(_internal_ftype == TYPE_S8 || _internal_ftype == TYPE_S16HL || _internal_ftype == TYPE_S16LH)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
@@ -620,8 +623,10 @@ namespace {
 			break;
 
 		// Decode the next _blocksize frames
-		if(![self decodeBlockReturningError:error])
+		if(![self decodeBlockReturningError:error]) {
 			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
+			return NO;
+		}
 	}
 
 	_framePosition += framesProcessed;
@@ -1043,6 +1048,9 @@ namespace {
 		return NO;
 	}
 
+	if(chunkID == 'AIFC')
+		_bigEndian = true;
+
 	// Skip unknown chunks, looking for 'COMM'
 	while((chunkID = chunkData.ReadBE<uint32_t>()) != 'COMM') {
 		auto len = chunkData.ReadBE<uint32_t>();
@@ -1100,7 +1108,7 @@ namespace {
 	if(exp >= 0)
 		_sampleRate = (uint32_t)(frac << exp);
 	else
-		_sampleRate = (uint32_t)((frac + (1 << (-frac - 1))) >> -frac);
+		_sampleRate = (uint32_t)((frac + (1 << (-exp - 1))) >> -exp);
 
 	if(len > 18)
 		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", len - 16);
@@ -1494,6 +1502,8 @@ namespace {
 			if(!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset])
 				_seekTableEntries = entries;
 		}
+		if(![_inputSource seekToOffset:startOffset error:error])
+			return NO;
 		return YES;
 	}
 
