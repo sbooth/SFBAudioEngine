@@ -1496,6 +1496,8 @@ namespace {
 			if(!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset])
 				_seekTableEntries = entries;
 		}
+		if(![_inputSource seekToOffset:startOffset error:error])
+			return NO;
 		return YES;
 	}
 
