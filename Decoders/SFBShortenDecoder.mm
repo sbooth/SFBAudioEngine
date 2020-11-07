@@ -1100,7 +1100,7 @@ namespace {
 	if(exp >= 0)
 		_sampleRate = (uint32_t)(frac << exp);
 	else
-		_sampleRate = (uint32_t)((frac + (1 << (-frac - 1))) >> -frac);
+		_sampleRate = (uint32_t)((frac + (1 << (-exp - 1))) >> -exp);
 
 	if(len > 18)
 		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", len - 16);
