@@ -390,6 +390,7 @@ namespace {
 
 	uint32_t _sampleRate;
 	uint32_t _bitsPerSample;
+	bool _bigEndian;
 
 	int32_t **_buffer;
 	int32_t **_offset;
@@ -468,7 +469,9 @@ namespace {
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
-	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	// Apparently *16HL isn't true for 'AIFF'
+//	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
 	if(_internal_ftype == TYPE_S8 || _internal_ftype == TYPE_S16HL || _internal_ftype == TYPE_S16LH)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
@@ -1044,6 +1047,9 @@ namespace {
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 		return NO;
 	}
+
+	if(chunkID == 'AIFC')
+		_bigEndian = true;
 
 	// Skip unknown chunks, looking for 'COMM'
 	while((chunkID = chunkData.ReadBE<uint32_t>()) != 'COMM') {
