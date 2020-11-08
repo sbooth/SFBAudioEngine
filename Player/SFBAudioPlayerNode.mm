@@ -177,14 +177,14 @@ namespace {
 				return mDecodeBuffer;
 			}];
 
-			if(buffer.frameLength == 0) {
-				if(status == AVAudioConverterOutputStatus_Error)
-					return false;
-				else if(!result) {
-					if(error)
-						*error = err;
-					return false;
-				}
+			if(status == AVAudioConverterOutputStatus_Error)
+				return false;
+
+			// If a decoding error occurred but valid frames were produced don't report the error
+			if(!result && buffer.frameLength == 0) {
+				if(error)
+					*error = err;
+				return false;
 			}
 
 			mFramesConverted.fetch_add(buffer.frameLength);
