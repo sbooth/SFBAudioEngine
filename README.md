@@ -32,7 +32,7 @@ macOS 10.15+ or iOS 14.0+
 2. `cd SFBAudioEngine`
 3. `make -C XCFrameworks install`
 
-The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a Team for Signing.
+The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
 
 The included `Makefile` may also be used to create the build products:
 
