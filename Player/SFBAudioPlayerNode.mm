@@ -153,35 +153,41 @@ namespace {
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
 		{
+			__block BOOL result = YES;
 			__block NSError *err = nil;
 			AVAudioConverterOutputStatus status = [mConverter convertToBuffer:buffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
 				if(!(mFlags.load() & eDecodingStartedFlag))
 					mFlags.fetch_or(eDecodingStartedFlag);
 
-				BOOL result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
-				if(!result && err)
-					os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", err);
+				result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
+				if(mDecodeBuffer.frameLength == 0) {
+					if(result) {
+						mFlags.fetch_or(eDecodingCompleteFlag);
+						*outStatus = AVAudioConverterInputStatus_EndOfStream;
+					}
+					// A decoding error occurred
+					else
+						*outStatus = AVAudioConverterInputStatus_NoDataNow;
+
+					return nil;
+				}
 
 				this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
-
-				if(result && mDecodeBuffer.frameLength == 0) {
-					mFlags.fetch_or(eDecodingCompleteFlag);
-					*outStatus = AVAudioConverterInputStatus_EndOfStream;
-				}
-				else
-					*outStatus = AVAudioConverterInputStatus_HaveData;
-
+				*outStatus = AVAudioConverterInputStatus_HaveData;
 				return mDecodeBuffer;
 			}];
 
-			mFramesConverted.fetch_add(buffer.frameLength);
-
-			if(status == AVAudioConverterOutputStatus_Error) {
-				if(error)
-					*error = err;
-				return false;
+			if(buffer.frameLength == 0) {
+				if(status == AVAudioConverterOutputStatus_Error)
+					return false;
+				else if(!result) {
+					if(error)
+						*error = err;
+					return false;
+				}
 			}
 
+			mFramesConverted.fetch_add(buffer.frameLength);
 			return true;
 		}
 
@@ -1069,8 +1075,13 @@ namespace {
 
 					// Decode audio into the buffer, converting to the bus format in the process
 					NSError *error;
-					if(!decoderState->DecodeAudio(buffer, &error))
+					if(!decoderState->DecodeAudio(buffer, &error)) {
 						os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
+						if(error && [_delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
+							dispatch_async_and_wait(_notificationQueue, ^{
+								[_delegate audioPlayerNode:self encounteredError:error];
+							});
+					}
 
 					// Write the decoded audio to the ring buffer for rendering
 					auto framesWritten = _audioRingBuffer.Write(buffer.audioBufferList, buffer.frameLength);
