@@ -218,7 +218,7 @@ namespace {
 
 		static size_t sizeof_var(int32_t val, size_t nbin)
 		{
-			return (uint32_t)(labs(val) >> nbin) + nbin + 1;
+			return (size_t)(labs(val) >> nbin) + nbin + 1;
 		}
 
 		void Reset()
