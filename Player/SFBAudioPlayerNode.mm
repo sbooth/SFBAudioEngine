@@ -159,7 +159,7 @@ namespace {
 
 			mFlags.fetch_or(eDecodingStartedFlag);
 
-			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:buffer.frameCapacity error:error])
+			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 				return false;
 
 			if(mDecodeBuffer.frameLength == 0) {
