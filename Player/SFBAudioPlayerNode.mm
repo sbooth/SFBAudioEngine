@@ -157,8 +157,6 @@ namespace {
 			assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
 #endif
 
-			mFlags.fetch_or(eDecodingStartedFlag);
-
 			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:mDecodeBuffer.frameCapacity error:error])
 				return false;
 
