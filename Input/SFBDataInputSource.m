@@ -27,7 +27,7 @@
 - (instancetype)initWithBytes:(const void *)bytes length:(NSInteger)length
 {
 	NSParameterAssert(bytes != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 
 	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
 	if(data == nil)
@@ -38,7 +38,7 @@
 - (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
 {
 	NSParameterAssert(bytes != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 
 	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
 	if(data == nil)
@@ -65,7 +65,7 @@
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 	NSParameterAssert(bytesRead != NULL);
 
 	NSUInteger count = (NSUInteger)length;
