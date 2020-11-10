@@ -161,6 +161,12 @@ namespace {
 
 			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:buffer.frameCapacity error:error])
 				return false;
+
+			if(mDecodeBuffer.frameLength == 0) {
+				mFlags.fetch_or(eDecodingCompleteFlag);
+				return true;
+			}
+
 			this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
 
 			// Only PCM to PCM conversions are performed
