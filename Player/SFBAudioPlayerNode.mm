@@ -153,41 +153,21 @@ namespace {
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
 		{
-			__block BOOL result = YES;
-			__block NSError *err = nil;
-			AVAudioConverterOutputStatus status = [mConverter convertToBuffer:buffer error:error withInputFromBlock:^AVAudioBuffer *(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
-				if(!(mFlags.load() & eDecodingStartedFlag))
-					mFlags.fetch_or(eDecodingStartedFlag);
+#if DEBUG
+			assert(buffer.frameCapacity == mDecodeBuffer.frameCapacity);
+#endif
 
-				result = [mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:inNumberOfPackets error:&err];
-				if(mDecodeBuffer.frameLength == 0) {
-					if(result) {
-						mFlags.fetch_or(eDecodingCompleteFlag);
-						*outStatus = AVAudioConverterInputStatus_EndOfStream;
-					}
-					// A decoding error occurred
-					else
-						*outStatus = AVAudioConverterInputStatus_NoDataNow;
+			mFlags.fetch_or(eDecodingStartedFlag);
 
-					return nil;
-				}
-
-				this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
-				*outStatus = AVAudioConverterInputStatus_HaveData;
-				return mDecodeBuffer;
-			}];
-
-			if(status == AVAudioConverterOutputStatus_Error)
+			if(![mDecoder decodeIntoBuffer:mDecodeBuffer frameLength:buffer.frameCapacity error:error])
 				return false;
+			this->mFramesDecoded.fetch_add(mDecodeBuffer.frameLength);
 
-			// If a decoding error occurred but valid frames were produced don't report the error
-			if(!result && buffer.frameLength == 0) {
-				if(error)
-					*error = err;
+			// Only PCM to PCM conversions are performed
+			if(![mConverter convertToBuffer:buffer fromBuffer:mDecodeBuffer error:error])
 				return false;
-			}
-
 			mFramesConverted.fetch_add(buffer.frameLength);
+
 			return true;
 		}
 
@@ -1074,7 +1054,7 @@ namespace {
 					}
 
 					// Decode audio into the buffer, converting to the bus format in the process
-					NSError *error;
+					NSError *error = nil;
 					if(!decoderState->DecodeAudio(buffer, &error)) {
 						os_log_error(_audioPlayerNodeLog, "Error decoding audio: %{public}@", error);
 						if(error && [_delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
