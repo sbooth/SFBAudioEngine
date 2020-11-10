@@ -860,4 +860,10 @@ namespace {
 		[self stop];
 }
 
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+		[_delegate audioPlayer:self encounteredError:error];
+}
+
 @end
