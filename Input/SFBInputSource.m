@@ -51,15 +51,15 @@ static void SFBCreateInputSourceLog()
 
 + (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error
 {
-	NSParameterAssert(bytes != nil);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(bytes != NULL);
+	NSParameterAssert(length >= 0);
 	return [[SFBDataInputSource alloc] initWithBytes:bytes length:length];
 }
 
 + (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone error:(NSError **)error
 {
-	NSParameterAssert(bytes != nil);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(bytes != NULL);
+	NSParameterAssert(length >= 0);
 	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
 }
 

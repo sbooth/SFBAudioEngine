@@ -68,7 +68,7 @@
 - (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
-	NSParameterAssert(length > 0);
+	NSParameterAssert(length >= 0);
 	NSParameterAssert(bytesRead != NULL);
 
 	size_t read = fread(buffer, 1, (size_t)length, _file);
@@ -113,6 +113,7 @@
 
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
+	NSParameterAssert(offset >= 0);
 	if(fseeko(_file, offset, SEEK_SET)) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
