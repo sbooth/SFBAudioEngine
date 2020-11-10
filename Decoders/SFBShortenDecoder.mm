@@ -774,7 +774,7 @@ namespace {
 	_internal_ftype = (int)ftype;
 
 	// Read number of channels
-	uint32_t nchan;
+	uint32_t nchan = 0;
 	if(!_input.uint_get(nchan, _version, CHANSIZE) || nchan == 0 || nchan > MAX_CHANNELS) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", nchan);
 		if(error)
@@ -790,7 +790,7 @@ namespace {
 
 	// Read blocksize if version > 0
 	if(_version > 0) {
-		uint32_t blocksize;
+		uint32_t blocksize = 0;
 		if(!_input.uint_get(blocksize, _version, (size_t)log2(DEFAULT_BLOCK_SIZE)) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
@@ -818,7 +818,7 @@ namespace {
 		}
 		_maxnlpc = (int)maxnlpc;
 
-		uint32_t nmean;
+		uint32_t nmean = 0;
 		if(!_input.uint_get(nmean, _version, 0) || nmean > 32768) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid nmean: %u", nmean);
 			if(error)
@@ -1052,7 +1052,7 @@ namespace {
 		_bigEndian = true;
 
 	// Skip unknown chunks, looking for 'COMM'
-	while((chunkID = chunkData.ReadBE<uint32_t>()) != 'COMM') {
+	while(chunkData.ReadBE<uint32_t>() != 'COMM') {
 		auto len = chunkData.ReadBE<uint32_t>();
 		// pad byte not included in ckLen
 		if((int32_t)len < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
@@ -1395,7 +1395,7 @@ namespace {
 
 			case FN_BLOCKSIZE:
 			{
-				uint32_t uint;
+				uint32_t uint = 0;
 				if(!_input.uint_get(uint, _version, (size_t)log2(_blocksize)) || uint == 0 || uint > MAX_BLOCKSIZE || (int)uint > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
