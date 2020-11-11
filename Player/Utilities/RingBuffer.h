@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 /*! @file RingBuffer.h @brief A generic ring buffer */
@@ -15,8 +16,7 @@ namespace SFB {
 	/*!
 	 * @brief A generic ring buffer implementation
 	 *
-	 * This class is thread safe when used from one reader thread
-	 * and one writer thread (single producer, single consumer model).
+	 * This class is thread safe when used from one reader thread and one writer thread (single producer, single consumer model).
 	 *
 	 * The read and write routines are based on JACK's ringbuffer implementation
 	 */
@@ -162,8 +162,8 @@ namespace SFB {
 		size_t				mCapacityBytes;			/*!< The capacity of \c mBuffer in bytes */
 		size_t				mCapacityBytesMask;		/*!< The capacity of \c mBuffer in bytes minus one */
 
-		volatile size_t		mWritePosition;			/*!< The offset into \c mBuffer of the read location */
-		volatile size_t		mReadPosition;			/*!< The offset into \c mBuffer of the write location */
+		std::atomic_size_t	mWritePosition;			/*!< The offset into \c mBuffer of the read location */
+		std::atomic_size_t	mReadPosition;			/*!< The offset into \c mBuffer of the write location */
 	};
 
 }

@@ -4,7 +4,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
 #include <cstdlib>
 
 #include "RingBuffer.h"
@@ -15,7 +14,6 @@ namespace {
 	 * Return the smallest power of two value greater than \c x
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
-	 *
 	 */
 	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
 	{
@@ -33,7 +31,9 @@ namespace {
 
 SFB::RingBuffer::RingBuffer()
 	: mBuffer(nullptr), mCapacityBytes(0), mCapacityBytesMask(0), mWritePosition(0), mReadPosition(0)
-{}
+{
+	assert(mWritePosition.is_lock_free());
+}
 
 #pragma mark Buffer Management
 
@@ -69,7 +69,6 @@ void SFB::RingBuffer::Deallocate()
 	}
 }
 
-
 void SFB::RingBuffer::Reset()
 {
 	mReadPosition = 0;
@@ -78,8 +77,8 @@ void SFB::RingBuffer::Reset()
 
 size_t SFB::RingBuffer::GetBytesAvailableToRead() const
 {
-	auto w = mWritePosition;
-	auto r = mReadPosition;
+	auto w = mWritePosition.load(std::memory_order_acquire);
+	auto r = mReadPosition.load(std::memory_order_acquire);
 
 	if(w > r)
 		return w - r;
@@ -89,8 +88,8 @@ size_t SFB::RingBuffer::GetBytesAvailableToRead() const
 
 size_t SFB::RingBuffer::GetBytesAvailableToWrite() const
 {
-	auto w = mWritePosition;
-	auto r = mReadPosition;
+	auto w = mWritePosition.load(std::memory_order_acquire);
+	auto r = mReadPosition.load(std::memory_order_acquire);
 
 	if(w > r)
 		return ((r - w + mCapacityBytes) & mCapacityBytesMask) - 1;
@@ -163,20 +162,18 @@ size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount)
 
 void SFB::RingBuffer::AdvanceReadPosition(size_t byteCount)
 {
-	std::atomic_thread_fence(std::memory_order_acq_rel);
-	mReadPosition = (mReadPosition + byteCount) & mCapacityBytesMask;
+	mReadPosition.store((mReadPosition.load(std::memory_order_acquire) + byteCount) & mCapacityBytesMask, std::memory_order_release);
 }
 
 void SFB::RingBuffer::AdvanceWritePosition(size_t byteCount)
 {
-	std::atomic_thread_fence(std::memory_order_release);
-	mWritePosition = (mWritePosition + byteCount) & mCapacityBytesMask;;
+	mWritePosition.store((mWritePosition.load(std::memory_order_acquire) + byteCount) & mCapacityBytesMask, std::memory_order_release);
 }
 
 SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
 {
-	auto w = mWritePosition;
-	auto r = mReadPosition;
+	auto w = mWritePosition.load(std::memory_order_acquire);
+	auto r = mReadPosition.load(std::memory_order_acquire);
 
 	size_t free_cnt;
 	if(w > r)
@@ -192,14 +189,13 @@ SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
 	else
 		rv = { { mBuffer + r, free_cnt }, {} };
 
-	std::atomic_thread_fence(std::memory_order_acquire);
 	return rv;
 }
 
 SFB::RingBuffer::BufferPair SFB::RingBuffer::GetWriteVector() const
 {
-	auto w = mWritePosition;
-	auto r = mReadPosition;
+	auto w = mWritePosition.load(std::memory_order_acquire);
+	auto r = mReadPosition.load(std::memory_order_acquire);
 
 	size_t free_cnt;
 	if(w > r)
@@ -217,6 +213,5 @@ SFB::RingBuffer::BufferPair SFB::RingBuffer::GetWriteVector() const
 	else
 		wv = { { mBuffer + w, free_cnt }, {} };
 
-	std::atomic_thread_fence(std::memory_order_acq_rel);
 	return wv;
 }
