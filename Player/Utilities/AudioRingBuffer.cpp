@@ -115,7 +115,6 @@ void SFB::Audio::RingBuffer::Deallocate()
 	}
 }
 
-
 void SFB::Audio::RingBuffer::Reset()
 {
 	mReadPointer = 0;
@@ -179,7 +178,6 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 		FetchABL(bufferList, mFormat.FrameCountToByteCount(n1), (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n2));
 		mReadPointer.store((mReadPointer.load(std::memory_order_acquire) + n2) & mCapacityFramesMask, std::memory_order_release);
 	}
-
 
 	// Set the buffer sizes
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
