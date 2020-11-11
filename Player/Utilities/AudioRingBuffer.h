@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include <CoreAudio/CoreAudioTypes.h>
@@ -134,8 +135,8 @@ namespace SFB {
 			size_t				mCapacityFrames;		// Frame capacity per channel
 			size_t				mCapacityFramesMask;
 
-			volatile size_t		mWritePointer;			// In frames
-			volatile size_t		mReadPointer;
+			std::atomic_size_t	mWritePointer;			// In frames
+			std::atomic_size_t	mReadPointer;
 		};
 
 	}
