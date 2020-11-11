@@ -120,9 +120,6 @@ void SFB::Audio::RingBuffer::Reset()
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
-
-	for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i)
-		memset(mBuffers[i], 0, mFormat.FrameCountToByteCount(mCapacityFrames));
 }
 
 size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
@@ -151,7 +148,7 @@ size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
 
 size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCount)
 {
-	if(0 == frameCount)
+	if(nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	size_t framesAvailable = GetFramesAvailableToRead();
@@ -189,7 +186,7 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 
 size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t frameCount)
 {
-	if(0 == frameCount)
+	if(nullptr == bufferList || 0 == frameCount)
 		return 0;
 
 	size_t framesAvailable = GetFramesAvailableToWrite();
