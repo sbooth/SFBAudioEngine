@@ -42,7 +42,6 @@ namespace {
 	 * Return the smallest power of two value greater than \c x
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
-	 *
 	 */
 	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
 	{
