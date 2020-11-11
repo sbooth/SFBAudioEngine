@@ -43,13 +43,10 @@ namespace {
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
 	 */
-	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
+	inline constexpr uint32_t NextPowerOfTwo(uint32_t x)
 	{
-#if 0
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
-#endif
-
 		return (uint32_t)1 << (32 - __builtin_clz(x - 1));
 	}
 
@@ -61,6 +58,11 @@ SFB::Audio::RingBuffer::RingBuffer()
 	: mBuffers(nullptr), mCapacityFrames(0), mCapacityFramesMask(0), mWritePointer(0), mReadPointer(0)
 {
 	assert(mWritePointer.is_lock_free());
+}
+
+SFB::Audio::RingBuffer::~RingBuffer()
+{
+	Deallocate();
 }
 
 #pragma mark Buffer Management
