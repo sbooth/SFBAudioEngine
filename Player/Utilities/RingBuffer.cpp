@@ -79,24 +79,24 @@ void SFB::RingBuffer::Reset()
 
 size_t SFB::RingBuffer::GetBytesAvailableToRead() const
 {
-	auto w = mWritePosition.load(std::memory_order_acquire);
-	auto r = mReadPosition.load(std::memory_order_acquire);
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	if(w > r)
-		return w - r;
+	if(writePosition > readPosition)
+		return writePosition - readPosition;
 	else
-		return (w - r + mCapacityBytes) & mCapacityBytesMask;
+		return (writePosition - readPosition + mCapacityBytes) & mCapacityBytesMask;
 }
 
 size_t SFB::RingBuffer::GetBytesAvailableToWrite() const
 {
-	auto w = mWritePosition.load(std::memory_order_acquire);
-	auto r = mReadPosition.load(std::memory_order_acquire);
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	if(w > r)
-		return ((r - w + mCapacityBytes) & mCapacityBytesMask) - 1;
-	else if(w < r)
-		return (r - w) - 1;
+	if(writePosition > readPosition)
+		return ((readPosition - writePosition + mCapacityBytes) & mCapacityBytesMask) - 1;
+	else if(writePosition < readPosition)
+		return (readPosition - writePosition) - 1;
 	else
 		return mCapacityBytes - 1;
 }
@@ -106,18 +106,28 @@ size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount)
 	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
 
-	auto rv = GetReadVector();
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	auto bytesAvailable = rv.first.mBufferCapacity + rv.second.mBufferCapacity;
-	auto bytesToRead = std::min(bytesAvailable, byteCount);
-	if(bytesToRead > rv.first.mBufferCapacity) {
-		memcpy(destinationBuffer, rv.first.mBuffer, rv.first.mBufferCapacity);
-		memcpy((uint8_t *)destinationBuffer + rv.first.mBufferCapacity, rv.second.mBuffer, bytesToRead - rv.first.mBufferCapacity);
+	size_t bytesAvailable;
+	if(writePosition > readPosition)
+		bytesAvailable = writePosition - readPosition;
+	else
+		bytesAvailable = (writePosition - readPosition + mCapacityBytes) & mCapacityBytesMask;
+
+	if(0 == bytesAvailable)
+		return 0;
+
+	size_t bytesToRead = std::min(bytesAvailable, byteCount);
+	if(readPosition + bytesToRead > mCapacityBytes) {
+		auto bytesAfterReadPointer = mCapacityBytes - readPosition;
+		memcpy(destinationBuffer, mBuffer + readPosition, bytesAfterReadPointer);
+		memcpy((uint8_t *)destinationBuffer + bytesAfterReadPointer, mBuffer, bytesToRead - bytesAfterReadPointer);
 	}
 	else
-		memcpy(destinationBuffer, rv.first.mBuffer, bytesToRead);
+		memcpy(destinationBuffer, mBuffer + readPosition, bytesToRead);
 
-	AdvanceReadPosition(bytesToRead);
+	mReadPosition.store((readPosition + bytesToRead) & mCapacityBytesMask, std::memory_order_release);
 
 	return bytesToRead;
 }
@@ -127,16 +137,26 @@ size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const
 	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
 
-	auto rv = GetReadVector();
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	auto bytesAvailable = rv.first.mBufferCapacity + rv.second.mBufferCapacity;
-	auto bytesToRead = std::min(bytesAvailable, byteCount);
-	if(bytesToRead > rv.first.mBufferCapacity) {
-		memcpy(destinationBuffer, rv.first.mBuffer, rv.first.mBufferCapacity);
-		memcpy((uint8_t *)destinationBuffer + rv.first.mBufferCapacity, rv.second.mBuffer, bytesToRead - rv.first.mBufferCapacity);
+	size_t bytesAvailable;
+	if(writePosition > readPosition)
+		bytesAvailable = writePosition - readPosition;
+	else
+		bytesAvailable = (writePosition - readPosition + mCapacityBytes) & mCapacityBytesMask;
+
+	if(0 == bytesAvailable)
+		return 0;
+
+	size_t bytesToRead = std::min(bytesAvailable, byteCount);
+	if(readPosition + bytesToRead > mCapacityBytes) {
+		auto bytesAfterReadPointer = mCapacityBytes - readPosition;
+		memcpy(destinationBuffer, mBuffer + readPosition, bytesAfterReadPointer);
+		memcpy((uint8_t *)destinationBuffer + bytesAfterReadPointer, mBuffer, bytesToRead - bytesAfterReadPointer);
 	}
 	else
-		memcpy(destinationBuffer, rv.first.mBuffer, bytesToRead);
+		memcpy(destinationBuffer, mBuffer + readPosition, bytesToRead);
 
 	return bytesToRead;
 }
@@ -146,18 +166,30 @@ size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount)
 	if(nullptr == sourceBuffer || 0 == byteCount)
 		return 0;
 
-	auto wv = GetWriteVector();
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	auto bytesAvailable = wv.first.mBufferCapacity + wv.second.mBufferCapacity;
-	auto bytesToWrite = std::min(bytesAvailable, byteCount);
-	if(bytesToWrite > wv.first.mBufferCapacity) {
-		memcpy(wv.first.mBuffer, sourceBuffer, wv.first.mBufferCapacity);
-		memcpy(wv.second.mBuffer, (uint8_t *)sourceBuffer + wv.first.mBufferCapacity, bytesToWrite - wv.first.mBufferCapacity);
+	size_t bytesAvailable;
+	if(writePosition > readPosition)
+		bytesAvailable = ((readPosition - writePosition + mCapacityBytes) & mCapacityBytesMask) - 1;
+	else if(writePosition < readPosition)
+		bytesAvailable = (readPosition - writePosition) - 1;
+	else
+		bytesAvailable = mCapacityBytes - 1;
+
+	if(0 == bytesAvailable)
+		return 0;
+
+	size_t bytesToWrite = std::min(bytesAvailable, byteCount);
+	if(writePosition + bytesToWrite > mCapacityBytes) {
+		auto bytesAfterWritePointer = mCapacityBytes - writePosition;
+		memcpy(mBuffer + writePosition, sourceBuffer, bytesAfterWritePointer);
+		memcpy(mBuffer, (uint8_t *)sourceBuffer + bytesAfterWritePointer, bytesToWrite - bytesAfterWritePointer);
 	}
 	else
-		memcpy(wv.first.mBuffer, sourceBuffer, bytesToWrite);
+		memcpy(mBuffer + writePosition, sourceBuffer, bytesToWrite);
 
-	AdvanceWritePosition(bytesToWrite);
+	mWritePosition.store((writePosition + bytesToWrite) & mCapacityBytesMask, std::memory_order_release);
 
 	return bytesToWrite;
 }
@@ -174,46 +206,46 @@ void SFB::RingBuffer::AdvanceWritePosition(size_t byteCount)
 
 SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
 {
-	auto w = mWritePosition.load(std::memory_order_acquire);
-	auto r = mReadPosition.load(std::memory_order_acquire);
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	size_t free_cnt;
-	if(w > r)
-		free_cnt = w - r;
+	size_t bytesAvailable;
+	if(writePosition > readPosition)
+		bytesAvailable = writePosition - readPosition;
 	else
-		free_cnt = (w - r + mCapacityBytes) & mCapacityBytesMask;
+		bytesAvailable = (writePosition - readPosition + mCapacityBytes) & mCapacityBytesMask;
 
-	auto cnt2 = r + free_cnt;
+	auto endOfRead = readPosition + bytesAvailable;
 
-	SFB::RingBuffer::BufferPair rv;
-	if(cnt2 > mCapacityBytes)
-		rv = { { mBuffer + r, mCapacityBytes - r }, { mBuffer, cnt2 & mCapacityBytes } };
+	SFB::RingBuffer::BufferPair readVector;
+	if(endOfRead > mCapacityBytes)
+		readVector = { { mBuffer + readPosition, mCapacityBytes - readPosition }, { mBuffer, endOfRead & mCapacityBytes } };
 	else
-		rv = { { mBuffer + r, free_cnt }, {} };
+		readVector = { { mBuffer + readPosition, bytesAvailable }, {} };
 
-	return rv;
+	return readVector;
 }
 
 SFB::RingBuffer::BufferPair SFB::RingBuffer::GetWriteVector() const
 {
-	auto w = mWritePosition.load(std::memory_order_acquire);
-	auto r = mReadPosition.load(std::memory_order_acquire);
+	auto writePosition = mWritePosition.load(std::memory_order_acquire);
+	auto readPosition = mReadPosition.load(std::memory_order_acquire);
 
-	size_t free_cnt;
-	if(w > r)
-		free_cnt = ((r - w + mCapacityBytes) & mCapacityBytesMask) - 1;
-	else if(w < r)
-		free_cnt = (r - w) - 1;
+	size_t bytesAvailable;
+	if(writePosition > readPosition)
+		bytesAvailable = ((readPosition - writePosition + mCapacityBytes) & mCapacityBytesMask) - 1;
+	else if(writePosition < readPosition)
+		bytesAvailable = (readPosition - writePosition) - 1;
 	else
-		free_cnt = mCapacityBytes - 1;
+		bytesAvailable = mCapacityBytes - 1;
 
-	auto cnt2 = w + free_cnt;
+	auto endOfWrite = writePosition + bytesAvailable;
 
-	SFB::RingBuffer::BufferPair wv;
-	if(cnt2 > mCapacityBytes)
-		wv = { { mBuffer + w, mCapacityBytes - w }, { mBuffer, cnt2 & mCapacityBytes } };
+	SFB::RingBuffer::BufferPair writeVector;
+	if(endOfWrite > mCapacityBytes)
+		writeVector = { { mBuffer + writePosition, mCapacityBytes - writePosition }, { mBuffer, endOfWrite & mCapacityBytes } };
 	else
-		wv = { { mBuffer + w, free_cnt }, {} };
+		writeVector = { { mBuffer + writePosition, bytesAvailable }, {} };
 
-	return wv;
+	return writeVector;
 }

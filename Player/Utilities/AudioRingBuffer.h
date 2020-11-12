@@ -21,11 +21,11 @@ namespace SFB {
 	namespace Audio {
 
 		/*!
-		 * @brief A ring buffer implementation supporting non-interleaved audio.
+		 * @brief A ring buffer supporting non-interleaved audio.
 		 *
 		 * This class is thread safe when used from one reader thread and one writer thread (single producer, single consumer model).
 		 *
-		 * The read and write routines are based on JACK's ringbuffer implementation but are modified for non-interleaved audio.
+		 * The read and write routines were originally based on JACK's ringbuffer implementation.
 		 */
 		class RingBuffer
 		{

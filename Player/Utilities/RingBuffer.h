@@ -8,17 +8,17 @@
 #include <atomic>
 #include <memory>
 
-/*! @file RingBuffer.h @brief A generic ring buffer */
+/*! @file RingBuffer.h @brief A ring buffer */
 
 /*! @brief \c SFBAudioEngine's encompassing namespace */
 namespace SFB {
 
 	/*!
-	 * @brief A generic ring buffer implementation
+	 * @brief A ring buffer.
 	 *
 	 * This class is thread safe when used from one reader thread and one writer thread (single producer, single consumer model).
 	 *
-	 * The read and write routines are based on JACK's ringbuffer implementation
+	 * The read and write routines were originally based on JACK's ringbuffer implementation.
 	 */
 	class RingBuffer
 	{
