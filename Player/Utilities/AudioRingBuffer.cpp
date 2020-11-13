@@ -166,8 +166,9 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 	size_t framesToRead = std::min(framesAvailable, frameCount);
 	if(readPointer + framesToRead > mCapacityFrames) {
 		auto framesAfterReadPointer = mCapacityFrames - readPointer;
-		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), mFormat.FrameCountToByteCount(framesAfterReadPointer));
-		FetchABL(bufferList, mFormat.FrameCountToByteCount(framesAfterReadPointer), (const uint8_t **)mBuffers, 0, mFormat.FrameCountToByteCount(framesToRead - framesAfterReadPointer));
+		auto bytesAfterReadPointer = mFormat.FrameCountToByteCount(framesAfterReadPointer);
+		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), bytesAfterReadPointer);
+		FetchABL(bufferList, bytesAfterReadPointer, (const uint8_t **)mBuffers, 0, mFormat.FrameCountToByteCount(framesToRead - framesAfterReadPointer));
 	}
 	else
 		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), mFormat.FrameCountToByteCount(framesToRead));
@@ -175,8 +176,9 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 	mReadPointer.store((readPointer + framesToRead) & mCapacityFramesMask, std::memory_order_release);
 
 	// Set the ABL buffer sizes
+	auto byteSize = (UInt32)mFormat.FrameCountToByteCount(framesToRead);
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(framesToRead);
+		bufferList->mBuffers[bufferIndex].mDataByteSize = byteSize;
 
 	return framesToRead;
 }
@@ -203,8 +205,9 @@ size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t f
 	size_t framesToWrite = std::min(framesAvailable, frameCount);
 	if(writePointer + framesToWrite > mCapacityFrames) {
 		auto framesAfterWritePointer = mCapacityFrames - writePointer;
-		StoreABL(mBuffers, mFormat.FrameCountToByteCount(writePointer), bufferList, 0, mFormat.FrameCountToByteCount(framesAfterWritePointer));
-		StoreABL(mBuffers, 0, bufferList, mFormat.FrameCountToByteCount(framesAfterWritePointer), mFormat.FrameCountToByteCount(framesToWrite - framesAfterWritePointer));
+		auto bytesAfterWritePointer = mFormat.FrameCountToByteCount(framesAfterWritePointer);
+		StoreABL(mBuffers, mFormat.FrameCountToByteCount(writePointer), bufferList, 0, bytesAfterWritePointer);
+		StoreABL(mBuffers, 0, bufferList, bytesAfterWritePointer, mFormat.FrameCountToByteCount(framesToWrite - framesAfterWritePointer));
 	}
 	else
 		StoreABL(mBuffers, mFormat.FrameCountToByteCount(writePointer), bufferList, 0, mFormat.FrameCountToByteCount(framesToWrite));
