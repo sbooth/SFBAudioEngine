@@ -5,7 +5,12 @@
 
 @import os.log;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+
 #include <opus/opusfile.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBOggOpusDecoder.h"
 

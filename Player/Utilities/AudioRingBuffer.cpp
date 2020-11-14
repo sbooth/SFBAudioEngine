@@ -4,7 +4,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
 #include <cstdlib>
 
 #include "AudioRingBuffer.h"
@@ -43,15 +42,11 @@ namespace {
 	 * Return the smallest power of two value greater than \c x
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
-	 *
 	 */
-	__attribute__ ((const)) inline uint32_t NextPowerOfTwo(uint32_t x)
+	inline constexpr uint32_t NextPowerOfTwo(uint32_t x)
 	{
-#if 0
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
-#endif
-
 		return (uint32_t)1 << (32 - __builtin_clz(x - 1));
 	}
 
@@ -61,7 +56,14 @@ namespace {
 
 SFB::Audio::RingBuffer::RingBuffer()
 	: mBuffers(nullptr), mCapacityFrames(0), mCapacityFramesMask(0), mWritePointer(0), mReadPointer(0)
-{}
+{
+	assert(mWritePointer.is_lock_free());
+}
+
+SFB::Audio::RingBuffer::~RingBuffer()
+{
+	Deallocate();
+}
 
 #pragma mark Buffer Management
 
@@ -114,111 +116,103 @@ void SFB::Audio::RingBuffer::Deallocate()
 	}
 }
 
-
 void SFB::Audio::RingBuffer::Reset()
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
-
-	for(UInt32 i = 0; i < mFormat.mChannelsPerFrame; ++i)
-		memset(mBuffers[i], 0, mFormat.FrameCountToByteCount(mCapacityFrames));
 }
 
 size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
 {
-	auto w = mWritePointer;
-	auto r = mReadPointer;
+	auto writePointer = mWritePointer.load(std::memory_order_acquire);
+	auto readPointer = mReadPointer.load(std::memory_order_acquire);
 
-	if(w > r)
-		return w - r;
+	if(writePointer > readPointer)
+		return writePointer - readPointer;
 	else
-		return (w - r + mCapacityFrames) & mCapacityFramesMask;
+		return (writePointer - readPointer + mCapacityFrames) & mCapacityFramesMask;
 }
 
 size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
 {
-	auto w = mWritePointer;
-	auto r = mReadPointer;
+	auto writePointer = mWritePointer.load(std::memory_order_acquire);
+	auto readPointer = mReadPointer.load(std::memory_order_acquire);
 
-	if(w > r)
-		return ((r - w + mCapacityFrames) & mCapacityFramesMask) - 1;
-	else if(w < r)
-		return (r - w) - 1;
+	if(writePointer > readPointer)
+		return ((readPointer - writePointer + mCapacityFrames) & mCapacityFramesMask) - 1;
+	else if(writePointer < readPointer)
+		return (readPointer - writePointer) - 1;
 	else
 		return mCapacityFrames - 1;
 }
 
 size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCount)
 {
-	if(0 == frameCount)
+	if(nullptr == bufferList || 0 == frameCount)
 		return 0;
 
-	size_t framesAvailable = GetFramesAvailableToRead();
+	auto writePointer = mWritePointer.load(std::memory_order_acquire);
+	auto readPointer = mReadPointer.load(std::memory_order_acquire);
+
+	size_t framesAvailable;
+	if(writePointer > readPointer)
+		framesAvailable = writePointer - readPointer;
+	else
+		framesAvailable = (writePointer - readPointer + mCapacityFrames) & mCapacityFramesMask;
+
 	if(0 == framesAvailable)
 		return 0;
 
 	size_t framesToRead = std::min(framesAvailable, frameCount);
-	size_t cnt2 = mReadPointer + framesToRead;
-
-	size_t n1, n2;
-	if(cnt2 > mCapacityFrames) {
-		n1 = mCapacityFrames - mReadPointer;
-		n2 = cnt2 & mCapacityFramesMask;
+	if(readPointer + framesToRead > mCapacityFrames) {
+		auto framesAfterReadPointer = mCapacityFrames - readPointer;
+		auto bytesAfterReadPointer = mFormat.FrameCountToByteCount(framesAfterReadPointer);
+		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), bytesAfterReadPointer);
+		FetchABL(bufferList, bytesAfterReadPointer, (const uint8_t **)mBuffers, 0, mFormat.FrameCountToByteCount(framesToRead - framesAfterReadPointer));
 	}
-	else {
-		n1 = framesToRead;
-		n2 = 0;
-	}
+	else
+		FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(readPointer), mFormat.FrameCountToByteCount(framesToRead));
 
-	FetchABL(bufferList, 0, (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n1));
+	mReadPointer.store((readPointer + framesToRead) & mCapacityFramesMask, std::memory_order_release);
 
-	std::atomic_thread_fence(std::memory_order_acq_rel);
-	mReadPointer = (mReadPointer + n1) & mCapacityFramesMask;
-
-	if(n2) {
-		FetchABL(bufferList, mFormat.FrameCountToByteCount(n1), (const uint8_t **)mBuffers, mFormat.FrameCountToByteCount(mReadPointer), mFormat.FrameCountToByteCount(n2));
-		mReadPointer = (mReadPointer + n2) & mCapacityFramesMask;
-	}
-
-
-	// Set the buffer sizes
+	// Set the ABL buffer sizes
+	auto byteSize = (UInt32)mFormat.FrameCountToByteCount(framesToRead);
 	for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
-		bufferList->mBuffers[bufferIndex].mDataByteSize = (UInt32)mFormat.FrameCountToByteCount(framesToRead);
+		bufferList->mBuffers[bufferIndex].mDataByteSize = byteSize;
 
 	return framesToRead;
 }
 
 size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t frameCount)
 {
-	if(0 == frameCount)
+	if(nullptr == bufferList || 0 == frameCount)
 		return 0;
 
-	size_t framesAvailable = GetFramesAvailableToWrite();
+	auto writePointer = mWritePointer.load(std::memory_order_acquire);
+	auto readPointer = mReadPointer.load(std::memory_order_acquire);
+
+	size_t framesAvailable;
+	if(writePointer > readPointer)
+		framesAvailable = ((readPointer - writePointer + mCapacityFrames) & mCapacityFramesMask) - 1;
+	else if(writePointer < readPointer)
+		framesAvailable = (readPointer - writePointer) - 1;
+	else
+		framesAvailable = mCapacityFrames - 1;
+
 	if(0 == framesAvailable)
 		return 0;
 
 	size_t framesToWrite = std::min(framesAvailable, frameCount);
-	size_t cnt2 = mWritePointer + framesToWrite;
-
-	size_t n1, n2;
-	if(cnt2 > mCapacityFrames) {
-		n1 = mCapacityFrames - mWritePointer;
-		n2 = cnt2 & mCapacityFramesMask;
+	if(writePointer + framesToWrite > mCapacityFrames) {
+		auto framesAfterWritePointer = mCapacityFrames - writePointer;
+		auto bytesAfterWritePointer = mFormat.FrameCountToByteCount(framesAfterWritePointer);
+		StoreABL(mBuffers, mFormat.FrameCountToByteCount(writePointer), bufferList, 0, bytesAfterWritePointer);
+		StoreABL(mBuffers, 0, bufferList, bytesAfterWritePointer, mFormat.FrameCountToByteCount(framesToWrite - framesAfterWritePointer));
 	}
-	else {
-		n1 = framesToWrite;
-		n2 = 0;
-	}
+	else
+		StoreABL(mBuffers, mFormat.FrameCountToByteCount(writePointer), bufferList, 0, mFormat.FrameCountToByteCount(framesToWrite));
 
-	StoreABL(mBuffers, mFormat.FrameCountToByteCount(mWritePointer), bufferList, 0, mFormat.FrameCountToByteCount(n1));
-
-	std::atomic_thread_fence(std::memory_order_release);
-	mWritePointer = (mWritePointer + n1) & mCapacityFramesMask;
-
-	if(n2) {
-		StoreABL(mBuffers, mFormat.FrameCountToByteCount(mWritePointer), bufferList, mFormat.FrameCountToByteCount(n1), mFormat.FrameCountToByteCount(n2));
-		mWritePointer = (mWritePointer + n2) & mCapacityFramesMask;
-	}
+	mWritePointer.store((writePointer + framesToWrite) & mCapacityFramesMask, std::memory_order_release);
 
 	return framesToWrite;
 }

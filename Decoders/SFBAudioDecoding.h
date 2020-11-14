@@ -47,10 +47,10 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Audio Format Information
 
-/// The format of the native audio data
+/// The format of the encoded audio data
 @property (nonatomic, readonly) AVAudioFormat *sourceFormat;
 
-/// The format of audio of data provided by `-decodeIntoBuffer:error:`
+/// The format of audio data produced by `-decodeIntoBuffer:error:`
 @property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
 #pragma mark - Setup and Teardown

@@ -25,11 +25,15 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// @return An initialized \c SFBInputSource object for the specified URL, or \c nil on failure
 + (nullable instancetype)inputSourceForURL:(NSURL *)url flags:(SFBInputSourceFlags)flags error:(NSError **)error;
 
+/// Returns an initialized \c SFBInputSource for the given \c NSData object or \c nil on failure
+/// @param data The desired data
+/// @return An initialized \c SFBInputSource object or \c nil on faliure
++ (nullable instancetype)inputSourceWithData:(NSData *)data error:(NSError **)error;
+
 /// Returns an initialized \c SFBInputSource for the given byte buffer or \c nil on failure
 /// @param bytes A pointer to the desired byte buffer
 /// @param length The number of bytes in \c bytes
 /// @return An initialized \c SFBInputSource object or \c nil on faliure
-/// @see SFBInputSourceFlags
 + (nullable instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error;
 
 /// Returns an initialized \c SFBInputSource for the given byte buffer or \c nil on failure
@@ -38,7 +42,6 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 /// @param length The number of bytes in \c bytes
 /// @param freeWhenDone If \c YES the returned object takes ownership of \c bytes and frees it on deallocation
 /// @return An initialized \c SFBInputSource object or \c nil on faliure
-/// @see SFBInputSourceFlags
 + (nullable instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone error:(NSError **)error;
 
 //+ (instancetype)new NS_UNAVAILABLE;

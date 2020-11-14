@@ -5,8 +5,13 @@
 
 @import os.log;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+
 #import <FLAC/metadata.h>
 #import <FLAC/stream_decoder.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBFLACDecoder.h"
 

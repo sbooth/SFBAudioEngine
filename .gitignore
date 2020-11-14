@@ -1,6 +1,8 @@
 docs/
 build/
-Libraries/
+archive/
+
+*.xcframework
 
 *.pbxuser
 *.mode1v3

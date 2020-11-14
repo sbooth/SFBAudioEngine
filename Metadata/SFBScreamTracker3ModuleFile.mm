@@ -7,8 +7,13 @@
 
 #import <os/log.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+
 #import <taglib/s3mfile.h>
 #import <taglib/tfilestream.h>
+
+#pragma clang diagnostic pop
 
 #import "SFBScreamTracker3ModuleFile.h"
 

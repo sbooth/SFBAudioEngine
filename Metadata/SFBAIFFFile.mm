@@ -7,6 +7,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #import <taglib/aifffile.h>
 #import <taglib/tfilestream.h>

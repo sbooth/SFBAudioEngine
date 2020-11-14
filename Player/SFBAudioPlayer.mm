@@ -13,6 +13,7 @@
 
 #import "AVAudioFormat+SFBFormatTransformation.h"
 #import "SFBAudioDecoder.h"
+#import "SFBCStringForOSType.h"
 #import "UnfairLock.h"
 
 namespace {
@@ -429,7 +430,7 @@ namespace {
 		AudioUnitParameterValue channelVolume;
 		OSStatus result = AudioUnitGetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, &channelVolume);
 		if(result != noErr) {
-			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
 			return;
 		}
 
@@ -449,7 +450,7 @@ namespace {
 		AudioUnitParameterValue channelVolume = volume;
 		OSStatus result = AudioUnitSetParameter(_engine.outputNode.audioUnit, kHALOutputParam_Volume, kAudioUnitScope_Global, channel, channelVolume, 0);
 		if(result != noErr) {
-			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d", channel, result);
+			os_log_error(_audioPlayerLog, "AudioUnitGetParameter (kHALOutputParam_Volume, kAudioUnitScope_Global, %u) failed: %d '%{public}.4s'", channel, result, SFBCStringForOSType(result));
 			err = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 			return;
 		}
@@ -857,6 +858,12 @@ namespace {
 		[_delegate audioPlayerEndOfAudio:self];
 	else
 		[self stop];
+}
+
+- (void)audioPlayerNode:(SFBAudioPlayerNode *)audioPlayerNode encounteredError:(NSError *)error
+{
+	if([_delegate respondsToSelector:@selector(audioPlayer:encounteredError:)])
+		[_delegate audioPlayer:self encounteredError:error];
 }
 
 @end

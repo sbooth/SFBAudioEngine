@@ -218,7 +218,7 @@ namespace {
 
 		static size_t sizeof_var(int32_t val, size_t nbin)
 		{
-			return (uint32_t)(labs(val) >> nbin) + nbin + 1;
+			return (size_t)(labs(val) >> nbin) + nbin + 1;
 		}
 
 		void Reset()
@@ -390,6 +390,7 @@ namespace {
 
 	uint32_t _sampleRate;
 	uint32_t _bitsPerSample;
+	bool _bigEndian;
 
 	int32_t **_buffer;
 	int32_t **_offset;
@@ -468,7 +469,9 @@ namespace {
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
-	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	// Apparently *16HL isn't true for 'AIFF'
+//	if(_internal_ftype == TYPE_U16HL || _internal_ftype == TYPE_S16HL)
+	if(_bigEndian)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsBigEndian;
 	if(_internal_ftype == TYPE_S8 || _internal_ftype == TYPE_S16HL || _internal_ftype == TYPE_S16LH)
 		processingStreamDescription.mFormatFlags	|= kAudioFormatFlagIsSignedInteger;
@@ -620,8 +623,10 @@ namespace {
 			break;
 
 		// Decode the next _blocksize frames
-		if(![self decodeBlockReturningError:error])
+		if(![self decodeBlockReturningError:error]) {
 			os_log_error(gSFBAudioDecoderLog, "Error decoding Shorten block");
+			return NO;
+		}
 	}
 
 	_framePosition += framesProcessed;
@@ -769,7 +774,7 @@ namespace {
 	_internal_ftype = (int)ftype;
 
 	// Read number of channels
-	uint32_t nchan;
+	uint32_t nchan = 0;
 	if(!_input.uint_get(nchan, _version, CHANSIZE) || nchan == 0 || nchan > MAX_CHANNELS) {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", nchan);
 		if(error)
@@ -785,7 +790,7 @@ namespace {
 
 	// Read blocksize if version > 0
 	if(_version > 0) {
-		uint32_t blocksize;
+		uint32_t blocksize = 0;
 		if(!_input.uint_get(blocksize, _version, (size_t)log2(DEFAULT_BLOCK_SIZE)) || blocksize == 0 || blocksize > MAX_BLOCKSIZE) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
@@ -813,7 +818,7 @@ namespace {
 		}
 		_maxnlpc = (int)maxnlpc;
 
-		uint32_t nmean;
+		uint32_t nmean = 0;
 		if(!_input.uint_get(nmean, _version, 0) || nmean > 32768) {
 			os_log_error(gSFBAudioDecoderLog, "Invalid nmean: %u", nmean);
 			if(error)
@@ -1043,8 +1048,11 @@ namespace {
 		return NO;
 	}
 
+	if(chunkID == 'AIFC')
+		_bigEndian = true;
+
 	// Skip unknown chunks, looking for 'COMM'
-	while((chunkID = chunkData.ReadBE<uint32_t>()) != 'COMM') {
+	while(chunkData.ReadBE<uint32_t>() != 'COMM') {
 		auto len = chunkData.ReadBE<uint32_t>();
 		// pad byte not included in ckLen
 		if((int32_t)len < 0 || chunkData.Remaining() < 18 + len + (len & 1)) {
@@ -1100,7 +1108,7 @@ namespace {
 	if(exp >= 0)
 		_sampleRate = (uint32_t)(frac << exp);
 	else
-		_sampleRate = (uint32_t)((frac + (1 << (-frac - 1))) >> -frac);
+		_sampleRate = (uint32_t)((frac + ((uint64_t)1 << (-exp - 1))) >> -exp);
 
 	if(len > 18)
 		os_log_info(gSFBAudioDecoderLog, "%u bytes in 'COMM' chunk not parsed", len - 16);
@@ -1387,7 +1395,7 @@ namespace {
 
 			case FN_BLOCKSIZE:
 			{
-				uint32_t uint;
+				uint32_t uint = 0;
 				if(!_input.uint_get(uint, _version, (size_t)log2(_blocksize)) || uint == 0 || uint > MAX_BLOCKSIZE || (int)uint > _blocksize) {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
@@ -1494,6 +1502,8 @@ namespace {
 			if(!entries.empty() && [self seekTableIsValid:entries startOffset:startOffset])
 				_seekTableEntries = entries;
 		}
+		if(![_inputSource seekToOffset:startOffset error:error])
+			return NO;
 		return YES;
 	}
 

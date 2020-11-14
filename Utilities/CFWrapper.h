@@ -183,13 +183,8 @@ namespace SFB {
 		/*! @brief Get the wrapped object */
 		inline operator T() const								{ return mObject; }
 
-
 		/*! @brief Get a pointer to the wrapped object */
-		inline T * operator&()
-		{
-			return &mObject;
-		}
-
+		inline T * operator&()									{ return &mObject; }
 
 		/*! @brief Get the wrapped object */
 		inline T Object() const									{ return mObject; }

@@ -24,13 +24,41 @@ In addition to playback SFBAudioEngine supports reading and writing of metadata 
 
 ## Requirements
 
-macOS 10.15+ or iOS 13.0+
+macOS 10.15+ or iOS 14.0+
 
 ## Building SFBAudioEngine
 
-1. Clone the [SFBAudioEngine](https://github.com/sbooth/SFBAudioEngine) repository.
-2. Download the [dependencies](https://files.sbooth.org/SFBAudioEngine-dependencies.tar.bz2) and decompress in the project's root
-3. Open the project, build, and play something using SimplePlayer!
+1. `git clone git@github.com:sbooth/SFBAudioEngine.git --recurse-submodules`
+2. `cd SFBAudioEngine`
+3. `make -C XCFrameworks install`
+
+The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
+
+The included `Makefile` may also be used to create the build products:
+
+### macOS Framework Build
+
+`make archive/macOS.xcarchive`
+
+### macOS Catalyst Framework Build
+
+`make archive/macOS-Catalyst.xcarchive`
+
+### iOS Framework Build
+
+`make archive/iOS.xcarchive`
+
+### iOS Simulator Framework Build
+
+`make archive/iOS-Simulator.xcarchive`
+
+### XCFramework Build
+
+`make`
+
+### SimplePlayer
+
+Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
 
 ## Quick Start
 
@@ -80,9 +108,9 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided illust
 
 ### macOS
 
-![Image of an audio player window](SimplePlayer/screenshot.png)
+![Image of an audio player window](SimplePlayer-macOS/screenshot.png)
 
-[SimplePlayer](SimplePlayer/) for macOS is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](SimplePlayer/PlayerWindowController.swift).
+[SimplePlayer](SimplePlayer-macOS/) for macOS is written in Swift using AppKit and supports gapless sequential playback of items from a playlist. The essential functionality is contained in one file, [PlayerWindowController.swift](SimplePlayer-macOS/PlayerWindowController.swift).
 
 ### iOS
 

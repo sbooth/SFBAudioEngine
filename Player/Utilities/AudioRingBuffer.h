@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include <CoreAudio/CoreAudioTypes.h>
@@ -20,13 +21,11 @@ namespace SFB {
 	namespace Audio {
 
 		/*!
-		 * @brief A ring buffer implementation supporting non-interleaved audio.
+		 * @brief A ring buffer supporting non-interleaved audio.
 		 *
-		 * This class is thread safe when used from one reader thread
-		 * and one writer thread (single producer, single consumer model).
+		 * This class is thread safe when used from one reader thread and one writer thread (single producer, single consumer model).
 		 *
-		 * The read and write routines are based on JACK's ringbuffer implementation
-		 * but are modified for non-interleaved audio.
+		 * The read and write routines were originally based on JACK's ringbuffer implementation.
 		 */
 		class RingBuffer
 		{
@@ -45,7 +44,7 @@ namespace SFB {
 			RingBuffer();
 
 			/*! @brief Destroy the \c RingBuffer and release all associated resources. */
-			inline ~RingBuffer() 										{ Deallocate(); }
+			~RingBuffer();
 
 			/*! @cond */
 
@@ -134,8 +133,8 @@ namespace SFB {
 			size_t				mCapacityFrames;		// Frame capacity per channel
 			size_t				mCapacityFramesMask;
 
-			volatile size_t		mWritePointer;			// In frames
-			volatile size_t		mReadPointer;
+			std::atomic_size_t	mWritePointer;			// In frames
+			std::atomic_size_t	mReadPointer;
 		};
 
 	}
