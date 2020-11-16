@@ -13,6 +13,10 @@
 // NSError domain for AudioEncoder and subclasses
 NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioEncoder";
 
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel			= @"FLAC Compression Level";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"Verify FLAC Encoding";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
+
 os_log_t gSFBAudioEncoderLog = NULL;
 
 static void SFBCreateAudioEncoderLog(void) __attribute__ ((constructor));
@@ -27,11 +31,12 @@ static void SFBCreateAudioEncoderLog()
 @implementation SFBAudioEncoder
 
 @synthesize outputSource = _outputSource;
+@synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
 @synthesize outputFormat = _outputFormat;
+@synthesize settings = _settings;
 
 @dynamic framePosition;
-@dynamic frameLength;
 
 static NSMutableArray *_registeredSubclasses = nil;
 
@@ -165,10 +170,41 @@ static NSMutableArray *_registeredSubclasses = nil;
 	[self closeReturningError:nil];
 }
 
-- (BOOL)openReturningError:(NSError **)error
+- (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat
 {
-	if(!_outputSource.isOpen)
-		return [_outputSource openReturningError:error];
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
+}
+
+- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error
+{
+	NSParameterAssert(sourceFormat != nil);
+
+	if(self.isOpen) {
+		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called on an encoder that is already open");
+		return NO;
+	}
+
+	if(!_outputSource.isOpen && ![_outputSource openReturningError:error])
+		return NO;
+
+	if(sourceFormat.streamDescription->mFormatID != kAudioFormatLinearPCM) {
+		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called with non-PCM format: %{public}@", sourceFormat);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+		return NO;
+	}
+
+	AVAudioFormat *processingFormat = [self processingFormatForSourceFormat:sourceFormat];
+	if(processingFormat == nil) {
+		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called with invalid format: %{public}@", sourceFormat);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+		return NO;
+	}
+
+	_sourceFormat = sourceFormat;
+	_processingFormat = processingFormat;
 
 	return YES;
 }
@@ -195,17 +231,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
-{
-	[self doesNotRecognizeSelector:_cmd];
-	__builtin_unreachable();
-}
-
-- (BOOL)supportsSeeking
-{
-	return _outputSource.supportsSeeking;
-}
-
-- (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();

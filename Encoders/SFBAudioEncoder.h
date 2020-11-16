@@ -37,7 +37,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error;
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
-- (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
+- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
 @end
@@ -62,7 +62,35 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 	/// File not found
 	SFBAudioEncoderErrorCodeFileNotFound	= 0,
 	/// Input/output error
-	SFBAudioEncoderErrorCodeInputOutput		= 1
+	SFBAudioEncoderErrorCodeInputOutput		= 1,
+	/// Invalid desired format
+	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
+	/// Internal encoder error
+	SFBAudioEncoderErrorCodeInternalError	= 3
 } NS_SWIFT_NAME(AudioEncoder.ErrorCode);
+
+#pragma mark - Encoder Settings
+
+// Encoder settings dictionary keys
+/// The FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
+/// Set to nonzero to verify FLAC encoding (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
+/// The APE compression level (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
+
+/// Constants for APE compression levels
+typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
+	/// Fast compression
+	SFBAudioEncoderAPECompressionLevelFast			= 1000,
+	/// Normal compression
+	SFBAudioEncoderAPECompressionLevelNormal		= 2000,
+	/// High compression
+	SFBAudioEncoderAPECompressionLevelHigh			= 3000,
+	/// Extra high compression
+	SFBAudioEncoderAPECompressionLevelExtraHigh		= 4000,
+	/// Insane compression
+	SFBAudioEncoderAPECompressionLevelInsane		= 5000
+} NS_SWIFT_NAME(AudioEncoder.APECompressionLevel);
 
 NS_ASSUME_NONNULL_END
