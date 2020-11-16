@@ -64,6 +64,12 @@ static void SFBCreateOutputSourceLog()
 	__builtin_unreachable();
 }
 
+- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
+}
+
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];

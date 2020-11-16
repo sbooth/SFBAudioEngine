@@ -40,6 +40,24 @@
 	return _data != nil;
 }
 
+- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
+{
+	NSParameterAssert(buffer != NULL);
+	NSParameterAssert(length >= 0);
+	NSParameterAssert(bytesRead != NULL);
+
+	NSUInteger count = (NSUInteger)length;
+	NSUInteger remaining = _data.length - _pos;
+	if(count > remaining)
+		count = remaining;
+
+	[_data getBytes:buffer range:NSMakeRange(_pos, count)];
+	_pos += count;
+	*bytesRead = (NSInteger)count;
+
+	return YES;
+}
+
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
@@ -50,6 +68,11 @@
 	_pos += (NSUInteger)length;
 	*bytesWritten = length;
 	return YES;
+}
+
+- (BOOL)atEOF
+{
+	return _pos == _data.length;
 }
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error

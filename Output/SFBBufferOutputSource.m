@@ -44,6 +44,27 @@
 	return _buffer != nil;
 }
 
+- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error
+{
+	NSParameterAssert(buffer != NULL);
+	NSParameterAssert(length >= 0);
+	NSParameterAssert(bytesRead != NULL);
+
+	size_t bytesAvailable = _capacity - _pos;
+	if(bytesAvailable == 0) {
+		if(error)
+			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:EINVAL userInfo:nil];
+		return NO;
+	}
+
+	size_t bytesToCopy = MIN(bytesAvailable, (size_t)length);
+	memcpy(buffer, (uint8_t *)_buffer + _pos, bytesToCopy);
+	_pos += bytesToCopy;
+	*bytesRead = (NSInteger)bytesToCopy;
+
+	return YES;
+}
+
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error
 {
 	NSParameterAssert(buffer != NULL);
@@ -61,7 +82,13 @@
 	memcpy((uint8_t *)_buffer + _pos, buffer, bytesToCopy);
 	_pos += bytesToCopy;
 	*bytesWritten = (NSInteger)bytesToCopy;
+
 	return YES;
+}
+
+- (BOOL)atEOF
+{
+	return _pos == _capacity;
 }
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error

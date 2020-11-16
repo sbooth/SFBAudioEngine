@@ -46,6 +46,14 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// Returns \c YES if the output source is open
 @property (nonatomic, readonly) BOOL isOpen;
 
+/// Reads bytes from the input
+/// @param buffer A buffer to receive data
+/// @param length The maximum number of bytes to read
+/// @param bytesRead The number of bytes actually read
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if any bytes were read, \c NO otherwise
+- (BOOL)readBytes:(void *)buffer length:(NSInteger)length bytesRead:(NSInteger *)bytesRead error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
 /// Writes bytes to the output
 /// @param buffer A buffer of data to write
 /// @param length The maximum number of bytes to write
@@ -53,6 +61,9 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if any bytes were written, \c NO otherwise
 - (BOOL)writeBytes:(const void *)buffer length:(NSInteger)length bytesWritten:(NSInteger *)bytesWritten error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns \c YES if the end of input has been reached
+@property (nonatomic, readonly) BOOL atEOF;
 
 /// Returns the current offset in the output, in bytes
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error NS_REFINED_FOR_SWIFT;

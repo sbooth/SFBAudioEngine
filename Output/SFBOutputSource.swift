@@ -18,6 +18,12 @@ extension OutputSource {
 		return length
 	}
 
+	public func read(_ buffer: UnsafeMutableRawPointer, length: Int) throws -> Int {
+		var bytesRead = 0
+		try __readBytes(buffer, length: length, bytesRead: &bytesRead)
+		return bytesRead
+	}
+
 	public func write(_ buffer: UnsafeRawPointer, length: Int) throws -> Int {
 		var bytesWritten = 0
 		try __writeBytes(buffer, length: length, bytesWritten: &bytesWritten)
