@@ -42,11 +42,13 @@ namespace {
 
 		virtual int Read(void * pBuffer, unsigned int nBytesToRead, unsigned int * pBytesRead)
 		{
-#pragma unused(pBuffer)
-#pragma unused(nBytesToRead)
-#pragma unused(pBytesRead)
+			NSInteger bytesRead;
+			if(![mOutputSource readBytes:pBuffer length:nBytesToRead bytesRead:&bytesRead error:nil])
+				return ERROR_IO_READ;
 
-			return ERROR_IO_READ;
+			*pBytesRead = (unsigned int)bytesRead;
+
+			return ERROR_SUCCESS;
 		}
 
 		inline virtual int Write(const void * pBuffer, unsigned int nBytesToWrite, unsigned int * pBytesWritten)
@@ -198,18 +200,16 @@ namespace {
 		return NO;
 
 	int result;
-	auto compressor = std::unique_ptr<APE::IAPECompress>(CreateIAPECompress(&result));
-	if(!_compressor) {
+	auto compressor = CreateIAPECompress(&result);
+	if(!compressor) {
 		os_log_error(gSFBAudioEncoderLog, "CreateIAPECompress() failed: %d", result);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
 	}
 
-	auto ioInterface = 	std::make_unique<APEIOInterface>(_outputSource);
-
-	_compressor = std::move(compressor);
-	_ioInterface = std::move(ioInterface);
+	_compressor = std::unique_ptr<APE::IAPECompress>(compressor);
+	_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 
 	int compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
 	NSNumber *level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
@@ -251,12 +251,14 @@ namespace {
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	auto result = _compressor->Finish(nullptr, 0, 0);
-	if(result != ERROR_SUCCESS) {
-		os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
-		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-		return NO;
+	if(_compressor) {
+		auto result = _compressor->Finish(nullptr, 0, 0);
+		if(result != ERROR_SUCCESS) {
+			os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
 	}
 
 	_ioInterface.reset();
