@@ -253,7 +253,6 @@ static int can_seek_callback(void *id)
 		free(_buffer);
 		_buffer = NULL;
 	}
-
 	if(_wpc) {
 		WavpackCloseFile(_wpc);
 		_wpc = NULL;
