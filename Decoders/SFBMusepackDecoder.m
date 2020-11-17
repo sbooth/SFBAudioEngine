@@ -111,8 +111,6 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 
 	_demux = mpc_demux_init(&_reader);
 	if(!_demux) {
-		mpc_reader_exit_stdio(&_reader);
-
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 											 code:SFBAudioDecoderErrorCodeInputOutput
@@ -166,8 +164,6 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 		mpc_demux_exit(_demux);
 		_demux = NULL;
 	}
-
-	mpc_reader_exit_stdio(&_reader);
 
 	return [super closeReturningError:error];
 }
