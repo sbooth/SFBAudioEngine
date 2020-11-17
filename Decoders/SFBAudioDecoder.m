@@ -27,6 +27,11 @@ static void SFBCreateAudioDecoderLog()
 	});
 }
 
+@interface SFBAudioDecoderSubclassInfo : NSObject
+@property (nonatomic) Class klass;
+@property (nonatomic) int priority;
+@end
+
 @implementation SFBAudioDecoder
 
 @synthesize inputSource = _inputSource;
