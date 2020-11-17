@@ -125,7 +125,7 @@
 	}
 
 	if(fseeko(_file, 0, SEEK_END)) {
-		os_log_error(gSFBOutputSourceLog, "fseeko(0,SEEK_END) error: %{public}s (%d)", strerror(errno), errno);
+		os_log_error(gSFBOutputSourceLog, "fseeko(0, SEEK_END) error: %{public}s (%d)", strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
@@ -140,7 +140,7 @@
 	}
 
 	if(fseeko(_file, offset, SEEK_SET)) {
-		os_log_error(gSFBOutputSourceLog, "fseeko(%ld,SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
+		os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
@@ -159,7 +159,7 @@
 - (BOOL)seekToOffset:(NSInteger)offset error:(NSError **)error
 {
 	if(fseeko(_file, offset, SEEK_SET)) {
-		os_log_error(gSFBOutputSourceLog, "fseeko(%ld,SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
+		os_log_error(gSFBOutputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
