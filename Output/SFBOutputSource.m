@@ -34,16 +34,21 @@ static void SFBCreateOutputSourceLog()
 
 + (instancetype)outputSourceWithMutableData:(NSMutableData *)data error:(NSError **)error
 {
-	if(data == nil)
-		return nil;
+	NSParameterAssert(data != nil);
 	return [[SFBMutableDataOutputSource alloc] initWithMutableData:data];
 }
 
 + (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity
 {
-	if(!buffer || capacity <= 0)
-		return nil;
+	NSParameterAssert(buffer != NULL);
+	NSParameterAssert(capacity >= 0);
 	return [[SFBBufferOutputSource alloc] initWithBuffer:buffer capacity:(size_t)capacity];
+}
+
+- (void)dealloc
+{
+	if(self.isOpen)
+		[self closeReturningError:nil];
 }
 
 - (BOOL)openReturningError:(NSError **)error
