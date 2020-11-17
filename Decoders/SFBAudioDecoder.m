@@ -170,6 +170,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)openReturningError:(NSError **)error
 {
+	if(self.isOpen) {
+		os_log_info(gSFBAudioDecoderLog, "-openReturningError: called on a decoder that is already open");
+		return YES;
+	}
+
 	if(!_inputSource.isOpen)
 		return [_inputSource openReturningError:error];
 
@@ -178,6 +183,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)closeReturningError:(NSError **)error
 {
+	if(!self.isOpen) {
+		os_log_info(gSFBAudioDecoderLog, "-closeReturningError: called on a decoder that isn't open");
+		return YES;
+	}
+
 	if(_inputSource.isOpen)
 		return [_inputSource closeReturningError:error];
 
