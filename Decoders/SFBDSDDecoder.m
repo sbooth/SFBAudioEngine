@@ -29,6 +29,11 @@ static void SFBCreateDSDDecoderLog()
 	});
 }
 
+@interface SFBDSDDecoderSubclassInfo : NSObject
+@property (nonatomic) Class klass;
+@property (nonatomic) int priority;
+@end
+
 @implementation SFBDSDDecoder
 
 @synthesize inputSource = _inputSource;
@@ -164,6 +169,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	return self;
 }
+
 - (void)dealloc
 {
 	[self closeReturningError:nil];
@@ -173,7 +179,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	if(!_inputSource.isOpen)
 		return [_inputSource openReturningError:error];
-
 	return YES;
 }
 
@@ -181,7 +186,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	if(_inputSource.isOpen)
 		return [_inputSource closeReturningError:error];
-
 	return YES;
 }
 

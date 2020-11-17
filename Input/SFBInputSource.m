@@ -63,6 +63,12 @@ static void SFBCreateInputSourceLog()
 	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
 }
 
+- (void)dealloc
+{
+	if(self.isOpen)
+		[self closeReturningError:nil];
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];

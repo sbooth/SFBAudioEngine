@@ -42,16 +42,6 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 
 @end
 
-#pragma mark - Subclass Registration
-
-@interface SFBAudioDecoder (SFBAudioDecoderSubclassRegistration)
-/// Register a subclass with the default priority (\c 0)
-+ (void)registerSubclass:(Class)subclass;
-
-/// Register a subclass with the specified priority
-+ (void)registerSubclass:(Class)subclass priority:(int)priority;
-@end
-
 #pragma mark - Error Information
 
 /// The \c NSErrorDomain used by \c SFBAudioDecoder and subclasses

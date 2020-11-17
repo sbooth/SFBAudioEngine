@@ -405,6 +405,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 
 	// Deinterleave the blocks and interleave the samples into clustered frames
 	AVAudioChannelCount channelCount = _processingFormat.channelCount;
+	assert(channelCount != 0);
 	uint8_t tmp [bufsize];
 	MatrixTransposeNaive(buf, tmp, channelCount, DSF_BLOCK_SIZE_BYTES_PER_CHANNEL);
 	memcpy(buf, tmp, bufsize);

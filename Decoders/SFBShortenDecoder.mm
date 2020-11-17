@@ -740,9 +740,10 @@ namespace {
 	_nmean = _version < 2 ? DEFAULT_V0NMEAN : DEFAULT_V2NMEAN;
 
 	// Set up variable length reading callback
+	__weak SFBInputSource *inputSource = self->_inputSource;
 	_input.SetInputCallback(^bool(void *buf, size_t len, size_t &read) {
 		NSInteger bytesRead;
-		if(![self->_inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
+		if(![inputSource readBytes:buf length:(NSInteger)len bytesRead:&bytesRead error:nil])
 			return false;
 		read = (size_t)bytesRead;
 		return true;

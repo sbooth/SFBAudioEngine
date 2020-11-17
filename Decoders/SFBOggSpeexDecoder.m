@@ -294,6 +294,7 @@
 	}
 
 	speex_bits_destroy(&_bits);
+	memset(&_bits, 0, sizeof(SpeexBits));
 
 	// Ogg cleanup
 	ogg_stream_clear(&_streamState);

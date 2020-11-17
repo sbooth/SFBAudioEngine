@@ -80,16 +80,16 @@
 	return YES;
 }
 
+- (BOOL)atEOF
+{
+	return _pos == _data.length;
+}
+
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
 	NSParameterAssert(offset != NULL);
 	*offset = (NSInteger)_pos;
 	return YES;
-}
-
-- (BOOL)atEOF
-{
-	return _pos == _data.length;
 }
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error

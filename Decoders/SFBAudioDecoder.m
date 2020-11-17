@@ -27,6 +27,11 @@ static void SFBCreateAudioDecoderLog()
 	});
 }
 
+@interface SFBAudioDecoderSubclassInfo : NSObject
+@property (nonatomic) Class klass;
+@property (nonatomic) int priority;
+@end
+
 @implementation SFBAudioDecoder
 
 @synthesize inputSource = _inputSource;
@@ -172,7 +177,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	if(!_inputSource.isOpen)
 		return [_inputSource openReturningError:error];
-
 	return YES;
 }
 
@@ -180,7 +184,6 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	if(_inputSource.isOpen)
 		return [_inputSource closeReturningError:error];
-
 	return YES;
 }
 

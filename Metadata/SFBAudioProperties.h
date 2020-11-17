@@ -12,7 +12,7 @@ typedef NSString * SFBAudioPropertiesKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioProper
 // Audio property dictionary keys
 /// The name of the audio format
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFormatName;
-/// The total number of audio frames (\c NSNumber
+/// The total number of audio frames (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyFrameLength;
 /// The number of channels (\c NSNumber)
 extern SFBAudioPropertiesKey const SFBAudioPropertiesKeyChannelCount;

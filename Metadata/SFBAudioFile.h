@@ -60,13 +60,6 @@ NS_SWIFT_NAME(AudioFile) @interface SFBAudioFile : NSObject
 
 @end
 
-#pragma mark - Subclass Registration
-
-@interface SFBAudioFile (SFBAudioFileSubclassRegistration)
-+ (void)registerSubclass:(Class)subclass;
-+ (void)registerSubclass:(Class)subclass priority:(int)priority;
-@end
-
 #pragma mark - Error Information
 
 /// The \c NSErrorDomain used by \c SFBAudioFile and subclasses
