@@ -22,6 +22,11 @@ static void SFBCreateAudioFileLog()
 	});
 }
 
+@interface SFBAudioFileSubclassInfo : NSObject
+@property (nonatomic) Class klass;
+@property (nonatomic) int priority;
+@end
+
 @implementation SFBAudioFile
 
 static NSMutableArray *_registeredSubclasses = nil;
