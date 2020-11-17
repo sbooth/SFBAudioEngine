@@ -33,14 +33,21 @@
 {
 	_file = fopen(self.url.fileSystemRepresentation, "r");
 	if(!_file) {
+		os_log_error(gSFBInputSourceLog, "fopen failed: %{public}s (%d)", strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
 	}
 
 	if(fstat(fileno(_file), &_filestats) == -1) {
+		os_log_error(gSFBInputSourceLog, "fstat failed: %{public}s (%d)", strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
+
+		if(fclose(_file))
+			os_log_info(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
+		_file = NULL;
+
 		return NO;
 	}
 
@@ -50,12 +57,14 @@
 - (BOOL)closeReturningError:(NSError **)error
 {
 	if(_file) {
-		if(fclose(_file)) {
+		int result = fclose(_file);
+		_file = NULL;
+		if(result) {
+			os_log_error(gSFBInputSourceLog, "fclose failed: %{public}s (%d)", strerror(errno), errno);
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 			return NO;
 		}
-		_file = NULL;
 	}
 	return YES;
 }
@@ -73,6 +82,7 @@
 
 	size_t read = fread(buffer, 1, (size_t)length, _file);
 	if(read != (size_t)length && ferror(_file)) {
+		os_log_error(gSFBInputSourceLog, "fread error: %{public}s (%d)", strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
@@ -86,6 +96,7 @@
 	NSParameterAssert(offset != NULL);
 	off_t result = ftello(_file);
 	if(result == -1) {
+		os_log_error(gSFBInputSourceLog, "ftello failed: %{public}s (%d)", strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
@@ -115,6 +126,7 @@
 {
 	NSParameterAssert(offset >= 0);
 	if(fseeko(_file, offset, SEEK_SET)) {
+		os_log_error(gSFBInputSourceLog, "fseeko(%ld) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;
