@@ -19,14 +19,21 @@ extern os_log_t gSFBDSDDecoderLog;
 }
 @end
 
-@interface SFBDSDDecoderSubclassInfo : NSObject
-@property (nonatomic) Class klass;
-@property (nonatomic) int priority;
+#pragma mark - Subclass Registration and Lookup
+
+@interface SFBDSDDecoder (SFBDSDDecoderSubclassRegistration)
+/// Register a subclass with the default priority (\c 0)
++ (void)registerSubclass:(Class)subclass;
+/// Register a subclass with the specified priority
++ (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 @interface SFBDSDDecoder (SFBDSDDecoderSubclassLookup)
+/// Returns the appropriate \c SFBDSDDecoder subclass for decoding \c url
 + (nullable Class)subclassForURL:(NSURL *)url;
+/// Returns the appropriate \c SFBDSDDecoder subclass for decoding paths with \c extension
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
+/// Returns the appropriate \c SFBDSDDecoder subclass for decoding data of \c mimeType
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
 @end
 
