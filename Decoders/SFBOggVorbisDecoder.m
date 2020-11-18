@@ -91,6 +91,11 @@ static long tell_func_callback(void *datasource)
 	return [NSSet setWithObject:@"audio/ogg-vorbis"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

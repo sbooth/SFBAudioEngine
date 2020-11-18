@@ -103,6 +103,11 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	return [NSSet setWithObject:@"audio/mpeg"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

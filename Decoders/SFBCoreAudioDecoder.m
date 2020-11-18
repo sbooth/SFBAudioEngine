@@ -96,6 +96,19 @@ static SInt64 get_size_callback(void *inClientData)
 	return [NSSet setWithArray:(__bridge_transfer NSArray *)supportedMIMETypes];
 }
 
+- (BOOL)decodingIsLossless
+{
+	switch(_sourceFormat.streamDescription->mFormatID) {
+		case kAudioFormatLinearPCM:
+		case kAudioFormatAppleLossless:
+		case kAudioFormatFLAC:
+			return YES;
+		default:
+			// Be conservative and return NO for formats that aren't known to be lossless
+			return NO;
+	}
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
@@ -204,17 +217,19 @@ static SInt64 get_size_callback(void *inClientData)
 	else
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
 
+	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
+
 	// Tell the ExtAudioFile the format in which we'd like our data
 
-	// For Linear PCM formats, leave the data untouched
+	// For Linear PCM formats leave the data untouched
 	if(format.mFormatID == kAudioFormatLinearPCM)
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
-	// For Apple Lossless, convert to high-aligned signed ints in 32 bits
-	else if(format.mFormatID == kAudioFormatAppleLossless) {
+	// For Apple Lossless and FLAC convert to packed ints if possible, otherwise high-align
+	else if(format.mFormatID == kAudioFormatAppleLossless || format.mFormatID == kAudioFormatFLAC) {
 		AudioStreamBasicDescription asbd = {0};
 
 		asbd.mFormatID			= kAudioFormatLinearPCM;
-		asbd.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsAlignedHigh;
+		asbd.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
 
 		asbd.mSampleRate		= format.mSampleRate;
 		asbd.mChannelsPerFrame	= format.mChannelsPerFrame;
@@ -228,7 +243,9 @@ static SInt64 get_size_callback(void *inClientData)
 		else if(format.mFormatFlags == kAppleLosslessFormatFlag_32BitSourceData)
 			asbd.mBitsPerChannel = 32;
 
-		asbd.mBytesPerPacket	= 4 * asbd.mChannelsPerFrame;
+		asbd.mFormatFlags		|= asbd.mBitsPerChannel % 8 ? kAudioFormatFlagIsAlignedHigh : kAudioFormatFlagIsPacked;
+
+		asbd.mBytesPerPacket	= ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
 		asbd.mFramesPerPacket	= 1;
 		asbd.mBytesPerFrame		= asbd.mBytesPerPacket * asbd.mFramesPerPacket;
 

@@ -40,6 +40,7 @@ static void SFBCreateDSDDecoderLog()
 @synthesize processingFormat = _processingFormat;
 @synthesize sourceFormat = _sourceFormat;
 
+@dynamic decodingIsLossless;
 @dynamic packetPosition;
 @dynamic packetCount;
 

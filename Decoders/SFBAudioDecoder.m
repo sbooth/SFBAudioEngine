@@ -38,6 +38,7 @@ static void SFBCreateAudioDecoderLog()
 @synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
 
+@dynamic decodingIsLossless;
 @dynamic framePosition;
 @dynamic frameLength;
 

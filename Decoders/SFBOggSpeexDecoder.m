@@ -70,6 +70,11 @@
 	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

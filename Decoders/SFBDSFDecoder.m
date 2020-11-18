@@ -77,6 +77,11 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 	return [NSSet setWithObject:@"audio/dsf"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return YES;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
