@@ -19,13 +19,19 @@ extern os_log_t gSFBAudioEncoderLog;
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 	AVAudioFormat *_outputFormat;
+	AVAudioFramePosition _estimatedFramesToEncode;
 	NSDictionary *_settings;
 }
 @end
 
-@interface SFBAudioEncoderSubclassInfo : NSObject
-@property (nonatomic) Class klass;
-@property (nonatomic) int priority;
+#pragma mark - Subclass Registration and Lookup
+
+@interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
+/// Register a subclass with the default priority (\c 0)
++ (void)registerSubclass:(Class)subclass;
+
+/// Register a subclass with the specified priority
++ (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 @interface SFBAudioEncoder (SFBAudioEncoderSubclassLookup)

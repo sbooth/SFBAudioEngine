@@ -28,12 +28,18 @@ static void SFBCreateAudioEncoderLog()
 	});
 }
 
+@interface SFBAudioEncoderSubclassInfo : NSObject
+@property (nonatomic) Class klass;
+@property (nonatomic) int priority;
+@end
+
 @implementation SFBAudioEncoder
 
 @synthesize outputSource = _outputSource;
 @synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
 @synthesize outputFormat = _outputFormat;
+@synthesize estimatedFramesToEncode = _estimatedFramesToEncode;
 @synthesize settings = _settings;
 
 @dynamic encodingIsLossless;
@@ -177,20 +183,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 	__builtin_unreachable();
 }
 
-- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error
+- (BOOL)setSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error
 {
 	NSParameterAssert(sourceFormat != nil);
 
-	if(self.isOpen) {
-		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called on an encoder that is already open");
-		return NO;
-	}
-
-	if(!_outputSource.isOpen && ![_outputSource openReturningError:error])
-		return NO;
-
 	if(sourceFormat.streamDescription->mFormatID != kAudioFormatLinearPCM) {
-		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called with non-PCM format: %{public}@", sourceFormat);
+		os_log_error(gSFBAudioEncoderLog, "-setSourceFormat:error: called with non-PCM format: %{public}@", sourceFormat);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
@@ -198,7 +196,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 	AVAudioFormat *processingFormat = [self processingFormatForSourceFormat:sourceFormat];
 	if(processingFormat == nil) {
-		os_log_error(gSFBAudioEncoderLog, "-openWithSourceFormat:error: called with invalid format: %{public}@", sourceFormat);
+		os_log_error(gSFBAudioEncoderLog, "-setSourceFormat:error: called with invalid format: %{public}@", sourceFormat);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
 		return NO;
@@ -210,11 +208,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return YES;
 }
 
+- (BOOL)openReturningError:(NSError **)error
+{
+	if(!_outputSource.isOpen)
+		return [_outputSource openReturningError:error];
+	return YES;
+}
+
 - (BOOL)closeReturningError:(NSError **)error
 {
 	if(_outputSource.isOpen)
 		return [_outputSource closeReturningError:error];
-
 	return YES;
 }
 

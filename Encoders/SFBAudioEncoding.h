@@ -40,12 +40,20 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 
 #pragma mark - Setup and Teardown
 
-/// Sets the source audio format for the encoder, uses it to determine the appropriate \c processingFormat, and opens the encoder for writing
-/// @note Most encoders do not support all possible source formats
+/// The estimated number of frames to encode or \c 0 if unknown
+@property (nonatomic) AVAudioFramePosition estimatedFramesToEncode;
+
+/// Sets the source audio format for the encoder
+/// @note If supported, the source format is used  to determine the appropriate \c processingFormat
 /// @param sourceFormat The source audio format
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error;
+- (BOOL)setSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error;
+
+/// Opens the encoder for writing
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
+- (BOOL)openReturningError:(NSError **)error;
 
 /// Finishes encoding and closes the encoder
 /// @param error An optional pointer to an \c NSError object to receive error information

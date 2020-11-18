@@ -37,19 +37,9 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error;
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
-- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error NS_REQUIRES_SUPER;
+- (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;
 
-@end
-
-#pragma mark - Subclass Registration
-
-@interface SFBAudioEncoder (SFBAudioEncoderSubclassRegistration)
-/// Register a subclass with the default priority (\c 0)
-+ (void)registerSubclass:(Class)subclass;
-
-/// Register a subclass with the specified priority
-+ (void)registerSubclass:(Class)subclass priority:(int)priority;
 @end
 
 #pragma mark - Error Information
