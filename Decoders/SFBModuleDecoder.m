@@ -115,6 +115,11 @@ static dumb_off_t get_size_callback(void *f)
 	return [NSSet setWithArray:@[@"audio/it", @"audio/xm", @"audio/s3m", @"audio/mod", @"audio/x-mod"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

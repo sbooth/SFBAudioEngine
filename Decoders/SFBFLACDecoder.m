@@ -151,6 +151,11 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return YES;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
@@ -288,7 +293,23 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 	sourceStreamDescription.mSampleRate			= _streamInfo.sample_rate;
 	sourceStreamDescription.mChannelsPerFrame	= _streamInfo.channels;
+	// Apple uses kAppleLosslessFormatFlag_XXBitSourceData to indicate FLAC bit depth in the Core Audio FLAC decoder
+	// Since the number of flags is limited the source bit depth is also stored in mBitsPerChannel
 	sourceStreamDescription.mBitsPerChannel		= _streamInfo.bits_per_sample;
+	switch(_streamInfo.bits_per_sample) {
+		case 16:
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			break;
+		case 20:
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
+			break;
+		case 24:
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			break;
+		case 32:
+			sourceStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
+			break;
+	}
 
 	sourceStreamDescription.mFramesPerPacket	= _streamInfo.max_blocksize;
 

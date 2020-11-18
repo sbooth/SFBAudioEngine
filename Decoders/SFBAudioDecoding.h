@@ -53,6 +53,9 @@ NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 /// The format of audio data produced by `-decodeIntoBuffer:error:`
 @property (nonatomic, readonly) AVAudioFormat *processingFormat;
 
+/// \c YES if decoding allows the original signal to be perfectly reconstructed
+@property (nonatomic, readonly) BOOL decodingIsLossless;
+
 #pragma mark - Setup and Teardown
 
 /// Opens the decoder for reading

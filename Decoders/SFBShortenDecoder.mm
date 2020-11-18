@@ -431,6 +431,11 @@ namespace {
 	return [NSSet setWithObject:@"audio/x-shorten"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return YES;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error] || ![self parseShortenHeaderReturningError:error])

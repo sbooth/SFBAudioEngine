@@ -69,6 +69,11 @@ namespace {
 	return [NSSet setWithObject:@"audio/x-tta"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return YES;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

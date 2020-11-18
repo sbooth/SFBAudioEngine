@@ -373,6 +373,11 @@ namespace {
 	return _decoder.sourceFormat;
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(!_decoder.isOpen && ![_decoder openReturningError:error])

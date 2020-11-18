@@ -97,6 +97,11 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

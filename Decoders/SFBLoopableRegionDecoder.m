@@ -94,6 +94,11 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	return _decoder.sourceFormat;
 }
 
+- (BOOL)decodingIsLossless
+{
+	return _decoder.decodingIsLossless;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(!_decoder.isOpen && ![_decoder openReturningError:error])

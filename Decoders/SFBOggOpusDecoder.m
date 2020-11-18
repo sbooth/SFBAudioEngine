@@ -94,6 +94,11 @@ static 	opus_int64 tell_callback(void *stream)
 	return [NSSet setWithArray:@[@"audio/opus", @"audio/ogg"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return NO;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

@@ -709,6 +709,11 @@ namespace {
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return YES;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])

@@ -126,7 +126,7 @@
 {
 	NSParameterAssert(offset >= 0);
 	if(fseeko(_file, offset, SEEK_SET)) {
-		os_log_error(gSFBInputSourceLog, "fseeko(%ld) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
+		os_log_error(gSFBInputSourceLog, "fseeko(%ld, SEEK_SET) error: %{public}s (%d)", (long)offset, strerror(errno), errno);
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:@{ NSURLErrorKey: self.url }];
 		return NO;

@@ -101,6 +101,11 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	return _decoder.sourceFormat;
 }
 
+- (BOOL)decodingIsLossless
+{
+	return _decoder.decodingIsLossless;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(!_decoder.isOpen && ![_decoder openReturningError:error])
