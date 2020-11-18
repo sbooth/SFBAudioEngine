@@ -199,9 +199,9 @@ namespace {
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
 
-- (BOOL)openWithSourceFormat:(AVAudioFormat *)sourceFormat error:(NSError **)error
+- (BOOL)openReturningError:(NSError **)error
 {
-	if(![super openWithSourceFormat:sourceFormat error:error])
+	if(![super openReturningError:error])
 		return NO;
 
 	int result;
