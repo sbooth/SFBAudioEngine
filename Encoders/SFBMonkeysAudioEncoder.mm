@@ -160,6 +160,11 @@ namespace {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
+- (BOOL)encodingIsLossless
+{
+	return YES;
+}
+
 - (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat
 {
 	NSParameterAssert(sourceFormat != nil);

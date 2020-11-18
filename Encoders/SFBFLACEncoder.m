@@ -109,6 +109,11 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 	return [NSSet setWithObject:@"audio/flac"];
 }
 
+- (BOOL)encodingIsLossless
+{
+	return YES;
+}
+
 - (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat
 {
 	NSParameterAssert(sourceFormat != nil);

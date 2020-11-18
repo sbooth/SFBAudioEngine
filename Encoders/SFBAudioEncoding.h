@@ -30,6 +30,9 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 /// The format of the encoded audio data
 @property (nonatomic, readonly) AVAudioFormat *outputFormat;
 
+/// \c YES if encoding allows the original signal to be perfectly reconstructed
+@property (nonatomic, readonly) BOOL encodingIsLossless;
+
 /// Returns the processing format used for the given source format
 /// @param sourceFormat The source audio format
 /// @return The processing format corresponding to \c sourceFormat, or \c nil if \c sourceFormat is not supported

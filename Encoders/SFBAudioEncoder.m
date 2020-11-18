@@ -36,6 +36,7 @@ static void SFBCreateAudioEncoderLog()
 @synthesize outputFormat = _outputFormat;
 @synthesize settings = _settings;
 
+@dynamic encodingIsLossless;
 @dynamic framePosition;
 
 static NSMutableArray *_registeredSubclasses = nil;
