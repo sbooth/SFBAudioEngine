@@ -36,8 +36,8 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error;
 
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:error: instead");
-- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:metadata:error: instead");
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
+- (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:metadata:error: instead");
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The decoder supplying the audio to be converted

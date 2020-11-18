@@ -60,14 +60,14 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [self initWithDecoder:decoder encoder:encoder error:nil];
 }
 
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
+{
+	return [self initWithDecoder:decoder encoder:encoder metadata:nil error:error];
+}
+
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata
 {
 	return [self initWithDecoder:decoder encoder:encoder metadata:metadata error:nil];
-}
-
-- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
-{
-	return [self initWithDecoder:decoder encoder:encoder metadata:nil error:nil];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(SFBAudioMetadata *)metadata error:(NSError **)error
