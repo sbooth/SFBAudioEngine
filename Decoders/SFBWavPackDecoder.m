@@ -149,6 +149,11 @@ static int can_seek_callback(void *id)
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
+- (BOOL)decodingIsLossless
+{
+	return (WavpackGetMode(_wpc) & MODE_LOSSLESS) == MODE_LOSSLESS;
+}
+
 - (BOOL)openReturningError:(NSError **)error
 {
 	if(![super openReturningError:error])
