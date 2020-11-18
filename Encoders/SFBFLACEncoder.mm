@@ -104,10 +104,11 @@ static FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *en
 static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__StreamMetadata *metadata, void *client_data)
 {
 #pragma unused(encoder)
+#pragma unused(metadata)
 	NSCParameterAssert(client_data != NULL);
 
-	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
-	SFBOutputSource *outputSource = flacEncoder->_outputSource;
+//	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
+//	SFBOutputSource *outputSource = flacEncoder->_outputSource;
 }
 
 @implementation SFBFLACEncoder
