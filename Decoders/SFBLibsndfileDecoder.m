@@ -154,31 +154,19 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 - (BOOL)decodingIsLossless
 {
-	switch(_sfinfo.format & SF_FORMAT_TYPEMASK) {
-		case SF_FORMAT_WAV:
-		case SF_FORMAT_AIFF:
-		case SF_FORMAT_AU:
-		case SF_FORMAT_RAW:
-		case SF_FORMAT_W64:
-		case SF_FORMAT_WAVEX:
-		case SF_FORMAT_FLAC:
-		case SF_FORMAT_RF64:
+	switch(_sfinfo.format & SF_FORMAT_SUBMASK) {
+		case SF_FORMAT_PCM_U8:
+		case SF_FORMAT_PCM_S8:
+		case SF_FORMAT_PCM_16:
+		case SF_FORMAT_PCM_24:
+		case SF_FORMAT_PCM_32:
+//		case SF_FORMAT_FLOAT:
+//		case SF_FORMAT_DOUBLE:
+		case SF_FORMAT_ALAC_16:
+		case SF_FORMAT_ALAC_20:
+		case SF_FORMAT_ALAC_24:
+		case SF_FORMAT_ALAC_32:
 			return YES;
-		case SF_FORMAT_CAF:
-		{
-			switch(_sfinfo.format & SF_FORMAT_SUBMASK) {
-				case SF_FORMAT_ALAC_16:
-				case SF_FORMAT_ALAC_20:
-				case SF_FORMAT_ALAC_24:
-				case SF_FORMAT_ALAC_32:
-					return YES;
-				default:
-					return NO;
-			}
-		}
-			// SF_FORMAT_OGGFLAC is not public (yet?)
-//		case SF_FORMAT_OGGFLAC:
-//			return YES;
 		default:
 			// Be conservative and return NO for formats that aren't known to be lossless
 			return NO;
