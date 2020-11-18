@@ -92,7 +92,12 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 					desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate channels:decoder.processingFormat.channelCount interleaved:YES];
 			}
 
-			if(![encoder openWithSourceFormat:desiredEncodingFormat error:error])
+			if(![encoder setSourceFormat:desiredEncodingFormat error:error])
+				return nil;
+
+			encoder.estimatedFramesToEncode = decoder.frameLength;
+
+			if(![encoder openReturningError:error])
 				return nil;
 		}
 		_encoder = encoder;
