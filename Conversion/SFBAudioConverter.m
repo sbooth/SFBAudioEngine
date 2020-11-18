@@ -41,11 +41,10 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		return NO;
 
 	if(!encoder.isOpen) {
-		AVAudioFormat *sourceFormat = decoder.sourceFormat;
 		AVAudioFormat *desiredEncodingFormat = decoder.processingFormat;
 
 		// Encode lossy sources as 16-bit PCM
-		if(sourceFormat.streamDescription->mBitsPerChannel == 0) {
+		if(!decoder.decodingIsLossless) {
 			AVAudioChannelLayout *decoderChannelLayout = decoder.processingFormat.channelLayout;
 			if(decoderChannelLayout)
 				desiredEncodingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatInt16 sampleRate:decoder.processingFormat.sampleRate interleaved:YES channelLayout:decoderChannelLayout];
