@@ -10,8 +10,6 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "SFBAudioDecoder+Internal.h"
 
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
 @interface SFBLoopableRegionDecoder ()
 {
 @private
@@ -165,7 +163,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 
 	while(framesRemaining > 0) {
 		AVAudioFrameCount framesRemainingInCurrentPass = (AVAudioFrameCount)(_framePosition + _frameLength - _decoder.framePosition);
-		AVAudioFrameCount framesToDecode = SFB_min(SFB_min(framesRemaining, framesRemainingInCurrentPass), _buffer.frameCapacity);
+		AVAudioFrameCount framesToDecode = MIN(MIN(framesRemaining, framesRemainingInCurrentPass), _buffer.frameCapacity);
 
 		// Nothing left to read
 		if(framesToDecode == 0)

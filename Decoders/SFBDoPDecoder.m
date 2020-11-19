@@ -15,8 +15,6 @@
 #define DSD_PACKETS_PER_DOP_FRAME (16 / SFB_PCM_FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 4096
 
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 static const uint8_t sBitReverseTable256 [256] =
 {
@@ -211,7 +209,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 		// Grab the DSD audio
 		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_DOP_FRAME;
-		if(![_decoder decodeIntoBuffer:_buffer packetCount:SFB_min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
+		if(![_decoder decodeIntoBuffer:_buffer packetCount:MIN(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
 		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;

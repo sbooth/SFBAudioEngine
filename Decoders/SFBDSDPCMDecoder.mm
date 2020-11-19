@@ -5,6 +5,7 @@
 
 #import <os/log.h>
 
+#include <algorithm>
 #include <vector>
 
 #include <Accelerate/Accelerate.h>
@@ -18,8 +19,6 @@
 
 #define DSD_PACKETS_PER_PCM_FRAME (8 / SFB_PCM_FRAMES_PER_DSD_PACKET)
 #define BUFFER_SIZE_PACKETS 16384
-
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
 
 namespace {
 
@@ -472,7 +471,7 @@ namespace {
 
 		// Grab the DSD audio
 		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_PCM_FRAME;
-		if(![_decoder decodeIntoBuffer:_buffer packetCount:SFB_min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
+		if(![_decoder decodeIntoBuffer:_buffer packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
 		AVAudioPacketCount dsdPacketsDecoded = _buffer.packetCount;

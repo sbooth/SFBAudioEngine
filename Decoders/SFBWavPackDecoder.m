@@ -13,8 +13,6 @@
 
 #define BUFFER_SIZE_FRAMES 2048
 
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
 static int32_t read_bytes_callback(void *id, void *data, int32_t bcount)
 {
 	NSCParameterAssert(id != NULL);
@@ -298,7 +296,7 @@ static int can_seek_callback(void *id)
 
 	AVAudioFrameCount framesRemaining = frameLength;
 	while(framesRemaining > 0) {
-		uint32_t framesToRead = SFB_min(framesRemaining, BUFFER_SIZE_FRAMES);
+		uint32_t framesToRead = MIN(framesRemaining, BUFFER_SIZE_FRAMES);
 
 		// Wavpack uses "complete" samples (one sample across all channels), i.e. a Core Audio frame
 		uint32_t samplesRead = WavpackUnpackSamples(_wpc, _buffer, framesToRead);

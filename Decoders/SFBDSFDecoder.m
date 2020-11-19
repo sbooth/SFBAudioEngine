@@ -12,8 +12,6 @@
 
 #define DSF_BLOCK_SIZE_BYTES_PER_CHANNEL 4096
 
-static inline AVAudioPacketCount SFB_min(AVAudioPacketCount a, AVAudioPacketCount b) { return a < b ? a : b; }
-
 // Read a four byte chunk ID as a uint32_t
 static BOOL ReadChunkID(SFBInputSource *inputSource, uint32_t *chunkID)
 {
@@ -317,7 +315,7 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 		AVAudioPacketCount packetsRemaining = packetCount - packetsProcessed;
 		AVAudioPacketCount packetsToSkip = buffer.packetCount;
 		AVAudioPacketCount packetsInBuffer = _buffer.packetCount;
-		AVAudioPacketCount packetsToCopy = SFB_min(packetsInBuffer, packetsRemaining);
+		AVAudioPacketCount packetsToCopy = MIN(packetsInBuffer, packetsRemaining);
 
 		// Copy data from the internal buffer to output
 		uint32_t copySize = packetsToCopy * packetSize;
