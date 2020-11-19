@@ -3,7 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
+#import <os/log.h>
+
+#import <memory>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
@@ -18,10 +20,18 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+template <>
+struct ::std::default_delete<FLAC__StreamDecoder> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(FLAC__StreamDecoder *decoder) const noexcept { FLAC__stream_decoder_delete(decoder); }
+};
+
 @interface SFBFLACDecoder ()
 {
 @private
-	FLAC__StreamDecoder *_flac;
+	std::unique_ptr<FLAC__StreamDecoder> _flac;
 	FLAC__StreamMetadata_StreamInfo _streamInfo;
 	AVAudioFramePosition _framePosition;
 	AVAudioPCMBuffer *_frameBuffer; // For converting push to pull
@@ -162,8 +172,8 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		return NO;
 
 	// Create FLAC decoder
-	_flac = FLAC__stream_decoder_new();
-	if(!_flac) {
+	auto flac = std::unique_ptr<FLAC__StreamDecoder>(FLAC__stream_decoder_new());
+	if(!flac) {
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 		return NO;
@@ -175,18 +185,12 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	// Attempt to create a stream decoder based on the file's extension
 	NSString *extension = _inputSource.url.pathExtension.lowercaseString;
 	if([extension isEqualToString:@"flac"])
-		status = FLAC__stream_decoder_init_stream(_flac, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
+		status = FLAC__stream_decoder_init_stream(flac.get(), read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
 	else if([extension isEqualToString:@"oga"])
-		status = FLAC__stream_decoder_init_ogg_stream(_flac, read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
+		status = FLAC__stream_decoder_init_ogg_stream(flac.get(), read_callback, seek_callback, tell_callback, length_callback, eof_callback, write_callback, metadata_callback, error_callback, (__bridge void *)self);
 
 	if(status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-		FLAC__stream_decoder_delete(_flac);
-		_flac = NULL;
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_init_xxx failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -200,14 +204,8 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	}
 
 	// Process metadata
-	if(!FLAC__stream_decoder_process_until_end_of_metadata(_flac)) {
-		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-		FLAC__stream_decoder_delete(_flac);
-		_flac = NULL;
+	if(!FLAC__stream_decoder_process_until_end_of_metadata(flac.get())) {
+		os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_until_end_of_metadata failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(flac.get()));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -221,7 +219,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	}
 
 	// Set up the processing format
-	AudioStreamBasicDescription processingStreamDescription = {0};
+	AudioStreamBasicDescription processingStreamDescription;
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
@@ -254,12 +252,6 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		default: {
 			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _streamInfo.bits_per_sample);
 
-			if(!FLAC__stream_decoder_finish(_flac))
-				os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
-
-			FLAC__stream_decoder_delete(_flac);
-			_flac = NULL;
-
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 												 code:SFBAudioDecoderErrorCodeInputOutput
@@ -271,6 +263,8 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 			return NO;
 		}
 	}
+
+	_flac = std::move(flac);
 
 	AVAudioChannelLayout *channelLayout = nil;
 	switch(_streamInfo.channels) {
@@ -287,7 +281,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
-	AudioStreamBasicDescription sourceStreamDescription = {0};
+	AudioStreamBasicDescription sourceStreamDescription;
 
 	sourceStreamDescription.mFormatID			= kAudioFormatFLAC;
 
@@ -324,13 +318,10 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	if(_flac) {
-		if(!FLAC__stream_decoder_finish(_flac))
-			os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+	if(_flac && !FLAC__stream_decoder_finish(_flac.get()))
+		os_log_info(gSFBAudioDecoderLog, "FLAC__stream_decoder_finish failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 
-		FLAC__stream_decoder_delete(_flac);
-		_flac = NULL;
-	}
+	_flac.reset();
 
 	_frameBuffer = nil;
 	memset(&_streamInfo, 0, sizeof(_streamInfo));
@@ -378,12 +369,12 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 		framesProcessed += framesCopied;
 
 		// All requested frames were read or EOS reached
-		if(framesProcessed == frameLength || FLAC__stream_decoder_get_state(_flac) == FLAC__STREAM_DECODER_END_OF_STREAM)
+		if(framesProcessed == frameLength || FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_END_OF_STREAM)
 			break;
 
 		// Grab the next frame
-		if(!FLAC__stream_decoder_process_single(_flac))
-			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac));
+		if(!FLAC__stream_decoder_process_single(_flac.get()))
+			os_log_error(gSFBAudioDecoderLog, "FLAC__stream_decoder_process_single failed: %{public}s", FLAC__stream_decoder_get_resolved_state_string(_flac.get()));
 	}
 
 	_framePosition += framesProcessed;
@@ -396,11 +387,11 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	NSParameterAssert(frame >= 0);
 //	NSParameterAssert(frame <= _totalFrames);
 
-	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac, (FLAC__uint64)frame);
+	FLAC__bool result = FLAC__stream_decoder_seek_absolute(_flac.get(), (FLAC__uint64)frame);
 
 	// Attempt to re-sync the stream if necessary
-	if(FLAC__stream_decoder_get_state(_flac) == FLAC__STREAM_DECODER_SEEK_ERROR)
-		result = FLAC__stream_decoder_flush(_flac);
+	if(FLAC__stream_decoder_get_state(_flac.get()) == FLAC__STREAM_DECODER_SEEK_ERROR)
+		result = FLAC__stream_decoder_flush(_flac.get());
 
 	if(result) {
 		_framePosition = frame;
