@@ -155,6 +155,9 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		}
 	}
 
+	if(![_encoder finishEncodingReturningError:error])
+		return NO;
+
 	if(![_encoder closeReturningError:error])
 		return NO;
 

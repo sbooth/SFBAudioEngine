@@ -142,7 +142,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 		return nil;
 
 	// Set up the processing format
-	AudioStreamBasicDescription streamDescription;
+	AudioStreamBasicDescription streamDescription{};
 
 	streamDescription.mFormatID				= kAudioFormatLinearPCM;
 	streamDescription.mFormatFlags			= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
@@ -227,10 +227,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 	if(_estimatedFramesToEncode > 0 && !FLAC__stream_encoder_set_total_samples_estimate(flac.get(), (FLAC__uint64)_estimatedFramesToEncode)) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_total_samples_estimate failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 		return NO;
 	}
 
@@ -242,10 +240,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 			case 1 ... 8:
 				if(!FLAC__stream_encoder_set_compression_level(flac.get(), value)) {
 					os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_compression_level failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 					return NO;
 				}
 				break;
@@ -260,10 +256,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 		FLAC__bool value = verifyEncoding.boolValue;
 		if(!FLAC__stream_encoder_set_verify(flac.get(), value)) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_verify failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 			return NO;
 		}
 
@@ -273,10 +267,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 	auto padding = std::unique_ptr<FLAC__StreamMetadata>(FLAC__metadata_object_new(FLAC__METADATA_TYPE_PADDING));
 	if(!padding) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_new failed");
-
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-
 		return NO;
 	}
 
@@ -288,30 +280,24 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 		seektable = std::unique_ptr<FLAC__StreamMetadata>(FLAC__metadata_object_new(FLAC__METADATA_TYPE_SEEKTABLE));
 		if(!seektable) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_new failed");
-
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-
 			return NO;
 		}
 
 		// Append seekpoints (one every 10 seconds)
 		if(!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(seektable.get(), (uint32_t)(10 * _processingFormat.sampleRate), (FLAC__uint64)_estimatedFramesToEncode)) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_seektable_template_append_spaced_points_by_samples failed");
-
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-
 			return NO;
 		}
 
 		// Sort the table
 		if(!FLAC__metadata_object_seektable_template_sort(seektable.get(), false)) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__metadata_object_seektable_template_sort failed");
-
 			if(error)
 				*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
-
 			return NO;
 		}
 	}
@@ -322,10 +308,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 	if(!FLAC__stream_encoder_set_metadata(flac.get(), _metadata, seektable ? 2 : 1)) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_metadata failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 		return NO;
 	}
 
@@ -333,10 +317,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 	FLAC__StreamEncoderInitStatus encoderStatus = FLAC__stream_encoder_init_stream(flac.get(), write_callback, seek_callback, tell_callback, metadata_callback, (__bridge void *)self);
 	if(encoderStatus != FLAC__STREAM_ENCODER_INIT_STATUS_OK) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_init_stream failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
-
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 		return NO;
 	}
 
@@ -349,9 +331,6 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	if(_flac && !FLAC__stream_encoder_finish(_flac.get()))
-		os_log_info(gSFBAudioEncoderLog, "FLAC__stream_encoder_finish failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
-
 	_flac.reset();
 	_seektable.reset();
 	_padding.reset();
@@ -388,6 +367,17 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 		return NO;
 	}
 
+	return YES;
+}
+
+- (BOOL)finishEncodingReturningError:(NSError **)error
+{
+	if(!FLAC__stream_encoder_finish(_flac.get())) {
+		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_finish failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
 	return YES;
 }
 

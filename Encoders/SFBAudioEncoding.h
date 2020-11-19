@@ -55,7 +55,7 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)openReturningError:(NSError **)error;
 
-/// Finishes encoding and closes the encoder
+/// Closes the encoder
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)closeReturningError:(NSError **)error NS_SWIFT_NAME(close());
@@ -73,6 +73,11 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
 - (BOOL)encodeFromBuffer:(AVAudioBuffer *)buffer error:(NSError **)error NS_SWIFT_NAME(encode(from:));
+
+/// Finishes encoding
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
+- (BOOL)finishEncodingReturningError:(NSError **)error NS_SWIFT_NAME(finish());
 
 @end
 

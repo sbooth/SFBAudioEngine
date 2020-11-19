@@ -181,7 +181,7 @@ namespace {
 	}
 
 	// Set up the processing format
-	AudioStreamBasicDescription streamDescription;
+	AudioStreamBasicDescription streamDescription{};
 
 	streamDescription.mFormatID				= kAudioFormatLinearPCM;
 	streamDescription.mFormatFlags			= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
@@ -256,16 +256,6 @@ namespace {
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	if(_compressor) {
-		auto result = _compressor->Finish(nullptr, 0, 0);
-		if(result != ERROR_SUCCESS) {
-			os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-			return NO;
-		}
-	}
-
 	_ioInterface.reset();
 	_compressor.reset();
 
@@ -304,6 +294,18 @@ namespace {
 
 	_framePosition += frameLength;
 
+	return YES;
+}
+
+- (BOOL)finishEncodingReturningError:(NSError **)error
+{
+	auto result = _compressor->Finish(nullptr, 0, 0);
+	if(result != ERROR_SUCCESS) {
+		os_log_error(gSFBAudioEncoderLog, "_compressor->Finish() failed: %d", result);
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+		return NO;
+	}
 	return YES;
 }
 
