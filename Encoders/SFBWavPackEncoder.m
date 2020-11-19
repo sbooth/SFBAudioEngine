@@ -13,10 +13,11 @@
 
 @interface SFBWavPackEncoder ()
 {
+@package
+	NSMutableData *_firstBlock;
 @private
 	WavpackContext *_wpc;
 	WavpackConfig _config;
-	void *_firstBlock;
 	CC_MD5_CTX _md5;
 	AVAudioFramePosition _framePosition;
 }
@@ -25,9 +26,13 @@
 static int wavpack_block_output(void *id, void *data, int32_t bcount)
 {
 	NSCParameterAssert(id != NULL);
-	SFBOutputSource *outputsource = (__bridge SFBOutputSource *)id;
+	SFBWavPackEncoder *encoder = (__bridge SFBWavPackEncoder *)id;
+
+	if(encoder->_firstBlock == nil)
+		encoder->_firstBlock = [NSMutableData dataWithBytes:data length:(NSUInteger)bcount];
+
 	NSInteger bytesWritten;
-	return [outputsource writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
+	return [encoder->_outputSource writeBytes:data length:bcount bytesWritten:&bytesWritten error:nil];
 }
 
 @implementation SFBWavPackEncoder
@@ -87,7 +92,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	if(![super openReturningError:error])
 		return NO;
 
-	_wpc = WavpackOpenFileOutput(wavpack_block_output, (__bridge void *)_outputSource, NULL);
+	_wpc = WavpackOpenFileOutput(wavpack_block_output, (__bridge void *)self, NULL);
 	if(!_wpc) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed");
 		if(error)
@@ -233,8 +238,13 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		return NO;
 	}
 
-	if(_estimatedFramesToEncode != _framePosition)
-		WavpackUpdateNumSamples(_wpc, _firstBlock);
+	if(_estimatedFramesToEncode != _framePosition && _firstBlock) {
+		WavpackUpdateNumSamples(_wpc, _firstBlock.mutableBytes);
+		if(![_outputSource seekToOffset:0 error:error])
+			return NO;
+		if(![_outputSource writeData:_firstBlock error:error])
+			return NO;
+	}
 
 	return YES;
 }
