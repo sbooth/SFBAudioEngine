@@ -219,7 +219,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	}
 
 	// Set up the processing format
-	AudioStreamBasicDescription processingStreamDescription;
+	AudioStreamBasicDescription processingStreamDescription{};
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsNonInterleaved;
