@@ -81,6 +81,10 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 
 @end
 
+@interface SFBOutputSource (SFBDataWriting)
+- (BOOL)writeData:(NSData *)data error:(NSError **)error;
+@end
+
 #pragma mark - Typed and Byte-Ordered Writing
 
 @interface SFBOutputSource (SFBSignedIntegerWriting)

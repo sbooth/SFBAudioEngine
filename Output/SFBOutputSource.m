@@ -107,6 +107,15 @@ static void SFBCreateOutputSourceLog()
 
 @end
 
+@implementation SFBOutputSource (SFBDataWriting)
+- (BOOL)writeData:(NSData *)data error:(NSError **)error
+{
+	NSParameterAssert(data != nil);
+	NSInteger bytesWritten;
+	return [self writeBytes:data.bytes length:(NSInteger)data.length bytesWritten:&bytesWritten error:error] && bytesWritten == data.length;
+}
+@end
+
 @implementation SFBOutputSource (SFBSignedIntegerWriting)
 - (BOOL)writeInt8:(int8_t)i8 error:(NSError **)error		{ return [self writeUInt8:(uint8_t)i8 error:error]; }
 - (BOOL)writeInt16:(int16_t)i16 error:(NSError **)error		{ return [self writeUInt16:(uint16_t)i16 error:error]; }
