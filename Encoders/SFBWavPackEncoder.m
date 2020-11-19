@@ -199,14 +199,14 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		case 3:
 			for(AVAudioFrameCount i = 0; i < frameLength; ++i) {
 				for(AVAudioFrameCount j = 0; j < _processingFormat.channelCount; ++j) {
-					int8_t b1 = (int8_t)(*buf & 0x00ff0000);
-					uint8_t b2 = (uint8_t)(*buf & 0x0000ff00);
-					uint8_t b3 = (uint8_t)(*buf & 0x000000ff);
+					uint8_t hi = (uint8_t)((*buf >> 16) & 0xff);
+					uint8_t mid = (uint8_t)((*buf >> 8) & 0xff);
+					uint8_t lo = (uint8_t)(*buf & 0xff);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated"
-					CC_MD5_Update(&_md5, &b1, 1);
-					CC_MD5_Update(&_md5, &b2, 1);
-					CC_MD5_Update(&_md5, &b3, 1);
+					CC_MD5_Update(&_md5, &lo, 1);
+					CC_MD5_Update(&_md5, &mid, 1);
+					CC_MD5_Update(&_md5, &hi, 1);
 #pragma clang diagnostic pop
 					++buf;
 				}
