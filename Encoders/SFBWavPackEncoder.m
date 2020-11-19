@@ -176,7 +176,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 			for(AVAudioFrameCount i = 0; i < frameLength; ++i) {
 				for(AVAudioFrameCount j = 0; j < _processingFormat.channelCount; ++j) {
 					int8_t i8 = (int8_t)*buf;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 					CC_MD5_Update(&_md5, &i8, 1);
+#pragma clang diagnostic pop
 					++buf;
 				}
 			}
@@ -185,7 +188,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 			for(AVAudioFrameCount i = 0; i < frameLength; ++i) {
 				for(AVAudioFrameCount j = 0; j < _processingFormat.channelCount; ++j) {
 					int16_t i16 = (int16_t)*buf;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 					CC_MD5_Update(&_md5, &i16, 2);
+#pragma clang diagnostic pop
 					++buf;
 				}
 			}
@@ -196,15 +202,21 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 					int8_t b1 = (int8_t)(*buf & 0x00ff0000);
 					uint8_t b2 = (uint8_t)(*buf & 0x0000ff00);
 					uint8_t b3 = (uint8_t)(*buf & 0x000000ff);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 					CC_MD5_Update(&_md5, &b1, 1);
 					CC_MD5_Update(&_md5, &b2, 1);
 					CC_MD5_Update(&_md5, &b3, 1);
+#pragma clang diagnostic pop
 					++buf;
 				}
 			}
 			break;
 		case 4:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 			CC_MD5_Update(&_md5, buf, frameLength * 4);
+#pragma clang diagnostic pop
 			break;
 	}
 
@@ -223,7 +235,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	}
 
 	unsigned char md5 [CC_MD5_DIGEST_LENGTH];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 	CC_MD5_Final(md5, &_md5);
+#pragma clang diagnostic pop
 	if(!WavpackStoreMD5Sum(_wpc, md5)) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackStoreMD5Sum failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)
