@@ -287,6 +287,7 @@ namespace {
 	auto bytesToWrite = frameLength * _processingFormat.streamDescription->mBytesPerFrame;
 	auto result = _compressor->AddData((unsigned char *)buffer.audioBufferList->mBuffers[0].mData, bytesToWrite);
 	if(result != ERROR_SUCCESS) {
+		os_log_error(gSFBAudioEncoderLog, "_compressor->AddData() failed: %lld", result);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
