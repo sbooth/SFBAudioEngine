@@ -20,16 +20,6 @@ namespace {
 		SFBAudioEncoder *mEncoder;
 	};
 
-	TTAint32 read_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
-	{
-		TTACallbacks *iocb = (TTACallbacks *)io;
-
-		NSInteger bytesRead;
-		if(![iocb->mEncoder->_outputSource readBytes:buffer length:size bytesRead:&bytesRead error:nil])
-			return -1;
-		return (TTAint32)bytesRead;
-	}
-
 	TTAint32 write_callback(struct _tag_TTA_io_callback *io, TTAuint8 *buffer, TTAuint32 size)
 	{
 		TTACallbacks *iocb = (TTACallbacks *)io;
@@ -125,7 +115,7 @@ namespace {
 	}
 
 	_callbacks				= std::make_unique<TTACallbacks>();
-	_callbacks->read		= read_callback;
+	_callbacks->read		= nullptr;
 	_callbacks->write		= write_callback;
 	_callbacks->seek		= seek_callback;
 	_callbacks->mEncoder	= self;
