@@ -68,19 +68,31 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompress
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
 /// The APE compression level (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
+/// The WavPack compression level (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
 
 /// Constants for APE compression levels
 typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
 	/// Fast compression
-	SFBAudioEncoderAPECompressionLevelFast			= 1000,
+	SFBAudioEncoderAPECompressionLevelFast,
 	/// Normal compression
-	SFBAudioEncoderAPECompressionLevelNormal		= 2000,
+	SFBAudioEncoderAPECompressionLevelNormal,
 	/// High compression
-	SFBAudioEncoderAPECompressionLevelHigh			= 3000,
+	SFBAudioEncoderAPECompressionLevelHigh,
 	/// Extra high compression
-	SFBAudioEncoderAPECompressionLevelExtraHigh		= 4000,
+	SFBAudioEncoderAPECompressionLevelExtraHigh,
 	/// Insane compression
-	SFBAudioEncoderAPECompressionLevelInsane		= 5000
+	SFBAudioEncoderAPECompressionLevelInsane
 } NS_SWIFT_NAME(AudioEncoder.APECompressionLevel);
+
+/// Constants for WavPack  compression levels
+typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
+	/// Fast compression
+	SFBAudioEncoderWavPackCompressionLevelFast,
+	/// High compression
+	SFBAudioEncoderWavPackCompressionLevelHigh,
+	/// Very high ompression
+	SFBAudioEncoderWavPackCompressionLevelVeryHigh
+} NS_SWIFT_NAME(AudioEncoder.WavPackCompressionLevel);
 
 NS_ASSUME_NONNULL_END

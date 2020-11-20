@@ -133,7 +133,25 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		}
 
 	_config.flags = CONFIG_MD5_CHECKSUM;
-	
+
+	NSNumber *level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
+	if(level) {
+		int intValue = level.intValue;
+		switch(intValue) {
+			case SFBAudioEncoderWavPackCompressionLevelFast:
+				_config.flags |= CONFIG_FAST_FLAG;
+			case SFBAudioEncoderWavPackCompressionLevelHigh:
+				_config.flags |= CONFIG_HIGH_FLAG;
+			case SFBAudioEncoderWavPackCompressionLevelVeryHigh:
+				_config.flags |= CONFIG_VERY_HIGH_FLAG;
+				break;
+			default:
+				os_log_info(gSFBAudioEncoderLog, "Invalid WavPack compression level: %d", intValue);
+				break;
+		}
+	}
+
+
 	if(!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1, NULL)) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed: %{public}s", WavpackGetErrorMessage(_wpc));
 		if(error)

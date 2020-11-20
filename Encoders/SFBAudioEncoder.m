@@ -16,6 +16,7 @@ NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioE
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel			= @"FLAC Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"Verify FLAC Encoding";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel		= @"WavPack Compression Level";
 
 os_log_t gSFBAudioEncoderLog = NULL;
 
@@ -236,6 +237,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 }
 
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
+}
+
+- (BOOL)finishEncodingReturningError:(NSError **)error
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();

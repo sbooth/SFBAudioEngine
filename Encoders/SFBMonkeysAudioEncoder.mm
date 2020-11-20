@@ -236,11 +236,15 @@ namespace {
 		auto intValue = level.intValue;
 		switch(intValue) {
 			case SFBAudioEncoderAPECompressionLevelFast:
+				compressionLevel = MAC_COMPRESSION_LEVEL_FAST;
 			case SFBAudioEncoderAPECompressionLevelNormal:
+				compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
 			case SFBAudioEncoderAPECompressionLevelHigh:
+				compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;
 			case SFBAudioEncoderAPECompressionLevelExtraHigh:
+				compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;
 			case SFBAudioEncoderAPECompressionLevelInsane:
-				compressionLevel = intValue;
+				compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;
 				break;
 			default:
 				os_log_info(gSFBAudioEncoderLog, "Invalid APE compression level: %d", intValue);
