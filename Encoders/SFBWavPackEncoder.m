@@ -54,7 +54,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 - (BOOL)encodingIsLossless
 {
-	return NO;//(WavpackGetMode(_wpc) & MODE_LOSSLESS) == MODE_LOSSLESS;
+	return YES;
 }
 
 - (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat
