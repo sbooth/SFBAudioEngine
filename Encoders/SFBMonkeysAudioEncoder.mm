@@ -194,8 +194,22 @@ namespace {
 	streamDescription.mFramesPerPacket		= 1;
 	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
 
-	// FIXME: Use WAVEFORMATEX channel ordering
-	AVAudioChannelLayout *channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:(kAudioChannelLayoutTag_DiscreteInOrder | sourceFormat.channelCount)];
+	// Use WAVFORMATEX channel order
+	AVAudioChannelLayout *channelLayout = nil;
+
+	UInt32 channelBitmap = 0;
+	UInt32 propertySize = sizeof(channelBitmap);
+	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
+	result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
+	if(result == noErr) {
+		AudioChannelLayout acl = {
+			.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+			.mChannelBitmap = channelBitmap,
+			.mNumberChannelDescriptions = 0
+		};
+		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+	}
+
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
 

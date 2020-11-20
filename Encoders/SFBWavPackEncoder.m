@@ -82,8 +82,24 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	streamDescription.mFramesPerPacket		= 1;
 	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
 
-	// FIXME
-	AVAudioChannelLayout *channelLayout = [[AVAudioChannelLayout alloc] initWithLayoutTag:(kAudioChannelLayoutTag_DiscreteInOrder | sourceFormat.channelCount)];
+	// Use WAVFORMATEX channel order
+	AVAudioChannelLayout *channelLayout = nil;
+
+	UInt32 channelBitmap = 0;
+	UInt32 propertySize = sizeof(channelBitmap);
+	AudioChannelLayoutTag layoutTag = sourceFormat.channelLayout.layoutTag;
+	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag, sizeof(layoutTag), &layoutTag, &propertySize, &channelBitmap);
+	if(result == noErr) {
+		AudioChannelLayout acl = {
+			.mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelBitmap,
+			.mChannelBitmap = channelBitmap,
+			.mNumberChannelDescriptions = 0
+		};
+		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
+	}
+	else
+		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d", layoutTag, result);
+
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
 
@@ -107,6 +123,15 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	_config.bits_per_sample = (int)_processingFormat.streamDescription->mBitsPerChannel;
 	_config.bytes_per_sample = (_config.bits_per_sample + 7) / 8;
 
+	AVAudioChannelLayout *layout = _processingFormat.channelLayout;
+	if(layout)
+		_config.channel_mask = (int)layout.layout->mChannelBitmap;
+	else
+		switch(_processingFormat.channelCount) {
+			case 1:		_config.channel_mask = kAudioChannelBit_Left;								break;
+			case 2:		_config.channel_mask = kAudioChannelBit_Left | kAudioChannelBit_Right;		break;
+		}
+
 	_config.flags = CONFIG_MD5_CHECKSUM;
 	
 	if(!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1, NULL)) {
@@ -123,7 +148,10 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		return NO;
 	}
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 	CC_MD5_Init(&_md5);
+#pragma clang diagnostic pop
 
 	return YES;
 }
