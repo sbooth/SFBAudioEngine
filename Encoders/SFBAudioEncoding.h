@@ -40,9 +40,6 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 
 #pragma mark - Setup and Teardown
 
-/// The estimated number of frames to encode or \c 0 if unknown
-@property (nonatomic) AVAudioFramePosition estimatedFramesToEncode;
-
 /// Sets the source audio format for the encoder
 /// @note If supported, the source format is used  to determine the appropriate \c processingFormat
 /// @param sourceFormat The source audio format

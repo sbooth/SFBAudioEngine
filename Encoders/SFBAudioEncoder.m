@@ -39,8 +39,8 @@ static void SFBCreateAudioEncoderLog()
 @synthesize sourceFormat = _sourceFormat;
 @synthesize processingFormat = _processingFormat;
 @synthesize outputFormat = _outputFormat;
-@synthesize estimatedFramesToEncode = _estimatedFramesToEncode;
 @synthesize settings = _settings;
+@synthesize estimatedFramesToEncode = _estimatedFramesToEncode;
 
 @dynamic encodingIsLossless;
 @dynamic framePosition;

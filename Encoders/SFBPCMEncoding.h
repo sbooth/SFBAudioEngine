@@ -16,6 +16,9 @@ NS_SWIFT_NAME(PCMEncoding) @protocol SFBPCMEncoding <SFBAudioEncoding>
 
 #pragma mark - Encoding
 
+/// The estimated number of frames to encode or \c 0 if unknown
+@property (nonatomic) AVAudioFramePosition estimatedFramesToEncode;
+
 /// Encodes audio
 /// @param buffer A buffer containing the audio to encode
 /// @param frameLength The desired number of audio frames
