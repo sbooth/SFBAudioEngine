@@ -234,7 +234,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 	// Encoder compression level
 	NSNumber *compressionLevel = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACCompressionLevel];
-	if(compressionLevel) {
+	if(compressionLevel != nil) {
 		unsigned int value = compressionLevel.unsignedIntValue;
 		switch(value) {
 			case 1 ... 8:

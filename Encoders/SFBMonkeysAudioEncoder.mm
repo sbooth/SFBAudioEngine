@@ -232,7 +232,7 @@ namespace {
 
 	int compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
 	NSNumber *level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
-	if(level) {
+	if(level != nil) {
 		auto intValue = level.intValue;
 		switch(intValue) {
 			case SFBAudioEncoderAPECompressionLevelFast:
