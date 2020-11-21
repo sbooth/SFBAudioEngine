@@ -281,7 +281,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
-	AudioStreamBasicDescription sourceStreamDescription;
+	AudioStreamBasicDescription sourceStreamDescription{};
 
 	sourceStreamDescription.mFormatID			= kAudioFormatFLAC;
 
