@@ -112,7 +112,7 @@ static void SFBCreateOutputSourceLog()
 {
 	NSParameterAssert(data != nil);
 	NSInteger bytesWritten;
-	return [self writeBytes:data.bytes length:(NSInteger)data.length bytesWritten:&bytesWritten error:error] && bytesWritten == data.length;
+	return [self writeBytes:data.bytes length:(NSInteger)data.length bytesWritten:&bytesWritten error:error] && bytesWritten == (NSInteger)data.length;
 }
 @end
 
