@@ -36,7 +36,7 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 /// Returns the processing format used for the given source format
 /// @param sourceFormat The source audio format
 /// @return The processing format corresponding to \c sourceFormat, or \c nil if \c sourceFormat is not supported
-- (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat;
+- (nullable AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat;
 
 #pragma mark - Setup and Teardown
 
