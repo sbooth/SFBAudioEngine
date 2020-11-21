@@ -5,8 +5,6 @@
 
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 
-static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b) { return a < b ? a : b; }
-
 @implementation AVAudioPCMBuffer (SFBBufferUtilities)
 
 - (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer
@@ -32,7 +30,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	if(readOffset > buffer.frameLength || writeOffset > self.frameLength || frameLength == 0 || buffer.frameLength == 0)
 		return 0;
 
-	AVAudioFrameCount framesToCopy = SFB_min(self.frameCapacity - writeOffset, SFB_min(frameLength, buffer.frameLength - readOffset));
+	AVAudioFrameCount framesToCopy = MIN(self.frameCapacity - writeOffset, MIN(frameLength, buffer.frameLength - readOffset));
 
 	const AudioStreamBasicDescription *asbd = self.format.streamDescription;
 	const AudioBufferList *src_abl = buffer.audioBufferList;
@@ -54,7 +52,7 @@ static inline AVAudioFrameCount SFB_min(AVAudioFrameCount a, AVAudioFrameCount b
 	if(offset > self.frameLength || frameLength == 0)
 		return 0;
 
-	AVAudioFrameCount framesToTrim = SFB_min(frameLength, self.frameLength - offset);
+	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength - offset);
 	AVAudioFrameCount moveOffset = offset + framesToTrim;
 	AVAudioFrameCount framesToMove = self.frameLength - moveOffset;
 

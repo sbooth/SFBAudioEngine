@@ -197,7 +197,7 @@ namespace {
 	}
 
 	// The file format
-	AudioStreamBasicDescription processingStreamDescription;
+	AudioStreamBasicDescription processingStreamDescription{};
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;

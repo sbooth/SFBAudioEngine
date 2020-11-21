@@ -110,10 +110,6 @@ NSErrorDomain const SFBReplayGainAnalyzerErrorDomain = @"org.sbooth.AudioEngine.
 NSString * const SFBReplayGainAnalyzerGainKey = @"Gain";
 NSString * const SFBReplayGainAnalyzerPeakKey = @"Peak";
 
-static inline long SFB_min(long a, long b) { return a < b ? a : b; }
-static inline long SFB_max(long a, long b) { return a > b ? a : b; }
-static inline float SFB_maxf(float a, float b) { return a > b ? a : b; }
-
 #define BUFFER_SIZE_FRAMES 2048
 
 // RG constants
@@ -469,11 +465,11 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 		// Find the peak sample magnitude
 		float lpeak;
 		vDSP_maxmgv(outputBuffer.floatChannelData[0], 1, &lpeak, (vDSP_Length)frameCount);
-		_trackPeak = SFB_maxf(_trackPeak, lpeak);
+		_trackPeak = MAX(_trackPeak, lpeak);
 		if(isStereo) {
 			float rpeak;
 			vDSP_maxmgv(outputBuffer.floatChannelData[1], 1, &rpeak, (vDSP_Length)frameCount);
-			_trackPeak = SFB_maxf(_trackPeak, rpeak);
+			_trackPeak = MAX(_trackPeak, rpeak);
 		}
 
 		// The replay gain analyzer expects 16-bit sample size passed as floats
@@ -487,7 +483,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 			[self analyzeLeftSamples:outputBuffer.floatChannelData[0] rightSamples:NULL sampleCount:(size_t)frameCount isStereo:NO];
 	}
 
-	_albumPeak = SFB_maxf(_albumPeak, _trackPeak);
+	_albumPeak = MAX(_albumPeak, _trackPeak);
 
 	// Calculate track RG
 	float gain = AnalyzeResult(_A, sizeof(_A) / sizeof(*_A));
@@ -545,7 +541,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
-			sampleRate = SFB_max(sampleRate, sReplayGainFilters[i].rate);
+			sampleRate = MAX(sampleRate, sReplayGainFilters[i].rate);
 	});
 
 	return sampleRate;
@@ -557,7 +553,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
 		for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i)
-			sampleRate = SFB_min(sampleRate, sReplayGainFilters[i].rate);
+			sampleRate = MIN(sampleRate, sReplayGainFilters[i].rate);
 	});
 
 	return sampleRate;
@@ -613,7 +609,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	NSInteger nextLowerSampleRate = 0;
 	for(size_t i = 0; i < sizeof(sReplayGainFilters) / sizeof(sReplayGainFilters[0]); ++i) {
 		if(sReplayGainFilters[i].rate < sampleRate)
-			nextLowerSampleRate = SFB_max(nextLowerSampleRate, sReplayGainFilters[i].rate);
+			nextLowerSampleRate = MAX(nextLowerSampleRate, sReplayGainFilters[i].rate);
 	}
 
 	if(nextLowerSampleRate)
@@ -692,7 +688,7 @@ static float AnalyzeResult(uint32_t *array, size_t len)
 	}
 
 	while(batchsamples > 0) {
-		long cursamples = SFB_min((long)(_sampleWindow - _totsamp), batchsamples);
+		long cursamples = MIN((long)(_sampleWindow - _totsamp), batchsamples);
 		if(cursamplepos < MAX_ORDER) {
 			downsample = 1;
 			curleft  = _linpre + cursamplepos;

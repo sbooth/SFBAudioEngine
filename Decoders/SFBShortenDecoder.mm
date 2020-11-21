@@ -470,7 +470,7 @@ namespace {
 		return NO;
 
 	// Set up the processing format
-	AudioStreamBasicDescription processingStreamDescription;
+	AudioStreamBasicDescription processingStreamDescription{};
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsPacked;
@@ -504,7 +504,7 @@ namespace {
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
-	AudioStreamBasicDescription sourceStreamDescription;
+	AudioStreamBasicDescription sourceStreamDescription{};
 
 	sourceStreamDescription.mFormatID			= SFBAudioFormatIDShorten;
 
