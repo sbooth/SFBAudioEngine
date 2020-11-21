@@ -52,7 +52,7 @@ struct ::std::default_delete<FLAC__StreamMetadata> {
 static FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *encoder, const FLAC__byte buffer[], size_t bytes, uint32_t samples, uint32_t current_frame, void *client_data)
 {
 #pragma unused(encoder)
-	NSCParameterAssert(client_data != NULL);
+	NSCParameterAssert(client_data != nullptr);
 
 	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
 	SFBOutputSource *outputSource = flacEncoder->_outputSource;
@@ -70,7 +70,7 @@ static FLAC__StreamEncoderWriteStatus write_callback(const FLAC__StreamEncoder *
 static FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
 #pragma unused(encoder)
-	NSCParameterAssert(client_data != NULL);
+	NSCParameterAssert(client_data != nullptr);
 
 	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
 	SFBOutputSource *outputSource = flacEncoder->_outputSource;
@@ -87,7 +87,7 @@ static FLAC__StreamEncoderSeekStatus seek_callback(const FLAC__StreamEncoder *en
 static FLAC__StreamEncoderTellStatus tell_callback(const FLAC__StreamEncoder *encoder, FLAC__uint64 *absolute_byte_offset, void *client_data)
 {
 #pragma unused(encoder)
-	NSCParameterAssert(client_data != NULL);
+	NSCParameterAssert(client_data != nullptr);
 
 	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
 	SFBOutputSource *outputSource = flacEncoder->_outputSource;
@@ -105,7 +105,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 {
 #pragma unused(encoder)
 #pragma unused(metadata)
-	NSCParameterAssert(client_data != NULL);
+	NSCParameterAssert(client_data != nullptr);
 
 //	SFBFLACEncoder *flacEncoder = (__bridge SFBFLACEncoder *)client_data;
 //	SFBOutputSource *outputSource = flacEncoder->_outputSource;
