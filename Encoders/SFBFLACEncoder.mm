@@ -252,7 +252,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 	}
 
 	NSNumber *verifyEncoding = [_settings objectForKey:SFBAudioEncodingSettingsKeyFLACVerifyEncoding];
-	if(verifyEncoding) {
+	if(verifyEncoding != nil) {
 		FLAC__bool value = verifyEncoding.boolValue;
 		if(!FLAC__stream_encoder_set_verify(flac.get(), value)) {
 			os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_set_verify failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(flac.get()));
