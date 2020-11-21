@@ -11,6 +11,8 @@
 
 #import "SFBWavPackEncoder.h"
 
+#import "SFBCStringForOSType.h"
+
 @interface SFBWavPackEncoder ()
 {
 @package
@@ -98,7 +100,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
 	}
 	else
-		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d", layoutTag, result);
+		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }

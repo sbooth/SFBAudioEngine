@@ -17,6 +17,8 @@
 
 #import "SFBMonkeysAudioEncoder.h"
 
+#import "SFBCStringForOSType.h"
+
 namespace {
 
 	// The I/O interface for MAC
@@ -209,6 +211,8 @@ namespace {
 		};
 		channelLayout = [[AVAudioChannelLayout alloc] initWithLayout:&acl];
 	}
+	else
+		os_log_info(gSFBAudioEncoderLog, "AudioFormatGetProperty(kAudioFormatProperty_BitmapForLayoutTag), layoutTag = %d failed: %d '%{public}.4s'", layoutTag, result, SFBCStringForOSType(result));
 
 	return [[AVAudioFormat alloc] initWithStreamDescription:&streamDescription channelLayout:channelLayout];
 }
