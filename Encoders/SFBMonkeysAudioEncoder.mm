@@ -235,17 +235,11 @@ namespace {
 	if(level != nil) {
 		auto intValue = level.intValue;
 		switch(intValue) {
-			case SFBAudioEncoderAPECompressionLevelFast:
-				compressionLevel = MAC_COMPRESSION_LEVEL_FAST;
-			case SFBAudioEncoderAPECompressionLevelNormal:
-				compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
-			case SFBAudioEncoderAPECompressionLevelHigh:
-				compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;
-			case SFBAudioEncoderAPECompressionLevelExtraHigh:
-				compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;
-			case SFBAudioEncoderAPECompressionLevelInsane:
-				compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;
-				break;
+			case SFBAudioEncoderAPECompressionLevelFast:		compressionLevel = MAC_COMPRESSION_LEVEL_FAST;			break;
+			case SFBAudioEncoderAPECompressionLevelNormal:		compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;		break;
+			case SFBAudioEncoderAPECompressionLevelHigh:		compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;			break;
+			case SFBAudioEncoderAPECompressionLevelExtraHigh:	compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;	break;
+			case SFBAudioEncoderAPECompressionLevelInsane:		compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;		break;
 			default:
 				os_log_info(gSFBAudioEncoderLog, "Invalid APE compression level: %d", intValue);
 				break;
