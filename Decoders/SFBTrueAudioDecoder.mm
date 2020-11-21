@@ -118,7 +118,7 @@ namespace {
 			break;
 	}
 
-	AudioStreamBasicDescription processingStreamDescription;
+	AudioStreamBasicDescription processingStreamDescription{};
 
 	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsSignedInteger;
@@ -133,19 +133,14 @@ namespace {
 
 	processingStreamDescription.mReserved			= 0;
 
-	// Support 4 to 32 bits per sample (True Audio may support more or less, but the documentation didn't say)
+	// True Audio supports 16 to 24 bits per sample
 	switch(streamInfo.bps) {
-		case 8:
 		case 16:
 		case 24:
-		case 32:
 			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsPacked;
 			break;
 
-		case 4 ... 7:
-		case 9 ... 15:
 		case 17 ... 23:
-		case 25 ... 31:
 			// Align high because Apple's AudioConverter doesn't handle low alignment
 			processingStreamDescription.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
 			break;
