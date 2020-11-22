@@ -62,14 +62,24 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 #pragma mark - Encoder Settings
 
 // Encoder settings dictionary keys
-/// The FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
+/// FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
 /// Set to nonzero to verify FLAC encoding (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
-/// The APE compression level (\c NSNumber)
+/// APE compression level (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
-/// The WavPack compression level (\c NSNumber)
+/// WavPack compression level (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
+/// Ogg Vorbis mode (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMode;
+/// Ogg Vorbis bitrate (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality;
+/// Ogg Vorbis nominal bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate;
+/// Ogg Vorbis minimum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate;
+/// Ogg Vorbis maximum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate;
 
 /// Constants for APE compression levels
 typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
@@ -94,5 +104,13 @@ typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
 	/// Very high ompression
 	SFBAudioEncoderWavPackCompressionLevelVeryHigh
 } NS_SWIFT_NAME(AudioEncoder.WavPackCompressionLevel);
+
+/// Constants for Ogg Vorbis encoding modes
+typedef NS_ENUM(int, SFBAudioEncoderOggVorbisMode) {
+	/// Quality mode
+	SFBAudioEncoderOggVorbisModeQuality,
+	/// Bitrate mode
+	SFBAudioEncoderOggVorbisModeBitrate
+} NS_SWIFT_NAME(AudioEncoder.OggVorbisMode);
 
 NS_ASSUME_NONNULL_END

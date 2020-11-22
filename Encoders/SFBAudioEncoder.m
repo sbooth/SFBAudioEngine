@@ -17,6 +17,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLeve
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"Verify FLAC Encoding";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel		= @"WavPack Compression Level";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMode					= @"Ogg Vorbis Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality				= @"Ogg Vorbis Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate				= @"Ogg Vorbis Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate			= @"Ogg Vorbis Minimum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate			= @"Ogg Vorbis Maximum Bitrate";
 
 os_log_t gSFBAudioEncoderLog = NULL;
 
