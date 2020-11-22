@@ -11,7 +11,7 @@
 #pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #import <FLAC/metadata.h>
-#include <FLAC/stream_encoder.h>
+#import <FLAC/stream_encoder.h>
 
 #pragma clang diagnostic pop
 
