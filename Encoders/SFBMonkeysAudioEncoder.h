@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBAudioEncoder subclass supporting FLAC
+// An SFBAudioEncoder subclass supporting Monkey's Audio
 @interface SFBMonkeysAudioEncoder : SFBAudioEncoder
 @end
 
