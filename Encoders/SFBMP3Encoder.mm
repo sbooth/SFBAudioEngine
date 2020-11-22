@@ -124,80 +124,64 @@ struct ::std::default_delete<lame_global_flags> {
 		}
 	}
 
-	NSNumber *target = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EncodingTarget];
-	if(target != nil) {
-		auto target_value = target.intValue;
-		switch(target_value) {
-			case SFBAudioEncoderMP3EncodingTargetQuality:
-			{
-				auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3FastVBR] boolValue];
-				result = lame_set_VBR(_gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
-				if(result == -1) {
-					os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(%d) failed", fastVBR ? vbr_mtrh : vbr_rh);
-					if(error)
-						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-					return NO;
-				}
+	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3TargetIsBitrate] boolValue];
+	if(!targetIsBitrate) {
+		auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseFastVBR] boolValue];
+		result = lame_set_VBR(_gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(%d) failed", fastVBR ? vbr_mtrh : vbr_rh);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
 
-				NSNumber *vbrQuality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality];
-				if(vbrQuality != nil) {
-					result = lame_set_VBR_quality(_gfp.get(), vbrQuality.floatValue);
-					if(result == -1) {
-						os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%f) failed", vbrQuality.floatValue);
-						if(error)
-							*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-						return NO;
-					}
-				}
+		NSNumber *vbrQuality = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality];
+		if(vbrQuality != nil) {
+			result = lame_set_VBR_quality(_gfp.get(), vbrQuality.floatValue);
+			if(result == -1) {
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_quality(%f) failed", vbrQuality.floatValue);
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
+			}
+		}
+	}
+	else {
+		auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality] intValue];
+		result = lame_set_brate(_gfp.get(), bitrate);
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", bitrate);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
 
-				break;
+		auto useCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseCBR] boolValue];
+		if(useCBR) {
+			result = lame_set_VBR(_gfp.get(), vbr_off);
+			if(result == -1) {
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
+			}
+		}
+		else {
+			result = lame_set_VBR(_gfp.get(), vbr_default);
+			if(result == -1) {
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
 			}
 
-			case SFBAudioEncoderMP3EncodingTargetBitrate:
-			{
-				auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality] intValue];
-				result = lame_set_brate(_gfp.get(), bitrate);
-				if(result == -1) {
-					os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", bitrate);
-					if(error)
-						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-					return NO;
-				}
-
-				auto useCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CBR] boolValue];
-				if(useCBR) {
-					result = lame_set_VBR(_gfp.get(), vbr_off);
-					if(result == -1) {
-						os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
-						if(error)
-							*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-						return NO;
-					}
-				}
-				else {
-					result = lame_set_VBR(_gfp.get(), vbr_default);
-					if(result == -1) {
-						os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_default) failed");
-						if(error)
-							*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-						return NO;
-					}
-
-					result = lame_set_VBR_min_bitrate_kbps(_gfp.get(), bitrate);
-					if(result == -1) {
-						os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
-						if(error)
-							*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-						return NO;
-					}
-				}
-
-				break;
+			result = lame_set_VBR_min_bitrate_kbps(_gfp.get(), bitrate);
+			if(result == -1) {
+				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR_min_bitrate_kbps(%d) failed", bitrate);
+				if(error)
+					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+				return NO;
 			}
-
-			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid LAME target: %d", target_value);
-				break;
 		}
 	}
 

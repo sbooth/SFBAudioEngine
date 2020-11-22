@@ -83,26 +83,9 @@
 	vorbis_info_init(&_vi);
 
 	// Encoder mode
-	BOOL targetIsQuality = YES;
+	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate] boolValue];
 
-	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisEncodingTarget];
-	if(mode != nil) {
-		int value = mode.intValue;
-		switch(value) {
-			case SFBAudioEncoderOggVorbisEncodingTargetQuality:
-				break;
-
-			case SFBAudioEncoderOggVorbisEncodingTargetBitrate:
-				targetIsQuality = NO;
-				break;
-
-			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid Ogg Vorbis mode: %d", value);
-				break;
-		}
-	}
-
-	if(targetIsQuality) {
+	if(!targetIsBitrate) {
 		float quality_value = 0.5;
 		NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisQuality];
 		if(quality != nil)
