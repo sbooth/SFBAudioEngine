@@ -15,13 +15,25 @@ NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioE
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel			= @"FLAC Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"Verify FLAC Encoding";
+
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
+
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel		= @"WavPack Compression Level";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMode					= @"Ogg Vorbis Mode";
+
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisEncodingTarget		= @"Ogg Vorbis Encoding Target";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality				= @"Ogg Vorbis Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate				= @"Ogg Vorbis Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate				= @"Ogg Vorbis Nominal Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate			= @"Ogg Vorbis Minimum Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate			= @"Ogg Vorbis Maximum Bitrate";
+
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EncodingTarget				= @"MP3 Encoding Target";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality						= @"MP3 Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate						= @"MP3 Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CBR							= @"MP3 CBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3FastVBR						= @"MP3 Fast VBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality					= @"MP3 VBR Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode					= @"MP3 Stereo Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"Calculate MP3 Replay Gain";
 
 os_log_t gSFBAudioEncoderLog = NULL;
 

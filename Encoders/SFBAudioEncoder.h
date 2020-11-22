@@ -62,24 +62,14 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 #pragma mark - Encoder Settings
 
 // Encoder settings dictionary keys
+
 /// FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
 /// Set to nonzero to verify FLAC encoding (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
+
 /// APE compression level (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
-/// WavPack compression level (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
-/// Ogg Vorbis mode (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMode;
-/// Ogg Vorbis bitrate (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality;
-/// Ogg Vorbis nominal bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate;
-/// Ogg Vorbis minimum bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate;
-/// Ogg Vorbis maximum bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate;
 
 /// Constants for APE compression levels
 typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
@@ -95,6 +85,9 @@ typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
 	SFBAudioEncoderAPECompressionLevelInsane
 } NS_SWIFT_NAME(AudioEncoder.APECompressionLevel);
 
+/// WavPack compression level (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
+
 /// Constants for WavPack  compression levels
 typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
 	/// Fast compression
@@ -105,12 +98,58 @@ typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
 	SFBAudioEncoderWavPackCompressionLevelVeryHigh
 } NS_SWIFT_NAME(AudioEncoder.WavPackCompressionLevel);
 
-/// Constants for Ogg Vorbis encoding modes
-typedef NS_ENUM(int, SFBAudioEncoderOggVorbisMode) {
+/// Ogg Vorbis encoding target (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisEncodingTarget;
+/// Ogg Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality;
+/// Ogg Vorbis nominal bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate;
+/// Ogg Vorbis minimum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate;
+/// Ogg Vorbis maximum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate;
+
+/// Constants for Ogg Vorbis encoding targets
+typedef NS_ENUM(int, SFBAudioEncoderOggVorbisEncodingTarget) {
 	/// Quality mode
-	SFBAudioEncoderOggVorbisModeQuality,
+	SFBAudioEncoderOggVorbisEncodingTargetQuality,
 	/// Bitrate mode
-	SFBAudioEncoderOggVorbisModeBitrate
-} NS_SWIFT_NAME(AudioEncoder.OggVorbisMode);
+	SFBAudioEncoderOggVorbisEncodingTargetBitrate
+} NS_SWIFT_NAME(AudioEncoder.OggVorbisEncodingTarget);
+
+/// MP3 encoding target (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EncodingTarget;
+/// MP3 encoding engine algorithm quality (\c NSNumber from 0 (best) to 9 (worst))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality;
+/// MP3 bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate;
+/// Set to nonzero to encode at a constant bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CBR;
+/// Set to nonzero to use fast variable bitrate mode (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3FastVBR;
+/// MP3 VBR quality (\c NSNumber from 0 (best) to < 10 (worst))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality;
+/// MP3 stereo mode (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode;
+/// Set to nonzero to calculate replay gain (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain;
+
+/// Constants for MP3 encoding targets
+typedef NS_ENUM(int, SFBAudioEncoderMP3EncodingTarget) {
+	/// Quality mode
+	SFBAudioEncoderMP3EncodingTargetQuality,
+	/// Bitrate mode
+	SFBAudioEncoderMP3EncodingTargetBitrate
+} NS_SWIFT_NAME(AudioEncoder.MP3EncodingTarget);
+
+/// Constants for MP3 stereo modes
+typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
+	/// Mono mode
+	SFBAudioEncoderMP3StereoModeMono,
+	/// Stereo mode
+	SFBAudioEncoderMP3StereoModeStereo,
+	/// Joint stereo mode
+	SFBAudioEncoderMP3StereoModeJointStereo
+} NS_SWIFT_NAME(AudioEncoder.MP3StereoMode);
 
 NS_ASSUME_NONNULL_END
