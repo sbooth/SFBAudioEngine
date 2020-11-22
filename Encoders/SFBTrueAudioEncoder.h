@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// An SFBAudioEmcoder subclass supporting True Audio
+// An SFBAudioEncoder subclass supporting True Audio
 @interface SFBTrueAudioEncoder : SFBAudioEncoder
 @end
 
