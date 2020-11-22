@@ -83,17 +83,17 @@
 	vorbis_info_init(&_vi);
 
 	// Encoder mode
-	BOOL useQualityMode = YES;
+	BOOL targetIsQuality = YES;
 
-	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisMode];
+	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisEncodingTarget];
 	if(mode != nil) {
 		int value = mode.intValue;
 		switch(value) {
-			case SFBAudioEncoderOggVorbisModeQuality:
+			case SFBAudioEncoderOggVorbisEncodingTargetQuality:
 				break;
 
-			case SFBAudioEncoderOggVorbisModeBitrate:
-				useQualityMode = NO;
+			case SFBAudioEncoderOggVorbisEncodingTargetBitrate:
+				targetIsQuality = NO;
 				break;
 
 			default:
@@ -102,7 +102,7 @@
 		}
 	}
 
-	if(useQualityMode) {
+	if(targetIsQuality) {
 		float quality_value = 0.5;
 		NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisQuality];
 		if(quality != nil)
