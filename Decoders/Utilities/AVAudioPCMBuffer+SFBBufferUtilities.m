@@ -103,6 +103,11 @@
 	return framesToZero;
 }
 
+- (BOOL)isEmpty
+{
+	return self.frameLength == 0;
+}
+
 - (BOOL)isFull
 {
 	return self.frameLength == self.frameCapacity;

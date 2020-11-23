@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (AVAudioFrameCount)appendSilenceOfLength:(AVAudioFrameCount)frameLength;
 - (AVAudioFrameCount)insertSilenceAtOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength NS_SWIFT_NAME(silence(at:length:));
 
+- (BOOL)isEmpty;
 - (BOOL)isFull;
 @end
 
