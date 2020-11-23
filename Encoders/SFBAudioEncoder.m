@@ -35,6 +35,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality					=
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode					= @"MP3 Stereo Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"Calculate MP3 Replay Gain";
 
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode					= @"Ogg Speex Encoding Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate		= @"Ogg Speex Encoding Target is Bitrate";
+
 os_log_t gSFBAudioEncoderLog = NULL;
 
 static void SFBCreateAudioEncoderLog(void) __attribute__ ((constructor));

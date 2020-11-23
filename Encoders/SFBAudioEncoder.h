@@ -136,4 +136,19 @@ typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
 	SFBAudioEncoderMP3StereoModeJointStereo
 } NS_SWIFT_NAME(AudioEncoder.MP3StereoMode);
 
+/// Ogg Speex encoding mode (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode;
+/// Set to nonzero to target bitrate instead of quality (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate;
+
+/// Constants for Speex modes
+typedef NS_ENUM(int, SFBAudioEncoderOggSpeexMode) {
+	/// Narrowband
+	SFBAudioEncoderOggSpeexModeNarrowband,
+	/// Wideband
+	SFBAudioEncoderOggSpeexModeWideband,
+	/// Ultra-wideband
+	SFBAudioEncoderOggSpeexModeUltraWideband
+} NS_SWIFT_NAME(AudioEncoder.OggSpeexMode);
+
 NS_ASSUME_NONNULL_END
