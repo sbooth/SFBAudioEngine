@@ -83,25 +83,7 @@
 	vorbis_info_init(&_vi);
 
 	// Encoder mode
-	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate] boolValue];
-
-	if(!targetIsBitrate) {
-		float quality_value = 0.5;
-		NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisQuality];
-		if(quality != nil)
-			quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
-
-		result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, quality_value);
-		if(result != 0) {
-			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init_vbr failed: %d", result);
-			vorbis_info_clear(&_vi);
-			ogg_stream_clear(&_os);
-			if(error)
-				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-			return NO;
-		}
-	}
-	else {
+	if([[_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate] boolValue]) {
 		long nominal_bitrate = 128000;
 		NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisBitrate];
 		if(bitrate != nil)
@@ -120,6 +102,22 @@
 		result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, min_bitrate, nominal_bitrate, max_bitrate);
 		if(result != 0) {
 			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
+			vorbis_info_clear(&_vi);
+			ogg_stream_clear(&_os);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+	}
+	else {
+		float quality_value = 0.5;
+		NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisQuality];
+		if(quality != nil)
+			quality_value = MAX(-0.1f, MIN(1.0f, quality.floatValue));
+
+		result = vorbis_encode_init_vbr(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, quality_value);
+		if(result != 0) {
+			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init_vbr failed: %d", result);
 			vorbis_info_clear(&_vi);
 			ogg_stream_clear(&_os);
 			if(error)
