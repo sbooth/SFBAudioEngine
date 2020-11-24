@@ -5,16 +5,17 @@
 
 @import os.log;
 
-//#pragma clang diagnostic push
-//#pragma clang diagnostic ignored "-Wdocumentation"
-//#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wstrict-prototypes"
+#pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
 
 #import <speex/speex.h>
 #import <speex/speex_header.h>
 #import <speex/speex_stereo.h>
 #import <speex/speex_callbacks.h>
 #import <speex/speex_preprocess.h>
-//#pragma clang diagnostic pop
+
+#pragma clang diagnostic pop
 
 #include <ogg/ogg.h>
 
@@ -23,37 +24,7 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "SFBCStringForOSType.h"
 
-enum {
-	SPEEX_MODE_NARROWBAND					= 0,
-	SPEEX_MODE_WIDEBAND						= 1,
-	SPEEX_MODE_ULTRAWIDEBAND				= 2,
-
-	SPEEX_TARGET_QUALITY					= 0,
-	SPEEX_TARGET_BITRATE					= 1
-};
-
-
-/*
- Comments will be stored in the Vorbis style.
- It is describled in the "Structure" section of
- http://www.xiph.org/ogg/vorbis/doc/v-comment.html
-
- The comment header is decoded as follows:
- 1) [vendor_length] = read an unsigned integer of 32 bits
- 2) [vendor_string] = read a UTF-8 vector as [vendor_length] octets
- 3) [user_comment_list_length] = read an unsigned integer of 32 bits
- 4) iterate [user_comment_list_length] times {
- 5) [length] = read an unsigned integer of 32 bits
- 6) this iteration's user comment = read a UTF-8 vector as [length] octets
- }
- 7) [framing_bit] = read a single bit as boolean
- 8) if ( [framing_bit]  unset or end of packet ) then ERROR
- 9) done.
-
- If you have troubles, please write to ymnk@jcraft.com.
- */
-
-static void comment_init(char **comments, size_t *length, const char *vendor_string)
+static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string)
 {
 	size_t vendor_length = strlen(vendor_string);
 	size_t len = 4 + vendor_length + 4;
@@ -74,7 +45,8 @@ static void comment_init(char **comments, size_t *length, const char *vendor_str
 	*comments = p;
 }
 
-static void comment_add(char **comments, size_t *length, const char *tag, const char *val)
+#if 0
+static void vorbis_comment_add(char **comments, size_t *length, const char *tag, const char *val)
 {
 	char *p = *comments;
 
@@ -99,6 +71,7 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	*comments = p;
 	*length = len;
 }
+#endif
 
 #define MAX_FRAME_BYTES 2000
 
@@ -111,7 +84,6 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	SpeexBits _bits;
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
-	AVAudioFramePosition _framesEncoded;
 	spx_int32_t _speex_frame_size;
 	spx_int32_t _speex_lookahead;
 	spx_int32_t _speex_frames_per_ogg_packet;
@@ -156,9 +128,9 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	if(mode != nil) {
 		// Determine the desired sample rate
 		switch(mode.intValue) {
-			case SPEEX_MODE_NARROWBAND:		sampleRate = 8000;		break;
-			case SPEEX_MODE_WIDEBAND:		sampleRate = 16000;		break;
-			case SPEEX_MODE_ULTRAWIDEBAND:	sampleRate = 32000;		break;
+			case SFBAudioEncoderOggSpeexModeNarrowband:		sampleRate = 8000;		break;
+			case SFBAudioEncoderOggSpeexModeWideband:		sampleRate = 16000;		break;
+			case SFBAudioEncoderOggSpeexModeUltraWideband:	sampleRate = 32000;		break;
 			default:
 				return nil;
 		}
@@ -171,6 +143,11 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 
 - (BOOL)openReturningError:(NSError **)error
 {
+//	NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.sampleRate >= 6000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+//	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
+//	NSAssert(_processingFormat.channelCount > 2, @"Invalid channel count: %d", _processingFormat.channelCount);
+
 	if(![super openReturningError:error])
 		return NO;
 
@@ -183,11 +160,8 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 		return NO;
 	}
 
-//	NSAssert(_processingFormat.sampleRate <= 48000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-//	NSAssert(_processingFormat.sampleRate < 6000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-
 	// Setup the encoder
-	const SpeexMode *speex_mode;
+	const SpeexMode *speex_mode = NULL;
 	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexMode];
 	if(mode == nil) {
 		if(_processingFormat.sampleRate > 25000)
@@ -199,9 +173,9 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	}
 	else {
 		switch(mode.intValue) {
-			case SPEEX_MODE_NARROWBAND:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);		break;
-			case SPEEX_MODE_WIDEBAND:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);		break;
-			case SPEEX_MODE_ULTRAWIDEBAND:	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);		break;
+			case SFBAudioEncoderOggSpeexModeNarrowband:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);		break;
+			case SFBAudioEncoderOggSpeexModeWideband:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);		break;
+			case SFBAudioEncoderOggSpeexModeUltraWideband:	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);		break;
 
 			default:
 				os_log_error(gSFBAudioEncoderLog, "Unrecognized Ogg Speex mode: %d", mode.intValue);
@@ -212,21 +186,13 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 		}
 	}
 
-	SpeexHeader header;
-	speex_init_header(&header, (int)_processingFormat.sampleRate, 1, speex_mode);
-
-	_speex_frames_per_ogg_packet = 1;  //1-10 default 1
-	header.frames_per_packet = _speex_frames_per_ogg_packet;
-	header.vbr = 0; // 0 or 1
-	header.nb_channels = (spx_int32_t)_processingFormat.channelCount;
-
 	// Setup the encoder
 	_st = speex_encoder_init(speex_mode);
 	if(_st == NULL) {
 		os_log_error(gSFBAudioEncoderLog, "Unrecognized Ogg Speex mode: %d", mode.intValue);
 		ogg_stream_clear(&_os);
 		if(error)
-			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -234,32 +200,42 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-	spx_int32_t complexity = 3; // 0-10 default 3
-	speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity);
+	NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexComplexity] ?: @3;
+	spx_int32_t complexity_value = complexity.intValue;
+	speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
+
 	spx_int32_t rate = (spx_int32_t)_processingFormat.sampleRate; // 8, 16, 32
 	speex_encoder_ctl(_st, SPEEX_SET_SAMPLING_RATE, &rate);
 
-	spx_int32_t vbr_enabled = 0;
-	spx_int32_t vad_enabled = 0;
-	spx_int32_t dtx_enabled = 0;
-	spx_int32_t abr_enabled = 0;
+	spx_int32_t vbr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVBR] boolValue];
+	spx_int32_t vad_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVAD] boolValue];
+	spx_int32_t dtx_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableDTX] boolValue];
+	spx_int32_t abr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableABR] boolValue];
+
+	NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexQuality] ?: @-1;
 
 	// Encoder mode
 	if([[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate] boolValue]) {
-		spx_int32_t bitrate = 0;
-		speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate);
+		NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexBitrate];
+		if(bitrate != nil) {
+			spx_int32_t bitrate_value = bitrate.intValue;
+			speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
+		}
+		else
+			os_log_info(gSFBAudioEncoderLog, "Ogg Speex encoding target is bitrate but no bitrate specified");
 	}
-	else {
-		spx_int32_t quality = 8; // 0 - 10 default 8;
-		spx_int32_t vbr_max = 0;
+	else if(quality.intValue >= 0) {
+		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate] intValue];
 		if(vbr_enabled) {
 			if(vbr_max > 0)
 				speex_encoder_ctl(_st, SPEEX_SET_VBR_MAX_BITRATE, &vbr_max);
-			float vbr_quality = quality;
+			float vbr_quality = quality.floatValue;
 			speex_encoder_ctl(_st, SPEEX_SET_VBR_QUALITY, &vbr_quality);
 		}
-		else
-			speex_encoder_ctl(_st, SPEEX_SET_QUALITY, &quality);
+		else {
+			spx_int32_t quality_value = quality.intValue;
+			speex_encoder_ctl(_st, SPEEX_SET_QUALITY, &quality_value);
+		}
 	}
 
 	if(vbr_enabled)
@@ -273,14 +249,19 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	if(abr_enabled)
 		speex_encoder_ctl(_st, SPEEX_SET_ABR, &abr_enabled);
 
+	if(dtx_enabled && !(vbr_enabled || abr_enabled || vad_enabled))
+		os_log_info(gSFBAudioEncoderLog, "DTX requires VAD, VBR, or ABR");
+	else if((vbr_enabled || abr_enabled) && (vad_enabled))
+		os_log_info(gSFBAudioEncoderLog, "VAD is implied by VBR or ABR");
 
-	spx_int32_t highpass_enabled = 0;
+
+	spx_int32_t highpass_enabled = ![[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter] boolValue];
 	speex_encoder_ctl(_st, SPEEX_SET_HIGHPASS, &highpass_enabled);
 
 	speex_encoder_ctl(_st, SPEEX_GET_LOOKAHEAD, &_speex_lookahead);
 
-	spx_int32_t denoise_enabled = 0;
-	spx_int32_t agc_enabled = 0;
+	spx_int32_t denoise_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput] boolValue];
+	spx_int32_t agc_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableAGC] boolValue];
 	if(denoise_enabled || agc_enabled) {
 		_preprocess = speex_preprocess_state_init(_speex_frame_size, rate);
 		speex_preprocess_ctl(_preprocess, SPEEX_PREPROCESS_SET_DENOISE, &denoise_enabled);
@@ -289,6 +270,27 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	}
 
 	// Write stream headers
+	SpeexHeader header;
+	speex_init_header(&header, (int)_processingFormat.sampleRate, (int)_processingFormat.channelCount, speex_mode);
+
+	_speex_frames_per_ogg_packet = 1;  //1-10 default 1
+	NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket] ?: @1;
+	if(framesPerPacket != nil) {
+		int intValue = framesPerPacket.intValue;
+		if(intValue < 1 || intValue > 10) {
+			os_log_error(gSFBAudioEncoderLog, "Invalid Ogg Speex frames per packet: %d", intValue);
+			ogg_stream_clear(&_os);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
+		}
+		_speex_frames_per_ogg_packet = intValue;
+	}
+
+	header.frames_per_packet = _speex_frames_per_ogg_packet;
+	header.vbr = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVBR] boolValue];
+	header.nb_channels = (spx_int32_t)_processingFormat.channelCount;
+
 	int packet_size;
 	unsigned char *packet_data = (unsigned char *)speex_header_to_packet(&header, &packet_size);
 
@@ -332,7 +334,7 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 
 	char *comments;
 	size_t comments_length;
-	comment_init(&comments, &comments_length, vendor_string);
+	vorbis_comment_init(&comments, &comments_length, vendor_string);
 
 	op.packet = (unsigned char *)comments;
 	op.bytes = (long)comments_length;
@@ -368,7 +370,6 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 
 	speex_bits_init(&_bits);
 
-	_framesEncoded = -_speex_lookahead;
 	_speex_frame_number = -1;
 
 	return YES;
@@ -496,7 +497,6 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 	speex_encode_int(_st, _frameBuffer.audioBufferList->mBuffers[0].mData, &_bits);
 
 	_framePosition += _frameBuffer.frameLength - framesOfSilenceAdded;
-	_framesEncoded += _frameBuffer.frameLength;
 
 	++_speex_frame_number;
 

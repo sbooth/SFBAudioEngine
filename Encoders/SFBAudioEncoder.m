@@ -14,7 +14,7 @@
 NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioEncoder";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel			= @"FLAC Compression Level";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"Verify FLAC Encoding";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"FLAC Verify Encoding";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
 
@@ -29,14 +29,26 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate				= @"MP3 Encoding Target is Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality						= @"MP3 Quality";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate						= @"MP3 Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseCBR						= @"MP3 Use CBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseFastVBR					= @"MP3 Use Fast VBR Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR					= @"MP3 Enable CBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR				= @"MP3 Enable Fast VBR Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality					= @"MP3 VBR Quality";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode					= @"MP3 Stereo Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"Calculate MP3 Replay Gain";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"MP3 Calculate Replay Gain";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode					= @"Ogg Speex Encoding Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate		= @"Ogg Speex Encoding Target is Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality				= @"Ogg Speex Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity				= @"Ogg Speex Complexity";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate				= @"Ogg Speex Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR				= @"Ogg Speex Enable VBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate			= @"Ogg Speex VBR Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD				= @"Ogg Speex Enable VAD";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX				= @"Ogg Speex Enable DTX";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR				= @"Ogg Speex Enable ABR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput			= @"Ogg Speex Denoise Input";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC				= @"Ogg Speex Enable AGC";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter	= @"Ogg Speex Disable Highpass Filter";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket	= @"Ogg Speex Speex Frames per Ogg Packet";
 
 os_log_t gSFBAudioEncoderLog = NULL;
 

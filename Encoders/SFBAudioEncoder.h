@@ -102,7 +102,7 @@ typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate;
 /// Ogg Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality;
-/// Ogg Vorbis nominal bitrate (\c NSNumber)
+/// Ogg Vorbis nominal bitrate (\c NSNumber in kpbs)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate;
 /// Ogg Vorbis minimum bitrate (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate;
@@ -113,14 +113,14 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMax
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate;
 /// MP3 encoding engine algorithm quality (\c NSNumber from 0 (best) to 9 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality;
-/// MP3 bitrate (\c NSNumber)
+/// MP3 bitrate (\c NSNumber in kbps)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate;
 /// Set to nonzero to encode at a constant bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseCBR;
-/// MP3 VBR quality (\c NSNumber from 0 (best) to < 10 (worst))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR;
+/// MP3 VBR quality (\c NSNumberfrom 0 (best) to < 10 (worst))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality;
 /// Set to nonzero to use fast variable bitrate mode (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3UseFastVBR;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR;
 /// MP3 stereo mode (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode;
 /// Set to nonzero to calculate replay gain (\c NSNumber)
@@ -140,6 +140,30 @@ typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode;
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate;
+/// Ogg Speex quality (\c NSNumber from 0 to 10)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality;
+/// Ogg Speex encoding complexity (\c NSNumber from 0 to 10)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity;
+/// Ogg Speex bitrate (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate;
+/// Set to nonzero to encode at a variable bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR;
+/// Ogg Speex VBR maximum bitrate (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate;
+/// Set to nonzero to enable voice activity detection (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD;
+/// Set to nonzero to enable discontinuous transmission (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX;
+/// Set to nonzero to encode at an average bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR;
+/// Set to nonzero to denoise input (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput;
+/// Set to nonzero to apply adaptive gain control (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC;
+/// Set to nonzero to disable the built-in highpass filter (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter;
+/// The number of Speex frames per Ogg Packet (\c NSNumber from 1 to 10)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket;
 
 /// Constants for Speex modes
 typedef NS_ENUM(int, SFBAudioEncoderOggSpeexMode) {
