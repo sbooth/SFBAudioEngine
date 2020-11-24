@@ -67,7 +67,7 @@
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
+	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
 }
 
 - (BOOL)decodingIsLossless
