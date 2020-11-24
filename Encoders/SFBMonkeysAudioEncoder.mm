@@ -19,6 +19,10 @@
 
 #import "SFBCStringForOSType.h"
 
+SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameMonkeysAudio 				= @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
+
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel 			= @"Compression Level";
+
 namespace {
 
 	// The I/O interface for MAC
@@ -160,6 +164,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
+}
+
++ (SFBAudioEncoderComponentName)componentName
+{
+	return SFBAudioEncoderComponentNameMonkeysAudio;
 }
 
 - (BOOL)encodingIsLossless

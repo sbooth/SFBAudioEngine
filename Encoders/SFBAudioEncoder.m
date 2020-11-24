@@ -13,43 +13,6 @@
 // NSError domain for AudioEncoder and subclasses
 NSErrorDomain const SFBAudioEncoderErrorDomain = @"org.sbooth.AudioEngine.AudioEncoder";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel			= @"FLAC Compression Level";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding				= @"FLAC Verify Encoding";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel			= @"APE Compression Level";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel		= @"WavPack Compression Level";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate		= @"Ogg Vorbis Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality				= @"Ogg Vorbis Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate				= @"Ogg Vorbis Nominal Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate			= @"Ogg Vorbis Minimum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate			= @"Ogg Vorbis Maximum Bitrate";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate				= @"MP3 Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality						= @"MP3 Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate						= @"MP3 Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR					= @"MP3 Enable CBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR				= @"MP3 Enable Fast VBR Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality					= @"MP3 VBR Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode					= @"MP3 Stereo Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"MP3 Calculate Replay Gain";
-
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode					= @"Ogg Speex Encoding Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate		= @"Ogg Speex Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality				= @"Ogg Speex Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity				= @"Ogg Speex Complexity";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate				= @"Ogg Speex Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR				= @"Ogg Speex Enable VBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate			= @"Ogg Speex VBR Maximum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD				= @"Ogg Speex Enable VAD";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX				= @"Ogg Speex Enable DTX";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR				= @"Ogg Speex Enable ABR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput			= @"Ogg Speex Denoise Input";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC				= @"Ogg Speex Enable AGC";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter	= @"Ogg Speex Disable Highpass Filter";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket	= @"Ogg Speex Speex Frames per Ogg Packet";
-
 os_log_t gSFBAudioEncoderLog = NULL;
 
 static void SFBCreateAudioEncoderLog(void) __attribute__ ((constructor));
@@ -98,6 +61,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 		[result unionSet:supportedMIMETypes];
 	}
 	return result;
+}
+
++ (SFBAudioEncoderComponentName)componentName
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
@@ -187,6 +156,51 @@ static NSMutableArray *_registeredSubclasses = nil;
 	Class subclass = [SFBAudioEncoder subclassForPathExtension:pathExtension.lowercaseString];
 	if(!subclass) {
 		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported path extension: %{public}@", pathExtension);
+
+		if(error)
+			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
+											 code:SFBAudioEncoderErrorCodeInputOutput
+					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
+											  url:outputSource.url
+									failureReason:NSLocalizedString(@"Unsupported file type", @"")
+							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
+
+		return nil;
+	}
+
+	if((self = [[subclass alloc] init]))
+		_outputSource = outputSource;
+
+	return self;
+}
+
+- (instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName
+{
+	return [self initWithURL:url componentName:componentName error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
+	if(!outputSource)
+		return nil;
+	return [self initWithOutputSource:outputSource componentName:componentName error:error];
+}
+
+- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName
+{
+	return [self initWithOutputSource:outputSource componentName:componentName error:nil];
+}
+
+- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error
+{
+	NSParameterAssert(outputSource != nil);
+
+	Class subclass = [SFBAudioEncoder subclassForComponentName:componentName];
+	if(!subclass) {
+		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported component: %{public}@", componentName);
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
@@ -340,6 +354,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
+			return subclassInfo.klass;
+	}
+
+	return nil;
+}
+
++ (Class)subclassForComponentName:(SFBAudioEncoderComponentName)componentName
+{
+	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBAudioEncoderComponentName subclassComponentName = [subclassInfo.klass componentName];
+		if([subclassComponentName isEqualToString:componentName])
 			return subclassInfo.klass;
 	}
 

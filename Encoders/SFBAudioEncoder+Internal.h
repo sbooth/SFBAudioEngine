@@ -22,6 +22,7 @@ extern os_log_t gSFBAudioEncoderLog;
 	AVAudioFramePosition _estimatedFramesToEncode;
 	NSDictionary *_settings;
 }
+@property (class, nonatomic, readonly) SFBAudioEncoderComponentName componentName;
 @end
 
 #pragma mark - Subclass Registration and Lookup
@@ -38,6 +39,7 @@ extern os_log_t gSFBAudioEncoderLog;
 + (nullable Class)subclassForURL:(NSURL *)url;
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
++ (nullable Class)subclassForComponentName:(SFBAudioEncoderComponentName)componentName;
 @end
 
 NS_ASSUME_NONNULL_END

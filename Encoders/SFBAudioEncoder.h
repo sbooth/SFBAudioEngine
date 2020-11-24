@@ -7,6 +7,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Constant type for encoder components names
+typedef NSString * SFBAudioEncoderComponentName NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncoder.ComponentName);
+
+/// FLAC
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameFLAC;
+/// Monkey's Audio
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameMonkeysAudio;
+/// MP3
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameMP3;
+/// Ogg Speex
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameOggSpeex;
+/// Ogg Vorbis
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameOggVorbis;
+/// True Audio
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameTrueAudio;
+/// WavPack
+extern SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameWavPack;
+
 /// An encoder consuming PCM audio
 NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncoding>
 
@@ -36,6 +54,12 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:error: instead");
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource error:(NSError **)error;
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+
+- (nullable instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName NS_SWIFT_UNAVAILABLE("Use -initWithURL:componentName:error: instead");
+- (nullable instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error;
+
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:componentName:error: instead");
+- (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;

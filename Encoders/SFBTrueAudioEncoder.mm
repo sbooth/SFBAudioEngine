@@ -11,6 +11,8 @@
 
 #import "SFBTrueAudioEncoder.h"
 
+SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameTrueAudio = @"org.sbooth.AudioEngine.Encoder.TrueAudio";
+
 namespace {
 
 	struct TTACallbacks : TTA_io_callback
@@ -63,6 +65,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/x-tta"];
+}
+
++ (SFBAudioEncoderComponentName)componentName
+{
+	return SFBAudioEncoderComponentNameTrueAudio;
 }
 
 - (BOOL)encodingIsLossless
