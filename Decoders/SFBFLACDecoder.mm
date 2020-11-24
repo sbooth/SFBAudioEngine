@@ -158,7 +158,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg"]];
+	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg; codecs=flac"]];
 }
 
 - (BOOL)decodingIsLossless

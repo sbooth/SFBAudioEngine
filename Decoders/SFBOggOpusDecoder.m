@@ -91,7 +91,7 @@ static 	opus_int64 tell_callback(void *stream)
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/opus", @"audio/ogg"]];
+	return [NSSet setWithObject:@"audio/ogg; codecs=opus"];
 }
 
 - (BOOL)decodingIsLossless

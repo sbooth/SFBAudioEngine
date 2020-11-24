@@ -83,12 +83,12 @@ static long tell_func_callback(void *datasource)
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"ogg", @"oga"]];
+	return [NSSet setWithArray:@[@"oga", @"ogg"]];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/ogg-vorbis"];
+	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
 }
 
 - (BOOL)decodingIsLossless
