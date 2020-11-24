@@ -126,7 +126,7 @@ struct ::std::default_delete<lame_global_flags> {
 
 	BOOL targetIsBitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3TargetIsBitrate] boolValue];
 	if(!targetIsBitrate) {
-		auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseFastVBR] boolValue];
+		auto fastVBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableFastVBR] boolValue];
 		result = lame_set_VBR(_gfp.get(), fastVBR ? vbr_mtrh : vbr_rh);
 		if(result == -1) {
 			os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(%d) failed", fastVBR ? vbr_mtrh : vbr_rh);
@@ -156,8 +156,8 @@ struct ::std::default_delete<lame_global_flags> {
 			return NO;
 		}
 
-		auto useCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3UseCBR] boolValue];
-		if(useCBR) {
+		auto enableCBR = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3EnableCBR] boolValue];
+		if(enableCBR) {
 			result = lame_set_VBR(_gfp.get(), vbr_off);
 			if(result == -1) {
 				os_log_error(gSFBAudioEncoderLog, "lame_set_VBR(vbr_off) failed");
