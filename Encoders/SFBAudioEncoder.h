@@ -16,6 +16,8 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameFLAC;
 extern SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio;
 /// MP3
 extern SFBAudioEncoderName const SFBAudioEncoderNameMP3;
+/// Ogg FLAC
+extern SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC;
 /// Ogg Speex
 extern SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex;
 /// Ogg Vorbis
