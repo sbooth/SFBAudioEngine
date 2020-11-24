@@ -46,12 +46,12 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 
 + (NSSet *)supportedPathExtensions
 {
-	return [NSSet setWithArray:@[@"ogg", @"oga"]];
+	return [NSSet setWithArray:@[@"oga", @"ogg"]];
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithObject:@"audio/ogg-vorbis"];
+	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
 }
 
 + (SFBAudioEncoderName)encoderName

@@ -123,7 +123,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 + (NSSet *)supportedMIMETypes
 {
-	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
+	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
 }
 
 + (SFBAudioEncoderName)encoderName
