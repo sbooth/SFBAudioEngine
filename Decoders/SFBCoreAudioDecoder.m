@@ -70,30 +70,82 @@ static SInt64 get_size_callback(void *inClientData)
 
 + (NSSet *)supportedPathExtensions
 {
-	CFArrayRef supportedExtensions = nil;
-	UInt32 size = sizeof(supportedExtensions);
-	OSStatus result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllExtensions, 0, NULL, &size, &supportedExtensions);
-
+	UInt32 size = 0;
+	OSStatus result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, NULL, &size);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllExtensions) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
 	}
 
-	return [NSSet setWithArray:(__bridge_transfer NSArray *)supportedExtensions];
+	UInt32 *readableTypes = (UInt32 *)malloc(size);
+	if(readableTypes == NULL)
+		return [NSSet set];
+
+	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, NULL, &size, readableTypes);
+	if(result != noErr) {
+		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		free(readableTypes);
+		return [NSSet set];
+	}
+
+	NSMutableSet *supportedExtensions = [NSMutableSet set];
+
+	UInt32 count = size / sizeof(UInt32);
+	for(UInt32 i = 0; i < count; ++i) {
+		UInt32 type = readableTypes[i];
+		CFArrayRef extensionsForType = nil;
+		size = sizeof(extensionsForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size, &extensionsForType);
+
+		if(result == noErr)
+			[supportedExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
+		else
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+	}
+
+	free(readableTypes);
+
+	return supportedExtensions;
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	CFArrayRef supportedMIMETypes = nil;
-	UInt32 size = sizeof(supportedMIMETypes);
-	OSStatus result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_AllMIMETypes, 0, NULL, &size, &supportedMIMETypes);
-
+	UInt32 size = 0;
+	OSStatus result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, NULL, &size);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_AllMIMETypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
 	}
 
-	return [NSSet setWithArray:(__bridge_transfer NSArray *)supportedMIMETypes];
+	UInt32 *readableTypes = (UInt32 *)malloc(size);
+	if(readableTypes == NULL)
+		return [NSSet set];
+
+	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, NULL, &size, readableTypes);
+	if(result != noErr) {
+		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		free(readableTypes);
+		return [NSSet set];
+	}
+
+	NSMutableSet *supportedMIMETypes = [NSMutableSet set];
+
+	UInt32 count = size / sizeof(UInt32);
+	for(UInt32 i = 0; i < count; ++i) {
+		UInt32 type = readableTypes[i];
+		CFArrayRef mimeTypesForType = nil;
+		size = sizeof(mimeTypesForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size, &mimeTypesForType);
+
+		if(result == noErr)
+			[supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
+		else
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+	}
+
+	free(readableTypes);
+
+	return supportedMIMETypes;
 }
 
 - (BOOL)decodingIsLossless
