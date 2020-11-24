@@ -325,9 +325,14 @@ static void comment_add(char **comments, size_t *length, const char *tag, const 
 			break;
 	}
 
+	const char *speex_version;
+	char vendor_string [64];
+	speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void *)&speex_version);
+	snprintf(vendor_string, sizeof(vendor_string), "Encoded with Speex %s", speex_version);
+
 	char *comments;
 	size_t comments_length;
-	comment_init(&comments, &comments_length, "");
+	comment_init(&comments, &comments_length, vendor_string);
 
 	op.packet = (unsigned char *)comments;
 	op.bytes = (long)comments_length;
