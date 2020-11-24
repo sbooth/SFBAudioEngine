@@ -63,7 +63,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return result;
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
 	[self doesNotRecognizeSelector:_cmd];
 	__builtin_unreachable();
@@ -174,33 +174,33 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return self;
 }
 
-- (instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName
+- (instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName
 {
-	return [self initWithURL:url componentName:componentName error:nil];
+	return [self initWithURL:url encoderName:encoderName error:nil];
 }
 
-- (instancetype)initWithURL:(NSURL *)url componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error
+- (instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error
 {
 	NSParameterAssert(url != nil);
 
 	SFBOutputSource *outputSource = [SFBOutputSource outputSourceForURL:url error:error];
 	if(!outputSource)
 		return nil;
-	return [self initWithOutputSource:outputSource componentName:componentName error:error];
+	return [self initWithOutputSource:outputSource encoderName:encoderName error:error];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName
+- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName
 {
-	return [self initWithOutputSource:outputSource componentName:componentName error:nil];
+	return [self initWithOutputSource:outputSource encoderName:encoderName error:nil];
 }
 
-- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource componentName:(SFBAudioEncoderComponentName)componentName error:(NSError **)error
+- (instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error
 {
 	NSParameterAssert(outputSource != nil);
 
-	Class subclass = [SFBAudioEncoder subclassForComponentName:componentName];
+	Class subclass = [SFBAudioEncoder subclassForEncoderName:encoderName];
 	if(!subclass) {
-		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported component: %{public}@", componentName);
+		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported encoder: %{public}@", encoderName);
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
@@ -360,11 +360,11 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return nil;
 }
 
-+ (Class)subclassForComponentName:(SFBAudioEncoderComponentName)componentName
++ (Class)subclassForEncoderName:(SFBAudioEncoderName)encoderName
 {
 	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
-		SFBAudioEncoderComponentName subclassComponentName = [subclassInfo.klass componentName];
-		if([subclassComponentName isEqualToString:componentName])
+		SFBAudioEncoderName subclassEncoderName = [subclassInfo.klass encoderName];
+		if([subclassEncoderName isEqualToString:encoderName])
 			return subclassInfo.klass;
 	}
 

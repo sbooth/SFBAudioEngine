@@ -13,7 +13,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameWavPack = @"org.sbooth.AudioEngine.Encoder.WavPack";
+SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.Encoder.WavPack";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel = @"Compression Level";
 
@@ -58,9 +58,9 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameWavPack;
+	return SFBAudioEncoderNameWavPack;
 }
 
 - (BOOL)encodingIsLossless

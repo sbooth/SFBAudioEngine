@@ -13,7 +13,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameMP3 							= @"org.sbooth.AudioEngine.Encoder.MP3";
+SFBAudioEncoderName const SFBAudioEncoderNameMP3 							= @"org.sbooth.AudioEngine.Encoder.MP3";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate				= @"Encoding Target is Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality						= @"Quality";
@@ -57,9 +57,9 @@ struct ::std::default_delete<lame_global_flags> {
 	return [NSSet setWithObject:@"audio/mpeg"];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameMP3;
+	return SFBAudioEncoderNameMP3;
 }
 
 - (BOOL)encodingIsLossless

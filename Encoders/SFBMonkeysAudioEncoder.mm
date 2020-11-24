@@ -19,7 +19,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameMonkeysAudio 				= @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
+SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio 				= @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel 			= @"Compression Level";
 
@@ -166,9 +166,9 @@ namespace {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameMonkeysAudio;
+	return SFBAudioEncoderNameMonkeysAudio;
 }
 
 - (BOOL)encodingIsLossless

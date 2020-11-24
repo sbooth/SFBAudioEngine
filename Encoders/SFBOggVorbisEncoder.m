@@ -17,7 +17,7 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
+SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate = @"Encoding Target is Bitrate";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality = @"Quality";
@@ -54,9 +54,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 	return [NSSet setWithObject:@"audio/ogg-vorbis"];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameOggVorbis;
+	return SFBAudioEncoderNameOggVorbis;
 }
 
 - (BOOL)encodingIsLossless

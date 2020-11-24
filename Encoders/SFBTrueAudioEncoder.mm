@@ -11,7 +11,7 @@
 
 #import "SFBTrueAudioEncoder.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameTrueAudio = @"org.sbooth.AudioEngine.Encoder.TrueAudio";
+SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio = @"org.sbooth.AudioEngine.Encoder.TrueAudio";
 
 namespace {
 
@@ -67,9 +67,9 @@ namespace {
 	return [NSSet setWithObject:@"audio/x-tta"];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameTrueAudio;
+	return SFBAudioEncoderNameTrueAudio;
 }
 
 - (BOOL)encodingIsLossless

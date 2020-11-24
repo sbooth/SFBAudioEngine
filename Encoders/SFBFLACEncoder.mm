@@ -19,7 +19,7 @@
 
 #define DEFAULT_PADDING 8192
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameFLAC 						= @"org.sbooth.AudioEngine.Encoder.FLAC";
+SFBAudioEncoderName const SFBAudioEncoderNameFLAC 						= @"org.sbooth.AudioEngine.Encoder.FLAC";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel 			= @"Compression Level";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding 			= @"Verify Encoding";
@@ -133,9 +133,9 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 	return [NSSet setWithObject:@"audio/flac"];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameFLAC;
+	return SFBAudioEncoderNameFLAC;
 }
 
 - (BOOL)encodingIsLossless

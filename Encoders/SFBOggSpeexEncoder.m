@@ -24,7 +24,7 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderComponentName const SFBAudioEncoderComponentNameOggSpeex 					= @"org.sbooth.AudioEngine.Encoder.OggSpeex";
+SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex 					= @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode					= @"Encoding Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate		= @"Encoding Target is Bitrate";
@@ -126,9 +126,9 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	return [NSSet setWithArray:@[@"audio/speex", @"audio/ogg"]];
 }
 
-+ (SFBAudioEncoderComponentName)componentName
++ (SFBAudioEncoderName)encoderName
 {
-	return SFBAudioEncoderComponentNameOggSpeex;
+	return SFBAudioEncoderNameOggSpeex;
 }
 
 - (BOOL)encodingIsLossless
