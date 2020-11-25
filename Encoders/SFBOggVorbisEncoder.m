@@ -95,11 +95,11 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 
 	// Encoder mode
 	if([[_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate] boolValue]) {
-		NSNumber *nominal_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisBitrate] ?: @128000;
-		NSNumber *min_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisMinBitrate] ?: @-1;
-		NSNumber *max_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate] ?: @-1;
+		NSNumber *nominal_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisBitrate];
+		NSNumber *min_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisMinBitrate];
+		NSNumber *max_bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate];
 
-		result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, min_bitrate.longValue, nominal_bitrate.longValue, max_bitrate.longValue);
+		result = vorbis_encode_init(&_vi, _processingFormat.channelCount, (long)_processingFormat.sampleRate, min_bitrate != nil ? min_bitrate.longValue * 1000 : -1, nominal_bitrate != nil ? nominal_bitrate.longValue * 1000 : 128000, max_bitrate != nil ? max_bitrate.longValue * 1000 : -1);
 		if(result != 0) {
 			os_log_error(gSFBAudioEncoderLog, "vorbis_encode_init failed: %d", result);
 			vorbis_info_clear(&_vi);
