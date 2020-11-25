@@ -19,7 +19,7 @@
 
 #define DEFAULT_PADDING 8192
 
-SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC 					= @"org.sbooth.AudioEngine.Encoder.OggFLAC";
+SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC = @"org.sbooth.AudioEngine.Encoder.OggFLAC";
 
 template <>
 struct ::std::default_delete<FLAC__StreamEncoder> {

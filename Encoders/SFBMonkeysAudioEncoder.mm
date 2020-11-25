@@ -19,9 +19,9 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio 				= @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
+SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Encoder.MonkeysAudio";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel 			= @"Compression Level";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel = @"Compression Level";
 
 namespace {
 

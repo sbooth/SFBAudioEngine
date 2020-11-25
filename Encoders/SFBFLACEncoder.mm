@@ -19,10 +19,10 @@
 
 #define DEFAULT_PADDING 8192
 
-SFBAudioEncoderName const SFBAudioEncoderNameFLAC 						= @"org.sbooth.AudioEngine.Encoder.FLAC";
+SFBAudioEncoderName const SFBAudioEncoderNameFLAC = @"org.sbooth.AudioEngine.Encoder.FLAC";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel 			= @"Compression Level";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding 			= @"Verify Encoding";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel = @"Compression Level";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding = @"Verify Encoding";
 
 template <>
 struct ::std::default_delete<FLAC__StreamEncoder> {

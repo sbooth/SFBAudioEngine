@@ -24,22 +24,22 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex 					= @"org.sbooth.AudioEngine.Encoder.OggSpeex";
+SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode					= @"Encoding Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate		= @"Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality				= @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity				= @"Complexity";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate				= @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR				= @"Enable VBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate			= @"VBR Maximum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD				= @"Enable VAD";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX				= @"Enable DTX";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR				= @"Enable ABR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput			= @"Denoise Input";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC				= @"Enable AGC";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter	= @"Disable Highpass Filter";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket= @"Speex Frames per Ogg Packet";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode = @"Encoding Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate = @"Encoding Target is Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality = @"Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity = @"Complexity";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate = @"Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR = @"Enable VBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate = @"VBR Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD = @"Enable VAD";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX = @"Enable DTX";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR = @"Enable ABR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput = @"Denoise Input";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC = @"Enable AGC";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter = @"Disable Highpass Filter";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket = @"Speex Frames per Ogg Packet";
 
 static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string)
 {

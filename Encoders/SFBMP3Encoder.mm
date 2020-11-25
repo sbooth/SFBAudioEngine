@@ -13,16 +13,16 @@
 
 #import "SFBCStringForOSType.h"
 
-SFBAudioEncoderName const SFBAudioEncoderNameMP3 							= @"org.sbooth.AudioEngine.Encoder.MP3";
+SFBAudioEncoderName const SFBAudioEncoderNameMP3 = @"org.sbooth.AudioEngine.Encoder.MP3";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate				= @"Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality						= @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate						= @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR					= @"Enable CBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR				= @"Enable Fast VBR Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality					= @"VBR Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode					= @"Stereo Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain			= @"Calculate Replay Gain";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate = @"Encoding Target is Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Quality = @"Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3Bitrate = @"Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR = @"Enable CBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR = @"Enable Fast VBR Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality = @"VBR Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode = @"Stereo Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain = @"Calculate Replay Gain";
 
 template <>
 struct ::std::default_delete<lame_global_flags> {
