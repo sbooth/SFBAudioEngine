@@ -55,6 +55,10 @@
 		322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */ = {isa = PBXBuildFile; fileRef = 322859D6242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm */; };
 		322859D9242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h in Headers */ = {isa = PBXBuildFile; fileRef = 322859D7242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h */; };
 		325116CD2423B15300B02926 /* SFBAttachedPicture.m in Sources */ = {isa = PBXBuildFile; fileRef = 325116CB2423B15200B02926 /* SFBAttachedPicture.m */; };
+		3256956E256DC1D2003F09C5 /* SFBOggOpusEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256956C256DC1D2003F09C5 /* SFBOggOpusEncoder.m */; };
+		3256956F256DC1D2003F09C5 /* SFBOggOpusEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256956C256DC1D2003F09C5 /* SFBOggOpusEncoder.m */; };
+		32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
+		32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */; };
 		325A5E05243F8D8B003138D5 /* SFBInputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 325A5DF8243F8D8B003138D5 /* SFBInputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5DF9243F8D8B003138D5 /* SFBFileInputSource.m */; };
 		325A5E07243F8D8B003138D5 /* SFBDataInputSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 325A5DFA243F8D8B003138D5 /* SFBDataInputSource.m */; };
@@ -567,6 +571,8 @@
 		322859D6242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "SFBAudioMetadata+TagLibAPETag.mm"; sourceTree = "<group>"; };
 		322859D7242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioMetadata+TagLibAPETag.h"; sourceTree = "<group>"; };
 		325116CB2423B15200B02926 /* SFBAttachedPicture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAttachedPicture.m; sourceTree = "<group>"; };
+		3256956C256DC1D2003F09C5 /* SFBOggOpusEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBOggOpusEncoder.m; sourceTree = "<group>"; };
+		3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBOggOpusEncoder.h; sourceTree = "<group>"; };
 		325A5DF8243F8D8B003138D5 /* SFBInputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBInputSource.h; sourceTree = "<group>"; };
 		325A5DF9243F8D8B003138D5 /* SFBFileInputSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBFileInputSource.m; sourceTree = "<group>"; };
 		325A5DFA243F8D8B003138D5 /* SFBDataInputSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBDataInputSource.m; sourceTree = "<group>"; };
@@ -1092,6 +1098,8 @@
 				328501BE256AA2A0009140DE /* SFBMP3Encoder.mm */,
 				32DBB6F3256D65D40002DEAA /* SFBOggFLACEncoder.h */,
 				32DBB6F4256D65D40002DEAA /* SFBOggFLACEncoder.mm */,
+				3256956D256DC1D2003F09C5 /* SFBOggOpusEncoder.h */,
+				3256956C256DC1D2003F09C5 /* SFBOggOpusEncoder.m */,
 				328501C8256AF4DC009140DE /* SFBOggSpeexEncoder.h */,
 				328501C9256AF4DC009140DE /* SFBOggSpeexEncoder.m */,
 				32DFEC5825698EFF005D4C39 /* SFBOggVorbisEncoder.h */,
@@ -1217,6 +1225,7 @@
 				32714BC62551D4DF00029BD7 /* SFBFileContentsInputSource.h in Headers */,
 				32714BC72551D4DF00029BD7 /* AudioRingBuffer.h in Headers */,
 				32714BC82551D4DF00029BD7 /* SFBScreamTracker3ModuleFile.h in Headers */,
+				32569571256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */,
 				32714BC92551D4DF00029BD7 /* UnfairLock.h in Headers */,
 				32714BCA2551D4DF00029BD7 /* SFBMusepackDecoder.h in Headers */,
 				32714BCB2551D4DF00029BD7 /* SFBDSDIFFFile.h in Headers */,
@@ -1371,6 +1380,7 @@
 				321296D8244C731B0008DC93 /* SFBDSDIFFDecoder.h in Headers */,
 				325A5E10243F8D8B003138D5 /* SFBHTTPInputSource.h in Headers */,
 				3294A6FA2445FA2D00841138 /* SFBLoopableRegionDecoder.h in Headers */,
+				32569570256DC1D2003F09C5 /* SFBOggOpusEncoder.h in Headers */,
 				32DFEC5B25698EFF005D4C39 /* SFBOggVorbisEncoder.h in Headers */,
 				325A5E18243F8DC0003138D5 /* SFBAudioDecoder.h in Headers */,
 				32BC09F524278B24008BB695 /* SFBAIFFFile.h in Headers */,
@@ -1514,6 +1524,7 @@
 				32714C122551D4DF00029BD7 /* AVAudioFormat+SFBFormatTransformation.m in Sources */,
 				32714C132551D4DF00029BD7 /* SFBFLACDecoder.mm in Sources */,
 				32714C142551D4DF00029BD7 /* SFBAudioMetadata+TagLibID3v2Tag.mm in Sources */,
+				3256956F256DC1D2003F09C5 /* SFBOggOpusEncoder.m in Sources */,
 				32714C152551D4DF00029BD7 /* SFBOggSpeexFile.mm in Sources */,
 				32D740D2255F6D91004D3C1A /* SFBBufferOutputSource.m in Sources */,
 				3207313C25631560008BEDA7 /* SFBAudioConverter.m in Sources */,
@@ -1598,6 +1609,7 @@
 				32AE32DA245775EE002BC014 /* SFBAudioOutputDevice.swift in Sources */,
 				325A5E89244493B9003138D5 /* SFBMPEGDecoder.m in Sources */,
 				326D3CAF242D2A21002AEC52 /* SFBDSDIFFFile.mm in Sources */,
+				3256956E256DC1D2003F09C5 /* SFBOggOpusEncoder.m in Sources */,
 				322859BB242417B10080B500 /* SFBAudioMetadata.m in Sources */,
 				321296DF244CAB840008DC93 /* SFBDSDPCMDecoder.mm in Sources */,
 				325A5E07243F8D8B003138D5 /* SFBDataInputSource.m in Sources */,

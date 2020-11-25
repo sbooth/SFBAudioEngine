@@ -18,6 +18,8 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio;
 extern SFBAudioEncoderName const SFBAudioEncoderNameMP3;
 /// Ogg FLAC
 extern SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC;
+/// Ogg Opus
+extern SFBAudioEncoderName const SFBAudioEncoderNameOggOpus;
 /// Ogg Speex
 extern SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex;
 /// Ogg Vorbis
@@ -137,6 +139,43 @@ typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
 	/// Joint stereo mode
 	SFBAudioEncoderMP3StereoModeJointStereo
 } NS_SWIFT_NAME(AudioEncoder.MP3StereoMode);
+
+/// Set to nonzero to disable resampling (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusPreserveSampleRate;
+/// Signal type (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusSignalType;
+/// Frame duration in msec (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusFrameDuration;
+
+/// Constants for Ogg Opus signal type
+typedef NS_ENUM(int, SFBAudioEncoderOggOpusSignalType) {
+	/// Automatic
+	SFBAudioEncoderOggOpusSignalTypeAutomatic,
+	/// Speech
+	SFBAudioEncoderOggOpusSignalTypeSpeech,
+	/// Music
+	SFBAudioEncoderOggOpusSignalTypeMusic
+} NS_SWIFT_NAME(AudioEncoder.OggOpusSignalType);
+
+/// Constants for Ogg Opus frame duration
+typedef NS_ENUM(int, SFBAudioEncoderOggOpusFrameDuration) {
+	/// 2.5 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration2_5ms,
+	/// 5 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration5ms,
+	/// 10 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration10ms,
+	/// 20 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration20ms,
+	/// 40 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration40ms,
+	/// 60 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration60ms,
+	/// 80 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration80ms,
+	/// 120 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration120ms
+} NS_SWIFT_NAME(AudioEncoder.OggOpusFrameDuration);
 
 /// Ogg Speex encoding mode (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode;
