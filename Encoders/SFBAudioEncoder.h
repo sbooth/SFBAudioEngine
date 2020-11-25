@@ -142,17 +142,31 @@ typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
 
 /// Set to nonzero to disable resampling (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusPreserveSampleRate;
+/// Ogg Opus complexity (\c NSNumber from 0 (fastest) to 10 (slowest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusComplexity;
+/// Ogg Opus bitrate (\c NSNumber from 6 to 256 in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusBitrate;
+/// Ogg Opus bitrate mode (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusBitrateMode;
 /// Signal type (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusSignalType;
 /// Frame duration in msec (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusFrameDuration;
 
 /// Constants for Ogg Opus signal type
+typedef NS_ENUM(int, SFBAudioEncoderOggOpusBitrateMode) {
+	/// VBR
+	SFBAudioEncoderOggOpusBitrateModeVBR,
+	/// Constrained VBR
+	SFBAudioEncoderOggOpusBitrateModeConstrainedVBR,
+	/// Hard CBR
+	SFBAudioEncoderOggOpusBitrateModeHardCBR
+} NS_SWIFT_NAME(AudioEncoder.OggOpusBitrateMode);
+
+/// Constants for Ogg Opus signal type
 typedef NS_ENUM(int, SFBAudioEncoderOggOpusSignalType) {
-	/// Automatic
-	SFBAudioEncoderOggOpusSignalTypeAutomatic,
-	/// Speech
-	SFBAudioEncoderOggOpusSignalTypeSpeech,
+	/// Voice
+	SFBAudioEncoderOggOpusSignalTypeVoice,
 	/// Music
 	SFBAudioEncoderOggOpusSignalTypeMusic
 } NS_SWIFT_NAME(AudioEncoder.OggOpusSignalType);
@@ -173,6 +187,8 @@ typedef NS_ENUM(int, SFBAudioEncoderOggOpusFrameDuration) {
 	SFBAudioEncodingSettingsKeyOggOpusFrameDuration60ms,
 	/// 80 msec
 	SFBAudioEncodingSettingsKeyOggOpusFrameDuration80ms,
+	/// 100 msec
+	SFBAudioEncodingSettingsKeyOggOpusFrameDuration100ms,
 	/// 120 msec
 	SFBAudioEncodingSettingsKeyOggOpusFrameDuration120ms
 } NS_SWIFT_NAME(AudioEncoder.OggOpusFrameDuration);
