@@ -163,7 +163,7 @@ struct ::std::default_delete<lame_global_flags> {
 		}
 	}
 	else {
-		auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3VBRQuality] intValue];
+		auto bitrate = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3Bitrate] intValue] * 1000;
 		result = lame_set_brate(_gfp.get(), bitrate);
 		if(result == -1) {
 			os_log_error(gSFBAudioEncoderLog, "lame_set_brate(%d) failed", bitrate);
