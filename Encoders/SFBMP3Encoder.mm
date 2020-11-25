@@ -135,7 +135,7 @@ struct ::std::default_delete<lame_global_flags> {
 				}
 				break;
 			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid LAME quality: %d", quality_value);
+				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME quality: %d", quality_value);
 				break;
 		}
 	}
@@ -236,7 +236,7 @@ struct ::std::default_delete<lame_global_flags> {
 				break;
 
 			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid LAME stereo mode: %d", value);
+				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME stereo mode: %d", value);
 				break;
 		}
 	}

@@ -256,7 +256,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 				}
 				break;
 			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid FLAC compression level: %d", value);
+				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid FLAC compression level: %d", value);
 				break;
 		}
 	}

@@ -153,7 +153,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 			case SFBAudioEncoderWavPackCompressionLevelHigh:		_config.flags |= CONFIG_HIGH_FLAG;			break;
 			case SFBAudioEncoderWavPackCompressionLevelVeryHigh:	_config.flags |= CONFIG_VERY_HIGH_FLAG;		break;
 			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid WavPack compression level: %d", intValue);
+				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid WavPack compression level: %d", intValue);
 				break;
 		}
 	}

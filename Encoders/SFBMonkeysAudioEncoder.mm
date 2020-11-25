@@ -254,7 +254,7 @@ namespace {
 			case SFBAudioEncoderAPECompressionLevelExtraHigh:	compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;	break;
 			case SFBAudioEncoderAPECompressionLevelInsane:		compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;		break;
 			default:
-				os_log_info(gSFBAudioEncoderLog, "Invalid APE compression level: %d", intValue);
+				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid APE compression level: %d", intValue);
 				break;
 		}
 	}

@@ -200,7 +200,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 			case SFBAudioEncoderOggSpeexModeUltraWideband:	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);		break;
 
 			default:
-				os_log_error(gSFBAudioEncoderLog, "Unrecognized Ogg Speex mode: %d", mode.intValue);
+				os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Ogg Speex mode: %d", mode.intValue);
 				ogg_stream_clear(&_os);
 				if(error)
 					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
