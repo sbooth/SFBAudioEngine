@@ -15,8 +15,6 @@
 
 #import "SFBOggVorbisEncoder.h"
 
-#import "SFBCStringForOSType.h"
-
 SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate = @"Encoding Target is Bitrate";
