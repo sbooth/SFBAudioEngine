@@ -7,14 +7,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Value representing an invalid or unknown audio frame position
-extern const AVAudioFramePosition SFBUnknownFramePosition NS_SWIFT_NAME(UnknownFramePosition);
-#define SFB_UNKNOWN_FRAME_POSITION ((AVAudioFramePosition)-1)
-
-/// Value representing an invalid or unknown audio frame length
-extern const AVAudioFramePosition SFBUnknownFrameLength NS_SWIFT_NAME(UnknownFrameLength);
-#define SFB_UNKNOWN_FRAME_LENGTH ((AVAudioFramePosition)-1)
-
 NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
