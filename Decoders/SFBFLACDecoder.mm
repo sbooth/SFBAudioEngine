@@ -353,6 +353,8 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 

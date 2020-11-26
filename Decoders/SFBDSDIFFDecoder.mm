@@ -829,6 +829,8 @@ namespace {
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBDSDDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 

@@ -271,6 +271,8 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 
