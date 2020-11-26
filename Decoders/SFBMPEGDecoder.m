@@ -196,7 +196,16 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMPEG1;
+	sourceStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
+
+	struct mpg123_frameinfo mi;
+	if(mpg123_info(_mpg123, &mi) == MPG123_OK) {
+		switch(mi.layer) {
+			case 1: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer1; 	break;
+			case 2: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer2; 	break;
+			case 3: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer3; 	break;
+		}
+	}
 
 	sourceStreamDescription.mSampleRate			= rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)channels;
