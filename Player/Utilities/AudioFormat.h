@@ -82,6 +82,9 @@ namespace SFB {
 			/*! @brief Query whether this format represents interleaved data */
 			inline bool IsInterleaved() const 								{ return !(kAudioFormatFlagIsNonInterleaved & mFormatFlags); }
 
+			/*! @brief Returns the number of interleaved channels */
+			inline UInt32 InterleavedChannelCount() const 					{ return IsInterleaved() ? mChannelsPerFrame : 1; }
+
 			/*! @brief Query whether this format represents PCM audio data */
 			inline bool IsPCM() const 										{ return kAudioFormatLinearPCM == mFormatID; }
 
