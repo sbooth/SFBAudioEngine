@@ -181,7 +181,7 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 	streamDescription.mBytesPerPacket		= sizeof(FLAC__int32) * streamDescription.mChannelsPerFrame;
 	streamDescription.mFramesPerPacket		= 1;
-	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
+	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
 	AVAudioChannelLayout *channelLayout = nil;
 	switch(sourceFormat.channelCount) {

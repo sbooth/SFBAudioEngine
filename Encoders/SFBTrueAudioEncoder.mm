@@ -99,7 +99,7 @@ namespace {
 
 	streamDescription.mBytesPerPacket		= ((sourceFormat.streamDescription->mBitsPerChannel + 7) / 8) * streamDescription.mChannelsPerFrame;
 	streamDescription.mFramesPerPacket		= 1;
-	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
+	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
 	// TODO: what channel layout is appropriate?
 	AVAudioChannelLayout *channelLayout = nil;

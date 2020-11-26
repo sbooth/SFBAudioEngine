@@ -203,7 +203,7 @@ namespace {
 
 	streamDescription.mBytesPerPacket		= ((wve.wBitsPerSample + 7) / 8) * streamDescription.mChannelsPerFrame;
 	streamDescription.mFramesPerPacket		= 1;
-	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
+	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;

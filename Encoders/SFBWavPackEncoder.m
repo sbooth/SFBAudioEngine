@@ -91,7 +91,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 	streamDescription.mBytesPerPacket		= 4 * streamDescription.mChannelsPerFrame;
 	streamDescription.mFramesPerPacket		= 1;
-	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket * streamDescription.mFramesPerPacket;
+	streamDescription.mBytesPerFrame		= streamDescription.mBytesPerPacket / streamDescription.mFramesPerPacket;
 
 	// Use WAVFORMATEX channel order
 	AVAudioChannelLayout *channelLayout = nil;
