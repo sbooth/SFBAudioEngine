@@ -230,7 +230,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 	processingStreamDescription.mBytesPerPacket		= (_streamInfo.bits_per_sample + 7) / 8;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	// FLAC supports from 4 to 32 bits per sample
 	switch(processingStreamDescription.mBitsPerChannel) {

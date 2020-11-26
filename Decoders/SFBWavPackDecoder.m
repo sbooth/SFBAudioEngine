@@ -219,7 +219,7 @@ static int can_seek_callback(void *id)
 
 		processingStreamDescription.mBytesPerPacket		= 4;
 		processingStreamDescription.mFramesPerPacket	= 1;
-		processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+		processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 	}

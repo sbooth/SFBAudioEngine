@@ -487,7 +487,7 @@ namespace {
 
 	processingStreamDescription.mBytesPerPacket		= (_bitsPerSample + 7) / 8;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	AVAudioChannelLayout *channelLayout = nil;
 	switch(_nchan) {

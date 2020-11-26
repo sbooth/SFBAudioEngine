@@ -285,7 +285,7 @@ namespace {
 
 		asbd.mBytesPerPacket	= ((asbd.mBitsPerChannel + 7) / 8) * asbd.mChannelsPerFrame;
 		asbd.mFramesPerPacket	= 1;
-		asbd.mBytesPerFrame		= asbd.mBytesPerPacket * asbd.mFramesPerPacket;
+		asbd.mBytesPerFrame		= asbd.mBytesPerPacket / asbd.mFramesPerPacket;
 
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&asbd channelLayout:channelLayout];
 	}

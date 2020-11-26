@@ -150,7 +150,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	processingStreamDescription.mBytesPerPacket		= 3;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:_decoder.processingFormat.channelLayout];
 

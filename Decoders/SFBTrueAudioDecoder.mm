@@ -129,7 +129,7 @@ namespace {
 
 	processingStreamDescription.mBytesPerPacket		= ((streamInfo.bps + 7) / 8) * processingStreamDescription.mChannelsPerFrame;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	processingStreamDescription.mReserved			= 0;
 
