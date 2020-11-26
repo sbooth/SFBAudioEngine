@@ -28,6 +28,8 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis;
 extern SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio;
 /// WavPack
 extern SFBAudioEncoderName const SFBAudioEncoderNameWavPack;
+/// Core Audio
+extern SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio;
 
 /// An encoder consuming PCM audio
 NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncoding>
@@ -255,5 +257,14 @@ typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
 	/// Very high ompression
 	SFBAudioEncoderWavPackCompressionLevelVeryHigh
 } NS_SWIFT_NAME(AudioEncoder.WavPackCompressionLevel);
+
+/// Core Audio file type ID (\c NSNumber representing \c AudioFileTypeID)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID;
+/// Core Audio format ID (\c NSNumber representing \c AudioFormatID)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatID;
+/// Core Audio format flags (\c NSNumber representing \c AudioStreamBasicDescription.mFormatFlags)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags;
+/// Core Audio bits per channel (\c NSNumber representing \c AudioStreamBasicDescription.mBitsPerChannel)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel;
 
 NS_ASSUME_NONNULL_END
