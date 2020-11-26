@@ -23,13 +23,12 @@ namespace SFB {
 			kAudioFormatDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
 			kAudioFormatMOD 					= 'MOD ',	/*!< MOD */
 			kAudioFormatMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
-			kAudioFormatMPEG1 					= 'MPG1',	/*!< MPEG-1 (Layer I, II, or III) */
 			kAudioFormatMusepack 				= 'MPC ',	/*!< Musepack */
+			kAudioFormatShorten 				= 'SHN ',	/*!< Shorten */
 			kAudioFormatSpeex 					= 'SPX ',	/*!< Ogg Speex */
 			kAudioFormatTrueAudio 				= 'TTA ',	/*!< True Audio */
-			kAudioFormatVorbis 					= 'OGG ',	/*!< Ogg Vorbis */
-			kAudioFormatWavpack 				= 'WV  ',	/*!< Wavpack */
-			kAudioFormatShorten 				= 'SHN '	/*!< Shorten */
+			kAudioFormatVorbis 					= 'VORB',	/*!< Ogg Vorbis */
+			kAudioFormatWavPack 				= 'WV  '	/*!< WavPack */
 		};
 
 		/*! @brief Common PCM audio formats */
