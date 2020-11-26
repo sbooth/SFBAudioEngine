@@ -215,6 +215,8 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 

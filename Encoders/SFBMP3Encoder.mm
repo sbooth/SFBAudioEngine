@@ -284,6 +284,8 @@ struct ::std::default_delete<lame_global_flags> {
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 

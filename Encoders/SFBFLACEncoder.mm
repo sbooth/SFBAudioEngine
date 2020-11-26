@@ -386,6 +386,8 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 
