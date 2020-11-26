@@ -250,6 +250,12 @@ struct ::std::default_delete<lame_global_flags> {
 		return NO;
 	}
 
+	AudioStreamBasicDescription outputStreamDescription{};
+	outputStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	_gfp = std::move(gfp);
 
 	return YES;

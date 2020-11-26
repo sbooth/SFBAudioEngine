@@ -311,6 +311,12 @@ static int close_callback(void *user_data)
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:frameCapacity];
 
+	AudioStreamBasicDescription outputStreamDescription = {0};
+	outputStreamDescription.mFormatID			= kAudioFormatOpus;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	_enc = enc;
 	_comments = comments;
 

@@ -181,6 +181,12 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 
 	vorbis_comment_clear(&vc);
 
+	AudioStreamBasicDescription outputStreamDescription = {0};
+	outputStreamDescription.mFormatID			= SFBAudioFormatIDVorbis;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	_isOpen = YES;
 
 	return YES;

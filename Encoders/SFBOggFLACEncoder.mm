@@ -325,6 +325,28 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 		return NO;
 	}
 
+	AudioStreamBasicDescription outputStreamDescription{};
+	outputStreamDescription.mFormatID			= kAudioFormatFLAC;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
+	switch(outputStreamDescription.mBitsPerChannel) {
+		case 16:
+			outputStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_16BitSourceData;
+			break;
+		case 20:
+			outputStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_20BitSourceData;
+			break;
+		case 24:
+			outputStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_24BitSourceData;
+			break;
+		case 32:
+			outputStreamDescription.mFormatFlags = kAppleLosslessFormatFlag_32BitSourceData;
+			break;
+	}
+	outputStreamDescription.mFramesPerPacket	= FLAC__stream_encoder_get_blocksize(flac.get());
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	_flac = std::move(flac);
 	_padding = std::move(padding);
 

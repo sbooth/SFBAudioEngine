@@ -177,6 +177,13 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 	CC_MD5_Init(&_md5);
 #pragma clang diagnostic pop
 
+	AudioStreamBasicDescription outputStreamDescription = {0};
+	outputStreamDescription.mFormatID			= SFBAudioFormatIDWavPack;
+	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	return YES;
 }
 

@@ -276,6 +276,13 @@ namespace {
 		return NO;
 	}
 
+	AudioStreamBasicDescription outputStreamDescription{};
+	outputStreamDescription.mFormatID			= SFBAudioFormatIDMonkeysAudio;
+	outputStreamDescription.mBitsPerChannel		= wve.wBitsPerSample;
+	outputStreamDescription.mSampleRate			= wve.nSamplesPerSec;
+	outputStreamDescription.mChannelsPerFrame	= wve.nChannels;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	return YES;
 }
 

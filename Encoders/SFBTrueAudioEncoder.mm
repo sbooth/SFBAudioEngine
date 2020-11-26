@@ -151,6 +151,13 @@ namespace {
 		return NO;
 	}
 
+	AudioStreamBasicDescription outputStreamDescription{};
+	outputStreamDescription.mFormatID			= SFBAudioFormatIDTrueAudio;
+	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
+	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
+	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
+	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
+
 	return YES;
 }
 
