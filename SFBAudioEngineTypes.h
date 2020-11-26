@@ -1,13 +1,32 @@
-//
-//  SFBAudioEngineTypes.h
-//  SFBAudioEngine
-//
-//  Created by Stephen F. Booth on 11/25/20.
-//  Copyright © 2020 sbooth.org. All rights reserved.
-//
+/*
+ * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
+ */
 
-#ifndef SFBAudioEngineTypes_h
-#define SFBAudioEngineTypes_h
+#import <Foundation/Foundation.h>
 
+#pragma mark Audio Format Identifiers
 
-#endif /* SFBAudioEngineTypes_h */
+/// Additional audio format IDs
+typedef NS_ENUM(UInt32, SFBAudioFormatID) {
+	/// Direct Stream Digital (DSD)
+	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
+	/// DSD over PCM (DoP)
+	SFBAudioFormatIDDoP 					= 'DoP ',
+	/// Module
+	SFBAudioFormatIDModule 					= 'MOD ',
+	/// Monkey's Audio (APE)
+	SFBAudioFormatIDMonkeysAudio 			= 'APE ',
+	/// Musepack
+	SFBAudioFormatIDMusepack 				= 'MPC ',
+	/// Shorten
+	SFBAudioFormatIDShorten					= 'SHN ',
+	/// Ogg Speex
+	SFBAudioFormatIDSpeex 					= 'SPX ',
+	/// True Audio
+	SFBAudioFormatIDTrueAudio 				= 'TTA ',
+	/// Ogg Vorbis
+	SFBAudioFormatIDVorbis 					= 'VORB',
+	/// WavPack
+	SFBAudioFormatIDWavPack 				= 'WV  '
+} NS_SWIFT_NAME(AudioFormatID);

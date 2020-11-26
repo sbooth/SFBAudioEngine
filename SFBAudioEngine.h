@@ -11,6 +11,8 @@ FOUNDATION_EXPORT double SFBAudioEngineVersionNumber;
 /// Project version string for SFBAudioEngine.
 FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 
+#import <SFBAudioEngine/SFBAudioEngineTypes.h>
+
 #import <SFBAudioEngine/SFBInputSource.h>
 
 #import <SFBAudioEngine/SFBAudioDecoding.h>
