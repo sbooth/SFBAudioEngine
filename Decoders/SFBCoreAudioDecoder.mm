@@ -92,7 +92,7 @@ namespace {
 + (NSSet *)supportedPathExtensions
 {
 	UInt32 size = 0;
-	OSStatus result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
@@ -125,7 +125,7 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	UInt32 size = 0;
-	OSStatus result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return [NSSet set];
@@ -175,9 +175,9 @@ namespace {
 
 	// Open the input file
 	AudioFileID audioFile;
-	OSStatus result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, nullptr, get_size_callback, nullptr, 0, &audioFile);
+	auto result = AudioFileOpenWithCallbacks((__bridge void *)self, read_callback, nullptr, get_size_callback, nullptr, 0, &audioFile);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -195,7 +195,7 @@ namespace {
 	ExtAudioFileRef extAudioFile;
 	result = ExtAudioFileWrapAudioFileID(af.get(), false, &extAudioFile);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -215,7 +215,7 @@ namespace {
 	UInt32 dataSize = sizeof(format);
 	result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileDataFormat, &dataSize, &format);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -228,7 +228,7 @@ namespace {
 		AudioChannelLayout *layout = (AudioChannelLayout *)malloc(dataSize);
 		result = ExtAudioFileGetProperty(eaf.get(), kExtAudioFileProperty_FileChannelLayout, &dataSize, layout);
 		if(result != noErr) {
-			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
+			os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileChannelLayout) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 			free(layout);
 
@@ -253,7 +253,7 @@ namespace {
 		}
 	}
 	else
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetPropertyInfo (kExtAudioFileProperty_FileChannelLayout) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 	_sourceFormat = [[AVAudioFormat alloc] initWithStreamDescription:&format channelLayout:channelLayout];
 
@@ -314,7 +314,7 @@ namespace {
 
 	result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), _processingFormat.streamDescription);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
@@ -349,9 +349,9 @@ namespace {
 - (AVAudioFramePosition)framePosition
 {
 	SInt64 currentFrame;
-	OSStatus result = ExtAudioFileTell(_eaf.get(), &currentFrame);
+	auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFB_UNKNOWN_FRAME_POSITION;
 	}
 	return currentFrame;
@@ -361,9 +361,9 @@ namespace {
 {
 	SInt64 frameLength;
 	UInt32 dataSize = sizeof(frameLength);
-	OSStatus result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
+	auto result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return SFB_UNKNOWN_FRAME_LENGTH;
 	}
 	return frameLength;
@@ -375,6 +375,8 @@ namespace {
 
 	if(![buffer.format isEqual:_processingFormat]) {
 		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return NO;
 	}
 
@@ -383,9 +385,11 @@ namespace {
 
 	buffer.frameLength = buffer.frameCapacity;
 
-	OSStatus result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
+	auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
 	}
 
@@ -397,9 +401,11 @@ namespace {
 - (BOOL)seekToFrame:(AVAudioFramePosition)frame error:(NSError **)error
 {
 	NSParameterAssert(frame >= 0);
-	OSStatus result = ExtAudioFileSeek(_eaf.get(), frame);
+	auto result = ExtAudioFileSeek(_eaf.get(), frame);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: %d", result);
+		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSeek failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
 	}
 	return YES;
