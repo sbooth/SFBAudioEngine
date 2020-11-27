@@ -286,6 +286,11 @@ namespace {
 	return supportedMIMETypes;
 }
 
++ (SFBAudioEncoderName)encoderName
+{
+	return SFBAudioEncoderNameCoreAudio;
+}
+
 - (BOOL)encodingIsLossless
 {
 	switch(_outputFormat.streamDescription->mFormatID) {
