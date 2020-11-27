@@ -21,6 +21,7 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatID = @"Format ID";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags = @"Format Flags";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel = @"Bits per Channel";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings = @"Audio Converter Property Settings";
 
 template <>
 struct ::std::default_delete<OpaqueAudioFileID> {
@@ -312,6 +313,7 @@ namespace {
 		// There is no way to determine caller intent and select the most appropriate type; just use the first one
 		if(!typesForExtension.empty())
 			fileType = typesForExtension[0];
+		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set: guessed '%{public}.4s' based on extension '%{public}@'", SFBCStringForOSType(fileType), _outputSource.url.pathExtension);
 	}
 
 	AudioFormatID formatID = 0;
@@ -323,13 +325,28 @@ namespace {
 		// There is no way to determine caller intent and select the most appropriate format; just use the first one
 		if(!availableFormatIDs.empty())
 			formatID = availableFormatIDs[0];
+		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set: guessed '%{public}.4s' based on format '%{public}.4s'", SFBCStringForOSType(formatID), SFBCStringForOSType(fileType));
 	}
+
+	UInt32 formatFlags = 0;
+	NSNumber *formatFlagsSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags];
+	if(formatFlagsSetting != nil)
+		formatFlags = (UInt32)formatFlagsSetting.unsignedIntValue;
+	else
+		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatFlags is not set; mFormatFlags will be zero which is probably incorrect");
+
+	UInt32 bitsPerChannel = 0;
+	NSNumber *bitsPerChannelSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel];
+	if(bitsPerChannelSetting != nil)
+		bitsPerChannel = (UInt32)bitsPerChannelSetting.unsignedIntValue;
+	else
+		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel is not set; mBitsPerChannel will be zero which is probably incorrect");
 
 	SFB::Audio::Format format;
 
 	format.mFormatID 			= formatID;
-	format.mFormatFlags 		= [[_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioFormatFlags] unsignedIntValue];
-	format.mBitsPerChannel 		= [[_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel] unsignedIntValue];
+	format.mFormatFlags 		= formatFlags;
+	format.mBitsPerChannel 		= bitsPerChannel;
 	format.mSampleRate 			= _processingFormat.sampleRate;
 	format.mChannelsPerFrame 	= _processingFormat.channelCount;
 
@@ -388,6 +405,44 @@ namespace {
 				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 			return NO;
 		}
+	}
+
+	NSArray *audioConverterPropertySettings = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
+	if(audioConverterPropertySettings != nil) {
+		AudioConverterRef audioConverter = nullptr;
+		UInt32 size = sizeof(audioConverter);
+		result = ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_AudioConverter, &size, &audioConverter);
+		if(result != noErr) {
+			os_log_error(gSFBAudioEncoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_AudioConverter) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			if(error)
+				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return NO;
+		}
+
+		if(audioConverter != nullptr) {
+//			CFArrayRef converterConfig = nullptr;
+//			result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertySettings, &size, &converterConfig);
+//			if(result != noErr) {
+//				os_log_error(gSFBAudioEncoderLog, "AudioConverterGetProperty (kAudioConverterPropertySettings) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+//				if(error)
+//					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+//				return NO;
+//			}
+
+			// TODO: Merge with existing converter configuration?
+
+			CFArrayRef converterConfig = (__bridge CFArrayRef)audioConverterPropertySettings;
+			size = sizeof(converterConfig);
+			result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, size, &converterConfig);
+			if(result != noErr) {
+				os_log_error(gSFBAudioEncoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ConverterConfig) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+				if(error)
+					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+				return NO;
+			}
+		}
+		else
+			os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings is set but kExtAudioFileProperty_AudioConverter is NULL");
 	}
 
 	_af = std::move(af);
