@@ -54,7 +54,7 @@ namespace SFB {
 			inline Format(const AudioStreamBasicDescription& format) 		{ memcpy(this, &format, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Create a new \c Format for the specified \c AudioStreamBasicDescription */
-			inline Format(const AudioStreamBasicDescription *format) 		{ memcpy(this, format, sizeof(AudioStreamBasicDescription)); }
+			inline Format(const AudioStreamBasicDescription *format) 		{ assert(format != nullptr); memcpy(this, format, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Create a new \c Format for the speciifed \c CommonPCMFormat */
 			Format(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved);
