@@ -12,7 +12,7 @@
 
 #import "SFBDSDIFFDecoder.h"
 
-#import "AVAudioChannelLayout+SFBChannelLabels.h"
+#import "AudioChannelLayout.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -750,7 +750,8 @@ namespace {
 		std::vector<AudioChannelLabel> labels;
 		for(auto channelID : channelsChunk->mChannelIDs)
 			labels.push_back(DSDIFFChannelIDToCoreAudioChannelLabel(channelID));
-		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:&labels[0] count:(AVAudioChannelCount)labels.size()];
+		auto layout = SFB::Audio::ChannelLayout::ChannelLayoutWithChannelLabels(labels);
+		channelLayout = [AVAudioChannelLayout layoutWithLayout:layout];
 	}
 
 	AudioStreamBasicDescription processingStreamDescription{};
