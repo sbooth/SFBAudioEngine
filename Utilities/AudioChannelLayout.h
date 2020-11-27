@@ -5,13 +5,11 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <vector>
+#import <vector>
 
-#include <AudioToolbox/AudioToolbox.h>
+#import <AudioToolbox/AudioToolbox.h>
 
-#include "CFWrapper.h"
+#import "CFWrapper.h"
 
 /*! @file AudioChannelLayout.h @brief A Core %Audio \c AudioChannelLayout wrapper  */
 
@@ -20,6 +18,13 @@ namespace SFB {
 
 	/*! @brief %Audio functionality */
 	namespace Audio {
+
+		/*!
+		 * @brief Returns the size of an \c AudioChannelLayout struct
+		 * @param channelLayout A pointer to an \c AudioChannelLayout struct
+		 * @return The size of \c channelLayout in bytes
+		 */
+		size_t ChannelLayoutSize(const AudioChannelLayout *channelLayout);
 
 		/*! @brief A class wrapping a Core %Audio \c AudioChannelLayout */
 		class ChannelLayout
@@ -67,12 +72,8 @@ namespace SFB {
 			/*! @brief Create a new, empty \c ChannelLayout */
 			ChannelLayout();
 
-			/*!
-			 * @brief Create a new \c ChannelLayout
-			 * @param numberChannelDescriptions The number of channel descriptions this channel layout will contain
-			 * @throws std::bad_alloc
-			 */
-			explicit ChannelLayout(UInt32 numberChannelDescriptions);
+			/*! @brief Destroy the \c ChannelLayout and release all associated resources. */
+			~ChannelLayout();
 
 			/*! @brief Create a new \c ChannelLayout by performing a deep copy of \c channelLayout */
 			ChannelLayout(const AudioChannelLayout *channelLayout);
@@ -103,7 +104,7 @@ namespace SFB {
 			//@{
 
 			/*! @brief Get the number of channels contained in this channel layout */
-			size_t GetChannelCount() const;
+			size_t ChannelCount() const;
 
 			/*!
 			 * @brief Create a channel map for converting audio from this channel layout
@@ -121,24 +122,21 @@ namespace SFB {
 			//@{
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
-			inline const AudioChannelLayout * GetACL() const		{ return mChannelLayout.get(); }
-
-			/*! @brief Retrieve the size of this object's internal \c AudioChannelLayout */
-			size_t GetACLSize() const;
+			inline const AudioChannelLayout * Layout() const		{ return mChannelLayout; }
 
 
 			/*! @brief Query whether this \c ChannelLayout is empty */
-			inline explicit operator bool() const					{ return (bool)mChannelLayout; }
+			inline explicit operator bool() const					{ return mChannelLayout != nullptr; }
 
 			/*! @brief Query whether this \c ChannelLayout is not empty */
 			inline bool operator!() const							{ return !mChannelLayout; }
 
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
-			inline const AudioChannelLayout * operator->() const	{ return mChannelLayout.get(); }
+			inline const AudioChannelLayout * operator->() const	{ return mChannelLayout; }
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
-			inline operator const AudioChannelLayout *() const		{ return mChannelLayout.get(); }
+			inline operator const AudioChannelLayout *() const		{ return mChannelLayout; }
 
 
 			/*! @brief Compare two \c ChannelLayout objects for equality*/
@@ -153,8 +151,7 @@ namespace SFB {
 			CFString Description() const;
 
 		private:
-			using unique_AudioChannelLayout_ptr = std::unique_ptr<AudioChannelLayout, std::function<void(void *)>>;
-			unique_AudioChannelLayout_ptr mChannelLayout;
+			AudioChannelLayout *mChannelLayout;
 		};
 
 	}
