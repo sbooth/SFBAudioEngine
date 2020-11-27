@@ -32,6 +32,18 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 	return [converter convertReturningError:error];
 }
 
++ (BOOL)convertURL:(NSURL *)sourceURL usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
+{
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithURL:sourceURL encoder:encoder error:error];
+	return [converter convertReturningError:error];
+}
+
++ (BOOL)convertAudioFromDecoder:(id <SFBPCMDecoding>)decoder toURL:(NSURL *)destinationURL error:(NSError **)error
+{
+	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder destinationURL:destinationURL error:error];
+	return [converter convertReturningError:error];
+}
+
 + (BOOL)convertAudioFromDecoder:(id <SFBPCMDecoding>)decoder usingEncoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
 {
 	SFBAudioConverter *converter = [[SFBAudioConverter alloc] initWithDecoder:decoder encoder:encoder error:error];
@@ -53,6 +65,33 @@ NSErrorDomain const SFBAudioConverterErrorDomain = @"org.sbooth.AudioEngine.Audi
 		return nil;
 	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
 	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata error:error];
+}
+
+- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder
+{
+	return [self initWithURL:sourceURL encoder:encoder error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error
+{
+	SFBAudioDecoder *decoder = [[SFBAudioDecoder alloc] initWithURL:sourceURL error:error];
+	if(!decoder)
+		return nil;
+	SFBAudioFile *audioFile = [SFBAudioFile audioFileWithURL:sourceURL error:nil];
+	return [self initWithDecoder:decoder encoder:encoder metadata:audioFile.metadata error:error];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL
+{
+	return [self initWithDecoder:decoder destinationURL:destinationURL error:nil];
+}
+
+- (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error
+{
+	SFBAudioEncoder *encoder = [[SFBAudioEncoder alloc] initWithURL:destinationURL error:error];
+	if(!encoder)
+		return nil;
+	return [self initWithDecoder:decoder encoder:encoder error:error];
 }
 
 - (instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder
