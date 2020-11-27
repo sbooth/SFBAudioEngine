@@ -64,6 +64,13 @@ namespace {
 //		AudioFileID _af;
 //	};
 
+	template <typename T>
+	OSStatus SetAudioConverterProperty(AudioConverterRef audioConverter, AudioConverterPropertyID propertyID, T propertyValue)
+	{
+		NSCParameterAssert(audioConverter != nullptr);
+		return AudioConverterSetProperty(audioConverter, propertyID, sizeof(propertyValue), &propertyValue);
+	}
+
 	std::vector<AudioFileTypeID> AudioFileTypeIDsForExtension(NSString *pathExtension)
 	{
 		NSCParameterAssert(pathExtension != nil);
@@ -313,7 +320,7 @@ namespace {
 		// There is no way to determine caller intent and select the most appropriate type; just use the first one
 		if(!typesForExtension.empty())
 			fileType = typesForExtension[0];
-		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set: guessed '%{public}.4s' based on extension '%{public}@'", SFBCStringForOSType(fileType), _outputSource.url.pathExtension);
+		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFileTypeID is not set: guessed '%{public}.4s' based on extension \"%{public}@\"", SFBCStringForOSType(fileType), _outputSource.url.pathExtension);
 	}
 
 	AudioFormatID formatID = 0;
@@ -407,7 +414,7 @@ namespace {
 		}
 	}
 
-	NSArray *audioConverterPropertySettings = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
+	NSDictionary *audioConverterPropertySettings = [_settings objectForKey:SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings];
 	if(audioConverterPropertySettings != nil) {
 		AudioConverterRef audioConverter = nullptr;
 		UInt32 size = sizeof(audioConverter);
@@ -419,21 +426,37 @@ namespace {
 			return NO;
 		}
 
-		if(audioConverter != nullptr) {
-//			CFArrayRef converterConfig = nullptr;
-//			result = AudioConverterGetProperty(audioConverter, kAudioConverterPropertySettings, &size, &converterConfig);
-//			if(result != noErr) {
-//				os_log_error(gSFBAudioEncoderLog, "AudioConverterGetProperty (kAudioConverterPropertySettings) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-//				if(error)
-//					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
-//				return NO;
-//			}
+		if(audioConverter) {
+			for(NSNumber *key in audioConverterPropertySettings) {
+				AudioConverterPropertyID propertyID = (AudioConverterPropertyID)key.unsignedIntValue;
+				switch(propertyID) {
+					case kAudioConverterSampleRateConverterComplexity:
+						result = SetAudioConverterProperty<OSType>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
+						break;
+					case kAudioConverterSampleRateConverterQuality:
+					case kAudioConverterCodecQuality:
+					case kAudioConverterEncodeBitRate:
+					case kAudioCodecPropertyBitRateControlMode:
+					case kAudioCodecPropertySoundQualityForVBR:
+					case kAudioCodecPropertyBitRateForVBR:
+						result = SetAudioConverterProperty<UInt32>(audioConverter, propertyID, [[audioConverterPropertySettings objectForKey:key] unsignedIntValue]);
+						break;
+					default:
+						os_log_info(gSFBAudioEncoderLog, "Ignoring unknown AudioConverterPropertyID: %d '%{public}.4s'", propertyID, SFBCStringForOSType(propertyID));
+						break;
+				}
 
-			// TODO: Merge with existing converter configuration?
+				if(result != noErr) {
+					os_log_error(gSFBAudioEncoderLog, "AudioConverterSetProperty ('%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(propertyID), result, SFBCStringForOSType(result));
+					if(error)
+						*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+					return NO;
+				}
+			}
 
-			CFArrayRef converterConfig = (__bridge CFArrayRef)audioConverterPropertySettings;
-			size = sizeof(converterConfig);
-			result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, size, &converterConfig);
+			// Notify ExtAudioFile about the converter property changes
+			CFArrayRef converterConfig = nullptr;
+			result = ExtAudioFileSetProperty(eaf.get(), kExtAudioFileProperty_ConverterConfig, sizeof(converterConfig), &converterConfig);
 			if(result != noErr) {
 				os_log_error(gSFBAudioEncoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ConverterConfig) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 				if(error)

@@ -266,7 +266,16 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFor
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFormatFlags;
 /// Core Audio bits per channel (\c NSNumber representing \c AudioStreamBasicDescription.mBitsPerChannel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel;
-/// Core Audio audio converter configuration (\c NSArray for \c kExtAudioFileProperty_ConverterConfig obtained from \c kAudioConverterPropertySettings)
+/// Core Audio audio converter configuration (\c NSDictionary keyed by \c NSNumber representing \c AudioConverterPropertyID with corresponding appropriately-wrapped value, typically \c NSNumber)
+///
+///	Currently supports:
+///	\c kAudioConverterSampleRateConverterComplexity
+///	\c kAudioConverterSampleRateConverterQuality
+///	\c kAudioConverterCodecQuality
+///	\c kAudioConverterEncodeBitRate
+///	\c kAudioCodecPropertyBitRateControlMode
+///	\c kAudioCodecPropertySoundQualityForVBR
+/// \c kAudioCodecPropertyBitRateForVBR
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
 
 NS_ASSUME_NONNULL_END
