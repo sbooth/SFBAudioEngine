@@ -334,9 +334,13 @@ namespace {
 		formatID = (AudioFormatID)formatIDSetting.unsignedIntValue;
 	else {
 		auto availableFormatIDs = AudioFormatIDsForFileTypeID(fileType, true);
-		// There is no way to determine caller intent and select the most appropriate format; just use the first one
-		if(!availableFormatIDs.empty())
+		// There is no way to determine caller intent and select the most appropriate format; use PCM if available, otherwise use the first one
+		if(!availableFormatIDs.empty()) {
 			formatID = availableFormatIDs[0];
+			auto result = std::find(std::cbegin(availableFormatIDs), std::cend(availableFormatIDs), kAudioFormatLinearPCM);
+			if(result != std::cend(availableFormatIDs))
+				formatID = *result;
+		}
 		os_log_info(gSFBAudioEncoderLog, "SFBAudioEncodingSettingsKeyCoreAudioFormatID is not set: guessed '%{public}.4s' based on format '%{public}.4s'", SFBCStringForOSType(formatID), SFBCStringForOSType(fileType));
 	}
 
