@@ -15,6 +15,8 @@
 
 #import "SFBOggVorbisEncoder.h"
 
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
+
 SFBAudioEncoderName const SFBAudioEncoderNameOggVorbis = @"org.sbooth.AudioEngine.Encoder.OggVorbis";
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate = @"Encoding Target is Bitrate";
@@ -70,9 +72,30 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate
 	if(sourceFormat.channelCount < 1 || sourceFormat.channelCount > 8)
 		return nil;
 
-	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sourceFormat.sampleRate channels:(AVAudioChannelCount)sourceFormat.channelCount interleaved:NO];
-
 	AVAudioChannelLayout *channelLayout = nil;
+	switch(sourceFormat.channelCount) {
+			// Default channel layouts from Vorbis I specification section 4.3.9
+			// http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9
+		case 1:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Mono];				break;
+		case 2:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Stereo];			break;
+		case 3:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_AC3_3_0];			break;
+		case 4:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_Quadraphonic];		break;
+		case 5:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_C];		break;
+		case 6:		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_C];		break;
+		case 7:
+			channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:7,
+							 kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_CenterSurround,
+							 kAudioChannelLabel_LFEScreen];
+			break;
+		case 8:
+			channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:8,
+							 kAudioChannelLabel_Left, kAudioChannelLabel_Center, kAudioChannelLabel_Right,
+							 kAudioChannelLabel_LeftSurround, kAudioChannelLabel_RightSurround, kAudioChannelLabel_RearSurroundLeft, kAudioChannelLabel_RearSurroundRight,
+							 kAudioChannelLabel_LFEScreen];
+			break;
+	}
+
 	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sourceFormat.sampleRate interleaved:NO channelLayout:channelLayout];
 }
 
