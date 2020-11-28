@@ -217,73 +217,91 @@ namespace {
 
 + (void)load
 {
-	[SFBAudioEncoder registerSubclass:[self class]];
+	[SFBAudioEncoder registerSubclass:[self class] priority:-75];
 }
 
 + (NSSet *)supportedPathExtensions
 {
-	UInt32 size = 0;
-	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
-	if(result != noErr) {
-		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+	static NSSet *pathExtensions = nil;
 
-	auto writableTypesCount = size / sizeof(UInt32);
-	std::vector<UInt32> writableTypes(writableTypesCount);
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		UInt32 size = 0;
+		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+		if(result != noErr) {
+			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			pathExtensions = [NSSet set];
+			return;
+		}
 
-	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, &writableTypes[0]);
-	if(result != noErr) {
-		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+		auto writableTypesCount = size / sizeof(UInt32);
+		std::vector<UInt32> writableTypes(writableTypesCount);
 
-	NSMutableSet *supportedExtensions = [NSMutableSet set];
-	for(UInt32 type : writableTypes) {
-		CFArrayRef extensionsForType = nil;
-		size = sizeof(extensionsForType);
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size, &extensionsForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, &writableTypes[0]);
+		if(result != noErr) {
+			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			pathExtensions = [NSSet set];
+			return;
+		}
 
-		if(result == noErr)
-			[supportedExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
-		else
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-	}
+		NSMutableSet *supportedPathExtensions = [NSMutableSet set];
+		for(UInt32 type : writableTypes) {
+			CFArrayRef extensionsForType = nil;
+			size = sizeof(extensionsForType);
+			result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size, &extensionsForType);
 
-	return supportedExtensions;
+			if(result == noErr)
+				[supportedPathExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
+			else
+				os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		}
+
+		pathExtensions = [supportedPathExtensions copy];
+	});
+
+	return pathExtensions;
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	UInt32 size = 0;
-	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
-	if(result != noErr) {
-		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+	static NSSet *mimeTypes = nil;
 
-	auto writableTypesCount = size / sizeof(UInt32);
-	std::vector<UInt32> writableTypes(writableTypesCount);
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		UInt32 size = 0;
+		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size);
+		if(result != noErr) {
+			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			mimeTypes = [NSSet set];
+			return;
+		}
 
-	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, &writableTypes[0]);
-	if(result != noErr) {
-		os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+		auto writableTypesCount = size / sizeof(UInt32);
+		std::vector<UInt32> writableTypes(writableTypesCount);
 
-	NSMutableSet *supportedMIMETypes = [NSMutableSet set];
-	for(UInt32 type : writableTypes) {
-		CFArrayRef mimeTypesForType = nil;
-		size = sizeof(mimeTypesForType);
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size, &mimeTypesForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_WritableTypes, 0, nullptr, &size, &writableTypes[0]);
+		if(result != noErr) {
+			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_WritableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			mimeTypes = [NSSet set];
+			return;
+		}
 
-		if(result == noErr)
-			[supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
-		else
-			os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-	}
+		NSMutableSet *supportedMIMETypes = [NSMutableSet set];
+		for(UInt32 type : writableTypes) {
+			CFArrayRef mimeTypesForType = nil;
+			size = sizeof(mimeTypesForType);
+			result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size, &mimeTypesForType);
 
-	return supportedMIMETypes;
+			if(result == noErr)
+				[supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
+			else
+				os_log_error(gSFBAudioEncoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		}
+
+		mimeTypes = [supportedMIMETypes copy];
+	});
+
+	return mimeTypes;
 }
 
 + (SFBAudioEncoderName)encoderName
@@ -307,6 +325,10 @@ namespace {
 - (AVAudioFormat *)processingFormatForSourceFormat:(AVAudioFormat *)sourceFormat
 {
 	NSParameterAssert(sourceFormat != nil);
+
+	// Validate format
+	if(sourceFormat.streamDescription->mFormatID != kAudioFormatLinearPCM)
+		return nil;
 
 	return sourceFormat;
 }
