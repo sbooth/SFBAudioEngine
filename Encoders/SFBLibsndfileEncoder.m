@@ -340,6 +340,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			case SFBAudioEncoderLibsndfileMajorFormatCAF:		majorFormat = SF_FORMAT_CAF;		break;
 			case SFBAudioEncoderLibsndfileMajorFormatWVE:		majorFormat = SF_FORMAT_WVE;		break;
 			case SFBAudioEncoderLibsndfileMajorFormatOgg:		majorFormat = SF_FORMAT_OGG;		break;
+			case SFBAudioEncoderLibsndfileSubtypeOpus:
 			case SFBAudioEncoderLibsndfileMajorFormatMPC2K:		majorFormat = SF_FORMAT_MPC2K;		break;
 			case SFBAudioEncoderLibsndfileMajorFormatRF64:		majorFormat = SF_FORMAT_RF64;		break;
 			default:
@@ -370,6 +371,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			case SFBAudioEncoderLibsndfileSubtypeMS_ADPCM:		subtype = SF_FORMAT_MS_ADPCM;		break;
 			case SFBAudioEncoderLibsndfileSubtypeGSM610:		subtype = SF_FORMAT_GSM610;			break;
 			case SFBAudioEncoderLibsndfileSubtypeVOX_ADPCM:		subtype = SF_FORMAT_VOX_ADPCM;		break;
+			case SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_16:	subtype = SF_FORMAT_NMS_ADPCM_16;	break;
+			case SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_24:	subtype = SF_FORMAT_NMS_ADPCM_24;	break;
+			case SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_32:	subtype = SF_FORMAT_NMS_ADPCM_32;	break;
 			case SFBAudioEncoderLibsndfileSubtypeG721_32:		subtype = SF_FORMAT_G721_32;		break;
 			case SFBAudioEncoderLibsndfileSubtypeG723_24:		subtype = SF_FORMAT_G723_24;		break;
 			case SFBAudioEncoderLibsndfileSubtypeG723_40:		subtype = SF_FORMAT_G723_40;		break;
@@ -380,6 +384,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			case SFBAudioEncoderLibsndfileSubtypeDPCM_8:		subtype = SF_FORMAT_DPCM_8;			break;
 			case SFBAudioEncoderLibsndfileSubtypeDPCM_16:		subtype = SF_FORMAT_DPCM_16;		break;
 			case SFBAudioEncoderLibsndfileSubtypeVorbis:		subtype = SF_FORMAT_VORBIS;			break;
+			case SFBAudioEncoderLibsndfileSubtypeOpus:			subtype = SF_FORMAT_OPUS;			break;
 			case SFBAudioEncoderLibsndfileSubtypeALAC_16:		subtype = SF_FORMAT_ALAC_16;		break;
 			case SFBAudioEncoderLibsndfileSubtypeALAC_20:		subtype = SF_FORMAT_ALAC_20;		break;
 			case SFBAudioEncoderLibsndfileSubtypeALAC_24:		subtype = SF_FORMAT_ALAC_24;		break;

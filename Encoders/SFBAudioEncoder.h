@@ -365,6 +365,12 @@ typedef NS_ENUM(int, SFBAudioEncoderLibsndfileSubtype) {
 	SFBAudioEncoderLibsndfileSubtypeGSM610,
 	/// OKI / Dialogix ADPCM
 	SFBAudioEncoderLibsndfileSubtypeVOX_ADPCM,
+	/// 16kbs NMS G721-variant encoding
+	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_16,
+	/// 24kbs NMS G721-variant encoding
+	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_24,
+	/// 32kbs NMS G721-variant encoding
+	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_32,
 	/// 32kbs G721 ADPCM encoding
 	SFBAudioEncoderLibsndfileSubtypeG721_32,
 	/// 24kbs G723 ADPCM encoding
@@ -385,6 +391,8 @@ typedef NS_ENUM(int, SFBAudioEncoderLibsndfileSubtype) {
 	SFBAudioEncoderLibsndfileSubtypeDPCM_16,
 	/// Xiph Vorbis encoding
 	SFBAudioEncoderLibsndfileSubtypeVorbis,
+	/// Xiph/Skype Opus encoding
+	SFBAudioEncoderLibsndfileSubtypeOpus,
 	/// Apple Lossless Audio Codec (16 bit)
 	SFBAudioEncoderLibsndfileSubtypeALAC_16,
 	/// Apple Lossless Audio Codec (20 bit)
