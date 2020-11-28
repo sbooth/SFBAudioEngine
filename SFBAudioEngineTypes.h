@@ -9,7 +9,7 @@
 #pragma mark Audio Format Identifiers
 
 /// Additional audio format IDs
-typedef NS_ENUM(UInt32, SFBAudioFormatID) {
+typedef NS_ENUM(AudioFormatID, SFBAudioFormatID) {
 	/// Direct Stream Digital (DSD)
 	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
 	/// DSD over PCM (DoP)
