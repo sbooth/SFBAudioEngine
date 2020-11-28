@@ -400,16 +400,16 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	}
 
 	int endian = 0;
-	NSNumber *endianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
-	if(endianSetting != nil) {
-		int intValue = endianSetting.intValue;
+	NSNumber *fileEndianSetting = [_settings objectForKey:SFBAudioEncodingSettingsKeyLibsndfileFileEndian];
+	if(fileEndianSetting != nil) {
+		int intValue = fileEndianSetting.intValue;
 		switch(intValue) {
-			case SFBAudioEncoderLibsndfileEndianDefault:	endian = SF_ENDIAN_FILE;	break;
-			case SFBAudioEncoderLibsndfileEndianLittle:		endian = SF_ENDIAN_LITTLE;	break;
-			case SFBAudioEncoderLibsndfileEndianBig:		endian = SF_ENDIAN_BIG;		break;
-			case SFBAudioEncoderLibsndfileEndianCPU:		endian = SF_ENDIAN_CPU;		break;
+			case SFBAudioEncoderLibsndfileFileEndianDefault:	endian = SF_ENDIAN_FILE;	break;
+			case SFBAudioEncoderLibsndfileFileEndianLittle:		endian = SF_ENDIAN_LITTLE;	break;
+			case SFBAudioEncoderLibsndfileFileEndianBig:		endian = SF_ENDIAN_BIG;		break;
+			case SFBAudioEncoderLibsndfileFileEndianCPU:		endian = SF_ENDIAN_CPU;		break;
 			default:
-				os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Libsndfile endian-ness: 0x%x", intValue);
+				os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Libsndfile file endian-ness: 0x%x", intValue);
 				break;
 		}
 	}

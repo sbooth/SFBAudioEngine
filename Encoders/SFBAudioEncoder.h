@@ -404,15 +404,15 @@ typedef NS_ENUM(int, SFBAudioEncoderLibsndfileSubtype) {
 } NS_SWIFT_NAME(AudioEncoder.LibsndfileSubtype);
 
 /// Constants for Libsndfile file endian-ness
-typedef NS_ENUM(int, SFBAudioEncoderLibsndfileEndian) {
+typedef NS_ENUM(int, SFBAudioEncoderLibsndfileFileEndian) {
 	/// Default file endian-ness
-	SFBAudioEncoderLibsndfileEndianDefault,
+	SFBAudioEncoderLibsndfileFileEndianDefault,
 	/// Force little endian-ness
-	SFBAudioEncoderLibsndfileEndianLittle,
+	SFBAudioEncoderLibsndfileFileEndianLittle,
 	/// Force big endian-ness
-	SFBAudioEncoderLibsndfileEndianBig,
+	SFBAudioEncoderLibsndfileFileEndianBig,
 	/// Force CPU endian-ness
-	SFBAudioEncoderLibsndfileEndianCPU
-} NS_SWIFT_NAME(AudioEncoder.LibsndfileEndian);
+	SFBAudioEncoderLibsndfileFileEndianCPU
+} NS_SWIFT_NAME(AudioEncoder.LibsndfileFileEndian);
 
 NS_ASSUME_NONNULL_END
