@@ -91,68 +91,86 @@ namespace {
 
 + (NSSet *)supportedPathExtensions
 {
-	UInt32 size = 0;
-	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
-	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+	static NSSet *pathExtensions = nil;
 
-	auto readableTypesCount = size / sizeof(UInt32);
-	std::vector<UInt32> readableTypes(readableTypesCount);
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		UInt32 size = 0;
+		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+		if(result != noErr) {
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			pathExtensions = [NSSet set];
+			return;
+		}
 
-	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
-	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+		auto readableTypesCount = size / sizeof(UInt32);
+		std::vector<UInt32> readableTypes(readableTypesCount);
 
-	NSMutableSet *supportedExtensions = [NSMutableSet set];
-	for(UInt32 type : readableTypes) {
-		CFArrayRef extensionsForType = nil;
-		size = sizeof(extensionsForType);
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size, &extensionsForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+		if(result != noErr) {
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			pathExtensions = [NSSet set];
+			return;
+		}
 
-		if(result == noErr)
-			[supportedExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
-		else
-			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-	}
+		NSMutableSet *supportedPathExtensions = [NSMutableSet set];
+		for(UInt32 type : readableTypes) {
+			CFArrayRef extensionsForType = nil;
+			size = sizeof(extensionsForType);
+			result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ExtensionsForType, sizeof(type), &type, &size, &extensionsForType);
 
-	return supportedExtensions;
+			if(result == noErr)
+				[supportedPathExtensions addObjectsFromArray:(__bridge_transfer NSArray *)extensionsForType];
+			else
+				os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ExtensionsForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		}
+
+		pathExtensions = [supportedPathExtensions copy];
+	});
+
+	return pathExtensions;
 }
 
 + (NSSet *)supportedMIMETypes
 {
-	UInt32 size = 0;
-	auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
-	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+	static NSSet *mimeTypes = nil;
 
-	auto readableTypesCount = size / sizeof(UInt32);
-	std::vector<UInt32> readableTypes(readableTypesCount);
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		UInt32 size = 0;
+		auto result = AudioFileGetGlobalInfoSize(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size);
+		if(result != noErr) {
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfoSize (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			mimeTypes = [NSSet set];
+			return;
+		}
 
-	result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
-	if(result != noErr) {
-		os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return [NSSet set];
-	}
+		auto readableTypesCount = size / sizeof(UInt32);
+		std::vector<UInt32> readableTypes(readableTypesCount);
 
-	NSMutableSet *supportedMIMETypes = [NSMutableSet set];
-	for(UInt32 type : readableTypes) {
-		CFArrayRef mimeTypesForType = nil;
-		size = sizeof(mimeTypesForType);
-		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size, &mimeTypesForType);
+		result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_ReadableTypes, 0, nullptr, &size, &readableTypes[0]);
+		if(result != noErr) {
+			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_ReadableTypes) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+			mimeTypes = [NSSet set];
+			return;
+		}
 
-		if(result == noErr)
-			[supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
-		else
-			os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-	}
+		NSMutableSet *supportedMIMETypes = [NSMutableSet set];
+		for(UInt32 type : readableTypes) {
+			CFArrayRef mimeTypesForType = nil;
+			size = sizeof(mimeTypesForType);
+			result = AudioFileGetGlobalInfo(kAudioFileGlobalInfo_MIMETypesForType, sizeof(type), &type, &size, &mimeTypesForType);
 
-	return supportedMIMETypes;
+			if(result == noErr)
+				[supportedMIMETypes addObjectsFromArray:(__bridge_transfer NSArray *)mimeTypesForType];
+			else
+				os_log_error(gSFBAudioDecoderLog, "AudioFileGetGlobalInfo (kAudioFileGlobalInfo_MIMETypesForType) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		}
+
+		mimeTypes = [supportedMIMETypes copy];
+	});
+
+	return mimeTypes;
 }
 
 - (BOOL)decodingIsLossless
@@ -180,8 +198,8 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "AudioFileOpenWithCallbacks failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
+											 code:result
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -198,8 +216,8 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileWrapAudioFileID failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
+											 code:result
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -233,8 +251,8 @@ namespace {
 			free(layout);
 
 			if(error)
-				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+				*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
+												 code:result
 						descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -303,7 +321,7 @@ namespace {
 	if(!_processingFormat) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -317,8 +335,8 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileSetProperty (kExtAudioFileProperty_ClientDataFormat) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+			*error = [NSError SFB_errorWithDomain:NSOSStatusErrorDomain
+											 code:result
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
