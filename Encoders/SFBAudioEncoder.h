@@ -30,6 +30,8 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameTrueAudio;
 extern SFBAudioEncoderName const SFBAudioEncoderNameWavPack;
 /// Core Audio
 extern SFBAudioEncoderName const SFBAudioEncoderNameCoreAudio;
+/// Libsndfile
+extern SFBAudioEncoderName const SFBAudioEncoderNameLibsndfile;
 
 /// An encoder consuming PCM audio
 NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncoding>
@@ -273,5 +275,136 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBit
 ///	\c kAudioCodecPropertySoundQualityForVBR
 /// \c kAudioCodecPropertyBitRateForVBR
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
+
+/// Libsndfile major format (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat;
+/// Libsndfile subtype (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype;
+/// Libsndfile output file endian-ness (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian;
+
+/// Constants for Libsndfile major formats
+typedef NS_ENUM(int, SFBAudioEncoderLibsndfileMajorFormat) {
+	/// Microsoft WAV format
+	SFBAudioEncoderLibsndfileMajorFormatWAV,
+	/// Apple/SGI AIFF format
+	SFBAudioEncoderLibsndfileMajorFormatAIFF,
+	/// Sun/NeXT AU format
+	SFBAudioEncoderLibsndfileMajorFormatAU,
+	/// \b RAW PCM data
+	SFBAudioEncoderLibsndfileMajorFormatRaw,
+	/// Ensoniq PARIS file format
+	SFBAudioEncoderLibsndfileMajorFormatPAF,
+	/// Amiga IFF / SVX8 / SV16 format
+	SFBAudioEncoderLibsndfileMajorFormatSVX,
+	/// Sphere NIST format
+	SFBAudioEncoderLibsndfileMajorFormatNIST,
+	/// VOC files
+	SFBAudioEncoderLibsndfileMajorFormatVOC,
+	/// Berkeley/IRCAM/CARL
+	SFBAudioEncoderLibsndfileMajorFormatIRCAM,
+	/// Sonic Foundry's 64 bit RIFF/WAV
+	SFBAudioEncoderLibsndfileMajorFormatW64,
+	/// Matlab (tm) V4.2 / GNU Octave 2.0
+	SFBAudioEncoderLibsndfileMajorFormatMAT4,
+	/// Matlab (tm) V5.0 / GNU Octave 2.1
+	SFBAudioEncoderLibsndfileMajorFormatMAT5,
+	/// Portable Voice Format
+	SFBAudioEncoderLibsndfileMajorFormatPVF,
+	/// Fasttracker 2 Extended Instrument
+	SFBAudioEncoderLibsndfileMajorFormatXI,
+	/// HMM Tool Kit format
+	SFBAudioEncoderLibsndfileMajorFormatHTK,
+	/// Midi Sample Dump Standard
+	SFBAudioEncoderLibsndfileMajorFormatSDS,
+	/// Audio Visual Research
+	SFBAudioEncoderLibsndfileMajorFormatAVR,
+	/// MS WAVE with WAVEFORMATEX
+	SFBAudioEncoderLibsndfileMajorFormatWAVEX,
+	/// Sound Designer 2
+	SFBAudioEncoderLibsndfileMajorFormatSD2,
+	/// FLAC lossless file format
+	SFBAudioEncoderLibsndfileMajorFormatFLAC,
+	/// Core Audio File format
+	SFBAudioEncoderLibsndfileMajorFormatCAF,
+	/// Psion WVE format
+	SFBAudioEncoderLibsndfileMajorFormatWVE,
+	/// Xiph OGG container
+	SFBAudioEncoderLibsndfileMajorFormatOgg,
+	/// Akai MPC 2000 sampler
+	SFBAudioEncoderLibsndfileMajorFormatMPC2K,
+	/// RF64 WAV file
+	SFBAudioEncoderLibsndfileMajorFormatRF64
+} NS_SWIFT_NAME(AudioEncoder.LibsndfileMajorFormat);
+
+/// Constants for Libsndfile subtypes
+typedef NS_ENUM(int, SFBAudioEncoderLibsndfileSubtype) {
+	/// Signed 8 bit data
+	SFBAudioEncoderLibsndfileSubtypePCM_S8,
+	/// Signed 16 bit data
+	SFBAudioEncoderLibsndfileSubtypePCM_16,
+	/// Signed 24 bit data
+	SFBAudioEncoderLibsndfileSubtypePCM_24,
+	/// Signed 32 bit data
+	SFBAudioEncoderLibsndfileSubtypePCM_32,
+	/// Unsigned 8 bit data (WAV and RAW only)
+	SFBAudioEncoderLibsndfileSubtypePCM_U8,
+	/// 32 bit float data
+	SFBAudioEncoderLibsndfileSubtypeFloat,
+	/// 64 bit float data
+	SFBAudioEncoderLibsndfileSubtypeDouble,
+	/// U-Law encoded
+	SFBAudioEncoderLibsndfileSubtypeµLAW,
+	/// A-Law encoded
+	SFBAudioEncoderLibsndfileSubtypeALAW,
+	/// IMA ADPCM
+	SFBAudioEncoderLibsndfileSubtypeIMA_ADPCM,
+	/// Microsoft ADPCM
+	SFBAudioEncoderLibsndfileSubtypeMS_ADPCM,
+	/// GSM 6.10 encoding
+	SFBAudioEncoderLibsndfileSubtypeGSM610,
+	/// OKI / Dialogix ADPCM
+	SFBAudioEncoderLibsndfileSubtypeVOX_ADPCM,
+	/// 32kbs G721 ADPCM encoding
+	SFBAudioEncoderLibsndfileSubtypeG721_32,
+	/// 24kbs G723 ADPCM encoding
+	SFBAudioEncoderLibsndfileSubtypeG723_24,
+	/// 40kbs G723 ADPCM encoding
+	SFBAudioEncoderLibsndfileSubtypeG723_40,
+	/// 12 bit Delta Width Variable Word encoding
+	SFBAudioEncoderLibsndfileSubtypeDWVW_12,
+	/// 16 bit Delta Width Variable Word encoding
+	SFBAudioEncoderLibsndfileSubtypeDWVW_16,
+	/// 24 bit Delta Width Variable Word encoding
+	SFBAudioEncoderLibsndfileSubtypeDWVW_24,
+	/// N bit Delta Width Variable Word encoding
+	SFBAudioEncoderLibsndfileSubtypeDWVW_N,
+	/// 8 bit differential PCM (XI only)
+	SFBAudioEncoderLibsndfileSubtypeDPCM_8,
+	/// 16 bit differential PCM (XI only)
+	SFBAudioEncoderLibsndfileSubtypeDPCM_16,
+	/// Xiph Vorbis encoding
+	SFBAudioEncoderLibsndfileSubtypeVorbis,
+	/// Apple Lossless Audio Codec (16 bit)
+	SFBAudioEncoderLibsndfileSubtypeALAC_16,
+	/// Apple Lossless Audio Codec (20 bit)
+	SFBAudioEncoderLibsndfileSubtypeALAC_20,
+	/// Apple Lossless Audio Codec (24 bit)
+	SFBAudioEncoderLibsndfileSubtypeALAC_24,
+	/// Apple Lossless Audio Codec (32 bit)
+	SFBAudioEncoderLibsndfileSubtypeALAC_32
+} NS_SWIFT_NAME(AudioEncoder.LibsndfileSubtype);
+
+/// Constants for Libsndfile file endian-ness
+typedef NS_ENUM(int, SFBAudioEncoderLibsndfileEndian) {
+	/// Default file endian-ness
+	SFBAudioEncoderLibsndfileEndianDefault,
+	/// Force little endian-ness
+	SFBAudioEncoderLibsndfileEndianLittle,
+	/// Force big endian-ness
+	SFBAudioEncoderLibsndfileEndianBig,
+	/// Force CPU endian-ness
+	SFBAudioEncoderLibsndfileEndianCPU
+} NS_SWIFT_NAME(AudioEncoder.LibsndfileEndian);
 
 NS_ASSUME_NONNULL_END
