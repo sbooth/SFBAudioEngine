@@ -79,14 +79,10 @@ extern NSErrorDomain const SFBAudioEncoderErrorDomain NS_SWIFT_NAME(AudioEncoder
 
 /// Possible \c NSError error codes used by \c SFBAudioEncoder
 typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
-	/// File not found
-	SFBAudioEncoderErrorCodeFileNotFound	= 0,
-	/// Input/output error
-	SFBAudioEncoderErrorCodeInputOutput		= 1,
-	/// Invalid desired format
-	SFBAudioEncoderErrorCodeInvalidFormat	= 2,
+	/// Invalid, unknown, or unsupported format
+	SFBAudioEncoderErrorCodeInvalidFormat	= 0,
 	/// Internal encoder error
-	SFBAudioEncoderErrorCodeInternalError	= 3
+	SFBAudioEncoderErrorCodeInternalError	= 1
 } NS_SWIFT_NAME(AudioEncoder.ErrorCode);
 
 #pragma mark - Encoder Settings
