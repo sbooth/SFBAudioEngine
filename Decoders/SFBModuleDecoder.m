@@ -246,7 +246,7 @@ static dumb_off_t get_size_callback(void *f)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Module file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Module file", @"")
@@ -271,7 +271,7 @@ static dumb_off_t get_size_callback(void *f)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Module file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Module file", @"")

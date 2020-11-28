@@ -118,7 +118,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	if(!_mpg123) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -137,7 +137,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -152,7 +152,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -170,7 +170,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -221,7 +221,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")

@@ -103,7 +103,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -119,7 +119,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -138,7 +138,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -155,7 +155,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -176,7 +176,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg Speex file", @"")
@@ -189,7 +189,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The Speex mode in the file “%@” is not supported.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported Ogg Speex file mode", @"")
@@ -205,7 +205,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The Speex version in the file “%@” is not supported.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported Ogg Speex file version", @"")
@@ -222,7 +222,7 @@
 
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInputOutput
+										 code:SFBAudioDecoderErrorCodeInternalError
 									 userInfo:@{
 										 NSLocalizedDescriptionKey: NSLocalizedString(@"Unable to initialize the Speex decoder.", @""),
 										 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Error initializing Speex decoder", @""),

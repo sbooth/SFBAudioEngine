@@ -118,7 +118,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	if(!_demux) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Musepack file", @"")

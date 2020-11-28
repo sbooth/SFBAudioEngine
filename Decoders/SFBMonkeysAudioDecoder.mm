@@ -174,7 +174,7 @@ namespace {
 	if(!decompressor) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Monkey's Audio file", @"")

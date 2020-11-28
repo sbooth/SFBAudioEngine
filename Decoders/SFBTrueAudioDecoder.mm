@@ -99,7 +99,7 @@ namespace {
 	if(!_decoder) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid True Audio file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a True Audio file", @"")
@@ -151,7 +151,7 @@ namespace {
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported True Audio file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Bit depth not supported", @"")

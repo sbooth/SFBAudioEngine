@@ -140,7 +140,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!pathExtension) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unknown file type", @"")
@@ -154,7 +154,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported file type", @"")

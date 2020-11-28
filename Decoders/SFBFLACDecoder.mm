@@ -194,7 +194,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
@@ -209,7 +209,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
@@ -254,7 +254,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Bit depth not supported", @"")

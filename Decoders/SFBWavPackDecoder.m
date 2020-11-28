@@ -172,7 +172,7 @@ static int can_seek_callback(void *id)
 	if(!_wpc) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a WavPack file", @"")
