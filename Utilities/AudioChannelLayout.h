@@ -129,7 +129,7 @@ namespace SFB {
 			inline explicit operator bool() const					{ return mChannelLayout != nullptr; }
 
 			/*! @brief Query whether this \c ChannelLayout is not empty */
-			inline bool operator!() const							{ return !mChannelLayout; }
+			inline bool operator!() const							{ return mChannelLayout == nullptr; }
 
 
 			/*! @brief Retrieve a const pointer to this object's internal \c AudioChannelLayout */
