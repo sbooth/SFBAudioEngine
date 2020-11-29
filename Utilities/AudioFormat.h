@@ -21,7 +21,7 @@ namespace SFB {
 		CF_ENUM(AudioFormatID) {
 			kAudioFormatDirectStreamDigital 	= 'DSD ',	/*!< Direct Stream Digital (DSD) */
 			kAudioFormatDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
-			kAudioFormatMOD 					= 'MOD ',	/*!< MOD */
+			kAudioFormatModule 					= 'MOD ',	/*!< Module */
 			kAudioFormatMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
 			kAudioFormatMusepack 				= 'MPC ',	/*!< Musepack */
 			kAudioFormatShorten 				= 'SHN ',	/*!< Shorten */
