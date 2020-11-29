@@ -24,6 +24,10 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality = @"V
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode = @"Stereo Mode";
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain = @"Calculate Replay Gain";
 
+SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono = @"Mono";
+SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo = @"Stereo";
+SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo = @"Joint Stereo";
+
 template <>
 struct ::std::default_delete<lame_global_flags> {
 	default_delete() = default;
@@ -201,43 +205,19 @@ struct ::std::default_delete<lame_global_flags> {
 		}
 	}
 
-	NSNumber *stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
+	SFBAudioEncodingSettingsValue stereoMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyMP3StereoMode];
 	if(stereoMode != nil) {
-		auto value = stereoMode.intValue;
-		switch(value) {
-			case SFBAudioEncoderMP3StereoModeMono:
-				result = lame_set_mode(_gfp.get(), MONO);
-				if(result == -1) {
-					os_log_error(gSFBAudioEncoderLog, "lame_set_mode(MONO) failed");
-					if(error)
-						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-					return NO;
-				}
-				break;
+		if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeMono)				result = lame_set_mode(_gfp.get(), MONO);
+		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeStereo)			result = lame_set_mode(_gfp.get(), STEREO);
+		else if(stereoMode == SFBAudioEncodingSettingsValueMP3StereoModeJointStereo)	result = lame_set_mode(_gfp.get(), JOINT_STEREO);
+		else
+			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown LAME stereo mode: %{public}@", stereoMode);
 
-			case SFBAudioEncoderMP3StereoModeStereo:
-				result = lame_set_mode(_gfp.get(), STEREO);
-				if(result == -1) {
-					os_log_error(gSFBAudioEncoderLog, "lame_set_mode(STEREO) failed");
-					if(error)
-						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-					return NO;
-				}
-				break;
-
-			case SFBAudioEncoderMP3StereoModeJointStereo:
-				result = lame_set_mode(_gfp.get(), JOINT_STEREO);
-				if(result == -1) {
-					os_log_error(gSFBAudioEncoderLog, "lame_set_mode(JOINT_STEREO) failed");
-					if(error)
-						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-					return NO;
-				}
-				break;
-
-			default:
-				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid LAME stereo mode: %d", value);
-				break;
+		if(result == -1) {
+			os_log_error(gSFBAudioEncoderLog, "lame_set_mode failed");
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
 		}
 	}
 

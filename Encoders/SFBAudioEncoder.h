@@ -41,7 +41,7 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// Returns a set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/*!@brief Returns a set containing the supported MIME types */
+/// Returns a set containing the supported MIME types
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
@@ -96,22 +96,22 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompress
 /// Set to nonzero to verify FLAC encoding (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
 
-/// APE compression level (\c NSNumber)
+/// APE compression level (\c SFBAudioEncodingSettingsValueAPECompressionLevel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
 
 /// Constants for APE compression levels
-typedef NS_ENUM(int, SFBAudioEncoderAPECompressionLevel) {
-	/// Fast compression
-	SFBAudioEncoderAPECompressionLevelFast,
-	/// Normal compression
-	SFBAudioEncoderAPECompressionLevelNormal,
-	/// High compression
-	SFBAudioEncoderAPECompressionLevelHigh,
-	/// Extra high compression
-	SFBAudioEncoderAPECompressionLevelExtraHigh,
-	/// Insane compression
-	SFBAudioEncoderAPECompressionLevelInsane
-} NS_SWIFT_NAME(AudioEncoder.APECompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueAPECompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(APECompressionLevel);
+
+/// Fast compression
+extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelFast;
+/// Normal compression
+extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionNormal;
+/// High compression
+extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionHigh;
+/// Extra high compression
+extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh;
+/// Insane compression
+extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelInsane;
 
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate;
@@ -125,136 +125,136 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableCBR
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3VBRQuality;
 /// Set to nonzero to use fast variable bitrate mode (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3EnableFastVBR;
-/// MP3 stereo mode (\c NSNumber)
+/// MP3 stereo mode (\c SFBAudioEncodingSettingsValueMP3StereoMode)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3StereoMode;
 /// Set to nonzero to calculate replay gain (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3CalculateReplayGain;
 
 /// Constants for MP3 stereo modes
-typedef NS_ENUM(int, SFBAudioEncoderMP3StereoMode) {
-	/// Mono mode
-	SFBAudioEncoderMP3StereoModeMono,
-	/// Stereo mode
-	SFBAudioEncoderMP3StereoModeStereo,
-	/// Joint stereo mode
-	SFBAudioEncoderMP3StereoModeJointStereo
-} NS_SWIFT_NAME(AudioEncoder.MP3StereoMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueMP3StereoMode NS_TYPED_ENUM NS_SWIFT_NAME(MP3StereoMode);
+
+/// Mono mode
+extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeMono;
+/// Stereo mode
+extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo;
+/// Joint stereo mode
+extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo;
 
 /// Set to nonzero to disable resampling (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusPreserveSampleRate;
-/// Ogg Opus complexity (\c NSNumber from 0 (fastest) to 10 (slowest))
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusComplexity;
-/// Ogg Opus bitrate (\c NSNumber from 6 to 256 in kbps)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusBitrate;
-/// Ogg Opus bitrate mode (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusBitrateMode;
-/// Signal type (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusSignalType;
-/// Frame duration in msec (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggOpusFrameDuration;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusPreserveSampleRate;
+/// Opus complexity (\c NSNumber from 0 (fastest) to 10 (slowest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusComplexity;
+/// Opus bitrate (\c NSNumber from 6 to 256 in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrate;
+/// Opus bitrate mode (\c SFBAudioEncodingSettingsValueOpusBitrateMode)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusBitrateMode;
+/// Opus signal type (\c SFBAudioEncodingSettingsValueOpusSignalType)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusSignalType;
+/// Opus frame duration (\c SFBAudioEncodingSettingsValueOpusFrameDuration)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusFrameDuration;
 
-/// Constants for Ogg Opus signal type
-typedef NS_ENUM(int, SFBAudioEncoderOggOpusBitrateMode) {
-	/// VBR
-	SFBAudioEncoderOggOpusBitrateModeVBR,
-	/// Constrained VBR
-	SFBAudioEncoderOggOpusBitrateModeConstrainedVBR,
-	/// Hard CBR
-	SFBAudioEncoderOggOpusBitrateModeHardCBR
-} NS_SWIFT_NAME(AudioEncoder.OggOpusBitrateMode);
+/// Constants for Opus bitrate modes
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusBitrateMode NS_TYPED_ENUM NS_SWIFT_NAME(OpusBitrateMode);
 
-/// Constants for Ogg Opus signal type
-typedef NS_ENUM(int, SFBAudioEncoderOggOpusSignalType) {
-	/// Voice
-	SFBAudioEncoderOggOpusSignalTypeVoice,
-	/// Music
-	SFBAudioEncoderOggOpusSignalTypeMusic
-} NS_SWIFT_NAME(AudioEncoder.OggOpusSignalType);
+/// VBR
+extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeVBR;
+/// Constrained VBR
+extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR;
+/// Hard CBR
+extern SFBAudioEncodingSettingsValueOpusBitrateMode const SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR;
 
-/// Constants for Ogg Opus frame duration
-typedef NS_ENUM(int, SFBAudioEncoderOggOpusFrameDuration) {
-	/// 2.5 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration2_5ms,
-	/// 5 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration5ms,
-	/// 10 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration10ms,
-	/// 20 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration20ms,
-	/// 40 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration40ms,
-	/// 60 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration60ms,
-	/// 80 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration80ms,
-	/// 100 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration100ms,
-	/// 120 msec
-	SFBAudioEncodingSettingsKeyOggOpusFrameDuration120ms
-} NS_SWIFT_NAME(AudioEncoder.OggOpusFrameDuration);
+/// Constants for Opus signal type
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusSignalType NS_TYPED_ENUM NS_SWIFT_NAME(OpusSignalType);
 
-/// Ogg Speex encoding mode (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode;
+/// Voice
+extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeVoice;
+/// Music
+extern SFBAudioEncodingSettingsValueOpusSignalType const SFBAudioEncodingSettingsValueOpusSignalTypeMusic;
+
+/// Constants for Opus frame duration
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueOpusFrameDuration NS_TYPED_ENUM NS_SWIFT_NAME(OpusFrameDuration);
+
+/// 2.5 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms;
+/// 5 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration5ms;
+/// 10 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration10ms;
+/// 20 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration20ms;
+/// 40 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration40ms;
+/// 60 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration60ms;
+/// 80 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration80ms;
+/// 100 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration100ms;
+/// 120 msec
+extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms;
+
+/// Speex encoding mode (\c SFBAudioEncodingSettingsValueSpeexMode)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode;
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate;
-/// Ogg Speex quality (\c NSNumber from 0 to 10)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality;
-/// Ogg Speex encoding complexity (\c NSNumber from 0 to 10)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity;
-/// Ogg Speex bitrate (\c NSNumber in kbps)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate;
+/// Speex quality (\c NSNumber from 0 to 10)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexQuality;
+/// Speex encoding complexity (\c NSNumber from 0 to 10)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexComplexity;
+/// Speex bitrate (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexBitrate;
 /// Set to nonzero to encode at a variable bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR;
-/// Ogg Speex VBR maximum bitrate (\c NSNumber in kbps)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVBR;
+/// Speex VBR maximum bitrate (\c NSNumber in kbps)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate;
 /// Set to nonzero to enable voice activity detection (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVAD;
 /// Set to nonzero to enable discontinuous transmission (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableDTX;
 /// Set to nonzero to encode at an average bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableABR;
 /// Set to nonzero to denoise input (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDenoiseInput;
 /// Set to nonzero to apply adaptive gain control (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableAGC;
 /// Set to nonzero to disable the built-in highpass filter (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter;
 /// The number of Speex frames per Ogg Packet (\c NSNumber from 1 to 10)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket;
 
 /// Constants for Speex modes
-typedef NS_ENUM(int, SFBAudioEncoderOggSpeexMode) {
-	/// Narrowband
-	SFBAudioEncoderOggSpeexModeNarrowband,
-	/// Wideband
-	SFBAudioEncoderOggSpeexModeWideband,
-	/// Ultra-wideband
-	SFBAudioEncoderOggSpeexModeUltraWideband
-} NS_SWIFT_NAME(AudioEncoder.OggSpeexMode);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueSpeexMode NS_TYPED_ENUM NS_SWIFT_NAME(SpeexMode);
+
+/// Narrowband
+extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeNarrowband;
+/// Wideband
+extern SFBAudioEncodingSettingsValueSpeexMode  const SFBAudioEncodingSettingsValueSpeexModeWideband;
+/// Ultra-wideband
+extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband;
 
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisTargetIsBitrate;
-/// Ogg Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisQuality;
-/// Ogg Vorbis nominal bitrate (\c NSNumber in kpbs)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisBitrate;
-/// Ogg Vorbis minimum bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMinBitrate;
-/// Ogg Vorbis maximum bitrate (\c NSNumber)
-extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggVorbisMaxBitrate;
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate;
+/// Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisQuality;
+/// Vorbis nominal bitrate (\c NSNumber in kpbs)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisBitrate;
+/// Vorbis minimum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBitrate;
+/// Vorbis maximum bitrate (\c NSNumber)
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate;
 
-/// WavPack compression level (\c NSNumber)
+/// WavPack compression level (\c SFBAudioEncodingSettingsValueWavPackCompressionLevel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
 
 /// Constants for WavPack  compression levels
-typedef NS_ENUM(int, SFBAudioEncoderWavPackCompressionLevel) {
-	/// Fast compression
-	SFBAudioEncoderWavPackCompressionLevelFast,
-	/// High compression
-	SFBAudioEncoderWavPackCompressionLevelHigh,
-	/// Very high ompression
-	SFBAudioEncoderWavPackCompressionLevelVeryHigh
-} NS_SWIFT_NAME(AudioEncoder.WavPackCompressionLevel);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueWavPackCompressionLevel NS_TYPED_ENUM NS_SWIFT_NAME(WavPackCompressionLevel);
+
+/// Fast compression
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelFast;
+/// High compression
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh;
+/// Very high ompression
+extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh;
 
 /// Core Audio file type ID (\c NSNumber representing \c AudioFileTypeID)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID;
@@ -276,143 +276,143 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBit
 /// \c kAudioCodecPropertyBitRateForVBR
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
 
-/// Libsndfile major format (\c NSNumber)
+/// Libsndfile major format (\c SFBAudioEncodingSettingsValueLibsndfileMajorFormat)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat;
-/// Libsndfile subtype (\c NSNumber)
+/// Libsndfile subtype (\c SFBAudioEncodingSettingsValueLibsndfileSubtype)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileSubtype;
-/// Libsndfile output file endian-ness (\c NSNumber)
+/// Libsndfile output file endian-ness (\c SFBAudioEncodingSettingsValueLibsndfileFileEndian)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileFileEndian;
 
 /// Constants for Libsndfile major formats
-typedef NS_ENUM(int, SFBAudioEncoderLibsndfileMajorFormat) {
-	/// Microsoft WAV format
-	SFBAudioEncoderLibsndfileMajorFormatWAV,
-	/// Apple/SGI AIFF format
-	SFBAudioEncoderLibsndfileMajorFormatAIFF,
-	/// Sun/NeXT AU format
-	SFBAudioEncoderLibsndfileMajorFormatAU,
-	/// \b RAW PCM data
-	SFBAudioEncoderLibsndfileMajorFormatRaw,
-	/// Ensoniq PARIS file format
-	SFBAudioEncoderLibsndfileMajorFormatPAF,
-	/// Amiga IFF / SVX8 / SV16 format
-	SFBAudioEncoderLibsndfileMajorFormatSVX,
-	/// Sphere NIST format
-	SFBAudioEncoderLibsndfileMajorFormatNIST,
-	/// VOC files
-	SFBAudioEncoderLibsndfileMajorFormatVOC,
-	/// Berkeley/IRCAM/CARL
-	SFBAudioEncoderLibsndfileMajorFormatIRCAM,
-	/// Sonic Foundry's 64 bit RIFF/WAV
-	SFBAudioEncoderLibsndfileMajorFormatW64,
-	/// Matlab (tm) V4.2 / GNU Octave 2.0
-	SFBAudioEncoderLibsndfileMajorFormatMAT4,
-	/// Matlab (tm) V5.0 / GNU Octave 2.1
-	SFBAudioEncoderLibsndfileMajorFormatMAT5,
-	/// Portable Voice Format
-	SFBAudioEncoderLibsndfileMajorFormatPVF,
-	/// Fasttracker 2 Extended Instrument
-	SFBAudioEncoderLibsndfileMajorFormatXI,
-	/// HMM Tool Kit format
-	SFBAudioEncoderLibsndfileMajorFormatHTK,
-	/// Midi Sample Dump Standard
-	SFBAudioEncoderLibsndfileMajorFormatSDS,
-	/// Audio Visual Research
-	SFBAudioEncoderLibsndfileMajorFormatAVR,
-	/// MS WAVE with WAVEFORMATEX
-	SFBAudioEncoderLibsndfileMajorFormatWAVEX,
-	/// Sound Designer 2
-	SFBAudioEncoderLibsndfileMajorFormatSD2,
-	/// FLAC lossless file format
-	SFBAudioEncoderLibsndfileMajorFormatFLAC,
-	/// Core Audio File format
-	SFBAudioEncoderLibsndfileMajorFormatCAF,
-	/// Psion WVE format
-	SFBAudioEncoderLibsndfileMajorFormatWVE,
-	/// Xiph OGG container
-	SFBAudioEncoderLibsndfileMajorFormatOgg,
-	/// Akai MPC 2000 sampler
-	SFBAudioEncoderLibsndfileMajorFormatMPC2K,
-	/// RF64 WAV file
-	SFBAudioEncoderLibsndfileMajorFormatRF64
-} NS_SWIFT_NAME(AudioEncoder.LibsndfileMajorFormat);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileMajorFormat NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileMajorFormat);
+
+/// Microsoft WAV format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV;
+/// Apple/SGI AIFF format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF;
+/// Sun/NeXT AU format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU;
+/// \b RAW PCM data
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw;
+/// Ensoniq PARIS file format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF;
+/// Amiga IFF / SVX8 / SV16 format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX;
+/// Sphere NIST format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST;
+/// VOC files
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC;
+/// Berkeley/IRCAM/CARL
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM;
+/// Sonic Foundry's 64 bit RIFF/WAV
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64;
+/// Matlab (tm) V4.2 / GNU Octave 2.0
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4;
+/// Matlab (tm) V5.0 / GNU Octave 2.1
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5;
+/// Portable Voice Format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF;
+/// Fasttracker 2 Extended Instrument
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI;
+/// HMM Tool Kit format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK;
+/// Midi Sample Dump Standard
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS;
+/// Audio Visual Research
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR;
+/// MS WAVE with WAVEFORMATEX
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX;
+/// Sound Designer 2
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2;
+/// FLAC lossless file format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC;
+/// Core Audio File format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF;
+/// Psion WVE format
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE;
+/// Xiph OGG container
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg;
+/// Akai MPC 2000 sampler
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K;
+/// RF64 WAV file
+extern SFBAudioEncodingSettingsValueLibsndfileMajorFormat const SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64;
 
 /// Constants for Libsndfile subtypes
-typedef NS_ENUM(int, SFBAudioEncoderLibsndfileSubtype) {
-	/// Signed 8 bit data
-	SFBAudioEncoderLibsndfileSubtypePCM_S8,
-	/// Signed 16 bit data
-	SFBAudioEncoderLibsndfileSubtypePCM_16,
-	/// Signed 24 bit data
-	SFBAudioEncoderLibsndfileSubtypePCM_24,
-	/// Signed 32 bit data
-	SFBAudioEncoderLibsndfileSubtypePCM_32,
-	/// Unsigned 8 bit data (WAV and RAW only)
-	SFBAudioEncoderLibsndfileSubtypePCM_U8,
-	/// 32 bit float data
-	SFBAudioEncoderLibsndfileSubtypeFloat,
-	/// 64 bit float data
-	SFBAudioEncoderLibsndfileSubtypeDouble,
-	/// U-Law encoded
-	SFBAudioEncoderLibsndfileSubtypeµLAW,
-	/// A-Law encoded
-	SFBAudioEncoderLibsndfileSubtypeALAW,
-	/// IMA ADPCM
-	SFBAudioEncoderLibsndfileSubtypeIMA_ADPCM,
-	/// Microsoft ADPCM
-	SFBAudioEncoderLibsndfileSubtypeMS_ADPCM,
-	/// GSM 6.10 encoding
-	SFBAudioEncoderLibsndfileSubtypeGSM610,
-	/// OKI / Dialogix ADPCM
-	SFBAudioEncoderLibsndfileSubtypeVOX_ADPCM,
-	/// 16kbs NMS G721-variant encoding
-	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_16,
-	/// 24kbs NMS G721-variant encoding
-	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_24,
-	/// 32kbs NMS G721-variant encoding
-	SFBAudioEncoderLibsndfileSubtypeNMS_ADPCM_32,
-	/// 32kbs G721 ADPCM encoding
-	SFBAudioEncoderLibsndfileSubtypeG721_32,
-	/// 24kbs G723 ADPCM encoding
-	SFBAudioEncoderLibsndfileSubtypeG723_24,
-	/// 40kbs G723 ADPCM encoding
-	SFBAudioEncoderLibsndfileSubtypeG723_40,
-	/// 12 bit Delta Width Variable Word encoding
-	SFBAudioEncoderLibsndfileSubtypeDWVW_12,
-	/// 16 bit Delta Width Variable Word encoding
-	SFBAudioEncoderLibsndfileSubtypeDWVW_16,
-	/// 24 bit Delta Width Variable Word encoding
-	SFBAudioEncoderLibsndfileSubtypeDWVW_24,
-	/// N bit Delta Width Variable Word encoding
-	SFBAudioEncoderLibsndfileSubtypeDWVW_N,
-	/// 8 bit differential PCM (XI only)
-	SFBAudioEncoderLibsndfileSubtypeDPCM_8,
-	/// 16 bit differential PCM (XI only)
-	SFBAudioEncoderLibsndfileSubtypeDPCM_16,
-	/// Xiph Vorbis encoding
-	SFBAudioEncoderLibsndfileSubtypeVorbis,
-	/// Xiph/Skype Opus encoding
-	SFBAudioEncoderLibsndfileSubtypeOpus,
-	/// Apple Lossless Audio Codec (16 bit)
-	SFBAudioEncoderLibsndfileSubtypeALAC_16,
-	/// Apple Lossless Audio Codec (20 bit)
-	SFBAudioEncoderLibsndfileSubtypeALAC_20,
-	/// Apple Lossless Audio Codec (24 bit)
-	SFBAudioEncoderLibsndfileSubtypeALAC_24,
-	/// Apple Lossless Audio Codec (32 bit)
-	SFBAudioEncoderLibsndfileSubtypeALAC_32
-} NS_SWIFT_NAME(AudioEncoder.LibsndfileSubtype);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileSubtype NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileSubtype);
+
+/// Signed 8 bit data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8;
+/// Signed 16 bit data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16;
+/// Signed 24 bit data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24;
+/// Signed 32 bit data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32;
+/// Unsigned 8 bit data (WAV and RAW only)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8;
+/// 32 bit float data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat;
+/// 64 bit float data
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble;
+/// U-Law encoded
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW;
+/// A-Law encoded
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW;
+/// IMA ADPCM
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM;
+/// Microsoft ADPCM
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM;
+/// GSM 6.10 encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610;
+/// OKI / Dialogix ADPCM
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM;
+/// 16kbs NMS G721-variant encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16;
+/// 24kbs NMS G721-variant encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24;
+/// 32kbs NMS G721-variant encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32;
+/// 32kbs G721 ADPCM encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32;
+/// 24kbs G723 ADPCM encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24;
+/// 40kbs G723 ADPCM encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40;
+/// 12 bit Delta Width Variable Word encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12;
+/// 16 bit Delta Width Variable Word encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16;
+/// 24 bit Delta Width Variable Word encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24;
+/// N bit Delta Width Variable Word encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N;
+/// 8 bit differential PCM (XI only)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8;
+/// 16 bit differential PCM (XI only)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16;
+/// Xiph Vorbis encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis;
+/// Xiph/Skype Opus encoding
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus;
+/// Apple Lossless Audio Codec (16 bit)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16;
+/// Apple Lossless Audio Codec (20 bit)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20;
+/// Apple Lossless Audio Codec (24 bit)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24;
+/// Apple Lossless Audio Codec (32 bit)
+extern SFBAudioEncodingSettingsValueLibsndfileSubtype const SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32;
 
 /// Constants for Libsndfile file endian-ness
-typedef NS_ENUM(int, SFBAudioEncoderLibsndfileFileEndian) {
-	/// Default file endian-ness
-	SFBAudioEncoderLibsndfileFileEndianDefault,
-	/// Force little endian-ness
-	SFBAudioEncoderLibsndfileFileEndianLittle,
-	/// Force big endian-ness
-	SFBAudioEncoderLibsndfileFileEndianBig,
-	/// Force CPU endian-ness
-	SFBAudioEncoderLibsndfileFileEndianCPU
-} NS_SWIFT_NAME(AudioEncoder.LibsndfileFileEndian);
+typedef SFBAudioEncodingSettingsValue SFBAudioEncodingSettingsValueLibsndfileFileEndian NS_TYPED_ENUM NS_SWIFT_NAME(LibsndfileFileEndian);
+
+/// Default file endian-ness
+extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault;
+/// Force little endian-ness
+extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle;
+/// Force big endian-ness
+extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianBig;
+/// Force CPU endian-ness
+extern SFBAudioEncodingSettingsValueLibsndfileFileEndian const SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU;
 
 NS_ASSUME_NONNULL_END

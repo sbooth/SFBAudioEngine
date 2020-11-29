@@ -17,6 +17,10 @@ SFBAudioEncoderName const SFBAudioEncoderNameWavPack = @"org.sbooth.AudioEngine.
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel = @"Compression Level";
 
+SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelFast = @"Fast";
+SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh = @"High";
+SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh = @"Very High";
+
 @interface SFBWavPackEncoder ()
 {
 @package
@@ -145,17 +149,13 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 	_config.flags = CONFIG_MD5_CHECKSUM;
 
-	NSNumber *level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
+	SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyWavPackCompressionLevel];
 	if(level != nil) {
-		int intValue = level.intValue;
-		switch(intValue) {
-			case SFBAudioEncoderWavPackCompressionLevelFast:		_config.flags |= CONFIG_FAST_FLAG;			break;
-			case SFBAudioEncoderWavPackCompressionLevelHigh:		_config.flags |= CONFIG_HIGH_FLAG;			break;
-			case SFBAudioEncoderWavPackCompressionLevelVeryHigh:	_config.flags |= CONFIG_VERY_HIGH_FLAG;		break;
-			default:
-				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid WavPack compression level: %d", intValue);
-				break;
-		}
+		if(level == SFBAudioEncodingSettingsValueWavPackCompressionLevelFast)				_config.flags |= CONFIG_FAST_FLAG;
+		else if(level == SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh)			_config.flags |= CONFIG_HIGH_FLAG;
+		else if(level == SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh)		_config.flags |= CONFIG_VERY_HIGH_FLAG;
+		else
+			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown WavPack compression level: %{public}@", level);
 	}
 
 	if(!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1, NULL)) {

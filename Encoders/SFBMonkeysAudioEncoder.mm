@@ -23,6 +23,12 @@ SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio = @"org.sbooth.AudioEn
 
 SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel = @"Compression Level";
 
+SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelFast = @"Fast";
+SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelNormal = @"Normal";
+SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelHigh = @"High";
+SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh = @"Extra High";
+SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelInsane = @"Insane";
+
 namespace {
 
 	// The I/O interface for MAC
@@ -244,19 +250,15 @@ namespace {
 	_ioInterface = std::make_unique<APEIOInterface>(_outputSource);
 
 	int compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
-	NSNumber *level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
+	SFBAudioEncodingSettingsValue level = [_settings objectForKey:SFBAudioEncodingSettingsKeyAPECompressionLevel];
 	if(level != nil) {
-		auto intValue = level.intValue;
-		switch(intValue) {
-			case SFBAudioEncoderAPECompressionLevelFast:		compressionLevel = MAC_COMPRESSION_LEVEL_FAST;			break;
-			case SFBAudioEncoderAPECompressionLevelNormal:		compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;		break;
-			case SFBAudioEncoderAPECompressionLevelHigh:		compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;			break;
-			case SFBAudioEncoderAPECompressionLevelExtraHigh:	compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;	break;
-			case SFBAudioEncoderAPECompressionLevelInsane:		compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;		break;
-			default:
-				os_log_info(gSFBAudioEncoderLog, "Ignoring invalid APE compression level: %d", intValue);
-				break;
-		}
+		if(level == SFBAudioEncodingSettingsValueAPECompressionLevelFast)				compressionLevel = MAC_COMPRESSION_LEVEL_FAST;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelNormal)		compressionLevel = MAC_COMPRESSION_LEVEL_NORMAL;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelHigh)			compressionLevel = MAC_COMPRESSION_LEVEL_HIGH;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh)		compressionLevel = MAC_COMPRESSION_LEVEL_EXTRA_HIGH;
+		else if(level == SFBAudioEncodingSettingsValueAPECompressionLevelInsane)		compressionLevel = MAC_COMPRESSION_LEVEL_INSANE;
+		else
+			os_log_info(gSFBAudioEncoderLog, "Ignoring unknown APE compression level: %{public}@", level);
 	}
 
 	APE::WAVEFORMATEX wve;

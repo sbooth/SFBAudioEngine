@@ -26,20 +26,24 @@
 
 SFBAudioEncoderName const SFBAudioEncoderNameOggSpeex = @"org.sbooth.AudioEngine.Encoder.OggSpeex";
 
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexMode = @"Encoding Mode";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate = @"Encoding Target is Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexQuality = @"Quality";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexComplexity = @"Complexity";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexBitrate = @"Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVBR = @"Enable VBR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate = @"VBR Maximum Bitrate";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableVAD = @"Enable VAD";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableDTX = @"Enable DTX";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableABR = @"Enable ABR";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput = @"Denoise Input";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexEnableAGC = @"Enable AGC";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter = @"Disable Highpass Filter";
-SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket = @"Speex Frames per Ogg Packet";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode = @"Encoding Mode";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexTargetIsBitrate = @"Encoding Target is Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexQuality = @"Quality";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexComplexity = @"Complexity";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexBitrate = @"Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVBR = @"Enable VBR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate = @"VBR Maximum Bitrate";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableVAD = @"Enable VAD";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableDTX = @"Enable DTX";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableABR = @"Enable ABR";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDenoiseInput = @"Denoise Input";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexEnableAGC = @"Enable AGC";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter = @"Disable Highpass Filter";
+SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket = @"Speex Frames per Ogg Packet";
+
+SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeNarrowband = @"Narrowband";
+SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeWideband = @"Wideband";
+SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband = @"Ultra Wideband";
 
 static void vorbis_comment_init(char **comments, size_t *length, const char *vendor_string)
 {
@@ -146,16 +150,14 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 	double sampleRate = sourceFormat.sampleRate;
 
-	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexMode];
+	SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
 	if(mode != nil) {
 		// Determine the desired sample rate
-		switch(mode.intValue) {
-			case SFBAudioEncoderOggSpeexModeNarrowband:		sampleRate = 8000;		break;
-			case SFBAudioEncoderOggSpeexModeWideband:		sampleRate = 16000;		break;
-			case SFBAudioEncoderOggSpeexModeUltraWideband:	sampleRate = 32000;		break;
-			default:
-				return nil;
-		}
+		if(mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)			sampleRate = 8000;
+		else if(mode == SFBAudioEncodingSettingsValueSpeexModeWideband)			sampleRate = 16000;
+		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	sampleRate = 32000;
+		else
+			return nil;
 	}
 	else if(sampleRate > 48000 || sampleRate < 6000)
 		return nil;
@@ -184,34 +186,29 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 	// Setup the encoder
 	const SpeexMode *speex_mode = NULL;
-	NSNumber *mode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexMode];
+	SFBAudioEncodingSettingsValue mode = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexMode];
 	if(mode == nil) {
-		if(_processingFormat.sampleRate > 25000)
-			speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
-		else if(_processingFormat.sampleRate > 12500)
-			speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
-		else if(_processingFormat.sampleRate >= 6000)
-			speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
+		if(_processingFormat.sampleRate > 25000)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
+		else if(_processingFormat.sampleRate > 12500)		speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
+		else if(_processingFormat.sampleRate >= 6000)		speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
 	}
 	else {
-		switch(mode.intValue) {
-			case SFBAudioEncoderOggSpeexModeNarrowband:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);		break;
-			case SFBAudioEncoderOggSpeexModeWideband:		speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);		break;
-			case SFBAudioEncoderOggSpeexModeUltraWideband:	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);		break;
-
-			default:
-				os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Ogg Speex mode: %d", mode.intValue);
-				ogg_stream_clear(&_os);
-				if(error)
-					*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-				return NO;
+		if(mode == SFBAudioEncodingSettingsValueSpeexModeNarrowband)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_NB);
+		else if(mode == SFBAudioEncodingSettingsValueSpeexModeWideband)			speex_mode = speex_lib_get_mode(SPEEX_MODEID_WB);
+		else if(mode == SFBAudioEncodingSettingsValueSpeexModeUltraWideband)	speex_mode = speex_lib_get_mode(SPEEX_MODEID_UWB);
+		else {
+			os_log_error(gSFBAudioEncoderLog, "Ignoring invalid Speex mode: %{public}@", mode);
+			ogg_stream_clear(&_os);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+			return NO;
 		}
 	}
 
 	// Setup the encoder
 	_st = speex_encoder_init(speex_mode);
 	if(_st == NULL) {
-		os_log_error(gSFBAudioEncoderLog, "Unrecognized Ogg Speex mode: %d", mode.intValue);
+		os_log_error(gSFBAudioEncoderLog, "Unrecognized Speex mode: %{public}@", mode);
 		ogg_stream_clear(&_os);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
@@ -222,32 +219,32 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:(AVAudioFrameCount)_speex_frame_size];
 
-	NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexComplexity] ?: @3;
+	NSNumber *complexity = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexComplexity] ?: @3;
 	spx_int32_t complexity_value = complexity.intValue;
 	speex_encoder_ctl(_st, SPEEX_SET_COMPLEXITY, &complexity_value);
 
 	spx_int32_t rate = (spx_int32_t)_processingFormat.sampleRate; // 8, 16, 32
 	speex_encoder_ctl(_st, SPEEX_SET_SAMPLING_RATE, &rate);
 
-	spx_int32_t vbr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVBR] boolValue];
-	spx_int32_t vad_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVAD] boolValue];
-	spx_int32_t dtx_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableDTX] boolValue];
-	spx_int32_t abr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableABR] boolValue];
+	spx_int32_t vbr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVBR] boolValue];
+	spx_int32_t vad_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVAD] boolValue];
+	spx_int32_t dtx_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableDTX] boolValue];
+	spx_int32_t abr_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableABR] boolValue];
 
-	NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexQuality] ?: @-1;
+	NSNumber *quality = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexQuality] ?: @-1;
 
 	// Encoder mode
-	if([[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexTargetIsBitrate] boolValue]) {
-		NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexBitrate];
+	if([[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexTargetIsBitrate] boolValue]) {
+		NSNumber *bitrate = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexBitrate];
 		if(bitrate != nil) {
 			spx_int32_t bitrate_value = bitrate.intValue;
 			speex_encoder_ctl(_st, SPEEX_SET_BITRATE, &bitrate_value);
 		}
 		else
-			os_log_info(gSFBAudioEncoderLog, "Ogg Speex encoding target is bitrate but no bitrate specified");
+			os_log_info(gSFBAudioEncoderLog, "Speex encoding target is bitrate but no bitrate specified");
 	}
 	else if(quality.intValue >= 0) {
-		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexVBRMaxBitrate] intValue];
+		spx_int32_t vbr_max = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate] intValue];
 		if(vbr_enabled) {
 			if(vbr_max > 0)
 				speex_encoder_ctl(_st, SPEEX_SET_VBR_MAX_BITRATE, &vbr_max);
@@ -277,13 +274,13 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 		os_log_info(gSFBAudioEncoderLog, "VAD is implied by VBR or ABR");
 
 
-	spx_int32_t highpass_enabled = ![[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexDisableHighpassFilter] boolValue];
+	spx_int32_t highpass_enabled = ![[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter] boolValue];
 	speex_encoder_ctl(_st, SPEEX_SET_HIGHPASS, &highpass_enabled);
 
 	speex_encoder_ctl(_st, SPEEX_GET_LOOKAHEAD, &_speex_lookahead);
 
-	spx_int32_t denoise_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexDenoiseInput] boolValue];
-	spx_int32_t agc_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableAGC] boolValue];
+	spx_int32_t denoise_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexDenoiseInput] boolValue];
+	spx_int32_t agc_enabled = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableAGC] boolValue];
 	if(denoise_enabled || agc_enabled) {
 		_preprocess = speex_preprocess_state_init(_speex_frame_size, rate);
 		speex_preprocess_ctl(_preprocess, SPEEX_PREPROCESS_SET_DENOISE, &denoise_enabled);
@@ -296,11 +293,11 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	speex_init_header(&header, (int)_processingFormat.sampleRate, (int)_processingFormat.channelCount, speex_mode);
 
 	_speex_frames_per_ogg_packet = 1;  //1-10 default 1
-	NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexSpeexFramesPerOggPacket] ?: @1;
+	NSNumber *framesPerPacket = [_settings objectForKey:SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket] ?: @1;
 	if(framesPerPacket != nil) {
 		int intValue = framesPerPacket.intValue;
 		if(intValue < 1 || intValue > 10) {
-			os_log_error(gSFBAudioEncoderLog, "Invalid Ogg Speex frames per packet: %d", intValue);
+			os_log_error(gSFBAudioEncoderLog, "Invalid Speex frames per packet: %d", intValue);
 			ogg_stream_clear(&_os);
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
@@ -310,7 +307,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	}
 
 	header.frames_per_packet = _speex_frames_per_ogg_packet;
-	header.vbr = [[_settings objectForKey:SFBAudioEncodingSettingsKeyOggSpeexEnableVBR] boolValue];
+	header.vbr = [[_settings objectForKey:SFBAudioEncodingSettingsKeySpeexEnableVBR] boolValue];
 	header.nb_channels = (spx_int32_t)_processingFormat.channelCount;
 
 	int packet_size;
