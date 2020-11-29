@@ -3,7 +3,9 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
+#import <os/log.h>
+
+#import <memory>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wquoted-include-in-framework-header"
@@ -42,24 +44,42 @@ SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsVal
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration100ms = @"100 msec";
 SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms = @"120 msec";
 
-static int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
-{
-	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-	NSInteger bytesWritten;
-	return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] && bytesWritten == len);
-}
+template <>
+struct ::std::default_delete<OggOpusComments> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(OggOpusComments *comments) const noexcept { ope_comments_destroy(comments); }
+};
 
-static int close_callback(void *user_data)
-{
-	SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
-	return ![encoder->_outputSource closeReturningError:nil];
+template <>
+struct ::std::default_delete<OggOpusEnc> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(OggOpusEnc *enc) const noexcept { ope_encoder_destroy(enc); }
+};
+
+namespace {
+	int write_callback(void *user_data, const unsigned char *ptr, opus_int32 len)
+	{
+		SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
+		NSInteger bytesWritten;
+		return !([encoder->_outputSource writeBytes:ptr length:len bytesWritten:&bytesWritten error:nil] && bytesWritten == len);
+	}
+
+	int close_callback(void *user_data)
+	{
+		SFBOggOpusEncoder *encoder = (__bridge SFBOggOpusEncoder *)user_data;
+		return ![encoder->_outputSource closeReturningError:nil];
+	}
 }
 
 @interface SFBOggOpusEncoder ()
 {
 @private
-	OggOpusEnc *_enc;
-	OggOpusComments *_comments;
+	std::unique_ptr<OggOpusEnc> _enc;
+	std::unique_ptr<OggOpusComments> _comments;
 	AVAudioPCMBuffer *_frameBuffer;
 	AVAudioFramePosition _framePosition;
 }
@@ -112,18 +132,18 @@ static int close_callback(void *user_data)
 
 - (BOOL)openReturningError:(NSError **)error
 {
-//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
-//	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
-//	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
+	//	NSAssert(_processingFormat.sampleRate <= 768000, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+	//	NSAssert(_processingFormat.sampleRate >= 100, @"Invalid sample rate: %f", _processingFormat.sampleRate);
+	//	NSAssert(_processingFormat.channelCount < 1, @"Invalid channel count: %d", _processingFormat.channelCount);
+	//	NSAssert(_processingFormat.channelCount > 255, @"Invalid channel count: %d", _processingFormat.channelCount);
 
 	if(![super openReturningError:error])
 		return NO;
 
 	OpusEncCallbacks callbacks = { write_callback, close_callback };
 
-	OggOpusComments *comments = ope_comments_create();
-	if(comments == NULL) {
+	auto comments = std::unique_ptr<OggOpusComments>(ope_comments_create());
+	if(!comments) {
 		os_log_error(gSFBAudioEncoderLog, "ope_comments_create failed");
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
@@ -132,27 +152,19 @@ static int close_callback(void *user_data)
 
 	char version [128];
 	snprintf(version, 128, "SFBAudioEngine Ogg Opus Encoder (%s)", opus_get_version_string());
-	int result = ope_comments_add(comments, "ENCODER", version);
+	int result = ope_comments_add(comments.get(), "ENCODER", version);
 	if(result != OPE_OK) {
 		os_log_error(gSFBAudioEncoderLog, "ope_comments_add(ENCODER) failed: %{public}s", ope_strerror(result));
-
-		ope_comments_destroy(comments);
-
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 		return NO;
 	}
 
-	OggOpusEnc *enc = ope_encoder_create_callbacks(&callbacks, (__bridge  void*)self, comments, (opus_int32)_processingFormat.sampleRate, (int)_processingFormat.channelCount, _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result);
-	if(enc == NULL) {
+	auto enc = std::unique_ptr<OggOpusEnc>((ope_encoder_create_callbacks(&callbacks, (__bridge  void*)self, comments.get(), (opus_int32)_processingFormat.sampleRate, (int)_processingFormat.channelCount, _processingFormat.channelCount > 8 ? 255 : _processingFormat.channelCount > 2, &result)));
+	if(!enc) {
 		os_log_error(gSFBAudioEncoderLog, "ope_encoder_create_callbacks failed: %{public}s", ope_strerror(result));
-
-		ope_comments_destroy(comments);
-
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 		return NO;
 	}
 
@@ -161,16 +173,11 @@ static int close_callback(void *user_data)
 		opus_int32 intValue = bitrate.intValue;
 		switch(intValue) {
 			case 6 ... 256:
-				result = ope_encoder_ctl(enc, OPUS_SET_BITRATE(MIN(256 * (opus_int32)_processingFormat.channelCount, intValue) * 1000));
+				result = ope_encoder_ctl(enc.get(), OPUS_SET_BITRATE(MIN(256 * (opus_int32)_processingFormat.channelCount, intValue) * 1000));
 				if(result != OPE_OK) {
 					os_log_error(gSFBAudioEncoderLog, "OPUS_SET_BITRATE failed: %{public}s", ope_strerror(result));
-
-					ope_encoder_destroy(enc);
-					ope_comments_destroy(comments);
-
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 					return NO;
 				}
 				break;
@@ -182,21 +189,16 @@ static int close_callback(void *user_data)
 
 	SFBAudioEncodingSettingsValue bitrateMode = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusBitrateMode];
 	if(bitrateMode != nil) {
-		if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR)						result = ope_encoder_ctl(enc, OPUS_SET_VBR(1));
-		else if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR)		result = ope_encoder_ctl(enc, OPUS_SET_VBR_CONSTRAINT(1));
-		else if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR)				result = ope_encoder_ctl(enc, OPUS_SET_VBR(0));
+		if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeVBR)						result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(1));
+		else if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR)		result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR_CONSTRAINT(1));
+		else if(bitrateMode == SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR)				result = ope_encoder_ctl(enc.get(), OPUS_SET_VBR(0));
 		else
 			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus bitrate mode: %{public}@", bitrateMode);
 
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "OPUS_SET_VBR[_CONSTRAINT] failed: %{public}s", ope_strerror(result));
-
-			ope_encoder_destroy(enc);
-			ope_comments_destroy(comments);
-
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 			return NO;
 		}
 	}
@@ -206,16 +208,11 @@ static int close_callback(void *user_data)
 		int intValue = complexity.intValue;
 		switch(intValue) {
 			case 0 ... 10:
-				result = ope_encoder_ctl(enc, OPUS_SET_COMPLEXITY(intValue));
+				result = ope_encoder_ctl(enc.get(), OPUS_SET_COMPLEXITY(intValue));
 				if(result != OPE_OK) {
 					os_log_error(gSFBAudioEncoderLog, "OPUS_SET_COMPLEXITY failed: %{public}s", ope_strerror(result));
-
-					ope_encoder_destroy(enc);
-					ope_comments_destroy(comments);
-
 					if(error)
 						*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 					return NO;
 				}
 				break;
@@ -228,20 +225,15 @@ static int close_callback(void *user_data)
 
 	SFBAudioEncodingSettingsValue signalType = [_settings objectForKey:SFBAudioEncodingSettingsKeyOpusSignalType];
 	if(signalType != nil) {
-		if(signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice)			result = ope_encoder_ctl(enc, OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
-		else if(signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic)		result = ope_encoder_ctl(enc, OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
+		if(signalType == SFBAudioEncodingSettingsValueOpusSignalTypeVoice)			result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
+		else if(signalType == SFBAudioEncodingSettingsValueOpusSignalTypeMusic)		result = ope_encoder_ctl(enc.get(), OPUS_SET_SIGNAL(OPUS_SIGNAL_MUSIC));
 		else
 			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus signal type: %{public}@", signalType);
 
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "OPUS_SET_SIGNAL failed: %{public}s", ope_strerror(result));
-
-			ope_encoder_destroy(enc);
-			ope_comments_destroy(comments);
-
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 			return NO;
 		}
 	}
@@ -253,88 +245,76 @@ static int close_callback(void *user_data)
 	if(frameDuration != nil) {
 		if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms) {
 			frameCapacity = 120;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_2_5_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration5ms) {
 			frameCapacity = 240;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_5_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration10ms) {
 			frameCapacity = 480;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_10_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_10_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration20ms) {
 			frameCapacity = 960;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_20_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration40ms) {
 			frameCapacity = 1920;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_40_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_40_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration60ms) {
 			frameCapacity = 2880;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_60_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_60_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration80ms) {
 			frameCapacity = 3840;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_80_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_80_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration100ms) {
 			frameCapacity = 4800;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_100_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_100_MS));
 		}
 		else if(signalType == SFBAudioEncodingSettingsValueOpusFrameDuration120ms) {
 			frameCapacity = 5760;
-			result = ope_encoder_ctl(_enc, OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
+			result = ope_encoder_ctl(enc.get(), OPUS_SET_EXPERT_FRAME_DURATION(OPUS_FRAMESIZE_120_MS));
 		}
 		else
 			os_log_error(gSFBAudioEncoderLog, "Ignoring unknown Opus frame duration: %{public}@", frameDuration);
 
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "OPUS_SET_EXPERT_FRAME_DURATION failed: %{public}s", ope_strerror(result));
-
-			ope_encoder_destroy(enc);
-			ope_comments_destroy(comments);
-
 			if(error)
 				*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
-
 			return NO;
 		}
 	}
 
 	_frameBuffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:_processingFormat frameCapacity:frameCapacity];
 
-	AudioStreamBasicDescription outputStreamDescription = {0};
+	AudioStreamBasicDescription outputStreamDescription{};
 	outputStreamDescription.mFormatID			= kAudioFormatOpus;
 	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];
 
-	_enc = enc;
-	_comments = comments;
+	_enc = std::move(enc);
+	_comments = std::move(comments);
 
 	return YES;
 }
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	if(_enc) {
-		ope_encoder_destroy(_enc);
-		_enc = NULL;
-	}
-
-	if(_comments) {
-		ope_comments_destroy(_comments);
-		_comments = NULL;
-	}
+	_enc.reset();
+	_comments.reset();
 
 	return [super closeReturningError:error];
 }
 
 - (BOOL)isOpen
 {
-	return _enc != NULL;
+	return _enc != nullptr;
 }
 
 - (AVAudioFramePosition)framePosition
@@ -365,7 +345,7 @@ static int close_callback(void *user_data)
 
 		// Encode the next Opus frame
 		if(_frameBuffer.isFull) {
-			int result = ope_encoder_write_float(_enc, (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
+			int result = ope_encoder_write_float(_enc.get(), (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
 			if(result != OPE_OK) {
 				os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
 				if(error)
@@ -389,7 +369,7 @@ static int close_callback(void *user_data)
 {
 	// Write remaining partial frame
 	if(!_frameBuffer.isEmpty) {
-		int result = ope_encoder_write_float(_enc, (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
+		int result = ope_encoder_write_float(_enc.get(), (float *)_frameBuffer.audioBufferList->mBuffers[0].mData, (int)_frameBuffer.frameLength);
 		if(result != OPE_OK) {
 			os_log_error(gSFBAudioEncoderLog, "ope_encoder_write_float failed: %{public}s", ope_strerror(result));
 			if(error)
@@ -401,7 +381,7 @@ static int close_callback(void *user_data)
 		_frameBuffer.frameLength = 0;
 	}
 
-	int result = ope_encoder_drain(_enc);
+	int result = ope_encoder_drain(_enc.get());
 	if(result != OPE_OK) {
 		os_log_error(gSFBAudioEncoderLog, "ope_encoder_drain failed: %{public}s", ope_strerror(result));
 		if(error)
