@@ -12,6 +12,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString * SFBAudioEncodingSettingsKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncodingSettingsKey);
+typedef id SFBAudioEncodingSettingsValue NS_SWIFT_NAME(AudioEncodingSettingsValue);
 
 NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 
@@ -64,7 +65,7 @@ NS_SWIFT_NAME(AudioEncoding) @protocol SFBAudioEncoding
 #pragma mark - Encoding
 
 /// Encoder settings
-@property (nonatomic, copy, nullable) NSDictionary<SFBAudioEncodingSettingsKey, id> *settings;
+@property (nonatomic, copy, nullable) NSDictionary<SFBAudioEncodingSettingsKey, SFBAudioEncodingSettingsValue> *settings;
 
 /// Encodes audio
 /// @param buffer A buffer to receive the decoded audio
