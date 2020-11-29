@@ -11,6 +11,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
+
 static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian, BOOL isNonInterleaved)
 {
 	return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? kAudioFormatFlagIsBigEndian : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? kAudioFormatFlagIsNonInterleaved : 0);
@@ -157,6 +159,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet set];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameLibsndfile;
 }
 
 - (BOOL)decodingIsLossless

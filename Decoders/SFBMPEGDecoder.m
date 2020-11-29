@@ -12,6 +12,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
+
 // ========================================
 // Initialization
 static void Setupmpg123(void) __attribute__ ((constructor));
@@ -101,6 +103,11 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/mpeg"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMPEG;
 }
 
 - (BOOL)decodingIsLossless

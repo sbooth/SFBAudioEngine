@@ -20,6 +20,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
+
 template <>
 struct ::std::default_delete<FLAC__StreamDecoder> {
 	default_delete() = default;
@@ -159,6 +161,11 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg; codecs=flac"]];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameFLAC;
 }
 
 - (BOOL)decodingIsLossless

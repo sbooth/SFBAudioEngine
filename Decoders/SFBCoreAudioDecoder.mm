@@ -15,6 +15,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio = @"org.sbooth.AudioEngine.Decoder.CoreAudio";
+
 template <>
 struct ::std::default_delete<OpaqueAudioFileID> {
 	default_delete() = default;
@@ -171,6 +173,11 @@ namespace {
 	});
 
 	return mimeTypes;
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameCoreAudio;
 }
 
 - (BOOL)decodingIsLossless

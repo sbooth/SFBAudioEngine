@@ -13,6 +13,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameTrueAudio = @"org.sbooth.AudioEngine.Decoder.TrueAudio";
+
 namespace {
 
 	struct TTACallbacks : TTA_io_callback
@@ -67,6 +69,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/x-tta"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameTrueAudio;
 }
 
 - (BOOL)decodingIsLossless

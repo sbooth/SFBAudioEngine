@@ -27,6 +27,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
+
 #define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
 
@@ -68,6 +70,11 @@
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggSpeex;
 }
 
 - (BOOL)decodingIsLossless

@@ -66,6 +66,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return result;
 }
 
++ (SFBDSDDecoderName)decoderName
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
+}
+
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
 {
 	NSString *lowercaseExtension = extension.lowercaseString;
@@ -162,6 +168,44 @@ static NSMutableArray *_registeredSubclasses = nil;
 									failureReason:NSLocalizedString(@"Unsupported file type", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 
+		return nil;
+	}
+
+	if((self = [[subclass alloc] init]))
+		_inputSource = inputSource;
+
+	return self;
+}
+
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName
+{
+	return [self initWithURL:url decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
+	if(!inputSource)
+		return nil;
+	return [self initWithInputSource:inputSource decoderName:decoderName error:error];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName
+{
+	return [self initWithInputSource:inputSource decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+
+	Class subclass = [SFBDSDDecoder subclassForDecoderName:decoderName];
+	if(!subclass) {
+		os_log_debug(gSFBDSDDecoderLog, "SFBDSDDecoder unsupported decoder: %{public}@", decoderName);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return nil;
 	}
 
@@ -280,6 +324,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
+			return subclassInfo.klass;
+	}
+
+	return nil;
+}
+
++ (Class)subclassForDecoderName:(SFBDSDDecoderName)decoderName
+{
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBDSDDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
+		if([subclassDecoderName isEqualToString:decoderName])
 			return subclassInfo.klass;
 	}
 

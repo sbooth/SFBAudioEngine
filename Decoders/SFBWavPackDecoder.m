@@ -11,6 +11,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
+
 #define BUFFER_SIZE_FRAMES 2048
 
 static int32_t read_bytes_callback(void *id, void *data, int32_t bcount)
@@ -145,6 +147,11 @@ static int can_seek_callback(void *id)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameWavPack;
 }
 
 - (BOOL)decodingIsLossless

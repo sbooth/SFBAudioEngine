@@ -14,6 +14,8 @@
 #import "ByteStream.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
+
 #define MIN_SUPPORTED_VERSION 1
 #define MAX_SUPPORTED_VERSION 3
 
@@ -429,6 +431,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/x-shorten"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameShorten;
 }
 
 - (BOOL)decodingIsLossless

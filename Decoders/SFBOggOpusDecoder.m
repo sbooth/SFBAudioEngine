@@ -17,6 +17,8 @@
 #import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
+
 #define OPUS_SAMPLE_RATE 48000
 
 static int read_callback(void *stream, unsigned char *ptr, int nbytes)
@@ -92,6 +94,11 @@ static 	opus_int64 tell_callback(void *stream)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/ogg; codecs=opus"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggOpus;
 }
 
 - (BOOL)decodingIsLossless

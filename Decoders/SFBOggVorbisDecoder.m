@@ -18,6 +18,8 @@
 #import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
+
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
 	NSCParameterAssert(datasource != NULL);
@@ -89,6 +91,11 @@ static long tell_func_callback(void *datasource)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggVorbis;
 }
 
 - (BOOL)decodingIsLossless

@@ -19,6 +19,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
+
 namespace {
 
 	// The I/O interface for MAC
@@ -157,6 +159,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMonkeysAudio;
 }
 
 - (BOOL)decodingIsLossless

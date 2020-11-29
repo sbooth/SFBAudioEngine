@@ -11,6 +11,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
+
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
@@ -113,6 +115,11 @@ static dumb_off_t get_size_callback(void *f)
 {
 	// FIXME: Add additional MIME types?
 	return [NSSet setWithArray:@[@"audio/it", @"audio/xm", @"audio/s3m", @"audio/mod", @"audio/x-mod"]];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameModule;
 }
 
 - (BOOL)decodingIsLossless

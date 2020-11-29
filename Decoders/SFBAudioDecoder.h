@@ -7,6 +7,36 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Constant type for decoder names
+typedef NSString * SFBAudioDecoderName NS_TYPED_ENUM NS_SWIFT_NAME(AudioDecoder.Name);
+
+/// FLAC and Ogg FLAC
+extern SFBAudioDecoderName const SFBAudioDecoderNameFLAC;
+/// Monkey's Audio
+extern SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio;
+/// Module
+extern SFBAudioDecoderName const SFBAudioDecoderNameModule;
+/// MPEG 1/2/2.5 Layers I, II, and III
+extern SFBAudioDecoderName const SFBAudioDecoderNameMPEG;
+/// Musepack
+extern SFBAudioDecoderName const SFBAudioDecoderNameMusepack;
+/// Ogg Opus
+extern SFBAudioDecoderName const SFBAudioDecoderNameOggOpus;
+/// Ogg Speex
+extern SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex;
+/// Ogg Vorbis
+extern SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis;
+/// Shorten
+extern SFBAudioDecoderName const SFBAudioDecoderNameShorten;
+/// True Audio
+extern SFBAudioDecoderName const SFBAudioDecoderNameTrueAudio;
+/// WavPack
+extern SFBAudioDecoderName const SFBAudioDecoderNameWavPack;
+/// Core Audio
+extern SFBAudioDecoderName const SFBAudioDecoderNameCoreAudio;
+/// Libsndfile
+extern SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile;
+
 /// A decoder providing audio as PCM
 NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecoding>
 
@@ -15,7 +45,7 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 /// Returns a set containing the supported path extensions
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedPathExtensions;
 
-/*!@brief Returns a set containing the supported MIME types */
+/// Returns a set containing the supported MIME types
 @property (class, nonatomic, readonly) NSSet<NSString *> *supportedMIMETypes;
 
 /// Tests whether a file extension is supported
@@ -36,6 +66,12 @@ NS_SWIFT_NAME(AudioDecoder) @interface SFBAudioDecoder : NSObject <SFBPCMDecodin
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:error: instead");
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource error:(NSError **)error;
 - (nullable instancetype)initWithInputSource:(SFBInputSource *)inputSource mimeType:(nullable NSString *)mimeType error:(NSError **)error NS_DESIGNATED_INITIALIZER;
+
+- (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithURL:decoderName:error: instead");
+- (nullable instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error;
+
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)outputSource decoderName:(SFBAudioDecoderName)decoderName NS_SWIFT_UNAVAILABLE("Use -initWithInputSource:decoderName:error: instead");
+- (nullable instancetype)initWithInputSource:(SFBInputSource *)outputSource decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)openReturningError:(NSError **)error NS_REQUIRES_SUPER;
 - (BOOL)closeReturningError:(NSError **)error NS_REQUIRES_SUPER;

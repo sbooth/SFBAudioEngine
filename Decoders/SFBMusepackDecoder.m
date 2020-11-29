@@ -19,6 +19,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
+
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 {
 	NSCParameterAssert(p_reader != NULL);
@@ -95,6 +97,11 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMusepack;
 }
 
 - (BOOL)decodingIsLossless

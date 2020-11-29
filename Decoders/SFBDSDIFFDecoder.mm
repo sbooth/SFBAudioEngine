@@ -16,6 +16,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
+SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDecoder.DSDIFF";
+
 namespace {
 
 	// Convert a four byte chunk ID to a uint32_t
@@ -707,6 +709,11 @@ namespace {
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsdiff"];
+}
+
++ (SFBDSDDecoderName)decoderName
+{
+	return SFBDSDDecoderNameDSDIFF;
 }
 
 - (BOOL)decodingIsLossless

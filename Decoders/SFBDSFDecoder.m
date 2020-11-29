@@ -10,6 +10,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
+SFBDSDDecoderName const SFBDSDDecoderNameDSF = @"org.sbooth.AudioEngine.DSDDecoder.DSF";
+
 #define DSF_BLOCK_SIZE_BYTES_PER_CHANNEL 4096
 
 // Read a four byte chunk ID as a uint32_t
@@ -73,6 +75,11 @@ static void MatrixTransposeNaive(const uint8_t * restrict A, uint8_t * restrict 
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet setWithObject:@"audio/dsf"];
+}
+
++ (SFBDSDDecoderName)decoderName
+{
+	return SFBDSDDecoderNameDSF;
 }
 
 - (BOOL)decodingIsLossless
