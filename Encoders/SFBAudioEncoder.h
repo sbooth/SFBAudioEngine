@@ -87,14 +87,14 @@ typedef NS_ERROR_ENUM(SFBAudioEncoderErrorDomain, SFBAudioEncoderErrorCode) {
 	SFBAudioEncoderErrorCodeInternalError	= 1
 } NS_SWIFT_NAME(AudioEncoder.ErrorCode);
 
-#pragma mark - Encoder Settings
-
-// Encoder settings dictionary keys
+#pragma mark - FLAC Encoder Settings
 
 /// FLAC compression level (\c NSNumber from 1 (lowest) to 8 (highest))
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACCompressionLevel;
 /// Set to nonzero to verify FLAC encoding (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyFLACVerifyEncoding;
+
+#pragma mark - Monkey's Audio Encoder Settings
 
 /// APE compression level (\c SFBAudioEncodingSettingsValueAPECompressionLevel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyAPECompressionLevel;
@@ -112,6 +112,8 @@ extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSe
 extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh;
 /// Insane compression
 extern SFBAudioEncodingSettingsValueAPECompressionLevel const SFBAudioEncodingSettingsValueAPECompressionLevelInsane;
+
+#pragma mark - MP3 Encoder Settings
 
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMP3TargetIsBitrate;
@@ -139,6 +141,8 @@ extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettings
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo;
 /// Joint stereo mode
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo;
+
+#pragma mark - Opus Encoder Settings
 
 /// Set to nonzero to disable resampling (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyOpusPreserveSampleRate;
@@ -193,6 +197,8 @@ extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSett
 /// 120 msec
 extern SFBAudioEncodingSettingsValueOpusFrameDuration const SFBAudioEncodingSettingsValueOpusFrameDuration120ms;
 
+#pragma mark - Speex Encoder Settings
+
 /// Speex encoding mode (\c SFBAudioEncodingSettingsValueSpeexMode)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeySpeexMode;
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
@@ -232,6 +238,8 @@ extern SFBAudioEncodingSettingsValueSpeexMode  const SFBAudioEncodingSettingsVal
 /// Ultra-wideband
 extern SFBAudioEncodingSettingsValueSpeexMode const SFBAudioEncodingSettingsValueSpeexModeUltraWideband;
 
+#pragma mark - Vorbis Encoder Settings
+
 /// Set to nonzero to target bitrate instead of quality (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate;
 /// Vorbis quality (\c NSNumber from -0.1 (lowest) to 1.0 (highest))
@@ -242,6 +250,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisBitrat
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMinBitrate;
 /// Vorbis maximum bitrate (\c NSNumber)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate;
+
+#pragma mark - WavPack Encoder Settings
 
 /// WavPack compression level (\c SFBAudioEncodingSettingsValueWavPackCompressionLevel)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyWavPackCompressionLevel;
@@ -255,6 +265,8 @@ extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodi
 extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh;
 /// Very high ompression
 extern SFBAudioEncodingSettingsValueWavPackCompressionLevel const SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh;
+
+#pragma mark - Core Audio Encoder Settings
 
 /// Core Audio file type ID (\c NSNumber representing \c AudioFileTypeID)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioFileTypeID;
@@ -275,6 +287,8 @@ extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioBit
 ///	\c kAudioCodecPropertySoundQualityForVBR
 /// \c kAudioCodecPropertyBitRateForVBR
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings;
+
+#pragma mark - Libsndfile Encoder Settings
 
 /// Libsndfile major format (\c SFBAudioEncodingSettingsValueLibsndfileMajorFormat)
 extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyLibsndfileMajorFormat;
