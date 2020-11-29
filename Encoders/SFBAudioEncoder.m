@@ -201,15 +201,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 	Class subclass = [SFBAudioEncoder subclassForEncoderName:encoderName];
 	if(!subclass) {
 		os_log_debug(gSFBAudioEncoderLog, "SFBAudioEncoder unsupported encoder: %{public}@", encoderName);
-
 		if(error)
-			*error = [NSError SFB_errorWithDomain:SFBAudioEncoderErrorDomain
-											 code:SFBAudioEncoderErrorCodeInvalidFormat
-					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
-											  url:outputSource.url
-									failureReason:NSLocalizedString(@"Unsupported file type", @"")
-							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
-
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return nil;
 	}
 
