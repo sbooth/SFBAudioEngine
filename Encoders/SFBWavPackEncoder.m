@@ -160,15 +160,25 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 
 	if(!WavpackSetConfiguration64(_wpc, &_config, _estimatedFramesToEncode > 0 ? _estimatedFramesToEncode : -1, NULL)) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackOpenFileOutput failed: %{public}s", WavpackGetErrorMessage(_wpc));
+
+		WavpackCloseFile(_wpc);
+		_wpc = NULL;
+
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
 	if(!WavpackPackInit(_wpc)) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackPackInit failed: %{public}s", WavpackGetErrorMessage(_wpc));
+
+		WavpackCloseFile(_wpc);
+		_wpc = NULL;
+
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
