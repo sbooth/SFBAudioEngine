@@ -156,6 +156,8 @@ namespace {
 		{
 			os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %d", streamInfo.bps);
 
+			_decoder.reset();
+
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
 												 code:SFBAudioDecoderErrorCodeInvalidFormat

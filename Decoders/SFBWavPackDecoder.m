@@ -248,6 +248,8 @@ static int can_seek_callback(void *id)
 	_buffer = malloc(sizeof(int32_t) * (size_t)BUFFER_SIZE_FRAMES * (size_t)WavpackGetNumChannels(_wpc));
 	if(!_buffer) {
 		WavpackCloseFile(_wpc);
+		_wpc = NULL;
+
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 

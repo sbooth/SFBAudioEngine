@@ -133,6 +133,9 @@ static long tell_func_callback(void *datasource)
 		if(ov_clear(&_vorbisFile))
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
@@ -142,6 +145,9 @@ static long tell_func_callback(void *datasource)
 
 		if(ov_clear(&_vorbisFile))
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
+
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 
 		return NO;
 	}

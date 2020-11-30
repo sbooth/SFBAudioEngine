@@ -133,7 +133,13 @@ static 	opus_int64 tell_callback(void *stream)
 
 	if(op_test_open(_opusFile)) {
 		os_log_error(gSFBAudioDecoderLog, "op_test_open failed");
+
 		op_free(_opusFile);
+		_opusFile = NULL;
+
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
@@ -255,6 +261,8 @@ static 	opus_int64 tell_callback(void *stream)
 	NSParameterAssert(frame >= 0);
 	if(op_pcm_seek(_opusFile, frame)) {
 		os_log_error(gSFBAudioDecoderLog, "op_pcm_seek() failed");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 	return YES;
