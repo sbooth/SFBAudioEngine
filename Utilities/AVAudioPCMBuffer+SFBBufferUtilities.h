@@ -62,6 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isEmpty;
 /// Returns \c YES if \c self.frameLength == \c self.frameCapacity
 - (BOOL)isFull;
+
+/// Returns \c YES if \c self contains only digital silence
+- (BOOL)isDigitalSilence;
 @end
 
 NS_ASSUME_NONNULL_END
