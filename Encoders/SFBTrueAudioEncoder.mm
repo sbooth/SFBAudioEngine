@@ -115,7 +115,7 @@ namespace {
 	if(_estimatedFramesToEncode <= 0) {
 		os_log_error(gSFBAudioEncoderLog, "True Audio encoding requires an accurate value for _estimatedFramesToEncode");
 		if(error)
-			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInvalidFormat userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
