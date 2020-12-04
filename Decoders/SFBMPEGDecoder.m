@@ -290,7 +290,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_buffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer readingFromOffset:0 frameLength:framesRemaining];
 		[_buffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;

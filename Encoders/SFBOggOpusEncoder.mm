@@ -340,7 +340,7 @@ namespace {
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
-		AVAudioFrameCount framesCopied = [_frameBuffer appendContentsOfBuffer:buffer readOffset:framesProcessed];
+		AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
 		framesProcessed += framesCopied;
 
 		// Encode the next Opus frame

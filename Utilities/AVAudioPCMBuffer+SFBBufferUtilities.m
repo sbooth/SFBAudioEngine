@@ -7,27 +7,42 @@
 
 @implementation AVAudioPCMBuffer (SFBBufferUtilities)
 
+- (AVAudioFrameCount)prependContentsOfBuffer:(AVAudioPCMBuffer *)buffer
+{
+	return [self prependFromBuffer:buffer readingFromOffset:0];
+}
+
+- (AVAudioFrameCount)prependFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset
+{
+	return [self prependFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset)];
+}
+
+- (AVAudioFrameCount)prependFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
+{
+	return [self insertFromBuffer:buffer readingFromOffset:offset frameLength:frameLength atOffset:0];
+}
+
 - (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer
 {
-	return [self copyFromBuffer:buffer readOffset:0 frameLength:buffer.frameLength writeOffset:self.frameLength];
+	return [self appendFromBuffer:buffer readingFromOffset:0];
 }
 
-- (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset
+- (AVAudioFrameCount)appendFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset
 {
-	return [self copyFromBuffer:buffer readOffset:readOffset frameLength:(self.frameCapacity - self.frameLength) writeOffset:self.frameLength];
+	return [self appendFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset)];
 }
 
-- (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength
+- (AVAudioFrameCount)appendFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
 {
-	return [self copyFromBuffer:buffer readOffset:readOffset frameLength:frameLength writeOffset:self.frameLength];
+	return [self insertFromBuffer:buffer readingFromOffset:offset frameLength:frameLength atOffset:self.frameLength];
 }
 
-- (AVAudioFrameCount)copyFromBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength
+- (AVAudioFrameCount)insertContentsOfBuffer:(AVAudioPCMBuffer *)buffer atOffset:(AVAudioFrameCount)offset
 {
-	return [self copyFromBuffer:buffer readOffset:readOffset frameLength:frameLength writeOffset:0];
+	return [self insertFromBuffer:buffer readingFromOffset:0 frameLength:buffer.frameLength atOffset:offset];
 }
 
-- (AVAudioFrameCount)copyFromBuffer:(AVAudioPCMBuffer *)buffer readOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength writeOffset:(AVAudioFrameCount)writeOffset
+- (AVAudioFrameCount)insertFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)readOffset frameLength:(AVAudioFrameCount)frameLength atOffset:(AVAudioFrameCount)writeOffset
 {
 	NSParameterAssert(buffer != nil);
 	NSParameterAssert([self.format isEqual:buffer.format]);
@@ -35,21 +50,33 @@
 	if(readOffset > buffer.frameLength || writeOffset > self.frameLength || frameLength == 0 || buffer.frameLength == 0)
 		return 0;
 
-	AVAudioFrameCount framesToCopy = MIN(self.frameCapacity - writeOffset, MIN(frameLength, buffer.frameLength - readOffset));
+	AVAudioFrameCount framesToInsert = MIN(self.frameCapacity - self.frameLength, MIN(frameLength, buffer.frameLength - readOffset));
 
 	const AudioStreamBasicDescription *asbd = self.format.streamDescription;
 	const AudioBufferList *src_abl = buffer.audioBufferList;
 	const AudioBufferList *dst_abl = self.audioBufferList;
 
-	for(UInt32 i = 0; i < src_abl->mNumberBuffers; ++i) {
-		const unsigned char *srcbuf = (unsigned char *)src_abl->mBuffers[i].mData + (readOffset * asbd->mBytesPerFrame);
-		unsigned char *dstbuf = (unsigned char *)dst_abl->mBuffers[i].mData + (writeOffset * asbd->mBytesPerFrame);
-		memcpy(dstbuf, srcbuf, framesToCopy * asbd->mBytesPerFrame);
+	AVAudioFrameCount framesToMove = self.frameLength - writeOffset;
+	if(framesToMove) {
+		AVAudioFrameCount moveToOffset = writeOffset + framesToInsert;
+		for(UInt32 i = 0; i < dst_abl->mNumberBuffers; ++i) {
+			const unsigned char *srcbuf = (const unsigned char *)dst_abl->mBuffers[i].mData + (writeOffset * asbd->mBytesPerFrame);
+			unsigned char *dstbuf = (unsigned char *)dst_abl->mBuffers[i].mData + (moveToOffset * asbd->mBytesPerFrame);
+			memmove(dstbuf, srcbuf, framesToMove * asbd->mBytesPerFrame);
+		}
 	}
 
-	self.frameLength += framesToCopy;
+	if(framesToInsert) {
+		for(UInt32 i = 0; i < src_abl->mNumberBuffers; ++i) {
+			const unsigned char *srcbuf = (const unsigned char *)src_abl->mBuffers[i].mData + (readOffset * asbd->mBytesPerFrame);
+			unsigned char *dstbuf = (unsigned char *)dst_abl->mBuffers[i].mData + (writeOffset * asbd->mBytesPerFrame);
+			memcpy(dstbuf, srcbuf, framesToInsert * asbd->mBytesPerFrame);
+		}
 
-	return framesToCopy;
+		self.frameLength += framesToInsert;
+	}
+
+	return framesToInsert;
 }
 
 - (AVAudioFrameCount)trimAtOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
@@ -58,21 +85,23 @@
 		return 0;
 
 	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength - offset);
-	AVAudioFrameCount moveOffset = offset + framesToTrim;
-	AVAudioFrameCount framesToMove = self.frameLength - moveOffset;
 
 	const AudioStreamBasicDescription *asbd = self.format.streamDescription;
 	const AudioBufferList *abl = self.audioBufferList;
 
-	for(UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
-		const unsigned char *srcbuf = (unsigned char *)abl->mBuffers[i].mData + (moveOffset * asbd->mBytesPerFrame);
-		unsigned char *dstbuf = (unsigned char *)abl->mBuffers[i].mData + (offset * asbd->mBytesPerFrame);
-		memmove(dstbuf, srcbuf, framesToMove * asbd->mBytesPerFrame);
+	AVAudioFrameCount framesToMove = self.frameLength - (offset + framesToTrim);
+	if(framesToMove) {
+		AVAudioFrameCount moveFromOffset = offset + framesToTrim;
+		for(UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
+			const unsigned char *srcbuf = (const unsigned char *)abl->mBuffers[i].mData + (moveFromOffset * asbd->mBytesPerFrame);
+			unsigned char *dstbuf = (unsigned char *)abl->mBuffers[i].mData + (offset * asbd->mBytesPerFrame);
+			memmove(dstbuf, srcbuf, framesToMove * asbd->mBytesPerFrame);
+		}
 	}
 
 	self.frameLength -= framesToTrim;
 
-	return framesToMove;
+	return framesToTrim;
 }
 
 - (AVAudioFrameCount)fillRemainderWithSilence
@@ -87,19 +116,33 @@
 
 - (AVAudioFrameCount)insertSilenceAtOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
 {
-	if(offset > self.frameCapacity || frameLength == 0)
+	if(offset > self.frameLength || frameLength == 0)
 		return 0;
 
-	AVAudioFrameCount framesToZero = MIN(frameLength, self.frameCapacity - offset);
+	AVAudioFrameCount framesToZero = MIN(self.frameCapacity - self.frameLength, frameLength);
 
 	const AudioStreamBasicDescription *asbd = self.format.streamDescription;
 	const AudioBufferList *abl = self.audioBufferList;
 
 	NSAssert((asbd->mFormatFlags & kAudioFormatFlagIsFloat) || ((asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger) && (asbd->mFormatFlags & kAudioFormatFlagIsPacked)), @"Inserting silence for unsigned integer or unpacked samples not supported");
 
-	for(UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
-		uint8_t *dstbuf = (uint8_t *)abl->mBuffers[i].mData + (offset * asbd->mBytesPerFrame);
-		memset(dstbuf, 0, framesToZero * asbd->mBytesPerFrame);
+	AVAudioFrameCount framesToMove = self.frameLength - offset;
+	if(framesToMove) {
+		AVAudioFrameCount moveToOffset = offset + framesToZero;
+		for(UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
+			const unsigned char *srcbuf = (const unsigned char *)abl->mBuffers[i].mData + (offset * asbd->mBytesPerFrame);
+			unsigned char *dstbuf = (unsigned char *)abl->mBuffers[i].mData + (moveToOffset * asbd->mBytesPerFrame);
+			memmove(dstbuf, srcbuf, framesToMove * asbd->mBytesPerFrame);
+		}
+	}
+
+	if(framesToZero) {
+		for(UInt32 i = 0; i < abl->mNumberBuffers; ++i) {
+			unsigned char *dstbuf = (uint8_t *)abl->mBuffers[i].mData + (offset * asbd->mBytesPerFrame);
+			memset(dstbuf, 0, framesToZero * asbd->mBytesPerFrame);
+		}
+
+		self.frameLength += framesToZero;
 	}
 
 	return framesToZero;

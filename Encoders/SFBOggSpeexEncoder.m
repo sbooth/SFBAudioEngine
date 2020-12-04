@@ -445,7 +445,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
-		AVAudioFrameCount framesCopied = [_frameBuffer appendContentsOfBuffer:buffer readOffset:framesProcessed];
+		AVAudioFrameCount framesCopied = [_frameBuffer appendFromBuffer:buffer readingFromOffset:framesProcessed];
 		framesProcessed += framesCopied;
 
 		// Encode the next Speex frame
