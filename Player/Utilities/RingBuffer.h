@@ -78,14 +78,14 @@ namespace SFB {
 		void Reset();
 
 
-		/*! @brief Get the capacity of this RingBuffer in bytes */
-		inline size_t GetCapacityBytes() const						{ return mCapacityBytes; }
+		/*! @brief Returns the capacity of this RingBuffer in bytes */
+		inline size_t CapacityBytes() const							{ return mCapacityBytes; }
 
-		/*! @brief Get the number of bytes available for reading */
-		size_t GetBytesAvailableToRead() const;
+		/*! @brief Returns the number of bytes available for reading */
+		size_t BytesAvailableToRead() const;
 
-		/*! @brief Get the free space available for writing in bytes */
-		size_t GetBytesAvailableToWrite() const;
+		/*! @brief Returns the free space available for writing in bytes */
+		size_t BytesAvailableToWrite() const;
 
 		//@}
 
@@ -147,11 +147,11 @@ namespace SFB {
 		/*! @brief A pair of \c Buffer objects */
 		using BufferPair = std::pair<Buffer, Buffer>;
 
-		/*! @brief Retrieve the read vector containing the current readable data */
-		BufferPair GetReadVector() const;
+		/*! @brief Returns the read vector containing the current readable data */
+		BufferPair ReadVector() const;
 
-		/*! @brief Retrieve the write vector containing the current writeable data */
-		BufferPair GetWriteVector() const;
+		/*! @brief Returns the write vector containing the current writeable data */
+		BufferPair WriteVector() const;
 
 		//@}
 

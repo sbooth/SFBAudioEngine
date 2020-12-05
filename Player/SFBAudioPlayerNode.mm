@@ -1126,13 +1126,13 @@ namespace {
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopNotifierThread)) {
 
-		if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 4) {
+		if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= 4) {
 			uint32_t cmd;
 			/*auto bytesRead =*/ self->_renderEventsRingBuffer.Read(&cmd, 4);
 
 			switch(cmd) {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
@@ -1170,7 +1170,7 @@ namespace {
 					break;
 
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
@@ -1210,7 +1210,7 @@ namespace {
 					break;
 
 				case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= 8) {
 						uint64_t hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
