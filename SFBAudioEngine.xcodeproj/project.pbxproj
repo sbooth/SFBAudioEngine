@@ -68,10 +68,6 @@
 		322A9156257007D8006795AA /* AudioFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322A914F257007D8006795AA /* AudioFormat.cpp */; };
 		322A9157257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A9150257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.m */; };
 		322A9158257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A9150257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.m */; };
-		322A915B257162C2006795AA /* AudioChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322A9159257162C2006795AA /* AudioChannelLayout.cpp */; };
-		322A915C257162C2006795AA /* AudioChannelLayout.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 322A9159257162C2006795AA /* AudioChannelLayout.cpp */; };
-		322A915D257162C2006795AA /* AudioChannelLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A915A257162C2006795AA /* AudioChannelLayout.h */; };
-		322A915E257162C2006795AA /* AudioChannelLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A915A257162C2006795AA /* AudioChannelLayout.h */; };
 		322A916125725637006795AA /* SFBLibsndfileEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A915F25725637006795AA /* SFBLibsndfileEncoder.h */; };
 		322A916225725637006795AA /* SFBLibsndfileEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A915F25725637006795AA /* SFBLibsndfileEncoder.h */; };
 		322A916325725637006795AA /* SFBLibsndfileEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A916025725637006795AA /* SFBLibsndfileEncoder.m */; };
@@ -595,8 +591,6 @@
 		322A914E257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AVAudioPCMBuffer+SFBBufferUtilities.h"; sourceTree = "<group>"; };
 		322A914F257007D8006795AA /* AudioFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioFormat.cpp; sourceTree = "<group>"; };
 		322A9150257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "AVAudioPCMBuffer+SFBBufferUtilities.m"; sourceTree = "<group>"; };
-		322A9159257162C2006795AA /* AudioChannelLayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AudioChannelLayout.cpp; sourceTree = "<group>"; };
-		322A915A257162C2006795AA /* AudioChannelLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioChannelLayout.h; sourceTree = "<group>"; };
 		322A915F25725637006795AA /* SFBLibsndfileEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBLibsndfileEncoder.h; sourceTree = "<group>"; };
 		322A916025725637006795AA /* SFBLibsndfileEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLibsndfileEncoder.m; sourceTree = "<group>"; };
 		325116CB2423B15200B02926 /* SFBAttachedPicture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAttachedPicture.m; sourceTree = "<group>"; };
@@ -1023,8 +1017,6 @@
 		3268F8642455B527006A5911 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				322A915A257162C2006795AA /* AudioChannelLayout.h */,
-				322A9159257162C2006795AA /* AudioChannelLayout.cpp */,
 				322A914D257007D8006795AA /* AudioFormat.h */,
 				322A914F257007D8006795AA /* AudioFormat.cpp */,
 				322A914E257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.h */,
@@ -1331,7 +1323,6 @@
 				32D740CA255F6D91004D3C1A /* SFBOutputSource.h in Headers */,
 				32714BFE2551D4DF00029BD7 /* SFBLibsndfileDecoder.h in Headers */,
 				32714BFF2551D4DF00029BD7 /* SFBAudioFile+Internal.h in Headers */,
-				322A915E257162C2006795AA /* AudioChannelLayout.h in Headers */,
 				32714C002551D4DF00029BD7 /* SFBOggOpusFile.h in Headers */,
 				32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */,
 				32714C012551D4DF00029BD7 /* SFBWavPackFile.h in Headers */,
@@ -1447,7 +1438,6 @@
 				32129691244A2AD80008DC93 /* SFBOggVorbisDecoder.h in Headers */,
 				326D3CCC242D2A21002AEC52 /* SFBWAVEFile.h in Headers */,
 				3212969D244A60680008DC93 /* SFBLibsndfileDecoder.h in Headers */,
-				322A915D257162C2006795AA /* AudioChannelLayout.h in Headers */,
 				326D3CA1242D0291002AEC52 /* SFBAudioFile+Internal.h in Headers */,
 				326D3CC0242D2A21002AEC52 /* SFBOggOpusFile.h in Headers */,
 				326D3CCE242D2A21002AEC52 /* SFBWavPackFile.h in Headers */,
@@ -1586,7 +1576,6 @@
 				32714C202551D4DF00029BD7 /* SFBScreamTracker3ModuleFile.mm in Sources */,
 				32714C212551D4DF00029BD7 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
 				32714C232551D4DF00029BD7 /* SFBModuleDecoder.m in Sources */,
-				322A915C257162C2006795AA /* AudioChannelLayout.cpp in Sources */,
 				32714C242551D4DF00029BD7 /* SFBFileInputSource.m in Sources */,
 				322A916425725637006795AA /* SFBLibsndfileEncoder.m in Sources */,
 				32714C262551D4DF00029BD7 /* SFBDSFFile.mm in Sources */,
@@ -1685,7 +1674,6 @@
 				326D3CC9242D2A21002AEC52 /* SFBScreamTracker3ModuleFile.mm in Sources */,
 				32DD9D7E257BCF8A00B47CFD /* SFBOggOpusEncoder.mm in Sources */,
 				322859D8242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.mm in Sources */,
-				322A915B257162C2006795AA /* AudioChannelLayout.cpp in Sources */,
 				3268F8762455FBF2006A5911 /* SFBAudioDevice.swift in Sources */,
 				325A5E912444D868003138D5 /* SFBModuleDecoder.m in Sources */,
 				325A5E06243F8D8B003138D5 /* SFBFileInputSource.m in Sources */,
