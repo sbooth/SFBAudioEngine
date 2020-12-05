@@ -12,7 +12,7 @@
 
 #import "SFBDSDIFFDecoder.h"
 
-#import "AudioChannelLayout.h"
+#import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
@@ -753,12 +753,11 @@ namespace {
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];
 	else if(channelsChunk->mChannelIDs.size() == 6 && channelsChunk->mChannelIDs[0] == 'MLFT' && channelsChunk->mChannelIDs[1] == 'MRGT' && channelsChunk->mChannelIDs[2] == 'C   ' && channelsChunk->mChannelIDs[3] == 'LFE ' && channelsChunk->mChannelIDs[4] == 'LS  ' && channelsChunk->mChannelIDs[5] == 'RS  ')
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];
-	else {
+	else if(!channelsChunk->mChannelIDs.empty()) {
 		std::vector<AudioChannelLabel> labels;
 		for(auto channelID : channelsChunk->mChannelIDs)
 			labels.push_back(DSDIFFChannelIDToCoreAudioChannelLabel(channelID));
-		auto layout = SFB::Audio::ChannelLayout::ChannelLayoutWithChannelLabels(labels);
-		channelLayout = [AVAudioChannelLayout layoutWithLayout:layout];
+		channelLayout = [[AVAudioChannelLayout alloc] initWithChannelLabels:&labels[0] count:(AVAudioChannelCount)labels.size()];
 	}
 
 	AudioStreamBasicDescription processingStreamDescription{};
