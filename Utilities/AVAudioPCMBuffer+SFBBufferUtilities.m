@@ -91,13 +91,8 @@
 - (AVAudioFrameCount)trimLast:(AVAudioFrameCount)frameLength
 {
 	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength);
-	return [self trimAtOffset:(self.frameLength - framesToTrim) frameLength:framesToTrim];
-}
-
-- (AVAudioFrameCount)trimToLength:(AVAudioFrameCount)frameLength
-{
-	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength);
-	return [self trimAtOffset:framesToTrim frameLength:(self.frameLength - framesToTrim)];
+	self.frameLength -= framesToTrim;
+	return framesToTrim;
 }
 
 - (AVAudioFrameCount)trimAtOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength

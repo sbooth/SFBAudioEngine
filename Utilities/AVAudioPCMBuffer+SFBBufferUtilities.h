@@ -74,11 +74,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (AVAudioFrameCount)trimLast:(AVAudioFrameCount)frameLength;
 
 /// Deletes at most \c frameLength frames from \c self starting at \c offset
-/// @param frameLength The desired number of frames
-/// @return The number of frames deleted
-- (AVAudioFrameCount)trimToLength:(AVAudioFrameCount)frameLength;
-
-/// Deletes at most \c frameLength frames from \c self starting at \c offset
 /// @param offset The desired starting offset
 /// @param frameLength The desired number of frames
 /// @return The number of frames deleted
