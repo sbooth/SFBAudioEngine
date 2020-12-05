@@ -291,5 +291,3 @@ namespace SFB {
 	using CGImageSource = CFWrapper<CGImageSourceRef>;							/*!< @brief A wrapped \c CGImageSourceRef */
 
 }
-
-/*! @cond */
