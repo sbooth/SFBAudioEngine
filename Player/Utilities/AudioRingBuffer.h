@@ -71,7 +71,7 @@ namespace SFB {
 			 * @param capacityFrames The desired capacity, in frames
 			 * @return \c true on success, \c false on error
 			 */
-			bool Allocate(const Format& format, size_t capacityFrames);
+			bool Allocate(const class Format& format, size_t capacityFrames);
 
 			/*!
 			 * @brief Free the resources used by this \c RingBuffer
@@ -87,17 +87,17 @@ namespace SFB {
 			void Reset();
 
 
-			/*! @brief Get the capacity of this RingBuffer in frames */
-			inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
+			/*! @brief Returns the capacity of this RingBuffer in frames */
+			inline size_t CapacityFrames() const						{ return mCapacityFrames; }
 
-			/*! @brief Get the format of this \c BufferList */
-			inline const Format& GetFormat() const						{ return mFormat; }
+			/*! @brief Returns the format of this \c BufferList */
+			inline const Format& Format() const							{ return mFormat; }
 
-			/*! @brief Get the number of frames available for reading */
-			size_t GetFramesAvailableToRead() const;
+			/*! @brief Returns the number of frames available for reading */
+			size_t FramesAvailableToRead() const;
 
-			/*! @brief Get the free space available for writing in frames */
-			size_t GetFramesAvailableToWrite() const;
+			/*! @brief Returns the free space available for writing in frames */
+			size_t FramesAvailableToWrite() const;
 
 			//@}
 
@@ -126,7 +126,7 @@ namespace SFB {
 
 		private:
 
-			Format				mFormat;				// The format of the audio
+			class Format		mFormat;				// The format of the audio
 
 			uint8_t				**mBuffers;				// The channel pointers and buffers, allocated in one chunk of memory
 

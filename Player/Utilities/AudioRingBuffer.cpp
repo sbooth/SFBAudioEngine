@@ -67,7 +67,7 @@ SFB::Audio::RingBuffer::~RingBuffer()
 
 #pragma mark Buffer Management
 
-bool SFB::Audio::RingBuffer::Allocate(const Format& format, size_t capacityFrames)
+bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacityFrames)
 {
 	// Only non-interleaved formats are supported
 	if(format.IsInterleaved())
@@ -122,7 +122,7 @@ void SFB::Audio::RingBuffer::Reset()
 	mWritePointer = 0;
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
+size_t SFB::Audio::RingBuffer::FramesAvailableToRead() const
 {
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
 	auto readPointer = mReadPointer.load(std::memory_order_acquire);
@@ -133,7 +133,7 @@ size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
 		return (writePointer - readPointer + mCapacityFrames) & mCapacityFramesMask;
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
+size_t SFB::Audio::RingBuffer::FramesAvailableToWrite() const
 {
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
 	auto readPointer = mReadPointer.load(std::memory_order_acquire);
