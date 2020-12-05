@@ -9,12 +9,14 @@
 
 - (AVAudioFrameCount)prependContentsOfBuffer:(AVAudioPCMBuffer *)buffer
 {
-	return [self prependFromBuffer:buffer readingFromOffset:0];
+	return [self insertFromBuffer:buffer readingFromOffset:0 frameLength:buffer.frameLength atOffset:0];
 }
 
 - (AVAudioFrameCount)prependFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset
 {
-	return [self prependFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset)];
+	if(offset > buffer.frameLength)
+		return 0;
+	return [self insertFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset) atOffset:0];
 }
 
 - (AVAudioFrameCount)prependFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
@@ -24,12 +26,14 @@
 
 - (AVAudioFrameCount)appendContentsOfBuffer:(AVAudioPCMBuffer *)buffer
 {
-	return [self appendFromBuffer:buffer readingFromOffset:0];
+	return [self insertFromBuffer:buffer readingFromOffset:0 frameLength:buffer.frameLength atOffset:self.frameLength];
 }
 
 - (AVAudioFrameCount)appendFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset
 {
-	return [self appendFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset)];
+	if(offset > buffer.frameLength)
+		return 0;
+	return [self insertFromBuffer:buffer readingFromOffset:offset frameLength:(buffer.frameLength - offset) atOffset:self.frameLength];
 }
 
 - (AVAudioFrameCount)appendFromBuffer:(AVAudioPCMBuffer *)buffer readingFromOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
@@ -77,6 +81,23 @@
 	}
 
 	return framesToInsert;
+}
+
+- (AVAudioFrameCount)trimFirst:(AVAudioFrameCount)frameLength
+{
+	return [self trimAtOffset:0 frameLength:frameLength];
+}
+
+- (AVAudioFrameCount)trimLast:(AVAudioFrameCount)frameLength
+{
+	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength);
+	return [self trimAtOffset:(self.frameLength - framesToTrim) frameLength:framesToTrim];
+}
+
+- (AVAudioFrameCount)trimToLength:(AVAudioFrameCount)frameLength
+{
+	AVAudioFrameCount framesToTrim = MIN(frameLength, self.frameLength);
+	return [self trimAtOffset:framesToTrim frameLength:(self.frameLength - framesToTrim)];
 }
 
 - (AVAudioFrameCount)trimAtOffset:(AVAudioFrameCount)offset frameLength:(AVAudioFrameCount)frameLength
