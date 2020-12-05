@@ -16,6 +16,8 @@ extern SFBAudioEncoderName const SFBAudioEncoderNameFLAC;
 extern SFBAudioEncoderName const SFBAudioEncoderNameMonkeysAudio;
 /// MP3
 extern SFBAudioEncoderName const SFBAudioEncoderNameMP3;
+/// Musepack
+extern SFBAudioEncoderName const SFBAudioEncoderNameMusepack;
 /// Ogg FLAC
 extern SFBAudioEncoderName const SFBAudioEncoderNameOggFLAC;
 /// Ogg Opus
@@ -141,6 +143,11 @@ extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettings
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeStereo;
 /// Joint stereo mode
 extern SFBAudioEncodingSettingsValueMP3StereoMode const SFBAudioEncodingSettingsValueMP3StereoModeJointStereo;
+
+#pragma mark - Musepack Encoder Settings
+
+/// Musepack quality (\c NSNumber from 0.0 (worst) to 10.0 (best))
+extern SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyMusepackQuality;
 
 #pragma mark - Opus Encoder Settings
 
