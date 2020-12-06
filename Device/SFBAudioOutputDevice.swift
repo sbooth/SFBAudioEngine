@@ -6,6 +6,8 @@
 import Foundation
 
 extension AudioOutputDevice {
+	/// Returns the preferred stereo channels for the device
+	/// - note: This is the property `{ kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }`
 	public var preferredStereoChannels: (left: UInt32, right: UInt32)? {
 		guard let preferredChannels = self.__preferredStereoChannels, preferredChannels.count == 2 else {
 			return nil;
