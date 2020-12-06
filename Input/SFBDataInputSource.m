@@ -24,28 +24,6 @@
 	return self;
 }
 
-- (instancetype)initWithBytes:(const void *)bytes length:(NSInteger)length
-{
-	NSParameterAssert(bytes != NULL);
-	NSParameterAssert(length >= 0);
-
-	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
-	if(data == nil)
-		return nil;
-	return [self initWithData:data];
-}
-
-- (instancetype)initWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
-{
-	NSParameterAssert(bytes != NULL);
-	NSParameterAssert(length >= 0);
-
-	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
-	if(data == nil)
-		return nil;
-	return [self initWithData:data];
-}
-
 - (BOOL)openReturningError:(NSError **)error
 {
 	return YES;
