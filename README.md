@@ -41,8 +41,8 @@ Reading audio properties and metadata is similarly trivial:
 
 ~~~swift
 if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
-let sampleRate = audioFile.properties.sampleRate
-let title = audioFile.metadata.title
+    let sampleRate = audioFile.properties.sampleRate
+    let title = audioFile.metadata.title
 }
 ~~~
 
@@ -61,9 +61,11 @@ More complex conversions are supported including writing to `Data` instead of fi
 ~~~swift
 let output = OutputSource.makeForData()
 let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
-encoder.settings = [.coreAudioFileTypeID: kAudioFileM4AType,
-.coreAudioFormatID: kAudioFormatMPEG4AAC,
-.coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]]
+encoder.settings = [
+    .coreAudioFileTypeID: kAudioFileM4AType,
+    .coreAudioFormatID: kAudioFormatMPEG4AAC,
+    .coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]
+]
 try AudioConverter.convert(inputURL, using: encoder)
 // Encoder output is in `output.data`
 ~~~
