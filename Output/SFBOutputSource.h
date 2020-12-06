@@ -19,7 +19,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// Returns an initialized \c SFBOutputSource for the given \c NSMutableData object or \c nil on failure
 /// @param data An \c NSMutableData object to receive output
 /// @return An initialized \c SFBOutputSource object or \c nil on faliure
-+ (nullable instancetype)outputSourceWithMutableData:(NSMutableData *)data error:(NSError **)error NS_REFINED_FOR_SWIFT;
++ (nullable instancetype)outputSourceWithMutableData:(NSMutableData *)data error:(NSError **)error;
 
 /// Returns an initialized \c SFBOutputSource for the given buffer or \c nil on failure
 /// @param buffer A buffer to receive output
