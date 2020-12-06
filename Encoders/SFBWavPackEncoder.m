@@ -222,16 +222,13 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameLength)
 		frameLength = buffer.frameLength;
+
+	if(frameLength == 0)
+		return YES;
 
 	if(!WavpackPackSamples(_wpc, (int32_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
 		os_log_error(gSFBAudioEncoderLog, "WavpackPackSamples failed: %{public}s", WavpackGetErrorMessage(_wpc));

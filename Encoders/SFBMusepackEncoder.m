@@ -199,16 +199,13 @@ static off_t my_mpc_tell_callback(void *context)
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameLength)
 		frameLength = buffer.frameLength;
+
+	if(frameLength == 0)
+		return YES;
 
 	if(mpc_stream_encoder_encode(_enc, (const mpc_int16_t *)buffer.audioBufferList->mBuffers[0].mData, frameLength) != MPC_STATUS_OK) {
 		os_log_error(gSFBAudioEncoderLog, "mpc_stream_encoder_encode failed");

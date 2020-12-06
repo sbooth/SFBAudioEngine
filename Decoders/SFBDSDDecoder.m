@@ -242,8 +242,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error
 {
-	if(![buffer isKindOfClass:[AVAudioCompressedBuffer class]])
-		return NO;
+	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer isKindOfClass:[AVAudioCompressedBuffer class]]);
 	return [self decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:((AVAudioCompressedBuffer *)buffer).packetCapacity error:error];
 }
 

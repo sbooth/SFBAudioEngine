@@ -374,16 +374,13 @@ static void metadata_callback(const FLAC__StreamEncoder *encoder, const FLAC__St
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameLength)
 		frameLength = buffer.frameLength;
+
+	if(frameLength == 0)
+		return YES;
 
 	if(!FLAC__stream_encoder_process_interleaved(_flac.get(), (const FLAC__int32 *)buffer.audioBufferList->mBuffers[0].mData, frameLength)) {
 		os_log_error(gSFBAudioEncoderLog, "FLAC__stream_encoder_process_interleaved failed: %{public}s", FLAC__stream_encoder_get_resolved_state_string(_flac.get()));

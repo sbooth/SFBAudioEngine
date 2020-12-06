@@ -829,20 +829,17 @@ namespace {
 - (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.packetCount = 0;
 	buffer.byteLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBDSDDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
-
 	if(packetCount > buffer.packetCapacity)
 		packetCount = buffer.packetCapacity;
+
+	if(packetCount == 0)
+		return YES;
 
 	AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);

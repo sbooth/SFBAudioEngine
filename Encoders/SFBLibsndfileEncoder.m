@@ -546,16 +546,13 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameLength)
 		frameLength = buffer.frameLength;
+
+	if(frameLength == 0)
+		return YES;
 
 	sf_count_t framesWritten = 0;
 	switch(_writeMethod) {

@@ -261,16 +261,13 @@ struct ::std::default_delete<lame_global_flags> {
 - (BOOL)encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioEncoderLog, "-encodeFromBuffer:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameLength)
 		frameLength = buffer.frameLength;
+
+	if(frameLength == 0)
+		return YES;
 
 	const size_t bufsize = (size_t)(1.25 * (_processingFormat.channelCount * frameLength)) + 7200;
 	auto buf = std::make_unique<unsigned char[]>(bufsize);

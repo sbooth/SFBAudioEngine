@@ -270,8 +270,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)encodeFromBuffer:(nonnull AVAudioBuffer *)buffer error:(NSError **)error
 {
-	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
-		return NO;
+	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer isKindOfClass:[AVAudioPCMBuffer class]]);
 	return [self encodeFromBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
 }
 

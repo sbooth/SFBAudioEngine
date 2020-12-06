@@ -397,22 +397,22 @@ namespace {
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
-
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-		return NO;
-	}
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0) {
+		buffer.frameLength = 0;
+		return YES;
+	}
 
 	buffer.frameLength = buffer.frameCapacity;
 
 	auto result = ExtAudioFileRead(_eaf.get(), &frameLength, buffer.mutableAudioBufferList);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileRead failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		buffer.frameLength = 0;
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
