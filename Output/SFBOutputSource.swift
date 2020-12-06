@@ -6,24 +6,38 @@
 import Foundation
 
 extension OutputSource {
+	/// Returns the current offset in the output, in bytes
+	/// - throws: An `NSError` object if an error occurs
 	public func offset() throws -> Int {
 		var offset = 0
 		try __getOffset(&offset)
 		return offset
 	}
 
+	/// Returns the length of the output, in bytes
+	/// - throws: An `NSError` object if an error occurs
 	public func length() throws -> Int {
 		var length = 0
 		try __getLength(&length)
 		return length
 	}
 
+	/// Reads bytes from the input
+	/// - parameter buffer: A buffer to receive data
+	/// - parameter length: The maximum number of bytes to read
+	/// - returns: The number of bytes actually read
+	/// - throws: An `NSError` object if an error occurs
 	public func read(_ buffer: UnsafeMutableRawPointer, length: Int) throws -> Int {
 		var bytesRead = 0
 		try __readBytes(buffer, length: length, bytesRead: &bytesRead)
 		return bytesRead
 	}
 
+	/// Writes bytes to the output
+	/// - parameter buffer: A buffer of data to write
+	/// - parameter length: The maximum number of bytes to write
+	/// - returns:The number of bytes actually written
+	/// - throws: An `NSError` object if an error occurs
 	public func write(_ buffer: UnsafeRawPointer, length: Int) throws -> Int {
 		var bytesWritten = 0
 		try __writeBytes(buffer, length: length, bytesWritten: &bytesWritten)
