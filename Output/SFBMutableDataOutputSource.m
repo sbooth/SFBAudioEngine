@@ -15,13 +15,19 @@
 
 @implementation SFBMutableDataOutputSource
 
-- (instancetype)initWithMutableData:(NSMutableData *)data
+- (instancetype)init
 {
-	NSParameterAssert(data != nil);
-
-	if((self = [super init]))
-		_data = data;
+	if((self = [super init])) {
+		_data = [NSMutableData data];
+		if(_data == nil)
+			return nil;
+	}
 	return self;
+}
+
+- (NSData *)data
+{
+	return _data;
 }
 
 - (BOOL)openReturningError:(NSError **)error

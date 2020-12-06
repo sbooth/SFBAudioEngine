@@ -16,10 +16,8 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// @return An initialized \c SFBOutputSource object for the specified URL, or \c nil on failure
 + (nullable instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error;
 
-/// Returns an initialized \c SFBOutputSource for the given \c NSMutableData object or \c nil on failure
-/// @param data An \c NSMutableData object to receive output
-/// @return An initialized \c SFBOutputSource object or \c nil on faliure
-+ (nullable instancetype)outputSourceWithMutableData:(NSMutableData *)data error:(NSError **)error;
+/// Returns an initialized \c SFBOutputSource writing to an internal data object or \c nil on failure
++ (nullable instancetype)dataOutputSource;
 
 /// Returns an initialized \c SFBOutputSource for the given buffer or \c nil on failure
 /// @param buffer A buffer to receive output
@@ -32,6 +30,9 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 
 /// Returns the URL corresponding to this output source or \c nil if none
 @property (nonatomic, nullable, readonly) NSURL * url;
+
+/// Returns the underlying data object for this output source or \c nil if none
+@property (nonatomic, nullable, readonly) NSData * data;
 
 /// Opens the output source for writing
 /// @param error An optional pointer to an \c NSError object to receive error information

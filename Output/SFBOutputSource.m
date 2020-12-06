@@ -32,10 +32,9 @@ static void SFBCreateOutputSourceLog()
 	return nil;
 }
 
-+ (instancetype)outputSourceWithMutableData:(NSMutableData *)data error:(NSError **)error
++ (instancetype)dataOutputSource
 {
-	NSParameterAssert(data != nil);
-	return [[SFBMutableDataOutputSource alloc] initWithMutableData:data];
+	return [[SFBMutableDataOutputSource alloc] init];
 }
 
 + (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity
@@ -49,6 +48,11 @@ static void SFBCreateOutputSourceLog()
 {
 	if(self.isOpen)
 		[self closeReturningError:nil];
+}
+
+- (NSData *)data
+{
+	return nil;
 }
 
 - (BOOL)openReturningError:(NSError **)error

@@ -9,9 +9,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SFBMutableDataOutputSource : SFBOutputSource
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithMutableData:(NSMutableData *)data NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END
