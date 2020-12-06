@@ -13,18 +13,18 @@ SFBAudioEngine is usable from both Swift and Objective-C.
 
 SFBAudioEngine supports most audio formats. In addition to all formats supported by Core Audio SFBAudioEngine supports:
 
-* Ogg Speex
-* Ogg Vorbis
-* Monkey's Audio
-* Musepack
+* [Ogg Speex](https://www.speex.org)
+* [Ogg Vorbis](https://xiph.org/vorbis/)
+* [Monkey's Audio](https://www.monkeysaudio.com)
+* [Musepack](https://www.musepack.net)
 * Shorten
 * True Audio
-* WavPack
-* All formats supported by libsndfile
+* [WavPack](http://www.wavpack.com)
+* All formats supported by [libsndfile](http://libsndfile.github.io/libsndfile/)
 * DSD to PCM conversion for DSD64
 * DSD decoding for DSF and DSDIFF with support for DSD over PCM (DoP)
 
-FLAC, Ogg Opus, and MP3 are natively supported by Core Audio, however SFBAudioEngine provides its own encoders and decoders for these formats.
+[FLAC](https://xiph.org/flac/), [Ogg Opus](https://opus-codec.org), and MP3 are natively supported by Core Audio, however SFBAudioEngine provides its own encoders and decoders for these formats.
 
 ## Quick Start
 
@@ -166,4 +166,4 @@ The open-source projects providing support for the various audio formats are sub
 
 ### LGPL Notes
 
-In order to maintain compatibility with the LGPL (used by libsndfile, mpg123, lame, and the Musepack encoder) dynamic linking is required.
+In order to maintain compatibility with the LGPL (used by [libsndfile](http://libsndfile.github.io/libsndfile/), [mpg123](https://www.mpg123.de), [lame](https://lame.sourceforge.io), and the Musepack encoder) dynamic linking is required.
