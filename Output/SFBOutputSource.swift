@@ -6,22 +6,6 @@
 import Foundation
 
 extension OutputSource {
-	/// Returns the current offset in the output, in bytes
-	/// - throws: An `NSError` object if an error occurs
-	public func offset() throws -> Int {
-		var offset = 0
-		try __getOffset(&offset)
-		return offset
-	}
-
-	/// Returns the length of the output, in bytes
-	/// - throws: An `NSError` object if an error occurs
-	public func length() throws -> Int {
-		var length = 0
-		try __getLength(&length)
-		return length
-	}
-
 	/// Reads bytes from the input
 	/// - parameter buffer: A buffer to receive data
 	/// - parameter length: The maximum number of bytes to read
@@ -44,6 +28,25 @@ extension OutputSource {
 		return bytesWritten
 	}
 
+	/// Returns the current offset in the output, in bytes
+	/// - throws: An `NSError` object if an error occurs
+	public func offset() throws -> Int {
+		var offset = 0
+		try __getOffset(&offset)
+		return offset
+	}
+
+	/// Returns the length of the output, in bytes
+	/// - throws: An `NSError` object if an error occurs
+	public func length() throws -> Int {
+		var length = 0
+		try __getLength(&length)
+		return length
+	}
+
+	/// Writes a binary integer to the output
+	/// - parameter i: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func write<T: BinaryInteger>(_ i: T) throws
 	{
 		let size = MemoryLayout<T>.size
@@ -56,31 +59,49 @@ extension OutputSource {
 		}
 	}
 
+	/// Writes a 16-bit integer to the output in big-endian format
+	/// - parameter ui16: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeBigEndian(_ ui16: UInt16) throws
 	{
 		try write(CFSwapInt16HostToBig(ui16))
 	}
 
+	/// Writes a 32-bit integer to the output in big-endian format
+	/// - parameter ui32: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeBigEndian(_ ui32: UInt32) throws
 	{
 		try write(CFSwapInt32HostToBig(ui32))
 	}
 
+	/// Writes a 64-bit integer to the output in little-endian format
+	/// - parameter ui64: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeBigEndian(_ ui64: UInt64) throws
 	{
 		try write(CFSwapInt64HostToBig(ui64))
 	}
 
+	/// Writes a 16-bit integer to the output in big-endian format
+	/// - parameter ui16: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeLittleEndian(_ ui16: UInt16) throws
 	{
 		try write(CFSwapInt16HostToLittle(ui16))
 	}
 
+	/// Writes a 32-bit integer to the output in little-endian format
+	/// - parameter ui32: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeLittleEndian(_ ui32: UInt32) throws
 	{
 		try write(CFSwapInt32HostToLittle(ui32))
 	}
 
+	/// Writes a 64-bit integer to the output in little-endian format
+	/// - parameter ui64: The value to write
+	/// - throws: An `NSError` object if an error occurs
 	public func writeLittleEndian(_ ui64: UInt64) throws
 	{
 		try write(CFSwapInt64HostToLittle(ui64))
