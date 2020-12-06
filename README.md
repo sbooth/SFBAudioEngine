@@ -1,6 +1,6 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a powerful toolbox of audio functionality for both macOS and iOS. SFBAudioEngine supports:
+SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
 * Audio decoding
 * Audio playback
