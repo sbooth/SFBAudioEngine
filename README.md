@@ -80,13 +80,33 @@ if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
 }
 ~~~
 
-## Design
+Want to convert a WAVE file to FLAC?
+
+~~~swift
+let inputURL = URL(fileURLWithPath: "music.wav")
+let outputURL = URL(fileURLWithPath: "music.flac")
+try AudioConverter.convert(inputURL, to: dst)
+~~~
+
+The output file's format is inferred from the file extension.
+
+More complex conversions are supported including writing to `Data` instead of files:
+
+~~~swift
+let output = OutputSource.makeForData()
+let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
+encoder.settings = [.coreAudioFileTypeID: kAudioFileM4AType, .coreAudioFormatID: kAudioFormatMPEG4AAC, .coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]]
+try AudioConverter.convert(inputURL, using: encoder)
+// Encoder output is in `output.data`
+~~~
+
+## Decoding and Playback
 
 ### [Audio Decoders](Decoders/)
 
 Audio decoders in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
 
-All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
+All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
 
 Three special decoder subclasses that wrap an underlying audio decoder instance are also provided: [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h), [SFBDoPDecoder](Decoders/SFBDoPDecoder.h), and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h). For seekable inputs, [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [SFBDoPDecoder](Decoders/SFBDoPDecoder.h) and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
 
@@ -101,6 +121,20 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 ### [Audio Properties and Metadata](Metadata/)
 
 Audio properties and metadata are accessed from instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/AudioMetada.h) is writable for most formats.
+
+## Encoding and Conversion
+
+### [Audio Encoders](Encoders/)
+
+Audio encoders in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
+
+All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Encoders/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
+
+Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
+
+### [Audio Conversion](Conversion/)
+
+[SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion using URLs. An audio converter obtains input data from a decoder, ensures the data is in the correct input format for the encoder, and provides the data to the encoder. At the completion of conversion metadata is written, if supported.
 
 ## Sample Audio Players
 
@@ -121,3 +155,9 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided illust
 ## License
 
 SFBAudioEngine is released under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).
+
+The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration. For information on the specific licenses for each project see the README in the project's folder in [XCFrameworks/](XCFrameworks/).
+
+### LGPL Notes
+
+In order to maintain compatibility with the LGPL (used by libsndfile, mpg123, lame, and the Musepack encoder) dynamic linking is required.
