@@ -19,10 +19,10 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// Returns an initialized \c SFBOutputSource writing to an internal data object
 + (instancetype)dataOutputSource NS_SWIFT_NAME(makeForData());
 
-/// Returns an initialized \c SFBOutputSource for the given buffer or \c nil on failure
+/// Returns an initialized \c SFBOutputSource for the given buffer
 /// @param buffer A buffer to receive output
 /// @param capacity The capacity of \c buffer in bytes
-/// @return An initialized \c SFBOutputSource object or \c nil on faliure
+/// @return An initialized \c SFBOutputSource object
 + (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
 
 //+ (instancetype)new NS_UNAVAILABLE;
