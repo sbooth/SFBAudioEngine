@@ -169,4 +169,4 @@ The open-source projects providing support for the various audio formats are sub
 
 ### LGPL Notes
 
-In order to maintain compatibility with the LGPL (used by [libsndfile](http://libsndfile.github.io/libsndfile/), [mpg123](https://www.mpg123.de), libtta-cpp, [lame](https://lame.sourceforge.io), and the Musepack encoder) dynamic linking is required.
+In order to maintain compatibility with the LGPL used by [libsndfile](http://libsndfile.github.io/libsndfile/), [mpg123](https://www.mpg123.de), [libtta-cpp](https://sourceforge.net/projects/tta/), [lame](https://lame.sourceforge.io), and the Musepack encoder dynamic linking is required.
