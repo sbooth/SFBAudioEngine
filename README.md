@@ -1,26 +1,72 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a framework for macOS and iOS audio playback using Swift or Objective-C. SFBAudioEngine supports the following formats:
+SFBAudioEngine is a powerful toolbox of audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
-* WAVE
-* AIFF
-* Apple Lossless
-* AAC
-* FLAC
-* MP3
-* WavPack
-* Ogg Vorbis
+* Audio decoding
+* Audio playback
+* Audio encoding
+* Reading and writing of audio metadata
+
+SFBAudioEngine is usable from both Swift and Objective-C.
+
+## Format Support
+
+SFBAudioEngine supports most audio formats. In addition to all formats supported by Core Audio SFBAudioEngine supports:
+
 * Ogg Speex
-* Ogg Opus
-* Musepack
+* Ogg Vorbis
 * Monkey's Audio
-* True Audio
+* Musepack
 * Shorten
+* True Audio
+* WavPack
 * All formats supported by libsndfile
-* All formats supported by Core Audio
 * DSD to PCM conversion for DSD64
+* DSD decoding for DSF and DSDIFF with support for DSD over PCM (DoP)
 
-In addition to playback SFBAudioEngine supports reading and writing of metadata for most supported formats.
+FLAC, Ogg Opus, and MP3 are natively supported by Core Audio, however SFBAudioEngine provides its own encoders and decoders for these formats.
+
+## Quick Start
+
+Playing an audio file is as simple as:
+
+~~~swift
+import SFBAudioEngine
+let player = AudioPlayer()
+let url = URL(fileURLWithPath: "example.flac")
+try? player.play(url)
+~~~
+
+Reading audio properties and metadata is similarly trivial:
+
+~~~swift
+if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
+let sampleRate = audioFile.properties.sampleRate
+let title = audioFile.metadata.title
+}
+~~~
+
+Want to convert a WAVE file to FLAC?
+
+~~~swift
+let inputURL = URL(fileURLWithPath: "music.wav")
+let outputURL = URL(fileURLWithPath: "music.flac")
+try AudioConverter.convert(inputURL, to: outputURL)
+~~~
+
+The output file's format is inferred from the file extension.
+
+More complex conversions are supported including writing to `Data` instead of files:
+
+~~~swift
+let output = OutputSource.makeForData()
+let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
+encoder.settings = [.coreAudioFileTypeID: kAudioFileM4AType,
+.coreAudioFormatID: kAudioFormatMPEG4AAC,
+.coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]]
+try AudioConverter.convert(inputURL, using: encoder)
+// Encoder output is in `output.data`
+~~~
 
 ## Requirements
 
@@ -59,46 +105,6 @@ The included `Makefile` may also be used to create the build products:
 ### SimplePlayer
 
 Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
-
-## Quick Start
-
-Playing an audio file is as simple as:
-
-~~~swift
-import SFBAudioEngine
-let player = AudioPlayer()
-let url = URL(fileURLWithPath: "example.flac")
-try? player.play(url)
-~~~
-
-Reading audio properties and metadata is similarly trivial:
-
-~~~swift
-if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
-    let sampleRate = audioFile.properties.sampleRate
-    let title = audioFile.metadata.title
-}
-~~~
-
-Want to convert a WAVE file to FLAC?
-
-~~~swift
-let inputURL = URL(fileURLWithPath: "music.wav")
-let outputURL = URL(fileURLWithPath: "music.flac")
-try AudioConverter.convert(inputURL, to: dst)
-~~~
-
-The output file's format is inferred from the file extension.
-
-More complex conversions are supported including writing to `Data` instead of files:
-
-~~~swift
-let output = OutputSource.makeForData()
-let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
-encoder.settings = [.coreAudioFileTypeID: kAudioFileM4AType, .coreAudioFormatID: kAudioFormatMPEG4AAC, .coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]]
-try AudioConverter.convert(inputURL, using: encoder)
-// Encoder output is in `output.data`
-~~~
 
 ## Decoding and Playback
 
