@@ -16,14 +16,14 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 /// @return An initialized \c SFBOutputSource object for the specified URL, or \c nil on failure
 + (nullable instancetype)outputSourceForURL:(NSURL *)url error:(NSError **)error;
 
-/// Returns an initialized \c SFBOutputSource writing to an internal data object or \c nil on failure
-+ (nullable instancetype)dataOutputSource;
+/// Returns an initialized \c SFBOutputSource writing to an internal data object
++ (instancetype)dataOutputSource NS_SWIFT_NAME(makeForData());
 
 /// Returns an initialized \c SFBOutputSource for the given buffer or \c nil on failure
 /// @param buffer A buffer to receive output
 /// @param capacity The capacity of \c buffer in bytes
 /// @return An initialized \c SFBOutputSource object or \c nil on faliure
-+ (nullable instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
++ (instancetype)outputSourceWithBuffer:(void *)buffer capacity:(NSInteger)capacity;
 
 //+ (instancetype)new NS_UNAVAILABLE;
 //- (instancetype)init NS_UNAVAILABLE;
