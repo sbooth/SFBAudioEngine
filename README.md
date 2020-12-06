@@ -141,9 +141,9 @@ All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/S
 
 Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
 
-### [Audio Conversion](Conversion/)
+### [SFBAudioConverter](Conversion/SFBAudioConverter.h)
 
-[SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion using URLs. An audio converter obtains input data from a decoder, ensures the data is in the correct input format for the encoder, and provides the data to the encoder. At the completion of conversion metadata is written, if supported.
+[SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion operations. An audio converter obtains input data from a decoder, ensures the data is in the correct input format for the encoder, and provides the data to the encoder. At the completion of conversion metadata is written, if supported.
 
 ## Sample Audio Players
 
