@@ -94,6 +94,11 @@
 	return YES;
 }
 
+- (BOOL)atEOF
+{
+	return feof(_file) != 0;
+}
+
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
 	NSParameterAssert(offset != NULL);
@@ -106,11 +111,6 @@
 	}
 	*offset = result;
 	return YES;
-}
-
-- (BOOL)atEOF
-{
-	return feof(_file) != 0;
 }
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error

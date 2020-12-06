@@ -93,12 +93,14 @@
 
 - (BOOL)getOffset:(NSInteger *)offset error:(NSError **)error
 {
+	NSParameterAssert(offset != NULL);
 	*offset = (NSInteger)_pos;
 	return YES;
 }
 
 - (BOOL)getLength:(NSInteger *)length error:(NSError **)error
 {
+	NSParameterAssert(length != NULL);
 	*length = (NSInteger)_capacity;
 	return YES;
 }
