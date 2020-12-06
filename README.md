@@ -11,7 +11,7 @@ SFBAudioEngine is usable from both Swift and Objective-C.
 
 ## Format Support
 
-SFBAudioEngine supports most audio formats. In addition to all formats supported by Core Audio SFBAudioEngine supports:
+SFBAudioEngine supports most audio formats. In addition to all formats supported by [Core Audio](https://developer.apple.com/library/archive/documentation/MusicAudio/Conceptual/CoreAudioOverview/Introduction/Introduction.html) SFBAudioEngine supports:
 
 * [Ogg Speex](https://www.speex.org)
 * [Ogg Vorbis](https://xiph.org/vorbis/)
