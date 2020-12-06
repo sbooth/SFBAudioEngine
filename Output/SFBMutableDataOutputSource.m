@@ -17,11 +17,8 @@
 
 - (instancetype)init
 {
-	if((self = [super init])) {
+	if((self = [super init]))
 		_data = [NSMutableData data];
-		if(_data == nil)
-			return nil;
-	}
 	return self;
 }
 
