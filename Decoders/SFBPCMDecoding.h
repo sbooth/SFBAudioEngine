@@ -7,6 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Protocol defining the interface for audio decoders producing PCM audio
 NS_SWIFT_NAME(PCMDecoding) @protocol SFBPCMDecoding <SFBAudioDecoding>
 
 #pragma mark - Position and Length Information
