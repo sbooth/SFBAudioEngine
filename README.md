@@ -85,25 +85,13 @@ The project file contains targets for macOS and iOS frameworks. The frameworks a
 
 The included `Makefile` may also be used to create the build products:
 
-### macOS Framework Build
-
-`make archive/macOS.xcarchive`
-
-### macOS Catalyst Framework Build
-
-`make archive/macOS-Catalyst.xcarchive`
-
-### iOS Framework Build
-
-`make archive/iOS.xcarchive`
-
-### iOS Simulator Framework Build
-
-`make archive/iOS-Simulator.xcarchive`
-
-### XCFramework Build
-
-`make`
+| Target | `make` Command |
+| --- | --- |
+| macOS Framework | `make archive/macOS.xcarchive` |
+| macOS Catalyst Framework | `make archive/macOS-Catalyst.xcarchive` |
+| iOS Framework | `make archive/iOS.xcarchive` |
+| iOS Simulator Framework | `make archive/iOS-Simulator.xcarchive` |
+| XCFramework | `make` |
 
 ### SimplePlayer
 
@@ -111,9 +99,7 @@ Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
 
 ## Decoding
 
-### [Audio Decoders](Decoders/)
-
-Audio decoders in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
+[Audio decoders](Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
 
 All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
 
@@ -131,7 +117,7 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 
 ## Encoding
 
-Audio encoders in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
+[Audio encoders](Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
 
 All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Encoders/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
 
