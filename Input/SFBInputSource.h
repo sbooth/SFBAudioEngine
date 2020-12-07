@@ -93,28 +93,84 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 #pragma mark - Typed and Byte-Ordered Reading
 
 @interface SFBInputSource (SFBSignedIntegerReading)
+/// Reads an 8-bit signed integer from the input
+/// @param i8 A pointer to an \c int8_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readInt8:(int8_t *)i8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads a 16-bit signed integer from the input
+/// @param i16 A pointer to an \c int16_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readInt16:(int16_t *)i16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 32-bit signed integer from the input
+/// @param i32 A pointer to an \c int32_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readInt32:(int32_t *)i32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 64-bit signed integer from the input
+/// @param i64 A pointer to an \c int64_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readInt64:(int64_t *)i64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBUnsignedIntegerReading)
+/// Reads an 8-bit unsigned integer from the input
+/// @param ui8 A pointer to an \c uint8_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt8:(uint8_t *)ui8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads a 16-bit unsigned integer from the input
+/// @param ui16 A pointer to an \c uint16_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt16:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 32-bit unsigned integer from the input
+/// @param ui32 A pointer to an \c uint32_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt32:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 64-bit unsigned integer from the input
+/// @param ui64 A pointer to an \c uint64_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBBigEndianReading)
+/// Reads a 16-bit unsigned integer from the input in big-endian format
+/// @param ui16 A pointer to an \c uint16_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt16BigEndian:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 32-bit unsigned integer from the input in big-endian format
+/// @param ui32 A pointer to an \c uint32_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt32BigEndian:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 64-bit unsigned integer from the input in big-endian format
+/// @param ui64 A pointer to an \c uint64_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBInputSource (SFBLittleEndianReading)
+/// Reads a 16-bit unsigned integer from the input in little-endian format
+/// @param ui16 A pointer to an \c uint16_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt16LittleEndian:(uint16_t *)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 32-bit unsigned integer from the input in little-endian format
+/// @param ui32 A pointer to an \c uint32_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt32LittleEndian:(uint32_t *)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Reads an 64-bit unsigned integer from the input in little-endian format
+/// @param ui64 A pointer to an \c uint64_t to receive the value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)readUInt64LittleEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 

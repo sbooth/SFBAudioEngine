@@ -83,34 +83,94 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 @end
 
 @interface SFBOutputSource (SFBDataWriting)
+/// Writes data to the output
+/// @param data The data to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeData:(NSData *)data error:(NSError **)error;
 @end
 
 #pragma mark - Typed and Byte-Ordered Writing
 
 @interface SFBOutputSource (SFBSignedIntegerWriting)
+/// Writes an 8-bit signed integer to the output
+/// @param i8 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeInt8:(int8_t)i8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 16-bit signed integer to the output
+/// @param i16 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeInt16:(int16_t)i16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 32-bit signed integer to the output
+/// @param i32 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeInt32:(int32_t)i32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 64-bit signed integer to the output
+/// @param i64 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeInt64:(int64_t)i64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBOutputSource (SFBUnsignedIntegerWriting)
+/// Writes an 8-bit unsigned integer to the output
+/// @param ui8 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt8:(uint8_t)ui8 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 16-bit unsigned integer to the output
+/// @param ui16 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt16:(uint16_t)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 32-bit unsigned integer to the output
+/// @param ui32 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt32:(uint32_t)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 64-bit unsigned integer to the output
+/// @param ui64 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt64:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBOutputSource (SFBBigEndianWriting)
+/// Writes an 16-bit unsigned integer to the output in big-endian format
+/// @param ui16 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt16BigEndian:(uint16_t)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 32-bit unsigned integer to the output in big-endian format
+/// @param ui32 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt32BigEndian:(uint32_t)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 64-bit unsigned integer to the output in big-endian format
+/// @param ui64 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt64BigEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
 @interface SFBOutputSource (SFBLittleEndianWriting)
+/// Writes an 16-bit unsigned integer to the output in little-endian format
+/// @param ui16 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt16LittleEndian:(uint16_t)ui16 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 32-bit unsigned integer to the output in little-endian format
+/// @param ui32 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt32LittleEndian:(uint32_t)ui32 error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// Writes an 64-bit unsigned integer to the output in little-endian format
+/// @param ui64 The value to write
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
 - (BOOL)writeUInt64LittleEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
