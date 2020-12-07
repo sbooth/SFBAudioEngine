@@ -92,6 +92,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 
 #pragma mark - Typed and Byte-Ordered Reading
 
+/// Signed integer reading
 @interface SFBInputSource (SFBSignedIntegerReading)
 /// Reads an 8-bit signed integer from the input
 /// @param i8 A pointer to an \c int8_t to receive the value
@@ -115,6 +116,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (BOOL)readInt64:(int64_t *)i64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Unsigned integer reading
 @interface SFBInputSource (SFBUnsignedIntegerReading)
 /// Reads an 8-bit unsigned integer from the input
 /// @param ui8 A pointer to an \c uint8_t to receive the value
@@ -138,6 +140,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (BOOL)readUInt64:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Big-endian unsigned integer reading
 @interface SFBInputSource (SFBBigEndianReading)
 /// Reads a 16-bit unsigned integer from the input in big-endian format
 /// @param ui16 A pointer to an \c uint16_t to receive the value
@@ -156,6 +159,7 @@ NS_SWIFT_NAME(InputSource) @interface SFBInputSource : NSObject
 - (BOOL)readUInt64BigEndian:(uint64_t *)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Little-endian unsigned integer reading
 @interface SFBInputSource (SFBLittleEndianReading)
 /// Reads a 16-bit unsigned integer from the input in little-endian format
 /// @param ui16 A pointer to an \c uint16_t to receive the value

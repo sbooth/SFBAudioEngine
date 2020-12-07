@@ -92,6 +92,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 
 #pragma mark - Typed and Byte-Ordered Writing
 
+/// Signed integer writing
 @interface SFBOutputSource (SFBSignedIntegerWriting)
 /// Writes an 8-bit signed integer to the output
 /// @param i8 The value to write
@@ -115,6 +116,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 - (BOOL)writeInt64:(int64_t)i64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Unsigned integer writing
 @interface SFBOutputSource (SFBUnsignedIntegerWriting)
 /// Writes an 8-bit unsigned integer to the output
 /// @param ui8 The value to write
@@ -138,6 +140,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 - (BOOL)writeUInt64:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Big-endian unsigned integer writing
 @interface SFBOutputSource (SFBBigEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in big-endian format
 /// @param ui16 The value to write
@@ -156,6 +159,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 - (BOOL)writeUInt64BigEndian:(uint64_t)ui64 error:(NSError **)error NS_REFINED_FOR_SWIFT;
 @end
 
+/// Little-endian unsigned integer writing
 @interface SFBOutputSource (SFBLittleEndianWriting)
 /// Writes an 16-bit unsigned integer to the output in little-endian format
 /// @param ui16 The value to write

@@ -11,7 +11,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// A key in an audio encoder's settings dictionary
 typedef NSString * SFBAudioEncodingSettingsKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioEncodingSettingsKey);
+/// A value in an audio encoder's settings dictionary
 typedef id SFBAudioEncodingSettingsValue NS_SWIFT_NAME(AudioEncodingSettingsValue);
 
 /// Protocol defining the interface for audio encoders

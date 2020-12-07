@@ -271,6 +271,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - SFBAudioPlayerDelegate
 
+/// Delegate methods supported by \c SFBAudioPlayer
 NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 @optional
 /// Called to notify the delegate before decoding the first frame of audio
