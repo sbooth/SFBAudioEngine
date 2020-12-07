@@ -315,11 +315,14 @@ void SFB::Audio::SetID3v2TagFromMetadata(SFBAudioMetadata *metadata, TagLib::ID3
 		 */
 		NSISO8601DateFormatter *formatter = [[NSISO8601DateFormatter alloc] init];
 		NSCalendar *gregorianCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-		tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:[formatter dateFromString:metadata.releaseDate]]);
+		NSDate *date = [formatter dateFromString:metadata.releaseDate];
+		if(date) {
+			tag->setYear((unsigned int)[gregorianCalendar component:NSCalendarUnitYear fromDate:date]);
 
-		auto frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
-		frame->setText(TagLib::StringFromNSString(metadata.releaseDate));
-		tag->addFrame(frame);
+			auto frame = new TagLib::ID3v2::TextIdentificationFrame("TDRC", TagLib::String::Latin1);
+			frame->setText(TagLib::StringFromNSString(metadata.releaseDate));
+			tag->addFrame(frame);
+		}
 	}
 
 	// Comment
