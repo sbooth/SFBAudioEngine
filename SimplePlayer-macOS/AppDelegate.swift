@@ -85,10 +85,24 @@ class AppDelegate: NSObject {
 		openPanel.allowedFileTypes = PlayerWindowController.supportedPathExtensions
 
 		if openPanel.runModal() == .OK, let url = openPanel.url {
+			let destURL = url.deletingPathExtension().appendingPathExtension("wav")
+			if FileManager.default.fileExists(atPath: destURL.path) {
+				let alert = NSAlert()
+				alert.messageText = "Do you want to overwrite the existing file?"
+				alert.informativeText = "A file with the same name already exists."
+				alert.addButton(withTitle: "Overwrite")
+				alert.addButton(withTitle: "Cancel")
+
+				if alert.runModal() != NSApplication.ModalResponse.alertFirstButtonReturn {
+					return
+				}
+			}
+
 			do {
-				try AudioExporter.export(url, to: url.deletingPathExtension().appendingPathExtension("wav"))
+				try AudioConverter.convert(url, to: destURL)
 			}
 			catch let error {
+				try? FileManager.default.trashItem(at: destURL, resultingItemURL: nil)
 				NSApp.presentError(error)
 			}
 		}
