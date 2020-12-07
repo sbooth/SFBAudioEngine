@@ -2,11 +2,11 @@
 
 SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
-* Audio decoding
-* Audio playback
-* Audio encoding
-* Audio format conversion
-* Reading and writing of audio metadata
+* [Audio decoding](#decoding)
+* [Audio playback](#playback)
+* [Audio encoding](#encoding)
+* [Audio format conversion](#conversion)
+* [Audio properties reading and audio metadata reading and writing](#properties-and-metadata)
 
 SFBAudioEngine is usable from both Swift and Objective-C.
 
@@ -109,7 +109,7 @@ The included `Makefile` may also be used to create the build products:
 
 Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
 
-## Decoding and Playback
+## Decoding
 
 ### [Audio Decoders](Decoders/)
 
@@ -119,6 +119,8 @@ All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/S
 
 Three special decoder subclasses that wrap an underlying audio decoder instance are also provided: [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h), [SFBDoPDecoder](Decoders/SFBDoPDecoder.h), and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h). For seekable inputs, [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [SFBDoPDecoder](Decoders/SFBDoPDecoder.h) and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
 
+## Playback
+
 ### [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h)
 
 [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) is a subclass of [AVAudioSourceNode](https://developer.apple.com/documentation/avfoundation/avaudiosourcenode) that provides rich playback functionality within an [AVAudioEngine](https://developer.apple.com/documentation/avfoundation/avaudioengine) processing graph. [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h) supports gapless playback and comprehensive status notifications through delegate callbacks.
@@ -127,13 +129,7 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 
 [SFBAudioPlayer](Player/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfoundation/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h). [SFBAudioPlayer](Player/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through delegate callbacks.
 
-### [Audio Properties and Metadata](Metadata/)
-
-Audio properties and metadata are accessed from instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/AudioMetada.h) is writable for most formats.
-
-## Encoding and Conversion
-
-### [Audio Encoders](Encoders/)
+## Encoding
 
 Audio encoders in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
 
@@ -141,9 +137,13 @@ All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/S
 
 Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
 
-### [SFBAudioConverter](Conversion/SFBAudioConverter.h)
+## Conversion
 
 [SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion operations. An audio converter obtains input data from a decoder, ensures the data is in the correct input format for the encoder, and provides the data to the encoder. At the completion of conversion metadata is written, if supported.
+
+## Properties and Metadata
+
+Audio properties and metadata are accessed via instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/AudioMetada.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Metadata/SFBAudioFile.h) or instantiated directly. 
 
 ## Sample Audio Players
 
