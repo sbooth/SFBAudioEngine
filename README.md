@@ -6,7 +6,7 @@ SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and i
 * [Audio playback](#playback)
 * [Audio encoding](#encoding)
 * [Audio format conversion](#conversion)
-* [Audio properties reading and audio metadata reading and writing](#properties-and-metadata)
+* [Audio properties information and metadata editing](#properties-and-metadata)
 
 SFBAudioEngine is usable from both Swift and Objective-C.
 
