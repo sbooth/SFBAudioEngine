@@ -49,19 +49,66 @@ NS_SWIFT_NAME(AudioConverter) @interface SFBAudioConverter : NSObject
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
+/// Returns an initialized \c SFBAudioConverter object for the given URLs or \c nil on failure
+/// @param sourceURL The source URL
+/// @param destinationURL The destination URL
+/// @return An initialized \c SFBAudioConverter object for the specified URLs, or \c nil on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL NS_SWIFT_UNAVAILABLE("Use -initWithURL:destinationURL:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given URLs or \c nil on failure
+/// @param sourceURL The source URL
+/// @param destinationURL The destination URL
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified URLs, or \c nil on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL destinationURL:(NSURL *)destinationURL error:(NSError **)error;
 
+/// Returns an initialized \c SFBAudioConverter object for the given URL and encoder or \c nil on failure
+/// @param sourceURL The source URL
+/// @param encoder The encoder
+/// @return An initialized \c SFBAudioConverter object for the specified URL and encoder, or \c nil on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder NS_SWIFT_UNAVAILABLE("Use -initWithURL:encoder:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given URL and encoder or \c nil on failure
+/// @param sourceURL The source URL
+/// @param encoder The encoder
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified URL and encoder, or \c nil on failure
 - (nullable instancetype)initWithURL:(NSURL *)sourceURL encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
 
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and URL or \c nil on failure
+/// @param decoder The decoder
+/// @param destinationURL The destination URL
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and URL, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:destinationURL:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and URL or \c nil on failure
+/// @param decoder The decoder
+/// @param destinationURL The destination URL
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and URL, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder destinationURL:(NSURL *)destinationURL error:(NSError **)error;
 
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder error:(NSError **)error;
 
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @param metadata An optional pointer to an \c SFBAudioMetadata object
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata NS_SWIFT_UNAVAILABLE("Use -initWithDecoder:encoder:metadata:error: instead");
+/// Returns an initialized \c SFBAudioConverter object for the given decoder and encoder or \c nil on failure
+/// @param decoder The decoder
+/// @param encoder The encoder
+/// @param metadata An optional pointer to an \c SFBAudioMetadata object
+/// @param error An optional pointer to a \c NSError to receive error information
+/// @return An initialized \c SFBAudioConverter object for the specified decoder and encoder, or \c nil on failure
 - (nullable instancetype)initWithDecoder:(id <SFBPCMDecoding>)decoder encoder:(id <SFBPCMEncoding>)encoder metadata:(nullable SFBAudioMetadata *)metadata error:(NSError **)error NS_DESIGNATED_INITIALIZER;
 
 /// The decoder supplying the audio to be converted
