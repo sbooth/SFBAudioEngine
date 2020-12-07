@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SFBOutputSource Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/objc/Class/SFBOutputSource" class="dashAnchor"></a>
+    <a title="SFBOutputSource Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (94% documented)</p>
+        <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
+        <p class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">SFBAudioEngine Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        SFBOutputSource Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAttachedPicture.html">SFBAttachedPicture</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioConverter.html">SFBAudioConverter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDecoder.html">SFBAudioDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDevice.html">SFBAudioDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioDeviceDataSource.html">SFBAudioDeviceDataSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioEncoder.html">SFBAudioEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioExporter.html">SFBAudioExporter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioFile.html">SFBAudioFile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioMetadata.html">SFBAudioMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioOutputDevice.html">SFBAudioOutputDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioPlayerNode.html">SFBAudioPlayerNode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBAudioProperties.html">SFBAudioProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDDecoder.html">SFBDSDDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDSDPCMDecoder.html">SFBDSDPCMDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBDoPDecoder.html">SFBDoPDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBInputSource.html">SFBInputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBLoopableRegionDecoder.html">SFBLoopableRegionDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBOutputSource.html">SFBOutputSource</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SFBReplayGainAnalyzer.html">SFBReplayGainAnalyzer</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Constants.html">Constants</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyDescription">SFBAttachedPictureKeyDescription</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyImageData">SFBAttachedPictureKeyImageData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAttachedPictureKeyType">SFBAttachedPictureKeyType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioConverterErrorDomain">SFBAudioConverterErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderErrorDomain">SFBAudioDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameCoreAudio">SFBAudioDecoderNameCoreAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameFLAC">SFBAudioDecoderNameFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameLibsndfile">SFBAudioDecoderNameLibsndfile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMPEG">SFBAudioDecoderNameMPEG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameModule">SFBAudioDecoderNameModule</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMonkeysAudio">SFBAudioDecoderNameMonkeysAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameMusepack">SFBAudioDecoderNameMusepack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggOpus">SFBAudioDecoderNameOggOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggSpeex">SFBAudioDecoderNameOggSpeex</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameOggVorbis">SFBAudioDecoderNameOggVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameShorten">SFBAudioDecoderNameShorten</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameTrueAudio">SFBAudioDecoderNameTrueAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDecoderNameWavPack">SFBAudioDecoderNameWavPack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioDevicesChangedNotification">SFBAudioDevicesChangedNotification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderErrorDomain">SFBAudioEncoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameCoreAudio">SFBAudioEncoderNameCoreAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameFLAC">SFBAudioEncoderNameFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameLibsndfile">SFBAudioEncoderNameLibsndfile</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMP3">SFBAudioEncoderNameMP3</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMonkeysAudio">SFBAudioEncoderNameMonkeysAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameMusepack">SFBAudioEncoderNameMusepack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggFLAC">SFBAudioEncoderNameOggFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggOpus">SFBAudioEncoderNameOggOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggSpeex">SFBAudioEncoderNameOggSpeex</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameOggVorbis">SFBAudioEncoderNameOggVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameTrueAudio">SFBAudioEncoderNameTrueAudio</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncoderNameWavPack">SFBAudioEncoderNameWavPack</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyAPECompressionLevel">SFBAudioEncodingSettingsKeyAPECompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings">SFBAudioEncodingSettingsKeyCoreAudioAudioConverterPropertySettings</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel">SFBAudioEncodingSettingsKeyCoreAudioBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFileTypeID">SFBAudioEncodingSettingsKeyCoreAudioFileTypeID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFormatFlags">SFBAudioEncodingSettingsKeyCoreAudioFormatFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyCoreAudioFormatID">SFBAudioEncodingSettingsKeyCoreAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyFLACCompressionLevel">SFBAudioEncodingSettingsKeyFLACCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyFLACVerifyEncoding">SFBAudioEncodingSettingsKeyFLACVerifyEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileFileEndian">SFBAudioEncodingSettingsKeyLibsndfileFileEndian</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileMajorFormat">SFBAudioEncodingSettingsKeyLibsndfileMajorFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyLibsndfileSubtype">SFBAudioEncodingSettingsKeyLibsndfileSubtype</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3Bitrate">SFBAudioEncodingSettingsKeyMP3Bitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3CalculateReplayGain">SFBAudioEncodingSettingsKeyMP3CalculateReplayGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3EnableCBR">SFBAudioEncodingSettingsKeyMP3EnableCBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3EnableFastVBR">SFBAudioEncodingSettingsKeyMP3EnableFastVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3Quality">SFBAudioEncodingSettingsKeyMP3Quality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3StereoMode">SFBAudioEncodingSettingsKeyMP3StereoMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3TargetIsBitrate">SFBAudioEncodingSettingsKeyMP3TargetIsBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMP3VBRQuality">SFBAudioEncodingSettingsKeyMP3VBRQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyMusepackQuality">SFBAudioEncodingSettingsKeyMusepackQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusBitrate">SFBAudioEncodingSettingsKeyOpusBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusBitrateMode">SFBAudioEncodingSettingsKeyOpusBitrateMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusComplexity">SFBAudioEncodingSettingsKeyOpusComplexity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusFrameDuration">SFBAudioEncodingSettingsKeyOpusFrameDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusPreserveSampleRate">SFBAudioEncodingSettingsKeyOpusPreserveSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyOpusSignalType">SFBAudioEncodingSettingsKeyOpusSignalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexBitrate">SFBAudioEncodingSettingsKeySpeexBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexComplexity">SFBAudioEncodingSettingsKeySpeexComplexity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexDenoiseInput">SFBAudioEncodingSettingsKeySpeexDenoiseInput</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter">SFBAudioEncodingSettingsKeySpeexDisableHighpassFilter</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableABR">SFBAudioEncodingSettingsKeySpeexEnableABR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableAGC">SFBAudioEncodingSettingsKeySpeexEnableAGC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableDTX">SFBAudioEncodingSettingsKeySpeexEnableDTX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableVAD">SFBAudioEncodingSettingsKeySpeexEnableVAD</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexEnableVBR">SFBAudioEncodingSettingsKeySpeexEnableVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket">SFBAudioEncodingSettingsKeySpeexFramesPerOggPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexMode">SFBAudioEncodingSettingsKeySpeexMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexQuality">SFBAudioEncodingSettingsKeySpeexQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexTargetIsBitrate">SFBAudioEncodingSettingsKeySpeexTargetIsBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate">SFBAudioEncodingSettingsKeySpeexVBRMaxBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisBitrate">SFBAudioEncodingSettingsKeyVorbisBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisMaxBitrate">SFBAudioEncodingSettingsKeyVorbisMaxBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisMinBitrate">SFBAudioEncodingSettingsKeyVorbisMinBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisQuality">SFBAudioEncodingSettingsKeyVorbisQuality</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate">SFBAudioEncodingSettingsKeyVorbisTargetIsBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsKeyWavPackCompressionLevel">SFBAudioEncodingSettingsKeyWavPackCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionHigh">SFBAudioEncodingSettingsValueAPECompressionHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh">SFBAudioEncodingSettingsValueAPECompressionLevelExtraHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelFast">SFBAudioEncodingSettingsValueAPECompressionLevelFast</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionLevelInsane">SFBAudioEncodingSettingsValueAPECompressionLevelInsane</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueAPECompressionNormal">SFBAudioEncodingSettingsValueAPECompressionNormal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianBig">SFBAudioEncodingSettingsValueLibsndfileFileEndianBig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU">SFBAudioEncodingSettingsValueLibsndfileFileEndianCPU</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault">SFBAudioEncodingSettingsValueLibsndfileFileEndianDefault</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle">SFBAudioEncodingSettingsValueLibsndfileFileEndianLittle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAU</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR">SFBAudioEncodingSettingsValueLibsndfileMajorFormatAVR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatCAF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC">SFBAudioEncodingSettingsValueLibsndfileMajorFormatFLAC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK">SFBAudioEncodingSettingsValueLibsndfileMajorFormatHTK</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM">SFBAudioEncodingSettingsValueLibsndfileMajorFormatIRCAM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT4</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMAT5</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K">SFBAudioEncodingSettingsValueLibsndfileMajorFormatMPC2K</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST">SFBAudioEncodingSettingsValueLibsndfileMajorFormatNIST</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg">SFBAudioEncodingSettingsValueLibsndfileMajorFormatOgg</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatPAF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF">SFBAudioEncodingSettingsValueLibsndfileMajorFormatPVF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64">SFBAudioEncodingSettingsValueLibsndfileMajorFormatRF64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw">SFBAudioEncodingSettingsValueLibsndfileMajorFormatRaw</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSD2</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSDS</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX">SFBAudioEncodingSettingsValueLibsndfileMajorFormatSVX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC">SFBAudioEncodingSettingsValueLibsndfileMajorFormatVOC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64">SFBAudioEncodingSettingsValueLibsndfileMajorFormatW64</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAV</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWAVEX</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE">SFBAudioEncodingSettingsValueLibsndfileMajorFormatWVE</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI">SFBAudioEncodingSettingsValueLibsndfileMajorFormatXI</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_20</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAC_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW">SFBAudioEncodingSettingsValueLibsndfileSubtypeALAW</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8">SFBAudioEncodingSettingsValueLibsndfileSubtypeDPCM_8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_12</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N">SFBAudioEncodingSettingsValueLibsndfileSubtypeDWVW_N</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble">SFBAudioEncodingSettingsValueLibsndfileSubtypeDouble</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat">SFBAudioEncodingSettingsValueLibsndfileSubtypeFloat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeG721_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40">SFBAudioEncodingSettingsValueLibsndfileSubtypeG723_40</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610">SFBAudioEncodingSettingsValueLibsndfileSubtypeGSM610</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeIMA_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeMS_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32">SFBAudioEncodingSettingsValueLibsndfileSubtypeNMS_ADPCM_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus">SFBAudioEncodingSettingsValueLibsndfileSubtypeOpus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_16</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_24</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_32</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_S8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8">SFBAudioEncodingSettingsValueLibsndfileSubtypePCM_U8</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM">SFBAudioEncodingSettingsValueLibsndfileSubtypeVOX_ADPCM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis">SFBAudioEncodingSettingsValueLibsndfileSubtypeVorbis</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW">SFBAudioEncodingSettingsValueLibsndfileSubtypeµLAW</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeJointStereo">SFBAudioEncodingSettingsValueMP3StereoModeJointStereo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeMono">SFBAudioEncodingSettingsValueMP3StereoModeMono</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueMP3StereoModeStereo">SFBAudioEncodingSettingsValueMP3StereoModeStereo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR">SFBAudioEncodingSettingsValueOpusBitrateModeConstrainedVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR">SFBAudioEncodingSettingsValueOpusBitrateModeHardCBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusBitrateModeVBR">SFBAudioEncodingSettingsValueOpusBitrateModeVBR</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration100ms">SFBAudioEncodingSettingsValueOpusFrameDuration100ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration10ms">SFBAudioEncodingSettingsValueOpusFrameDuration10ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration120ms">SFBAudioEncodingSettingsValueOpusFrameDuration120ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration20ms">SFBAudioEncodingSettingsValueOpusFrameDuration20ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms">SFBAudioEncodingSettingsValueOpusFrameDuration2_5ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration40ms">SFBAudioEncodingSettingsValueOpusFrameDuration40ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration5ms">SFBAudioEncodingSettingsValueOpusFrameDuration5ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration60ms">SFBAudioEncodingSettingsValueOpusFrameDuration60ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusFrameDuration80ms">SFBAudioEncodingSettingsValueOpusFrameDuration80ms</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusSignalTypeMusic">SFBAudioEncodingSettingsValueOpusSignalTypeMusic</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueOpusSignalTypeVoice">SFBAudioEncodingSettingsValueOpusSignalTypeVoice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeNarrowband">SFBAudioEncodingSettingsValueSpeexModeNarrowband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeUltraWideband">SFBAudioEncodingSettingsValueSpeexModeUltraWideband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueSpeexModeWideband">SFBAudioEncodingSettingsValueSpeexModeWideband</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelFast">SFBAudioEncodingSettingsValueWavPackCompressionLevelFast</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh">SFBAudioEncodingSettingsValueWavPackCompressionLevelHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh">SFBAudioEncodingSettingsValueWavPackCompressionLevelVeryHigh</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionNumber">SFBAudioEngineVersionNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioEngineVersionString">SFBAudioEngineVersionString</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioExporterErrorDomain">SFBAudioExporterErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioFileErrorDomain">SFBAudioFileErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAdditionalMetadata">SFBAudioMetadataKeyAdditionalMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtist">SFBAudioMetadataKeyAlbumArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumArtistSortOrder">SFBAudioMetadataKeyAlbumArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitle">SFBAudioMetadataKeyAlbumTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAlbumTitleSortOrder">SFBAudioMetadataKeyAlbumTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtist">SFBAudioMetadataKeyArtist</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyArtistSortOrder">SFBAudioMetadataKeyArtistSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyAttachedPictures">SFBAudioMetadataKeyAttachedPictures</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyBPM">SFBAudioMetadataKeyBPM</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComment">SFBAudioMetadataKeyComment</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyCompilation">SFBAudioMetadataKeyCompilation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposer">SFBAudioMetadataKeyComposer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyComposerSortOrder">SFBAudioMetadataKeyComposerSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscNumber">SFBAudioMetadataKeyDiscNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyDiscTotal">SFBAudioMetadataKeyDiscTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenre">SFBAudioMetadataKeyGenre</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGenreSortOrder">SFBAudioMetadataKeyGenreSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyGrouping">SFBAudioMetadataKeyGrouping</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyISRC">SFBAudioMetadataKeyISRC</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyLyrics">SFBAudioMetadataKeyLyrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMCN">SFBAudioMetadataKeyMCN</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzRecordingID">SFBAudioMetadataKeyMusicBrainzRecordingID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyMusicBrainzReleaseID">SFBAudioMetadataKeyMusicBrainzReleaseID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyRating">SFBAudioMetadataKeyRating</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReleaseDate">SFBAudioMetadataKeyReleaseDate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumGain">SFBAudioMetadataKeyReplayGainAlbumGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainAlbumPeak">SFBAudioMetadataKeyReplayGainAlbumPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainReferenceLoudness">SFBAudioMetadataKeyReplayGainReferenceLoudness</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackGain">SFBAudioMetadataKeyReplayGainTrackGain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyReplayGainTrackPeak">SFBAudioMetadataKeyReplayGainTrackPeak</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitle">SFBAudioMetadataKeyTitle</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTitleSortOrder">SFBAudioMetadataKeyTitleSortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackNumber">SFBAudioMetadataKeyTrackNumber</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioMetadataKeyTrackTotal">SFBAudioMetadataKeyTrackTotal</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPlayerNodeErrorDomain">SFBAudioPlayerNodeErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitrate">SFBAudioPropertiesKeyBitrate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyBitsPerChannel">SFBAudioPropertiesKeyBitsPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyChannelCount">SFBAudioPropertiesKeyChannelCount</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyDuration">SFBAudioPropertiesKeyDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFormatName">SFBAudioPropertiesKeyFormatName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeyFrameLength">SFBAudioPropertiesKeyFrameLength</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderNameDSDIFF">SFBDSDDecoderNameDSDIFF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBDSDDecoderNameDSF">SFBDSDDecoderNameDSF</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBInputSourceErrorDomain">SFBInputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerGainKey">SFBReplayGainAnalyzerGainKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAttachedPictureType.html">SFBAttachedPictureType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioConverterErrorCode.html">SFBAudioConverterErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioDecoderErrorCode.html">SFBAudioDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioEncoderErrorCode.html">SFBAudioEncoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioExporterErrorCode.html">SFBAudioExporterErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerNodeErrorCode.html">SFBAudioPlayerNodeErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBAudioPlayerPlaybackState.html">SFBAudioPlayerPlaybackState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBInputSourceFlags.html">SFBInputSourceFlags</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBOutputSourceErrorCode.html">SFBOutputSourceErrorCode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SFBReplayGainAnalyzerErrorCode.html">SFBReplayGainAnalyzerErrorCode</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioEncoding.html">SFBAudioEncoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerDelegate.html">SFBAudioPlayerDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBAudioPlayerNodeDelegate.html">SFBAudioPlayerNodeDelegate</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBDSDDecoding.html">SFBDSDDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SFBPCMEncoding.html">SFBPCMEncoding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Type%20Definitions.html">Type Definitions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAttachedPicture.h@T@SFBAttachedPictureKey">SFBAttachedPictureKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioDecoder.h@T@SFBAudioDecoderName">SFBAudioDecoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncoderName">SFBAudioEncoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoding.h@T@SFBAudioEncodingSettingsKey">SFBAudioEncodingSettingsKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoding.h@T@SFBAudioEncodingSettingsValue">SFBAudioEncodingSettingsValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueAPECompressionLevel">SFBAudioEncodingSettingsValueAPECompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileFileEndian">SFBAudioEncodingSettingsValueLibsndfileFileEndian</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileMajorFormat">SFBAudioEncodingSettingsValueLibsndfileMajorFormat</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueLibsndfileSubtype">SFBAudioEncodingSettingsValueLibsndfileSubtype</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueMP3StereoMode">SFBAudioEncodingSettingsValueMP3StereoMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusBitrateMode">SFBAudioEncodingSettingsValueOpusBitrateMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusFrameDuration">SFBAudioEncodingSettingsValueOpusFrameDuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueOpusSignalType">SFBAudioEncodingSettingsValueOpusSignalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueSpeexMode">SFBAudioEncodingSettingsValueSpeexMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioEncoder.h@T@SFBAudioEncodingSettingsValueWavPackCompressionLevel">SFBAudioEncodingSettingsValueWavPackCompressionLevel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioMetadata.h@T@SFBAudioMetadataKey">SFBAudioMetadataKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerAVAudioEngineBlock">SFBAudioPlayerAVAudioEngineBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackPosition">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayerNode.h@T@SFBAudioPlayerNodePlaybackTime">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackPosition">SFBAudioPlayerPlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioPlayer.h@T@SFBAudioPlayerPlaybackTime">SFBAudioPlayerPlaybackTime</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBAudioProperties.h@T@SFBAudioPropertiesKey">SFBAudioPropertiesKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBDSDDecoder.h@T@SFBDSDDecoderName">SFBDSDDecoderName</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Type%20Definitions.html#/c:SFBReplayGainAnalyzer.h@T@SFBReplayGainAnalyzerKey">SFBReplayGainAnalyzerKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackPosition.html">SFBAudioPlayerNodePlaybackPosition</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/SFBAudioPlayerNodePlaybackTime.html">SFBAudioPlayerNodePlaybackTime</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>SFBOutputSource</h1>
+              <div class="declaration">
+                <div class="language">
+                  <p class="aside-title">Objective-C</p>
+                  <pre class="highlight objective_c"><code>
+<span class="k">@interface</span> <span class="nc">SFBOutputSource</span> <span class="p">:</span> <span class="nc">NSObject</span></code></pre>
+
+                </div>
+                <div class="language">
+                  <p class="aside-title">Swift</p>
+                  <pre class="highlight swift"><code><span class="kd">class</span> <span class="kt">OutputSource</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>An output source</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(cm)outputSourceForURL:error:"></a>
+                    <a name="//apple_ref/objc/Method/+outputSourceForURL:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)outputSourceForURL:error:">+outputSourceForURL:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an initialized \c SFBOutputSource object for the given URL or \c nil on failure</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nullable</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">outputSourceForURL</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span>
+                                      <span class="nf">error</span><span class="p">:</span>
+                                          <span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="k">for</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>url</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The URL</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to a \c NSError to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>An initialized \c SFBOutputSource object for the specified URL, or \c nil on failure</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(cm)dataOutputSource"></a>
+                    <a name="//apple_ref/objc/Method/+dataOutputSource" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)dataOutputSource">+dataOutputSource</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an initialized \c SFBOutputSource writing to an internal data object</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="n">dataOutputSource</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">class</span> <span class="kd">func</span> <span class="nf">makeForData</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(cm)outputSourceWithBuffer:capacity:"></a>
+                    <a name="//apple_ref/objc/Method/+outputSourceWithBuffer:capacity:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(cm)outputSourceWithBuffer:capacity:">+outputSourceWithBuffer:<wbr>capacity:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an initialized \c SFBOutputSource for the given buffer</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">+</span> <span class="p">(</span><span class="n">nonnull</span> <span class="n">instancetype</span><span class="p">)</span><span class="nf">outputSourceWithBuffer</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">buffer</span>
+                                      <span class="nf">capacity</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">capacity</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">buffer</span><span class="p">:</span> <span class="kt">UnsafeMutableRawPointer</span><span class="p">,</span> <span class="nv">capacity</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer to receive output</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>capacity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The capacity of \c buffer in bytes</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>An initialized \c SFBOutputSource object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(py)url"></a>
+                    <a name="//apple_ref/objc/Property/url" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(py)url">url</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the URL corresponding to this output source or \c nil if none</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSURL</span> <span class="o">*</span><span class="n">url</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(py)data"></a>
+                    <a name="//apple_ref/objc/Property/data" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(py)data">data</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the underlying data object for this output source or \c nil if none</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">,</span> <span class="n">nullable</span><span class="p">)</span> <span class="n">NSData</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)openReturningError:"></a>
+                    <a name="//apple_ref/objc/Method/-openReturningError:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)openReturningError:">-openReturningError:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Opens the output source for writing</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">openReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">open</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)closeReturningError:"></a>
+                    <a name="//apple_ref/objc/Method/-closeReturningError:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)closeReturningError:">-closeReturningError:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Closes the output source</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">closeReturningError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">close</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(py)isOpen"></a>
+                    <a name="//apple_ref/objc/Property/isOpen" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(py)isOpen">isOpen</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns \c YES if the output source is open</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">isOpen</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isOpen</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)readBytes:length:bytesRead:error:"></a>
+                    <a name="//apple_ref/objc/Method/-readBytes:length:bytesRead:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)readBytes:length:bytesRead:error:">-readBytes:<wbr>length:<wbr>bytesRead:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads bytes from the input</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">readBytes</span><span class="p">:(</span><span class="n">nonnull</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">buffer</span>
+           <span class="nf">length</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">length</span>
+        <span class="nf">bytesRead</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSInteger</span> <span class="o">*</span><span class="p">)</span><span class="nv">bytesRead</span>
+            <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer to receive data</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>length</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The maximum number of bytes to read</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>bytesRead</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The number of bytes actually read</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if any bytes were read, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeBytes:length:bytesWritten:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeBytes:length:bytesWritten:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeBytes:length:bytesWritten:error:">-writeBytes:<wbr>length:<wbr>bytesWritten:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes bytes to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeBytes</span><span class="p">:(</span><span class="n">nonnull</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="nv">buffer</span>
+            <span class="nf">length</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">length</span>
+      <span class="nf">bytesWritten</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSInteger</span> <span class="o">*</span><span class="p">)</span><span class="nv">bytesWritten</span>
+             <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>buffer</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A buffer of data to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>length</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The maximum number of bytes to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>bytesWritten</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The number of bytes actually written</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES if any bytes were written, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(py)atEOF"></a>
+                    <a name="//apple_ref/objc/Property/atEOF" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(py)atEOF">atEOF</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns \c YES if the end of input has been reached</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">atEOF</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">atEOF</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)getOffset:error:"></a>
+                    <a name="//apple_ref/objc/Method/-getOffset:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)getOffset:error:">-getOffset:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current offset in the output, in bytes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">getOffset</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSInteger</span> <span class="o">*</span><span class="p">)</span><span class="nv">offset</span>
+            <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)getLength:error:"></a>
+                    <a name="//apple_ref/objc/Method/-getLength:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)getLength:error:">-getLength:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the length of the output, in bytes</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">getLength</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSInteger</span> <span class="o">*</span><span class="p">)</span><span class="nv">length</span>
+            <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(py)supportsSeeking"></a>
+                    <a name="//apple_ref/objc/Property/supportsSeeking" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(py)supportsSeeking">supportsSeeking</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns \c YES if the output is seekable</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">BOOL</span> <span class="n">supportsSeeking</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">supportsSeeking</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)seekToOffset:error:"></a>
+                    <a name="//apple_ref/objc/Method/-seekToOffset:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)seekToOffset:error:">-seekToOffset:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Seeks to the specified byte offset</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToOffset</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">offset</span>
+               <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">seek</span><span class="p">(</span><span class="n">toOffset</span> <span class="nv">offset</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>offset</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The desired offset, in bytes</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/SFBDataWriting"></a>
+                <a name="//apple_ref/objc/Section/SFBDataWriting" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/SFBDataWriting"></a>
+                  <h3 class="section-name"><p>SFBDataWriting</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeData:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeData:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeData:error:">-writeData:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes data to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeData</span><span class="p">:(</span><span class="n">nonnull</span> <span class="n">NSData</span> <span class="o">*</span><span class="p">)</span><span class="nv">data</span>
+            <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">writeData</span><span class="p">(</span><span class="n">_</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>data</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/SFBSignedIntegerWriting"></a>
+                <a name="//apple_ref/objc/Section/SFBSignedIntegerWriting" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/SFBSignedIntegerWriting"></a>
+                  <h3 class="section-name"><p>SFBSignedIntegerWriting</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeInt8:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeInt8:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt8:error:">-writeInt8:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 8-bit signed integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeInt8</span><span class="p">:(</span><span class="kt">int8_t</span><span class="p">)</span><span class="nv">i8</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>i8</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeInt16:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeInt16:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt16:error:">-writeInt16:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 16-bit signed integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeInt16</span><span class="p">:(</span><span class="kt">int16_t</span><span class="p">)</span><span class="nv">i16</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>i16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeInt32:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeInt32:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt32:error:">-writeInt32:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 32-bit signed integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeInt32</span><span class="p">:(</span><span class="kt">int32_t</span><span class="p">)</span><span class="nv">i32</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>i32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeInt64:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeInt64:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeInt64:error:">-writeInt64:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 64-bit signed integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeInt64</span><span class="p">:(</span><span class="kt">int64_t</span><span class="p">)</span><span class="nv">i64</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>i64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/SFBUnsignedIntegerWriting"></a>
+                <a name="//apple_ref/objc/Section/SFBUnsignedIntegerWriting" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/SFBUnsignedIntegerWriting"></a>
+                  <h3 class="section-name"><p>SFBUnsignedIntegerWriting</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt8:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt8:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt8:error:">-writeUInt8:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 8-bit unsigned integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt8</span><span class="p">:(</span><span class="kt">uint8_t</span><span class="p">)</span><span class="nv">ui8</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui8</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt16:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16:error:">-writeUInt16:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 16-bit unsigned integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt16</span><span class="p">:(</span><span class="kt">uint16_t</span><span class="p">)</span><span class="nv">ui16</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt32:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32:error:">-writeUInt32:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 32-bit unsigned integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt32</span><span class="p">:(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="nv">ui32</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt64:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64:error:">-writeUInt64:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 64-bit unsigned integer to the output</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt64</span><span class="p">:(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="nv">ui64</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/SFBBigEndianWriting"></a>
+                <a name="//apple_ref/objc/Section/SFBBigEndianWriting" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/SFBBigEndianWriting"></a>
+                  <h3 class="section-name"><p>SFBBigEndianWriting</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16BigEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt16BigEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16BigEndian:error:">-writeUInt16BigEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 16-bit unsigned integer to the output in big-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt16BigEndian</span><span class="p">:(</span><span class="kt">uint16_t</span><span class="p">)</span><span class="nv">ui16</span>
+                       <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32BigEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt32BigEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32BigEndian:error:">-writeUInt32BigEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 32-bit unsigned integer to the output in big-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt32BigEndian</span><span class="p">:(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="nv">ui32</span>
+                       <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64BigEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt64BigEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64BigEndian:error:">-writeUInt64BigEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 64-bit unsigned integer to the output in big-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt64BigEndian</span><span class="p">:(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="nv">ui64</span>
+                       <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/SFBLittleEndianWriting"></a>
+                <a name="//apple_ref/objc/Section/SFBLittleEndianWriting" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/SFBLittleEndianWriting"></a>
+                  <h3 class="section-name"><p>SFBLittleEndianWriting</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt16LittleEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt16LittleEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt16LittleEndian:error:">-writeUInt16LittleEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 16-bit unsigned integer to the output in little-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt16LittleEndian</span><span class="p">:(</span><span class="kt">uint16_t</span><span class="p">)</span><span class="nv">ui16</span>
+                          <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui16</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt32LittleEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt32LittleEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt32LittleEndian:error:">-writeUInt32LittleEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 32-bit unsigned integer to the output in little-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt32LittleEndian</span><span class="p">:(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="nv">ui32</span>
+                          <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui32</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:objc(cs)SFBOutputSource(im)writeUInt64LittleEndian:error:"></a>
+                    <a name="//apple_ref/objc/Method/-writeUInt64LittleEndian:error:" class="dashAnchor"></a>
+                    <a class="token" href="#/c:objc(cs)SFBOutputSource(im)writeUInt64LittleEndian:error:">-writeUInt64LittleEndian:<wbr>error:<wbr></a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Writes an 64-bit unsigned integer to the output in little-endian format</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Objective-C</p>
+                          <pre class="highlight objective_c"><code><span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">writeUInt64LittleEndian</span><span class="p">:(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="nv">ui64</span>
+                          <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">_Nullable</span> <span class="o">*</span><span class="n">_Nullable</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>ui64</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value to write</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>error</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional pointer to an \c NSError object to receive error information</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>\c YES on success, \c NO otherwise</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>© 2006 - 2020 <a class="link" href="https://sbooth.org" target="_blank" rel="external">Stephen F. Booth</a> under the <a class="link" href="https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt" target="_blank" rel="external">MIT License</a>.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.6</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
