@@ -224,7 +224,7 @@ struct ::std::default_delete<lame_global_flags> {
 	auto calculateReplayGain = [[_settings objectForKey:SFBAudioEncodingSettingsKeyMP3CalculateReplayGain] boolValue];
 	result = lame_set_findReplayGain(gfp.get(), calculateReplayGain);
 	if(result == -1) {
-		os_log_error(gSFBAudioEncoderLog, "lame_init_params failed");
+		os_log_error(gSFBAudioEncoderLog, "lame_set_findReplayGain(%d) failed", calculateReplayGain);
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioEncoderErrorDomain code:SFBAudioEncoderErrorCodeInternalError userInfo:nil];
 		return NO;
