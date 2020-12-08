@@ -101,6 +101,10 @@ NS_SWIFT_NAME(AudioEncoder) @interface SFBAudioEncoder : NSObject <SFBPCMEncodin
 /// @return An initialized \c SFBAudioEncoder object for the specified URL, or \c nil on failure
 - (nullable instancetype)initWithURL:(NSURL *)url encoderName:(SFBAudioEncoderName)encoderName error:(NSError **)error;
 
+/// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
+/// @param outputSource The output source
+/// @param encoderName The name of the encoder to use
+/// @return An initialized \c SFBAudioEncoder object for the specified output source, or \c nil on failure
 - (nullable instancetype)initWithOutputSource:(SFBOutputSource *)outputSource encoderName:(SFBAudioEncoderName)encoderName NS_SWIFT_UNAVAILABLE("Use -initWithOutputSource:encoderName:error: instead");
 /// Returns an initialized \c SFBAudioEncoder object for the given output source or \c nil on failure
 /// @param outputSource The output source

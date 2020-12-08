@@ -82,6 +82,7 @@ NS_SWIFT_NAME(OutputSource) @interface SFBOutputSource : NSObject
 
 @end
 
+/// Data writing
 @interface SFBOutputSource (SFBDataWriting)
 /// Writes data to the output
 /// @param data The data to write

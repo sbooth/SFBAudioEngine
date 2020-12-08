@@ -34,7 +34,6 @@ struct SFBAudioPlayerNodePlaybackTime {
 	/// The total time or \c SFBUnknownTime if unknown
 	NSTimeInterval totalTime;
 } /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackTime instead")*/;
-/// Playback time information for \c SFBAudioPlayerNode
 typedef struct SFBAudioPlayerNodePlaybackTime SFBAudioPlayerNodePlaybackTime;
 
 #pragma mark - SFBAudioPlayerNode
