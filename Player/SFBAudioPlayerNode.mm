@@ -947,14 +947,7 @@ namespace {
 		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder) {
 			// Create the decoder state
-			DecoderStateData *decoderState = nullptr;
-			try {
-				decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
-			}
-			catch(const std::exception& e) {
-				os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data: %{public}s", e.what());
-				continue;
-			}
+			auto decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
 
 			// Add the decoder state to the list of active decoders
 			auto stored = false;
