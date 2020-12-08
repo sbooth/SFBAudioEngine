@@ -42,8 +42,8 @@
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
-	if(!stream->isOpen()) {
+	TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
+	if(!stream.isOpen()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
@@ -54,7 +54,7 @@
 		return NO;
 	}
 
-	TagLib::MPEG::File file(stream.get(), TagLib::ID3v2::FrameFactory::instance());
+	TagLib::MPEG::File file(&stream, TagLib::ID3v2::FrameFactory::instance());
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
@@ -119,8 +119,8 @@
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
-	if(!stream->isOpen()) {
+	TagLib::FileStream stream(self.url.fileSystemRepresentation);
+	if(!stream.isOpen()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
@@ -131,7 +131,7 @@
 		return NO;
 	}
 
-	TagLib::MPEG::File file(stream.get(), TagLib::ID3v2::FrameFactory::instance(), false);
+	TagLib::MPEG::File file(&stream, TagLib::ID3v2::FrameFactory::instance(), false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

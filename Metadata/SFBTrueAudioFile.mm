@@ -40,8 +40,8 @@
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
-	if(!stream->isOpen()) {
+	TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
+	if(!stream.isOpen()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
@@ -52,7 +52,7 @@
 		return NO;
 	}
 
-	TagLib::TrueAudio::File file(stream.get());
+	TagLib::TrueAudio::File file(&stream);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
@@ -90,8 +90,8 @@
 
 - (BOOL)writeMetadataReturningError:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation));
-	if(!stream->isOpen()) {
+	TagLib::FileStream stream(self.url.fileSystemRepresentation);
+	if(!stream.isOpen()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
@@ -102,7 +102,7 @@
 		return NO;
 	}
 
-	TagLib::TrueAudio::File file(stream.get(), false);
+	TagLib::TrueAudio::File file(&stream, false);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
