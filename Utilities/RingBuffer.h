@@ -34,10 +34,10 @@ namespace SFB {
 		 * @brief Create a new \c RingBuffer
 		 * @note Allocate() must be called before the object may be used.
 		 */
-		RingBuffer();
+		RingBuffer() noexcept;
 
 		/*! @brief Destroy the \c RingBuffer and release all associated resources. */
-		~RingBuffer();
+		~RingBuffer() noexcept;
 
 		/*! @cond */
 
@@ -59,33 +59,34 @@ namespace SFB {
 		/*!
 		 * @brief Allocate space for data.
 		 * @note This method is not thread safe.
+		 * @note Capacities from 2 to 2,147,483,648 (0x80000000) bytes are supported
 		 * @param byteCount The desired capacity, in bytes
 		 * @return \c true on success, \c false on error
 		 */
-		bool Allocate(size_t byteCount);
+		bool Allocate(size_t byteCount) noexcept;
 
 		/*!
 		 * @brief Free the resources used by this \c RingBuffer
 		 * @note This method is not thread safe.
 		 */
-		void Deallocate();
+		void Deallocate() noexcept;
 
 
 		/*!
 		 * @brief Reset this \c RingBuffer to its default state.
 		 * @note This method is not thread safe.
 		 */
-		void Reset();
+		void Reset() noexcept;
 
 
 		/*! @brief Returns the capacity of this RingBuffer in bytes */
-		inline size_t CapacityBytes() const							{ return mCapacityBytes; }
+		inline size_t CapacityBytes() const noexcept				{ return mCapacityBytes; }
 
 		/*! @brief Returns the number of bytes available for reading */
-		size_t BytesAvailableToRead() const;
+		size_t BytesAvailableToRead() const noexcept;
 
 		/*! @brief Returns the free space available for writing in bytes */
-		size_t BytesAvailableToWrite() const;
+		size_t BytesAvailableToWrite() const noexcept;
 
 		//@}
 
@@ -100,7 +101,7 @@ namespace SFB {
 		 * @param byteCount The desired number of bytes to read
 		 * @return The number of bytes actually read
 		 */
-		size_t Read(void *destinationBuffer, size_t byteCount);
+		size_t Read(void *destinationBuffer, size_t byteCount) noexcept;
 
 		/*!
 		 * @brief Read data from the \c RingBuffer without advancing the read pointer.
@@ -108,7 +109,7 @@ namespace SFB {
 		 * @param byteCount The desired number of bytes to read
 		 * @return The number of bytes actually read
 		 */
-		size_t Peek(void *destinationBuffer, size_t byteCount) const;
+		size_t Peek(void *destinationBuffer, size_t byteCount) const noexcept;
 
 		/*!
 		 * @brief Write data to the \c RingBuffer, advancing the write pointer.
@@ -116,14 +117,14 @@ namespace SFB {
 		 * @param byteCount The desired number of frames to write
 		 * @return The number of bytes actually written
 		 */
-		size_t Write(const void *sourceBuffer, size_t byteCount);
+		size_t Write(const void *sourceBuffer, size_t byteCount) noexcept;
 
 
 		/*! @brief Advance the read position by the specified number of bytes */
-		void AdvanceReadPosition(size_t byteCount);
+		void AdvanceReadPosition(size_t byteCount) noexcept;
 
 		/*! @brief Advance the write position by the specified number of bytes */
-		void AdvanceWritePosition(size_t byteCount);
+		void AdvanceWritePosition(size_t byteCount) noexcept;
 
 
 		/*! @brief A struct wrapping a memory buffer location and capacity */
@@ -132,7 +133,7 @@ namespace SFB {
 			size_t	mBufferCapacity;	/*!< The capacity of \c mBuffer in bytes */
 
 			/*! @brief Construct an empty Buffer */
-			Buffer()
+			Buffer() noexcept
 				: Buffer(nullptr, 0) {}
 
 			/*!
@@ -140,7 +141,7 @@ namespace SFB {
 			 * @param buffer The memory buffer location
 			 * @param bufferCapacity The capacity of \c buffer in bytes
 			 */
-			Buffer(uint8_t *buffer, size_t bufferCapacity)
+			Buffer(uint8_t *buffer, size_t bufferCapacity) noexcept
 				: mBuffer(buffer), mBufferCapacity(bufferCapacity) {}
 		};
 
@@ -148,10 +149,10 @@ namespace SFB {
 		using BufferPair = std::pair<Buffer, Buffer>;
 
 		/*! @brief Returns the read vector containing the current readable data */
-		BufferPair ReadVector() const;
+		BufferPair ReadVector() const noexcept;
 
 		/*! @brief Returns the write vector containing the current writeable data */
-		BufferPair WriteVector() const;
+		BufferPair WriteVector() const noexcept;
 
 		//@}
 
