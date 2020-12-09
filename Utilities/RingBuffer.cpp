@@ -32,7 +32,7 @@ SFB::RingBuffer::RingBuffer() noexcept
 	assert(mWritePosition.is_lock_free());
 }
 
-SFB::RingBuffer::~RingBuffer() noexcept
+SFB::RingBuffer::~RingBuffer()
 {
 	Deallocate();
 }

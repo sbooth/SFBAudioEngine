@@ -37,7 +37,7 @@ namespace SFB {
 		RingBuffer() noexcept;
 
 		/*! @brief Destroy the \c RingBuffer and release all associated resources. */
-		~RingBuffer() noexcept;
+		~RingBuffer();
 
 		/*! @cond */
 
