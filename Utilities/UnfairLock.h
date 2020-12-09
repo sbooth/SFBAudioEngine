@@ -21,7 +21,7 @@ namespace SFB {
 		//@{
 
 		/*! @brief Create a new \c UnfairLock */
-		inline UnfairLock() : mLock(OS_UNFAIR_LOCK_INIT) {}
+		inline UnfairLock() noexcept : mLock(OS_UNFAIR_LOCK_INIT) {}
 
 		/*! @cond */
 
