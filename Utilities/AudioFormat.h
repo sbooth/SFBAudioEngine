@@ -48,28 +48,28 @@ namespace SFB {
 			//@{
 
 			/*! @brief Create a new, empty \c Format */
-			inline Format() 												{ memset(this, 0, sizeof(AudioStreamBasicDescription)); }
+			inline Format() noexcept										{ memset(this, 0, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Create a new \c Format for the specified \c AudioStreamBasicDescription */
-			inline Format(const AudioStreamBasicDescription& format) 		{ memcpy(this, &format, sizeof(AudioStreamBasicDescription)); }
+			inline Format(const AudioStreamBasicDescription& asbd) noexcept	{ memcpy(this, &asbd, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Create a new \c Format for the specified \c AudioStreamBasicDescription */
-			inline Format(const AudioStreamBasicDescription *format) 		{ assert(format != nullptr); memcpy(this, format, sizeof(AudioStreamBasicDescription)); }
+			inline Format(const AudioStreamBasicDescription *asbd) noexcept { assert(asbd != nullptr); memcpy(this, asbd, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Create a new \c Format for the speciifed \c CommonPCMFormat */
-			Format(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved);
+			Format(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved) noexcept;
 
 			/*! @brief Copy constructor */
-			inline Format(const Format& rhs) 								{ *this = rhs; }
+			inline Format(const Format& rhs) noexcept						{ *this = rhs; }
 
 			/*! @brief Assignment operator */
-			inline Format& operator=(const Format& rhs) 					{ memcpy(this, &rhs, sizeof(AudioStreamBasicDescription)); return *this; }
+			inline Format& operator=(const Format& rhs) noexcept			{ memcpy(this, &rhs, sizeof(AudioStreamBasicDescription)); return *this; }
 
 			/*! @brief Compare two \c Format objects for equality*/
-			inline bool operator==(const Format& rhs) const 				{ return !memcmp(this, &rhs, sizeof(AudioStreamBasicDescription)); }
+			inline bool operator==(const Format& rhs) const noexcept		{ return !memcmp(this, &rhs, sizeof(AudioStreamBasicDescription)); }
 
 			/*! @brief Compare two \c Format objects for inequality*/
-			inline bool operator!=(const Format& rhs) const 				{ return !operator==(rhs); }
+			inline bool operator!=(const Format& rhs) const noexcept		{ return !operator==(rhs); }
 
 			//@}
 
@@ -79,46 +79,46 @@ namespace SFB {
 			//@{
 
 			/*! @brief Query whether this format represents interleaved data */
-			inline bool IsInterleaved() const 								{ return !(kAudioFormatFlagIsNonInterleaved & mFormatFlags); }
+			inline bool IsInterleaved() const noexcept						{ return !(kAudioFormatFlagIsNonInterleaved & mFormatFlags); }
 
 			/*! @brief Returns the number of interleaved channels */
-			inline UInt32 InterleavedChannelCount() const 					{ return IsInterleaved() ? mChannelsPerFrame : 1; }
+			inline UInt32 InterleavedChannelCount() const noexcept			{ return IsInterleaved() ? mChannelsPerFrame : 1; }
 
 			/*! @brief Query whether this format represents PCM audio data */
-			inline bool IsPCM() const 										{ return kAudioFormatLinearPCM == mFormatID; }
+			inline bool IsPCM() const noexcept								{ return kAudioFormatLinearPCM == mFormatID; }
 
 			/*! @brief Query whether this format represents DSD audio data */
-			inline bool IsDSD() const 										{ return kAudioFormatDirectStreamDigital == mFormatID; }
+			inline bool IsDSD() const noexcept								{ return kAudioFormatDirectStreamDigital == mFormatID; }
 
 			/*! @brief Query whether this format represents DoP audio data */
-			inline bool IsDoP() const 										{ return kAudioFormatDoP == mFormatID; }
+			inline bool IsDoP() const noexcept								{ return kAudioFormatDoP == mFormatID; }
 
 			/*! @brief Query whether this format represents big-endian ordered data */
-			inline bool IsBigEndian() const 								{ return kAudioFormatFlagIsBigEndian & mFormatFlags; }
+			inline bool IsBigEndian() const noexcept						{ return kAudioFormatFlagIsBigEndian & mFormatFlags; }
 
 			/*! @brief Query whether this format represents little-endian ordered data */
-			inline bool IsLittleEndian() const 								{ return !IsBigEndian(); }
+			inline bool IsLittleEndian() const noexcept						{ return !IsBigEndian(); }
 
 			/*! @brief Query whether this format represents native-endian ordered data */
-			inline bool IsNativeEndian() const 								{ return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags); }
+			inline bool IsNativeEndian() const noexcept						{ return kAudioFormatFlagsNativeEndian == (kAudioFormatFlagIsBigEndian & mFormatFlags); }
 
 			/*! @brief Query whether this format represents floating-point data */
-			inline bool IsFloat() const 									{ return kAudioFormatFlagIsFloat & mFormatFlags; }
+			inline bool IsFloat() const noexcept							{ return kAudioFormatFlagIsFloat & mFormatFlags; }
 
 			/*! @brief Query whether this format represents signed integer data */
-			inline bool IsSignedInteger() const 							{ return kAudioFormatFlagIsSignedInteger & mFormatFlags; }
+			inline bool IsSignedInteger() const noexcept					{ return kAudioFormatFlagIsSignedInteger & mFormatFlags; }
 
 			/*! @brief Query whether this format represents packed data */
-			inline bool IsPacked() const 									{ return kAudioFormatFlagIsPacked & mFormatFlags; }
+			inline bool IsPacked() const noexcept							{ return kAudioFormatFlagIsPacked & mFormatFlags; }
 
 			/*! @brief Query whether this format is high-aligned */
-			inline bool IsAlignedHigh() const 								{ return kAudioFormatFlagIsAlignedHigh & mFormatFlags; }
+			inline bool IsAlignedHigh() const noexcept						{ return kAudioFormatFlagIsAlignedHigh & mFormatFlags; }
 
 			/*! @brief Convert a frame count to byte count */
-			size_t FrameCountToByteCount(size_t frameCount) const;
+			size_t FrameCountToByteCount(size_t frameCount) const noexcept;
 
 			/*! @brief Convert a byte count to frame count */
-			size_t ByteCountToFrameCount(size_t byteCount) const;
+			size_t ByteCountToFrameCount(size_t byteCount) const noexcept;
 
 			//@}
 
@@ -128,19 +128,19 @@ namespace SFB {
 			//@{
 
 			/*! @brief Sets \c format to the equivalent non-interleaved format of \c this. Fails for non-PCM formats. */
-			bool GetNonInterleavedEquivalent(Format& format) const;
+			bool GetNonInterleavedEquivalent(Format& format) const noexcept;
 
 			/*! @brief Sets \c format to the equivalent interleaved format of \c this. Fails for non-PCM formats. */
-			bool GetInterleavedEquivalent(Format& format) const;
+			bool GetInterleavedEquivalent(Format& format) const noexcept;
 
 			/*! @brief Sets \c format to the equivalent standard format of \c this. Fails for non-PCM formats. */
-			bool GetStandardEquivalent(Format& format) const;
+			bool GetStandardEquivalent(Format& format) const noexcept;
 
 			//@}
 
 
 			/*! @brief Returns a string representation of this format suitable for logging */
-			CFString Description() const;
+			CFString Description() const noexcept;
 
 		};
 
