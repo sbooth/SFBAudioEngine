@@ -87,7 +87,7 @@ bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacit
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
 	size_t allocationSize = (capacityBytes + sizeof(uint8_t *)) * format.mChannelsPerFrame;
-	uint8_t *memoryChunk = (uint8_t *)malloc(allocationSize);
+	uint8_t *memoryChunk = (uint8_t *)std::malloc(allocationSize);
 	if(nullptr == memoryChunk)
 		return false;
 
@@ -111,8 +111,14 @@ bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacit
 void SFB::Audio::RingBuffer::Deallocate()
 {
 	if(mBuffers) {
-		free(mBuffers);
+		std::free(mBuffers);
 		mBuffers = nullptr;
+
+		mCapacityFrames = 0;
+		mCapacityFramesMask = 0;
+
+		mReadPointer = 0;
+		mWritePointer = 0;
 	}
 }
 
