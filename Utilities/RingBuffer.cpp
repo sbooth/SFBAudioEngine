@@ -49,7 +49,7 @@ bool SFB::RingBuffer::Allocate(size_t capacityBytes) noexcept
 	// Round up to the next power of two
 	capacityBytes = NextPowerOfTwo((uint32_t)capacityBytes);
 
-	mBuffer = (uint8_t *)malloc(capacityBytes);
+	mBuffer = (uint8_t *)std::malloc(capacityBytes);
 	if(!mBuffer)
 		return false;
 
@@ -62,7 +62,7 @@ bool SFB::RingBuffer::Allocate(size_t capacityBytes) noexcept
 void SFB::RingBuffer::Deallocate() noexcept
 {
 	if(mBuffer) {
-		free(mBuffer);
+		std::free(mBuffer);
 		mBuffer = nullptr;
 
 		mCapacityBytes = 0;
