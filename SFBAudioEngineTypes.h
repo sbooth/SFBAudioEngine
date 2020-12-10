@@ -9,10 +9,6 @@
 
 #pragma mark Audio Format Identifiers
 
-#ifdef __cplusplus
-extern "C"
-#endif
-
 /// Additional audio format IDs
 typedef CF_ENUM(AudioFormatID, SFBAudioFormatID) {
 	/// Direct Stream Digital (DSD)
@@ -82,7 +78,7 @@ extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(bytesPerDSDP
 /// The number of bytes in a DSD packet, per channel (a channel byte)
 #define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL ((NSInteger)1)
 
-#pragma mark - PCM Constants
+#pragma mark - Constants for Unknowns
 
 /// Value representing an invalid or unknown time
 extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
