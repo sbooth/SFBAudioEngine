@@ -17,7 +17,7 @@
     <a title="SFBPCMDecoding Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">SFBAudioEngine Docs</a> (94% documented)</p>
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (96% documented)</p>
         <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -741,9 +741,6 @@
                 <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -759,9 +756,6 @@
                 <a href="../Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -769,18 +763,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
@@ -809,9 +791,6 @@
                 <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
               </li>
               <li class="nav-group-task">
@@ -822,12 +801,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
@@ -966,38 +939,11 @@
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBPCMDecoding</span> <span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a></span><span class="o">&gt;</span>
-
-<span class="cp">#pragma mark - Position and Length Information
-</span>
-<span class="c1">/// Returns the decoder's current frame position or \c SFBUnknownFramePosition if unknown</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AVAudioFramePosition</span> <span class="n">framePosition</span> <span class="nf">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">position</span><span class="p">);</span>
-
-<span class="c1">/// Returns the decoder's length in frames or \c SFBUnknownFrameLength if unknown</span>
-<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AVAudioFramePosition</span> <span class="n">frameLength</span> <span class="nf">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">length</span><span class="p">);</span>
-
-<span class="cp">#pragma mark - Decoding
-</span>
-<span class="c1">/// Decodes audio</span>
-<span class="c1">/// @param buffer A buffer to receive the decoded audio</span>
-<span class="c1">/// @param frameLength The desired number of audio frames</span>
-<span class="c1">/// @param error An optional pointer to an \c NSError object to receive error information</span>
-<span class="c1">/// @return \c YES on success, \c NO otherwise</span>
-<span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">decodeIntoBuffer</span><span class="p">:(</span><span class="n">AVAudioPCMBuffer</span> <span class="o">*</span><span class="p">)</span><span class="nv">buffer</span> <span class="nf">frameLength</span><span class="p">:(</span><span class="n">AVAudioFrameCount</span><span class="p">)</span><span class="nv">frameLength</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">**</span><span class="p">)</span><span class="nv">error</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">decode</span><span class="p">(</span><span class="n">into</span><span class="o">:</span><span class="n">length</span><span class="o">:</span><span class="p">));</span>
-
-<span class="cp">#pragma mark - Seeking
-</span>
-<span class="c1">/// Seeks to the specified frame</span>
-<span class="c1">/// @param frame The desired frame</span>
-<span class="c1">/// @param error An optional pointer to an \c NSError object to receive error information</span>
-<span class="c1">/// @return \c YES on success, \c NO otherwise</span>
-<span class="k">-</span> <span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">seekToFrame</span><span class="p">:(</span><span class="n">AVAudioFramePosition</span><span class="p">)</span><span class="nv">frame</span> <span class="nf">error</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">**</span><span class="p">)</span><span class="nv">error</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">seek</span><span class="p">(</span><span class="n">to</span><span class="o">:</span><span class="p">));</span>
-
-<span class="k">@end</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBPCMDecoding</span> <span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBAudioDecoding.html">SFBAudioDecoding</a></span><span class="o">&gt;</span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Protocol defining the interface for audio decoders producing PCM audio</p>
 
           </section>
           <section class="section task-group-section">

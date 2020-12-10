@@ -17,7 +17,7 @@
     <a title="Constants  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">SFBAudioEngine Docs</a> (94% documented)</p>
+        <p><a href="index.html">SFBAudioEngine Docs</a> (96% documented)</p>
         <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
@@ -741,9 +741,6 @@
                 <a href="Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
               </li>
               <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -759,9 +756,6 @@
                 <a href="Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
               </li>
               <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -769,18 +763,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Constants.html#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
               </li>
               <li class="nav-group-task">
                 <a href="Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
@@ -809,9 +791,6 @@
                 <a href="Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
               </li>
               <li class="nav-group-task">
-                <a href="Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
               </li>
               <li class="nav-group-task">
@@ -822,12 +801,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
               </li>
               <li class="nav-group-task">
                 <a href="Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
@@ -6489,11 +6462,11 @@
             </div>
             <div class="task-group">
               <div class="task-name-container">
-                <a name="/PCM%20Constants"></a>
-                <a name="//apple_ref/objc/Section/PCM Constants" class="dashAnchor"></a>
+                <a name="/Constants%20for%20Unknowns"></a>
+                <a name="//apple_ref/objc/Section/Constants for Unknowns" class="dashAnchor"></a>
                 <div class="section-name-container">
-                  <a class="section-name-link" href="#/PCM%20Constants"></a>
-                  <h3 class="section-name"><p>PCM Constants</p>
+                  <a class="section-name-link" href="#/Constants%20for%20Unknowns"></a>
+                  <h3 class="section-name"><p>Constants for Unknowns</p>
 </h3>
                 </div>
               </div>
@@ -6501,9 +6474,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@SFBUnknownFramePosition"></a>
-                    <a name="//apple_ref/objc/Constant/SFBUnknownFramePosition" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
+                    <a name="/c:@SFBUnknownTime"></a>
+                    <a name="//apple_ref/objc/Constant/SFBUnknownTime" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@SFBUnknownTime">SFBUnknownTime</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -6511,192 +6484,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Value representing an invalid or unknown audio frame position</p>
+                        <p>Value representing an invalid or unknown time</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">AVAudioFramePosition</span> <span class="n">SFBUnknownFramePosition</span></code></pre>
+                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">NSTimeInterval</span> <span class="n">SFBUnknownTime</span></code></pre>
 
                         </div>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">UnknownFramePosition</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBUnknownFrameLength"></a>
-                    <a name="//apple_ref/objc/Constant/SFBUnknownFrameLength" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Value representing an invalid or unknown audio frame length</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">AVAudioFramePosition</span> <span class="n">SFBUnknownFrameLength</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">UnknownFrameLength</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/DSD%20Constants"></a>
-                <a name="//apple_ref/objc/Section/DSD Constants" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/DSD%20Constants"></a>
-                  <h3 class="section-name"><p>DSD Constants</p>
-</h3>
-                </div>
-              </div>
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBPCMFramesPerDSDPacket"></a>
-                    <a name="//apple_ref/objc/Constant/SFBPCMFramesPerDSDPacket" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The number of frames in a DSD packet (a clustered frame)</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">NSInteger</span> <span class="n">SFBPCMFramesPerDSDPacket</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">PCMFramesPerDSDPacket</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBBytesPerDSDPacketPerChannel"></a>
-                    <a name="//apple_ref/objc/Constant/SFBBytesPerDSDPacketPerChannel" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The number of bytes in a DSD packet, per channel (a channel byte)</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">NSInteger</span> <span class="n">SFBBytesPerDSDPacketPerChannel</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">BytesPerDSDPacketPerChannel</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBUnknownPacketPosition"></a>
-                    <a name="//apple_ref/objc/Constant/SFBUnknownPacketPosition" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Value representing an invalid or unknown audio packet position</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">AVAudioFramePosition</span> <span class="n">SFBUnknownPacketPosition</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">UnknownPacketPosition</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBUnknownPacketCount"></a>
-                    <a name="//apple_ref/objc/Constant/SFBUnknownPacketCount" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Value representing an invalid or unknown audio packet count</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">AVAudioFramePosition</span> <span class="n">SFBUnknownPacketCount</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">UnknownPacketCount</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">unknownTime</span><span class="p">:</span> <span class="kt">TimeInterval</span></code></pre>
 
                         </div>
                       </div>
@@ -7870,64 +7670,6 @@
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Playback%20position%20and%20time%20information"></a>
-                <a name="//apple_ref/objc/Section/Playback position and time information" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Playback%20position%20and%20time%20information"></a>
-                  <h3 class="section-name"><p>Playback position and time information</p>
-</h3>
-                </div>
-              </div>
-              <ul>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@SFBUnknownTime"></a>
-                    <a name="//apple_ref/objc/Constant/SFBUnknownTime" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@SFBUnknownTime">SFBUnknownTime</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Value representing an invalid or unknown time</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Objective-C</p>
-                          <pre class="highlight objective_c"><code><span class="k">extern</span> <span class="k">const</span> <span class="n">NSTimeInterval</span> <span class="n">SFBUnknownTime</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">let</span> <span class="nv">UnknownTime</span><span class="p">:</span> <span class="kt">TimeInterval</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Error%20Information3"></a>
-                <a name="//apple_ref/objc/Section/Error Information" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Error%20Information3"></a>
-                  <h3 class="section-name"><p>Error Information</p>
-</h3>
-                </div>
-              </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>

@@ -17,7 +17,7 @@
     <a title="SFBAudioPlayerDelegate Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">SFBAudioEngine Docs</a> (94% documented)</p>
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (96% documented)</p>
         <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -741,9 +741,6 @@
                 <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -759,9 +756,6 @@
                 <a href="../Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -769,18 +763,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
@@ -809,9 +791,6 @@
                 <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
               </li>
               <li class="nav-group-task">
@@ -822,12 +801,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
@@ -966,58 +939,7 @@
               <div class="declaration">
                 <div class="language">
                   <p class="aside-title">Objective-C</p>
-                  <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioPlayerDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span>
-<span class="k">@optional</span>
-<span class="c1">/// Called to notify the delegate before decoding the first frame of audio</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder</span>
-<span class="c1">/// @param decoder The decoder for which decoding started</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">decodingStarted</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span><span class="p">;</span>
-<span class="c1">/// Called to notify the delegate after decoding the final frame of audio</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder</span>
-<span class="c1">/// @param decoder The decoder for which decoding is complete</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">decodingComplete</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span><span class="p">;</span>
-<span class="c1">/// Called to notify the delegate that decoding has been canceled</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder</span>
-<span class="c1">/// @param decoder The decoder for which decoding is canceled</span>
-<span class="c1">/// @param partiallyRendered \c YES if any audio frames from \c decoder were rendered</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">decodingCanceled</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span> <span class="nf">partiallyRendered</span><span class="p">:(</span><span class="n">BOOL</span><span class="p">)</span><span class="nv">partiallyRendered</span><span class="p">;</span>
-<span class="c1">/// Called to notify the delegate that audio will soon begin rendering</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder</span>
-<span class="c1">/// @param decoder The decoder for which rendering is about to start</span>
-<span class="c1">/// @param hostTime The host time at which the first audio frame from \c decoder will reach the device</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">renderingWillStart</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span> <span class="nf">atHostTime</span><span class="p">:(</span><span class="kt">uint64_t</span><span class="p">)</span><span class="nv">hostTime</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">audioPlayer</span><span class="p">(</span><span class="n">_</span><span class="o">:</span><span class="n">renderingWillStart</span><span class="o">:</span><span class="n">at</span><span class="o">:</span><span class="p">));</span>
-<span class="c1">/// Called to notify the delegate when rendering the first frame of audio</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing decoder</span>
-<span class="c1">/// @param decoder The decoder for which rendering started</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">renderingStarted</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span><span class="p">;</span>
-<span class="c1">/// Called to notify the delegate when rendering the final frame of audio</span>
-<span class="c1">/// @warning Do not change any properties of \c decoder</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object processing \c decoder</span>
-<span class="c1">/// @param decoder The decoder for which rendering is complete</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">renderingComplete</span><span class="p">:(</span><span class="n">id</span><span class="o">&lt;</span><span class="n"><a href="../Protocols/SFBPCMDecoding.html">SFBPCMDecoding</a></span><span class="o">&gt;</span><span class="p">)</span><span class="nv">decoder</span><span class="p">;</span>
-<span class="c1">/// Called to notify the delegate when the now playing item changes</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayerNowPlayingChanged</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">audioPlayerNowPlayingChanged</span><span class="p">(</span><span class="n">_</span><span class="o">:</span><span class="p">));</span>
-<span class="c1">/// Called to notify the delegate when the playback state changes</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayerPlaybackStateChanged</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">audioPlayerPlaybackStateChanged</span><span class="p">(</span><span class="n">_</span><span class="o">:</span><span class="p">));</span>
-<span class="c1">/// Called to notify the delegate when the configuration of the underlying \c AVAudioEngine changes</span>
-<span class="c1">/// @note Use this instead of listening for \c AVAudioEngineConfigurationChangeNotification</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayerAVAudioEngineConfigurationChange</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">audioPlayerAVAudioEngineConfigurationChange</span><span class="p">(</span><span class="n">_</span><span class="o">:</span><span class="p">));</span>
-<span class="c1">/// Called to notify the delegate when rendering is complete for all available decoders</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayerEndOfAudio</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="n">NS_SWIFT_NAME</span><span class="p">(</span><span class="n">audioPlayerEndOfAudio</span><span class="p">(</span><span class="n">_</span><span class="o">:</span><span class="p">));</span>
-<span class="c1">/// Called to notify the delegate when an asynchronous error occurs</span>
-<span class="c1">/// @param audioPlayer The \c SFBAudioPlayer object</span>
-<span class="c1">/// @param error The error</span>
-<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">audioPlayer</span><span class="p">:(</span><span class="n"><a href="../Classes/SFBAudioPlayer.html">SFBAudioPlayer</a></span> <span class="o">*</span><span class="p">)</span><span class="nv">audioPlayer</span> <span class="nf">encounteredError</span><span class="p">:(</span><span class="n">NSError</span> <span class="o">*</span><span class="p">)</span><span class="nv">error</span><span class="p">;</span>
-<span class="k">@end</span></code></pre>
+                  <pre class="highlight objective_c"><code><span class="k">@protocol</span> <span class="nc">SFBAudioPlayerDelegate</span> <span class="o">&lt;</span><span class="n">NSObject</span><span class="o">&gt;</span></code></pre>
 
                 </div>
                 <div class="language">
@@ -1026,7 +948,7 @@
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Delegate methods supported by \c SFBAudioPlayer</p>
 
           </section>
           <section class="section task-group-section">

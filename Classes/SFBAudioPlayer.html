@@ -17,7 +17,7 @@
     <a title="SFBAudioPlayer Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">SFBAudioEngine Docs</a> (94% documented)</p>
+        <p><a href="../index.html">SFBAudioEngine Docs</a> (96% documented)</p>
         <p class="header-right"><a href="https://github.com/sbooth/SFBAudioEngine"><img src="../img/gh.png"/>View on GitHub</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
@@ -741,9 +741,6 @@
                 <a href="../Constants.html#/c:@SFBAudioPropertiesKeySampleRate">SFBAudioPropertiesKeySampleRate</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBBytesPerDSDPacketPerChannel">SFBBytesPerDSDPacketPerChannel</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBDSDDecoderErrorDomain">SFBDSDDecoderErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -759,9 +756,6 @@
                 <a href="../Constants.html#/c:@SFBOutputSourceErrorDomain">SFBOutputSourceErrorDomain</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBPCMFramesPerDSDPacket">SFBPCMFramesPerDSDPacket</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerErrorDomain">SFBReplayGainAnalyzerErrorDomain</a>
               </li>
               <li class="nav-group-task">
@@ -769,18 +763,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBReplayGainAnalyzerPeakKey">SFBReplayGainAnalyzerPeakKey</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFrameLength">SFBUnknownFrameLength</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownFramePosition">SFBUnknownFramePosition</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketCount">SFBUnknownPacketCount</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Constants.html#/c:@SFBUnknownPacketPosition">SFBUnknownPacketPosition</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Constants.html#/c:@SFBUnknownTime">SFBUnknownTime</a>
@@ -809,9 +791,6 @@
                 <a href="../Enums/SFBAudioFileErrorCode.html">SFBAudioFileErrorCode</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/SFBAudioFormatID.html">SFBAudioFormatID</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/SFBAudioMetadataKind.html">SFBAudioMetadataKind</a>
               </li>
               <li class="nav-group-task">
@@ -822,12 +801,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBDSDDecoderErrorCode.html">SFBDSDDecoderErrorCode</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRate.html">SFBDSDSampleRate</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Enums/SFBDSDSampleRateVariant.html">SFBDSDSampleRateVariant</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SFBInputSourceErrorCode.html">SFBInputSourceErrorCode</a>
@@ -2184,11 +2157,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AVAudioFramePosition</span> <span class="n">framePosition</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">framePosition</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2214,11 +2182,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">AVAudioFramePosition</span> <span class="n">frameLength</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">frameLength</span><span class="p">:</span> <span class="kt">AVAudioFramePosition</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -2275,11 +2238,6 @@ currently rendering audio.</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSTimeInterval</span> <span class="n">currentTime</span><span class="p">;</span></code></pre>
 
                         </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">currentTime</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2305,11 +2263,6 @@ currently rendering audio.</p>
                         <div class="language">
                           <p class="aside-title">Objective-C</p>
                           <pre class="highlight objective_c"><code><span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">readonly</span><span class="p">)</span> <span class="n">NSTimeInterval</span> <span class="n">totalTime</span><span class="p">;</span></code></pre>
-
-                        </div>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">totalTime</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
