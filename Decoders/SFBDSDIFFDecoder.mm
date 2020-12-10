@@ -770,8 +770,8 @@ namespace {
 	processingStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	processingStreamDescription.mBitsPerChannel		= 1;
 
-	processingStreamDescription.mBytesPerPacket		= SFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels;
-	processingStreamDescription.mFramesPerPacket	= SFBPCMFramesPerDSDPacket;
+	processingStreamDescription.mBytesPerPacket		= kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels;
+	processingStreamDescription.mFramesPerPacket	= kSFBPCMFramesPerDSDPacket;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
@@ -795,7 +795,7 @@ namespace {
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (SFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
+	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
@@ -845,7 +845,7 @@ namespace {
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsRead = 0;
 
-	uint32_t packetSize = SFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
@@ -885,7 +885,7 @@ namespace {
 {
 	NSParameterAssert(packet >= 0);
 
-	NSInteger packetOffset = packet * SFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
+	NSInteger packetOffset = packet * kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
 		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
 		return NO;

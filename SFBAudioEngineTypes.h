@@ -38,25 +38,25 @@ CF_ENUM(AudioFormatID) {
 /// DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz)
 CF_ENUM(uint32_t) {
 	/// DSD (DSD64) based on 44,100 Hz
-	SFBSampleRateDSD64 		CF_SWIFT_NAME(dsd64SampleRate) 		= 2822400,
+	kSFBSampleRateDSD64		CF_SWIFT_NAME(dsd64SampleRate) 		= 2822400,
 	/// Double-rate DSD (DSD128) based on 44,100 Hz
-	SFBSampleRateDSD128 	CF_SWIFT_NAME(dsd128SampleRate) 	= 5644800,
+	kSFBSampleRateDSD128 	CF_SWIFT_NAME(dsd128SampleRate) 	= 5644800,
 	/// Quad-rate DSD (DSD256) based on 44,100 Hz
-	SFBSampleRateDSD256 	CF_SWIFT_NAME(dsd256SampleRate) 	= 11289600,
+	kSFBSampleRateDSD256 	CF_SWIFT_NAME(dsd256SampleRate) 	= 11289600,
 	/// Octuple-rate DSD (DSD512) based on 44,100 Hz
-	SFBSampleRateDSD512 	CF_SWIFT_NAME(dsd512SampleRate) 	= 22579200,
+	kSFBSampleRateDSD512 	CF_SWIFT_NAME(dsd512SampleRate) 	= 22579200,
 };
 
 /// DSD sample rate variants based on 48,000 Hz
 CF_ENUM(uint32_t) {
 	/// DSD (DSD64) based on 48,000 Hz
-	SFBSampleRateDSD64Variant 		CF_SWIFT_NAME(dsd64SampleRateVariant) 		= 3072000,
+	kSFBSampleRateDSD64Variant 		CF_SWIFT_NAME(dsd64SampleRateVariant) 		= 3072000,
 	/// Double-rate DSD (DSD128) based on 48,000 Hz
-	SFBSampleRateDSD128Variant 		CF_SWIFT_NAME(dsd128SampleRateVariant) 		= 6144000,
+	kSFBSampleRateDSD128Variant 	CF_SWIFT_NAME(dsd128SampleRateVariant) 		= 6144000,
 	/// Quad-rate DSD (DSD256) based on 48,000 Hz
-	SFBSampleRateDSD256Variant 		CF_SWIFT_NAME(dsd256SampleRateVariant) 		= 12288000,
+	kSFBSampleRateDSD256Variant 	CF_SWIFT_NAME(dsd256SampleRateVariant) 		= 12288000,
 	/// Octuple-rate DSD (DSD512) based on 48,000 Hz
-	SFBSampleRateDSD512Variant 		CF_SWIFT_NAME(dsd512SampleRateVariant) 		= 24576000
+	kSFBSampleRateDSD512Variant 	CF_SWIFT_NAME(dsd512SampleRateVariant) 		= 24576000
 };
 
 // A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
@@ -66,9 +66,9 @@ CF_ENUM(uint32_t) {
 
 CF_ENUM(int) {
 	/// The number of frames in a DSD packet (a clustered frame)
-	SFBPCMFramesPerDSDPacket 		CF_SWIFT_NAME(pcmFramesPerDSDPacket) 		= 8,
+	kSFBPCMFramesPerDSDPacket 			CF_SWIFT_NAME(pcmFramesPerDSDPacket) 		= 8,
 	/// The number of bytes in a DSD packet, per channel (a channel byte)
-	SFBBytesPerDSDPacketPerChannel 	CF_SWIFT_NAME(bytesPerDSDPacketPerChannel) 	= 1,
+	kSFBBytesPerDSDPacketPerChannel		CF_SWIFT_NAME(bytesPerDSDPacketPerChannel) 	= 1,
 };
 
 #ifdef __OBJC__
