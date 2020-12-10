@@ -96,6 +96,9 @@ SFBAudioEncodingSettingsKey const SFBAudioEncodingSettingsKeyVorbisMaxBitrate = 
 			break;
 	}
 
+	if(channelLayout == nil)
+		return nil;
+
 	return [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:sourceFormat.sampleRate interleaved:NO channelLayout:channelLayout];
 }
 
