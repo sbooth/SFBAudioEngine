@@ -152,7 +152,7 @@ namespace {
 	}
 
 	AudioStreamBasicDescription outputStreamDescription{};
-	outputStreamDescription.mFormatID			= SFBAudioFormatIDTrueAudio;
+	outputStreamDescription.mFormatID			= kSFBAudioFormatTrueAudio;
 	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
 	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;

@@ -17,10 +17,9 @@
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_PCM_FRAME (8 / SFB_PCM_FRAMES_PER_DSD_PACKET)
-#define BUFFER_SIZE_PACKETS 16384
-
 namespace {
+	const int kDSDPacketsPerPCMFrame = 8 / SFBPCMFramesPerDSDPacket;
+	const int kBufferSizePackets = 16384;
 
 	// Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
 	static const uint8_t sBitReverseTable256 [256] =
@@ -384,7 +383,7 @@ namespace {
 
 	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-	if(!(asbd->mFormatID == SFBAudioFormatIDDirectStreamDigital)) {
+	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
 											 code:SFBDSDDecoderErrorCodeInputOutput
@@ -396,7 +395,7 @@ namespace {
 		return NO;
 	}
 
-	if(asbd->mSampleRate != SFBDSDSampleRateDSD64) {
+	if(asbd->mSampleRate != SFBSampleRateDSD64) {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported DSD sample rate for PCM conversion: %f", asbd->mSampleRate);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
@@ -410,9 +409,9 @@ namespace {
 	}
 
 	// Generate non-interleaved 32-bit float output
-	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / (SFB_PCM_FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_PCM_FRAME)) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
+	_processingFormat = [[AVAudioFormat alloc] initWithCommonFormat:AVAudioPCMFormatFloat32 sampleRate:(asbd->mSampleRate / (SFBPCMFramesPerDSDPacket * kDSDPacketsPerPCMFrame)) interleaved:NO channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:kBufferSizePackets maximumPacketSize:(SFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	_context.resize(asbd->mChannelsPerFrame);
@@ -434,12 +433,12 @@ namespace {
 
 - (AVAudioFramePosition)framePosition
 {
-	return _decoder.packetPosition / DSD_PACKETS_PER_PCM_FRAME;
+	return _decoder.packetPosition / kDSDPacketsPerPCMFrame;
 }
 
 - (AVAudioFramePosition)frameLength
 {
-	return _decoder.packetCount / DSD_PACKETS_PER_PCM_FRAME;
+	return _decoder.packetCount / kDSDPacketsPerPCMFrame;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error {
@@ -469,7 +468,7 @@ namespace {
 		AVAudioFrameCount framesRemaining = frameLength - framesRead;
 
 		// Grab the DSD audio
-		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * DSD_PACKETS_PER_PCM_FRAME;
+		AVAudioPacketCount dsdPacketsRemaining = framesRemaining * kDSDPacketsPerPCMFrame;
 		if(![_decoder decodeIntoBuffer:_buffer packetCount:std::min(_buffer.packetCapacity, dsdPacketsRemaining) error:error])
 			break;
 
@@ -477,7 +476,7 @@ namespace {
 		if(dsdPacketsDecoded == 0)
 			break;
 
-		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / DSD_PACKETS_PER_PCM_FRAME;
+		AVAudioFrameCount framesDecoded = dsdPacketsDecoded / kDSDPacketsPerPCMFrame;
 
 		// Convert to PCM
 		// NB: Currently DSDIFFDecoder and DSFDecoder only produce interleaved output
@@ -518,7 +517,7 @@ namespace {
 {
 	NSParameterAssert(frame >= 0);
 
-	if(![_decoder seekToPacket:(frame * DSD_PACKETS_PER_PCM_FRAME) error:error])
+	if(![_decoder seekToPacket:(frame * kDSDPacketsPerPCMFrame) error:error])
 		return NO;
 
 	_buffer.packetCount = 0;

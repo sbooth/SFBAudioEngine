@@ -17,20 +17,6 @@ namespace SFB {
 	/*! @brief %Audio functionality */
 	namespace Audio {
 
-		/*! @brief Additional audio format IDs */
-		CF_ENUM(AudioFormatID) {
-			kAudioFormatDirectStreamDigital 	= SFBAudioFormatIDDirectStreamDigital,	/*!< Direct Stream Digital (DSD) */
-			kAudioFormatDoP 					= SFBAudioFormatIDDoP,					/*!< DSD over PCM (DoP) */
-			kAudioFormatModule 					= SFBAudioFormatIDModule,				/*!< Module */
-			kAudioFormatMonkeysAudio 			= SFBAudioFormatIDMonkeysAudio,			/*!< Monkey's Audio (APE) */
-			kAudioFormatMusepack 				= SFBAudioFormatIDMusepack,				/*!< Musepack */
-			kAudioFormatShorten 				= SFBAudioFormatIDShorten,				/*!< Shorten */
-			kAudioFormatSpeex 					= SFBAudioFormatIDSpeex,				/*!< Ogg Speex */
-			kAudioFormatTrueAudio 				= SFBAudioFormatIDTrueAudio,			/*!< True Audio */
-			kAudioFormatVorbis 					= SFBAudioFormatIDVorbis,				/*!< Ogg Vorbis */
-			kAudioFormatWavPack 				= SFBAudioFormatIDWavPack				/*!< WavPack */
-		};
-
 		/*! @brief Common PCM audio formats */
 		typedef CF_ENUM(uint32_t, CommonPCMFormat) {
 			kCommonPCMFormatFloat32 			= 1, 		/*!< Native-endian \c float */
@@ -88,10 +74,10 @@ namespace SFB {
 			inline bool IsPCM() const noexcept								{ return kAudioFormatLinearPCM == mFormatID; }
 
 			/*! @brief Query whether this format represents DSD audio data */
-			inline bool IsDSD() const noexcept								{ return kAudioFormatDirectStreamDigital == mFormatID; }
+			inline bool IsDSD() const noexcept								{ return kSFBAudioFormatDSD == mFormatID; }
 
 			/*! @brief Query whether this format represents DoP audio data */
-			inline bool IsDoP() const noexcept								{ return kAudioFormatDoP == mFormatID; }
+			inline bool IsDoP() const noexcept								{ return kSFBAudioFormatDoP == mFormatID; }
 
 			/*! @brief Query whether this format represents big-endian ordered data */
 			inline bool IsBigEndian() const noexcept						{ return kAudioFormatFlagIsBigEndian & mFormatFlags; }

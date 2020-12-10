@@ -10,99 +10,86 @@
 #pragma mark Audio Format Identifiers
 
 /// Additional audio format IDs
-typedef CF_ENUM(AudioFormatID, SFBAudioFormatID) {
+CF_ENUM(AudioFormatID) {
 	/// Direct Stream Digital (DSD)
-	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
+	kSFBAudioFormatDSD 				CF_SWIFT_NAME(dsd) 				= 'DSD ',
 	/// DSD over PCM (DoP)
-	SFBAudioFormatIDDoP 					= 'DoP ',
+	kSFBAudioFormatDoP				CF_SWIFT_NAME(dsdOverPCM) 		= 'DoP ',
 	/// Module
-	SFBAudioFormatIDModule 					= 'MOD ',
+	kSFBAudioFormatModule 			CF_SWIFT_NAME(module) 			= 'MOD ',
 	/// Monkey's Audio (APE)
-	SFBAudioFormatIDMonkeysAudio 			= 'APE ',
+	kSFBAudioFormatMonkeysAudio		CF_SWIFT_NAME(monkeysAudio) 	= 'APE ',
 	/// Musepack
-	SFBAudioFormatIDMusepack 				= 'MPC ',
+	kSFBAudioFormatMusepack			CF_SWIFT_NAME(musepack) 		= 'MPC ',
 	/// Shorten
-	SFBAudioFormatIDShorten					= 'SHN ',
+	kSFBAudioFormatShorten 			CF_SWIFT_NAME(shorten) 			= 'SHN ',
 	/// Ogg Speex
-	SFBAudioFormatIDSpeex 					= 'SPX ',
+	kSFBAudioFormatSpeex 			CF_SWIFT_NAME(speex) 			= 'SPX ',
 	/// True Audio
-	SFBAudioFormatIDTrueAudio 				= 'TTA ',
+	kSFBAudioFormatTrueAudio 		CF_SWIFT_NAME(trueAudio) 		= 'TTA ',
 	/// Ogg Vorbis
-	SFBAudioFormatIDVorbis 					= 'VORB',
+	kSFBAudioFormatVorbis 			CF_SWIFT_NAME(vorbis) 			= 'VORB',
 	/// WavPack
-	SFBAudioFormatIDWavPack 				= 'WV  '
-} CF_SWIFT_NAME(AudioFormatID);
-
-#ifdef __OBJC__
-
-#import <AVFoundation/AVFoundation.h>
+	kSFBAudioFormatWavPack 			CF_SWIFT_NAME(wavPack) 			= 'WV  '
+};
 
 #pragma mark - DSD Constants
 
 /// DSD sample rates (named as multiples of the CD sample rate, 44,100 Hz)
-typedef NS_ENUM(NSUInteger, SFBDSDSampleRate) {
-	/// DSD (DSD64)
-	SFBDSDSampleRateDSD64 	= 2822400,
-	/// Double-rate DSD (DSD128)
-	SFBDSDSampleRateDSD128 	= 5644800,
-	/// Quad-rate DSD (DSD256)
-	SFBDSDSampleRateDSD256 	= 11289600,
-	/// Octuple-rate DSD (DSD512)
-	SFBDSDSampleRateDSD512 	= 22579200
-} NS_SWIFT_NAME(DSDSampleRate);
+CF_ENUM(uint32_t) {
+	/// DSD (DSD64) based on 44,100 Hz
+	SFBSampleRateDSD64 		CF_SWIFT_NAME(dsd64SampleRate) 		= 2822400,
+	/// Double-rate DSD (DSD128) based on 44,100 Hz
+	SFBSampleRateDSD128 	CF_SWIFT_NAME(dsd128SampleRate) 	= 5644800,
+	/// Quad-rate DSD (DSD256) based on 44,100 Hz
+	SFBSampleRateDSD256 	CF_SWIFT_NAME(dsd256SampleRate) 	= 11289600,
+	/// Octuple-rate DSD (DSD512) based on 44,100 Hz
+	SFBSampleRateDSD512 	CF_SWIFT_NAME(dsd512SampleRate) 	= 22579200,
+};
 
 /// DSD sample rate variants based on 48,000 Hz
-typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
-	/// DSD (DSD64)
-	SFBDSDSampleRateVariantDSD64 	= 3072000,
-	/// Double-rate DSD (DSD128)
-	SFBDSDSampleRateVariantDSD128 	= 6144000,
-	/// Quad-rate DSD (DSD256)
-	SFBDSDSampleRateVariantDSD256 	= 12288000,
-	/// Octuple-rate DSD (DSD512)
-	SFBDSDSampleRateVariantDSD512 	= 24576000
-} NS_SWIFT_NAME(DSDSampleRateVariant);
+CF_ENUM(uint32_t) {
+	/// DSD (DSD64) based on 48,000 Hz
+	SFBSampleRateDSD64Variant 		CF_SWIFT_NAME(dsd64SampleRateVariant) 		= 3072000,
+	/// Double-rate DSD (DSD128) based on 48,000 Hz
+	SFBSampleRateDSD128Variant 		CF_SWIFT_NAME(dsd128SampleRateVariant) 		= 6144000,
+	/// Quad-rate DSD (DSD256) based on 48,000 Hz
+	SFBSampleRateDSD256Variant 		CF_SWIFT_NAME(dsd256SampleRateVariant) 		= 12288000,
+	/// Octuple-rate DSD (DSD512) based on 48,000 Hz
+	SFBSampleRateDSD512Variant 		CF_SWIFT_NAME(dsd512SampleRateVariant) 		= 24576000
+};
 
 // A DSD packet in this context is 8 one-bit samples (a single channel byte) grouped into
 // a clustered frame consisting of one channel byte per channel.
 // From a bit perspective, for stereo one clustered frame looks like LLLLLLLLRRRRRRRR
 // Since DSD audio is CBR, one packet equals one frame
 
-/// The number of frames in a DSD packet (a clustered frame)
-extern const NSInteger SFBPCMFramesPerDSDPacket NS_SWIFT_NAME(pcmFramesPerDSDPacket);
-/// The number of frames in a DSD packet (a clustered frame)
-#define SFB_PCM_FRAMES_PER_DSD_PACKET ((NSInteger)8)
+CF_ENUM(int) {
+	/// The number of frames in a DSD packet (a clustered frame)
+	SFBPCMFramesPerDSDPacket 		CF_SWIFT_NAME(pcmFramesPerDSDPacket) 		= 8,
+	/// The number of bytes in a DSD packet, per channel (a channel byte)
+	SFBBytesPerDSDPacketPerChannel 	CF_SWIFT_NAME(bytesPerDSDPacketPerChannel) 	= 1,
+};
 
-/// The number of bytes in a DSD packet, per channel (a channel byte)
-extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(bytesPerDSDPacketPerChannel);
-/// The number of bytes in a DSD packet, per channel (a channel byte)
-#define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL ((NSInteger)1)
+#ifdef __OBJC__
+
+#import <AVFoundation/AVFoundation.h>
 
 #pragma mark - Constants for Unknowns
 
 /// Value representing an invalid or unknown time
 extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
-/// Value representing an invalid or unknown time
-#define SFB_UNKNOWN_TIME ((NSTimeInterval)-1)
 
-/// Value representing an invalid or unknown audio frame position
-extern const AVAudioFramePosition SFBUnknownFramePosition NS_SWIFT_NAME(unknownFramePosition);
-/// Value representing an invalid or unknown audio frame position
-#define SFB_UNKNOWN_FRAME_POSITION ((AVAudioFramePosition)-1)
-
-/// Value representing an invalid or unknown audio frame length
-extern const AVAudioFramePosition SFBUnknownFrameLength NS_SWIFT_NAME(unknownFrameLength);
-/// Value representing an invalid or unknown audio frame length
-#define SFB_UNKNOWN_FRAME_LENGTH ((AVAudioFramePosition)-1)
-
-/// Value representing an invalid or unknown audio packet position
-extern const AVAudioFramePosition SFBUnknownPacketPosition NS_SWIFT_NAME(unknownPacketPosition);
-/// Value representing an invalid or unknown audio packet position
-#define SFB_UNKNOWN_PACKET_POSITION ((AVAudioFramePosition)-1)
-
-/// Value representing an invalid or unknown audio packet count
-extern const AVAudioFramePosition SFBUnknownPacketCount NS_SWIFT_NAME(unknownPacketCount);
-/// Value representing an invalid or unknown audio packet count
-#define SFB_UNKNOWN_PACKET_COUNT ((AVAudioFramePosition)-1)
+/// Frame and packet unknowns
+NS_ENUM(AVAudioFramePosition) {
+	/// Value representing an invalid or unknown audio frame position
+	SFBUnknownFramePosition 	NS_SWIFT_NAME(unknownFramePosition) 	= -1,
+	/// Value representing an invalid or unknown audio frame length
+	SFBUnknownFrameLength 		NS_SWIFT_NAME(unknownFrameLength) 		= -1,
+	/// Value representing an invalid or unknown audio packet position
+	SFBUnknownPacketPosition 	NS_SWIFT_NAME(unknownPacketPosition) 	= -1,
+	/// Value representing an invalid or unknown audio packet count
+	SFBUnknownPacketCount 		NS_SWIFT_NAME(unknownPacketCount) 		= -1
+};
 
 #endif /* __OBJC__ */

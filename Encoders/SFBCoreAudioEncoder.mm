@@ -524,7 +524,7 @@ namespace {
 	OSStatus result = ExtAudioFileTell(_eaf.get(), &currentFrame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioEncoderLog, "ExtAudioFileTell failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	}
 	return currentFrame;
 }

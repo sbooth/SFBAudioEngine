@@ -392,7 +392,7 @@ static void vorbis_comment_add(char **comments, size_t *length, const char *tag,
 	_speex_frame_number = -1;
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
-	outputStreamDescription.mFormatID			= SFBAudioFormatIDSpeex;
+	outputStreamDescription.mFormatID			= kSFBAudioFormatSpeex;
 	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
 	_outputFormat = [[AVAudioFormat alloc] initWithStreamDescription:&outputStreamDescription];

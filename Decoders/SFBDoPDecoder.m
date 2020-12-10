@@ -12,7 +12,7 @@
 #import "SFBAudioDecoder+Internal.h"
 #import "SFBDSDDecoder.h"
 
-#define DSD_PACKETS_PER_DOP_FRAME (16 / SFB_PCM_FRAMES_PER_DSD_PACKET)
+#define DSD_PACKETS_PER_DOP_FRAME (16 / SFBPCMFramesPerDSDPacket)
 #define BUFFER_SIZE_PACKETS 4096
 
 // Bit reversal lookup table from http://graphics.stanford.edu/~seander/bithacks.html#BitReverseTable
@@ -28,15 +28,15 @@ static const uint8_t sBitReverseTable256 [256] =
 // as well as the 48.0 KHz variants 6.144 MHz and 12.288 MHz
 static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 {
-	if(sampleRate == SFBDSDSampleRateDSD64)
+	if(sampleRate == SFBSampleRateDSD64)
 		return YES;
-	else if(sampleRate == SFBDSDSampleRateDSD128)
+	else if(sampleRate == SFBSampleRateDSD128)
 		return YES;
-	else if(sampleRate == SFBDSDSampleRateDSD256)
+	else if(sampleRate == SFBSampleRateDSD256)
 		return YES;
-	else if(sampleRate == SFBDSDSampleRateVariantDSD128)
+	else if(sampleRate == SFBSampleRateDSD128Variant)
 		return YES;
-	else if(sampleRate == SFBDSDSampleRateVariantDSD256)
+	else if(sampleRate == SFBSampleRateDSD256Variant)
 		return YES;
 	else
 		return NO;
@@ -111,7 +111,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	const AudioStreamBasicDescription *asbd = _decoder.processingFormat.streamDescription;
 
-	if(!(asbd->mFormatID == SFBAudioFormatIDDirectStreamDigital)) {
+	if(!(asbd->mFormatID == kSFBAudioFormatDSD)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBDSDDecoderErrorDomain
 											 code:SFBDSDDecoderErrorCodeInputOutput
@@ -141,10 +141,10 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 	// Generate non-interleaved 24-bit big endian output
 	AudioStreamBasicDescription processingStreamDescription = {0};
 
-	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*SFBAudioFormatIDDoP*/;
+	processingStreamDescription.mFormatID			= kAudioFormatLinearPCM/*SFBAudioFormatDoP*/;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved | kAudioFormatFlagIsBigEndian;
 
-	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (SFB_PCM_FRAMES_PER_DSD_PACKET * DSD_PACKETS_PER_DOP_FRAME);
+	processingStreamDescription.mSampleRate			= asbd->mSampleRate / (SFBPCMFramesPerDSDPacket * DSD_PACKETS_PER_DOP_FRAME);
 	processingStreamDescription.mChannelsPerFrame	= asbd->mChannelsPerFrame;
 	processingStreamDescription.mBitsPerChannel		= 24;
 
@@ -154,7 +154,7 @@ static BOOL IsSupportedDoPSampleRate(Float64 sampleRate)
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:_decoder.processingFormat.channelLayout];
 
-	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _decoder.processingFormat.channelCount)];
+	_buffer = [[AVAudioCompressedBuffer alloc] initWithFormat:_decoder.processingFormat packetCapacity:BUFFER_SIZE_PACKETS maximumPacketSize:(SFBBytesPerDSDPacketPerChannel * _decoder.processingFormat.channelCount)];
 	_buffer.packetCount = 0;
 
 	return YES;

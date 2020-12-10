@@ -155,7 +155,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMusepack;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatMusepack;
 
 	sourceStreamDescription.mSampleRate			= streaminfo.sample_freq;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)streaminfo.channels;

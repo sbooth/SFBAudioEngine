@@ -21,7 +21,7 @@
 #import "SFBAudioDecoder.h"
 #import "UnfairLock.h"
 
-const NSTimeInterval SFBUnknownTime = SFB_UNKNOWN_TIME;
+const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 @interface SFBAudioPlayerNode ()
@@ -148,7 +148,7 @@ namespace {
 		inline AVAudioFramePosition FrameLength() const
 		{
 			auto frameLength = mFrameLength.load();
-			return frameLength == SFB_UNKNOWN_FRAME_LENGTH ? SFB_UNKNOWN_FRAME_LENGTH : frameLength;
+			return frameLength == SFBUnknownFrameLength ? SFBUnknownFrameLength : frameLength;
 		}
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
@@ -744,7 +744,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
+		return { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
 
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
@@ -753,18 +753,18 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+		return { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
-	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
 	int64_t framePosition = decoderState->FramePosition();
 	int64_t frameLength = decoderState->FrameLength();
 
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 	if(sampleRate > 0) {
-		if(framePosition != SFB_UNKNOWN_FRAME_POSITION)
+		if(framePosition != SFBUnknownFramePosition)
 			playbackTime.currentTime = framePosition / sampleRate;
-		if(frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+		if(frameLength != SFBUnknownFrameLength)
 			playbackTime.totalTime = frameLength / sampleRate;
 	}
 
@@ -776,9 +776,9 @@ namespace {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState) {
 		if(playbackPosition)
-			*playbackPosition = { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
+			*playbackPosition = { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
 		if(playbackTime)
-			*playbackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+			*playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 		return NO;
 	}
 
@@ -787,12 +787,12 @@ namespace {
 		*playbackPosition = currentPlaybackPosition;
 
 	if(playbackTime) {
-		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		if(sampleRate > 0) {
-			if(currentPlaybackPosition.framePosition != SFB_UNKNOWN_FRAME_POSITION)
+			if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
-			if(currentPlaybackPosition.frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+			if(currentPlaybackPosition.frameLength != SFBUnknownFrameLength)
 				currentPlaybackTime.totalTime = currentPlaybackPosition.frameLength / sampleRate;
 		}
 		*playbackTime = currentPlaybackTime;

@@ -224,7 +224,7 @@ namespace {
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMonkeysAudio;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatMonkeysAudio;
 
 	sourceStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE);
 	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);

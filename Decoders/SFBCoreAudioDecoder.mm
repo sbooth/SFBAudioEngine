@@ -377,7 +377,7 @@ namespace {
 	auto result = ExtAudioFileTell(_eaf.get(), &currentFrame);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileTell failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	}
 	return currentFrame;
 }
@@ -389,7 +389,7 @@ namespace {
 	auto result = ExtAudioFileGetProperty(_eaf.get(), kExtAudioFileProperty_FileLengthFrames, &dataSize, &frameLength);
 	if(result != noErr) {
 		os_log_error(gSFBAudioDecoderLog, "ExtAudioFileGetProperty (kExtAudioFileProperty_FileLengthFrames) failed: failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return SFB_UNKNOWN_FRAME_LENGTH;
+		return SFBUnknownFrameLength;
 	}
 	return frameLength;
 }

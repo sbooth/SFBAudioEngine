@@ -10,9 +10,6 @@
 
 #import "NSError+SFBURLPresentation.h"
 
-const AVAudioFramePosition SFBUnknownFramePosition = SFB_UNKNOWN_FRAME_POSITION;
-const AVAudioFramePosition SFBUnknownFrameLength = SFB_UNKNOWN_FRAME_LENGTH;
-
 // NSError domain for AudioDecoder and subclasses
 NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
 

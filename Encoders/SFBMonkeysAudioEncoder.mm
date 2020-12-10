@@ -279,7 +279,7 @@ namespace {
 	}
 
 	AudioStreamBasicDescription outputStreamDescription{};
-	outputStreamDescription.mFormatID			= SFBAudioFormatIDMonkeysAudio;
+	outputStreamDescription.mFormatID			= kSFBAudioFormatMonkeysAudio;
 	outputStreamDescription.mBitsPerChannel		= wve.wBitsPerSample;
 	outputStreamDescription.mSampleRate			= wve.nSamplesPerSec;
 	outputStreamDescription.mChannelsPerFrame	= wve.nChannels;

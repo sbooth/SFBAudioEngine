@@ -11,10 +11,6 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
 
-// Constants declared in SFBDSDDecoding.h but defined here
-const NSInteger SFBPCMFramesPerDSDPacket = 8;
-const NSInteger SFBBytesPerDSDPacketPerChannel = 1;
-
 // NSError domain for DSDDecoder and subclasses
 NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
 

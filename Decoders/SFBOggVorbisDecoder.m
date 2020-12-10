@@ -184,7 +184,7 @@ static long tell_func_callback(void *datasource)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDVorbis;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatVorbis;
 
 	sourceStreamDescription.mSampleRate			= ovInfo->rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)ovInfo->channels;
@@ -211,7 +211,7 @@ static long tell_func_callback(void *datasource)
 {
 	ogg_int64_t framePosition = ov_pcm_tell(&_vorbisFile);
 	if(framePosition == OV_EINVAL)
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	return framePosition;
 }
 
@@ -219,7 +219,7 @@ static long tell_func_callback(void *datasource)
 {
 	ogg_int64_t frameLength = ov_pcm_total(&_vorbisFile, -1);
 	if(frameLength == OV_EINVAL)
-		return SFB_UNKNOWN_FRAME_LENGTH;
+		return SFBUnknownFrameLength;
 	return frameLength;
 }
 

@@ -139,7 +139,7 @@ static dumb_off_t get_size_callback(void *f)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDModule;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatModule;
 
 	sourceStreamDescription.mSampleRate			= DUMB_SAMPLE_RATE;
 	sourceStreamDescription.mChannelsPerFrame	= DUMB_CHANNELS;

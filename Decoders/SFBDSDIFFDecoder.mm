@@ -763,22 +763,22 @@ namespace {
 	AudioStreamBasicDescription processingStreamDescription{};
 
 	// The output format is raw DSD
-	processingStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+	processingStreamDescription.mFormatID			= kSFBAudioFormatDSD;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsBigEndian;
 
 	processingStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
 	processingStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	processingStreamDescription.mBitsPerChannel		= 1;
 
-	processingStreamDescription.mBytesPerPacket		= SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels;
-	processingStreamDescription.mFramesPerPacket	= SFB_PCM_FRAMES_PER_DSD_PACKET;
+	processingStreamDescription.mBytesPerPacket		= SFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels;
+	processingStreamDescription.mFramesPerPacket	= SFBPCMFramesPerDSDPacket;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatDSD;
 
 	sourceStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
 	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
@@ -795,7 +795,7 @@ namespace {
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
+	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (SFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
@@ -845,7 +845,7 @@ namespace {
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsRead = 0;
 
-	uint32_t packetSize = SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = SFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
@@ -885,7 +885,7 @@ namespace {
 {
 	NSParameterAssert(packet >= 0);
 
-	NSInteger packetOffset = packet * SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	NSInteger packetOffset = packet * SFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
 		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
 		return NO;

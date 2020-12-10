@@ -177,7 +177,7 @@ namespace {
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDTrueAudio;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatTrueAudio;
 
 	sourceStreamDescription.mSampleRate			= streamInfo.sps;
 	sourceStreamDescription.mChannelsPerFrame	= streamInfo.nch;

@@ -513,7 +513,7 @@ namespace {
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDShorten;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatShorten;
 
 	sourceStreamDescription.mSampleRate			= _sampleRate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)_nchan;

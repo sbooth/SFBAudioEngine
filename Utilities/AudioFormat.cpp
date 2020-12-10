@@ -54,10 +54,10 @@ SFB::Audio::Format::Format(CommonPCMFormat format, Float32 sampleRate, UInt32 ch
 size_t SFB::Audio::Format::FrameCountToByteCount(size_t frameCount) const noexcept
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:
+		case kSFBAudioFormatDSD:
 			return frameCount / 8;
 
-		case kAudioFormatDoP:
+		case kSFBAudioFormatDoP:
 		case kAudioFormatLinearPCM:
 			return frameCount * mBytesPerFrame;
 
@@ -69,10 +69,10 @@ size_t SFB::Audio::Format::FrameCountToByteCount(size_t frameCount) const noexce
 size_t SFB::Audio::Format::ByteCountToFrameCount(size_t byteCount) const noexcept
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:
+		case kSFBAudioFormatDSD:
 			return byteCount * 8;
 
-		case kAudioFormatDoP:
+		case kSFBAudioFormatDoP:
 		case kAudioFormatLinearPCM:
 			return byteCount / mBytesPerFrame;
 

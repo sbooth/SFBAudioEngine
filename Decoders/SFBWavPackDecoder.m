@@ -236,7 +236,7 @@ static int can_seek_callback(void *id)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDWavPack;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatWavPack;
 
 	sourceStreamDescription.mSampleRate			= WavpackGetSampleRate(_wpc);
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(_wpc);

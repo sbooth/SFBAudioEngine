@@ -87,7 +87,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 	if(![super openReturningError:error])
 		return NO;
 
-	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 
 	// Initialize Ogg data struct
@@ -270,7 +270,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDSpeex;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatSpeex;
 
 	sourceStreamDescription.mSampleRate			= header->rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)header->nb_channels;
@@ -291,7 +291,7 @@ SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 
 	// Speex cleanup

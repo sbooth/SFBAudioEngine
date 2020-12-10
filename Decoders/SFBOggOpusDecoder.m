@@ -206,7 +206,7 @@ static 	opus_int64 tell_callback(void *stream)
 {
 	ogg_int64_t framePosition = op_pcm_tell(_opusFile);
 	if(framePosition == OP_EINVAL)
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	return framePosition;
 }
 
@@ -214,7 +214,7 @@ static 	opus_int64 tell_callback(void *stream)
 {
 	ogg_int64_t frameLength = op_pcm_total(_opusFile, -1);
 	if(frameLength == OP_EINVAL)
-		return SFB_UNKNOWN_FRAME_LENGTH;
+		return SFBUnknownFrameLength;
 	return frameLength;
 }
 

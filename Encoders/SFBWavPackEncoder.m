@@ -188,7 +188,7 @@ static int wavpack_block_output(void *id, void *data, int32_t bcount)
 #pragma clang diagnostic pop
 
 	AudioStreamBasicDescription outputStreamDescription = {0};
-	outputStreamDescription.mFormatID			= SFBAudioFormatIDWavPack;
+	outputStreamDescription.mFormatID			= kSFBAudioFormatWavPack;
 	outputStreamDescription.mBitsPerChannel		= _processingFormat.streamDescription->mBitsPerChannel;
 	outputStreamDescription.mSampleRate			= _processingFormat.sampleRate;
 	outputStreamDescription.mChannelsPerFrame	= _processingFormat.channelCount;
