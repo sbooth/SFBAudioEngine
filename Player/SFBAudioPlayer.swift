@@ -9,6 +9,18 @@ extension AudioPlayer {
 	public typealias PlaybackPosition = AudioPlayerNode.PlaybackPosition
 	public typealias PlaybackTime = AudioPlayerNode.PlaybackTime
 
+	/// Returns the frame position in the current decoder or `nil` if the current decoder is `nil`
+	public var framePosition: AVAudioFramePosition? {
+		let framePosition = __framePosition
+		return framePosition == unknownFramePosition ? nil : framePosition
+	}
+
+	/// Returns the frame length of the current decoder or `nil` if the current decoder is `nil`
+	public var frameLength: AVAudioFramePosition? {
+		let frameLength = __frameLength
+		return frameLength == unknownFrameLength ? nil : frameLength
+	}
+
 	/// Returns the playback position in the current decoder or `nil` if the current decoder is `nil`
 	public var position: PlaybackPosition? {
 		var position = SFBAudioPlayerPlaybackPosition()
@@ -16,6 +28,18 @@ extension AudioPlayer {
 			return nil
 		}
 		return PlaybackPosition(position)
+	}
+
+	/// Returns the current time in the current decoder or `nil` if the current decoder is `nil`
+	public var currentTime: TimeInterval? {
+		let currentTime = __currentTime
+		return currentTime == unknownTime ? nil : currentTime
+	}
+
+	/// Returns the total time of the current decoder or `nil` if the current decoder is `nil`
+	public var totalTime: TimeInterval? {
+		let totalTime = __totalTime
+		return totalTime == unknownTime ? nil : totalTime
 	}
 
 	/// Returns the playback time in the current decoder or `nil` if the current decoder is `nil`
