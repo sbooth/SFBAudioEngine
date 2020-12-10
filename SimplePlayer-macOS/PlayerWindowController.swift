@@ -337,7 +337,7 @@ class PlayerWindowController: NSWindowController {
 		forwardButton.isEnabled = seekable
 
 		elapsed.isHidden = false
-		if player.frameLength != UnknownFrameLength {
+		if player.frameLength != unknownFrameLength {
 			remaining.isHidden = false
 		}
 

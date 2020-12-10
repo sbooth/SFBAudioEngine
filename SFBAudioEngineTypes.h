@@ -3,13 +3,18 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <Foundation/Foundation.h>
-#import <AVFoundation/AVFoundation.h>
+#pragma once
+
+#import <CoreAudioTypes/CoreAudioTypes.h>
 
 #pragma mark Audio Format Identifiers
 
+#ifdef __cplusplus
+extern "C"
+#endif
+
 /// Additional audio format IDs
-typedef NS_ENUM(AudioFormatID, SFBAudioFormatID) {
+typedef CF_ENUM(AudioFormatID, SFBAudioFormatID) {
 	/// Direct Stream Digital (DSD)
 	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
 	/// DSD over PCM (DoP)
@@ -30,17 +35,11 @@ typedef NS_ENUM(AudioFormatID, SFBAudioFormatID) {
 	SFBAudioFormatIDVorbis 					= 'VORB',
 	/// WavPack
 	SFBAudioFormatIDWavPack 				= 'WV  '
-} NS_SWIFT_NAME(AudioFormatID);
+} CF_SWIFT_NAME(AudioFormatID);
 
-#pragma mark - PCM Constants
+#ifdef __OBJC__
 
-/// Value representing an invalid or unknown audio frame position
-extern const AVAudioFramePosition SFBUnknownFramePosition NS_SWIFT_NAME(UnknownFramePosition);
-#define SFB_UNKNOWN_FRAME_POSITION ((AVAudioFramePosition)-1)
-
-/// Value representing an invalid or unknown audio frame length
-extern const AVAudioFramePosition SFBUnknownFrameLength NS_SWIFT_NAME(UnknownFrameLength);
-#define SFB_UNKNOWN_FRAME_LENGTH ((AVAudioFramePosition)-1)
+#import <AVFoundation/AVFoundation.h>
 
 #pragma mark - DSD Constants
 
@@ -74,17 +73,40 @@ typedef NS_ENUM(NSUInteger, SFBDSDSampleRateVariant) {
 // Since DSD audio is CBR, one packet equals one frame
 
 /// The number of frames in a DSD packet (a clustered frame)
-extern const NSInteger SFBPCMFramesPerDSDPacket NS_SWIFT_NAME(PCMFramesPerDSDPacket);
-#define SFB_PCM_FRAMES_PER_DSD_PACKET 8
+extern const NSInteger SFBPCMFramesPerDSDPacket NS_SWIFT_NAME(pcmFramesPerDSDPacket);
+/// The number of frames in a DSD packet (a clustered frame)
+#define SFB_PCM_FRAMES_PER_DSD_PACKET ((NSInteger)8)
 
 /// The number of bytes in a DSD packet, per channel (a channel byte)
-extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(BytesPerDSDPacketPerChannel);
-#define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL 1
+extern const NSInteger SFBBytesPerDSDPacketPerChannel NS_SWIFT_NAME(bytesPerDSDPacketPerChannel);
+/// The number of bytes in a DSD packet, per channel (a channel byte)
+#define SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL ((NSInteger)1)
+
+#pragma mark - PCM Constants
+
+/// Value representing an invalid or unknown time
+extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(unknownTime);
+/// Value representing an invalid or unknown time
+#define SFB_UNKNOWN_TIME ((NSTimeInterval)-1)
+
+/// Value representing an invalid or unknown audio frame position
+extern const AVAudioFramePosition SFBUnknownFramePosition NS_SWIFT_NAME(unknownFramePosition);
+/// Value representing an invalid or unknown audio frame position
+#define SFB_UNKNOWN_FRAME_POSITION ((AVAudioFramePosition)-1)
+
+/// Value representing an invalid or unknown audio frame length
+extern const AVAudioFramePosition SFBUnknownFrameLength NS_SWIFT_NAME(unknownFrameLength);
+/// Value representing an invalid or unknown audio frame length
+#define SFB_UNKNOWN_FRAME_LENGTH ((AVAudioFramePosition)-1)
 
 /// Value representing an invalid or unknown audio packet position
-extern const AVAudioFramePosition SFBUnknownPacketPosition NS_SWIFT_NAME(UnknownPacketPosition);
+extern const AVAudioFramePosition SFBUnknownPacketPosition NS_SWIFT_NAME(unknownPacketPosition);
+/// Value representing an invalid or unknown audio packet position
 #define SFB_UNKNOWN_PACKET_POSITION ((AVAudioFramePosition)-1)
 
 /// Value representing an invalid or unknown audio packet count
-extern const AVAudioFramePosition SFBUnknownPacketCount NS_SWIFT_NAME(UnknownPacketCount);
+extern const AVAudioFramePosition SFBUnknownPacketCount NS_SWIFT_NAME(unknownPacketCount);
+/// Value representing an invalid or unknown audio packet count
 #define SFB_UNKNOWN_PACKET_COUNT ((AVAudioFramePosition)-1)
+
+#endif /* __OBJC__ */

@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <CoreAudio/CoreAudioTypes.h>
+#import <SFBAudioEngine/SFBAudioEngineTypes.h>
 
-#include "CFWrapper.h"
+#import "CFWrapper.h"
 
 /*! @file AudioFormat.h @brief A Core %Audio \c AudioStreamBasicDescription wrapper */
 
@@ -19,16 +19,16 @@ namespace SFB {
 
 		/*! @brief Additional audio format IDs */
 		CF_ENUM(AudioFormatID) {
-			kAudioFormatDirectStreamDigital 	= 'DSD ',	/*!< Direct Stream Digital (DSD) */
-			kAudioFormatDoP 					= 'DoP ',	/*!< DSD over PCM (DoP) */
-			kAudioFormatModule 					= 'MOD ',	/*!< Module */
-			kAudioFormatMonkeysAudio 			= 'APE ',	/*!< Monkey's Audio (APE) */
-			kAudioFormatMusepack 				= 'MPC ',	/*!< Musepack */
-			kAudioFormatShorten 				= 'SHN ',	/*!< Shorten */
-			kAudioFormatSpeex 					= 'SPX ',	/*!< Ogg Speex */
-			kAudioFormatTrueAudio 				= 'TTA ',	/*!< True Audio */
-			kAudioFormatVorbis 					= 'VORB',	/*!< Ogg Vorbis */
-			kAudioFormatWavPack 				= 'WV  '	/*!< WavPack */
+			kAudioFormatDirectStreamDigital 	= SFBAudioFormatIDDirectStreamDigital,	/*!< Direct Stream Digital (DSD) */
+			kAudioFormatDoP 					= SFBAudioFormatIDDoP,					/*!< DSD over PCM (DoP) */
+			kAudioFormatModule 					= SFBAudioFormatIDModule,				/*!< Module */
+			kAudioFormatMonkeysAudio 			= SFBAudioFormatIDMonkeysAudio,			/*!< Monkey's Audio (APE) */
+			kAudioFormatMusepack 				= SFBAudioFormatIDMusepack,				/*!< Musepack */
+			kAudioFormatShorten 				= SFBAudioFormatIDShorten,				/*!< Shorten */
+			kAudioFormatSpeex 					= SFBAudioFormatIDSpeex,				/*!< Ogg Speex */
+			kAudioFormatTrueAudio 				= SFBAudioFormatIDTrueAudio,			/*!< True Audio */
+			kAudioFormatVorbis 					= SFBAudioFormatIDVorbis,				/*!< Ogg Vorbis */
+			kAudioFormatWavPack 				= SFBAudioFormatIDWavPack				/*!< WavPack */
 		};
 
 		/*! @brief Common PCM audio formats */
