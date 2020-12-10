@@ -575,6 +575,9 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 			return NO;
 	}
 
+	if(framesWritten != frameLength)
+		os_log_info(gSFBAudioEncoderLog, "sf_writef_XXX wrote %lld/%u frames", framesWritten, frameLength);
+
 	int result = sf_error(_sndfile);
 	if(result) {
 		os_log_error(gSFBAudioEncoderLog, "sf_writef_XXX failed: %{public}s", sf_error_number(result));
