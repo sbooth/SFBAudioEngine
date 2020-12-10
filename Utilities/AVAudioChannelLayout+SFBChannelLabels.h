@@ -32,6 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable instancetype)initWithChannelLabels:(AudioChannelLabel *)channelLabels count:(AVAudioChannelCount)count;
 /// Returns an initialized \c AVAudioChannelLayout object according to the specified channel label string or \c nil on failure
 /// @note The string comparisons are case-insensitive
+///
 /// The following channel label strings are recognized:
 /// L \c kAudioChannelLabel_Left
 /// R \c kAudioChannelLabel_Right
