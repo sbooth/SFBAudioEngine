@@ -947,7 +947,15 @@ namespace {
 		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder) {
 			// Create the decoder state
-			auto decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
+			auto decoderState = new (std::nothrow) DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
+			if(!decoderState) {
+				os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data");
+				if([_delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
+					dispatch_async_and_wait(_notificationQueue, ^{
+						[_delegate audioPlayerNode:self encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+					});
+				continue;
+			}
 
 			// Add the decoder state to the list of active decoders
 			auto stored = false;
