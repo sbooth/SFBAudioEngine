@@ -29,7 +29,6 @@
 
 SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
 
-#define MAX_FRAME_SIZE 2000
 #define READ_SIZE_BYTES 4096
 
 @interface SFBOggSpeexDecoder ()
