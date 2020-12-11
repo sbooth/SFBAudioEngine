@@ -141,14 +141,12 @@ namespace {
 		inline AVAudioFramePosition FramePosition() const
 		{
 			int64_t seek = mFrameToSeek.load();
-			int64_t rendered = mFramesRendered.load();
-			return seek == kInvalidFramePosition ? rendered : seek;
+			return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
 		}
 
 		inline AVAudioFramePosition FrameLength() const
 		{
-			auto frameLength = mFrameLength.load();
-			return frameLength == SFBUnknownFrameLength ? SFBUnknownFrameLength : frameLength;
+			return mFrameLength.load();
 		}
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
