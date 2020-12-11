@@ -356,6 +356,28 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return SFBDeviceIsAggregate(_deviceID);
 }
 
+- (BOOL)isPrivateAggregate
+{
+	if(!SFBDeviceIsAggregate(_deviceID))
+		return NO;
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioAggregateDevicePropertyComposition,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	CFDictionaryRef composition = NULL;
+	UInt32 dataSize = sizeof(composition);
+	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &composition);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyComposition) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return [[(__bridge_transfer NSDictionary *)composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
+}
+
 #pragma mark - Device Properties
 
 - (double)sampleRate
