@@ -40,8 +40,8 @@
 
 - (BOOL)readPropertiesAndMetadataReturningError:(NSError **)error
 {
-	std::unique_ptr<TagLib::FileStream> stream(new TagLib::FileStream(self.url.fileSystemRepresentation, true));
-	if(!stream->isOpen()) {
+	TagLib::FileStream stream(self.url.fileSystemRepresentation, true);
+	if(!stream.isOpen()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain
 											 code:SFBAudioFileErrorCodeInputOutput
@@ -52,7 +52,7 @@
 		return NO;
 	}
 
-	TagLib::IT::File file(stream.get());
+	TagLib::IT::File file(&stream);
 	if(!file.isValid()) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioFileErrorDomain

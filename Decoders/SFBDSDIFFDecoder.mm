@@ -16,6 +16,8 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBCStringForOSType.h"
 
+SFBDSDDecoderName const SFBDSDDecoderNameDSDIFF = @"org.sbooth.AudioEngine.DSDDecoder.DSDIFF";
+
 namespace {
 
 	// Convert a four byte chunk ID to a uint32_t
@@ -709,6 +711,11 @@ namespace {
 	return [NSSet setWithObject:@"audio/dsdiff"];
 }
 
++ (SFBDSDDecoderName)decoderName
+{
+	return SFBDSDDecoderNameDSDIFF;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return YES;
@@ -746,7 +753,7 @@ namespace {
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_0_A];
 	else if(channelsChunk->mChannelIDs.size() == 6 && channelsChunk->mChannelIDs[0] == 'MLFT' && channelsChunk->mChannelIDs[1] == 'MRGT' && channelsChunk->mChannelIDs[2] == 'C   ' && channelsChunk->mChannelIDs[3] == 'LFE ' && channelsChunk->mChannelIDs[4] == 'LS  ' && channelsChunk->mChannelIDs[5] == 'RS  ')
 		channelLayout = [AVAudioChannelLayout layoutWithLayoutTag:kAudioChannelLayoutTag_MPEG_5_1_A];
-	else {
+	else if(!channelsChunk->mChannelIDs.empty()) {
 		std::vector<AudioChannelLabel> labels;
 		for(auto channelID : channelsChunk->mChannelIDs)
 			labels.push_back(DSDIFFChannelIDToCoreAudioChannelLabel(channelID));
@@ -756,22 +763,22 @@ namespace {
 	AudioStreamBasicDescription processingStreamDescription{};
 
 	// The output format is raw DSD
-	processingStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+	processingStreamDescription.mFormatID			= kSFBAudioFormatDSD;
 	processingStreamDescription.mFormatFlags		= kAudioFormatFlagIsBigEndian;
 
 	processingStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
 	processingStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
 	processingStreamDescription.mBitsPerChannel		= 1;
 
-	processingStreamDescription.mBytesPerPacket		= SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels;
-	processingStreamDescription.mFramesPerPacket	= SFB_PCM_FRAMES_PER_DSD_PACKET;
+	processingStreamDescription.mBytesPerPacket		= kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels;
+	processingStreamDescription.mFramesPerPacket	= kSFBPCMFramesPerDSDPacket;
 
 	_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDDirectStreamDigital;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatDSD;
 
 	sourceStreamDescription.mSampleRate			= (Float64)sampleRateChunk->mSampleRate;
 	sourceStreamDescription.mChannelsPerFrame	= channelsChunk->mNumberChannels;
@@ -788,7 +795,7 @@ namespace {
 	}
 
 	_audioOffset = soundDataChunk->mDataOffset;
-	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * channelsChunk->mNumberChannels);
+	_packetCount = (AVAudioFramePosition)(soundDataChunk->mDataSize - 12) / (kSFBBytesPerDSDPacketPerChannel * channelsChunk->mNumberChannels);
 
 	if(![_inputSource seekToOffset:_audioOffset error:error])
 		return NO;
@@ -822,24 +829,23 @@ namespace {
 - (BOOL)decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:(AVAudioPacketCount)packetCount error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.packetCount = 0;
 	buffer.byteLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBDSDDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(packetCount > buffer.packetCapacity)
 		packetCount = buffer.packetCapacity;
+
+	if(packetCount == 0)
+		return YES;
 
 	AVAudioPacketCount packetsRemaining = (AVAudioPacketCount)(_packetCount - _packetPosition);
 	AVAudioPacketCount packetsToRead = std::min(packetCount, packetsRemaining);
 	AVAudioPacketCount packetsRead = 0;
 
-	uint32_t packetSize = SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	uint32_t packetSize = kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 
 	for(;;) {
 		// Read interleaved input, grouped as 8 one bit samples per frame (a single channel byte) into
@@ -879,7 +885,7 @@ namespace {
 {
 	NSParameterAssert(packet >= 0);
 
-	NSInteger packetOffset = packet * SFB_BYTES_PER_DSD_PACKET_PER_CHANNEL * _processingFormat.channelCount;
+	NSInteger packetOffset = packet * kSFBBytesPerDSDPacketPerChannel * _processingFormat.channelCount;
 	if(![_inputSource seekToOffset:(_audioOffset + packetOffset) error:error]) {
 		os_log_debug(gSFBDSDDecoderLog, "-seekToPacket:error: failed seeking to input offset: %lld", _audioOffset + packetOffset);
 		return NO;

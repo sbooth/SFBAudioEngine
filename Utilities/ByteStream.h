@@ -16,7 +16,7 @@ namespace SFB {
 		/// Initializes a \c ByteStream object with the specified buffer and length and sets the read position to \c 0
 		/// @param buf The buffer providing the data
 		/// @param len The length of \c buf in bytes
-		ByteStream(const void *buf, size_t len)
+		ByteStream(const void *buf, size_t len) noexcept
 			: mBuffer(buf), mBufferLength(len), mReadPosition(0)
 		{
 			assert(mBuffer != nullptr);
@@ -24,14 +24,14 @@ namespace SFB {
 
 		/// Initializes a \c ByteStream object with the same buffer, length, and read position as \c rhs
 		/// @param rhs The object to copy
-		ByteStream(const ByteStream& rhs)
+		ByteStream(const ByteStream& rhs) noexcept
 			: mBuffer(rhs.mBuffer), mBufferLength(rhs.mBufferLength), mReadPosition(rhs.mReadPosition)
 		{}
 
 		/// Sets the buffer, length, and read position to those of \c rhs
 		/// @param rhs The object to copy
 		/// @return A reference to \c this
-		ByteStream& operator=(const ByteStream& rhs)
+		ByteStream& operator=(const ByteStream& rhs) noexcept
 		{
 			mBuffer = rhs.mBuffer;
 			mBufferLength = rhs.mBufferLength;
@@ -43,7 +43,7 @@ namespace SFB {
 		/// Two \c ByteStream objects are equal if they have the same buffer, length, and read position
 		/// @param rhs The object to compare
 		/// @return \c true if the objects are equal, \c false otherwise
-		bool operator==(const ByteStream& rhs)
+		bool operator==(const ByteStream& rhs) noexcept
 		{
 			return mBuffer == rhs.mBuffer && mBufferLength == rhs.mBufferLength && mReadPosition == rhs.mReadPosition;
 		}
@@ -52,7 +52,7 @@ namespace SFB {
 		/// Two \c ByteStream objects are equal if they have the same buffer, length, and read position
 		/// @param rhs The object to compare
 		/// @return \c true if the objects are not equal, \c false otherwise
-		bool operator!=(const ByteStream& rhs)
+		bool operator!=(const ByteStream& rhs) noexcept
 		{
 			return mBuffer != rhs.mBuffer || mBufferLength != rhs.mBufferLength || mReadPosition != rhs.mReadPosition;
 		}
@@ -62,7 +62,7 @@ namespace SFB {
 		/// @param value The destination value
 		/// @return \c true on success, \c false otherwise
 		template <typename T>
-		typename std::enable_if<std::is_integral<T>::value, bool>::type Read(T& value)
+		typename std::enable_if<std::is_integral<T>::value, bool>::type Read(T& value) noexcept
 		{
 			auto valueSize = sizeof(value);
 			if(valueSize > Remaining())
@@ -76,7 +76,7 @@ namespace SFB {
 		/// @param value The destination value
 		/// @return \c true on success, \c false otherwise
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadLE(T& value)
+		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadLE(T& value) noexcept
 		{
 			auto valueSize = sizeof(value);
 			if(valueSize > Remaining())
@@ -86,9 +86,9 @@ namespace SFB {
 				return false;
 
 			switch(valueSize) {
-				case 2:	value = (T)OSSwapLittleToHostInt16(value);	break;
-				case 4:	value = (T)OSSwapLittleToHostInt32(value);	break;
-				case 8:	value = (T)OSSwapLittleToHostInt64(value);	break;
+				case 2:	value = (T)OSSwapLittleToHostInt16(value); break;
+				case 4:	value = (T)OSSwapLittleToHostInt32(value); break;
+				case 8:	value = (T)OSSwapLittleToHostInt64(value); break;
 			}
 
 			return true;
@@ -99,7 +99,7 @@ namespace SFB {
 		/// @param value The destination value
 		/// @return \c true on success, \c false otherwise
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadBE(T& value)
+		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadBE(T& value) noexcept
 		{
 			auto valueSize = sizeof(value);
 			if(valueSize > Remaining())
@@ -122,7 +122,7 @@ namespace SFB {
 		/// @param value The destination value
 		/// @return \c true on success, \c false otherwise
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadSwapped(T& value)
+		typename std::enable_if<std::is_unsigned<T>::value, bool>::type ReadSwapped(T& value) noexcept
 		{
 			auto valueSize = sizeof(value);
 			if(valueSize > Remaining())
@@ -144,7 +144,7 @@ namespace SFB {
 		/// @tparam T The integral type to read
 		/// @return The value read or \c 0 on failure
 		template <typename T>
-		typename std::enable_if<std::is_integral<T>::value, T>::type Read()
+		typename std::enable_if<std::is_integral<T>::value, T>::type Read() noexcept
 		{
 			T value;
 			return Read(value) ? value : 0;
@@ -154,7 +154,7 @@ namespace SFB {
 		/// @tparam T The unsigned integral type to read
 		/// @return The value read or \c 0 on failure
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadLE()
+		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadLE() noexcept
 		{
 			T value;
 			return ReadLE(value) ? value : 0;
@@ -164,7 +164,7 @@ namespace SFB {
 		/// @tparam T The unsigned integral type to read
 		/// @return The value read or \c 0 on failure
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadBE()
+		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadBE() noexcept
 		{
 			T value;
 			return ReadBE(value) ? value : 0;
@@ -174,7 +174,7 @@ namespace SFB {
 		/// @tparam T The unsigned integral type to read
 		/// @return The value read or \c 0 on failure
 		template <typename T>
-		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadSwapped()
+		typename std::enable_if<std::is_unsigned<T>::value, T>::type ReadSwapped() noexcept
 		{
 			T value;
 			return ReadSwapped(value) ? value : 0;
@@ -184,7 +184,7 @@ namespace SFB {
 		/// @param buf The destination buffer or \c nullptr to discard the bytes
 		/// @param count The number of bytes to read
 		/// @return The number of bytes actually read
-		size_t Read(void *buf, size_t count)
+		size_t Read(void *buf, size_t count) noexcept
 		{
 			auto bytesToCopy = std::min(count, mBufferLength - mReadPosition);
 			if(buf)
@@ -196,7 +196,7 @@ namespace SFB {
 		/// Advances the read position
 		/// @param count The number of bytes to skip
 		/// @return The number of bytes actually skipped
-		size_t Skip(size_t count)
+		size_t Skip(size_t count) noexcept
 		{
 			mReadPosition += std::min(count, mBufferLength - mReadPosition);
 			return mReadPosition;
@@ -205,7 +205,7 @@ namespace SFB {
 		/// Rewinds the read position
 		/// @param count The number of bytes to rewind
 		/// @return The number of bytes actually skipped
-		size_t Rewind(size_t count)
+		size_t Rewind(size_t count) noexcept
 		{
 			auto bytesToSkip = std::min(count, mReadPosition);
 			mReadPosition -= bytesToSkip;
@@ -214,20 +214,20 @@ namespace SFB {
 
 		/// Returns the number of bytes in the buffer
 		/// @return The number of bytes in the buffer
-		inline size_t Length() const
+		inline size_t Length() const noexcept
 		{
 			return mBufferLength;
 		}
 
 		/// Returns the number of bytes remaining
-		inline size_t Remaining() const
+		inline size_t Remaining() const noexcept
 		{
 			return mBufferLength - mReadPosition;
 		}
 
 		/// Returns the read position
 		/// @return The read posiiton
-		inline size_t Position() const
+		inline size_t Position() const noexcept
 		{
 			return mReadPosition;
 		}
@@ -235,7 +235,7 @@ namespace SFB {
 		/// Sets the read position
 		/// @param pos The desired read position
 		/// @return The new read posiiton
-		inline size_t SetPosition(size_t pos)
+		inline size_t SetPosition(size_t pos) noexcept
 		{
 			mReadPosition = std::min(pos, mBufferLength);
 			return mReadPosition;

@@ -20,6 +20,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameFLAC = @"org.sbooth.AudioEngine.Decoder.FLAC";
+
 template <>
 struct ::std::default_delete<FLAC__StreamDecoder> {
 	default_delete() = default;
@@ -161,6 +163,11 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 	return [NSSet setWithArray:@[@"audio/flac", @"audio/ogg; codecs=flac"]];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameFLAC;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return YES;
@@ -194,7 +201,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
@@ -209,7 +216,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid FLAC file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a FLAC file", @"")
@@ -230,7 +237,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 	processingStreamDescription.mBytesPerPacket		= (_streamInfo.bits_per_sample + 7) / 8;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	// FLAC supports from 4 to 32 bits per sample
 	switch(processingStreamDescription.mBitsPerChannel) {
@@ -254,7 +261,7 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported FLAC file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Bit depth not supported", @"")
@@ -347,23 +354,22 @@ static void error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecod
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_frameBuffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:framesRemaining];
 		[_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;

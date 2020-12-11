@@ -11,6 +11,8 @@ FOUNDATION_EXPORT double SFBAudioEngineVersionNumber;
 /// Project version string for SFBAudioEngine.
 FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 
+#import <SFBAudioEngine/SFBAudioEngineTypes.h>
+
 #import <SFBAudioEngine/SFBInputSource.h>
 
 #import <SFBAudioEngine/SFBAudioDecoding.h>
@@ -21,6 +23,12 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 #import <SFBAudioEngine/SFBDSDPCMDecoder.h>
 #import <SFBAudioEngine/SFBDoPDecoder.h>
 #import <SFBAudioEngine/SFBLoopableRegionDecoder.h>
+
+#import <SFBAudioEngine/SFBOutputSource.h>
+
+#import <SFBAudioEngine/SFBAudioEncoding.h>
+#import <SFBAudioEngine/SFBPCMEncoding.h>
+#import <SFBAudioEngine/SFBAudioEncoder.h>
 
 #if TARGET_OS_OSX
 
@@ -41,3 +49,4 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 #import <SFBAudioEngine/SFBReplayGainAnalyzer.h>
 
 #import <SFBAudioEngine/SFBAudioExporter.h>
+#import <SFBAudioEngine/SFBAudioConverter.h>

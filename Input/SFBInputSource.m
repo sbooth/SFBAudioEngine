@@ -43,24 +43,30 @@ static void SFBCreateInputSourceLog()
 	return nil;
 }
 
-+ (instancetype)inputSourceWithData:(NSData *)data error:(NSError **)error
++ (instancetype)inputSourceWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
 	return [[SFBDataInputSource alloc] initWithData:data];
 }
 
-+ (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length error:(NSError **)error
++ (instancetype)inputSourceWithBytes:(const void *)bytes length:(NSInteger)length
 {
 	NSParameterAssert(bytes != NULL);
 	NSParameterAssert(length >= 0);
-	return [[SFBDataInputSource alloc] initWithBytes:bytes length:length];
+	NSData *data = [NSData dataWithBytes:bytes length:(NSUInteger)length];
+	if(data == nil)
+		return nil;
+	return [[SFBDataInputSource alloc] initWithData:data];
 }
 
-+ (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone error:(NSError **)error
++ (instancetype)inputSourceWithBytesNoCopy:(void *)bytes length:(NSInteger)length freeWhenDone:(BOOL)freeWhenDone
 {
 	NSParameterAssert(bytes != NULL);
 	NSParameterAssert(length >= 0);
-	return [[SFBDataInputSource alloc] initWithBytesNoCopy:bytes length:length freeWhenDone:freeWhenDone];
+	NSData *data = [NSData dataWithBytesNoCopy:bytes length:(NSUInteger)length freeWhenDone:freeWhenDone];
+	if(data == nil)
+		return nil;
+	return [[SFBDataInputSource alloc] initWithData:data];
 }
 
 - (void)dealloc

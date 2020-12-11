@@ -41,7 +41,7 @@ namespace SFB {
 			 * @brief Create a new \c RingBuffer
 			 * @note Allocate() must be called before the object may be used.
 			 */
-			RingBuffer();
+			RingBuffer() noexcept;
 
 			/*! @brief Destroy the \c RingBuffer and release all associated resources. */
 			~RingBuffer();
@@ -67,37 +67,38 @@ namespace SFB {
 			 * @brief Allocate space for audio data.
 			 * @note Only interleaved formats are supported.
 			 * @note This method is not thread safe.
+			 * @note Capacities from 2 to 2,147,483,648 (0x80000000) frames are supported
 			 * @param format The format of the audio that will be written to and read from this buffer.
 			 * @param capacityFrames The desired capacity, in frames
 			 * @return \c true on success, \c false on error
 			 */
-			bool Allocate(const Format& format, size_t capacityFrames);
+			bool Allocate(const class Format& format, size_t capacityFrames) noexcept;
 
 			/*!
 			 * @brief Free the resources used by this \c RingBuffer
 			 * @note This method is not thread safe.
 			 */
-			void Deallocate();
+			void Deallocate() noexcept;
 
 
 			/*!
 			 * @brief Reset this \c RingBuffer to its default state.
 			 * @note This method is not thread safe.
 			 */
-			void Reset();
+			void Reset() noexcept;
 
 
-			/*! @brief Get the capacity of this RingBuffer in frames */
-			inline size_t GetCapacityFrames() const						{ return mCapacityFrames; }
+			/*! @brief Returns the capacity of this RingBuffer in frames */
+			inline size_t CapacityFrames() const noexcept				{ return mCapacityFrames; }
 
-			/*! @brief Get the format of this \c BufferList */
-			inline const Format& GetFormat() const						{ return mFormat; }
+			/*! @brief Returns the format of this \c BufferList */
+			inline const Format& Format() const noexcept				{ return mFormat; }
 
-			/*! @brief Get the number of frames available for reading */
-			size_t GetFramesAvailableToRead() const;
+			/*! @brief Returns the number of frames available for reading */
+			size_t FramesAvailableToRead() const noexcept;
 
-			/*! @brief Get the free space available for writing in frames */
-			size_t GetFramesAvailableToWrite() const;
+			/*! @brief Returns the free space available for writing in frames */
+			size_t FramesAvailableToWrite() const noexcept;
 
 			//@}
 
@@ -112,7 +113,7 @@ namespace SFB {
 			 * @param frameCount The desired number of frames to read
 			 * @return The number of frames actually read
 			 */
-			size_t Read(AudioBufferList *bufferList, size_t frameCount);
+			size_t Read(AudioBufferList *bufferList, size_t frameCount) noexcept;
 
 			/*!
 			 * @brief Write audio to the \c RingBuffer, advancing the write pointer.
@@ -120,13 +121,13 @@ namespace SFB {
 			 * @param frameCount The desired number of frames to write
 			 * @return The number of frames actually written
 			 */
-			size_t Write(const AudioBufferList *bufferList, size_t frameCount);
+			size_t Write(const AudioBufferList *bufferList, size_t frameCount) noexcept;
 
 			//@}
 
 		private:
 
-			Format				mFormat;				// The format of the audio
+			class Format		mFormat;				// The format of the audio
 
 			uint8_t				**mBuffers;				// The channel pointers and buffers, allocated in one chunk of memory
 

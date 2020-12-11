@@ -54,8 +54,8 @@ extension AudioPlayerNode {
 extension AudioPlayerNode.PlaybackPosition {
 	/// Returns an initialized `AudioPlayerNode.PlaybackPosition` object from `position`
 	init(_ position: SFBAudioPlayerNodePlaybackPosition) {
-		self.current = position.framePosition == UnknownFramePosition ? nil : position.framePosition
-		self.total = position.frameLength == UnknownFrameLength ? nil : position.frameLength
+		self.current = position.framePosition == unknownFramePosition ? nil : position.framePosition
+		self.total = position.frameLength == unknownFrameLength ? nil : position.frameLength
 	}
 
 	/// Returns `current` as a fraction of `total`
@@ -78,8 +78,8 @@ extension AudioPlayerNode.PlaybackPosition {
 extension AudioPlayerNode.PlaybackTime {
 	/// Returns an initialized `AudioPlayerNode.PlaybackTime` object from `time`
 	init(_ time: SFBAudioPlayerNodePlaybackTime) {
-		self.current = time.currentTime == UnknownTime ? nil : time.currentTime
-		self.total = time.totalTime == UnknownTime ? nil : time.totalTime
+		self.current = time.currentTime == unknownTime ? nil : time.currentTime
+		self.total = time.totalTime == unknownTime ? nil : time.totalTime
 	}
 
 	/// Returns `current` as a fraction of `total`

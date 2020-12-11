@@ -17,6 +17,8 @@ extern os_log_t gSFBDSDDecoderLog;
 	AVAudioFormat *_sourceFormat;
 	AVAudioFormat *_processingFormat;
 }
+/// Returns the decoder name
+@property (class, nonatomic, readonly) SFBDSDDecoderName decoderName;
 @end
 
 #pragma mark - Subclass Registration and Lookup
@@ -35,6 +37,8 @@ extern os_log_t gSFBDSDDecoderLog;
 + (nullable Class)subclassForPathExtension:(NSString *)extension;
 /// Returns the appropriate \c SFBDSDDecoder subclass for decoding data of \c mimeType
 + (nullable Class)subclassForMIMEType:(NSString *)mimeType;
+/// Returns the appropriate \c SFBDSDDecoder subclass corresponding to \c decoderName
++ (nullable Class)subclassForDecoderName:(SFBDSDDecoderName)decoderName;
 @end
 
 NS_ASSUME_NONNULL_END

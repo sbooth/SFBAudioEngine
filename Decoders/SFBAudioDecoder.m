@@ -10,9 +10,6 @@
 
 #import "NSError+SFBURLPresentation.h"
 
-const AVAudioFramePosition SFBUnknownFramePosition = SFB_UNKNOWN_FRAME_POSITION;
-const AVAudioFramePosition SFBUnknownFrameLength = SFB_UNKNOWN_FRAME_LENGTH;
-
 // NSError domain for AudioDecoder and subclasses
 NSErrorDomain const SFBAudioDecoderErrorDomain = @"org.sbooth.AudioEngine.AudioDecoder";
 
@@ -62,6 +59,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 		[result unionSet:supportedMIMETypes];
 	}
 	return result;
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
@@ -140,7 +143,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!pathExtension) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” could not be determined.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unknown file type", @"")
@@ -154,12 +157,50 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The type of the file “%@” is not supported.", @"")
 											  url:inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported file type", @"")
 							   recoverySuggestion:NSLocalizedString(@"The file's extension may not match the file's type.", @"")];
 
+		return nil;
+	}
+
+	if((self = [[subclass alloc] init]))
+		_inputSource = inputSource;
+
+	return self;
+}
+
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName
+{
+	return [self initWithURL:url decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
+	if(!inputSource)
+		return nil;
+	return [self initWithInputSource:inputSource decoderName:decoderName error:error];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName
+{
+	return [self initWithInputSource:inputSource decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBAudioDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+
+	Class subclass = [SFBAudioDecoder subclassForDecoderName:decoderName];
+	if(!subclass) {
+		os_log_debug(gSFBAudioDecoderLog, "SFBAudioDecoder unsupported decoder: %{public}@", decoderName);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 		return nil;
 	}
 
@@ -196,8 +237,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error
 {
-	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
-		return NO;
+	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer isKindOfClass:[AVAudioPCMBuffer class]]);
 	return [self decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
 }
 
@@ -278,6 +319,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
+			return subclassInfo.klass;
+	}
+
+	return nil;
+}
+
++ (Class)subclassForDecoderName:(SFBAudioDecoderName)decoderName
+{
+	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBAudioDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
+		if(subclassDecoderName == decoderName)
 			return subclassInfo.klass;
 	}
 

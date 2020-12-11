@@ -14,6 +14,8 @@
 #import "ByteStream.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameShorten = @"org.sbooth.AudioEngine.Decoder.Shorten";
+
 #define MIN_SUPPORTED_VERSION 1
 #define MAX_SUPPORTED_VERSION 3
 
@@ -431,6 +433,11 @@ namespace {
 	return [NSSet setWithObject:@"audio/x-shorten"];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameShorten;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return YES;
@@ -446,7 +453,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth: %u", _bitsPerSample);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported bit depth", @"")
@@ -458,7 +465,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported bit depth/audio type combination: %u, %u", _bitsPerSample, _internal_ftype);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported bit depth/audio type combination", @"")
@@ -487,7 +494,7 @@ namespace {
 
 	processingStreamDescription.mBytesPerPacket		= (_bitsPerSample + 7) / 8;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	AVAudioChannelLayout *channelLayout = nil;
 	switch(_nchan) {
@@ -506,7 +513,7 @@ namespace {
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDShorten;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatShorten;
 
 	sourceStreamDescription.mSampleRate			= _sampleRate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)_nchan;
@@ -602,23 +609,22 @@ namespace {
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_frameBuffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_frameBuffer readingFromOffset:0 frameLength:framesRemaining];
 		[_frameBuffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;
@@ -718,7 +724,7 @@ namespace {
 	if(![_inputSource readUInt32BigEndian:&magic error:nil] || magic != 'ajkg') {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -732,7 +738,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported version: %u", version);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Version not supported", @"")
@@ -759,7 +765,7 @@ namespace {
 	if(!_input.uint_get(ftype, _version, TYPESIZE)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -770,7 +776,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported audio type: %u", ftype);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Invalid or unsupported audio type", @"")
@@ -785,7 +791,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported channel count: %u", nchan);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Invalid or unsupported number of channels", @"")
@@ -801,7 +807,7 @@ namespace {
 			os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", blocksize);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Invalid or unsupported block size", @"")
@@ -815,7 +821,7 @@ namespace {
 			os_log_error(gSFBAudioDecoderLog, "Invalid maxnlpc: %u", maxnlpc);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -829,7 +835,7 @@ namespace {
 			os_log_error(gSFBAudioDecoderLog, "Invalid nmean: %u", nmean);
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -842,7 +848,7 @@ namespace {
 		if(!_input.uint_get(nskip, _version, NSKIPSIZE) /* || nskip > bits_remaining_in_input */) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -855,7 +861,7 @@ namespace {
 			if(!_input.uint_get(dummy, _version, XBYTESIZE)) {
 				if(error)
 					*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-													 code:SFBAudioDecoderErrorCodeInputOutput
+													 code:SFBAudioDecoderErrorCodeInvalidFormat
 							descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 													  url:_inputSource.url
 											failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -881,7 +887,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Missing initial verbatim section");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Missing initial verbatim section", @"")
@@ -894,7 +900,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Incorrect header size: %u", header_size);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -908,7 +914,7 @@ namespace {
 		if(!_input.uvar_get(byte, VERBATIM_BYTE_SIZE)) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -939,7 +945,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Unsupported data format: %u", chunkID);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported data format", @"")
@@ -957,7 +963,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'WAVE' in 'RIFF' chunk");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -978,7 +984,7 @@ namespace {
 					os_log_error(gSFBAudioDecoderLog, "'fmt ' chunk is too small (%u bytes)", len);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInputOutput
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -991,7 +997,7 @@ namespace {
 					os_log_error(gSFBAudioDecoderLog, "Unsupported WAVE format tag: %x", format_tag);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInputOutput
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a supported Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Unsupported WAVE format tag", @"")
@@ -1025,7 +1031,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'fmt ' chunk");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1046,7 +1052,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "Missing 'AIFF' or 'AIFC' in 'FORM' chunk");
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1065,7 +1071,7 @@ namespace {
 			os_log_error(gSFBAudioDecoderLog, "Missing 'COMM' chunk");
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1080,7 +1086,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "'COMM' chunk is too small (%u bytes)", len);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1102,7 +1108,7 @@ namespace {
 		os_log_error(gSFBAudioDecoderLog, "exp out of range: %d", exp);
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1130,7 +1136,7 @@ namespace {
 		if(!_input.uvar_get(cmd, FNSIZE)) {
 			if(error)
 				*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-												 code:SFBAudioDecoderErrorCodeInputOutput
+												 code:SFBAudioDecoderErrorCodeInvalidFormat
 						descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 												  url:_inputSource.url
 										failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1158,7 +1164,7 @@ namespace {
 					if(!_input.uvar_get(resn, ENERGYSIZE)) {
 						if(error)
 							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-															 code:SFBAudioDecoderErrorCodeInputOutput
+															 code:SFBAudioDecoderErrorCodeInvalidFormat
 									descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 															  url:_inputSource.url
 													failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1198,7 +1204,7 @@ namespace {
 							if(!_input.var_get(var, (size_t)resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1214,7 +1220,7 @@ namespace {
 							if(!_input.var_get(var, (size_t)resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1230,7 +1236,7 @@ namespace {
 							if(!_input.var_get(var, (size_t)resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1246,7 +1252,7 @@ namespace {
 							if(!_input.var_get(var, (size_t)resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1260,7 +1266,7 @@ namespace {
 						if(!_input.uvar_get(nlpc, LPCQSIZE)) {
 							if(error)
 								*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																 code:SFBAudioDecoderErrorCodeInputOutput
+																 code:SFBAudioDecoderErrorCodeInvalidFormat
 										descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																  url:_inputSource.url
 														failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1272,7 +1278,7 @@ namespace {
 							if(!_input.var_get(_qlpc[i], LPCQUANT)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1293,7 +1299,7 @@ namespace {
 							if(!_input.var_get(var, (size_t)resn)) {
 								if(error)
 									*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-																	 code:SFBAudioDecoderErrorCodeInputOutput
+																	 code:SFBAudioDecoderErrorCodeInvalidFormat
 											descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 																	  url:_inputSource.url
 															failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1406,7 +1412,7 @@ namespace {
 					os_log_error(gSFBAudioDecoderLog, "Invalid or unsupported block size: %u", uint);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInputOutput
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Invalid or unsupported block size", @"")
@@ -1421,7 +1427,7 @@ namespace {
 					os_log_error(gSFBAudioDecoderLog, "Invald or unsupported bitshift: %u", _bitshift);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInputOutput
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Invalid or unsupported bitshift", @"")
@@ -1436,7 +1442,7 @@ namespace {
 					os_log_error(gSFBAudioDecoderLog, "Invald verbatim length: %u", chunk_len);
 					if(error)
 						*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-														 code:SFBAudioDecoderErrorCodeInputOutput
+														 code:SFBAudioDecoderErrorCodeInvalidFormat
 								descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 														  url:_inputSource.url
 												failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1448,7 +1454,7 @@ namespace {
 					if(!_input.uvar_get(dummy, VERBATIM_BYTE_SIZE)) {
 						if(error)
 							*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-															 code:SFBAudioDecoderErrorCodeInputOutput
+															 code:SFBAudioDecoderErrorCodeInvalidFormat
 									descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 															  url:_inputSource.url
 													failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")
@@ -1463,7 +1469,7 @@ namespace {
 				os_log_error(gSFBAudioDecoderLog, "sanity check failed for function: %d", cmd);
 				if(error)
 					*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-													 code:SFBAudioDecoderErrorCodeInputOutput
+													 code:SFBAudioDecoderErrorCodeInvalidFormat
 							descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Shorten file.", @"")
 													  url:_inputSource.url
 											failureReason:NSLocalizedString(@"Not a valid Shorten file", @"")

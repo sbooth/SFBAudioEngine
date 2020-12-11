@@ -19,6 +19,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMusepack = @"org.sbooth.AudioEngine.Decoder.Musepack";
+
 static mpc_int32_t read_callback(mpc_reader *p_reader, void *ptr, mpc_int32_t size)
 {
 	NSCParameterAssert(p_reader != NULL);
@@ -97,6 +99,11 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	return [NSSet setWithArray:@[@"audio/musepack", @"audio/x-musepack"]];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMusepack;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -118,7 +125,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	if(!_demux) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Musepack file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid Musepack file", @"")
@@ -148,7 +155,7 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMusepack;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatMusepack;
 
 	sourceStreamDescription.mSampleRate			= streaminfo.sample_freq;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)streaminfo.channels;
@@ -191,23 +198,22 @@ static mpc_bool_t canseek_callback(mpc_reader *p_reader)
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_buffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer readingFromOffset:0 frameLength:framesRemaining];
 		[_buffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;

@@ -3,11 +3,10 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#include <cstdlib>
-#include <functional>
-#include <stdexcept>
+#import <cstdlib>
+#import <stdexcept>
 
-#include "AudioChannelLayout.h"
+#import "AudioChannelLayout.h"
 
 namespace {
 
@@ -27,7 +26,7 @@ namespace {
 	{
 		size_t layoutSize = GetChannelLayoutSize(numberChannelDescriptions);
 		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
-		if(nullptr == channelLayout)
+		if(NULL == channelLayout)
 			throw std::bad_alloc();
 
 		memset(channelLayout, 0, layoutSize);
@@ -43,7 +42,7 @@ namespace {
 
 		size_t layoutSize = GetChannelLayoutSize(rhs->mNumberChannelDescriptions);
 		AudioChannelLayout *channelLayout = (AudioChannelLayout *)std::malloc(layoutSize);
-		if(nullptr == channelLayout)
+		if(NULL == channelLayout)
 			throw std::bad_alloc();
 
 		memcpy(channelLayout, rhs, layoutSize);
@@ -261,20 +260,29 @@ namespace {
 
 }
 
+size_t SFB::Audio::ChannelLayoutSize(const AudioChannelLayout *channelLayout)
+{
+	if(!channelLayout)
+		return 0;
+	return GetChannelLayoutSize(channelLayout->mNumberChannelDescriptions);
+}
+
 // Constants
 const SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::Mono		= SFB::Audio::ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Mono);
 const SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::Stereo	= SFB::Audio::ChannelLayout::ChannelLayoutWithTag(kAudioChannelLayoutTag_Stereo);
 
 SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithTag(AudioChannelLayoutTag layoutTag)
 {
-	auto channelLayout = ChannelLayout((UInt32)0);
+	ChannelLayout channelLayout{};
+	channelLayout.mChannelLayout = CreateChannelLayout(0);
 	channelLayout.mChannelLayout->mChannelLayoutTag = layoutTag;
 	return channelLayout;
 }
 
 SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithChannelLabels(std::vector<AudioChannelLabel> channelLabels)
 {
-	auto channelLayout = ChannelLayout((UInt32)channelLabels.size());
+	ChannelLayout channelLayout{};
+	channelLayout.mChannelLayout = CreateChannelLayout((UInt32)channelLabels.size());
 
 	channelLayout.mChannelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
 	channelLayout.mChannelLayout->mChannelBitmap = 0;
@@ -289,21 +297,23 @@ SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithChannelLab
 
 SFB::Audio::ChannelLayout SFB::Audio::ChannelLayout::ChannelLayoutWithBitmap(UInt32 channelBitmap)
 {
-	auto channelLayout = ChannelLayout((UInt32)0);
+	ChannelLayout channelLayout{};
+	channelLayout.mChannelLayout = CreateChannelLayout(0);
 	channelLayout.mChannelLayout->mChannelBitmap = channelBitmap;
 	return channelLayout;
 }
 
 SFB::Audio::ChannelLayout::ChannelLayout()
-	: mChannelLayout(nullptr, nullptr)
+	: mChannelLayout(nullptr)
 {}
 
-SFB::Audio::ChannelLayout::ChannelLayout(UInt32 numberChannelDescriptions)
-	: mChannelLayout(CreateChannelLayout(numberChannelDescriptions), std::free)
-{}
+SFB::Audio::ChannelLayout::~ChannelLayout()
+{
+	std::free(mChannelLayout);
+}
 
 SFB::Audio::ChannelLayout::ChannelLayout(const AudioChannelLayout *channelLayout)
-	: mChannelLayout(CopyChannelLayout(channelLayout), std::free)
+	: mChannelLayout(CopyChannelLayout(channelLayout))
 {}
 
 SFB::Audio::ChannelLayout::ChannelLayout(ChannelLayout&& rhs)
@@ -326,39 +336,31 @@ SFB::Audio::ChannelLayout::ChannelLayout(const ChannelLayout& rhs)
 SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const ChannelLayout& rhs)
 {
 	if(this != &rhs) {
-		if(!rhs)
-			mChannelLayout.reset();
-		else
-			mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs.mChannelLayout.get()), std::free);
+		std::free(mChannelLayout);
+		mChannelLayout = CopyChannelLayout(rhs.mChannelLayout);
 	}
-
 	return *this;
 }
 
 SFB::Audio::ChannelLayout& SFB::Audio::ChannelLayout::operator=(const AudioChannelLayout *rhs)
 {
-	if(nullptr == rhs)
-		mChannelLayout.reset();
-	else
-		mChannelLayout = unique_AudioChannelLayout_ptr(CopyChannelLayout(rhs), std::free);
-
+	std::free(mChannelLayout);
+	mChannelLayout = CopyChannelLayout(rhs);
 	return *this;
 }
 
-size_t SFB::Audio::ChannelLayout::GetChannelCount() const
+size_t SFB::Audio::ChannelLayout::ChannelCount() const
 {
 	if(!mChannelLayout)
 		return 0;
 
-	UInt32 channelCount = 0;
-	UInt32 propertySize = sizeof(channelCount);
-	OSStatus result = AudioFormatGetProperty(kAudioFormatProperty_NumberOfChannelsForLayout, (UInt32)GetACLSize(), (void *)GetACL(), &propertySize, &channelCount);
+	if(mChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelDescriptions)
+		return mChannelLayout->mNumberChannelDescriptions;
 
-	if(noErr != result)
-		return 0;
-	//os_log_error(OS_LOG_DEFAULT, "AudioFormatGetProperty (kAudioFormatProperty_NumberOfChannelsForLayout) failed: %d", result);
+	if(mChannelLayout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap)
+		return (size_t)__builtin_popcount(mChannelLayout->mChannelBitmap);
 
-	return channelCount;
+	return AudioChannelLayoutTag_GetNumberOfChannels(mChannelLayout->mChannelLayoutTag);
 }
 
 bool SFB::Audio::ChannelLayout::MapToLayout(const ChannelLayout& outputLayout, std::vector<SInt32>& channelMap) const
@@ -368,11 +370,11 @@ bool SFB::Audio::ChannelLayout::MapToLayout(const ChannelLayout& outputLayout, s
 		return false;
 
 	const AudioChannelLayout *layouts [] = {
-		GetACL(),
-		outputLayout.GetACL()
+		mChannelLayout,
+		outputLayout.mChannelLayout
 	};
 
-	auto outputChannelCount = outputLayout.GetChannelCount();
+	auto outputChannelCount = outputLayout.ChannelCount();
 	if(0 == outputChannelCount)
 		return false;
 
@@ -390,14 +392,6 @@ bool SFB::Audio::ChannelLayout::MapToLayout(const ChannelLayout& outputLayout, s
 	return true;
 }
 
-size_t SFB::Audio::ChannelLayout::GetACLSize() const
-{
-	if(!mChannelLayout)
-		return 0;
-
-	return GetChannelLayoutSize(mChannelLayout->mNumberChannelDescriptions);
-}
-
 bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
 {
 	// Two empty channel layouts are considered equivalent
@@ -408,8 +402,8 @@ bool SFB::Audio::ChannelLayout::operator==(const ChannelLayout& rhs) const
 		return false;
 
 	const AudioChannelLayout *layouts [] = {
-		rhs.GetACL(),
-		GetACL()
+		rhs.mChannelLayout,
+		mChannelLayout
 	};
 
 	UInt32 layoutsEqual = false;

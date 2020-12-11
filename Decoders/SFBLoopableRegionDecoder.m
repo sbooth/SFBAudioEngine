@@ -134,24 +134,20 @@
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error {
-	if(![buffer isKindOfClass:[AVAudioPCMBuffer class]])
-		return NO;
+	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer isKindOfClass:[AVAudioPCMBuffer class]]);
 	return [self decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:((AVAudioPCMBuffer *)buffer).frameCapacity error:error];
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_decoder.processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_decoder.processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
-	if(_repeatCount && (_framesDecoded / _frameLength) == (_repeatCount + 1))
+	if((_repeatCount && (_framesDecoded / _frameLength) == (_repeatCount + 1)) || frameLength == 0)
 		return YES;
 
 	if(frameLength > buffer.frameCapacity)

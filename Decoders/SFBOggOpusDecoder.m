@@ -17,6 +17,8 @@
 #import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameOggOpus = @"org.sbooth.AudioEngine.Decoder.OggOpus";
+
 #define OPUS_SAMPLE_RATE 48000
 
 static int read_callback(void *stream, unsigned char *ptr, int nbytes)
@@ -94,6 +96,11 @@ static 	opus_int64 tell_callback(void *stream)
 	return [NSSet setWithObject:@"audio/ogg; codecs=opus"];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggOpus;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -115,7 +122,7 @@ static 	opus_int64 tell_callback(void *stream)
 	if(!_opusFile) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Opus file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg Opus file", @"")
@@ -126,7 +133,13 @@ static 	opus_int64 tell_callback(void *stream)
 
 	if(op_test_open(_opusFile)) {
 		os_log_error(gSFBAudioDecoderLog, "op_test_open failed");
+
 		op_free(_opusFile);
+		_opusFile = NULL;
+
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
@@ -193,7 +206,7 @@ static 	opus_int64 tell_callback(void *stream)
 {
 	ogg_int64_t framePosition = op_pcm_tell(_opusFile);
 	if(framePosition == OP_EINVAL)
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	return framePosition;
 }
 
@@ -201,24 +214,23 @@ static 	opus_int64 tell_callback(void *stream)
 {
 	ogg_int64_t frameLength = op_pcm_total(_opusFile, -1);
 	if(frameLength == OP_EINVAL)
-		return SFB_UNKNOWN_FRAME_LENGTH;
+		return SFBUnknownFrameLength;
 	return frameLength;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesRemaining = frameLength;
 	while(framesRemaining > 0) {
@@ -246,6 +258,8 @@ static 	opus_int64 tell_callback(void *stream)
 	NSParameterAssert(frame >= 0);
 	if(op_pcm_seek(_opusFile, frame)) {
 		os_log_error(gSFBAudioDecoderLog, "op_pcm_seek() failed");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 	return YES;

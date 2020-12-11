@@ -27,7 +27,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
-#define MAX_FRAME_SIZE 2000
+SFBAudioDecoderName const SFBAudioDecoderNameOggSpeex = @"org.sbooth.AudioEngine.Decoder.OggSpeex";
+
 #define READ_SIZE_BYTES 4096
 
 @interface SFBOggSpeexDecoder ()
@@ -70,6 +71,11 @@
 	return [NSSet setWithObject:@"audio/ogg; codecs=speex"];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggSpeex;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -80,7 +86,7 @@
 	if(![super openReturningError:error])
 		return NO;
 
-	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 
 	// Initialize Ogg data struct
@@ -103,7 +109,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -119,7 +125,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -138,7 +144,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -155,7 +161,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg file", @"")
@@ -176,7 +182,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Speex file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg Speex file", @"")
@@ -189,7 +195,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The Speex mode in the file “%@” is not supported.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported Ogg Speex file mode", @"")
@@ -205,7 +211,7 @@
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The Speex version in the file “%@” is not supported.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Unsupported Ogg Speex file version", @"")
@@ -222,7 +228,7 @@
 
 		if(error)
 			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain
-										 code:SFBAudioDecoderErrorCodeInputOutput
+										 code:SFBAudioDecoderErrorCodeInternalError
 									 userInfo:@{
 										 NSLocalizedDescriptionKey: NSLocalizedString(@"Unable to initialize the Speex decoder.", @""),
 										 NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Error initializing Speex decoder", @""),
@@ -263,7 +269,7 @@
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDSpeex;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatSpeex;
 
 	sourceStreamDescription.mSampleRate			= header->rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)header->nb_channels;
@@ -284,7 +290,7 @@
 
 - (BOOL)closeReturningError:(NSError **)error
 {
-	_frameLength = SFB_UNKNOWN_FRAME_LENGTH;
+	_frameLength = SFBUnknownFrameLength;
 	_serialNumber = -1;
 
 	// Speex cleanup
@@ -326,23 +332,22 @@
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_buffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer readingFromOffset:0 frameLength:framesRemaining];
 		[_buffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;

@@ -18,6 +18,8 @@
 #import "AVAudioChannelLayout+SFBChannelLabels.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameOggVorbis = @"org.sbooth.AudioEngine.Decoder.OggVorbis";
+
 static size_t read_func_callback(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
 	NSCParameterAssert(datasource != NULL);
@@ -91,6 +93,11 @@ static long tell_func_callback(void *datasource)
 	return [NSSet setWithObject:@"audio/ogg; codecs=vorbis"];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameOggVorbis;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -111,7 +118,7 @@ static long tell_func_callback(void *datasource)
 	if(ov_test_callbacks((__bridge void *)self, &_vorbisFile, NULL, 0, callbacks)) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Ogg Vorbis file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not an Ogg Vorbis file", @"")
@@ -126,6 +133,9 @@ static long tell_func_callback(void *datasource)
 		if(ov_clear(&_vorbisFile))
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
 
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+
 		return NO;
 	}
 
@@ -135,6 +145,9 @@ static long tell_func_callback(void *datasource)
 
 		if(ov_clear(&_vorbisFile))
 			os_log_error(gSFBAudioDecoderLog, "ov_clear failed");
+
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 
 		return NO;
 	}
@@ -171,7 +184,7 @@ static long tell_func_callback(void *datasource)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDVorbis;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatVorbis;
 
 	sourceStreamDescription.mSampleRate			= ovInfo->rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)ovInfo->channels;
@@ -198,7 +211,7 @@ static long tell_func_callback(void *datasource)
 {
 	ogg_int64_t framePosition = ov_pcm_tell(&_vorbisFile);
 	if(framePosition == OV_EINVAL)
-		return SFB_UNKNOWN_FRAME_POSITION;
+		return SFBUnknownFramePosition;
 	return framePosition;
 }
 
@@ -206,24 +219,23 @@ static long tell_func_callback(void *datasource)
 {
 	ogg_int64_t frameLength = ov_pcm_total(&_vorbisFile, -1);
 	if(frameLength == OV_EINVAL)
-		return SFB_UNKNOWN_FRAME_LENGTH;
+		return SFBUnknownFrameLength;
 	return frameLength;
 }
 
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesRemaining = frameLength;
 	float **pcm_channels = NULL;

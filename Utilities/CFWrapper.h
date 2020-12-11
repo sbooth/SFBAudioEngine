@@ -31,32 +31,32 @@ namespace SFB {
 		//@{
 
 		/*! @brief Create a new \c CFWrapper */
-		inline CFWrapper()						: CFWrapper(nullptr)					{}
+		inline CFWrapper() noexcept						: CFWrapper(nullptr)					{}
 
 		/*!
 		 * @brief Create a new \c CFWrapper
 		 * @note The \c CFWrapper takes ownership of \c object
 		 * @param object The object to wrap
 		 */
-		inline explicit CFWrapper(T object)		: CFWrapper(object, true)				{}
+		inline explicit CFWrapper(T object) noexcept	: CFWrapper(object, true)				{}
 
 		/*!
 		 * @brief Create a new \c CFWrapper
 		 * @param object The object to wrap
 		 * @param release Whether this \c CFWrapper should take ownership of \c object
 		 */
-		CFWrapper(T object, bool release)		: mObject(object), mRelease(release)	{}
+		CFWrapper(T object, bool release) noexcept		: mObject(object), mRelease(release)	{}
 
 
 		/*! @brief Create a new \c CFWrapper */
-		CFWrapper(CFWrapper&& rhs)
+		CFWrapper(CFWrapper&& rhs) noexcept
 			: mObject(rhs.mObject), mRelease(rhs.mRelease)
 		{
 			rhs.mObject = nullptr;
 		}
 
 		/*! @brief Create a new \c CFWrapper */
-		CFWrapper(const CFWrapper& rhs)
+		CFWrapper(const CFWrapper& rhs) noexcept
 			: mObject(rhs.mObject), mRelease(rhs.mRelease)
 		{
 			if(mObject && mRelease)
@@ -82,7 +82,7 @@ namespace SFB {
 		 * @note The \c CFWrapper takes ownership of \c rhs
 		 * @param rhs The object to wrap
 		 */
-		CFWrapper& operator=(const T& rhs)
+		CFWrapper& operator=(const T& rhs) noexcept
 		{
 			if(mObject != rhs) {
 				if(mObject && mRelease)
@@ -96,7 +96,7 @@ namespace SFB {
 		}
 
 		/*! @brief Replace the wrapped object */
-		CFWrapper& operator=(const CFWrapper& rhs)
+		CFWrapper& operator=(const CFWrapper& rhs) noexcept
 		{
 			if(mObject != rhs.mObject) {
 				if(mObject && mRelease)
@@ -113,7 +113,7 @@ namespace SFB {
 		}
 
 		/*! @brief Replace the wrapped object */
-		CFWrapper& operator=(CFWrapper&& rhs)
+		CFWrapper& operator=(CFWrapper&& rhs) noexcept
 		{
 			if(mObject != rhs.mObject) {
 				if(mObject && mRelease)
@@ -136,7 +136,7 @@ namespace SFB {
 		//@{
 
 		/*! @brief Relinquish ownership of the wrapped object and return it */
-		inline T Relinquish()
+		inline T Relinquish() noexcept
 		{
 			T object = mObject;
 			mObject = nullptr;
@@ -152,7 +152,7 @@ namespace SFB {
 		//@{
 
 		/*! @brief Test two \c CFWrapper objects for equality using \c CFEqual() */
-		inline bool operator==(const CFWrapper& rhs) const
+		inline bool operator==(const CFWrapper& rhs) const noexcept
 		{
 			if(mObject == rhs.mObject)
 				return true;
@@ -165,7 +165,7 @@ namespace SFB {
 		}
 
 		/*! @brief Test two \c CFWrapper objects for inequality */
-		inline bool operator!=(const CFWrapper& rhs) const		{ return !operator==(rhs); }
+		inline bool operator!=(const CFWrapper& rhs) const noexcept		{ return !operator==(rhs); }
 
 		//@}
 
@@ -175,19 +175,19 @@ namespace SFB {
 		//@{
 
 		/*! @brief Check whether the wrapped object is not \c nullptr */
-		inline explicit operator bool() const					{ return nullptr != mObject; }
+		inline explicit operator bool() const noexcept					{ return nullptr != mObject; }
 
 		/*! @brief Check whether the wrapped object is \c nullptr */
-		inline bool operator!() const							{ return nullptr == mObject; }
+		inline bool operator!() const noexcept							{ return nullptr == mObject; }
 
 		/*! @brief Get the wrapped object */
-		inline operator T() const								{ return mObject; }
+		inline operator T() const noexcept								{ return mObject; }
 
 		/*! @brief Get a pointer to the wrapped object */
-		inline T * operator&()									{ return &mObject; }
+		inline T * operator&() noexcept									{ return &mObject; }
 
 		/*! @brief Get the wrapped object */
-		inline T Object() const									{ return mObject; }
+		inline T Object() const noexcept								{ return mObject; }
 
 		//@}
 
@@ -198,13 +198,13 @@ namespace SFB {
 
 		/*! @brief Create a new wrapped \c CFStringRef using \c CFStringCreateWithCString with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFStringRef>::value>>
-		CFWrapper(const char *cStr, CFStringEncoding encoding)
+		CFWrapper(const char *cStr, CFStringEncoding encoding) noexcept
 			: CFWrapper(CFStringCreateWithCString(kCFAllocatorDefault, cStr, encoding))
 		{}
 
 		/*! @brief Create a new wrapped \c CFStringRef using \c CFStringCreateWithFormatAndArguments with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFStringRef>::value>>
-		CFWrapper(CFDictionaryRef formatOptions, CFStringRef format, ...) CF_FORMAT_FUNCTION(3,4)
+		CFWrapper(CFDictionaryRef formatOptions, CFStringRef format, ...) noexcept CF_FORMAT_FUNCTION(3,4)
 			: CFWrapper()
 		{
 			va_list ap;
@@ -215,37 +215,37 @@ namespace SFB {
 
 		/*! @brief Create a new wrapped \c CFNumberRef using \c CFNumberCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFNumberRef>::value>>
-		CFWrapper(CFNumberType theType, const void *valuePtr)
+		CFWrapper(CFNumberType theType, const void *valuePtr) noexcept
 			: CFWrapper(CFNumberCreate(kCFAllocatorDefault, theType, valuePtr))
 		{}
 
 		/*! @brief Create a new wrapped \c CFArrayRef using \c CFArrayCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFArrayRef>::value>>
-		CFWrapper(const void **values, CFIndex numValues, const CFArrayCallBacks *callBacks)
+		CFWrapper(const void **values, CFIndex numValues, const CFArrayCallBacks *callBacks) noexcept
 			: CFWrapper(CFArrayCreate(kCFAllocatorDefault, values, numValues, callBacks))
 		{}
 
 		/*! @brief Create a new wrapped \c CFMutableArrayRef using \c CFArrayCreateMutable with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFMutableArrayRef>::value>>
-		CFWrapper(CFIndex capacity, const CFArrayCallBacks *callBacks)
+		CFWrapper(CFIndex capacity, const CFArrayCallBacks *callBacks) noexcept
 			: CFWrapper(CFArrayCreateMutable(kCFAllocatorDefault, capacity, callBacks))
 		{}
 
 		/*! @brief Create a new wrapped \c CFDictionaryRef using \c CFDictionaryCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFDictionaryRef>::value>>
-		CFWrapper(const void **keys, const void **values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks)
+		CFWrapper(const void **keys, const void **values, CFIndex numValues, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) noexcept
 			: CFWrapper(CFDictionaryCreate(kCFAllocatorDefault, keys, values, numValues, keyCallBacks, valueCallBacks))
 		{}
 
 		/*! @brief Create a new wrapped \c CFMutableDictionaryRef using \c CFDictionaryCreateMutable with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFMutableDictionaryRef>::value>>
-		CFWrapper(CFIndex capacity, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks)
+		CFWrapper(CFIndex capacity, const CFDictionaryKeyCallBacks *keyCallBacks, const CFDictionaryValueCallBacks *valueCallBacks) noexcept
 			: CFWrapper(CFDictionaryCreateMutable(kCFAllocatorDefault, capacity, keyCallBacks, valueCallBacks))
 		{}
 
 		/*! @brief Create a new wrapped \c CFDataRef using \c CFDataCreate with the default allocator */
 		template <typename = std::enable_if<std::is_same<T, CFDataRef>::value>>
-		CFWrapper(const UInt8 *bytes, CFIndex length)
+		CFWrapper(const UInt8 *bytes, CFIndex length) noexcept
 			: CFWrapper(CFDataCreate(kCFAllocatorDefault, bytes, length))
 		{}
 
@@ -291,5 +291,3 @@ namespace SFB {
 	using CGImageSource = CFWrapper<CGImageSourceRef>;							/*!< @brief A wrapped \c CGImageSourceRef */
 
 }
-
-/*! @cond */

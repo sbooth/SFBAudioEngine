@@ -6,38 +6,12 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
+#import <SFBAudioEngine/SFBAudioEngineTypes.h>
 #import <SFBAudioEngine/SFBInputSource.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-#pragma mark Audio Format Identifiers
-
-/// Additional audio format IDs
-typedef NS_ENUM(UInt32, SFBAudioFormatID) {
-	/// Direct Stream Digital (DSD)
-	SFBAudioFormatIDDirectStreamDigital 	= 'DSD ',
-	/// DSD over PCM (DoP)
-	SFBAudioFormatIDDoP 					= 'DoP ',
-	/// Module
-	SFBAudioFormatIDModule 					= 'MOD ',
-	/// Monkey's Audio (APE)
-	SFBAudioFormatIDMonkeysAudio 			= 'APE ',
-	/// MPEG-1 (Layer I, II, or III)
-	SFBAudioFormatIDMPEG1 					= 'MPG1',
-	/// Musepack
-	SFBAudioFormatIDMusepack 				= 'MPC ',
-	/// Ogg Speex
-	SFBAudioFormatIDSpeex 					= 'SPX ',
-	/// True Audio
-	SFBAudioFormatIDTrueAudio 				= 'TTA ',
-	/// Ogg Vorbis
-	SFBAudioFormatIDVorbis 					= 'OGG ',
-	/// WavPack
-	SFBAudioFormatIDWavPack 				= 'WV  ',
-	/// Shorten
-	SFBAudioFormatIDShorten					= 'SHN '
-} NS_SWIFT_NAME(AudioFormatID);
-
+/// Protocol defining the interface for audio decoders
 NS_SWIFT_NAME(AudioDecoding) @protocol SFBAudioDecoding
 
 #pragma mark - Input

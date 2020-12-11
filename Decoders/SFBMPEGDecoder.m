@@ -12,6 +12,8 @@
 #import "AVAudioPCMBuffer+SFBBufferUtilities.h"
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMPEG = @"org.sbooth.AudioEngine.Decoder.MPEG";
+
 // ========================================
 // Initialization
 static void Setupmpg123(void) __attribute__ ((constructor));
@@ -103,6 +105,11 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	return [NSSet setWithObject:@"audio/mpeg"];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMPEG;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -118,7 +125,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	if(!_mpg123) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -137,7 +144,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -152,7 +159,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -170,7 +177,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -196,7 +203,16 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMPEG1;
+	sourceStreamDescription.mFormatID			= kAudioFormatMPEGLayer3;
+
+	struct mpg123_frameinfo mi;
+	if(mpg123_info(_mpg123, &mi) == MPG123_OK) {
+		switch(mi.layer) {
+			case 1: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer1; 	break;
+			case 2: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer2; 	break;
+			case 3: 	sourceStreamDescription.mFormatID = kAudioFormatMPEGLayer3; 	break;
+		}
+	}
 
 	sourceStreamDescription.mSampleRate			= rate;
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)channels;
@@ -212,7 +228,7 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid MP3 file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a valid MP3 file", @"")
@@ -256,23 +272,22 @@ static off_t lseek_callback(void *iohandle, off_t offset, int whence)
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
 	for(;;) {
 		AVAudioFrameCount framesRemaining = frameLength - framesProcessed;
-		AVAudioFrameCount framesCopied = [buffer appendContentsOfBuffer:_buffer readOffset:0 frameLength:framesRemaining];
+		AVAudioFrameCount framesCopied = [buffer appendFromBuffer:_buffer readingFromOffset:0 frameLength:framesRemaining];
 		[_buffer trimAtOffset:0 frameLength:framesCopied];
 
 		framesProcessed += framesCopied;

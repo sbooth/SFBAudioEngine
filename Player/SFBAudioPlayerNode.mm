@@ -21,7 +21,7 @@
 #import "SFBAudioDecoder.h"
 #import "UnfairLock.h"
 
-const NSTimeInterval SFBUnknownTime = SFB_UNKNOWN_TIME;
+const NSTimeInterval SFBUnknownTime = -1;
 NSErrorDomain const SFBAudioPlayerNodeErrorDomain = @"org.sbooth.AudioEngine.AudioPlayerNode";
 
 @interface SFBAudioPlayerNode ()
@@ -141,14 +141,12 @@ namespace {
 		inline AVAudioFramePosition FramePosition() const
 		{
 			int64_t seek = mFrameToSeek.load();
-			int64_t rendered = mFramesRendered.load();
-			return seek == kInvalidFramePosition ? rendered : seek;
+			return seek == kInvalidFramePosition ? mFramesRendered.load() : seek;
 		}
 
 		inline AVAudioFramePosition FrameLength() const
 		{
-			auto frameLength = mFrameLength.load();
-			return frameLength == SFB_UNKNOWN_FRAME_LENGTH ? SFB_UNKNOWN_FRAME_LENGTH : frameLength;
+			return mFrameLength.load();
 		}
 
 		bool DecodeAudio(AVAudioPCMBuffer *buffer, NSError **error = nullptr)
@@ -386,14 +384,14 @@ namespace {
 
 		// ========================================
 		// 1. Determine how many audio frames are available to read in the ring buffer
-		AVAudioFrameCount framesAvailableToRead = (AVAudioFrameCount)self->_audioRingBuffer.GetFramesAvailableToRead();
+		AVAudioFrameCount framesAvailableToRead = (AVAudioFrameCount)self->_audioRingBuffer.FramesAvailableToRead();
 
 		// ========================================
 		// 2. Output silence if a) the node isn't playing, b) the node is muted, or c) the ring buffer is empty
 		if(!(self->_flags.load() & eAudioPlayerNodeFlagIsPlaying) || self->_flags.load() & eAudioPlayerNodeFlagOutputIsMuted || framesAvailableToRead == 0) {
-			size_t byteCountToZero = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(frameCount);
+			size_t byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(frameCount);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset(outputData->mBuffers[bufferIndex].mData, self->_audioRingBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
+				memset(outputData->mBuffers[bufferIndex].mData, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
 				outputData->mBuffers[bufferIndex].mDataByteSize = (UInt32)byteCountToZero;
 			}
 
@@ -414,16 +412,16 @@ namespace {
 			os_log_debug(_audioPlayerNodeLog, "Insufficient audio in ring buffer: %u frames available, %u requested", framesRead, frameCount);
 
 			auto framesOfSilence = frameCount - framesRead;
-			auto byteCountToSkip = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(framesRead);
-			auto byteCountToZero = self->_audioRingBuffer.GetFormat().FrameCountToByteCount(framesOfSilence);
+			auto byteCountToSkip = self->_audioRingBuffer.Format().FrameCountToByteCount(framesRead);
+			auto byteCountToZero = self->_audioRingBuffer.Format().FrameCountToByteCount(framesOfSilence);
 			for(UInt32 bufferIndex = 0; bufferIndex < outputData->mNumberBuffers; ++bufferIndex) {
-				memset((int8_t *)outputData->mBuffers[bufferIndex].mData + byteCountToSkip, self->_audioRingBuffer.GetFormat().IsDSD() ? 0xF : 0, byteCountToZero);
+				memset((int8_t *)outputData->mBuffers[bufferIndex].mData + byteCountToSkip, self->_audioRingBuffer.Format().IsDSD() ? 0xF : 0, byteCountToZero);
 			}
 		}
 
 		// ========================================
 		// 5. If there is adequate space in the ring buffer for another chunk signal the decoding thread
-		AVAudioFrameCount framesAvailableToWrite = (AVAudioFrameCount)self->_audioRingBuffer.GetFramesAvailableToWrite();
+		AVAudioFrameCount framesAvailableToWrite = (AVAudioFrameCount)self->_audioRingBuffer.FramesAvailableToWrite();
 		if(framesAvailableToWrite >= kRingBufferChunkSize)
 			dispatch_semaphore_signal(self->_decodingSemaphore);
 
@@ -455,7 +453,7 @@ namespace {
 				// Schedule the rendering started notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted;
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.GetFormat().mSampleRate);
+				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.Format().mSampleRate);
 
 				uint8_t bytesToWrite [4 + 8 + 8];
 				memcpy(bytesToWrite, &cmd, 4);
@@ -474,7 +472,7 @@ namespace {
 				// Schedule the rendering complete notification
 				const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete;
 				const uint32_t frameOffset = framesRead - framesRemainingToDistribute;
-				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.GetFormat().mSampleRate);
+				const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(frameOffset / self->_audioRingBuffer.Format().mSampleRate);
 
 				uint8_t bytesToWrite [4 + 8 + 8];
 				memcpy(bytesToWrite, &cmd, 4);
@@ -496,7 +494,7 @@ namespace {
 		decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(self->_decoderStateArray, kDecoderStateArraySize);
 		if(!decoderState) {
 			const uint32_t cmd = eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio;
-			const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / self->_audioRingBuffer.GetFormat().mSampleRate);
+			const uint64_t hostTime = timestamp->mHostTime + ConvertSecondsToHostTicks(framesRead / self->_audioRingBuffer.Format().mSampleRate);
 
 			uint8_t bytesToWrite [4 + 8];
 			memcpy(bytesToWrite, &cmd, 4);
@@ -744,7 +742,7 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
+		return { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
 
 	return { .framePosition = decoderState->FramePosition(), .frameLength = decoderState->FrameLength() };
 }
@@ -753,18 +751,18 @@ namespace {
 {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState)
-		return { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+		return { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
-	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+	SFBAudioPlayerNodePlaybackTime playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 
 	int64_t framePosition = decoderState->FramePosition();
 	int64_t frameLength = decoderState->FrameLength();
 
 	double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 	if(sampleRate > 0) {
-		if(framePosition != SFB_UNKNOWN_FRAME_POSITION)
+		if(framePosition != SFBUnknownFramePosition)
 			playbackTime.currentTime = framePosition / sampleRate;
-		if(frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+		if(frameLength != SFBUnknownFrameLength)
 			playbackTime.totalTime = frameLength / sampleRate;
 	}
 
@@ -776,9 +774,9 @@ namespace {
 	auto decoderState = GetActiveDecoderStateWithSmallestSequenceNumber(_decoderStateArray, kDecoderStateArraySize);
 	if(!decoderState) {
 		if(playbackPosition)
-			*playbackPosition = { .framePosition = SFB_UNKNOWN_FRAME_POSITION, .frameLength = SFB_UNKNOWN_FRAME_LENGTH };
+			*playbackPosition = { .framePosition = SFBUnknownFramePosition, .frameLength = SFBUnknownFrameLength };
 		if(playbackTime)
-			*playbackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+			*playbackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 		return NO;
 	}
 
@@ -787,12 +785,12 @@ namespace {
 		*playbackPosition = currentPlaybackPosition;
 
 	if(playbackTime) {
-		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFB_UNKNOWN_TIME, .totalTime = SFB_UNKNOWN_TIME };
+		SFBAudioPlayerNodePlaybackTime currentPlaybackTime = { .currentTime = SFBUnknownTime, .totalTime = SFBUnknownTime };
 		double sampleRate = decoderState->mConverter.outputFormat.sampleRate;
 		if(sampleRate > 0) {
-			if(currentPlaybackPosition.framePosition != SFB_UNKNOWN_FRAME_POSITION)
+			if(currentPlaybackPosition.framePosition != SFBUnknownFramePosition)
 				currentPlaybackTime.currentTime = currentPlaybackPosition.framePosition / sampleRate;
-			if(currentPlaybackPosition.frameLength != SFB_UNKNOWN_FRAME_LENGTH)
+			if(currentPlaybackPosition.frameLength != SFBUnknownFrameLength)
 				currentPlaybackTime.totalTime = currentPlaybackPosition.frameLength / sampleRate;
 		}
 		*playbackTime = currentPlaybackTime;
@@ -947,7 +945,15 @@ namespace {
 		id <SFBPCMDecoding> decoder = [self dequeueDecoder];
 		if(decoder) {
 			// Create the decoder state
-			auto decoderState = new DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
+			auto decoderState = new (std::nothrow) DecoderStateData(decoder, self->_renderingFormat, kRingBufferChunkSize);
+			if(!decoderState) {
+				os_log_error(_audioPlayerNodeLog, "Unable to allocate decoder state data");
+				if([_delegate respondsToSelector:@selector(audioPlayerNode:encounteredError:)])
+					dispatch_async_and_wait(_notificationQueue, ^{
+						[_delegate audioPlayerNode:self encounteredError:[NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil]];
+					});
+				continue;
+			}
 
 			// Add the decoder state to the list of active decoders
 			auto stored = false;
@@ -1041,7 +1047,7 @@ namespace {
 				}
 
 				// Determine how many frames are available in the ring buffer
-				auto framesAvailableToWrite = _audioRingBuffer.GetFramesAvailableToWrite();
+				auto framesAvailableToWrite = _audioRingBuffer.FramesAvailableToWrite();
 
 				// Force writes to the ring buffer to be at least kRingBufferChunkSize
 				if(framesAvailableToWrite >= kRingBufferChunkSize && !(decoderState->mFlags.load() & DecoderStateData::eCancelDecodingFlag)) {
@@ -1126,13 +1132,13 @@ namespace {
 
 	while(!(_flags.load() & eAudioPlayerNodeFlagStopNotifierThread)) {
 
-		if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 4) {
+		if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= 4) {
 			uint32_t cmd;
 			/*auto bytesRead =*/ self->_renderEventsRingBuffer.Read(&cmd, 4);
 
 			switch(cmd) {
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingStarted:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
@@ -1156,7 +1162,7 @@ namespace {
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								double tolerance = 1000 / self->_audioRingBuffer.Format().mSampleRate;
 								if(abs(delta) > tolerance)
 									os_log_debug(_audioPlayerNodeLog, "Rendering started notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
@@ -1170,7 +1176,7 @@ namespace {
 					break;
 
 				case eAudioPlayerNodeRenderEventRingBufferCommandRenderingComplete:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= (8 + 8)) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= (8 + 8)) {
 						uint64_t sequenceNumber, hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&sequenceNumber, 8);
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
@@ -1193,7 +1199,7 @@ namespace {
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								double tolerance = 1000 / self->_audioRingBuffer.Format().mSampleRate;
 								if(abs(delta) > tolerance)
 									os_log_debug(_audioPlayerNodeLog, "Rendering complete notification for \"%{public}@\" arrived %.2f msec %s", [[NSFileManager defaultManager] displayNameAtPath:decoder.inputSource.url.path], delta, delta > 0 ? "late" : "early");
 #endif
@@ -1210,7 +1216,7 @@ namespace {
 					break;
 
 				case eAudioPlayerNodeRenderEventRingBufferCommandEndOfAudio:
-					if(self->_renderEventsRingBuffer.GetBytesAvailableToRead() >= 8) {
+					if(self->_renderEventsRingBuffer.BytesAvailableToRead() >= 8) {
 						uint64_t hostTime;
 						/*bytesRead =*/ self->_renderEventsRingBuffer.Read(&hostTime, 8);
 
@@ -1221,7 +1227,7 @@ namespace {
 							dispatch_after(notificationTime, _notificationQueue, ^{
 #if DEBUG
 								double delta = (ConvertHostTicksToNanos(mach_absolute_time()) - ConvertHostTicksToNanos(notificationTime)) / NSEC_PER_MSEC;
-								double tolerance = 1000 / self->_audioRingBuffer.GetFormat().mSampleRate;
+								double tolerance = 1000 / self->_audioRingBuffer.Format().mSampleRate;
 								if(abs(delta) > tolerance)
 									os_log_debug(_audioPlayerNodeLog, "End of audio notification arrived %.2f msec %s", delta, delta > 0 ? "late" : "early");
 #endif

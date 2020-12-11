@@ -11,10 +11,6 @@
 #import "NSError+SFBURLPresentation.h"
 #import "SFBAudioDecoder.h"
 
-// Constants declared in SFBDSDDecoding.h but defined here
-const NSInteger SFBPCMFramesPerDSDPacket = 8;
-const NSInteger SFBBytesPerDSDPacketPerChannel = 1;
-
 // NSError domain for DSDDecoder and subclasses
 NSErrorDomain const SFBDSDDecoderErrorDomain = @"org.sbooth.AudioEngine.DSDDecoder";
 
@@ -64,6 +60,12 @@ static NSMutableArray *_registeredSubclasses = nil;
 		[result unionSet:supportedMIMETypes];
 	}
 	return result;
+}
+
++ (SFBDSDDecoderName)decoderName
+{
+	[self doesNotRecognizeSelector:_cmd];
+	__builtin_unreachable();
 }
 
 + (BOOL)handlesPathsWithExtension:(NSString *)extension
@@ -171,6 +173,44 @@ static NSMutableArray *_registeredSubclasses = nil;
 	return self;
 }
 
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName
+{
+	return [self initWithURL:url decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithURL:(NSURL *)url decoderName:(SFBDSDDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(url != nil);
+
+	SFBInputSource *inputSource = [SFBInputSource inputSourceForURL:url flags:0 error:error];
+	if(!inputSource)
+		return nil;
+	return [self initWithInputSource:inputSource decoderName:decoderName error:error];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName
+{
+	return [self initWithInputSource:inputSource decoderName:decoderName error:nil];
+}
+
+- (instancetype)initWithInputSource:(SFBInputSource *)inputSource decoderName:(SFBDSDDecoderName)decoderName error:(NSError **)error
+{
+	NSParameterAssert(inputSource != nil);
+
+	Class subclass = [SFBDSDDecoder subclassForDecoderName:decoderName];
+	if(!subclass) {
+		os_log_debug(gSFBDSDDecoderLog, "SFBDSDDecoder unsupported decoder: %{public}@", decoderName);
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
+		return nil;
+	}
+
+	if((self = [[subclass alloc] init]))
+		_inputSource = inputSource;
+
+	return self;
+}
+
 - (void)dealloc
 {
 	[self closeReturningError:nil];
@@ -198,8 +238,8 @@ static NSMutableArray *_registeredSubclasses = nil;
 
 - (BOOL)decodeIntoBuffer:(AVAudioBuffer *)buffer error:(NSError **)error
 {
-	if(![buffer isKindOfClass:[AVAudioCompressedBuffer class]])
-		return NO;
+	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer isKindOfClass:[AVAudioCompressedBuffer class]]);
 	return [self decodeIntoBuffer:(AVAudioCompressedBuffer *)buffer packetCount:((AVAudioCompressedBuffer *)buffer).packetCapacity error:error];
 }
 
@@ -280,6 +320,17 @@ static NSMutableArray *_registeredSubclasses = nil;
 	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		NSSet *supportedMIMETypes = [subclassInfo.klass supportedMIMETypes];
 		if([supportedMIMETypes containsObject:mimeType])
+			return subclassInfo.klass;
+	}
+
+	return nil;
+}
+
++ (Class)subclassForDecoderName:(SFBDSDDecoderName)decoderName
+{
+	for(SFBDSDDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
+		SFBDSDDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
+		if(subclassDecoderName == decoderName)
 			return subclassInfo.klass;
 	}
 

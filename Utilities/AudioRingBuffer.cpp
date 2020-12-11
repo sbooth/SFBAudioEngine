@@ -18,7 +18,7 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void StoreABL(uint8_t **buffers, size_t dstOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount)
+	inline void StoreABL(uint8_t **buffers, size_t dstOffset, const AudioBufferList *bufferList, size_t srcOffset, size_t byteCount) noexcept
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 			memcpy(buffers[bufferIndex] + dstOffset, (uint8_t *)bufferList->mBuffers[bufferIndex].mData + srcOffset, byteCount);
@@ -32,7 +32,7 @@ namespace {
 	 * @param srcOffset The byte offset in \c bufferList to begin reading
 	 * @param byteCount The number of bytes per non-interleaved buffer to read and write
 	 */
-	inline void FetchABL(AudioBufferList *bufferList, size_t dstOffset, const uint8_t **buffers, size_t srcOffset, size_t byteCount)
+	inline void FetchABL(AudioBufferList *bufferList, size_t dstOffset, const uint8_t **buffers, size_t srcOffset, size_t byteCount) noexcept
 	{
 		for(UInt32 bufferIndex = 0; bufferIndex < bufferList->mNumberBuffers; ++bufferIndex)
 			memcpy((uint8_t *)bufferList->mBuffers[bufferIndex].mData + dstOffset, buffers[bufferIndex] + srcOffset, byteCount);
@@ -43,7 +43,7 @@ namespace {
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
 	 */
-	inline constexpr uint32_t NextPowerOfTwo(uint32_t x)
+	inline constexpr uint32_t NextPowerOfTwo(uint32_t x) noexcept
 	{
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
@@ -54,7 +54,7 @@ namespace {
 
 #pragma mark Creation and Destruction
 
-SFB::Audio::RingBuffer::RingBuffer()
+SFB::Audio::RingBuffer::RingBuffer() noexcept
 	: mBuffers(nullptr), mCapacityFrames(0), mCapacityFramesMask(0), mWritePointer(0), mReadPointer(0)
 {
 	assert(mWritePointer.is_lock_free());
@@ -67,7 +67,7 @@ SFB::Audio::RingBuffer::~RingBuffer()
 
 #pragma mark Buffer Management
 
-bool SFB::Audio::RingBuffer::Allocate(const Format& format, size_t capacityFrames)
+bool SFB::Audio::RingBuffer::Allocate(const class Format& format, size_t capacityFrames) noexcept
 {
 	// Only non-interleaved formats are supported
 	if(format.IsInterleaved())
@@ -87,7 +87,7 @@ bool SFB::Audio::RingBuffer::Allocate(const Format& format, size_t capacityFrame
 
 	// One memory allocation holds everything- first the pointers followed by the deinterleaved channels
 	size_t allocationSize = (capacityBytes + sizeof(uint8_t *)) * format.mChannelsPerFrame;
-	uint8_t *memoryChunk = (uint8_t *)malloc(allocationSize);
+	uint8_t *memoryChunk = (uint8_t *)std::malloc(allocationSize);
 	if(nullptr == memoryChunk)
 		return false;
 
@@ -108,21 +108,27 @@ bool SFB::Audio::RingBuffer::Allocate(const Format& format, size_t capacityFrame
 	return true;
 }
 
-void SFB::Audio::RingBuffer::Deallocate()
+void SFB::Audio::RingBuffer::Deallocate() noexcept
 {
 	if(mBuffers) {
-		free(mBuffers);
+		std::free(mBuffers);
 		mBuffers = nullptr;
+
+		mCapacityFrames = 0;
+		mCapacityFramesMask = 0;
+
+		mReadPointer = 0;
+		mWritePointer = 0;
 	}
 }
 
-void SFB::Audio::RingBuffer::Reset()
+void SFB::Audio::RingBuffer::Reset() noexcept
 {
 	mReadPointer = 0;
 	mWritePointer = 0;
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
+size_t SFB::Audio::RingBuffer::FramesAvailableToRead() const noexcept
 {
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
 	auto readPointer = mReadPointer.load(std::memory_order_acquire);
@@ -133,7 +139,7 @@ size_t SFB::Audio::RingBuffer::GetFramesAvailableToRead() const
 		return (writePointer - readPointer + mCapacityFrames) & mCapacityFramesMask;
 }
 
-size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
+size_t SFB::Audio::RingBuffer::FramesAvailableToWrite() const noexcept
 {
 	auto writePointer = mWritePointer.load(std::memory_order_acquire);
 	auto readPointer = mReadPointer.load(std::memory_order_acquire);
@@ -146,7 +152,7 @@ size_t SFB::Audio::RingBuffer::GetFramesAvailableToWrite() const
 		return mCapacityFrames - 1;
 }
 
-size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCount) noexcept
 {
 	if(nullptr == bufferList || 0 == frameCount)
 		return 0;
@@ -183,7 +189,7 @@ size_t SFB::Audio::RingBuffer::Read(AudioBufferList *bufferList, size_t frameCou
 	return framesToRead;
 }
 
-size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t frameCount)
+size_t SFB::Audio::RingBuffer::Write(const AudioBufferList *bufferList, size_t frameCount) noexcept
 {
 	if(nullptr == bufferList || 0 == frameCount)
 		return 0;

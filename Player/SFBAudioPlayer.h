@@ -167,16 +167,16 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - Playback Properties
 
 /// Returns the frame position in the current decoder or \c SFBUnknownFramePosition if the current decoder is \c nil
-@property (nonatomic, readonly) AVAudioFramePosition framePosition;
+@property (nonatomic, readonly) AVAudioFramePosition framePosition NS_REFINED_FOR_SWIFT;
 /// Returns the frame length of the current decoder or \c SFBUnknownFrameLength if the current decoder is \c nil
-@property (nonatomic, readonly) AVAudioFramePosition frameLength;
+@property (nonatomic, readonly) AVAudioFramePosition frameLength NS_REFINED_FOR_SWIFT;
 /// Returns the playback position in the current decoder or \c {SFBUnknownFramePosition, \c SFBUnknownFrameLength} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackPosition playbackPosition NS_REFINED_FOR_SWIFT;
 
 /// Returns the current time in the current decoder or \c SFBUnknownTime if the current decoder is \c nil
-@property (nonatomic, readonly) NSTimeInterval currentTime;
+@property (nonatomic, readonly) NSTimeInterval currentTime NS_REFINED_FOR_SWIFT;
 /// Returns the total time of the current decoder or \c SFBUnknownTime if the current decoder is \c nil
-@property (nonatomic, readonly) NSTimeInterval totalTime;
+@property (nonatomic, readonly) NSTimeInterval totalTime NS_REFINED_FOR_SWIFT;
 /// Returns the playback time in the current decoder or \c {SFBUnknownTime, \c SFBUnknownTime} if the current decoder is \c nil
 @property (nonatomic, readonly) SFBAudioPlayerPlaybackTime playbackTime NS_REFINED_FOR_SWIFT;
 
@@ -271,6 +271,7 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 
 #pragma mark - SFBAudioPlayerDelegate
 
+/// Delegate methods supported by \c SFBAudioPlayer
 NS_SWIFT_NAME(AudioPlayer.Delegate) @protocol SFBAudioPlayerDelegate <NSObject>
 @optional
 /// Called to notify the delegate before decoding the first frame of audio

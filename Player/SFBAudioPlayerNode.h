@@ -23,10 +23,6 @@ struct SFBAudioPlayerNodePlaybackPosition {
 } /*NS_SWIFT_UNAVAILABLE("Use AudioPlayerNode.PlaybackPosition instead")*/;
 typedef struct SFBAudioPlayerNodePlaybackPosition SFBAudioPlayerNodePlaybackPosition;
 
-/// Value representing an invalid or unknown time
-extern const NSTimeInterval SFBUnknownTime NS_SWIFT_NAME(UnknownTime);
-#define SFB_UNKNOWN_TIME ((NSTimeInterval)-1)
-
 /// Playback time information for \c SFBAudioPlayerNode
 struct SFBAudioPlayerNodePlaybackTime {
 	/// The current time or \c SFBUnknownTime if unknown

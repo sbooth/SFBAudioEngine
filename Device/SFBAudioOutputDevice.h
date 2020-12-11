@@ -11,6 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// An \c SFBAudioDevice supporting output
 NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 
 #pragma mark - Device Properties

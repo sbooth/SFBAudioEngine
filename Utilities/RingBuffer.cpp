@@ -15,7 +15,7 @@ namespace {
 	 * @param x A value in the range [2..2147483648]
 	 * @return The smallest power of two greater than \c x
 	 */
-	inline constexpr uint32_t NextPowerOfTwo(uint32_t x)
+	inline constexpr uint32_t NextPowerOfTwo(uint32_t x) noexcept
 	{
 		assert(x > 1);
 		assert(x <= ((UINT32_MAX / 2) + 1));
@@ -26,7 +26,7 @@ namespace {
 
 #pragma mark Creation and Destruction
 
-SFB::RingBuffer::RingBuffer()
+SFB::RingBuffer::RingBuffer() noexcept
 	: mBuffer(nullptr), mCapacityBytes(0), mCapacityBytesMask(0), mWritePosition(0), mReadPosition(0)
 {
 	assert(mWritePosition.is_lock_free());
@@ -39,45 +39,47 @@ SFB::RingBuffer::~RingBuffer()
 
 #pragma mark Buffer Management
 
-bool SFB::RingBuffer::Allocate(size_t capacityBytes)
+bool SFB::RingBuffer::Allocate(size_t capacityBytes) noexcept
 {
+	if(capacityBytes < 2 || capacityBytes > 0x80000000)
+		return false;
+
 	Deallocate();
 
 	// Round up to the next power of two
 	capacityBytes = NextPowerOfTwo((uint32_t)capacityBytes);
 
+	mBuffer = (uint8_t *)std::malloc(capacityBytes);
+	if(!mBuffer)
+		return false;
+
 	mCapacityBytes = capacityBytes;
 	mCapacityBytesMask = capacityBytes - 1;
-
-	try {
-		mBuffer = new uint8_t [mCapacityBytes];
-	}
-
-	catch(const std::exception& e) {
-		return false;
-	}
-
-	mReadPosition = 0;
-	mWritePosition = 0;
 
 	return true;
 }
 
-void SFB::RingBuffer::Deallocate()
+void SFB::RingBuffer::Deallocate() noexcept
 {
 	if(mBuffer) {
-		delete [] mBuffer;
+		std::free(mBuffer);
 		mBuffer = nullptr;
+
+		mCapacityBytes = 0;
+		mCapacityBytesMask = 0;
+
+		mReadPosition = 0;
+		mWritePosition = 0;
 	}
 }
 
-void SFB::RingBuffer::Reset()
+void SFB::RingBuffer::Reset() noexcept
 {
 	mReadPosition = 0;
 	mWritePosition = 0;
 }
 
-size_t SFB::RingBuffer::GetBytesAvailableToRead() const
+size_t SFB::RingBuffer::BytesAvailableToRead() const noexcept
 {
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
 	auto readPosition = mReadPosition.load(std::memory_order_acquire);
@@ -88,7 +90,7 @@ size_t SFB::RingBuffer::GetBytesAvailableToRead() const
 		return (writePosition - readPosition + mCapacityBytes) & mCapacityBytesMask;
 }
 
-size_t SFB::RingBuffer::GetBytesAvailableToWrite() const
+size_t SFB::RingBuffer::BytesAvailableToWrite() const noexcept
 {
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
 	auto readPosition = mReadPosition.load(std::memory_order_acquire);
@@ -101,7 +103,7 @@ size_t SFB::RingBuffer::GetBytesAvailableToWrite() const
 		return mCapacityBytes - 1;
 }
 
-size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount)
+size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount) noexcept
 {
 	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
@@ -132,7 +134,7 @@ size_t SFB::RingBuffer::Read(void *destinationBuffer, size_t byteCount)
 	return bytesToRead;
 }
 
-size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const
+size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const noexcept
 {
 	if(nullptr == destinationBuffer || 0 == byteCount)
 		return 0;
@@ -161,7 +163,7 @@ size_t SFB::RingBuffer::Peek(void *destinationBuffer, size_t byteCount) const
 	return bytesToRead;
 }
 
-size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount)
+size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount) noexcept
 {
 	if(nullptr == sourceBuffer || 0 == byteCount)
 		return 0;
@@ -194,17 +196,17 @@ size_t SFB::RingBuffer::Write(const void *sourceBuffer, size_t byteCount)
 	return bytesToWrite;
 }
 
-void SFB::RingBuffer::AdvanceReadPosition(size_t byteCount)
+void SFB::RingBuffer::AdvanceReadPosition(size_t byteCount) noexcept
 {
 	mReadPosition.store((mReadPosition.load(std::memory_order_acquire) + byteCount) & mCapacityBytesMask, std::memory_order_release);
 }
 
-void SFB::RingBuffer::AdvanceWritePosition(size_t byteCount)
+void SFB::RingBuffer::AdvanceWritePosition(size_t byteCount) noexcept
 {
 	mWritePosition.store((mWritePosition.load(std::memory_order_acquire) + byteCount) & mCapacityBytesMask, std::memory_order_release);
 }
 
-SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
+SFB::RingBuffer::BufferPair SFB::RingBuffer::ReadVector() const noexcept
 {
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
 	auto readPosition = mReadPosition.load(std::memory_order_acquire);
@@ -226,7 +228,7 @@ SFB::RingBuffer::BufferPair SFB::RingBuffer::GetReadVector() const
 	return readVector;
 }
 
-SFB::RingBuffer::BufferPair SFB::RingBuffer::GetWriteVector() const
+SFB::RingBuffer::BufferPair SFB::RingBuffer::WriteVector() const noexcept
 {
 	auto writePosition = mWritePosition.load(std::memory_order_acquire);
 	auto readPosition = mReadPosition.load(std::memory_order_acquire);

@@ -11,6 +11,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameWavPack = @"org.sbooth.AudioEngine.Decoder.WavPack";
+
 #define BUFFER_SIZE_FRAMES 2048
 
 static int32_t read_bytes_callback(void *id, void *data, int32_t bcount)
@@ -147,6 +149,11 @@ static int can_seek_callback(void *id)
 	return [NSSet setWithArray:@[@"audio/wavpack", @"audio/x-wavpack"]];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameWavPack;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return (WavpackGetMode(_wpc) & MODE_LOSSLESS) == MODE_LOSSLESS;
@@ -172,7 +179,7 @@ static int can_seek_callback(void *id)
 	if(!_wpc) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid WavPack file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a WavPack file", @"")
@@ -219,7 +226,7 @@ static int can_seek_callback(void *id)
 
 		processingStreamDescription.mBytesPerPacket		= 4;
 		processingStreamDescription.mFramesPerPacket	= 1;
-		processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+		processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 		_processingFormat = [[AVAudioFormat alloc] initWithStreamDescription:&processingStreamDescription channelLayout:channelLayout];
 	}
@@ -229,7 +236,7 @@ static int can_seek_callback(void *id)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDWavPack;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatWavPack;
 
 	sourceStreamDescription.mSampleRate			= WavpackGetSampleRate(_wpc);
 	sourceStreamDescription.mChannelsPerFrame	= (UInt32)WavpackGetNumChannels(_wpc);
@@ -241,6 +248,8 @@ static int can_seek_callback(void *id)
 	_buffer = malloc(sizeof(int32_t) * (size_t)BUFFER_SIZE_FRAMES * (size_t)WavpackGetNumChannels(_wpc));
 	if(!_buffer) {
 		WavpackCloseFile(_wpc);
+		_wpc = NULL;
+
 		if(error)
 			*error = [NSError errorWithDomain:NSPOSIXErrorDomain code:ENOMEM userInfo:nil];
 
@@ -282,17 +291,16 @@ static int can_seek_callback(void *id)
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesRemaining = frameLength;
 	while(framesRemaining > 0) {

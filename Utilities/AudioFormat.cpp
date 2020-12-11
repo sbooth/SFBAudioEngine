@@ -7,12 +7,12 @@
 
 namespace {
 
-	static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved)
+	static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved) noexcept
 	{
-		return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? ((UInt32)kAudioFormatFlagIsBigEndian) : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? ((UInt32)kAudioFormatFlagIsNonInterleaved) : 0);
+		return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? kAudioFormatFlagIsBigEndian : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? kAudioFormatFlagIsNonInterleaved : 0);
 	}
 
-	static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sampleRate, UInt32 channelsPerFrame, UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved)
+	static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sampleRate, UInt32 channelsPerFrame, UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, bool isFloat, bool isBigEndian, bool isNonInterleaved) noexcept
 	{
 		asbd->mFormatID = kAudioFormatLinearPCM;
 		asbd->mFormatFlags = CalculateLPCMFlags(validBitsPerChannel, totalBitsPerChannel, isFloat, isBigEndian, isNonInterleaved);
@@ -28,7 +28,7 @@ namespace {
 
 }
 
-SFB::Audio::Format::Format(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved)
+SFB::Audio::Format::Format(CommonPCMFormat format, Float32 sampleRate, UInt32 channelsPerFrame, bool isInterleaved) noexcept
 {
 	assert(0 < sampleRate);
 	assert(0 < channelsPerFrame);
@@ -51,13 +51,13 @@ SFB::Audio::Format::Format(CommonPCMFormat format, Float32 sampleRate, UInt32 ch
 	}
 }
 
-size_t SFB::Audio::Format::FrameCountToByteCount(size_t frameCount) const
+size_t SFB::Audio::Format::FrameCountToByteCount(size_t frameCount) const noexcept
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:
+		case kSFBAudioFormatDSD:
 			return frameCount / 8;
 
-		case kAudioFormatDoP:
+		case kSFBAudioFormatDoP:
 		case kAudioFormatLinearPCM:
 			return frameCount * mBytesPerFrame;
 
@@ -66,13 +66,13 @@ size_t SFB::Audio::Format::FrameCountToByteCount(size_t frameCount) const
 	}
 }
 
-size_t SFB::Audio::Format::ByteCountToFrameCount(size_t byteCount) const
+size_t SFB::Audio::Format::ByteCountToFrameCount(size_t byteCount) const noexcept
 {
 	switch(mFormatID) {
-		case kAudioFormatDirectStreamDigital:
+		case kSFBAudioFormatDSD:
 			return byteCount * 8;
 
-		case kAudioFormatDoP:
+		case kSFBAudioFormatDoP:
 		case kAudioFormatLinearPCM:
 			return byteCount / mBytesPerFrame;
 
@@ -81,7 +81,7 @@ size_t SFB::Audio::Format::ByteCountToFrameCount(size_t byteCount) const
 	}
 }
 
-bool SFB::Audio::Format::GetNonInterleavedEquivalent(Format& format) const
+bool SFB::Audio::Format::GetNonInterleavedEquivalent(Format& format) const noexcept
 {
 	if(!IsPCM())
 		return false;
@@ -97,7 +97,7 @@ bool SFB::Audio::Format::GetNonInterleavedEquivalent(Format& format) const
 	return true;
 }
 
-bool SFB::Audio::Format::GetInterleavedEquivalent(Format& format) const
+bool SFB::Audio::Format::GetInterleavedEquivalent(Format& format) const noexcept
 {
 	if(!IsPCM())
 		return false;
@@ -113,7 +113,7 @@ bool SFB::Audio::Format::GetInterleavedEquivalent(Format& format) const
 	return true;
 }
 
-bool SFB::Audio::Format::GetStandardEquivalent(Format& format) const
+bool SFB::Audio::Format::GetStandardEquivalent(Format& format) const noexcept
 {
 	if(!IsPCM())
 		return false;
@@ -124,7 +124,7 @@ bool SFB::Audio::Format::GetStandardEquivalent(Format& format) const
 }
 
 // Most of this is stolen from Apple's CAStreamBasicDescription::Print()
-SFB::CFString SFB::Audio::Format::Description() const
+SFB::CFString SFB::Audio::Format::Description() const noexcept
 {
 	CFMutableString result{ CFStringCreateMutable(kCFAllocatorDefault, 0) };
 
@@ -137,7 +137,7 @@ SFB::CFString SFB::Audio::Format::Description() const
 
 	if(kAudioFormatLinearPCM == mFormatID) {
 		// Bit depth
-		UInt32 fractionalBits = ((0x3f << 7)/*kLinearPCMFormatFlagsSampleFractionMask*/ & mFormatFlags) >> 7/*kLinearPCMFormatFlagsSampleFractionShift*/;
+		UInt32 fractionalBits = (kLinearPCMFormatFlagsSampleFractionMask & mFormatFlags) >> kLinearPCMFormatFlagsSampleFractionShift;
 		if(0 < fractionalBits)
 			CFStringAppendFormat(result, NULL, CFSTR("%d.%d-bit"), mBitsPerChannel - fractionalBits, fractionalBits);
 		else

@@ -23,6 +23,7 @@ typedef NS_OPTIONS(NSUInteger, SFBAudioMetadataKind) {
 	SFBAudioMetadataKindReplayGain		= (1u << 4)
 } NS_SWIFT_NAME(AudioMetadata.Kind);
 
+/// A key in an audio metadata dictionary
 typedef NSString * SFBAudioMetadataKey NS_TYPED_ENUM NS_SWIFT_NAME(AudioMetadata.Key);
 
 // Basic metadata dictionary keys

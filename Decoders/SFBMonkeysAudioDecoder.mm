@@ -19,6 +19,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameMonkeysAudio = @"org.sbooth.AudioEngine.Decoder.MonkeysAudio";
+
 namespace {
 
 	// The I/O interface for MAC
@@ -159,6 +161,11 @@ namespace {
 	return [NSSet setWithArray:@[@"audio/monkeys-audio", @"audio/x-monkeys-audio"]];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameMonkeysAudio;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return YES;
@@ -174,7 +181,7 @@ namespace {
 	if(!decompressor) {
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Monkey's Audio file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Monkey's Audio file", @"")
@@ -208,7 +215,7 @@ namespace {
 
 	processingStreamDescription.mBytesPerPacket		= (processingStreamDescription.mBitsPerChannel / 8) * processingStreamDescription.mChannelsPerFrame;
 	processingStreamDescription.mFramesPerPacket	= 1;
-	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket * processingStreamDescription.mFramesPerPacket;
+	processingStreamDescription.mBytesPerFrame		= processingStreamDescription.mBytesPerPacket / processingStreamDescription.mFramesPerPacket;
 
 	processingStreamDescription.mReserved			= 0;
 
@@ -217,7 +224,7 @@ namespace {
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription{};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDMonkeysAudio;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatMonkeysAudio;
 
 	sourceStreamDescription.mBitsPerChannel		= (UInt32)_decompressor->GetInfo(APE::APE_INFO_BITS_PER_SAMPLE);
 	sourceStreamDescription.mSampleRate			= _decompressor->GetInfo(APE::APE_INFO_SAMPLE_RATE);
@@ -254,17 +261,16 @@ namespace {
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	int64_t blocksRead = 0;
 	if(_decompressor->GetData((char *)buffer.audioBufferList->mBuffers[0].mData, (int64_t)frameLength, &blocksRead)) {

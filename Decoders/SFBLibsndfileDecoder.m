@@ -11,9 +11,11 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameLibsndfile = @"org.sbooth.AudioEngine.Decoder.Libsndfile";
+
 static AudioFormatFlags CalculateLPCMFlags(UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian, BOOL isNonInterleaved)
 {
-	return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? ((UInt32)kAudioFormatFlagIsBigEndian) : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? ((UInt32)kAudioFormatFlagIsNonInterleaved) : 0);
+	return (isFloat ? kAudioFormatFlagIsFloat : kAudioFormatFlagIsSignedInteger) | (isBigEndian ? kAudioFormatFlagIsBigEndian : 0) | ((validBitsPerChannel == totalBitsPerChannel) ? kAudioFormatFlagIsPacked : kAudioFormatFlagIsAlignedHigh) | (isNonInterleaved ? kAudioFormatFlagIsNonInterleaved : 0);
 }
 
 static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sampleRate, UInt32 channelsPerFrame, UInt32 validBitsPerChannel, UInt32 totalBitsPerChannel, BOOL isFloat, BOOL isBigEndian, BOOL isNonInterleaved)
@@ -31,11 +33,11 @@ static void FillOutASBDForLPCM(AudioStreamBasicDescription *asbd, Float64 sample
 }
 
 enum ReadMethod {
-	Unknown = 0,
-	Short = 1,
-	Int = 2,
-	Float = 3,
-	Double = 4
+	Unknown,
+	Short,
+	Int,
+	Float,
+	Double
 };
 
 static sf_count_t my_sf_vio_get_filelen(void *user_data)
@@ -126,23 +128,30 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 + (NSSet *)supportedPathExtensions
 {
-	int majorCount = 0;
-	sf_command(NULL, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
+	static NSSet *pathExtensions = nil;
 
-	NSMutableSet *pathExtensions = [NSMutableSet setWithCapacity:(NSUInteger)majorCount];
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		int majorCount = 0;
+		sf_command(NULL, SFC_GET_FORMAT_MAJOR_COUNT, &majorCount, sizeof(int));
 
-	// Loop through each major mode
-	for(int i = 0; i < majorCount; ++i) {
-		SF_FORMAT_INFO formatInfo;
-		formatInfo.format = i;
-		if(!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
-			NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
-			if(pathExtension)
-				[pathExtensions addObject:pathExtension];
+		NSMutableSet *majorModeExtensions = [NSMutableSet setWithCapacity:(NSUInteger)majorCount];
+
+		// Loop through each major mode
+		for(int i = 0; i < majorCount; ++i) {
+			SF_FORMAT_INFO formatInfo;
+			formatInfo.format = i;
+			if(!sf_command(NULL, SFC_GET_FORMAT_MAJOR, &formatInfo, sizeof(formatInfo))) {
+				NSString *pathExtension = [NSString stringWithUTF8String:formatInfo.extension];
+				if(pathExtension)
+					[majorModeExtensions addObject:pathExtension];
+			}
+			else
+				os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
 		}
-		else
-			os_log_debug(gSFBAudioDecoderLog, "sf_command (SFC_GET_FORMAT_MAJOR) %d failed", i);
-	}
+
+		pathExtensions = [majorModeExtensions copy];
+	});
 
 	return pathExtensions;
 }
@@ -150,6 +159,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 + (NSSet *)supportedMIMETypes
 {
 	return [NSSet set];
+}
+
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameLibsndfile;
 }
 
 - (BOOL)decodingIsLossless
@@ -193,7 +207,7 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The format of the file “%@” was not recognized.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"File Format Not Recognized", @"")
@@ -332,23 +346,19 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
 
+	if(frameLength == 0)
+		return YES;
+
 	sf_count_t framesRead = 0;
 	switch(_readMethod) {
-		case Unknown:
-			/* Do nothing */
-			break;
 		case Short:
 			framesRead = sf_readf_short(_sndfile, (short *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
 			break;
@@ -361,6 +371,11 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 		case Double:
 			framesRead = sf_readf_double(_sndfile, (double *)buffer.audioBufferList->mBuffers[0].mData, frameLength);
 			break;
+		default:
+			os_log_error(gSFBAudioDecoderLog, "Unknown libsndfile read method: %d", _readMethod);
+			if(error)
+				*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
+			return NO;
 	}
 
 	buffer.frameLength = (AVAudioFrameCount)framesRead;
@@ -368,6 +383,8 @@ static sf_count_t my_sf_vio_tell(void *user_data)
 	int result = sf_error(_sndfile);
 	if(result) {
 		os_log_error(gSFBAudioDecoderLog, "sf_readf_XXX failed: %{public}s", sf_error_number(result));
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 

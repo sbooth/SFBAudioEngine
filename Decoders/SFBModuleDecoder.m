@@ -11,6 +11,8 @@
 
 #import "NSError+SFBURLPresentation.h"
 
+SFBAudioDecoderName const SFBAudioDecoderNameModule = @"org.sbooth.AudioEngine.Decoder.Module";
+
 #define DUMB_SAMPLE_RATE	65536
 #define DUMB_CHANNELS		2
 #define DUMB_BIT_DEPTH		16
@@ -115,6 +117,11 @@ static dumb_off_t get_size_callback(void *f)
 	return [NSSet setWithArray:@[@"audio/it", @"audio/xm", @"audio/s3m", @"audio/mod", @"audio/x-mod"]];
 }
 
++ (SFBAudioDecoderName)decoderName
+{
+	return SFBAudioDecoderNameModule;
+}
+
 - (BOOL)decodingIsLossless
 {
 	return NO;
@@ -132,7 +139,7 @@ static dumb_off_t get_size_callback(void *f)
 	// Set up the source format
 	AudioStreamBasicDescription sourceStreamDescription = {0};
 
-	sourceStreamDescription.mFormatID			= SFBAudioFormatIDModule;
+	sourceStreamDescription.mFormatID			= kSFBAudioFormatModule;
 
 	sourceStreamDescription.mSampleRate			= DUMB_SAMPLE_RATE;
 	sourceStreamDescription.mChannelsPerFrame	= DUMB_CHANNELS;
@@ -166,17 +173,16 @@ static dumb_off_t get_size_callback(void *f)
 - (BOOL)decodeIntoBuffer:(AVAudioPCMBuffer *)buffer frameLength:(AVAudioFrameCount)frameLength error:(NSError **)error
 {
 	NSParameterAssert(buffer != nil);
+	NSParameterAssert([buffer.format isEqual:_processingFormat]);
 
 	// Reset output buffer data size
 	buffer.frameLength = 0;
 
-	if(![buffer.format isEqual:_processingFormat]) {
-		os_log_debug(gSFBAudioDecoderLog, "-decodeAudio:frameLength:error: called with invalid parameters");
-		return NO;
-	}
-
 	if(frameLength > buffer.frameCapacity)
 		frameLength = buffer.frameCapacity;
+
+	if(frameLength == 0)
+		return YES;
 
 	AVAudioFrameCount framesProcessed = 0;
 
@@ -234,6 +240,8 @@ static dumb_off_t get_size_callback(void *f)
 	_df = dumbfile_open_ex((__bridge void *)self, &_dfs);
 	if(!_df) {
 		os_log_error(gSFBAudioDecoderLog, "dumbfile_open_ex failed");
+		if(error)
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeInternalError userInfo:nil];
 		return NO;
 	}
 
@@ -244,7 +252,7 @@ static dumb_off_t get_size_callback(void *f)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Module file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Module file", @"")
@@ -269,7 +277,7 @@ static dumb_off_t get_size_callback(void *f)
 
 		if(error)
 			*error = [NSError SFB_errorWithDomain:SFBAudioDecoderErrorDomain
-											 code:SFBAudioDecoderErrorCodeInputOutput
+											 code:SFBAudioDecoderErrorCodeInvalidFormat
 					descriptionFormatStringForURL:NSLocalizedString(@"The file “%@” is not a valid Module file.", @"")
 											  url:_inputSource.url
 									failureReason:NSLocalizedString(@"Not a Module file", @"")

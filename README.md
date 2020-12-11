@@ -1,64 +1,31 @@
 # SFBAudioEngine
 
-SFBAudioEngine is a framework for macOS and iOS audio playback using Swift or Objective-C. SFBAudioEngine supports the following formats:
+SFBAudioEngine is a toolbox of powerful audio functionality for both macOS and iOS. SFBAudioEngine supports:
 
-* WAVE
-* AIFF
-* Apple Lossless
-* AAC
-* FLAC
-* MP3
-* WavPack
-* Ogg Vorbis
-* Ogg Speex
-* Ogg Opus
-* Musepack
-* Monkey's Audio
-* True Audio
+* [Audio decoding](#decoding)
+* [Audio playback](#playback)
+* [Audio encoding](#encoding)
+* [Audio format conversion](#conversion)
+* [Audio properties information and metadata editing](#properties-and-metadata)
+
+SFBAudioEngine is usable from both Swift and Objective-C.
+
+## Format Support
+
+SFBAudioEngine supports most audio formats. In addition to all formats supported by [Core Audio](https://developer.apple.com/library/archive/documentation/MusicAudio/Conceptual/CoreAudioOverview/Introduction/Introduction.html) SFBAudioEngine supports:
+
+* [Ogg Speex](https://www.speex.org)
+* [Ogg Vorbis](https://xiph.org/vorbis/)
+* [Monkey's Audio](https://www.monkeysaudio.com)
+* [Musepack](https://www.musepack.net)
 * Shorten
-* All formats supported by libsndfile
-* All formats supported by Core Audio
+* True Audio
+* [WavPack](http://www.wavpack.com)
+* All formats supported by [libsndfile](http://libsndfile.github.io/libsndfile/)
 * DSD to PCM conversion for DSD64
+* DSD decoding for DSF and DSDIFF with support for DSD over PCM (DoP)
 
-In addition to playback SFBAudioEngine supports reading and writing of metadata for most supported formats.
-
-## Requirements
-
-macOS 10.15+ or iOS 14.0+
-
-## Building SFBAudioEngine
-
-1. `git clone git@github.com:sbooth/SFBAudioEngine.git --recurse-submodules`
-2. `cd SFBAudioEngine`
-3. `make -C XCFrameworks install`
-
-The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
-
-The included `Makefile` may also be used to create the build products:
-
-### macOS Framework Build
-
-`make archive/macOS.xcarchive`
-
-### macOS Catalyst Framework Build
-
-`make archive/macOS-Catalyst.xcarchive`
-
-### iOS Framework Build
-
-`make archive/iOS.xcarchive`
-
-### iOS Simulator Framework Build
-
-`make archive/iOS-Simulator.xcarchive`
-
-### XCFramework Build
-
-`make`
-
-### SimplePlayer
-
-Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
+[FLAC](https://xiph.org/flac/), [Ogg Opus](https://opus-codec.org), and MP3 are natively supported by Core Audio, however SFBAudioEngine provides its own encoders and decoders for these formats.
 
 ## Quick Start
 
@@ -80,15 +47,65 @@ if let audioFile = try? AudioFile(readingPropertiesAndMetadataFrom: url) {
 }
 ~~~
 
-## Design
+Want to convert a WAVE file to FLAC?
 
-### [Audio Decoders](Decoders/)
+~~~swift
+let inputURL = URL(fileURLWithPath: "music.wav")
+let outputURL = URL(fileURLWithPath: "music.flac")
+try AudioConverter.convert(inputURL, to: outputURL)
+~~~
 
-Audio decoders in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
+The output file's format is inferred from the file extension.
 
-All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
+More complex conversions are supported including writing to `Data` instead of files:
+
+~~~swift
+let output = OutputSource.makeForData()
+let encoder = try AudioEncoder(outputSource: output, encoderName: .coreAudio)
+encoder.settings = [
+    .coreAudioFileTypeID: kAudioFileM4AType,
+    .coreAudioFormatID: kAudioFormatMPEG4AAC,
+    .coreAudioAudioConverterPropertySettings: [kAudioConverterCodecQuality: kAudioConverterQuality_High]
+]
+try AudioConverter.convert(inputURL, using: encoder)
+// Encoder output is in `output.data`
+~~~
+
+## Requirements
+
+macOS 10.15+ or iOS 14.0+
+
+## Building SFBAudioEngine
+
+1. `git clone git@github.com:sbooth/SFBAudioEngine.git --recurse-submodules`
+2. `cd SFBAudioEngine`
+3. `make -C XCFrameworks install`
+
+The project file contains targets for macOS and iOS frameworks. The frameworks are signed to run locally by default. If you are using the hardened runtime you will need to select a team for signing.
+
+The included `Makefile` may also be used to create the build products:
+
+| Target | `make` Command |
+| --- | --- |
+| macOS Framework | `make archive/macOS.xcarchive` |
+| macOS Catalyst Framework | `make archive/macOS-Catalyst.xcarchive` |
+| iOS Framework | `make archive/iOS.xcarchive` |
+| iOS Simulator Framework | `make archive/iOS-Simulator.xcarchive` |
+| XCFramework | `make` |
+
+### SimplePlayer
+
+Open [SimplePlayer](SimplePlayer-macOS/), build, and play something!
+
+## Decoding
+
+[Audio decoders](Decoders/) in SFBAudioEngine are broadly divided into two categories, those producing PCM output and those producing DSD output. Audio decoders read data from an [SFBInputSource](Input/SFBInputSource.h) which may refer to a file, buffer, or network source.
+
+All audio decoders in SFBAudioEngine implement the [SFBAudioDecoding](Decoders/SFBAudioDecoding.h) protocol. PCM-producing decoders additionally implement [SFBPCMDecoding](Decoders/SFBPCMDecoding.h) while DSD decoders implement [SFBDSDDecoding](Decoders/SFBDSDDecoding.h).
 
 Three special decoder subclasses that wrap an underlying audio decoder instance are also provided: [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h), [SFBDoPDecoder](Decoders/SFBDoPDecoder.h), and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h). For seekable inputs, [SFBLoopableRegionDecoder](Decoders/SFBLoopableRegionDecoder.h) allows arbitrary looping and repeating of a specified PCM decoder segment. [SFBDoPDecoder](Decoders/SFBDoPDecoder.h) and [SFBDSDPCMDecoder](Decoders/SFBDSDPCMDecoder.h) wrap a DSD decoder providing DSD over PCM (DoP) and PCM output respectively.
+
+## Playback
 
 ### [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h)
 
@@ -98,9 +115,21 @@ Three special decoder subclasses that wrap an underlying audio decoder instance 
 
 [SFBAudioPlayer](Player/SFBAudioPlayer.h) wraps an [AVAudioEngine](https://developer.apple.com/documentation/avfoundation/avaudioengine) processing graph driven by [SFBAudioPlayerNode](Player/SFBAudioPlayerNode.h). [SFBAudioPlayer](Player/SFBAudioPlayer.h) provides complete player functionality with no required configuration but also allows customization of the underlying processing graph as well as rich status notifications through delegate callbacks.
 
-### [Audio Properties and Metadata](Metadata/)
+## Encoding
 
-Audio properties and metadata are accessed from instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/AudioMetada.h) is writable for most formats.
+[Audio encoders](Encoders/) in SFBAudioEngine process input data and convert it to their output format. Audio encoders write data to an [SFBOutputSource](Output/SFBOutputSource.h) which may refer to a file, buffer, or memory source.
+
+All audio encoders in SFBAudioEngine implement the [SFBAudioEncoding](Encoders/SFBAudioEncoding.h) protocol. PCM-consuming encoders additionally implement [SFBPCMEncoding](Encoders/SFBPCMEncoding.h). Currently there are no encoders consuming DSD in SFBAudioEngine.
+
+Encoders don't support arbitrary input formats. The processing format used by an encoder is derived from a desired format combined with the encoder's settings.
+
+## Conversion
+
+[SFBAudioConverter](Conversion/SFBAudioConverter.h) supports high level conversion operations. An audio converter pulls input data from a decoder, converts the data to the encoder's processing format, and pushes the data to the encoder. At the completion of conversion metadata is written, if supported.
+
+## Properties and Metadata
+
+Audio properties and metadata are accessed via instances of [SFBAudioFile](Metadata/SFBAudioFile.h). [Audio properties](Metadata/SFBAudioProperties.h) are read-only while [metadata](Metadata/SFBAudioMetadata.h) is writable for most formats. Audio metadata may be obtained from an instance of [SFBAudioFile](Metadata/SFBAudioFile.h) or instantiated directly. 
 
 ## Sample Audio Players
 
@@ -121,3 +150,9 @@ Two versions of SimplePlayer, one for macOS and one for iOS, are provided illust
 ## License
 
 SFBAudioEngine is released under the [MIT License](https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt).
+
+The open-source projects providing support for the various audio formats are subject to their own licenses that are compatible with the MIT license when used with SFBAudioEngine's default build configuration. For information on the specific licenses for each project see the README in the project's folder in [XCFrameworks](https://github.com/sbooth/AudioXCFrameworks/).
+
+### LGPL Notes
+
+In order to maintain compatibility with the LGPL used by [libsndfile](http://libsndfile.github.io/libsndfile/), [mpg123](https://www.mpg123.de), [libtta-cpp](https://sourceforge.net/projects/tta/), [lame](https://lame.sourceforge.io), and the Musepack encoder dynamic linking is required.
