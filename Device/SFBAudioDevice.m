@@ -7,6 +7,7 @@
 
 #import "SFBAudioDevice.h"
 
+#import "SFBAggregateAudioDevice.h"
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBAudioDeviceNotifier.h"
 #import "SFBAudioOutputDevice.h"
@@ -64,9 +65,28 @@ static BOOL DeviceSupportsInput(AudioObjectID deviceID)
 	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeInput);
 }
 
-static BOOL DeviceSupportsOutput(AudioObjectID deviceID)
+BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID)
 {
 	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput);
+}
+
+BOOL SFBDeviceIsAggregate(AudioObjectID deviceID)
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioObjectPropertyClass,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioClassID classID;
+	UInt32 dataSize = sizeof(classID);
+	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &classID);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioObjectPropertyClass) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return classID == kAudioAggregateDeviceClassID;
 }
 
 @interface SFBAudioDevice ()
@@ -140,12 +160,28 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	for(SFBAudioDevice *device in allDevices) {
 		if(device.supportsOutput) {
 			SFBAudioOutputDevice *outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:device.deviceID];
-			if(device)
+			if(outputDevice)
 				[outputDevices addObject:outputDevice];
 		}
 	}
 
 	return outputDevices;
+}
+
++ (NSArray *)aggregateDevices
+{
+	NSMutableArray *aggregateDevices = [NSMutableArray array];
+
+	NSArray *allDevices = [self allDevices];
+	for(SFBAudioDevice *device in allDevices) {
+		if(device.isAggregate) {
+			SFBAggregateAudioDevice *aggregateDevice = [[SFBAggregateAudioDevice alloc] initWithAudioObjectID:device.deviceID];
+			if(aggregateDevice)
+				[aggregateDevices addObject:aggregateDevice];
+		}
+	}
+
+	return aggregateDevices;
 }
 
 + (SFBAudioOutputDevice *)defaultOutputDevice
@@ -227,6 +263,25 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return _deviceID;
 }
 
+- (NSString *)modelUID
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyModelUID,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementWildcard
+	};
+
+	CFStringRef modelUID = NULL;
+	UInt32 dataSize = sizeof(modelUID);
+	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &modelUID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyModelUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return (__bridge_transfer NSString *)modelUID;
+}
+
 - (NSString *)deviceUID
 {
 	AudioObjectPropertyAddress propertyAddress = {
@@ -291,7 +346,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)supportsOutput
 {
-	return DeviceSupportsOutput(_deviceID);
+	return SFBDeviceSupportsOutput(_deviceID);
+}
+
+- (BOOL)isAggregate
+{
+	return SFBDeviceIsAggregate(_deviceID);
 }
 
 #pragma mark - Device Properties

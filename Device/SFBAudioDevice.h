@@ -9,6 +9,7 @@
 #import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
 
 @class SFBAudioOutputDevice;
+@class SFBAggregateAudioDevice;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -24,6 +25,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 /// Returns an array of available audio devices supporting output or \c nil on error
 /// @note A device supports output if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
+/// Returns an array of available aggregate audio devices or \c nil on error
+/// @note A device is an aggregate if its \c AudioClassID is \c kAudioAggregateDeviceClassID
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAggregateAudioDevice *> *aggregateDevices;
 
 /// Returns the default output device or \c nil on error
 @property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultOutputDevice;
@@ -44,17 +48,23 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 @property (nonatomic, readonly) AudioObjectID deviceID;
 /// Returns the device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *deviceUID;
+/// Returns the model UID or \c nil on error
+@property (nonatomic, nullable, readonly) NSString *modelUID;
 /// Returns the device name
 @property (nonatomic, nullable, readonly) NSString *name;
 /// Returns the device manufacturer
 @property (nonatomic, nullable, readonly) NSString *manufacturer;
 
 /// Returns \c YES if the device supports input
-/// @note A device supports input if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementWildcard }
+/// @note A device supports input if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementWildcard }
 @property (nonatomic, readonly) BOOL supportsInput;
 /// Returns \c YES if the device supports output
-/// @note A device supports output if it has a buffers in {kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
+/// @note A device supports output if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
 @property (nonatomic, readonly) BOOL supportsOutput;
+
+/// Returns \c YES if the device is an aggregate device
+/// @note A device is an aggregate if its \c AudioClassID is \c kAudioAggregateDeviceClassID
+@property (nonatomic, readonly) BOOL isAggregate;
 
 #pragma mark - Device Properties
 
