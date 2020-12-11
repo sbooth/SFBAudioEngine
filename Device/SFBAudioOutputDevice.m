@@ -11,8 +11,17 @@
 #import "SFBCStringForOSType.h"
 
 extern os_log_t gSFBAudioDeviceLog;
+extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 
 @implementation SFBAudioOutputDevice
+
+- (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
+{
+	NSParameterAssert(audioObjectID != kAudioObjectUnknown);
+	NSParameterAssert(SFBDeviceSupportsOutput(audioObjectID));
+
+	return [super initWithAudioObjectID:audioObjectID];
+}
 
 #pragma mark - Device Properties
 
