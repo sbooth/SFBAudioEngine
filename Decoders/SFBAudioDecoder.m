@@ -329,7 +329,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	for(SFBAudioDecoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		SFBAudioDecoderName subclassDecoderName = [subclassInfo.klass decoderName];
-		if([subclassDecoderName isEqualToString:decoderName])
+		if(subclassDecoderName == decoderName)
 			return subclassInfo.klass;
 	}
 

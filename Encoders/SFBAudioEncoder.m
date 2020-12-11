@@ -357,7 +357,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 {
 	for(SFBAudioEncoderSubclassInfo *subclassInfo in _registeredSubclasses) {
 		SFBAudioEncoderName subclassEncoderName = [subclassInfo.klass encoderName];
-		if([subclassEncoderName isEqualToString:encoderName])
+		if(subclassEncoderName == encoderName)
 			return subclassInfo.klass;
 	}
 
