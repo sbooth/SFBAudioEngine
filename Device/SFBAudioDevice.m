@@ -65,11 +65,13 @@ static BOOL DeviceSupportsInput(AudioObjectID deviceID)
 	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeInput);
 }
 
+BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID)
 {
 	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput);
 }
 
+BOOL SFBDeviceIsAggregate(AudioObjectID deviceID);
 BOOL SFBDeviceIsAggregate(AudioObjectID deviceID)
 {
 	AudioObjectPropertyAddress propertyAddress = {
