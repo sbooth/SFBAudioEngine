@@ -757,7 +757,7 @@ namespace {
 		std::vector<AudioChannelLabel> labels;
 		for(auto channelID : channelsChunk->mChannelIDs)
 			labels.push_back(DSDIFFChannelIDToCoreAudioChannelLabel(channelID));
-		channelLayout = [[AVAudioChannelLayout alloc] initWithChannelLabels:&labels[0] count:(AVAudioChannelCount)labels.size()];
+		channelLayout = [AVAudioChannelLayout layoutWithChannelLabels:&labels[0] count:(AVAudioChannelCount)labels.size()];
 	}
 
 	AudioStreamBasicDescription processingStreamDescription{};
