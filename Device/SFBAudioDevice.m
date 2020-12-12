@@ -144,9 +144,8 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	NSMutableArray *allDevices = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
 		SFBAudioDevice *device = [[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]];
-		if(device) {
+		if(device)
 			[allDevices addObject:device];
-		}
 	}
 
 	free(deviceIDs);
