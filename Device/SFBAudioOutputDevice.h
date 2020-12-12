@@ -14,6 +14,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// An \c SFBAudioDevice supporting output
 NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 
+/// Returns an array of available audio devices supporting output or \c nil on error
+/// @note A device supports output if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
+
+/// Returns the default output device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultOutputDevice;
+
 #pragma mark - Device Properties
 
 /// Mutes or unmutes the output device

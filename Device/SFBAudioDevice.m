@@ -6,100 +6,12 @@
 @import os.log;
 
 #import "SFBAudioDevice.h"
+#import "SFBAudioObject+Internal.h"
 
-#import "SFBAggregateAudioDevice.h"
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBAudioDeviceNotifier.h"
 #import "SFBAudioOutputDevice.h"
 #import "SFBCStringForOSType.h"
-
-os_log_t gSFBAudioDeviceLog = NULL;
-
-static void SFBCreateAudioDeviceLog(void) __attribute__ ((constructor));
-static void SFBCreateAudioDeviceLog()
-{
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		gSFBAudioDeviceLog = os_log_create("org.sbooth.AudioEngine", "AudioDevice");
-	});
-}
-
-static BOOL DeviceHasBuffersInScope(AudioObjectID deviceID, AudioObjectPropertyScope scope)
-{
-	NSCParameterAssert(deviceID != kAudioObjectUnknown);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyStreamConfiguration,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementWildcard
-	};
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, NULL, &dataSize);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyStreamConfiguration) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return NO;
-	}
-
-	AudioBufferList *bufferList = malloc(dataSize);
-	if(!bufferList) {
-		os_log_error(gSFBAudioDeviceLog, "Unable to allocate memory");
-		return NO;
-	}
-
-	result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, bufferList);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyStreamConfiguration) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		free(bufferList);
-		return NO;
-	}
-
-	BOOL supportsScope = bufferList->mNumberBuffers > 0;
-	free(bufferList);
-
-	return supportsScope;
-}
-
-static BOOL DeviceSupportsInput(AudioObjectID deviceID)
-{
-	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeInput);
-}
-
-BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
-BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID)
-{
-	return DeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput);
-}
-
-BOOL SFBDeviceIsAggregate(AudioObjectID deviceID);
-BOOL SFBDeviceIsAggregate(AudioObjectID deviceID)
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioObjectPropertyClass,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioClassID classID;
-	UInt32 dataSize = sizeof(classID);
-	OSStatus result = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, NULL, &dataSize, &classID);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioObjectPropertyClass) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return NO;
-	}
-
-	return classID == kAudioAggregateDeviceClassID;
-}
-
-@interface SFBAudioDevice ()
-{
-@private
-	AudioObjectID _deviceID;
-	NSMutableDictionary *_listenerBlocks;
-}
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block;
-- (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress;
-@end
 
 @implementation SFBAudioDevice
 
@@ -113,155 +25,76 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	});
 }
 
-+ (NSArray *)allDevices
++ (NSArray *)devices
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioHardwarePropertyDevices,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
+		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	UInt32 dataSize = 0;
 	OSStatus result = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	AudioObjectID *deviceIDs = (AudioObjectID *)malloc(dataSize);
 	if(!deviceIDs) {
-		os_log_error(gSFBAudioDeviceLog, "Unable to allocate memory");
+		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
 		return nil;
 	}
 
 	result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, deviceIDs);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		free(deviceIDs);
 		return nil;
 	}
 
-	NSMutableArray *allDevices = [NSMutableArray array];
+	NSMutableArray *devices = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
 		SFBAudioDevice *device = [[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]];
 		if(device)
-			[allDevices addObject:device];
+			[devices addObject:device];
 	}
 
 	free(deviceIDs);
 
-	return allDevices;
+	return devices;
 }
 
-+ (NSArray *)outputDevices
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSMutableArray *outputDevices = [NSMutableArray array];
-
-	NSArray *allDevices = [self allDevices];
-	for(SFBAudioDevice *device in allDevices) {
-		if(device.supportsOutput) {
-			SFBAudioOutputDevice *outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:device.deviceID];
-			if(outputDevice)
-				[outputDevices addObject:outputDevice];
-		}
-	}
-
-	return outputDevices;
+	NSParameterAssert(SFBAudioObjectIsDevice(objectID));
+	return [super initWithAudioObjectID:objectID];
 }
 
-+ (NSArray *)aggregateDevices
-{
-	NSMutableArray *aggregateDevices = [NSMutableArray array];
-
-	NSArray *allDevices = [self allDevices];
-	for(SFBAudioDevice *device in allDevices) {
-		if(device.isAggregate) {
-			SFBAggregateAudioDevice *aggregateDevice = [[SFBAggregateAudioDevice alloc] initWithAudioObjectID:device.deviceID];
-			if(aggregateDevice)
-				[aggregateDevices addObject:aggregateDevice];
-		}
-	}
-
-	return aggregateDevices;
-}
-
-+ (SFBAudioOutputDevice *)defaultOutputDevice
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
-	};
-
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
-}
-
-- (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID
+- (instancetype)initWithDeviceUID:(NSString *)deviceUID
 {
 	NSParameterAssert(deviceUID != nil);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioHardwarePropertyTranslateUIDToDevice,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
+		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	AudioObjectID deviceID = kAudioObjectUnknown;
 	UInt32 specifierSize = sizeof(deviceID);
 	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(deviceUID), &deviceUID, &specifierSize, &deviceID);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDeviceForUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	if(deviceID == kAudioObjectUnknown) {
-		os_log_error(gSFBAudioDeviceLog, "Unknown audio device UID: %{public}@", deviceUID);
+		os_log_error(gSFBAudioObjectLog, "Unknown audio device UID: %{public}@", deviceUID);
 		return nil;
 	}
 
 	return [self initWithAudioObjectID:deviceID];
-}
-
-- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
-{
-	NSParameterAssert(audioObjectID != kAudioObjectUnknown);
-
-	if((self = [super init])) {
-		_deviceID = audioObjectID;
-		_listenerBlocks = [NSMutableDictionary dictionary];
-	}
-	return self;
-}
-
-- (void)dealloc
-{
-	for(NSValue *propertyAddressAsValue in [_listenerBlocks allKeys]) {
-		AudioObjectPropertyAddress propertyAddress = {0};
-		[propertyAddressAsValue getValue:&propertyAddress];
-		[self removePropertyListenerForPropertyAddress:&propertyAddress];
-	}
-}
-
-- (BOOL)isEqual:(id)object
-{
-	if(![object isKindOfClass:[SFBAudioDevice class]])
-		return NO;
-
-	SFBAudioDevice *other = (SFBAudioDevice *)object;
-	return _deviceID == other->_deviceID;
-}
-
-- (NSUInteger)hash
-{
-	return _deviceID;
 }
 
 - (NSString *)modelUID
@@ -269,18 +102,23 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyModelUID,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
+		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	CFStringRef modelUID = NULL;
 	UInt32 dataSize = sizeof(modelUID);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &modelUID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &modelUID);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyModelUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyModelUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	return (__bridge_transfer NSString *)modelUID;
+}
+
+- (AudioObjectID)deviceID
+{
+	return self.objectID;
 }
 
 - (NSString *)deviceUID
@@ -288,76 +126,38 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyDeviceUID,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
+		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
 	CFStringRef deviceUID = NULL;
 	UInt32 dataSize = sizeof(deviceUID);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &deviceUID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &deviceUID);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	return (__bridge_transfer NSString *)deviceUID;
 }
 
-- (NSString *)name
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioObjectPropertyName,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
-	};
-
-	CFStringRef name = NULL;
-	UInt32 dataSize = sizeof(name);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &name);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioObjectPropertyName) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)name;
-}
-
-- (NSString *)manufacturer
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioObjectPropertyManufacturer,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementWildcard
-	};
-
-	CFStringRef manufacturer = NULL;
-	UInt32 dataSize = sizeof(manufacturer);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &manufacturer);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioObjectPropertyManufacturer) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)manufacturer;
-}
-
 - (BOOL)supportsInput
 {
-	return DeviceSupportsInput(_deviceID);
+	return SFBAudioDeviceSupportsInput(_objectID);
 }
 
 - (BOOL)supportsOutput
 {
-	return SFBDeviceSupportsOutput(_deviceID);
+	return SFBAudioDeviceSupportsOutput(_objectID);
 }
 
 - (BOOL)isAggregate
 {
-	return SFBDeviceIsAggregate(_deviceID);
+	return self.classID == kAudioAggregateDeviceClassID;
 }
 
 - (BOOL)isPrivateAggregate
 {
-	if(!SFBDeviceIsAggregate(_deviceID))
+	if(!self.isAggregate)
 		return NO;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -370,12 +170,13 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	UInt32 dataSize = sizeof(composition);
 	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &composition);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyComposition) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyComposition) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return NO;
 	}
 
 	return [[(__bridge_transfer NSDictionary *)composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
 }
+
 
 #pragma mark - Device Properties
 
@@ -389,9 +190,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float64 sampleRate;
 	UInt32 dataSize = sizeof(sampleRate);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &sampleRate);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &sampleRate);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nan("1");
 	}
 
@@ -400,7 +201,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x sample rate to %.2f Hz", _deviceID, sampleRate);
+	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x sample rate to %.2f Hz", _objectID, sampleRate);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyNominalSampleRate,
@@ -409,9 +210,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	Float64 nominalSampleRate = sampleRate;
-	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(nominalSampleRate), &nominalSampleRate);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(nominalSampleRate), &nominalSampleRate);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -429,21 +230,21 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(_deviceID, &propertyAddress, 0, NULL, &dataSize);
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	AudioValueRange *availableNominalSampleRates = (AudioValueRange *)malloc(dataSize);
 	if(!availableNominalSampleRates) {
-		os_log_error(gSFBAudioDeviceLog, "Unable to allocate memory");
+		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
 		return nil;
 	}
 
-	result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, availableNominalSampleRates);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, availableNominalSampleRates);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyAvailableNominalSampleRates) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		free(availableNominalSampleRates);
 		return nil;
 	}
@@ -455,7 +256,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		if(nominalSampleRate.mMinimum == nominalSampleRate.mMaximum)
 			[availablSampleRates addObject:@(nominalSampleRate.mMinimum)];
 		else
-			os_log_error(gSFBAudioDeviceLog, "nominalSampleRate.mMinimum (%.2f Hz) and nominalSampleRate.mMaximum (%.2f Hz) don't match", nominalSampleRate.mMinimum, nominalSampleRate.mMaximum);
+			os_log_error(gSFBAudioObjectLog, "nominalSampleRate.mMinimum (%.2f Hz) and nominalSampleRate.mMaximum (%.2f Hz) don't match", nominalSampleRate.mMinimum, nominalSampleRate.mMaximum);
 	}
 
 	free(availableNominalSampleRates);
@@ -473,9 +274,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		return nanf("1");
 	}
 	return volume;
@@ -483,7 +284,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setVolume:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume scalar to %f", _deviceID, SFBCStringForOSType(scope), channel, volume);
+	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x '%{public}.4s' channel %u volume scalar to %f", _objectID, SFBCStringForOSType(scope), channel, volume);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeScalar,
@@ -491,14 +292,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= channel
 	};
 
-	if(!AudioObjectHasProperty(_deviceID, &propertyAddress)) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
 		return NO;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeScalar, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -517,9 +318,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		return nanf("1");
 	}
 	return volume;
@@ -527,7 +328,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)setVolumeInDecibels:(float)volume forChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' channel %u volume dB to %f", _deviceID, SFBCStringForOSType(scope), channel, volume);
+	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x '%{public}.4s' channel %u volume dB to %f", _objectID, SFBCStringForOSType(scope), channel, volume);
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyVolumeDecibels,
@@ -535,14 +336,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= channel
 	};
 
-	if(!AudioObjectHasProperty(_deviceID, &propertyAddress)) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) is false", SFBCStringForOSType(scope), channel);
 		return NO;
 	}
 
-	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(volume), &volume);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyVolumeDecibels, '%{public}.4s', %u) failed: %d", SFBCStringForOSType(scope), channel, result);
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -561,9 +362,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume = volumeScalar;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalarToDecibels, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeScalarToDecibels, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		return nanf("1");
 	}
 
@@ -580,9 +381,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	Float32 volume = decibels;
 	UInt32 dataSize = sizeof(volume);
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &volume);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &volume);
 	if(result != noErr) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibelsToScalar, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyVolumeDecibelsToScalar, '%{public}.4s') failed: %d '%{public}.4s'", SFBCStringForOSType(scope), result, SFBCStringForOSType(result));
 		return nanf("1");
 	}
 
@@ -598,21 +399,21 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(_deviceID, &propertyAddress, 0, NULL, &dataSize);
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	UInt32 *dataSourceIDs = (UInt32 *)malloc(dataSize);
 	if(!dataSourceIDs) {
-		os_log_error(gSFBAudioDeviceLog, "Unable to allocate memory");
+		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
 		return nil;
 	}
 
-	result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, dataSourceIDs);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, dataSourceIDs);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSources) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		free(dataSourceIDs);
 		return nil;
 	}
@@ -640,21 +441,21 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	};
 
 	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(_deviceID, &propertyAddress, 0, NULL, &dataSize);
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
 	UInt32 *dataSourceIDs = (UInt32 *)malloc(dataSize);
 	if(!dataSourceIDs) {
-		os_log_error(gSFBAudioDeviceLog, "Unable to allocate memory");
+		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
 		return nil;
 	}
 
-	result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, dataSourceIDs);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, dataSourceIDs);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		free(dataSourceIDs);
 		return nil;
 	}
@@ -677,7 +478,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 {
 	NSParameterAssert(activeDataSources != nil);
 
-	os_log_info(gSFBAudioDeviceLog, "Setting device 0x%x '%{public}.4s' active data sources to %{public}@", _deviceID, SFBCStringForOSType(scope), activeDataSources);
+	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x '%{public}.4s' active data sources to %{public}@", _objectID, SFBCStringForOSType(scope), activeDataSources);
 
 //	if(activeDataSources.count == 0)
 //		return NO;
@@ -695,9 +496,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	OSStatus result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, (UInt32)sizeof(dataSourceIDs), dataSourceIDs);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, (UInt32)sizeof(dataSourceIDs), dataSourceIDs);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyDataSource) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -717,9 +518,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return NO;
 	}
 
@@ -737,9 +538,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return NO;
 	}
 
@@ -748,7 +549,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)startHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Taking hog mode for device 0x%x '%{public}.4s'", _deviceID, SFBCStringForOSType(scope));
+	os_log_info(gSFBAudioObjectLog, "Taking hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
@@ -759,9 +560,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -769,13 +570,13 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	// The device is already hogged
 	if(hogPID != (pid_t)-1)
-		os_log_error(gSFBAudioDeviceLog, "Device is already hogged by pid: %d", hogPID);
+		os_log_error(gSFBAudioObjectLog, "Device is already hogged by pid: %d", hogPID);
 
 	hogPID = getpid();
 
-	result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
+	result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -786,7 +587,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)stopHoggingInScope:(AudioObjectPropertyScope)scope error:(NSError **)error
 {
-	os_log_info(gSFBAudioDeviceLog, "Releasing hog mode for device 0x%x '%{public}.4s'", _deviceID, SFBCStringForOSType(scope));
+	os_log_info(gSFBAudioObjectLog, "Releasing hog mode for device 0x%x '%{public}.4s'", _objectID, SFBCStringForOSType(scope));
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioDevicePropertyHogMode,
@@ -797,9 +598,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	pid_t hogPID = (pid_t)-1;
 	UInt32 dataSize = sizeof(hogPID);
 
-	OSStatus result = AudioObjectGetPropertyData(_deviceID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -807,14 +608,14 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	// If we don't own hog mode we can't release it
 	if(hogPID != getpid())
-		os_log_error(gSFBAudioDeviceLog, "Device is hogged by pid: %d", hogPID);
+		os_log_error(gSFBAudioObjectLog, "Device is hogged by pid: %d", hogPID);
 
 	// Release hog mode.
 	hogPID = (pid_t)-1;
 
-	result = AudioObjectSetPropertyData(_deviceID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
+	result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(hogPID), &hogPID);
 	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyHogMode) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)
 			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 		return NO;
@@ -840,94 +641,9 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property
-{
-	return [self hasProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
-}
-
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
-{
-	return [self hasProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
-}
-
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= property,
-		.mScope		= scope,
-		.mElement	= element
-	};
-
-	return (BOOL)AudioObjectHasProperty(_deviceID, &propertyAddress);
-}
-
-- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
-{
-	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
-}
-
-- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
-{
-	[self whenProperty:property inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
-}
-
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= property,
-		.mScope		= scope,
-		.mElement	= element
-	};
-
-	[self removePropertyListenerForPropertyAddress:&propertyAddress];
-	if(block)
-		[self addPropertyListenerForPropertyAddress:&propertyAddress block:block];
-}
-
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block
-{
-	NSParameterAssert(propertyAddress != nil);
-	NSParameterAssert(block != nil);
-
-	os_log_info(gSFBAudioDeviceLog, "Adding property listener on device 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _deviceID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
-
-	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
-
-	AudioObjectPropertyListenerBlock listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses) {
-#pragma unused(inNumberAddresses)
-#pragma unused(inAddresses)
-		block();
-	};
-
-	[_listenerBlocks setObject:listenerBlock forKey:propertyAddressAsValue];
-
-	OSStatus result = AudioObjectAddPropertyListenerBlock(_deviceID, propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectAddPropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement, result, SFBCStringForOSType(result));
-		[_listenerBlocks removeObjectForKey:propertyAddressAsValue];
-	}
-}
-
-- (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress
-{
-	NSParameterAssert(propertyAddress != nil);
-
-	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
-	AudioObjectPropertyListenerBlock listenerBlock = [_listenerBlocks objectForKey:propertyAddressAsValue];
-	if(listenerBlock) {
-		os_log_info(gSFBAudioDeviceLog, "Removing property listener on device 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _deviceID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
-
-		[_listenerBlocks removeObjectForKey:propertyAddressAsValue];
-
-		OSStatus result = AudioObjectRemovePropertyListenerBlock(_deviceID, propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
-		if(result != kAudioHardwareNoError)
-			os_log_error(gSFBAudioDeviceLog, "AudioObjectRemovePropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement, result, SFBCStringForOSType(result));
-	}
-}
-
 - (NSString *)description
 {
-	return [NSString stringWithFormat:@"<%@ 0x%x, \"%@\">", self.className, _deviceID, self.deviceUID];
+	return [NSString stringWithFormat:@"<%@ 0x%x, \"%@\">", self.className, _objectID, self.deviceUID];
 }
 
 @end

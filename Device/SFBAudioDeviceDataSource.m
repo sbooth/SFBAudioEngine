@@ -10,7 +10,7 @@
 #import "SFBAudioDevice.h"
 #import "SFBCStringForOSType.h"
 
-extern os_log_t gSFBAudioDeviceLog;
+extern os_log_t gSFBAudioObjectLog;
 
 @interface SFBAudioDeviceDataSource ()
 {
@@ -68,7 +68,7 @@ extern os_log_t gSFBAudioDeviceLog;
 	UInt32 dataSize = sizeof(translation);
 	OSStatus result = AudioObjectGetPropertyData(_audioDevice.deviceID, &propertyAddress, 0, NULL, &dataSize, &translation);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceNameForIDCFString) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceNameForIDCFString) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
@@ -94,7 +94,7 @@ extern os_log_t gSFBAudioDeviceLog;
 	UInt32 dataSize = sizeof(translation);
 	OSStatus result = AudioObjectGetPropertyData(_audioDevice.deviceID, &propertyAddress, 0, NULL, &dataSize, &translation);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceKindForID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceKindForID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return kAudioObjectUnknown;
 	}
 

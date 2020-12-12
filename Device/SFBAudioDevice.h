@@ -3,63 +3,40 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-#import <Foundation/Foundation.h>
-#import <CoreAudio/CoreAudio.h>
+#import <SFBAudioEngine/SFBAudioObject.h>
 
-#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
-
-@class SFBAudioOutputDevice;
-@class SFBAggregateAudioDevice;
+@class SFBAudioDeviceDataSource;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// Posted when the available audio devices change
 extern const NSNotificationName SFBAudioDevicesChangedNotification;
 
-/// An audio device with an underlying \c AudioObjectID supporting input or output
-NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
+/// An audio device supporting input or output
+NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns an array of all available audio devices or \c nil on error
-/// @note This returns \c { kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementWildcard }
-@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *allDevices;
-/// Returns an array of available audio devices supporting output or \c nil on error
-/// @note A device supports output if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
-@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioOutputDevice *> *outputDevices;
-/// Returns an array of available aggregate audio devices or \c nil on error
-/// @note A device is an aggregate if its \c AudioClassID is \c kAudioAggregateDeviceClassID
-@property (class, nonatomic, nullable, readonly) NSArray<SFBAggregateAudioDevice *> *aggregateDevices;
-
-/// Returns the default output device or \c nil on error
-@property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultOutputDevice;
-
-+ (instancetype)new NS_UNAVAILABLE;
-- (instancetype)init NS_UNAVAILABLE;
+/// @note This returns \c { kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
 
 /// Returns an initialized \c SFBAudioDevice object with the specified device UID
 /// @param deviceUID The desired device UID
 /// @return An initialized \c SFBAudioDevice object or \c nil if \c deviceUID is invalid or unknown
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID;
-/// Returns an initialized \c SFBAudioDevice object with the specified audio object ID
-/// @param audioObjectID The desired audio object ID
-/// @return An initialized \c SFBAudioDevice object or \c nil if \c audioObjectID is invalid or unknown
-- (nullable instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID NS_DESIGNATED_INITIALIZER;
 
 /// Returns the device ID
+/// @note This is equivalent to \c objectID
 @property (nonatomic, readonly) AudioObjectID deviceID;
 /// Returns the device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *deviceUID;
 /// Returns the model UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *modelUID;
-/// Returns the device name
-@property (nonatomic, nullable, readonly) NSString *name;
-/// Returns the device manufacturer
-@property (nonatomic, nullable, readonly) NSString *manufacturer;
 
 /// Returns \c YES if the device supports input
-/// @note A device supports input if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementWildcard }
+/// @note A device supports input if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementMaster }
 @property (nonatomic, readonly) BOOL supportsInput;
 /// Returns \c YES if the device supports output
-/// @note A device supports output if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementWildcard }
+/// @note A device supports output if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
 @property (nonatomic, readonly) BOOL supportsOutput;
 
 /// Returns \c YES if the device is an aggregate device
@@ -184,42 +161,6 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : NSObject
 /// @param scope The desired scope
 /// @param block A block to invoke when the active data sources change or \c nil to remove the previous value
 - (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
-
-/// Returns \c YES if the underlying audio object has the specified property
-/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-/// @param property The property to query
-/// @return \c YES if the property is supported
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property;
-/// Returns \c YES if the underlying audio object has the specified property in a scope
-/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
-/// @param property The property to query
-/// @param scope The desired scope
-/// @return \c YES if the property is supported
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
-/// Returns \c YES if the underlying audio object has the specified property on an element in a scope
-/// @param property The property to query
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return \c YES if the property is supported
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
-
-/// Performs a block when the specified property changes
-/// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-/// @param property The property to observe
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-- (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(_Nullable dispatch_block_t)block;
-/// Performs a block when the specified property in a scope changes
-/// @note This observes \c { property, scope, kAudioObjectPropertyElementMaster }
-/// @param property The property to observe
-/// @param scope The desired scope
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
-/// Performs a block when the specified property on an element in a scope changes
-/// @param property The property to observe
-/// @param scope The desired scope
-/// @param element The desired element
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block;
 
 @end
 

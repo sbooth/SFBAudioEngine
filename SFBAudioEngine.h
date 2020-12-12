@@ -32,10 +32,13 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 
 #if TARGET_OS_OSX
 
+#import <SFBAudioEngine/SFBAudioObject.h>
 #import <SFBAudioEngine/SFBAudioDevice.h>
 #import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
 #import <SFBAudioEngine/SFBAudioOutputDevice.h>
 #import <SFBAudioEngine/SFBAggregateAudioDevice.h>
+#import <SFBAudioEngine/SFBAudioBox.h>
+#import <SFBAudioEngine/SFBAudioClockDevice.h>
 
 #endif
 

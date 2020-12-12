@@ -6,19 +6,52 @@
 @import os.log;
 
 #import "SFBAudioOutputDevice.h"
+#import "SFBAudioObject+Internal.h"
 
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBCStringForOSType.h"
 
-extern os_log_t gSFBAudioDeviceLog;
-extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
-
 @implementation SFBAudioOutputDevice
+
++ (NSArray *)outputDevices
+{
+	NSMutableArray *outputDevices = [NSMutableArray array];
+
+	NSArray *devices = [SFBAudioDevice devices];
+	for(SFBAudioDevice *device in devices) {
+		if(device.supportsOutput) {
+			SFBAudioOutputDevice *outputDevice = [[SFBAudioOutputDevice alloc] initWithAudioObjectID:device.deviceID];
+			if(outputDevice)
+				[outputDevices addObject:outputDevice];
+		}
+	}
+
+	return outputDevices;
+}
+
++ (SFBAudioOutputDevice *)defaultOutputDevice
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID deviceID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
+}
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
 {
 	NSParameterAssert(audioObjectID != kAudioObjectUnknown);
-	NSParameterAssert(SFBDeviceSupportsOutput(audioObjectID));
+	NSParameterAssert(SFBAudioDeviceSupportsOutput(audioObjectID));
 
 	return [super initWithAudioObjectID:audioObjectID];
 }
@@ -35,9 +68,9 @@ extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 
 	UInt32 isMuted = 0;
 	UInt32 dataSize = sizeof(isMuted);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &isMuted);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &isMuted);
 	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return NO;
 	}
 
@@ -53,9 +86,9 @@ extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 	};
 
 	UInt32 muted = (UInt32)mute;
-	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(muted), &muted);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(muted), &muted);
 	if(result != kAudioHardwareNoError)
-		os_log_error(gSFBAudioDeviceLog, "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 }
 
 - (BOOL)hasMasterVolume
@@ -91,16 +124,16 @@ extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) is false");
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) is false");
 		return nil;
 	}
 
 	UInt32 preferredChannels [2];
 	UInt32 dataSize = sizeof(preferredChannels);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
 	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, kAudioObjectPropertyScopeOutput) failed: %d", result);
 		return nil;
 	}
 
@@ -115,22 +148,22 @@ extern BOOL SFBDeviceSupportsOutput(AudioObjectID deviceID);
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	if(!AudioObjectHasProperty(self.deviceID, &propertyAddress)) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) is false");
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) is false");
 		return nil;
 	}
 
 	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(self.deviceID, &propertyAddress, 0, NULL, &dataSize);
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
 	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
 		return nil;
 	}
 
 	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
-	result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
 	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioDeviceLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, kAudioObjectPropertyScopeOutput) failed: %d", result);
 		free(preferredChannelLayout);
 		return nil;
 	}

@@ -399,6 +399,13 @@
 		3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */; };
 		32A0BA7725842A550046B802 /* SFBAggregateAudioDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA7525842A540046B802 /* SFBAggregateAudioDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32A0BA7825842A550046B802 /* SFBAggregateAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A0BA7625842A550046B802 /* SFBAggregateAudioDevice.m */; };
+		32A0BA822584F8C20046B802 /* SFBAudioBox.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32A0BA832584F8C20046B802 /* SFBAudioClockDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A0BA7F2584F8C20046B802 /* SFBAudioClockDevice.m */; };
+		32A0BA842584F8C20046B802 /* SFBAudioBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A0BA802584F8C20046B802 /* SFBAudioBox.m */; };
+		32A0BA852584F8C20046B802 /* SFBAudioClockDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA812584F8C20046B802 /* SFBAudioClockDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32A0BA88258500F30046B802 /* SFBAudioObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA86258500F30046B802 /* SFBAudioObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32A0BA89258500F30046B802 /* SFBAudioObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A0BA87258500F30046B802 /* SFBAudioObject.m */; };
+		32A0BA8B258501740046B802 /* SFBAudioObject+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA8A258501740046B802 /* SFBAudioObject+Internal.h */; };
 		32A1012116A50C2400EC1F9C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32A1012016A50C2400EC1F9C /* Accelerate.framework */; };
 		32AE32DA245775EE002BC014 /* SFBAudioOutputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */; };
 		32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AE32DB245894ED002BC014 /* SFBInputSource.swift */; };
@@ -687,6 +694,13 @@
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		32A0BA7525842A540046B802 /* SFBAggregateAudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAggregateAudioDevice.h; sourceTree = "<group>"; };
 		32A0BA7625842A550046B802 /* SFBAggregateAudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAggregateAudioDevice.m; sourceTree = "<group>"; };
+		32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioBox.h; sourceTree = "<group>"; };
+		32A0BA7F2584F8C20046B802 /* SFBAudioClockDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioClockDevice.m; sourceTree = "<group>"; };
+		32A0BA802584F8C20046B802 /* SFBAudioBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioBox.m; sourceTree = "<group>"; };
+		32A0BA812584F8C20046B802 /* SFBAudioClockDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioClockDevice.h; sourceTree = "<group>"; };
+		32A0BA86258500F30046B802 /* SFBAudioObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioObject.h; sourceTree = "<group>"; };
+		32A0BA87258500F30046B802 /* SFBAudioObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioObject.m; sourceTree = "<group>"; };
+		32A0BA8A258501740046B802 /* SFBAudioObject+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SFBAudioObject+Internal.h"; sourceTree = "<group>"; };
 		32A1012016A50C2400EC1F9C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioOutputDevice.swift; sourceTree = "<group>"; };
 		32AE32DB245894ED002BC014 /* SFBInputSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBInputSource.swift; sourceTree = "<group>"; };
@@ -969,6 +983,9 @@
 		3268F83C24548A81006A5911 /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				32A0BA86258500F30046B802 /* SFBAudioObject.h */,
+				32A0BA8A258501740046B802 /* SFBAudioObject+Internal.h */,
+				32A0BA87258500F30046B802 /* SFBAudioObject.m */,
 				3268F84124548A81006A5911 /* SFBAudioDevice.h */,
 				3268F83F24548A81006A5911 /* SFBAudioDevice.m */,
 				3268F8752455FBF2006A5911 /* SFBAudioDevice.swift */,
@@ -979,6 +996,10 @@
 				32AE32D9245775EE002BC014 /* SFBAudioOutputDevice.swift */,
 				32A0BA7525842A540046B802 /* SFBAggregateAudioDevice.h */,
 				32A0BA7625842A550046B802 /* SFBAggregateAudioDevice.m */,
+				32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */,
+				32A0BA802584F8C20046B802 /* SFBAudioBox.m */,
+				32A0BA812584F8C20046B802 /* SFBAudioClockDevice.h */,
+				32A0BA7F2584F8C20046B802 /* SFBAudioClockDevice.m */,
 				3268F8722455D133006A5911 /* SFBAudioDeviceNotifier.h */,
 				3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */,
 			);
@@ -1330,6 +1351,7 @@
 				326D3CC4242D2A21002AEC52 /* SFBOggVorbisFile.h in Headers */,
 				3268F84824548A81006A5911 /* SFBAudioOutputDevice.h in Headers */,
 				321296A2244B13950008DC93 /* SFBOggSpeexDecoder.h in Headers */,
+				32A0BA8B258501740046B802 /* SFBAudioObject+Internal.h in Headers */,
 				328DDD642544E73200B6A093 /* SFBAudioExporter.h in Headers */,
 				322859D9242564AE0080B500 /* SFBAudioMetadata+TagLibAPETag.h in Headers */,
 				325A5E0A243F8D8B003138D5 /* SFBFileInputSource.h in Headers */,
@@ -1366,6 +1388,7 @@
 				321296812449C4B90008DC93 /* SFBWavPackDecoder.h in Headers */,
 				322A9153257007D8006795AA /* AVAudioPCMBuffer+SFBBufferUtilities.h in Headers */,
 				328DDD79254676A300B6A093 /* SFBShortenFile.h in Headers */,
+				32A0BA88258500F30046B802 /* SFBAudioObject.h in Headers */,
 				321296AF244B459B0008DC93 /* SFBDSDDecoder.h in Headers */,
 				32D740C9255F6D91004D3C1A /* SFBOutputSource.h in Headers */,
 				3268F86A2455B527006A5911 /* SFBReplayGainAnalyzer.h in Headers */,
@@ -1373,6 +1396,7 @@
 				32DFEC482568B07E005D4C39 /* SFBTrueAudioEncoder.h in Headers */,
 				32D740C3255F6D91004D3C1A /* SFBAudioEncoding.h in Headers */,
 				322859D12425528B0080B500 /* SFBAudioMetadata+TagLibID3v1Tag.h in Headers */,
+				32A0BA822584F8C20046B802 /* SFBAudioBox.h in Headers */,
 				326D3CB4242D2A21002AEC52 /* SFBFLACFile.h in Headers */,
 				3268F86C2455B527006A5911 /* NSError+SFBURLPresentation.h in Headers */,
 				326D3CBA242D2A21002AEC52 /* SFBMP4File.h in Headers */,
@@ -1401,6 +1425,7 @@
 				322859CC2425519A0080B500 /* AddAudioPropertiesToDictionary.h in Headers */,
 				326D3CBC242D2A21002AEC52 /* SFBMusepackFile.h in Headers */,
 				325A5E902444D868003138D5 /* SFBModuleDecoder.h in Headers */,
+				32A0BA852584F8C20046B802 /* SFBAudioClockDevice.h in Headers */,
 				321296B3244B70F90008DC93 /* SFBDSFDecoder.h in Headers */,
 				325A5E88244493B9003138D5 /* SFBMPEGDecoder.h in Headers */,
 				321296D8244C731B0008DC93 /* SFBDSDIFFDecoder.h in Headers */,
@@ -1656,6 +1681,7 @@
 				321296862449FC700008DC93 /* SFBTrueAudioDecoder.mm in Sources */,
 				326D3CB9242D2A21002AEC52 /* SFBMonkeysAudioFile.mm in Sources */,
 				322859CD2425519A0080B500 /* AddAudioPropertiesToDictionary.mm in Sources */,
+				32A0BA89258500F30046B802 /* SFBAudioObject.m in Sources */,
 				3212969E244A60680008DC93 /* SFBLibsndfileDecoder.m in Sources */,
 				322A916325725637006795AA /* SFBLibsndfileEncoder.m in Sources */,
 				3268F84324548A81006A5911 /* SFBAudioDeviceDataSource.m in Sources */,
@@ -1716,6 +1742,7 @@
 				325A5E8024434123003138D5 /* SFBAudioPlayer.swift in Sources */,
 				321296B0244B459B0008DC93 /* SFBDSDDecoder.m in Sources */,
 				32D740BF255F6D91004D3C1A /* SFBAudioEncoder.m in Sources */,
+				32A0BA842584F8C20046B802 /* SFBAudioBox.m in Sources */,
 				325A5E08243F8D8B003138D5 /* SFBInputSource.m in Sources */,
 				3275D9972466F3D90055308E /* SFBReplayGainAnalyzer.swift in Sources */,
 				326D3CCD242D2A21002AEC52 /* SFBWAVEFile.mm in Sources */,
@@ -1736,6 +1763,7 @@
 				32AE32DC245894ED002BC014 /* SFBInputSource.swift in Sources */,
 				328501C1256AA2A0009140DE /* SFBMP3Encoder.mm in Sources */,
 				32DD9D7C257BCF8A00B47CFD /* SFBMusepackEncoder.m in Sources */,
+				32A0BA832584F8C20046B802 /* SFBAudioClockDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
