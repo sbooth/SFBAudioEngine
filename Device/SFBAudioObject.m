@@ -154,9 +154,10 @@ static SFBAudioObject *sSystemObject = nil;
 	return sSystemObject;
 }
 
-+ (instancetype)audioObjectWithAudioObjectID:(AudioObjectID)objectID
++ (instancetype)audioObjectWithID:(AudioObjectID)objectID
 {
-	NSParameterAssert(objectID != kAudioObjectUnknown);
+	if(objectID == kAudioObjectUnknown)
+		return nil;
 
 	AudioClassID classID = AudioObjectClass(objectID);
 	switch(classID) {
@@ -408,7 +409,7 @@ static SFBAudioObject *sSystemObject = nil;
 
 	NSMutableArray *objects = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioObject *object = [[SFBAudioObject alloc] initWithAudioObjectID:objectIDs[i]];
+		SFBAudioObject *object = [SFBAudioObject audioObjectWithID:objectIDs[i]];
 		if(object)
 			[objects addObject:object];
 	}
