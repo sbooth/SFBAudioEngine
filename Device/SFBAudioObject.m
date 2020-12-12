@@ -149,7 +149,9 @@ static SFBAudioObject *sSystemObject = nil;
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
-		sSystemObject = [[SFBAudioObject alloc] initWithAudioObjectID:kAudioObjectSystemObject];
+		sSystemObject = [[SFBAudioObject alloc] init];
+		sSystemObject->_objectID = kAudioObjectSystemObject;
+		sSystemObject->_listenerBlocks = [NSMutableDictionary dictionary];
 	});
 	return sSystemObject;
 }
@@ -175,6 +177,9 @@ static SFBAudioObject *sSystemObject = nil;
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
 	NSParameterAssert(objectID != kAudioObjectUnknown);
+
+	if(objectID == kAudioObjectSystemObject)
+		return [SFBAudioObject systemObject];
 
 	if((self = [super init])) {
 		_objectID = objectID;
