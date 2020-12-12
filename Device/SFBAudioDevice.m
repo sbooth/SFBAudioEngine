@@ -10,7 +10,6 @@
 
 #import "SFBAudioDeviceDataSource.h"
 #import "SFBAudioDeviceNotifier.h"
-#import "SFBAudioOutputDevice.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBAudioDevice
