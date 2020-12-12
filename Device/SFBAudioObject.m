@@ -10,6 +10,7 @@
 #import "SFBAudioBox.h"
 #import "SFBAudioClockDevice.h"
 #import "SFBAudioDevice.h"
+#import "SFBAggregateAudioDevice.h"
 #import "SFBCStringForOSType.h"
 
 os_log_t gSFBAudioObjectLog = NULL;
@@ -163,6 +164,8 @@ static SFBAudioObject *sSystemObject = nil;
 
 	AudioClassID classID = AudioObjectClass(objectID);
 	switch(classID) {
+		case kAudioAggregateDeviceClassID:
+			return [[SFBAggregateAudioDevice alloc] initWithAudioObjectID:objectID];
 		case kAudioDeviceClassID:
 			return [[SFBAudioDevice alloc] initWithAudioObjectID:objectID];
 		case kAudioBoxClassID:
