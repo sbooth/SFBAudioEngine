@@ -48,6 +48,25 @@
 	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
 }
 
++ (SFBAudioOutputDevice *)defaultSystemOutputDevice
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyDefaultSystemOutputDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID deviceID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultSystemOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return [[SFBAudioOutputDevice alloc] initWithAudioObjectID:deviceID];
+}
+
 - (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
 {
 	NSParameterAssert(audioObjectID != kAudioObjectUnknown);

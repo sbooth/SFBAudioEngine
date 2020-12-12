@@ -21,6 +21,9 @@ NS_SWIFT_NAME(AudioOutputDevice) @interface SFBAudioOutputDevice: SFBAudioDevice
 /// Returns the default output device or \c nil on error
 @property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultOutputDevice;
 
+/// Returns the default system output device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioOutputDevice *defaultSystemOutputDevice;
+
 #pragma mark - Device Properties
 
 /// Mutes or unmutes the output device
