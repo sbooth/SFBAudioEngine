@@ -19,11 +19,8 @@
 
 	NSArray *devices = [SFBAudioDevice devices];
 	for(SFBAudioDevice *device in devices) {
-		if(device.isAggregate) {
-			SFBAggregateAudioDevice *aggregateDevice = [[SFBAggregateAudioDevice alloc] initWithAudioObjectID:device.deviceID];
-			if(aggregateDevice)
-				[aggregateDevices addObject:aggregateDevice];
-		}
+		if(device.isAggregate)
+			[aggregateDevices addObject:device];
 	}
 
 	return aggregateDevices;
