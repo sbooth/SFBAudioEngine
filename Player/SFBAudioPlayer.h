@@ -8,7 +8,7 @@
 
 #import <SFBAudioEngine/SFBAudioPlayerNode.h>
 #if TARGET_OS_OSX
-#import <SFBAudioEngine/SFBAudioOutputDevice.h>
+#import <SFBAudioEngine/SFBAudioDevice.h>
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -244,12 +244,12 @@ NS_SWIFT_NAME(AudioPlayer) @interface SFBAudioPlayer : NSObject <SFBAudioPlayerN
 #pragma mark - Output Device
 
 /// Returns the output device for \c AVAudioEngine.outputNode
-@property (nonatomic, nonnull, readonly) SFBAudioOutputDevice *outputDevice;
+@property (nonatomic, nonnull, readonly) SFBAudioDevice *outputDevice;
 /// Sets the output device for \c AVAudioEngine.outputNode
 /// @param outputDevice The desired output device
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the output device was successfully set
-- (BOOL)setOutputDevice:(SFBAudioOutputDevice *)outputDevice error:(NSError **)error;
+- (BOOL)setOutputDevice:(SFBAudioDevice *)outputDevice error:(NSError **)error;
 
 #endif
 

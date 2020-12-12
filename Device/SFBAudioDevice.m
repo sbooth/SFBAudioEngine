@@ -54,14 +54,96 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	NSMutableArray *devices = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioDevice *device = [[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]];
-		if(device)
-			[devices addObject:device];
+		[devices addObject:[SFBAudioObject audioObjectWithID:deviceIDs[i]]];
 	}
 
 	free(deviceIDs);
 
 	return devices;
+}
+
++ (NSArray *)inputDevices
+{
+	NSMutableArray *inputDevices = [NSMutableArray array];
+
+	NSArray *devices = [SFBAudioDevice devices];
+	for(SFBAudioDevice *device in devices) {
+		if(device.supportsInput)
+			[inputDevices addObject:device];
+	}
+
+	return inputDevices;
+}
+
++ (NSArray *)outputDevices
+{
+	NSMutableArray *outputDevices = [NSMutableArray array];
+
+	NSArray *devices = [SFBAudioDevice devices];
+	for(SFBAudioDevice *device in devices) {
+		if(device.supportsOutput) {
+			[outputDevices addObject:device];
+		}
+	}
+
+	return outputDevices;
+}
+
++ (SFBAudioDevice *)defaultInputDevice
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyDefaultInputDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID deviceID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultInputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
+}
+
++ (SFBAudioDevice *)defaultOutputDevice
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID deviceID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
+}
+
++ (SFBAudioDevice *)defaultSystemOutputDevice
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyDefaultSystemOutputDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID deviceID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(deviceID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultSystemOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -151,12 +233,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)isAggregate
 {
-	return self.classID == kAudioAggregateDeviceClassID;
+	return SFBAudioDeviceIsAggregate(_objectID);
 }
 
 - (BOOL)isPrivateAggregate
 {
-	if(!self.isAggregate)
+	if(!SFBAudioDeviceIsAggregate(_objectID))
 		return NO;
 
 	AudioObjectPropertyAddress propertyAddress = {
@@ -175,7 +257,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	return [[(__bridge_transfer NSDictionary *)composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
 }
-
 
 #pragma mark - Device Properties
 
@@ -387,6 +468,103 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	}
 
 	return volume;
+}
+
+- (BOOL)isMutedInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyMute,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 isMuted = 0;
+	UInt32 dataSize = sizeof(isMuted);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &isMuted);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return isMuted ? YES : NO;
+}
+
+- (BOOL)setMute:(BOOL)mute inScope:(AudioObjectPropertyScope)scope error:(NSError **)error
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyMute,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	UInt32 muted = (UInt32)mute;
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(muted), &muted);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyMute) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
+}
+
+- (NSArray *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') is false", SFBCStringForOSType(scope));
+		return nil;
+	}
+
+	UInt32 preferredChannels [2];
+	UInt32 dataSize = sizeof(preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		return nil;
+	}
+
+	return @[@(preferredChannels[0]), @(preferredChannels[1])];
+}
+
+- (AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelLayout,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') is false", SFBCStringForOSType(scope));
+		return nil;
+	}
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		return nil;
+	}
+
+	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		free(preferredChannelLayout);
+		return nil;
+	}
+
+	AVAudioChannelLayout *channelLayout = [AVAudioChannelLayout layoutWithLayout:preferredChannelLayout];
+	free(preferredChannelLayout);
+
+	return channelLayout;
 }
 
 - (NSArray *)dataSourcesInScope:(AudioObjectPropertyScope)scope
@@ -638,6 +816,21 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:kAudioDevicePropertyDataSource inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenMuteChangeInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyMute inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenMasterVolumeChangesInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+}
+
+- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	[self whenProperty:kAudioDevicePropertyVolumeScalar inScope:scope changesOnElement:channel performBlock:block];
 }
 
 - (NSString *)description

@@ -4,6 +4,7 @@
  */
 
 #import <SFBAudioEngine/SFBAudioObject.h>
+#import <AVFoundation/AVFoundation.h>
 
 @class SFBAudioDeviceDataSource;
 
@@ -12,12 +13,29 @@ NS_ASSUME_NONNULL_BEGIN
 /// Posted when the available audio devices change
 extern const NSNotificationName SFBAudioDevicesChangedNotification;
 
-/// An audio device supporting input or output
+/// An audio device supporting input and/or output
 NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
-/// Returns an array of all available audio devices or \c nil on error
+/// Returns an array of available audio devices or \c nil on error
 /// @note This returns \c { kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
+
+/// Returns an array of available audio devices supporting input or \c nil on error
+/// @note A device supports input if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementMaster }
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *inputDevices;
+
+/// Returns an array of available audio devices supporting output or \c nil on error
+/// @note A device supports output if it has a buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *outputDevices;
+
+/// Returns the default input device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioDevice *defaultInputDevice;
+
+/// Returns the default output device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioDevice *defaultOutputDevice;
+
+/// Returns the default system output device or \c nil on error
+@property (class, nonatomic, nullable, readonly) SFBAudioDevice *defaultSystemOutputDevice;
 
 /// Returns an initialized \c SFBAudioDevice object with the specified device UID
 /// @param deviceUID The desired device UID
@@ -43,7 +61,7 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note A device is an aggregate if its \c AudioClassID is \c kAudioAggregateDeviceClassID
 @property (nonatomic, readonly) BOOL isAggregate;
 /// Returns \c YES if the device is a private aggregate device
-/// @note A aggregate device is private if \c kAudioAggregateDeviceIsPrivateKey is true
+/// @note An aggregate device is private if \c kAudioAggregateDeviceIsPrivateKey is true
 @property (nonatomic, readonly) BOOL isPrivateAggregate;
 
 #pragma mark - Device Properties
@@ -105,6 +123,25 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @return The volume scalar for the volume in decibels or \c NaN on error
 - (float)convertDecibels:(float)decibels toVolumeScalarInScope:(AudioObjectPropertyScope)scope;
 
+/// Returns \c YES if the device is muted
+/// @note This is the property \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
+- (BOOL)isMutedInScope:(AudioObjectPropertyScope)scope;
+/// Mutes or unmutes the device
+/// @note This sets \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
+- (BOOL)setMute:(BOOL)mute inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
+
+/// Returns the preferred stereo channels for the device
+/// @note This is the property \c { kAudioDevicePropertyPreferredChannelsForStereo, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return The preferred stereo channels or \c nil on error
+- (nullable NSArray<NSNumber *> *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the preferred channel layout for the device
+/// @note This corresponds to the property \c { kAudioDevicePropertyPreferredChannelLayout, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return The preferred channel layout or \c nil on error
+- (nullable AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope;
+
 /// Returns an array of \c SFBAudioDeviceDataSource objects for the specified scope
 /// @note This returns \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
 /// @param scope The desired scope
@@ -161,6 +198,17 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @param scope The desired scope
 /// @param block A block to invoke when the active data sources change or \c nil to remove the previous value
 - (void)whenActiveDataSourcesChangeInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+/// Performs a block when mute in a scope changes
+/// @note This observes \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @param block A block to invoke when mute change or \c nil to remove the previous value
+- (void)whenMuteChangeInScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+/// Performs a block when the volume for a channel in a scope changes
+/// @note This observes \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }
+/// @param channel The desired channel
+/// @param scope The desired scope
+/// @param block A block to invoke when the volume on the specified channel changes or \c nil to remove the previous value
+- (void)whenVolumeChangesForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
 
 @end
 
