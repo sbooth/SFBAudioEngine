@@ -60,7 +60,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Returns the audio object's firmware version
 @property (nonatomic, nullable, readonly) NSString *firmwareVersion;
 
-#pragma mark - Audio Object Property Observation
+#pragma mark - Audio Object Properties
 
 /// Returns \c YES if the underlying audio object has the specified property
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -79,6 +79,24 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @return \c YES if the property is supported
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+
+/// Returns \c YES if the underlying audio object has the specified property and it is settable
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @param property The property to query
+/// @return \c YES if the property is settable
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property;
+/// Returns \c YES if the underlying audio object has the specified property in a scope and it is settable
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return \c YES if the property is settable
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+/// Returns \c YES if the underlying audio object has the specified property on an element in a scope and it is settable
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if the property is settable
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 
 /// Performs a block when the specified property changes
 /// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }

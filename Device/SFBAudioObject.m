@@ -479,6 +479,34 @@ static SFBAudioObject *sSystemObject = nil;
 	return (BOOL)AudioObjectHasProperty(_objectID, &propertyAddress);
 }
 
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property
+{
+	return [self propertyIsSettable:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+{
+	return [self propertyIsSettable:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= property,
+		.mScope		= scope,
+		.mElement	= element
+	};
+
+	Boolean isSettable;
+	OSStatus result = AudioObjectIsPropertySettable(_objectID, &propertyAddress, &isSettable);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectIsPropertySettable ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return (BOOL)isSettable;
+}
+
 - (void)whenPropertyChanges:(AudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
