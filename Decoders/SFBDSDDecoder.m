@@ -201,7 +201,7 @@ static NSMutableArray *_registeredSubclasses = nil;
 	if(!subclass) {
 		os_log_debug(gSFBDSDDecoderLog, "SFBDSDDecoder unsupported decoder: %{public}@", decoderName);
 		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
+			*error = [NSError errorWithDomain:SFBAudioDecoderErrorDomain code:SFBAudioDecoderErrorCodeUnknownDecoder userInfo:nil];
 		return nil;
 	}
 

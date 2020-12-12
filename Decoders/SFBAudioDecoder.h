@@ -133,10 +133,12 @@ extern NSErrorDomain const SFBAudioDecoderErrorDomain NS_SWIFT_NAME(AudioDecoder
 
 /// Possible \c NSError error codes used by \c SFBAudioDecoder
 typedef NS_ERROR_ENUM(SFBAudioDecoderErrorDomain, SFBAudioDecoderErrorCode) {
+	/// Internal decoder error
+	SFBAudioDecoderErrorCodeInternalError	= 0,
+	/// Unknown decoder name
+	SFBAudioDecoderErrorCodeUnknownDecoder	= 1,
 	/// Invalid, unknown, or unsupported format
-	SFBAudioDecoderErrorCodeInvalidFormat	= 0,
-	/// Internal encoder error
-	SFBAudioDecoderErrorCodeInternalError	= 1
+	SFBAudioDecoderErrorCodeInvalidFormat	= 2
 } NS_SWIFT_NAME(AudioDecoder.ErrorCode);
 
 NS_ASSUME_NONNULL_END
