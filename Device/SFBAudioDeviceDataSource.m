@@ -66,7 +66,7 @@ extern os_log_t gSFBAudioObjectLog;
 	};
 
 	UInt32 dataSize = sizeof(translation);
-	OSStatus result = AudioObjectGetPropertyData(_audioDevice.deviceID, &propertyAddress, 0, NULL, &dataSize, &translation);
+	OSStatus result = AudioObjectGetPropertyData(_audioDevice.objectID, &propertyAddress, 0, NULL, &dataSize, &translation);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceNameForIDCFString) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
@@ -92,14 +92,13 @@ extern os_log_t gSFBAudioObjectLog;
 	};
 
 	UInt32 dataSize = sizeof(translation);
-	OSStatus result = AudioObjectGetPropertyData(_audioDevice.deviceID, &propertyAddress, 0, NULL, &dataSize, &translation);
+	OSStatus result = AudioObjectGetPropertyData(_audioDevice.objectID, &propertyAddress, 0, NULL, &dataSize, &translation);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDataSourceKindForID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return kAudioObjectUnknown;
 	}
 
 	return dataSourceKind;
-
 }
 
 - (NSString *)description

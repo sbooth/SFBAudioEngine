@@ -101,11 +101,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self stringForProperty:kAudioDevicePropertyModelUID];
 }
 
-- (AudioObjectID)deviceID
-{
-	return self.objectID;
-}
-
 - (NSString *)deviceUID
 {
 	return [self stringForProperty:kAudioDevicePropertyDeviceUID];

@@ -49,11 +49,6 @@
 	return [self initWithAudioObjectID:clockDeviceID];
 }
 
-- (AudioObjectID)clockDeviceID
-{
-	return self.objectID;
-}
-
 - (NSString *)clockDeviceUID
 {
 	return [self stringForProperty:kAudioClockDevicePropertyDeviceUID];

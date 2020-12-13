@@ -18,9 +18,6 @@ NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 /// @return An initialized \c SFBAudioBox object or \c nil if \c boxUID is invalid or unknown
 - (nullable instancetype)initWithBoxUID:(NSString *)boxUID;
 
-/// Returns the box ID
-/// @note This is equivalent to \c objectID
-@property (nonatomic, readonly) AudioObjectID boxID;
 /// Returns the box UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *boxUID;
 

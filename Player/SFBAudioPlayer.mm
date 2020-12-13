@@ -476,7 +476,7 @@ namespace {
 	__block BOOL result;
 	__block NSError *err = nil;
 	dispatch_async_and_wait(_engineQueue, ^{
-		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.deviceID error:&err];
+		result = [_engine.outputNode.AUAudioUnit setDeviceID:outputDevice.objectID error:&err];
 	});
 
 	if(result)

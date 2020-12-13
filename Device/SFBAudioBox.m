@@ -49,11 +49,6 @@
 	return [self initWithAudioObjectID:deviceID];
 }
 
-- (AudioObjectID)boxID
-{
-	return self.objectID;
-}
-
 - (NSString *)boxUID
 {
 	return [self stringForProperty:kAudioBoxPropertyBoxUID];

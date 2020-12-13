@@ -39,7 +39,7 @@
 
 	CFArrayRef fullSubDeviceList = NULL;
 	UInt32 dataSize = sizeof(fullSubDeviceList);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &fullSubDeviceList);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &fullSubDeviceList);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyFullSubDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
@@ -70,7 +70,7 @@
 
 - (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", self.deviceID, clockDevice.clockDeviceUID ?: @"nil");
+	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", _objectID, clockDevice.clockDeviceUID ?: @"nil");
 
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioAggregateDevicePropertyClockDevice,
@@ -79,7 +79,7 @@
 	};
 
 	CFStringRef clockDeviceUID = (__bridge CFStringRef)clockDevice.clockDeviceUID;
-	OSStatus result = AudioObjectSetPropertyData(self.deviceID, &propertyAddress, 0, NULL, sizeof(clockDeviceUID), &clockDeviceUID);
+	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(clockDeviceUID), &clockDeviceUID);
 	if(kAudioHardwareNoError != result) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioAggregateDevicePropertyClockDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		if(error)

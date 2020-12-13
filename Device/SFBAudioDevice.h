@@ -42,9 +42,6 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @return An initialized \c SFBAudioDevice object or \c nil if \c deviceUID is invalid or unknown
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID;
 
-/// Returns the device ID
-/// @note This is equivalent to \c objectID
-@property (nonatomic, readonly) AudioObjectID deviceID;
 /// Returns the device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *deviceUID;
 /// Returns the model UID or \c nil on error

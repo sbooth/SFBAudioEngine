@@ -18,9 +18,6 @@ NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 /// @return An initialized \c SFBAudioClockDevice object or \c nil if \c clockDeviceUID is invalid or unknown
 - (nullable instancetype)initWithClockDeviceUID:(NSString *)clockDeviceUID;
 
-/// Returns the clock device ID
-/// @note This is equivalent to \c objectID
-@property (nonatomic, readonly) AudioObjectID clockDeviceID;
 /// Returns the clock device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *clockDeviceUID;
 
