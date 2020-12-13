@@ -96,16 +96,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [self initWithAudioObjectID:deviceID];
 }
 
-- (NSString *)modelUID
-{
-	return [self stringForProperty:kAudioDevicePropertyModelUID];
-}
-
-- (NSString *)deviceUID
-{
-	return [self stringForProperty:kAudioDevicePropertyDeviceUID];
-}
-
 - (BOOL)supportsInput
 {
 	return SFBAudioDeviceSupportsInput(_objectID);
@@ -134,6 +124,76 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 }
 
 #pragma mark - Device Properties
+
+- (NSString *)configurationApplication
+{
+	return [self stringForProperty:kAudioDevicePropertyConfigurationApplication];
+}
+
+- (NSString *)deviceUID
+{
+	return [self stringForProperty:kAudioDevicePropertyDeviceUID];
+}
+
+- (NSString *)modelUID
+{
+	return [self stringForProperty:kAudioDevicePropertyModelUID];
+}
+
+- (UInt32)transportType
+{
+	return [self uInt32ForProperty:kAudioDevicePropertyTransportType];
+}
+
+- (NSArray *)relatedDevices
+{
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices];
+}
+
+- (UInt32)clockDomain
+{
+	return [self uInt32ForProperty:kAudioDevicePropertyClockDomain];
+}
+
+- (BOOL)isAlive
+{
+	return (BOOL)[self uInt32ForProperty:kAudioDevicePropertyDeviceIsAlive];
+}
+
+- (BOOL)isRunning
+{
+	return (BOOL)[self uInt32ForProperty:kAudioDevicePropertyDeviceIsRunning];
+}
+
+- (BOOL)canBeDefault
+{
+	return (BOOL)[self uInt32ForProperty:kAudioDevicePropertyDeviceCanBeDefaultDevice];
+}
+
+- (BOOL)canBeSystemDefault
+{
+	return (BOOL)[self uInt32ForProperty:kAudioDevicePropertyDeviceCanBeDefaultSystemDevice];
+}
+
+- (UInt32)latency
+{
+	return [self uInt32ForProperty:kAudioDevicePropertyLatency];
+}
+
+- (NSArray *)streams
+{
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams];
+}
+
+- (NSArray *)controls
+{
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
+}
+
+- (UInt32)safetyOffset
+{
+	return [self uInt32ForProperty:kAudioDevicePropertySafetyOffset];
+}
 
 - (double)sampleRate
 {
@@ -218,6 +278,90 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	return availablSampleRates;
 }
+
+- (NSURL *)icon
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyIcon,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	CFURLRef url = NULL;
+	UInt32 dataSize = sizeof(url);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &url);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyIcon) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return (__bridge_transfer NSURL *)url;
+}
+
+- (BOOL)isHidden
+{
+	return (BOOL)[self uInt32ForProperty:kAudioDevicePropertyIsHidden];
+}
+
+- (NSArray *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') is false", SFBCStringForOSType(scope));
+		return nil;
+	}
+
+	UInt32 preferredChannels [2];
+	UInt32 dataSize = sizeof(preferredChannels);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		return nil;
+	}
+
+	return @[@(preferredChannels[0]), @(preferredChannels[1])];
+}
+
+- (AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyPreferredChannelLayout,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') is false", SFBCStringForOSType(scope));
+		return nil;
+	}
+
+	UInt32 dataSize = 0;
+	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		return nil;
+	}
+
+	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
+	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
+	if(kAudioHardwareNoError != result) {
+		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
+		free(preferredChannelLayout);
+		return nil;
+	}
+
+	AVAudioChannelLayout *channelLayout = [AVAudioChannelLayout layoutWithLayout:preferredChannelLayout];
+	free(preferredChannelLayout);
+
+	return channelLayout;
+}
+
+#pragma mark - Audio Controls
 
 - (float)volumeForChannel:(AudioObjectPropertyElement)channel inScope:(AudioObjectPropertyScope)scope
 {
@@ -382,64 +526,6 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	}
 
 	return YES;
-}
-
-- (NSArray *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyPreferredChannelsForStereo,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') is false", SFBCStringForOSType(scope));
-		return nil;
-	}
-
-	UInt32 preferredChannels [2];
-	UInt32 dataSize = sizeof(preferredChannels);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &preferredChannels);
-	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelsForStereo, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
-		return nil;
-	}
-
-	return @[@(preferredChannels[0]), @(preferredChannels[1])];
-}
-
-- (AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope
-{
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyPreferredChannelLayout,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') is false", SFBCStringForOSType(scope));
-		return nil;
-	}
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
-	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
-		return nil;
-	}
-
-	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
-	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
-	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
-		free(preferredChannelLayout);
-		return nil;
-	}
-
-	AVAudioChannelLayout *channelLayout = [AVAudioChannelLayout layoutWithLayout:preferredChannelLayout];
-	free(preferredChannelLayout);
-
-	return channelLayout;
 }
 
 - (NSArray *)dataSourcesInScope:(AudioObjectPropertyScope)scope

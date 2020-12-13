@@ -6,7 +6,7 @@
 #import <SFBAudioEngine/SFBAudioObject.h>
 #import <AVFoundation/AVFoundation.h>
 
-@class SFBAudioDeviceDataSource;
+@class SFBAudioStream, SFBAudioDeviceDataSource;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -42,11 +42,6 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @return An initialized \c SFBAudioDevice object or \c nil if \c deviceUID is invalid or unknown
 - (nullable instancetype)initWithDeviceUID:(NSString *)deviceUID;
 
-/// Returns the device UID or \c nil on error
-@property (nonatomic, nullable, readonly) NSString *deviceUID;
-/// Returns the model UID or \c nil on error
-@property (nonatomic, nullable, readonly) NSString *modelUID;
-
 /// Returns \c YES if the device supports input
 /// @note A device supports input if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementMaster }
 @property (nonatomic, readonly) BOOL supportsInput;
@@ -67,6 +62,35 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 #pragma mark - Device Properties
 
+/// Returns the configuration application or \c nil on error
+@property (nonatomic, nullable, readonly) NSString *configurationApplication;
+/// Returns the device UID or \c nil on error
+@property (nonatomic, nullable, readonly) NSString *deviceUID;
+/// Returns the model UID or \c nil on error
+@property (nonatomic, nullable, readonly) NSString *modelUID;
+/// Returns the transport type  or \c 0 on error
+@property (nonatomic, readonly) UInt32 transportType;
+/// Returns an array  of related audio devices or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *relatedDevices;
+/// Returns the clock domain  or \c 0 on error
+@property (nonatomic, readonly) UInt32 clockDomain;
+/// Returns \c YES if the device is alive
+@property (nonatomic, readonly) BOOL isAlive;
+/// Returns \c YES if the device is running
+@property (nonatomic, readonly) BOOL isRunning;
+/// Returns \c YES if the device can be the default device
+@property (nonatomic, readonly) BOOL canBeDefault;
+/// Returns \c YES if the device can be the system default device
+@property (nonatomic, readonly) BOOL canBeSystemDefault;
+/// Returns the latency  or \c 0 on error
+@property (nonatomic, readonly) UInt32 latency;
+/// Returns an array  of the device's audio streams or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioStream *> *streams;
+/// Returns an array  of the device's audio controls or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *controls;
+/// Returns the safety offset  or \c 0 on error
+@property (nonatomic, readonly) UInt32 safetyOffset;
+
 /// Returns the device sample rate or \c NaN on error
 /// @note This returns \c { kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 @property (nonatomic, readonly) double sampleRate;
@@ -80,6 +104,25 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// Returns an array of available sample rates or \c nil on error
 /// @note This returns \c { kAudioDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 @property (nonatomic, nullable, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
+
+/// Returns the URL of the device's icon or \c nil on error
+@property (nonatomic, nullable, readonly) NSURL *icon;
+/// Returns \c YES if the device is hidden
+@property (nonatomic, readonly) BOOL isHidden;
+
+/// Returns the preferred stereo channels for the device
+/// @note This is the property \c { kAudioDevicePropertyPreferredChannelsForStereo, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return The preferred stereo channels or \c nil on error
+- (nullable NSArray<NSNumber *> *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
+
+/// Returns the preferred channel layout for the device
+/// @note This corresponds to the property \c { kAudioDevicePropertyPreferredChannelLayout, scope, kAudioObjectPropertyElementMaster }
+/// @param scope The desired scope
+/// @return The preferred channel layout or \c nil on error
+- (nullable AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope;
+
+#pragma mark - Audio Controls
 
 /// Returns the volume scalar of the specified channel or \c NaN on error
 /// @note This returns \c { kAudioDevicePropertyVolumeScalar, scope, channel }
@@ -130,18 +173,6 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// Mutes or unmutes the device
 /// @note This sets \c { kAudioDevicePropertyMute, scope, kAudioObjectPropertyElementMaster }
 - (BOOL)setMute:(BOOL)mute inScope:(AudioObjectPropertyScope)scope error:(NSError **)error;
-
-/// Returns the preferred stereo channels for the device
-/// @note This is the property \c { kAudioDevicePropertyPreferredChannelsForStereo, scope, kAudioObjectPropertyElementMaster }
-/// @param scope The desired scope
-/// @return The preferred stereo channels or \c nil on error
-- (nullable NSArray<NSNumber *> *)preferredStereoChannelsInScope:(AudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
-
-/// Returns the preferred channel layout for the device
-/// @note This corresponds to the property \c { kAudioDevicePropertyPreferredChannelLayout, scope, kAudioObjectPropertyElementMaster }
-/// @param scope The desired scope
-/// @return The preferred channel layout or \c nil on error
-- (nullable AVAudioChannelLayout *)preferredChannelLayoutInScope:(AudioObjectPropertyScope)scope;
 
 /// Returns an array of \c SFBAudioDeviceDataSource objects for the specified scope
 /// @note This returns \c { kAudioDevicePropertyDataSources, scope, kAudioObjectPropertyElementMaster }

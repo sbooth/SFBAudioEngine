@@ -14,7 +14,7 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 
 /// Returns an array  of audio end points provided by the transport manager or \c nil on error
 @property (nonatomic, nullable, readonly) NSArray<SFBEndPointDevice *> *endPoints;
-/// Returns the transport type of the transport manager or \c 0 on error
+/// Returns the transport type  or \c 0 on error
 @property (nonatomic, readonly) UInt32 transportType;
 
 @end

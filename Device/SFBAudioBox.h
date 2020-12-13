@@ -22,7 +22,7 @@ NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
 /// Returns the box UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *boxUID;
-/// Returns the transport type of the box or \c 0 on error
+/// Returns the transport type  or \c 0 on error
 @property (nonatomic, readonly) UInt32 transportType;
 /// Returns \c YES if the box has audio
 @property (nonatomic, readonly) BOOL hasAudio;
