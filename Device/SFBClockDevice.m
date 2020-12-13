@@ -5,12 +5,12 @@
 
 @import os.log;
 
-#import "SFBAudioClockDevice.h"
+#import "SFBClockDevice.h"
 #import "SFBAudioObject+Internal.h"
 
 #import "SFBCStringForOSType.h"
 
-@implementation SFBAudioClockDevice
+@implementation SFBClockDevice
 
 + (NSArray *)clockDevices
 {
@@ -42,7 +42,7 @@
 
 	NSMutableArray *allDevices = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioClockDevice *device = [[SFBAudioClockDevice alloc] initWithAudioObjectID:deviceIDs[i]];
+		SFBClockDevice *device = [[SFBClockDevice alloc] initWithAudioObjectID:deviceIDs[i]];
 		if(device)
 			[allDevices addObject:device];
 	}

@@ -11,11 +11,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern os_log_t gSFBAudioObjectLog;
 
-BOOL SFBAudioObjectIsDevice(AudioObjectID objectID);
+BOOL SFBAudioObjectIsPlugIn(AudioObjectID objectID);
 BOOL SFBAudioObjectIsBox(AudioObjectID objectID);
+BOOL SFBAudioObjectIsDevice(AudioObjectID objectID);
 BOOL SFBAudioObjectIsClockDevice(AudioObjectID objectID);
+BOOL SFBAudioObjectIsStream(AudioObjectID objectID);
+
+BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID);
 
 BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID);
+BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID);
+
 BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);
 BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 

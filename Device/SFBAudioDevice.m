@@ -258,6 +258,11 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [[(__bridge_transfer NSDictionary *)composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
 }
 
+- (BOOL)isEndPoint
+{
+	return SFBAudioDeviceIsEndPoint(_objectID);
+}
+
 #pragma mark - Device Properties
 
 - (double)sampleRate

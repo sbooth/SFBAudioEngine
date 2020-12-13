@@ -7,14 +7,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SFBAudioClockDevice;
+@class SFBClockDevice;
 
 /// An aggregate audio device
-NS_SWIFT_NAME(AggregateAudioDevice) @interface SFBAggregateAudioDevice : SFBAudioDevice
+NS_SWIFT_NAME(AggregateDevice) @interface SFBAggregateDevice : SFBAudioDevice
 
-/// Returns an array of available aggregate audio devices or \c nil on error
+/// Returns an array of available aggregate devices or \c nil on error
 /// @note A device is an aggregate if its \c AudioClassID is \c kAudioAggregateDeviceClassID
-@property (class, nonatomic, nullable, readonly) NSArray<SFBAggregateAudioDevice *> *aggregateDevices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAggregateDevice *> *aggregateDevices;
 
 /// Returns the UIDs of all subdevices in the aggregate device, active or inactive, or \c nil on error
 /// @note This returns \c { kAudioAggregateDevicePropertyFullSubDeviceList, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -34,13 +34,13 @@ NS_SWIFT_NAME(AggregateAudioDevice) @interface SFBAggregateAudioDevice : SFBAudi
 
 /// The aggregate device's clock device or \c nil if none
 /// @note This returns \c { kAudioAggregateDevicePropertyClockDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, nullable, readonly) SFBAudioClockDevice * clockDevice;
+@property (nonatomic, nullable, readonly) SFBClockDevice * clockDevice;
 /// Sets the aggregate device's clock device
 /// @note This sets \c { kAudioAggregateDevicePropertyClockDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 /// @param clockDevice The desired clock device
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the clock device was set successfully
-- (BOOL)setClockDevice:(nullable SFBAudioClockDevice *)clockDevice error:(NSError **)error;
+- (BOOL)setClockDevice:(nullable SFBClockDevice *)clockDevice error:(NSError **)error;
 
 #pragma mark - Convenience Accessors
 

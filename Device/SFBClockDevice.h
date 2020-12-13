@@ -8,10 +8,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio clock device
-NS_SWIFT_NAME(AudioClockDevice) @interface SFBAudioClockDevice : SFBAudioObject
+NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 
-/// Returns an array of available audio clock devices or \c nil on error
-@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioClockDevice *> *clockDevices;
+/// Returns an array of available clock devices or \c nil on error
+@property (class, nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices;
 
 /// Returns an initialized \c SFBAudioClockDevice object with the specified clock UID
 /// @param clockDeviceUID The desired clock UID

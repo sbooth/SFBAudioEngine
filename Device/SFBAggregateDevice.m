@@ -5,13 +5,13 @@
 
 @import os.log;
 
-#import "SFBAggregateAudioDevice.h"
+#import "SFBAggregateDevice.h"
 #import "SFBAudioObject+Internal.h"
 
-#import "SFBAudioClockDevice.h"
+#import "SFBClockDevice.h"
 #import "SFBCStringForOSType.h"
 
-@implementation SFBAggregateAudioDevice
+@implementation SFBAggregateDevice
 
 + (NSArray *)aggregateDevices
 {
@@ -28,9 +28,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
 {
-	NSParameterAssert(audioObjectID != kAudioObjectUnknown);
 	NSParameterAssert(SFBAudioDeviceIsAggregate(audioObjectID));
-
 	return [super initWithAudioObjectID:audioObjectID];
 }
 
@@ -131,7 +129,7 @@
 	return [[SFBAudioDevice alloc] initWithDeviceUID:(__bridge_transfer NSString *)masterSubDevice];
 }
 
-- (SFBAudioClockDevice *)clockDevice
+- (SFBClockDevice *)clockDevice
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioAggregateDevicePropertyClockDevice,
@@ -147,10 +145,10 @@
 		return nil;
 	}
 
-	return [[SFBAudioClockDevice alloc] initWithClockDeviceUID:(__bridge_transfer NSString *)clockDeviceUID];
+	return [[SFBClockDevice alloc] initWithClockDeviceUID:(__bridge_transfer NSString *)clockDeviceUID];
 }
 
-- (BOOL)setClockDevice:(SFBAudioClockDevice *)clockDevice error:(NSError **)error
+- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", self.deviceID, clockDevice.clockDeviceUID ?: @"nil");
 

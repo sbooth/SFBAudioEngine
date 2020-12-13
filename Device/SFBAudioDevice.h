@@ -64,6 +64,10 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note An aggregate device is private if \c kAudioAggregateDeviceIsPrivateKey is true
 @property (nonatomic, readonly) BOOL isPrivateAggregate;
 
+/// Returns \c YES if the device is an end point device
+/// @note A device is an aggregate if its \c AudioClassID is \c kAudioEndPointDeviceClassID
+@property (nonatomic, readonly) BOOL isEndPoint;
+
 #pragma mark - Device Properties
 
 /// Returns the device sample rate or \c NaN on error

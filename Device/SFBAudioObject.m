@@ -7,10 +7,12 @@
 
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBAggregateDevice.h"
 #import "SFBAudioBox.h"
-#import "SFBAudioClockDevice.h"
 #import "SFBAudioDevice.h"
-#import "SFBAggregateAudioDevice.h"
+#import "SFBAudioStream.h"
+#import "SFBClockDevice.h"
+#import "SFBEndPointDevice.h"
 #import "SFBCStringForOSType.h"
 
 os_log_t gSFBAudioObjectLog = NULL;
@@ -64,9 +66,9 @@ static AudioClassID AudioObjectBaseClass(AudioObjectID objectID)
 	return classID;
 }
 
-BOOL SFBAudioObjectIsDevice(AudioObjectID objectID)
+BOOL SFBAudioObjectIsPlugIn(AudioObjectID objectID)
 {
-	return AudioObjectClass(objectID) == kAudioDeviceClassID || AudioObjectBaseClass(objectID) == kAudioDeviceClassID;
+	return AudioObjectClass(objectID) == kAudioPlugInClassID || AudioObjectBaseClass(objectID) == kAudioPlugInClassID;
 }
 
 BOOL SFBAudioObjectIsBox(AudioObjectID objectID)
@@ -74,9 +76,26 @@ BOOL SFBAudioObjectIsBox(AudioObjectID objectID)
 	return AudioObjectClass(objectID) == kAudioBoxClassID || AudioObjectBaseClass(objectID) == kAudioBoxClassID;
 }
 
+BOOL SFBAudioObjectIsDevice(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioDeviceClassID || AudioObjectBaseClass(objectID) == kAudioDeviceClassID;
+}
+
 BOOL SFBAudioObjectIsClockDevice(AudioObjectID objectID)
 {
 	return AudioObjectClass(objectID) == kAudioClockDeviceClassID || AudioObjectBaseClass(objectID) == kAudioClockDeviceClassID;
+}
+
+BOOL SFBAudioObjectIsStream(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioStreamClassID || AudioObjectBaseClass(objectID) == kAudioStreamClassID;
+}
+
+#pragma mark - Audio PlugIn Information
+
+BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioTransportManagerClassID;
 }
 
 #pragma mark - Audio Device Information
@@ -84,6 +103,11 @@ BOOL SFBAudioObjectIsClockDevice(AudioObjectID objectID)
 BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID)
 {
 	return AudioObjectClass(objectID) == kAudioAggregateDeviceClassID;
+}
+
+BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioEndPointDeviceClassID;
 }
 
 static BOOL AudioDeviceHasBuffersInScope(AudioObjectID deviceID, AudioObjectPropertyScope scope)
@@ -164,14 +188,19 @@ static SFBAudioObject *sSystemObject = nil;
 
 	AudioClassID classID = AudioObjectClass(objectID);
 	switch(classID) {
-		case kAudioAggregateDeviceClassID:
-			return [[SFBAggregateAudioDevice alloc] initWithAudioObjectID:objectID];
-		case kAudioDeviceClassID:
-			return [[SFBAudioDevice alloc] initWithAudioObjectID:objectID];
 		case kAudioBoxClassID:
 			return [[SFBAudioBox alloc] initWithAudioObjectID:objectID];
+		case kAudioDeviceClassID:
+			return [[SFBAudioDevice alloc] initWithAudioObjectID:objectID];
+		case kAudioEndPointDeviceClassID:
+			return [[SFBEndPointDevice alloc] initWithAudioObjectID:objectID];
+		case kAudioAggregateDeviceClassID:
+			return [[SFBAggregateDevice alloc] initWithAudioObjectID:objectID];
 		case kAudioClockDeviceClassID:
-			return [[SFBAudioClockDevice alloc] initWithAudioObjectID:objectID];
+			return [[SFBClockDevice alloc] initWithAudioObjectID:objectID];
+		case kAudioStreamClassID:
+			return [[SFBAudioStream alloc] initWithAudioObjectID:objectID];
+		case kAudioPlugInClassID:
 		default:
 			return [[SFBAudioObject alloc] initWithAudioObjectID:objectID];
 	}
