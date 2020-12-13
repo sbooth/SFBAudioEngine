@@ -390,79 +390,17 @@ static SFBAudioObject *sSystemObject = nil;
 
 #pragma mark - Audio Object Properties
 
-- (AudioClassID)baseClassID
-{
-	return [self uInt32ForProperty:kAudioObjectPropertyBaseClass];
-}
-
-- (AudioClassID)classID
-{
-	return [self uInt32ForProperty:kAudioObjectPropertyClass];
-}
-
-- (NSString *)owner
-{
-	return [self stringForProperty:kAudioObjectPropertyOwner];
-}
-
-- (NSString *)name
-{
-	return [self stringForProperty:kAudioObjectPropertyName];
-}
-
-- (NSString *)modelName
-{
-	return [self stringForProperty:kAudioObjectPropertyModelName];
-}
-
-- (NSString *)manufacturer
-{
-	return [self stringForProperty:kAudioObjectPropertyManufacturer];
-}
-
-- (NSString *)elementName
-{
-	return [self stringForProperty:kAudioObjectPropertyElementName];
-}
-
-- (NSString *)elementCategoryName
-{
-	return [self stringForProperty:kAudioObjectPropertyElementCategoryName];
-}
-
-- (NSString *)elementNumberName
-{
-	return [self stringForProperty:kAudioObjectPropertyElementNumberName];
-}
-
-- (NSArray *)ownedObjects
-{
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyOwnedObjects];
-}
-
-- (NSString *)serialNumber
-{
-	return [self stringForProperty:kAudioObjectPropertySerialNumber];
-}
-
-- (NSString *)firmwareVersion
-{
-	return [self stringForProperty:kAudioObjectPropertyFirmwareVersion];
-}
-
-#pragma mark - Audio Object Property Observation
-
 - (BOOL)hasProperty:(AudioObjectPropertySelector)property
 {
 	return [self hasProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self hasProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -477,12 +415,12 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self propertyIsSettable:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self propertyIsSettable:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -505,12 +443,12 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self stringForProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+- (NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self stringForProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -525,12 +463,12 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self dictionaryForProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+- (NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self dictionaryForProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -545,12 +483,12 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self audioObjectForProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property  inScope:(AudioObjectPropertyScope)scope
+- (SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self audioObjectForProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -565,12 +503,12 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self audioObjectArrayForProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSArray *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property  inScope:(AudioObjectPropertyScope)scope
+- (NSArray *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self audioObjectArrayForProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
 }
 
-- (NSArray *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+- (NSArray *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -585,12 +523,12 @@ static SFBAudioObject *sSystemObject = nil;
 	[self whenProperty:property inScope:kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenProperty:(AudioObjectPropertySelector)property changesInScope:(AudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+- (void)whenProperty:(AudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
 	[self whenProperty:property inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
 }
 
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= property,
@@ -693,6 +631,85 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSString *)description
 {
 	return [NSString stringWithFormat:@"<%@ 0x%x>", self.className, _objectID];
+}
+
+@end
+
+@implementation SFBAudioObject (SFBAudioObjectProperties)
+
+- (AudioClassID)baseClassID
+{
+	return [self uInt32ForProperty:kAudioObjectPropertyBaseClass];
+}
+
+- (AudioClassID)classID
+{
+	return [self uInt32ForProperty:kAudioObjectPropertyClass];
+}
+
+- (NSString *)owner
+{
+	return [self stringForProperty:kAudioObjectPropertyOwner];
+}
+
+- (NSString *)name
+{
+	return [self stringForProperty:kAudioObjectPropertyName];
+}
+
+- (NSString *)modelName
+{
+	return [self stringForProperty:kAudioObjectPropertyModelName];
+}
+
+- (NSString *)manufacturer
+{
+	return [self stringForProperty:kAudioObjectPropertyManufacturer];
+}
+
+- (NSString *)nameOfElement:(AudioObjectPropertyElement)element
+{
+	return [self stringForProperty:kAudioObjectPropertyElementName inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+}
+
+- (NSString *)nameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return [self stringForProperty:kAudioObjectPropertyElementName inScope:scope onElement:element];
+}
+
+- (NSString *)categoryNameOfElement:(AudioObjectPropertyElement)element
+{
+	return [self stringForProperty:kAudioObjectPropertyElementCategoryName inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+}
+
+- (NSString *)categoryNameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return [self stringForProperty:kAudioObjectPropertyElementCategoryName inScope:scope onElement:element];
+}
+
+- (NSString *)numberNameOfElement:(AudioObjectPropertyElement)element
+{
+	return [self stringForProperty:kAudioObjectPropertyElementNumberName inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+}
+
+- (NSString *)numberNameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return [self stringForProperty:kAudioObjectPropertyElementNumberName inScope:scope onElement:element];
+}
+
+- (NSArray *)ownedObjects
+{
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyOwnedObjects];
+}
+
+- (NSString *)serialNumber
+{
+	return [self stringForProperty:kAudioObjectPropertySerialNumber];
+}
+
+- (NSString *)firmwareVersion
+{
+	return [self stringForProperty:kAudioObjectPropertyFirmwareVersion];
 }
 
 @end
