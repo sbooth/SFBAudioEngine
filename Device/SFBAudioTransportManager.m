@@ -8,6 +8,11 @@
 
 @implementation SFBAudioTransportManager
 
++ (NSArray *)transportManagers
+{
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyTransportManagerList];
+}
+
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
 	NSParameterAssert(SFBAudioPlugInIsTransportManager(objectID));
