@@ -18,4 +18,67 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
+- (BOOL)isActive
+{
+	return (BOOL)[self uInt32ForProperty:kAudioStreamPropertyIsActive];
+}
+
+- (BOOL)isOutput
+{
+	return (BOOL)[self uInt32ForProperty:kAudioStreamPropertyDirection];
+}
+
+- (UInt32)terminalType
+{
+	return [self uInt32ForProperty:kAudioStreamPropertyTerminalType];
+}
+
+- (UInt32)startingChannel
+{
+	return [self uInt32ForProperty:kAudioStreamPropertyStartingChannel];
+}
+
+- (UInt32)latency
+{
+	return [self uInt32ForProperty:kAudioStreamPropertyLatency];
+}
+
+- (AVAudioFormat *)virtualFormat
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioStreamPropertyVirtualFormat,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioStreamBasicDescription asbd = {0};
+	UInt32 dataSize = sizeof(asbd);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &asbd);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
+}
+
+- (AVAudioFormat *)physicalFormat
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioStreamPropertyPhysicalFormat,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioStreamBasicDescription asbd = {0};
+	UInt32 dataSize = sizeof(asbd);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &asbd);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	return [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
+}
+
 @end
