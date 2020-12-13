@@ -197,21 +197,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (double)sampleRate
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyNominalSampleRate,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	Float64 sampleRate;
-	UInt32 dataSize = sizeof(sampleRate);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &sampleRate);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nan("1");
-	}
-
-	return sampleRate;
+	return [self float64ForProperty:kAudioDevicePropertyNominalSampleRate];
 }
 
 - (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error

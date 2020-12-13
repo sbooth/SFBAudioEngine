@@ -20,6 +20,24 @@ NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 
 /// Returns the clock device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *clockDeviceUID;
+/// Returns the transport type  or \c 0 on error
+@property (nonatomic, readonly) UInt32 transportType;
+/// Returns the domain  or \c 0 on error
+@property (nonatomic, readonly) UInt32 domain;
+/// Returns \c YES if the clock device is alive
+@property (nonatomic, readonly) BOOL isAlive;
+/// Returns \c YES if the clock device is running
+@property (nonatomic, readonly) BOOL isRunning;
+/// Returns the latency  or \c 0 on error
+@property (nonatomic, readonly) UInt32 latency;
+/// Returns an array  of the clock device's audio controls or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *controls;
+/// Returns the device sample rate or \c NaN on error
+/// @note This returns \c { kAudioClockDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+@property (nonatomic, readonly) double sampleRate;
+/// Returns an array of available sample rates or \c nil on error
+/// @note This returns \c { kAudioClockDevicePropertyAvailableNominalSampleRates, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
 
 @end
 
