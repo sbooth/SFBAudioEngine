@@ -54,6 +54,41 @@
 	return [self stringForProperty:kAudioBoxPropertyBoxUID];
 }
 
+- (UInt32)transportType
+{
+	return [self uInt32ForProperty:kAudioBoxPropertyTransportType];
+}
+
+- (BOOL)hasAudio
+{
+	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasAudio];
+}
+
+- (BOOL)hasVideo
+{
+	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasVideo];
+}
+
+- (BOOL)hasMIDI
+{
+	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasMIDI];
+}
+
+- (BOOL)acquired
+{
+	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyAcquired];
+}
+
+- (NSArray *)devices
+{
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyDeviceList];
+}
+
+- (NSArray *)clocks
+{
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyClockDeviceList];
+}
+
 - (NSString *)description
 {
 	return [NSString stringWithFormat:@"<%@ 0x%x, \"%@\">", self.className, _objectID, self.boxUID];

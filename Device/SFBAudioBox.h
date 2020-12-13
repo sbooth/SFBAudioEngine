@@ -7,6 +7,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class SFBAudioDevice, SFBClockDevice;
+
 /// An audio box
 NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
@@ -20,6 +22,20 @@ NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
 /// Returns the box UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *boxUID;
+/// Returns the transport type of the box or \c 0 on error
+@property (nonatomic, readonly) UInt32 transportType;
+/// Returns \c YES if the box has audio
+@property (nonatomic, readonly) BOOL hasAudio;
+/// Returns \c YES if the box has video
+@property (nonatomic, readonly) BOOL hasVideo;
+/// Returns \c YES if the box has MIDI
+@property (nonatomic, readonly) BOOL hasMIDI;
+/// Returns \c YES if the box is acquired
+@property (nonatomic, readonly) BOOL acquired;
+/// Returns an array  of audio devices provided by the box or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
+/// Returns an array  of audio clock devices provided by the box or \c nil on error
+@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clocks;
 
 @end
 
