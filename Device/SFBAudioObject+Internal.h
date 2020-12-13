@@ -21,6 +21,7 @@ BOOL SFBAudioObjectIsStream(AudioObjectID objectID);
 BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID);
 
 BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID);
+BOOL SFBAudioDeviceIsEndPointDevice(AudioObjectID objectID);
 BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID);
 
 BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);

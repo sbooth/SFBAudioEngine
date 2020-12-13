@@ -7,6 +7,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class SFBAudioDevice;
+
 /// An audio end point device
 NS_SWIFT_NAME(EndPointDevice) @interface SFBEndPointDevice : SFBAudioDevice
 
@@ -17,7 +19,7 @@ NS_SWIFT_NAME(EndPointDevice) @interface SFBEndPointDevice : SFBAudioDevice
 /// @note The constants for the dictionary keys are located in \c AudioHardwareBase.h
 @property (nonatomic, nullable, readonly) NSDictionary * composition;
 /// Returns an array of available end points or \c nil on error
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *endPoints;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *endPoints;
 /// Returns the owning process id or \c 0 for public devices
 @property (nonatomic, readonly) pid_t isPrivate;
 

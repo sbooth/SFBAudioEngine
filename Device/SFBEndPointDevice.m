@@ -18,13 +18,13 @@
 	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
 #pragma unused(idx)
 #pragma unused(stop)
-		return [obj isEndPoint];
+		return [obj isEndPointDevice];
 	}]];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioDeviceIsEndPoint(objectID));
+	NSParameterAssert(SFBAudioDeviceIsEndPointDevice(objectID));
 	return [super initWithAudioObjectID:objectID];
 }
 

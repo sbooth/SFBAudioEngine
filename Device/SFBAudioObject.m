@@ -107,9 +107,14 @@ BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID)
 	return AudioObjectClass(objectID) == kAudioAggregateDeviceClassID;
 }
 
-BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID)
+BOOL SFBAudioDeviceIsEndPointDevice(AudioObjectID objectID)
 {
 	return AudioObjectClass(objectID) == kAudioEndPointDeviceClassID;
+}
+
+BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioEndPointClassID;
 }
 
 static BOOL AudioDeviceHasBuffersInScope(AudioObjectID deviceID, AudioObjectPropertyScope scope)

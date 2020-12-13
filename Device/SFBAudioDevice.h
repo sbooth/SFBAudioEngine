@@ -58,6 +58,9 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
 /// Returns \c YES if the device is an end point device
 /// @note A device is an aggregate if its \c AudioClassID is \c kAudioEndPointDeviceClassID
+@property (nonatomic, readonly) BOOL isEndPointDevice;
+/// Returns \c YES if the device is an end point
+/// @note A device is an aggregate if its \c AudioClassID is \c kAudioEndPointClassID
 @property (nonatomic, readonly) BOOL isEndPoint;
 
 #pragma mark - Device Properties
