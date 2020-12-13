@@ -93,6 +93,11 @@ BOOL SFBAudioObjectIsStream(AudioObjectID objectID)
 	return AudioObjectClass(objectID) == kAudioStreamClassID || AudioObjectBaseClass(objectID) == kAudioStreamClassID;
 }
 
+BOOL SFBAudioObjectIsControl(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioControlClassID || AudioObjectBaseClass(objectID) == kAudioControlClassID;
+}
+
 #pragma mark - Audio PlugIn Information
 
 BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID)

@@ -17,6 +17,7 @@ BOOL SFBAudioObjectIsBox(AudioObjectID objectID);
 BOOL SFBAudioObjectIsDevice(AudioObjectID objectID);
 BOOL SFBAudioObjectIsClockDevice(AudioObjectID objectID);
 BOOL SFBAudioObjectIsStream(AudioObjectID objectID);
+BOOL SFBAudioObjectIsControl(AudioObjectID objectID);
 
 BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID);
 
