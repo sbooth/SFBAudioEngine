@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern os_log_t gSFBAudioObjectLog;
 
+// Audio object class determination
 BOOL SFBAudioObjectIsPlugIn(AudioObjectID objectID);
 BOOL SFBAudioObjectIsBox(AudioObjectID objectID);
 BOOL SFBAudioObjectIsDevice(AudioObjectID objectID);
@@ -25,14 +26,42 @@ BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID);
 BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);
 BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 
+// Property support
+BOOL SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, UInt32 *value);
+
+NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+
+SFBAudioObject * _Nullable SFBAudioObjectForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+
 @interface SFBAudioObject ()
 {
 @protected
 	/// The underlying audio object identifier
 	AudioObjectID _objectID;
 }
+/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @return The property value
+- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 @end
-
-
 
 NS_ASSUME_NONNULL_END

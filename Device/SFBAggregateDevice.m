@@ -50,99 +50,22 @@
 
 - (NSArray *)activeSubdevices
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyActiveSubDeviceList,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(self.deviceID, &propertyAddress, 0, NULL, &dataSize);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioAggregateDevicePropertyActiveSubDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	AudioObjectID *deviceIDs = (AudioObjectID *)malloc(dataSize);
-	if(!deviceIDs) {
-		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
-		return nil;
-	}
-
-	result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, deviceIDs);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyActiveSubDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		free(deviceIDs);
-		return nil;
-	}
-
-	NSMutableArray *subdevices = [NSMutableArray array];
-	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioDevice *device = [[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]];
-		if(device)
-			[subdevices addObject:device];
-	}
-
-	free(deviceIDs);
-
-	return subdevices;
+	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList];
 }
 
 - (NSDictionary *)composition
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyComposition,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFDictionaryRef composition = NULL;
-	UInt32 dataSize = sizeof(composition);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &composition);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyComposition) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSDictionary *)composition;
+	return [self dictionaryForProperty:kAudioAggregateDevicePropertyComposition];
 }
 
 - (SFBAudioDevice *)masterSubdevice
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyMasterSubDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef masterSubDevice = NULL;
-	UInt32 dataSize = sizeof(masterSubDevice);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &masterSubDevice);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyMasterSubDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBAudioDevice alloc] initWithDeviceUID:(__bridge_transfer NSString *)masterSubDevice];
+	return (SFBAudioDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyMasterSubDevice];
 }
 
 - (SFBClockDevice *)clockDevice
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyClockDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef clockDeviceUID = NULL;
-	UInt32 dataSize = sizeof(clockDeviceUID);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &clockDeviceUID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyClockDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBClockDevice alloc] initWithClockDeviceUID:(__bridge_transfer NSString *)clockDeviceUID];
+	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice];
 }
 
 - (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error

@@ -14,42 +14,7 @@
 
 + (NSArray *)boxes
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyBoxList,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioHardwarePropertyBoxList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	AudioObjectID *boxIDs = (AudioObjectID *)malloc(dataSize);
-	if(!boxIDs) {
-		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
-		return nil;
-	}
-
-	result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, boxIDs);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyBoxList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		free(boxIDs);
-		return nil;
-	}
-
-	NSMutableArray *allBoxes = [NSMutableArray array];
-	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioBox *device = [[SFBAudioBox alloc] initWithAudioObjectID:boxIDs[i]];
-		if(device)
-			[allBoxes addObject:device];
-	}
-
-	free(boxIDs);
-
-	return allBoxes;
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -91,21 +56,7 @@
 
 - (NSString *)boxUID
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioBoxPropertyBoxUID,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef boxUID = NULL;
-	UInt32 dataSize = sizeof(boxUID);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &boxUID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioBoxPropertyBoxUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)boxUID;
+	return [self stringForProperty:kAudioBoxPropertyBoxUID];
 }
 
 - (NSString *)description

@@ -14,42 +14,7 @@
 
 + (NSArray *)clockDevices
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyClockDeviceList,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioHardwarePropertyClockDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	AudioObjectID *deviceIDs = (AudioObjectID *)malloc(dataSize);
-	if(!deviceIDs) {
-		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
-		return nil;
-	}
-
-	result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, deviceIDs);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyClockDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		free(deviceIDs);
-		return nil;
-	}
-
-	NSMutableArray *allDevices = [NSMutableArray array];
-	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBClockDevice *device = [[SFBClockDevice alloc] initWithAudioObjectID:deviceIDs[i]];
-		if(device)
-			[allDevices addObject:device];
-	}
-
-	free(deviceIDs);
-
-	return allDevices;
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -91,21 +56,7 @@
 
 - (NSString *)clockDeviceUID
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioClockDevicePropertyDeviceUID,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef clockDeviceUID = NULL;
-	UInt32 dataSize = sizeof(clockDeviceUID);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &clockDeviceUID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioClockDevicePropertyDeviceUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)clockDeviceUID;
+	return [self stringForProperty:kAudioClockDevicePropertyDeviceUID];
 }
 
 - (NSString *)description

@@ -3,12 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
-
 #import "SFBEndPointDevice.h"
 #import "SFBAudioObject+Internal.h"
-
-#import "SFBCStringForOSType.h"
 
 @implementation SFBEndPointDevice
 

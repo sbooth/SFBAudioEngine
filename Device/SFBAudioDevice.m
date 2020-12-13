@@ -26,124 +26,42 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 + (NSArray *)devices
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyDevices,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	AudioObjectID *deviceIDs = (AudioObjectID *)malloc(dataSize);
-	if(!deviceIDs) {
-		os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
-		return nil;
-	}
-
-	result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, deviceIDs);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDevices) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		free(deviceIDs);
-		return nil;
-	}
-
-	NSMutableArray *devices = [NSMutableArray array];
-	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		[devices addObject:[[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]]];
-	}
-
-	free(deviceIDs);
-
-	return devices;
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices];
 }
 
 + (NSArray *)inputDevices
 {
-	NSMutableArray *inputDevices = [NSMutableArray array];
-
 	NSArray *devices = [SFBAudioDevice devices];
-	for(SFBAudioDevice *device in devices) {
-		if(device.supportsInput)
-			[inputDevices addObject:device];
-	}
-
-	return inputDevices;
+	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+#pragma unused(idx)
+#pragma unused(stop)
+		return [obj supportsInput];
+	}]];
 }
 
 + (NSArray *)outputDevices
 {
-	NSMutableArray *outputDevices = [NSMutableArray array];
-
 	NSArray *devices = [SFBAudioDevice devices];
-	for(SFBAudioDevice *device in devices) {
-		if(device.supportsOutput) {
-			[outputDevices addObject:device];
-		}
-	}
-
-	return outputDevices;
+	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+#pragma unused(idx)
+#pragma unused(stop)
+		return [obj supportsOutput];
+	}]];
 }
 
 + (SFBAudioDevice *)defaultInputDevice
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyDefaultInputDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultInputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultInputDevice];
 }
 
 + (SFBAudioDevice *)defaultOutputDevice
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyDefaultOutputDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultOutputDevice];
 }
 
 + (SFBAudioDevice *)defaultSystemOutputDevice
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioHardwarePropertyDefaultSystemOutputDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &specifierSize, &deviceID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyDefaultSystemOutputDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
+	return (SFBAudioDevice *)[[SFBAudioObject systemObject] audioObjectForProperty:kAudioHardwarePropertyDefaultSystemOutputDevice];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -180,21 +98,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSString *)modelUID
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyModelUID,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef modelUID = NULL;
-	UInt32 dataSize = sizeof(modelUID);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &modelUID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyModelUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)modelUID;
+	return [self stringForProperty:kAudioDevicePropertyModelUID];
 }
 
 - (AudioObjectID)deviceID
@@ -204,21 +108,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSString *)deviceUID
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyDeviceUID,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef deviceUID = NULL;
-	UInt32 dataSize = sizeof(deviceUID);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &deviceUID);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyDeviceUID) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSString *)deviceUID;
+	return [self stringForProperty:kAudioDevicePropertyDeviceUID];
 }
 
 - (BOOL)supportsInput
@@ -240,22 +130,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 {
 	if(!SFBAudioDeviceIsAggregate(_objectID))
 		return NO;
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyComposition,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFDictionaryRef composition = NULL;
-	UInt32 dataSize = sizeof(composition);
-	OSStatus result = AudioObjectGetPropertyData(self.deviceID, &propertyAddress, 0, NULL, &dataSize, &composition);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyComposition) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return NO;
-	}
-
-	return [[(__bridge_transfer NSDictionary *)composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
+	return [[[self dictionaryForProperty:kAudioAggregateDevicePropertyComposition] objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
 }
 
 - (BOOL)isEndPoint
