@@ -181,39 +181,42 @@ static SFBAudioObject *sSystemObject = nil;
 	return sSystemObject;
 }
 
-+ (instancetype)audioObjectWithID:(AudioObjectID)objectID
-{
-	if(objectID == kAudioObjectUnknown)
-		return nil;
-
-	AudioClassID classID = AudioObjectClass(objectID);
-	switch(classID) {
-		case kAudioBoxClassID:
-			return [[SFBAudioBox alloc] initWithAudioObjectID:objectID];
-		case kAudioDeviceClassID:
-			return [[SFBAudioDevice alloc] initWithAudioObjectID:objectID];
-		case kAudioEndPointDeviceClassID:
-			return [[SFBEndPointDevice alloc] initWithAudioObjectID:objectID];
-		case kAudioAggregateDeviceClassID:
-			return [[SFBAggregateDevice alloc] initWithAudioObjectID:objectID];
-		case kAudioClockDeviceClassID:
-			return [[SFBClockDevice alloc] initWithAudioObjectID:objectID];
-		case kAudioStreamClassID:
-			return [[SFBAudioStream alloc] initWithAudioObjectID:objectID];
-		case kAudioPlugInClassID:
-		default:
-			return [[SFBAudioObject alloc] initWithAudioObjectID:objectID];
-	}
-}
-
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(objectID != kAudioObjectUnknown);
+//	NSParameterAssert(objectID != kAudioObjectUnknown);
+	if(objectID == kAudioObjectUnknown)
+		return nil;
 
 	if(objectID == kAudioObjectSystemObject)
 		return [SFBAudioObject systemObject];
 
-	if((self = [super init])) {
+	AudioClassID classID = AudioObjectClass(objectID);
+	switch(classID) {
+		case kAudioBoxClassID:
+			self = [[SFBAudioBox alloc] init];
+			break;
+		case kAudioDeviceClassID:
+			self = [[SFBAudioDevice alloc] init];
+			break;
+		case kAudioEndPointDeviceClassID:
+			self = [[SFBEndPointDevice alloc] init];
+			break;
+		case kAudioAggregateDeviceClassID:
+			self = [[SFBAggregateDevice alloc] init];
+			break;
+		case kAudioClockDeviceClassID:
+			self = [[SFBClockDevice alloc] init];
+			break;
+		case kAudioStreamClassID:
+			self = [[SFBAudioStream alloc] init];
+			break;
+		case kAudioPlugInClassID:
+		default:
+			self = [[SFBAudioObject alloc] init];
+			break;
+	}
+
+	if(self) {
 		_objectID = objectID;
 		_listenerBlocks = [NSMutableDictionary dictionary];
 	}
@@ -446,7 +449,7 @@ static SFBAudioObject *sSystemObject = nil;
 
 	NSMutableArray *objects = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		SFBAudioObject *object = [SFBAudioObject audioObjectWithID:objectIDs[i]];
+		SFBAudioObject *object = [[SFBAudioObject alloc] initWithAudioObjectID:objectIDs[i]];
 		if(object)
 			[objects addObject:object];
 	}

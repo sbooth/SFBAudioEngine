@@ -54,7 +54,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 	NSMutableArray *devices = [NSMutableArray array];
 	for(NSInteger i = 0; i < (NSInteger)(dataSize / sizeof(AudioObjectID)); ++i) {
-		[devices addObject:[SFBAudioObject audioObjectWithID:deviceIDs[i]]];
+		[devices addObject:[[SFBAudioDevice alloc] initWithAudioObjectID:deviceIDs[i]]];
 	}
 
 	free(deviceIDs);
@@ -105,7 +105,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		return nil;
 	}
 
-	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
+	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
 }
 
 + (SFBAudioDevice *)defaultOutputDevice
@@ -124,7 +124,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		return nil;
 	}
 
-	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
+	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
 }
 
 + (SFBAudioDevice *)defaultSystemOutputDevice
@@ -143,7 +143,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 		return nil;
 	}
 
-	return (SFBAudioDevice *)[SFBAudioObject audioObjectWithID:deviceID];
+	return [[SFBAudioDevice alloc] initWithAudioObjectID:deviceID];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

@@ -14,16 +14,11 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// The system audio object
 + (SFBAudioObject *)systemObject;
 
-/// Returns an initialized \c SFBAudioObject object with the specified audio object ID
-/// @note This returns a specialized subclass of \c SFBAudioObject when possible
-/// @param objectID The desired audio object ID
-/// @return An initialized \c SFBAudioObject object or \c nil if \c objectID is invalid or unknown
-+ (instancetype)audioObjectWithID:(AudioObjectID)objectID;
-
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
 
 /// Returns an initialized \c SFBAudioObject object with the specified audio object ID
+/// @note This returns a specialized subclass of \c SFBAudioObject when possible
 /// @param objectID The desired audio object ID
 /// @return An initialized \c SFBAudioObject object or \c nil if \c objectID is invalid or unknown
 - (nullable instancetype)initWithAudioObjectID:(AudioObjectID)objectID NS_DESIGNATED_INITIALIZER;
