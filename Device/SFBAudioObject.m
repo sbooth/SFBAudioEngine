@@ -12,6 +12,7 @@
 #import "SFBAudioDevice.h"
 #import "SFBAudioPlugIn.h"
 #import "SFBAudioStream.h"
+#import "SFBAudioTransportManager.h"
 #import "SFBClockDevice.h"
 #import "SFBEndPointDevice.h"
 #import "SFBCStringForOSType.h"
@@ -313,6 +314,9 @@ static SFBAudioObject *sSystemObject = nil;
 			break;
 		case kAudioPlugInClassID:
 			self = [[SFBAudioPlugIn alloc] init];
+			break;
+		case kAudioTransportManagerClassID:
+			self = [[SFBAudioTransportManager alloc] init];
 			break;
 		default:
 			self = [[SFBAudioObject alloc] init];

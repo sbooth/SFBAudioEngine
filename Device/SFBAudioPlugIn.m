@@ -3,15 +3,8 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
-
 #import "SFBAudioPlugIn.h"
 #import "SFBAudioObject+Internal.h"
-
-#import "SFBAudioBox.h"
-#import "SFBAudioDevice.h"
-#import "SFBClockDevice.h"
-#import "SFBCStringForOSType.h"
 
 @implementation SFBAudioPlugIn
 
