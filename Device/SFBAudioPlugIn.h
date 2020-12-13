@@ -12,7 +12,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// An audio plug in
 NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 
-/// Returns the bundleID or \c nil on error
+/// Returns an array of available audio plug ins or \c nil on error
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioPlugIn *> *plugIns;
+
+/// Returns the bundle ID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *bundleID;
 /// Returns an array  of audio devices provided by the plug in or \c nil on error
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;

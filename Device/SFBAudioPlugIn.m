@@ -8,6 +8,11 @@
 
 @implementation SFBAudioPlugIn
 
++ (NSArray *)plugIns
+{
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList];
+}
+
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
 	NSParameterAssert(SFBAudioObjectIsPlugIn(objectID));
