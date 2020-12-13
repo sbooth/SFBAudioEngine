@@ -56,12 +56,16 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note An aggregate device is private if \c kAudioAggregateDeviceIsPrivateKey is true
 @property (nonatomic, readonly) BOOL isPrivateAggregate;
 
-/// Returns \c YES if the device is an end point device
-/// @note A device is an aggregate if its \c AudioClassID is \c kAudioEndPointDeviceClassID
-@property (nonatomic, readonly) BOOL isEndPointDevice;
-/// Returns \c YES if the device is an end point
-/// @note A device is an aggregate if its \c AudioClassID is \c kAudioEndPointClassID
-@property (nonatomic, readonly) BOOL isEndPoint;
+/// Returns \c YES if the device is an endpoint device
+/// @note A device is an endpoint device if its \c AudioClassID is \c kAudioEndPointDeviceClassID
+@property (nonatomic, readonly) BOOL isEndpointDevice;
+/// Returns \c YES if the device is an endpoint
+/// @note A device is an endpoint if its \c AudioClassID is \c kAudioEndPointClassID
+@property (nonatomic, readonly) BOOL isEndpoint;
+
+/// Returns \c YES if the device is a subdevice
+/// @note A device is a subdevice if its \c AudioClassID is \c kAudioSubDeviceClassID
+@property (nonatomic, readonly) BOOL isSubdevice;
 
 #pragma mark - Device Properties
 

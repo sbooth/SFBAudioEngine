@@ -118,14 +118,19 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return [[[self dictionaryForProperty:kAudioAggregateDevicePropertyComposition] objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
 }
 
-- (BOOL)isEndPointDevice
+- (BOOL)isEndpointDevice
 {
 	return SFBAudioDeviceIsEndpointDevice(_objectID);
 }
 
-- (BOOL)isEndPoint
+- (BOOL)isEndpoint
 {
 	return SFBAudioDeviceIsEndpoint(_objectID);
+}
+
+- (BOOL)isSubdevice
+{
+	return SFBAudioDeviceIsSubdevice(_objectID);
 }
 
 #pragma mark - Device Properties

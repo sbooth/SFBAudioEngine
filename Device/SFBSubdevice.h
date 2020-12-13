@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 - 2020 Stephen F. Booth <me@sbooth.org>
+ * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
@@ -9,6 +9,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// An audio subdevice
 NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
+
+/// Returns an array of available subdevices or \c nil on error
+@property (class, nonatomic, nullable, readonly) NSArray<SFBSubdevice *> *subdevices;
 
 /// Returns the extra latency or \c 0 on error
 @property (nonatomic, readonly) Float64 extraLatency;
