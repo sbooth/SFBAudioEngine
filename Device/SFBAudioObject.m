@@ -14,7 +14,7 @@
 #import "SFBAudioStream.h"
 #import "SFBAudioTransportManager.h"
 #import "SFBClockDevice.h"
-#import "SFBEndPointDevice.h"
+#import "SFBEndpointDevice.h"
 #import "SFBCStringForOSType.h"
 
 os_log_t gSFBAudioObjectLog = NULL;
@@ -112,12 +112,17 @@ BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID)
 	return AudioObjectClass(objectID) == kAudioAggregateDeviceClassID;
 }
 
-BOOL SFBAudioDeviceIsEndPointDevice(AudioObjectID objectID)
+BOOL SFBAudioDeviceIsSubdevice(AudioObjectID objectID)
+{
+	return AudioObjectClass(objectID) == kAudioSubDeviceClassID;
+}
+
+BOOL SFBAudioDeviceIsEndpointDevice(AudioObjectID objectID)
 {
 	return AudioObjectClass(objectID) == kAudioEndPointDeviceClassID;
 }
 
-BOOL SFBAudioDeviceIsEndPoint(AudioObjectID objectID)
+BOOL SFBAudioDeviceIsEndpoint(AudioObjectID objectID)
 {
 	return AudioObjectClass(objectID) == kAudioEndPointClassID;
 }
@@ -327,7 +332,7 @@ static SFBAudioObject *sSystemObject = nil;
 			self = [[SFBAudioDevice alloc] init];
 			break;
 		case kAudioEndPointDeviceClassID:
-			self = [[SFBEndPointDevice alloc] init];
+			self = [[SFBEndpointDevice alloc] init];
 			break;
 		case kAudioAggregateDeviceClassID:
 			self = [[SFBAggregateDevice alloc] init];

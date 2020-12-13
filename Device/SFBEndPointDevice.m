@@ -5,12 +5,12 @@
 
 @import os.log;
 
-#import "SFBEndPointDevice.h"
+#import "SFBEndpointDevice.h"
 #import "SFBAudioObject+Internal.h"
 
 #import "SFBCStringForOSType.h"
 
-@implementation SFBEndPointDevice
+@implementation SFBEndpointDevice
 
 + (NSArray *)endPointDevices
 {
@@ -24,7 +24,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioDeviceIsEndPointDevice(objectID));
+	NSParameterAssert(SFBAudioDeviceIsEndpointDevice(objectID));
 	return [super initWithAudioObjectID:objectID];
 }
 

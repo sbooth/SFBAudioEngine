@@ -120,12 +120,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (BOOL)isEndPointDevice
 {
-	return SFBAudioDeviceIsEndPointDevice(_objectID);
+	return SFBAudioDeviceIsEndpointDevice(_objectID);
 }
 
 - (BOOL)isEndPoint
 {
-	return SFBAudioDeviceIsEndPoint(_objectID);
+	return SFBAudioDeviceIsEndpoint(_objectID);
 }
 
 #pragma mark - Device Properties

@@ -7,7 +7,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SFBEndPointDevice;
+@class SFBEndpointDevice;
 
 /// An audio transport manager
 NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAudioPlugIn
@@ -16,7 +16,7 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioTransportManager *> *transportManagers;
 
 /// Returns an array  of audio end points provided by the transport manager or \c nil on error
-@property (nonatomic, nullable, readonly) NSArray<SFBEndPointDevice *> *endPoints;
+@property (nonatomic, nullable, readonly) NSArray<SFBEndpointDevice *> *endPoints;
 /// Returns the transport type  or \c 0 on error
 @property (nonatomic, readonly) UInt32 transportType;
 
