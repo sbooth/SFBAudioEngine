@@ -15,6 +15,7 @@
 #import "SFBAudioTransportManager.h"
 #import "SFBClockDevice.h"
 #import "SFBEndpointDevice.h"
+#import "SFBSubdevice.h"
 #import "SFBCStringForOSType.h"
 
 os_log_t gSFBAudioObjectLog = NULL;
@@ -336,6 +337,9 @@ static SFBAudioObject *sSystemObject = nil;
 			break;
 		case kAudioAggregateDeviceClassID:
 			self = [[SFBAggregateDevice alloc] init];
+			break;
+		case kAudioSubDeviceClassID:
+			self = [[SFBSubdevice alloc] init];
 			break;
 		case kAudioClockDeviceClassID:
 			self = [[SFBClockDevice alloc] init];

@@ -7,8 +7,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SFBAudioDevice;
-
 /// An audio end point device
 NS_SWIFT_NAME(EndpointDevice) @interface SFBEndpointDevice : SFBAudioDevice
 
