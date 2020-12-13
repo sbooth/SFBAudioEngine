@@ -14,15 +14,12 @@
 
 + (NSArray *)endPointDevices
 {
-	NSMutableArray *endPointDevices = [NSMutableArray array];
-
 	NSArray *devices = [SFBAudioDevice devices];
-	for(SFBAudioDevice *device in devices) {
-		if(device.isEndPoint)
-			[endPointDevices addObject:device];
-	}
-
-	return endPointDevices;
+	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+#pragma unused(idx)
+#pragma unused(stop)
+		return [obj isEndPoint];
+	}]];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID

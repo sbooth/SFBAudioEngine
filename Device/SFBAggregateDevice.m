@@ -15,15 +15,12 @@
 
 + (NSArray *)aggregateDevices
 {
-	NSMutableArray *aggregateDevices = [NSMutableArray array];
-
 	NSArray *devices = [SFBAudioDevice devices];
-	for(SFBAudioDevice *device in devices) {
-		if(device.isAggregate)
-			[aggregateDevices addObject:device];
-	}
-
-	return aggregateDevices;
+	return [devices objectsAtIndexes:[devices indexesOfObjectsPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+#pragma unused(idx)
+#pragma unused(stop)
+		return [obj isAggregate];
+	}]];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
