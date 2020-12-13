@@ -176,6 +176,22 @@ BOOL SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *pr
 	return YES;
 }
 
+BOOL SFBFloat64ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, Float64 *value)
+{
+	NSCParameterAssert(objectID != kAudioObjectUnknown);
+	NSCParameterAssert(propertyAddress != NULL);
+	NSCParameterAssert(value != NULL);
+
+	UInt32 dataSize = sizeof(*value);
+	OSStatus result = AudioObjectGetPropertyData(objectID, propertyAddress, 0, NULL, &dataSize, value);
+	if(kAudioHardwareNoError != result) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement, result, SFBCStringForOSType(result));
+		return NO;
+	}
+
+	return YES;
+}
+
 NSString * SFBStringForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress)
 {
 	NSCParameterAssert(objectID != kAudioObjectUnknown);
@@ -589,6 +605,27 @@ static SFBAudioObject *sSystemObject = nil;
 	};
 	UInt32 value;
 	return SFBUInt32ForProperty(_objectID, &propertyAddress, &value) ? value : 0;
+}
+
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property
+{
+	return [self float64ForProperty:property inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope
+{
+	return [self float64ForProperty:property inScope:scope onElement:kAudioObjectPropertyElementMaster];
+}
+
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= property,
+		.mScope		= scope,
+		.mElement	= element
+	};
+	Float64 value;
+	return SFBFloat64ForProperty(_objectID, &propertyAddress, &value) ? value : nan("1");
 }
 
 #pragma mark - Private Methods

@@ -28,6 +28,7 @@ BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 
 // Property support
 BOOL SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, UInt32 *value);
+BOOL SFBFloat64ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, Float64 *value);
 
 NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
 NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
@@ -62,6 +63,28 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 /// @param element The desired element
 /// @return The property value
 - (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+
+/// Returns the value for \c property as an \c Float64 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @return The property value
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c Float64 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c Float64 or \c 0 on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 @end
 
 NS_ASSUME_NONNULL_END
