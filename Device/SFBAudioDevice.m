@@ -26,7 +26,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 + (NSArray *)devices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices];
+	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyDevices];
 }
 
 + (NSArray *)inputDevices
@@ -157,7 +157,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSArray *)relatedDevices
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices];
+	return [self audioObjectsForProperty:kAudioDevicePropertyRelatedDevices];
 }
 
 - (UInt32)clockDomain
@@ -192,12 +192,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSArray *)streams
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams];
+	return [self audioObjectsForProperty:kAudioDevicePropertyStreams];
 }
 
 - (NSArray *)controls
 {
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
+	return [self audioObjectsForProperty:kAudioObjectPropertyControlList];
 }
 
 - (UInt32)safetyOffset

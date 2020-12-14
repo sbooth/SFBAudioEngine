@@ -14,7 +14,7 @@
 
 + (NSArray *)clockDevices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList];
+	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyClockDeviceList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -81,7 +81,7 @@
 
 - (NSArray *)controls
 {
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
+	return [self audioObjectsForProperty:kAudioObjectPropertyControlList];
 }
 
 - (UInt32)safetyOffset

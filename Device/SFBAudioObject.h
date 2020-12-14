@@ -25,8 +25,8 @@ typedef NS_ENUM(AudioObjectPropertyScope, SFBAudioObjectPropertyScope) {
 /// An audio object
 NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
-/// The system audio object
-/// @note This object has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
+/// The singleton system audio object
+/// @note This object has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)
 + (SFBAudioObject *)systemObject;
 
 + (instancetype)new NS_UNAVAILABLE;
@@ -53,13 +53,13 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return \c YES if the property is supported
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(hasProperty(_:scope:));
 /// Returns \c YES if the underlying audio object has the specified property on an element in a scope
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return \c YES if the property is supported
-- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (BOOL)hasProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(hasProperty(_:scope:element:));
 
 /// Returns \c YES if the underlying audio object has the specified property and it is settable
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -71,13 +71,13 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return \c YES if the property is settable
-- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(propertyIsSettable(_:scope:));
 /// Returns \c YES if the underlying audio object has the specified property on an element in a scope and it is settable
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return \c YES if the property is settable
-- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (BOOL)propertyIsSettable:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(propertyIsSettable(_:scope:element:));
 
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -91,7 +91,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (nullable NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(string(forProperty:scope:));
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c CFStringRef
@@ -99,7 +99,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (nullable NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (nullable NSString *)stringForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(string(forProperty:scope:element:));
 
 /// Returns the value for \c property as an \c NSDictionary object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -113,7 +113,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (nullable NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(dictionary(forProperty:scope:));
 /// Returns the value for \c property as an \c NSDictionary object or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c CFDictionaryRef
@@ -121,7 +121,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (nullable NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (nullable NSDictionary *)dictionaryForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(dictionary(forProperty:scope:element:));
 
 /// Returns the value for \c property as an \c SFBAudioObject object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -135,7 +135,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (nullable SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(audioObject(forProperty:scope:));
 /// Returns the value for \c property as an \c SFBAudioObject object or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c propertyAddress must refer to a property of type \c AudioObjectID
@@ -143,21 +143,21 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (nullable SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (nullable SFBAudioObject *)audioObjectForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(audioObject(forProperty:scope:element:));
 
 /// Returns the value for \c property as an array of \c SFBAudioObject objects or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 /// @note \c propertyAddress must refer to a property of type array of \c AudioObjectID
 /// @param property The property to query
 /// @return The property value
-- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property;
+- (nullable NSArray<SFBAudioObject *> *)audioObjectsForProperty:(AudioObjectPropertySelector)property;
 /// Returns the value for \c property as an array of \c SFBAudioObject objects or \c nil on error
 /// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
 /// @note \c propertyAddress must refer to a property of type array of \c AudioObjectID
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSArray<SFBAudioObject *> *)audioObjectsForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(audioObjects(forProperty:scope:));
 /// Returns the value for \c property as an array of \c SFBAudioObject objects or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c propertyAddress must refer to a property of type array of \c AudioObjectID
@@ -165,7 +165,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (nullable NSArray<SFBAudioObject *> *)audioObjectsForProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(audioObjects(forProperty:scope:element:));
 
 /// Performs a block when the specified property changes
 /// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -177,13 +177,13 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param property The property to observe
 /// @param scope The desired scope
 /// @param block A block to invoke when the property changes or \c nil to remove the previous value
-- (void)whenProperty:(AudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenProperty:(AudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenPropertyChanges(_:scope:perform:));
 /// Performs a block when the specified property on an element in a scope changes
 /// @param property The property to observe
 /// @param scope The desired scope
 /// @param element The desired element
 /// @param block A block to invoke when the property changes or \c nil to remove the previous value
-- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block;
+- (void)whenProperty:(AudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(AudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_NAME(whenPropertyChanges(_:scope:element:perform:));
 
 @end
 
@@ -195,7 +195,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Returns the audio object's class or \c 0 on error
 @property (nonatomic, readonly) AudioClassID classID;
 /// Returns the audio object's owning object
-@property (nonatomic, readonly) SFBAudioObject * owner;
+@property (nonatomic, readonly) SFBAudioObject *owner;
 /// Returns the audio object's name
 @property (nonatomic, nullable, readonly) NSString *name;
 /// Returns the audio object's model name

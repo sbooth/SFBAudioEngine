@@ -10,7 +10,7 @@
 
 + (NSArray *)transportManagers
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyTransportManagerList];
+	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyTransportManagerList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -21,7 +21,7 @@
 
 - (NSArray *)endPoints
 {
-	return [self audioObjectArrayForProperty:kAudioTransportManagerPropertyEndPointList];
+	return [self audioObjectsForProperty:kAudioTransportManagerPropertyEndPointList];
 }
 
 - (UInt32)transportType
