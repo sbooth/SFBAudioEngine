@@ -8,6 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio endpoint device
+/// @note This class has four scopes (\c kAudioObjectPropertyScopeGlobal, \c kAudioObjectPropertyScopeInput, \c kAudioObjectPropertyScopeOutput, and \c kAudioObjectPropertyScopePlayThrough), and a master element (\c kAudioObjectPropertyElementMaster) and an element for each channel in each stream
 NS_SWIFT_NAME(EndpointDevice) @interface SFBEndpointDevice : SFBAudioDevice
 
 /// Returns an array of available endpoint devices or \c nil on error

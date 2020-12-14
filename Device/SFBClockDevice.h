@@ -8,6 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio clock device
+/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
 NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 
 /// Returns an array of available clock devices or \c nil on error
