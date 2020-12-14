@@ -54,7 +54,7 @@
 	return [self stringForProperty:kAudioBoxPropertyBoxUID];
 }
 
-- (UInt32)transportType
+- (SFBCADeviceTransportType)transportType
 {
 	return [self uInt32ForProperty:kAudioBoxPropertyTransportType];
 }

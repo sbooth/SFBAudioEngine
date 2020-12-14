@@ -57,7 +57,7 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope;
 /// Returns the value for \c property as an \c UInt32 or \c 0 on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c UInt32
@@ -65,7 +65,7 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 
 /// Returns the value for \c property as an \c Float64 or \c 0 on error
 /// @note This queries \c { property, scope, element }
@@ -79,7 +79,7 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope;
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope;
 /// Returns the value for \c property as an \c Float64 or \c 0 on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float64
@@ -87,7 +87,7 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(AudioObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
 @end
 
 NS_ASSUME_NONNULL_END

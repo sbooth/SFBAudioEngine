@@ -25,7 +25,7 @@ NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 @property (nonatomic, nullable, readonly) NSString *clockDeviceUID;
 /// Returns the transport type  or \c 0 on error
 /// @note This corresponds to \c kAudioClockDevicePropertyTransportType
-@property (nonatomic, readonly) UInt32 transportType;
+@property (nonatomic, readonly) SFBCADeviceTransportType transportType;
 /// Returns the domain  or \c 0 on error
 /// @note This corresponds to \c kAudioClockDevicePropertyClockDomain
 @property (nonatomic, readonly) UInt32 domain;

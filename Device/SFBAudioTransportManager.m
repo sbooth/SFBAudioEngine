@@ -24,7 +24,7 @@
 	return [self audioObjectsForProperty:kAudioTransportManagerPropertyEndPointList];
 }
 
-- (UInt32)transportType
+- (SFBCADeviceTransportType)transportType
 {
 	return [self uInt32ForProperty:kAudioTransportManagerPropertyTransportType];
 }
