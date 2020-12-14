@@ -4,7 +4,6 @@
  */
 
 @import os.log;
-
 @import CoreAudio;
 
 #import "SFBAudioDeviceNotifier.h"
