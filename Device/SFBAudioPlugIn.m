@@ -34,7 +34,7 @@
 	return [self audioObjectsForProperty:kAudioPlugInPropertyBoxList];
 }
 
-- (NSArray *)clocks
+- (NSArray *)clockDevices
 {
 	return [self audioObjectsForProperty:kAudioPlugInPropertyClockDeviceList];
 }

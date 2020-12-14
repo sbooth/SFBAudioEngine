@@ -13,18 +13,25 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
 /// Returns \c YES if the stream is active
+/// @note This corresponds to \c kAudioStreamPropertyIsActive
 @property (nonatomic, readonly) BOOL isActive;
 /// Returns \c YES if this is an output stream
+/// @note This corresponds to \c kAudioStreamPropertyDirection
 @property (nonatomic, readonly) BOOL isOutput;
 /// Returns the terminal type  or \c 0 on error
+/// @note This corresponds to \c kAudioStreamPropertyTerminalType
 @property (nonatomic, readonly) UInt32 terminalType;
 /// Returns the starting channel in the owning device  or \c 0 on error
+/// @note This corresponds to \c kAudioStreamPropertyStartingChannel
 @property (nonatomic, readonly) UInt32 startingChannel;
 /// Returns the latency  or \c 0 on error
+/// @note This corresponds to \c kAudioStreamPropertyLatency
 @property (nonatomic, readonly) UInt32 latency;
 /// Returns the virtual format  or \c nil on error
+/// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 @property (nonatomic, nullable, readonly) AVAudioFormat * virtualFormat;
 /// Returns the physical format  or \c nil on error
+/// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
 @property (nonatomic, nullable, readonly) AVAudioFormat * physicalFormat;
 
 @end

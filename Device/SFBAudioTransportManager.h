@@ -12,11 +12,14 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAudioPlugIn
 
 /// Returns an array of available audio transport managers or \c nil on error
+/// @note This corresponds to \c kAudioHardwarePropertyTransportManagerList on the object \c kAudioObjectSystemObject
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioTransportManager *> *transportManagers;
 
 /// Returns an array  of audio endpoints provided by the transport manager or \c nil on error
+/// @note This corresponds to \c kAudioTransportManagerPropertyEndPointList
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *endpoints;
 /// Returns the transport type  or \c 0 on error
+/// @note This corresponds to \c kAudioTransportManagerPropertyTransportType
 @property (nonatomic, readonly) UInt32 transportType;
 
 @end

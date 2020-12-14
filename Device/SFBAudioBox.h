@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
 /// Returns an array of available audio boxes or \c nil on error
+/// @note This corresponds to \c kAudioHardwarePropertyBoxList on the object \c kAudioObjectSystemObject
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioBox *> *boxes;
 
 /// Returns an initialized \c SFBAudioBox object with the specified box UID
@@ -22,21 +23,29 @@ NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 - (nullable instancetype)initWithBoxUID:(NSString *)boxUID;
 
 /// Returns the box UID or \c nil on error
+/// @note This corresponds to \c kAudioBoxPropertyBoxUID
 @property (nonatomic, nullable, readonly) NSString *boxUID;
 /// Returns the transport type  or \c 0 on error
+/// @note This corresponds to \c kAudioBoxPropertyTransportType
 @property (nonatomic, readonly) UInt32 transportType;
 /// Returns \c YES if the box has audio
+/// @note This corresponds to \c kAudioBoxPropertyHasAudio
 @property (nonatomic, readonly) BOOL hasAudio;
 /// Returns \c YES if the box has video
+/// @note This corresponds to \c kAudioBoxPropertyHasVideo
 @property (nonatomic, readonly) BOOL hasVideo;
 /// Returns \c YES if the box has MIDI
+/// @note This corresponds to \c kAudioBoxPropertyHasMIDI
 @property (nonatomic, readonly) BOOL hasMIDI;
 /// Returns \c YES if the box is acquired
+/// @note This corresponds to \c kAudioBoxPropertyAcquired
 @property (nonatomic, readonly) BOOL acquired;
 /// Returns an array  of audio devices provided by the box or \c nil on error
+/// @note This corresponds to \c kAudioBoxPropertyDeviceList
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
 /// Returns an array  of audio clock devices provided by the box or \c nil on error
-@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clocks;
+/// @note This corresponds to \c kAudioBoxPropertyClockDeviceList
+@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices;
 
 @end
 
