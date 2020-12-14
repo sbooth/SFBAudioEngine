@@ -10,6 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class SFBAudioDevice, SFBAudioBox, SFBClockDevice;
 
 /// An audio plug in
+/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
 NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 
 /// Returns an array of available audio plug ins or \c nil on error
