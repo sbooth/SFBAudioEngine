@@ -10,7 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class SFBAudioDevice, SFBClockDevice;
 
 /// An audio box
-/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
+/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)
 NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
 /// Returns an array of available audio boxes or \c nil on error

@@ -9,7 +9,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio stream
-/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal), and a master element (\c kAudioObjectPropertyElementMaster) and an element for each channel in each stream
+/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal), a master element (\c kAudioObjectPropertyElementMaster), and an element for each channel in each stream
 NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
 /// Returns \c YES if the stream is active

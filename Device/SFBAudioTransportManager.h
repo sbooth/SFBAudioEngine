@@ -8,7 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio transport manager
-/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
+/// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)
 NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAudioPlugIn
 
 /// Returns an array of available audio transport managers or \c nil on error
