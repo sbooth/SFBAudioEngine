@@ -26,6 +26,7 @@ typedef NS_ENUM(AudioObjectPropertyScope, SFBAudioObjectPropertyScope) {
 NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 /// The system audio object
+/// @note This object has a single scope (\c kAudioObjectPropertyScopeGlobal) and single element (\c kAudioObjectPropertyElementMaster)
 + (SFBAudioObject *)systemObject;
 
 + (instancetype)new NS_UNAVAILABLE;
