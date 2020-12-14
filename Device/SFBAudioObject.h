@@ -8,8 +8,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Possible scopes for \c SFBAudioObject properties
-/// @note These are interchangeable with \c AudioObjectPropertyScope
+/// Scopes for \c SFBAudioObject properties
+/// @note These are interchangeable with \c AudioObjectPropertyScope but are typed
+/// for ease of use from Swift.
 typedef NS_ENUM(AudioObjectPropertyScope, SFBAudioObjectPropertyScope) {
 	/// Global scope
 	SFBAudioObjectPropertyScopeGlobal         = kAudioObjectPropertyScopeGlobal,
@@ -185,6 +186,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 @end
 
+/// AudioObject Properties
 @interface SFBAudioObject (SFBAudioObjectProperties)
 
 /// Returns the audio object's base class or \c 0 on error
@@ -200,17 +202,19 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Returns the audio object's manufacturer
 @property (nonatomic, nullable, readonly) NSString *manufacturer;
 
-/// Returns the name of the specified element
+/// Returns the name of the specified element in the global scope
 - (NSString *)nameOfElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(nameOfElement(_:));
 /// Returns the name of the specified element in the specified scope
 - (NSString *)nameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(nameOfElement(_:scope:));
-/// Returns the category name of the specified element
+
+/// Returns the category name of the specified element in the global scope
 - (NSString *)categoryNameOfElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(categoryNameOfElement(_:));
-/// Returns the category name of the specifiec element in the specified scope
+/// Returns the category name of the specified element in the specified scope
 - (NSString *)categoryNameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(categoryNameOfElement(_:scope:));
-/// Returns the number name of the specifiec element
+
+/// Returns the number name of the specified element in the global scope
 - (NSString *)numberNameOfElement:(AudioObjectPropertyElement)element NS_SWIFT_NAME(numberNameOfElement(_:));
-/// Returns the number name of the specifiec element in the specified scope
+/// Returns the number name of the specified element in the specified scope
 - (NSString *)numberNameOfElement:(AudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_NAME(numberNameOfElement(_:scope:));
 
 /// Returns the audio objects owned by this object
