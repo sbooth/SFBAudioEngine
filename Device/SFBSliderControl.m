@@ -25,8 +25,7 @@
 
 - (NSArray *)range
 {
-//	kAudioSliderControlPropertyRange
-	return nil;
+	return [self uInt32ArrayForProperty:kAudioSliderControlPropertyRange];
 }
 
 @end
