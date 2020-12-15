@@ -5,9 +5,9 @@
 
 #import <SFBAudioEngine/SFBAudioObject.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
 @class SFBAudioDevice, SFBClockDevice;
+
+NS_ASSUME_NONNULL_BEGIN
 
 /// An audio box
 /// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)

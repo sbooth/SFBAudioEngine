@@ -5,9 +5,9 @@
 
 #import <SFBAudioEngine/SFBAudioDevice.h>
 
-NS_ASSUME_NONNULL_BEGIN
-
 @class SFBClockDevice;
+
+NS_ASSUME_NONNULL_BEGIN
 
 /// An aggregate audio device
 NS_SWIFT_NAME(AggregateDevice) @interface SFBAggregateDevice : SFBAudioDevice
