@@ -1,0 +1,27 @@
+/*
+ * Copyright (c) 2020 Stephen F. Booth <me@sbooth.org>
+ * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
+ */
+
+#import <SFBAudioEngine/SFBAudioControl.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+/// An audio level control
+NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
+
+/// Returns the control's scalar value
+/// @note This corresponds to \c kAudioLevelControlPropertyScalarValue
+@property (nonatomic, readonly) Float32 scalarValue;
+
+/// Returns the control's decibel value
+/// @note This corresponds to \c kAudioLevelControlPropertyDecibelValue
+@property (nonatomic, readonly) Float32 decibelValue;
+
+//kAudioLevelControlPropertyDecibelRange
+//kAudioLevelControlPropertyConvertScalarToDecibels
+//kAudioLevelControlPropertyConvertDecibelsToScalar
+
+@end
+
+NS_ASSUME_NONNULL_END
