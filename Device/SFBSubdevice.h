@@ -7,6 +7,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Audio subdevice clock drift compensation quality
+typedef NS_ENUM(UInt32, SFBSubdeviceDriftCompensationQuality) {
+	/// Minimum quality
+	SFBSubdeviceDriftCompensationQualityMin 	= kAudioSubDeviceDriftCompensationMinQuality,
+	/// Low quality
+	SFBSubdeviceDriftCompensationQualityLow 	= kAudioSubDeviceDriftCompensationLowQuality,
+	/// Medium quality
+	SFBSubdeviceDriftCompensationQualityMedium 	= kAudioSubDeviceDriftCompensationMediumQuality,
+	/// High quality
+	SFBSubdeviceDriftCompensationQualityHigh 	= kAudioSubDeviceDriftCompensationHighQuality,
+	/// Maximum quality
+	SFBSubdeviceDriftCompensationQualityMax 	= kAudioSubDeviceDriftCompensationMaxQuality
+} NS_SWIFT_NAME(Subdevice.DriftCompensationQuality);
+
 /// An audio subdevice
 NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
 
@@ -16,9 +30,9 @@ NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
 /// Returns the extra latency or \c 0 on error
 @property (nonatomic, readonly) Float64 extraLatency;
 /// Returns the drift compensation or \c 0 on error
-@property (nonatomic, readonly) UInt32 driftCompensation;
+@property (nonatomic, readonly) BOOL driftCompensation;
 /// Returns the drift compensation quality or \c 0 on error
-@property (nonatomic, readonly) UInt32 driftCompensationQuality;
+@property (nonatomic, readonly) SFBSubdeviceDriftCompensationQuality driftCompensationQuality;
 
 @end
 

@@ -8,7 +8,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Audio stream terminal types
+/// Audio stream terminal types
 typedef NS_ENUM(UInt32, SFBAudioStreamTerminalType) {
 	/// Unknown
 	SFBAudioStreamTerminalTypeUnknown 					= kAudioStreamTerminalTypeUnknown,

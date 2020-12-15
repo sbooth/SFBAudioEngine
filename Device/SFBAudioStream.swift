@@ -10,7 +10,7 @@ extension AudioStream.TerminalType: CustomDebugStringConvertible {
 		switch self {
 		case .unknown:					return ".unknown"
 		case .line:						return ".line"
-		case .digitalAudioInterface:	return ".digitalAudioInterface"
+		case .digitalAudioInterface: 	return ".digitalAudioInterface"
 		case .speaker:					return ".speaker"
 		case .headphones:				return ".headphones"
 		case .lfeSpeaker:				return ".LFESpeaker"

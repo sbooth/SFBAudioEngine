@@ -396,6 +396,7 @@
 		3294A6FA2445FA2D00841138 /* SFBLoopableRegionDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294A6F82445FA2D00841138 /* SFBLoopableRegionDecoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3294A6FB2445FA2D00841138 /* SFBLoopableRegionDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */; };
 		329CFF412588EB3500335A06 /* SFBAudioStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329CFF402588EB3500335A06 /* SFBAudioStream.swift */; };
+		329CFF432588F54200335A06 /* SFBSubdevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329CFF422588F54200335A06 /* SFBSubdevice.swift */; };
 		32A0BA7725842A550046B802 /* SFBAggregateDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA7525842A540046B802 /* SFBAggregateDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32A0BA7825842A550046B802 /* SFBAggregateDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A0BA7625842A550046B802 /* SFBAggregateDevice.m */; };
 		32A0BA822584F8C20046B802 /* SFBAudioBox.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -701,6 +702,7 @@
 		3294A6F92445FA2D00841138 /* SFBLoopableRegionDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBLoopableRegionDecoder.m; sourceTree = "<group>"; };
 		3296828617B9D69400B3CDB4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		329CFF402588EB3500335A06 /* SFBAudioStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBAudioStream.swift; sourceTree = "<group>"; };
+		329CFF422588F54200335A06 /* SFBSubdevice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBSubdevice.swift; sourceTree = "<group>"; };
 		32A0BA7525842A540046B802 /* SFBAggregateDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAggregateDevice.h; sourceTree = "<group>"; };
 		32A0BA7625842A550046B802 /* SFBAggregateDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAggregateDevice.m; sourceTree = "<group>"; };
 		32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioBox.h; sourceTree = "<group>"; };
@@ -1018,6 +1020,7 @@
 				32A0BA9525856FF80046B802 /* SFBEndpointDevice.m */,
 				32A0BAAC25865F680046B802 /* SFBSubdevice.h */,
 				32A0BAAB25865F680046B802 /* SFBSubdevice.m */,
+				329CFF422588F54200335A06 /* SFBSubdevice.swift */,
 				32A0BA7E2584F8C20046B802 /* SFBAudioBox.h */,
 				32A0BA802584F8C20046B802 /* SFBAudioBox.m */,
 				32A0BA812584F8C20046B802 /* SFBClockDevice.h */,
@@ -1741,6 +1744,7 @@
 				32DD9D88257D4D5C00B47CFD /* AVAudioFormat+SFBFormatTransformation.m in Sources */,
 				32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */,
 				32D740CB255F6D91004D3C1A /* SFBFileOutputSource.m in Sources */,
+				329CFF432588F54200335A06 /* SFBSubdevice.swift in Sources */,
 				326D3CCB242D2A21002AEC52 /* SFBTrueAudioFile.mm in Sources */,
 				32DD9D94257D4EE500B47CFD /* AudioRingBuffer.cpp in Sources */,
 				32A0BAA6258648B00046B802 /* SFBClockDevice.swift in Sources */,

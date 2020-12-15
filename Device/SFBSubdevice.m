@@ -33,12 +33,12 @@
 	return [[self float64ForProperty:kAudioSubDevicePropertyExtraLatency] doubleValue];
 }
 
-- (UInt32)driftCompensation
+- (BOOL)driftCompensation
 {
-	return [[self uInt32ForProperty:kAudioSubDevicePropertyDriftCompensation] unsignedIntValue];
+	return [[self uInt32ForProperty:kAudioSubDevicePropertyDriftCompensation] boolValue];
 }
 
-- (UInt32)driftCompensationQuality
+- (SFBSubdeviceDriftCompensationQuality)driftCompensationQuality
 {
 	return [[self uInt32ForProperty:kAudioSubDevicePropertyDriftCompensationQuality] unsignedIntValue];
 }
