@@ -3,7 +3,7 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
+#import <os/log.h>
 
 #import "SFBAudioObject.h"
 
@@ -11,7 +11,38 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern os_log_t gSFBAudioObjectLog;
 
-// Audio object class determination
+@interface SFBAudioObject ()
+{
+@protected
+	/// The underlying audio object identifier
+	AudioObjectID _objectID;
+}
+@end
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#pragma mark -  General property support
+
+NSNumber * _Nullable SFBUInt32ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+NSArray <NSNumber *> * _Nullable SFBUInt32ArrayForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+
+NSNumber * _Nullable SFBFloat32ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+NSNumber * _Nullable SFBFloat64ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+
+NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+
+SFBAudioObject * _Nullable SFBAudioObjectForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
+
+
+#pragma mark - Audio object class determination
+
+BOOL SFBAudioObjectIsClass(AudioObjectID objectID, AudioClassID classID);
+BOOL SFBAudioObjectIsClassOrSubclassOf(AudioObjectID objectID, AudioClassID classID);
+
 BOOL SFBAudioObjectIsPlugIn(AudioObjectID objectID);
 BOOL SFBAudioObjectIsBox(AudioObjectID objectID);
 BOOL SFBAudioObjectIsDevice(AudioObjectID objectID);
@@ -19,7 +50,11 @@ BOOL SFBAudioObjectIsClockDevice(AudioObjectID objectID);
 BOOL SFBAudioObjectIsStream(AudioObjectID objectID);
 BOOL SFBAudioObjectIsControl(AudioObjectID objectID);
 
+#pragma mark - Audio PlugIn Information
+
 BOOL SFBAudioPlugInIsTransportManager(AudioObjectID objectID);
+
+#pragma mark - Audio Device Information
 
 BOOL SFBAudioDeviceIsAggregate(AudioObjectID objectID);
 BOOL SFBAudioDeviceIsSubdevice(AudioObjectID objectID);
@@ -29,65 +64,41 @@ BOOL SFBAudioDeviceIsEndpoint(AudioObjectID objectID);
 BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);
 BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 
-// Property support
-NSNumber * SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
-NSNumber * SFBFloat64ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+#pragma mark - Audio Control Information
 
-NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
-NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+BOOL SFBAudioControlIsSlider(AudioObjectID objectID);
+BOOL SFBAudioControlIsLevel(AudioObjectID objectID);
+BOOL SFBAudioControlIsBoolean(AudioObjectID objectID);
+BOOL SFBAudioControlIsSelector(AudioObjectID objectID);
+BOOL SFBAudioControlIsStereoPan(AudioObjectID objectID);
 
-SFBAudioObject * _Nullable SFBAudioObjectForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
-NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+#pragma mark - Audio Level Control Information
 
-@interface SFBAudioObject ()
-{
-@protected
-	/// The underlying audio object identifier
-	AudioObjectID _objectID;
+BOOL SFBAudioLevelControlIsVolume(AudioObjectID objectID);
+BOOL SFBAudioLevelControlIsLFEVolume(AudioObjectID objectID);
+
+#pragma mark - Audio Boolean Control Information
+
+BOOL SFBAudioBooleanControlIsMute(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsSolo(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsJack(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsLFEMute(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsPhantomPower(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsPhaseInvert(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsClipLight(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsTalkback(AudioObjectID objectID);
+BOOL SFBAudioBooleanControlIsListenback(AudioObjectID objectID);
+
+#pragma mark - Audio Selector Control Information
+
+BOOL SFBAudioSelectorControlIsDataSource(AudioObjectID objectID);
+BOOL SFBAudioSelectorControlIsDataDestination(AudioObjectID objectID);
+BOOL SFBAudioSelectorControlIsClockSource(AudioObjectID objectID);
+BOOL SFBAudioSelectorControlIsLevel(AudioObjectID objectID);
+BOOL SFBAudioSelectorControlIsHighpassFilter(AudioObjectID objectID);
+
+#ifdef __cplusplus
 }
-/// Returns the value for \c property as an \c UInt32 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c UInt32
-/// @param property The property to query
-/// @return The property value
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property;
-/// Returns the value for \c property as an \c UInt32 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c UInt32
-/// @param property The property to query
-/// @param scope The desired scope
-/// @return The property value
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
-/// Returns the value for \c property as an \c UInt32 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c UInt32
-/// @param property The property to query
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
-
-/// Returns the value for \c property as an \c Float64 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c Float64
-/// @param property The property to query
-/// @return The property value
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property;
-/// Returns the value for \c property as an \c Float64 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c Float64
-/// @param property The property to query
-/// @param scope The desired scope
-/// @return The property value
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
-/// Returns the value for \c property as an \c Float64 or \c nil on error
-/// @note This queries \c { property, scope, element }
-/// @note \c property must refer to a property of type \c Float64
-/// @param property The property to query
-/// @param scope The desired scope
-/// @param element The desired element
-/// @return The property value
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
-@end
+#endif
 
 NS_ASSUME_NONNULL_END

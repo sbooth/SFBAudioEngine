@@ -104,6 +104,34 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorStreamPhysicalFormat 				= kAudioStreamPropertyPhysicalFormat,
 	SFBAudioObjectPropertySelectorStreamAvailablePhysicalFormats 	= kAudioStreamPropertyAvailablePhysicalFormats,
 
+	// AudioControl
+	SFBAudioObjectPropertySelectorControlScope 		= kAudioControlPropertyScope,
+	SFBAudioObjectPropertySelectorControlElement 	= kAudioControlPropertyElement,
+
+	// AudioSliderControl
+	SFBAudioObjectPropertySelectorSliderControlValue 	= kAudioSliderControlPropertyValue,
+	SFBAudioObjectPropertySelectorSliderControlRange 	= kAudioSliderControlPropertyRange,
+
+	// AudioLevelControl
+	SFBAudioObjectPropertySelectorLevelControlScalarValue 		= kAudioLevelControlPropertyScalarValue,
+	SFBAudioObjectPropertySelectorLevelControlDecibelValue 		= kAudioLevelControlPropertyDecibelValue,
+	SFBAudioObjectPropertySelectorLevelControlDecibelRange 		= kAudioLevelControlPropertyDecibelRange,
+	SFBAudioObjectPropertySelectorLevelControlScalarToDecibels 	= kAudioLevelControlPropertyConvertScalarToDecibels,
+	SFBAudioObjectPropertySelectorLevelControlDecibelsToScalar 	= kAudioLevelControlPropertyConvertDecibelsToScalar,
+
+	// AudioBooleanControl
+	SFBAudioObjectPropertySelectorBooleanControlValue 	= kAudioBooleanControlPropertyValue,
+
+	// AudioSelectorControl
+	SFBAudioObjectPropertySelectorSelectorControlCurrentItem 		= kAudioSelectorControlPropertyCurrentItem,
+	SFBAudioObjectPropertySelectorSelectorControlAvailableItems 	= kAudioSelectorControlPropertyAvailableItems,
+	SFBAudioObjectPropertySelectorSelectorControlItemName 			= kAudioSelectorControlPropertyItemName,
+	SFBAudioObjectPropertySelectorSelectorControlItemKind 			= kAudioSelectorControlPropertyItemKind,
+
+	// AudioStereoPanControl
+	SFBAudioObjectPropertySelectorPanControlValue 				= kAudioStereoPanControlPropertyValue,
+	SFBAudioObjectPropertySelectorPanControlPanningChannels 	= kAudioStereoPanControlPropertyPanningChannels,
+
 	/// Wildcard  selector, useful for notifications
 	SFBAudioObjectPropertySelectorWildcard 	= kAudioObjectPropertySelectorWildcard,
 
@@ -334,6 +362,94 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @return \c YES if the property is settable
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_NAME(propertyIsSettable(_:scope:element:));
+
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @return The property value
+- (nullable NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
+
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type array of \c UInt32
+/// @param property The property to query
+/// @return The property value
+- (nullable NSArray <NSNumber *> *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type array of \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSArray <NSNumber *> *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type array of \c UInt32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSArray <NSNumber *> *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
+
+/// Returns the value for \c property as an \c Float32 or \c nil on error
+/// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c Float32
+/// @param property The property to query
+/// @return The property value
+- (nullable NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c Float32 or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c Float32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c Float32 or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float32
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
+
+/// Returns the value for \c property as an \c Float64 or \c nil on error
+/// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @return The property value
+- (nullable NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c Float64 or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c Float64 or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
 
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
