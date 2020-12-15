@@ -58,7 +58,7 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorDeviceDeviceCanBeDefaultSystemDevice 	= kAudioDevicePropertyDeviceCanBeDefaultSystemDevice,
 	SFBAudioObjectPropertySelectorDeviceLatency 						= kAudioDevicePropertyLatency,
 	SFBAudioObjectPropertySelectorDeviceStreams 						= kAudioDevicePropertyStreams,
-	SFBAudioObjectPropertySelectorkControlList 							= kAudioObjectPropertyControlList,
+	SFBAudioObjectPropertySelectorControlList 							= kAudioObjectPropertyControlList,
 	SFBAudioObjectPropertySelectorDeviceSafetyOffset 					= kAudioDevicePropertySafetyOffset,
 	SFBAudioObjectPropertySelectorDeviceNominalSampleRate 				= kAudioDevicePropertyNominalSampleRate,
 	SFBAudioObjectPropertySelectorDeviceAvailableNominalSampleRates 	= kAudioDevicePropertyAvailableNominalSampleRates,
