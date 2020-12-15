@@ -11,7 +11,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Property selectors for \c SFBAudioObject and subclasses
 /// @note These are interchangeable with \c AudioObjectPropertySelector but are typed for ease of use from Swift.
 typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
-	// AudioObject properties
+
+	// Selectors from AudioHardwareBase.h
+
+	// AudioObject
 	SFBAudioObjectPropertySelectorBaseClass 			= kAudioObjectPropertyBaseClass,
 	SFBAudioObjectPropertySelectorClass 				= kAudioObjectPropertyClass,
 	SFBAudioObjectPropertySelectorOwner 				= kAudioObjectPropertyOwner,
@@ -22,30 +25,37 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorElementCategoryName 	= kAudioObjectPropertyElementCategoryName,
 	SFBAudioObjectPropertySelectorElementNumberName 	= kAudioObjectPropertyElementNumberName,
 	SFBAudioObjectPropertySelectorOwnedObjects 			= kAudioObjectPropertyOwnedObjects,
+	SFBAudioObjectPropertySelectorIdentify 				= kAudioObjectPropertyIdentify,
 	SFBAudioObjectPropertySelectorSerialNumber 			= kAudioObjectPropertySerialNumber,
 	SFBAudioObjectPropertySelectorFirmwareVersion 		= kAudioObjectPropertyFirmwareVersion,
 
-	// AudioPlugIn properties
-	SFBAudioObjectPropertySelectorPlugInBundleID 			= kAudioPlugInPropertyBundleID,
-	SFBAudioObjectPropertySelectorPlugInDeviceList 			= kAudioPlugInPropertyDeviceList,
-	SFBAudioObjectPropertySelectorPlugInBoxList 			= kAudioPlugInPropertyBoxList,
-	SFBAudioObjectPropertySelectorPlugInClockDeviceList 	= kAudioPlugInPropertyClockDeviceList,
+	// AudioPlugIn
+	SFBAudioObjectPropertySelectorPlugInBundleID 					= kAudioPlugInPropertyBundleID,
+	SFBAudioObjectPropertySelectorPlugInDeviceList 					= kAudioPlugInPropertyDeviceList,
+	SFBAudioObjectPropertySelectorPlugInTranslateUIDToDevice 		= kAudioPlugInPropertyTranslateUIDToDevice,
+	SFBAudioObjectPropertySelectorPlugInBoxList 					= kAudioPlugInPropertyBoxList,
+	SFBAudioObjectPropertySelectorPlugInTranslateUIDToBox 			= kAudioPlugInPropertyTranslateUIDToBox,
+	SFBAudioObjectPropertySelectorPlugInClockDeviceList 			= kAudioPlugInPropertyClockDeviceList,
+	SFBAudioObjectPropertySelectorPlugInTranslateUIDToClockDevice 	= kAudioPlugInPropertyTranslateUIDToClockDevice,
 
-	// AudioTransportManager properties
-	SFBAudioObjectPropertySelectorTransportManagerEndPointList 		= kAudioTransportManagerPropertyEndPointList,
-	SFBAudioObjectPropertySelectorTransportManagerTransportType 	= kAudioTransportManagerPropertyTransportType,
+	// AudioTransportManager
+	SFBAudioObjectPropertySelectorTransportManagerEndPointList 				= kAudioTransportManagerPropertyEndPointList,
+	SFBAudioObjectPropertySelectorTransportManagerTranslateUIDToEndPoint 	= kAudioTransportManagerPropertyTranslateUIDToEndPoint,
+	SFBAudioObjectPropertySelectorTransportManagerTransportType 			= kAudioTransportManagerPropertyTransportType,
 
-	// AudioBox properties
+	// AudioBox
 	SFBAudioObjectPropertySelectorBoxUID 				= kAudioBoxPropertyBoxUID,
 	SFBAudioObjectPropertySelectorBoxTransportType 		= kAudioBoxPropertyTransportType,
 	SFBAudioObjectPropertySelectorBoxHasAudio 			= kAudioBoxPropertyHasAudio,
 	SFBAudioObjectPropertySelectorBoxHasVideo 			= kAudioBoxPropertyHasVideo,
 	SFBAudioObjectPropertySelectorBoxHasMIDI 			= kAudioBoxPropertyHasMIDI,
+	SFBAudioObjectPropertySelectorBoxIsProtected 		= kAudioBoxPropertyIsProtected,
 	SFBAudioObjectPropertySelectorBoxAcquired 			= kAudioBoxPropertyAcquired,
+	SFBAudioObjectPropertySelectorBoxAcquisitionFailed 	= kAudioBoxPropertyAcquisitionFailed,
 	SFBAudioObjectPropertySelectorBoxDeviceList 		= kAudioBoxPropertyDeviceList,
 	SFBAudioObjectPropertySelectorBoxClockDeviceList 	= kAudioBoxPropertyClockDeviceList,
 
-	// AudioDevice properties
+	// AudioDevice
 	SFBAudioObjectPropertySelectorDeviceConfigurationApplication 		= kAudioDevicePropertyConfigurationApplication,
 	SFBAudioObjectPropertySelectorDeviceDeviceUID 						= kAudioDevicePropertyDeviceUID,
 	SFBAudioObjectPropertySelectorDeviceModelUID 						= kAudioDevicePropertyModelUID,
@@ -67,7 +77,7 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorDevicePreferredChannelsForStereo 		= kAudioDevicePropertyPreferredChannelsForStereo,
 	SFBAudioObjectPropertySelectorDevicePreferredChannelLayout 			= kAudioDevicePropertyPreferredChannelLayout,
 
-	// AudioClockDevice properties
+	// AudioClockDevice
 	SFBAudioObjectPropertySelectorClockDeviceDeviceUID 						= kAudioClockDevicePropertyDeviceUID,
 	SFBAudioObjectPropertySelectorClockDeviceTransportType 					= kAudioClockDevicePropertyTransportType,
 	SFBAudioObjectPropertySelectorClockDeviceClockDomain 					= kAudioClockDevicePropertyClockDomain,
@@ -78,12 +88,12 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorClockDeviceNominalSampleRate 				= kAudioClockDevicePropertyNominalSampleRate,
 	SFBAudioObjectPropertySelectorClockDeviceAvailableNominalSampleRates 	= kAudioClockDevicePropertyAvailableNominalSampleRates,
 
-	// AudioEndPointDevice properties
+	// AudioEndPointDevice
 	SFBAudioObjectPropertySelectorEndpointDeviceComposition 	= kAudioEndPointDevicePropertyComposition,
 	SFBAudioObjectPropertySelectorEndpointDeviceEndPointList 	= kAudioEndPointDevicePropertyEndPointList,
 	SFBAudioObjectPropertySelectorEndpointDeviceIsPrivate 		= kAudioEndPointDevicePropertyIsPrivate,
 
-	// AudioStream properties
+	// AudioStream
 	SFBAudioObjectPropertySelectorStreamIsActive 					= kAudioStreamPropertyIsActive,
 	SFBAudioObjectPropertySelectorStreamDirection 					= kAudioStreamPropertyDirection,
 	SFBAudioObjectPropertySelectorStreamTerminalType 				= kAudioStreamPropertyTerminalType,
@@ -95,54 +105,173 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorStreamAvailablePhysicalFormats 	= kAudioStreamPropertyAvailablePhysicalFormats,
 
 	/// Wildcard  selector, useful for notifications
-	SFBAudioObjectPropertySelectorWildcard 		= kAudioObjectPropertySelectorWildcard
+	SFBAudioObjectPropertySelectorWildcard 	= kAudioObjectPropertySelectorWildcard,
+
+	// Selectors from AudioHardware.h
+
+	// AudioObject
+	SFBAudioObjectPropertySelectorCreator 			= kAudioObjectPropertyCreator,
+	SFBAudioObjectPropertySelectorListenerAdded 	= kAudioObjectPropertyListenerAdded,
+	SFBAudioObjectPropertySelectorListenerRemoved 	= kAudioObjectPropertyListenerRemoved,
+
+	// AudioSystemObject
+	SFBAudioObjectPropertySelectorDevices 								= kAudioHardwarePropertyDevices,
+	SFBAudioObjectPropertySelectorDefaultInputDevice 					= kAudioHardwarePropertyDefaultInputDevice,
+	SFBAudioObjectPropertySelectorDefaultOutputDevice 					= kAudioHardwarePropertyDefaultOutputDevice,
+	SFBAudioObjectPropertySelectorDefaultSystemOutputDevice 			= kAudioHardwarePropertyDefaultSystemOutputDevice,
+	SFBAudioObjectPropertySelectorTranslateUIDToDevice 					= kAudioHardwarePropertyTranslateUIDToDevice,
+	SFBAudioObjectPropertySelectorMixStereoToMono 						= kAudioHardwarePropertyMixStereoToMono,
+	SFBAudioObjectPropertySelectorPlugInList 							= kAudioHardwarePropertyPlugInList,
+	SFBAudioObjectPropertySelectorTranslateBundleIDToPlugIn 			= kAudioHardwarePropertyTranslateBundleIDToPlugIn,
+	SFBAudioObjectPropertySelectorTransportManagerList 					= kAudioHardwarePropertyTransportManagerList,
+	SFBAudioObjectPropertySelectorTranslateBundleIDToTransportManager 	= kAudioHardwarePropertyTranslateBundleIDToTransportManager,
+	SFBAudioObjectPropertySelectorBoxList 								= kAudioHardwarePropertyBoxList,
+	SFBAudioObjectPropertySelectorTranslateUIDToBox 					= kAudioHardwarePropertyTranslateUIDToBox,
+	SFBAudioObjectPropertySelectorClockDeviceList 						= kAudioHardwarePropertyClockDeviceList,
+	SFBAudioObjectPropertySelectorTranslateUIDToClockDevice 			= kAudioHardwarePropertyTranslateUIDToClockDevice,
+	SFBAudioObjectPropertySelectorProcessIsMaster 						= kAudioHardwarePropertyProcessIsMaster,
+	SFBAudioObjectPropertySelectorIsInitingOrExiting 					= kAudioHardwarePropertyIsInitingOrExiting,
+	SFBAudioObjectPropertySelectorUserIDChanged 						= kAudioHardwarePropertyUserIDChanged,
+	SFBAudioObjectPropertySelectorProcessIsAudible 						= kAudioHardwarePropertyProcessIsAudible,
+	SFBAudioObjectPropertySelectorSleepingIsAllowed 					= kAudioHardwarePropertySleepingIsAllowed,
+	SFBAudioObjectPropertySelectorUnloadingIsAllowed 					= kAudioHardwarePropertyUnloadingIsAllowed,
+	SFBAudioObjectPropertySelectorHogModeIsAllowed 						= kAudioHardwarePropertyHogModeIsAllowed,
+	SFBAudioObjectPropertySelectorUserSessionIsActiveOrHeadless 		= kAudioHardwarePropertyUserSessionIsActiveOrHeadless,
+	SFBAudioObjectPropertySelectorServiceRestarted 						= kAudioHardwarePropertyServiceRestarted,
+	SFBAudioObjectPropertySelectorPowerHint 							= kAudioHardwarePropertyPowerHint,
+
+	// AudioPlugIn
+	SFBAudioObjectPropertySelectorPlugInCreateAggregateDevice 	= kAudioPlugInCreateAggregateDevice,
+	SFBAudioObjectPropertySelectorPlugInDestroyAggregateDevice 	= kAudioPlugInDestroyAggregateDevice,
+
+	// AudioTransportManager
+	SFBAudioObjectPropertySelectorTransportManagerCreateEndpointDevice 		= kAudioTransportManagerCreateEndPointDevice,
+	SFBAudioObjectPropertySelectorTransportManagerDestroyEndpointDevice 	= kAudioTransportManagerDestroyEndPointDevice,
+
+	// AudioDevice
+	SFBAudioObjectPropertySelectorDevicePlugIn 							= kAudioDevicePropertyPlugIn,
+	SFBAudioObjectPropertySelectorDeviceDeviceHasChanged 				= kAudioDevicePropertyDeviceHasChanged,
+	SFBAudioObjectPropertySelectorDeviceDeviceIsRunningSomewhere 		= kAudioDevicePropertyDeviceIsRunningSomewhere,
+	SFBAudioObjectPropertySelectorProcessorOverload 					= kAudioDeviceProcessorOverload,
+	SFBAudioObjectPropertySelectorDeviceIOStoppedAbnormally 			= kAudioDevicePropertyIOStoppedAbnormally,
+	SFBAudioObjectPropertySelectorDeviceHogMode 						= kAudioDevicePropertyHogMode,
+	SFBAudioObjectPropertySelectorDeviceBufferFrameSize 				= kAudioDevicePropertyBufferFrameSize,
+	SFBAudioObjectPropertySelectorDeviceBufferFrameSizeRange 			= kAudioDevicePropertyBufferFrameSizeRange,
+	SFBAudioObjectPropertySelectorDeviceUsesVariableBufferFrameSizes 	= kAudioDevicePropertyUsesVariableBufferFrameSizes,
+	SFBAudioObjectPropertySelectorDeviceIOCycleUsage 					= kAudioDevicePropertyIOCycleUsage,
+	SFBAudioObjectPropertySelectorDeviceStreamConfiguration 			= kAudioDevicePropertyStreamConfiguration,
+	SFBAudioObjectPropertySelectorDeviceIOProcStreamUsage 				= kAudioDevicePropertyIOProcStreamUsage,
+	SFBAudioObjectPropertySelectorDeviceActualSampleRate 				= kAudioDevicePropertyActualSampleRate,
+	SFBAudioObjectPropertySelectorDeviceClockDevice 					= kAudioDevicePropertyClockDevice,
+	SFBAudioObjectPropertySelectorDeviceIOThreadOSWorkgroup 			= kAudioDevicePropertyIOThreadOSWorkgroup,
+
+	SFBAudioObjectPropertySelectorDeviceJackIsConnected = kAudioDevicePropertyJackIsConnected,
+	SFBAudioObjectPropertySelectorDeviceVolumeScalar = kAudioDevicePropertyVolumeScalar,
+	SFBAudioObjectPropertySelectorDeviceVolumeDecibels = kAudioDevicePropertyVolumeDecibels,
+	SFBAudioObjectPropertySelectorDeviceVolumeRangeDecibels = kAudioDevicePropertyVolumeRangeDecibels,
+	SFBAudioObjectPropertySelectorDeviceVolumeScalarToDecibels = kAudioDevicePropertyVolumeScalarToDecibels,
+	SFBAudioObjectPropertySelectorDeviceVolumeDecibelsToScalar = kAudioDevicePropertyVolumeDecibelsToScalar,
+	SFBAudioObjectPropertySelectorDeviceStereoPan = kAudioDevicePropertyStereoPan,
+	SFBAudioObjectPropertySelectorDeviceStereoPanChannels = kAudioDevicePropertyStereoPanChannels,
+	SFBAudioObjectPropertySelectorDeviceMute = kAudioDevicePropertyMute,
+	SFBAudioObjectPropertySelectorDeviceSolo = kAudioDevicePropertySolo,
+	SFBAudioObjectPropertySelectorDevicePhantomPower = kAudioDevicePropertyPhantomPower,
+	SFBAudioObjectPropertySelectorDevicePhaseInvert = kAudioDevicePropertyPhaseInvert,
+	SFBAudioObjectPropertySelectorDeviceClipLight = kAudioDevicePropertyClipLight,
+	SFBAudioObjectPropertySelectorDeviceTalkback = kAudioDevicePropertyTalkback,
+	SFBAudioObjectPropertySelectorDeviceListenback = kAudioDevicePropertyListenback,
+	SFBAudioObjectPropertySelectorDeviceDataSource = kAudioDevicePropertyDataSource,
+	SFBAudioObjectPropertySelectorDeviceDataSources = kAudioDevicePropertyDataSources,
+	SFBAudioObjectPropertySelectorDeviceDataSourceNameForIDCFString = kAudioDevicePropertyDataSourceNameForIDCFString,
+	SFBAudioObjectPropertySelectorDeviceDataSourceKindForID = kAudioDevicePropertyDataSourceKindForID,
+	SFBAudioObjectPropertySelectorDeviceClockSource = kAudioDevicePropertyClockSource,
+	SFBAudioObjectPropertySelectorDeviceClockSources = kAudioDevicePropertyClockSources,
+	SFBAudioObjectPropertySelectorDeviceClockSourceNameForIDCFString = kAudioDevicePropertyClockSourceNameForIDCFString,
+	SFBAudioObjectPropertySelectorDeviceClockSourceKindForID = kAudioDevicePropertyClockSourceKindForID,
+	SFBAudioObjectPropertySelectorDevicePlayThru = kAudioDevicePropertyPlayThru,
+	SFBAudioObjectPropertySelectorDevicePlayThruSolo = kAudioDevicePropertyPlayThruSolo,
+	SFBAudioObjectPropertySelectorDevicePlayThruVolumeScalar = kAudioDevicePropertyPlayThruVolumeScalar,
+	SFBAudioObjectPropertySelectorDevicePlayThruVolumeDecibels = kAudioDevicePropertyPlayThruVolumeDecibels,
+	SFBAudioObjectPropertySelectorDevicePlayThruVolumeRangeDecibels = kAudioDevicePropertyPlayThruVolumeRangeDecibels,
+	SFBAudioObjectPropertySelectorDevicePlayThruVolumeScalarToDecibels = kAudioDevicePropertyPlayThruVolumeScalarToDecibels,
+	SFBAudioObjectPropertySelectorDevicePlayThruVolumeDecibelsToScalar = kAudioDevicePropertyPlayThruVolumeDecibelsToScalar,
+	SFBAudioObjectPropertySelectorDevicePlayThruStereoPan = kAudioDevicePropertyPlayThruStereoPan,
+	SFBAudioObjectPropertySelectorDevicePlayThruStereoPanChannels = kAudioDevicePropertyPlayThruStereoPanChannels,
+	SFBAudioObjectPropertySelectorDevicePlayThruDestination = kAudioDevicePropertyPlayThruDestination,
+	SFBAudioObjectPropertySelectorDevicePlayThruDestinations = kAudioDevicePropertyPlayThruDestinations,
+	SFBAudioObjectPropertySelectorDevicePlayThruDestinationNameForIDCFString = kAudioDevicePropertyPlayThruDestinationNameForIDCFString,
+	SFBAudioObjectPropertySelectorDeviceChannelNominalLineLevel = kAudioDevicePropertyChannelNominalLineLevel,
+	SFBAudioObjectPropertySelectorDeviceChannelNominalLineLevels = kAudioDevicePropertyChannelNominalLineLevels,
+	SFBAudioObjectPropertySelectorDeviceChannelNominalLineLevelNameForIDCFString = kAudioDevicePropertyChannelNominalLineLevelNameForIDCFString,
+	SFBAudioObjectPropertySelectorDeviceHighPassFilterSetting = kAudioDevicePropertyHighPassFilterSetting,
+	SFBAudioObjectPropertySelectorDeviceHighPassFilterSettings = kAudioDevicePropertyHighPassFilterSettings,
+	SFBAudioObjectPropertySelectorDeviceHighPassFilterSettingNameForIDCFString = kAudioDevicePropertyHighPassFilterSettingNameForIDCFString,
+	SFBAudioObjectPropertySelectorDeviceSubVolumeScalar = kAudioDevicePropertySubVolumeScalar,
+	SFBAudioObjectPropertySelectorDeviceSubVolumeDecibels = kAudioDevicePropertySubVolumeDecibels,
+	SFBAudioObjectPropertySelectorDeviceSubVolumeRangeDecibels = kAudioDevicePropertySubVolumeRangeDecibels,
+	SFBAudioObjectPropertySelectorDeviceSubVolumeScalarToDecibels = kAudioDevicePropertySubVolumeScalarToDecibels,
+	SFBAudioObjectPropertySelectorDeviceSubVolumeDecibelsToScalar = kAudioDevicePropertySubVolumeDecibelsToScalar,
+	SFBAudioObjectPropertySelectorDeviceSubMute = kAudioDevicePropertySubMute,
+
+	// AudioAggregateDevice
+	SFBAudioObjectPropertySelectorAggregateDeviceFullSubDeviceList 		= kAudioAggregateDevicePropertyFullSubDeviceList,
+	SFBAudioObjectPropertySelectorAggregateDeviceActiveSubDeviceList 	= kAudioAggregateDevicePropertyActiveSubDeviceList,
+	SFBAudioObjectPropertySelectorAggregateDeviceComposition 			= kAudioAggregateDevicePropertyComposition,
+	SFBAudioObjectPropertySelectorAggregateDeviceMasterSubDevice 		= kAudioAggregateDevicePropertyMasterSubDevice,
+	SFBAudioObjectPropertySelectorAggregateDeviceClockDevice 			= kAudioAggregateDevicePropertyClockDevice,
+
+	// AudioSubDevice
+	SFBAudioObjectPropertySelectorSubdeviceExtraLatency 				= kAudioSubDevicePropertyExtraLatency,
+	SFBAudioObjectPropertySelectorSubdeviceDriftCompensation 			= kAudioSubDevicePropertyDriftCompensation,
+	SFBAudioObjectPropertySelectorSubdeviceDriftCompensationQuality 	= kAudioSubDevicePropertyDriftCompensationQuality
+
 } NS_SWIFT_NAME(AudioObject.PropertySelector);
 
 /// Property scopes for \c SFBAudioObject and subclasses
 /// @note These are interchangeable with \c AudioObjectPropertyScope but are typed for ease of use from Swift.
 typedef NS_ENUM(AudioObjectPropertyScope, SFBAudioObjectPropertyScope) {
 	/// Global scope
-	SFBAudioObjectPropertyScopeGlobal			= kAudioObjectPropertyScopeGlobal,
+	SFBAudioObjectPropertyScopeGlobal		= kAudioObjectPropertyScopeGlobal,
 	/// Input scope
-	SFBAudioObjectPropertyScopeInput			= kAudioObjectPropertyScopeInput,
+	SFBAudioObjectPropertyScopeInput		= kAudioObjectPropertyScopeInput,
 	/// Output scope
-	SFBAudioObjectPropertyScopeOutput 			= kAudioObjectPropertyScopeOutput,
+	SFBAudioObjectPropertyScopeOutput 		= kAudioObjectPropertyScopeOutput,
 	/// Playthrough scope
-	SFBAudioObjectPropertyScopePlayThrough 		= kAudioObjectPropertyScopePlayThrough,
+	SFBAudioObjectPropertyScopePlayThrough 	= kAudioObjectPropertyScopePlayThrough,
 	/// Wildcard  scope, useful for notifications
-	SFBAudioObjectPropertyScopeWildcard			= kAudioObjectPropertyScopeWildcard
+	SFBAudioObjectPropertyScopeWildcard		= kAudioObjectPropertyScopeWildcard
 } NS_SWIFT_NAME(AudioObject.PropertyScope);
 
 /// Audio device transport types
 typedef NS_ENUM(UInt32, SFBAudioDeviceTransportType) {
 	/// Unknown
-	SFBAudioDeviceTransportTypeUnknown 			= kAudioDeviceTransportTypeUnknown,
+	SFBAudioDeviceTransportTypeUnknown 		= kAudioDeviceTransportTypeUnknown,
 	/// Built-in
-	SFBAudioDeviceTransportTypeBuiltIn 			= kAudioDeviceTransportTypeBuiltIn,
+	SFBAudioDeviceTransportTypeBuiltIn 		= kAudioDeviceTransportTypeBuiltIn,
 	/// Aggregate device
-	SFBAudioDeviceTransportTypeAggregate 		= kAudioDeviceTransportTypeAggregate,
+	SFBAudioDeviceTransportTypeAggregate 	= kAudioDeviceTransportTypeAggregate,
 	/// Virtual device
-	SFBAudioDeviceTransportTypeVirtual 			= kAudioDeviceTransportTypeVirtual,
+	SFBAudioDeviceTransportTypeVirtual 		= kAudioDeviceTransportTypeVirtual,
 	/// PCI
-	SFBAudioDeviceTransportTypePCI 				= kAudioDeviceTransportTypePCI,
+	SFBAudioDeviceTransportTypePCI 			= kAudioDeviceTransportTypePCI,
 	/// USB
-	SFBAudioDeviceTransportTypeUSB 				= kAudioDeviceTransportTypeUSB,
+	SFBAudioDeviceTransportTypeUSB 			= kAudioDeviceTransportTypeUSB,
 	/// FireWire
-	SFBAudioDeviceTransportTypeFireWire 		= kAudioDeviceTransportTypeFireWire,
+	SFBAudioDeviceTransportTypeFireWire 	= kAudioDeviceTransportTypeFireWire,
 	/// Bluetooth
-	SFBAudioDeviceTransportTypeBluetooth 		= kAudioDeviceTransportTypeBluetooth,
+	SFBAudioDeviceTransportTypeBluetooth 	= kAudioDeviceTransportTypeBluetooth,
 	/// Bluetooth Low Energy
-	SFBAudioDeviceTransportTypeBluetoothLE 		= kAudioDeviceTransportTypeBluetoothLE,
+	SFBAudioDeviceTransportTypeBluetoothLE 	= kAudioDeviceTransportTypeBluetoothLE,
 	/// HDMI
-	SFBAudioDeviceTransportTypeHDMI 			= kAudioDeviceTransportTypeHDMI,
+	SFBAudioDeviceTransportTypeHDMI 		= kAudioDeviceTransportTypeHDMI,
 	/// DisplayPort
-	SFBAudioDeviceTransportTypeDisplayPort 		= kAudioDeviceTransportTypeDisplayPort,
+	SFBAudioDeviceTransportTypeDisplayPort 	= kAudioDeviceTransportTypeDisplayPort,
 	/// AirPlay
-	SFBAudioDeviceTransportTypeAirPlay 			= kAudioDeviceTransportTypeAirPlay,
+	SFBAudioDeviceTransportTypeAirPlay 		= kAudioDeviceTransportTypeAirPlay,
 	/// AVB
-	SFBAudioDeviceTransportTypeAVB 				= kAudioDeviceTransportTypeAVB,
+	SFBAudioDeviceTransportTypeAVB 			= kAudioDeviceTransportTypeAVB,
 	/// Thunderbolt
-	SFBAudioDeviceTransportTypeThunderbolt 		= kAudioDeviceTransportTypeThunderbolt
+	SFBAudioDeviceTransportTypeThunderbolt 	= kAudioDeviceTransportTypeThunderbolt
 } NS_SWIFT_NAME(AudioDevice.TransportType);
 
 /// Property element for \c SFBAudioObject and subclasses
