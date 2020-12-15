@@ -20,7 +20,7 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *endpoints;
 /// Returns the transport type  or \c 0 on error
 /// @note This corresponds to \c kAudioTransportManagerPropertyTransportType
-@property (nonatomic, readonly) SFBCADeviceTransportType transportType;
+@property (nonatomic, readonly) SFBAudioDeviceTransportType transportType;
 
 @end
 

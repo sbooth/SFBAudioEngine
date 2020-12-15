@@ -30,8 +30,8 @@ BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);
 BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 
 // Property support
-BOOL SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, UInt32 *value);
-BOOL SFBFloat64ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress, Float64 *value);
+NSNumber * SFBUInt32ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
+NSNumber * SFBFloat64ForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
 
 NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
 NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, AudioObjectPropertyAddress *propertyAddress);
@@ -45,49 +45,49 @@ NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjec
 	/// The underlying audio object identifier
 	AudioObjectID _objectID;
 }
-/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c UInt32
 /// @param property The property to query
 /// @return The property value
-- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property;
-/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c UInt32
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope;
-/// Returns the value for \c property as an \c UInt32 or \c 0 on error
+- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c UInt32 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c UInt32
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (UInt32)uInt32ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
 
-/// Returns the value for \c property as an \c Float64 or \c 0 on error
+/// Returns the value for \c property as an \c Float64 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float64
 /// @param property The property to query
 /// @return The property value
-- (Float64)float64ForProperty:(AudioObjectPropertySelector)property;
-/// Returns the value for \c property as an \c Float64 or \c 0 on error
+- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property;
+/// Returns the value for \c property as an \c Float64 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float64
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope;
-/// Returns the value for \c property as an \c Float64 or \c 0 on error
+- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope;
+/// Returns the value for \c property as an \c Float64 or \c nil on error
 /// @note This queries \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float64
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (Float64)float64ForProperty:(AudioObjectPropertySelector)property inScope:(SFBCAObjectPropertyScope)scope onElement:(AudioObjectPropertyElement)element;
+- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
 @end
 
 NS_ASSUME_NONNULL_END

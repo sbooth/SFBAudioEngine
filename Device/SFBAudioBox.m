@@ -54,29 +54,29 @@
 	return [self stringForProperty:kAudioBoxPropertyBoxUID];
 }
 
-- (SFBCADeviceTransportType)transportType
+- (SFBAudioDeviceTransportType)transportType
 {
-	return [self uInt32ForProperty:kAudioBoxPropertyTransportType];
+	return [[self uInt32ForProperty:kAudioBoxPropertyTransportType] unsignedIntValue];
 }
 
 - (BOOL)hasAudio
 {
-	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasAudio];
+	return [[self uInt32ForProperty:kAudioBoxPropertyHasAudio] boolValue];
 }
 
 - (BOOL)hasVideo
 {
-	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasVideo];
+	return [[self uInt32ForProperty:kAudioBoxPropertyHasVideo] boolValue];
 }
 
 - (BOOL)hasMIDI
 {
-	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyHasMIDI];
+	return [[self uInt32ForProperty:kAudioBoxPropertyHasMIDI] boolValue];
 }
 
 - (BOOL)acquired
 {
-	return (BOOL)[self uInt32ForProperty:kAudioBoxPropertyAcquired];
+	return [[self uInt32ForProperty:kAudioBoxPropertyAcquired] boolValue];
 }
 
 - (NSArray *)devices

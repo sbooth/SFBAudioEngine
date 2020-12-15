@@ -14,11 +14,14 @@ NS_SWIFT_NAME(EndpointDevice) @interface SFBEndpointDevice : SFBAudioDevice
 @property (class, nonatomic, nullable, readonly) NSArray<SFBEndpointDevice *> *endpointDevices;
 
 /// Returns the endpoint device's composition \c nil on error
+/// @note This corresponds to \c kAudioEndPointDevicePropertyComposition
 /// @note The constants for the dictionary keys are located in \c AudioHardwareBase.h
 @property (nonatomic, nullable, readonly) NSDictionary * composition;
 /// Returns an array of available endpoints or \c nil on error
+/// @note This corresponds to \c kAudioEndPointDevicePropertyEndPointList
 @property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *endpoints;
 /// Returns the owning process id or \c 0 for public devices
+/// @note This corresponds to \c kAudioEndPointDevicePropertyIsPrivate
 @property (nonatomic, readonly) pid_t isPrivate;
 
 @end
