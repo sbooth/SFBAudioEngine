@@ -33,17 +33,24 @@ FOUNDATION_EXPORT const unsigned char SFBAudioEngineVersionString [];
 #if TARGET_OS_OSX
 
 #import <SFBAudioEngine/SFBAudioObject.h>
-#import <SFBAudioEngine/SFBAudioDevice.h>
-#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
-#import <SFBAudioEngine/SFBAggregateDevice.h>
-#import <SFBAudioEngine/SFBEndpointDevice.h>
-#import <SFBAudioEngine/SFBSubdevice.h>
-#import <SFBAudioEngine/SFBAudioBox.h>
-#import <SFBAudioEngine/SFBClockDevice.h>
-#import <SFBAudioEngine/SFBAudioStream.h>
-#import <SFBAudioEngine/SFBAudioStream.h>
 #import <SFBAudioEngine/SFBAudioPlugIn.h>
 #import <SFBAudioEngine/SFBAudioTransportManager.h>
+#import <SFBAudioEngine/SFBAudioBox.h>
+#import <SFBAudioEngine/SFBAudioDevice.h>
+#import <SFBAudioEngine/SFBClockDevice.h>
+#import <SFBAudioEngine/SFBEndpointDevice.h>
+#import <SFBAudioEngine/SFBAudioStream.h>
+#import <SFBAudioEngine/SFBAudioControl.h>
+
+#import <SFBAudioEngine/SFBAggregateDevice.h>
+#import <SFBAudioEngine/SFBSubdevice.h>
+#import <SFBAudioEngine/SFBAudioDeviceDataSource.h>
+
+#import <SFBAudioEngine/SFBBooleanControl.h>
+#import <SFBAudioEngine/SFBLevelControl.h>
+#import <SFBAudioEngine/SFBSelectorControl.h>
+#import <SFBAudioEngine/SFBSliderControl.h>
+#import <SFBAudioEngine/SFBStereoPanControl.h>
 
 #endif
 
