@@ -18,9 +18,17 @@ NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
 /// @note This corresponds to \c kAudioLevelControlPropertyDecibelValue
 @property (nonatomic, readonly) Float32 decibelValue;
 
-//kAudioLevelControlPropertyDecibelRange
-//kAudioLevelControlPropertyConvertScalarToDecibels
-//kAudioLevelControlPropertyConvertDecibelsToScalar
+/// Returns the control's decibel range or \c nil on error
+/// @note This corresponds to \c kAudioLevelControlPropertyDecibelRange
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *decibelRange;
+
+/// Converts and returns \c scalar converted to decibels
+/// @note This corresponds to \c kAudioLevelControlPropertyConvertScalarToDecibels
+- (Float32)convertToDecibelsFromScalar:(Float32)scalar;
+
+/// Converts and returns \c decibels converted to scalar
+/// @note This corresponds to \c kAudioLevelControlPropertyConvertDecibelsToScalar
+- (Float32)convertToScalarFromDecibels:(Float32)decibels;
 
 @end
 
