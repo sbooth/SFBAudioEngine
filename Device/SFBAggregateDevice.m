@@ -3,8 +3,6 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
-
 #import "SFBAggregateDevice.h"
 #import "SFBAudioObject+Internal.h"
 

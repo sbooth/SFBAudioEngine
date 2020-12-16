@@ -43,8 +43,10 @@
 	return [[self uintForProperty:kAudioStreamPropertyLatency] unsignedIntValue];
 }
 
-- (AVAudioFormat *)virtualFormat
+- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)streamDescription
 {
+	NSParameterAssert(streamDescription != NULL);
+
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioStreamPropertyVirtualFormat,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
@@ -56,10 +58,15 @@
 	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &asbd);
 	if(kAudioHardwareNoError != result) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
+		return NO;
 	}
 
-	return [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
+	return YES;
+}
+
+- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)streamDescription onElement:(SFBAudioObjectPropertyElement)element
+{
+	
 }
 
 - (AVAudioFormat *)physicalFormat
