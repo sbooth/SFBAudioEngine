@@ -3,12 +3,26 @@
  * See https://github.com/sbooth/SFBAudioEngine/blob/master/LICENSE.txt for license information
  */
 
-@import os.log;
-
 #import "SFBAudioStream.h"
 #import "SFBAudioObject+Internal.h"
 
 #import "SFBCStringForOSType.h"
+
+namespace {
+
+	bool AudioStreamBasicDescriptionForProperty(AudioObjectID objectID, AudioStreamBasicDescription& streamDescription, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return SFB::GetFixedSizeProperty(objectID, propertyAddress, streamDescription);
+	}
+
+	bool AudioStreamBasicDescriptionArrayForProperty(AudioObjectID objectID, std::vector<AudioStreamBasicDescription>& streamDescriptions, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return SFB::GetArrayProperty(objectID, propertyAddress, streamDescriptions);
+	}
+
+}
 
 @implementation SFBAudioStream
 
@@ -20,72 +34,51 @@
 
 - (BOOL)isActive
 {
-	return [[self uintForProperty:kAudioStreamPropertyIsActive] boolValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyIsActive) boolValue];
 }
 
 - (BOOL)isOutput
 {
-	return [[self uintForProperty:kAudioStreamPropertyDirection] boolValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyDirection) boolValue];
 }
 
 - (SFBAudioStreamTerminalType)terminalType
 {
-	return [[self uintForProperty:kAudioStreamPropertyTerminalType] unsignedIntValue];
+	return (SFBAudioStreamTerminalType)[SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyTerminalType) unsignedIntValue];
 }
 
 - (UInt32)startingChannel
 {
-	return [[self uintForProperty:kAudioStreamPropertyStartingChannel] unsignedIntValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyStartingChannel) unsignedIntValue];
 }
 
 - (UInt32)latency
 {
-	return [[self uintForProperty:kAudioStreamPropertyLatency] unsignedIntValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyLatency) unsignedIntValue];
 }
 
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)streamDescription
+- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format
 {
-	NSParameterAssert(streamDescription != NULL);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioStreamPropertyVirtualFormat,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioStreamBasicDescription asbd = {0};
-	UInt32 dataSize = sizeof(asbd);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &asbd);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return NO;
-	}
-
-	return YES;
+	NSParameterAssert(format != NULL);
+	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyVirtualFormat);
 }
 
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)streamDescription onElement:(SFBAudioObjectPropertyElement)element
+- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element
 {
-	
+	NSParameterAssert(format != NULL);
+	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyVirtualFormat, element);
 }
 
-- (AVAudioFormat *)physicalFormat
+- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioStreamPropertyPhysicalFormat,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
+	NSParameterAssert(format != NULL);
+	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyPhysicalFormat);
+}
 
-	AudioStreamBasicDescription asbd = {0};
-	UInt32 dataSize = sizeof(asbd);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &asbd);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioStreamPropertyVirtualFormat) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [[AVAudioFormat alloc] initWithStreamDescription:&asbd];
+- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format  onElement:(SFBAudioObjectPropertyElement)element
+{
+	NSParameterAssert(format != NULL);
+	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyPhysicalFormat, element);
 }
 
 @end
