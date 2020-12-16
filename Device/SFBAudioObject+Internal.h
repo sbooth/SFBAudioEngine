@@ -100,6 +100,16 @@ namespace SFB {
 		return true;
 	}
 
+#pragma mark - Numeric Properties
+
+	template <typename T, T DefaultValue = std::numeric_limits<T>::quiet_NaN()>
+	typename std::enable_if<std::is_arithmetic<T>::value, bool>::type NumericTypeForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		T value;
+		return GetFixedSizeProperty(objectID, propertyAddress, value) ? value : DefaultValue;
+	}
+
 #pragma mark Property Information
 
 	bool HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster);

@@ -619,12 +619,12 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (AudioClassID)baseClassID
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioObjectPropertyBaseClass) unsignedIntValue];
+	return SFB::NumericTypeForProperty<AudioClassID>(_objectID, kAudioObjectPropertyBaseClass);
 }
 
 - (AudioClassID)classID
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioObjectPropertyClass) unsignedIntValue];
+	return SFB::NumericTypeForProperty<AudioClassID>(_objectID, kAudioObjectPropertyClass);
 }
 
 - (SFBAudioObject *)owner
