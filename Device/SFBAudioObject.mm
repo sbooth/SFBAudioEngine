@@ -5,6 +5,7 @@
 
 #import <os/log.h>
 
+#import <map>
 #import <vector>
 
 #import "SFBAudioObject+Internal.h"
@@ -30,6 +31,12 @@ struct ::std::default_delete<AudioBufferList> {
 	constexpr default_delete(default_delete<U>) noexcept {}
 	void operator()(AudioBufferList *abl) const noexcept { std::free(abl); }
 };
+
+bool operator<(const AudioObjectPropertyAddress& lhs, const AudioObjectPropertyAddress& rhs);
+bool operator<(const AudioObjectPropertyAddress& lhs, const AudioObjectPropertyAddress& rhs)
+{
+	return lhs.mSelector < rhs.mSelector && lhs.mScope < rhs.mScope && lhs.mElement < rhs.mElement;
+}
 
 namespace {
 
@@ -230,6 +237,57 @@ namespace {
 		return GetVariableSizeProperty(deviceID, propertyAddress, value) ? value->mNumberBuffers > 0 : NO;
 	}
 
+	bool RemovePropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	{
+		NSCParameterAssert(objectID != kAudioObjectUnknown);
+
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+
+		const auto listenerBlock = listenerBlocks.find(propertyAddress);
+		if(listenerBlock == listenerBlocks.end())
+			return false;
+
+		os_log_info(gSFBAudioObjectLog, "Removing property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", objectID, SFBCStringForOSType(property), SFBCStringForOSType(scope), element);
+
+		OSStatus result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock->second);
+		if(result != kAudioHardwareNoError)
+			os_log_error(gSFBAudioObjectLog, "AudioObjectRemovePropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(property), SFBCStringForOSType(scope), element, result, SFBCStringForOSType(result));
+
+		listenerBlocks.erase(listenerBlock);
+
+		return true;
+	}
+
+	bool AddPropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, dispatch_block_t block, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	{
+		NSCParameterAssert(objectID != kAudioObjectUnknown);
+
+		RemovePropertyListener(objectID, listenerBlocks, property, scope, element);
+
+		if(block) {
+			AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+
+			os_log_info(gSFBAudioObjectLog, "Adding property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", objectID, SFBCStringForOSType(property), SFBCStringForOSType(scope), element);
+
+			AudioObjectPropertyListenerBlock listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses) {
+#pragma unused(inNumberAddresses)
+#pragma unused(inAddresses)
+				block();
+			};
+
+			listenerBlocks[propertyAddress] = listenerBlock;
+
+			OSStatus result = AudioObjectAddPropertyListenerBlock(objectID, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
+			if(result != kAudioHardwareNoError) {
+				os_log_error(gSFBAudioObjectLog, "AudioObjectAddPropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(property), SFBCStringForOSType(scope), element, result, SFBCStringForOSType(result));
+				listenerBlocks.erase(propertyAddress);
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 }
 
 extern "C" {
@@ -307,11 +365,9 @@ extern "C" {
 @interface SFBAudioObject ()
 {
 @private
-	/// An array of property listener blocks
-	NSMutableDictionary *_listenerBlocks;
+	/// Registered property listener blocks
+	std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock> _listenerBlocks;
 }
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block;
-- (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress;
 @end
 
 @implementation SFBAudioObject
@@ -324,7 +380,6 @@ static SFBAudioObject *sSystemObject = nil;
 	dispatch_once(&onceToken, ^{
 		sSystemObject = [[SFBAudioObject alloc] init];
 		sSystemObject->_objectID = kAudioObjectSystemObject;
-		sSystemObject->_listenerBlocks = [NSMutableDictionary dictionary];
 	});
 	return sSystemObject;
 }
@@ -375,19 +430,16 @@ static SFBAudioObject *sSystemObject = nil;
 			break;
 	}
 
-	if(self) {
+	if(self)
 		_objectID = objectID;
-		_listenerBlocks = [NSMutableDictionary dictionary];
-	}
 	return self;
 }
 
 - (void)dealloc
 {
-	for(NSValue *propertyAddressAsValue in [_listenerBlocks allKeys]) {
-		AudioObjectPropertyAddress propertyAddress{};
-		[propertyAddressAsValue getValue:&propertyAddress];
-		[self removePropertyListenerForPropertyAddress:&propertyAddress];
+	while(!_listenerBlocks.empty()) {
+		auto it = _listenerBlocks.begin();
+		RemovePropertyListener(_objectID, _listenerBlocks, it->first.mSelector, it->first.mScope, it->first.mElement);
 	}
 }
 
@@ -559,68 +611,17 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (void)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:property inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	AddPropertyListener(_objectID, _listenerBlocks, block, property);
 }
 
 - (void)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	[self whenProperty:property inScope:scope changesOnElement:kAudioObjectPropertyElementMaster performBlock:block];
+	AddPropertyListener(_objectID, _listenerBlocks, block, property, scope);
 }
 
 - (void)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= property,
-		.mScope		= scope,
-		.mElement	= element
-	};
-
-	[self removePropertyListenerForPropertyAddress:&propertyAddress];
-	if(block)
-		[self addPropertyListenerForPropertyAddress:&propertyAddress block:block];
-}
-
-#pragma mark - Private Methods
-
-- (void)addPropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress block:(dispatch_block_t)block
-{
-	NSParameterAssert(propertyAddress != nil);
-	NSParameterAssert(block != nil);
-
-	os_log_info(gSFBAudioObjectLog, "Adding property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _objectID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
-
-	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
-
-	AudioObjectPropertyListenerBlock listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses) {
-#pragma unused(inNumberAddresses)
-#pragma unused(inAddresses)
-		block();
-	};
-
-	[_listenerBlocks setObject:listenerBlock forKey:propertyAddressAsValue];
-
-	OSStatus result = AudioObjectAddPropertyListenerBlock(_objectID, propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectAddPropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement, result, SFBCStringForOSType(result));
-		[_listenerBlocks removeObjectForKey:propertyAddressAsValue];
-	}
-}
-
-- (void)removePropertyListenerForPropertyAddress:(const AudioObjectPropertyAddress *)propertyAddress
-{
-	NSParameterAssert(propertyAddress != nil);
-
-	NSValue *propertyAddressAsValue = [NSValue value:propertyAddress withObjCType:@encode(AudioObjectPropertyAddress)];
-	AudioObjectPropertyListenerBlock listenerBlock = [_listenerBlocks objectForKey:propertyAddressAsValue];
-	if(listenerBlock) {
-		os_log_info(gSFBAudioObjectLog, "Removing property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", _objectID, SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement);
-
-		[_listenerBlocks removeObjectForKey:propertyAddressAsValue];
-
-		OSStatus result = AudioObjectRemovePropertyListenerBlock(_objectID, propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock);
-		if(result != kAudioHardwareNoError)
-			os_log_error(gSFBAudioObjectLog, "AudioObjectRemovePropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress->mSelector), SFBCStringForOSType(propertyAddress->mScope), propertyAddress->mElement, result, SFBCStringForOSType(result));
-	}
+	AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element);
 }
 
 - (NSString *)description
