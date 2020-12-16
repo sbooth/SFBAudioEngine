@@ -537,62 +537,62 @@ static SFBAudioObject *sSystemObject = nil;
 	return PropertyIsSettable(_objectID, property, element);
 }
 
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property
+- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return UInt32ForProperty(_objectID, property);
 }
 
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return UInt32ForProperty(_objectID, property, scope);
 }
 
-- (NSNumber *)uInt32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return UInt32ForProperty(_objectID, property, scope, element);
 }
 
-- (NSArray *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property
+- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return UInt32ArrayForProperty(_objectID, property);
 }
 
-- (NSArray *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return UInt32ArrayForProperty(_objectID, property, scope);
 }
 
-- (NSArray *)uInt32ArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return UInt32ArrayForProperty(_objectID, property, scope, element);
 }
 
-- (NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property
+- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return Float32ForProperty(_objectID, property);
 }
 
-- (NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return Float32ForProperty(_objectID, property, scope);
 }
 
-- (NSNumber *)float32ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return Float32ForProperty(_objectID, property, scope, element);
 }
 
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property
+- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return Float64ForProperty(_objectID, property);
 }
 
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return Float64ForProperty(_objectID, property, scope);
 }
 
-- (NSNumber *)float64ForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return Float64ForProperty(_objectID, property, scope, element);
 }
@@ -642,17 +642,17 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectForProperty(_objectID, property, scope, element);
 }
 
-- (NSArray *)audioObjectsForProperty:(SFBAudioObjectPropertySelector)property
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return AudioObjectArrayForProperty(_objectID, property);
 }
 
-- (NSArray *)audioObjectsForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope);
 }
 
-- (NSArray *)audioObjectsForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope, element);
 }

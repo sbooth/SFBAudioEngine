@@ -14,7 +14,7 @@
 
 + (NSArray *)clockDevices
 {
-	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyClockDeviceList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -56,42 +56,42 @@
 
 - (SFBAudioDeviceTransportType)transportType
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertyTransportType] unsignedIntValue];
+	return [[self uintForProperty:kAudioDevicePropertyTransportType] unsignedIntValue];
 }
 
 - (UInt32)domain
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertyClockDomain] unsignedIntValue];
+	return [[self uintForProperty:kAudioDevicePropertyClockDomain] unsignedIntValue];
 }
 
 - (BOOL)isAlive
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertyDeviceIsAlive] boolValue];
+	return [[self uintForProperty:kAudioDevicePropertyDeviceIsAlive] boolValue];
 }
 
 - (BOOL)isRunning
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertyDeviceIsRunning] boolValue];
+	return [[self uintForProperty:kAudioDevicePropertyDeviceIsRunning] boolValue];
 }
 
 - (UInt32)latency
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertyLatency] unsignedIntValue];
+	return [[self uintForProperty:kAudioDevicePropertyLatency] unsignedIntValue];
 }
 
 - (NSArray *)controls
 {
-	return [self audioObjectsForProperty:kAudioObjectPropertyControlList];
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
 }
 
 - (UInt32)safetyOffset
 {
-	return [[self uInt32ForProperty:kAudioDevicePropertySafetyOffset] unsignedIntValue];
+	return [[self uintForProperty:kAudioDevicePropertySafetyOffset] unsignedIntValue];
 }
 
 - (double)sampleRate
 {
-	return [[self float64ForProperty:kAudioClockDevicePropertyNominalSampleRate] doubleValue];
+	return [[self doubleForProperty:kAudioClockDevicePropertyNominalSampleRate] doubleValue];
 }
 
 - (NSArray *)availableSampleRates

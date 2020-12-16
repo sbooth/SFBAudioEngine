@@ -28,19 +28,19 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (Float64)extraLatency
+- (double)extraLatency
 {
-	return [[self float64ForProperty:kAudioSubDevicePropertyExtraLatency] doubleValue];
+	return [[self doubleForProperty:kAudioSubDevicePropertyExtraLatency] doubleValue];
 }
 
 - (BOOL)driftCompensation
 {
-	return [[self uInt32ForProperty:kAudioSubDevicePropertyDriftCompensation] boolValue];
+	return [[self uintForProperty:kAudioSubDevicePropertyDriftCompensation] boolValue];
 }
 
 - (SFBSubdeviceDriftCompensationQuality)driftCompensationQuality
 {
-	return [[self uInt32ForProperty:kAudioSubDevicePropertyDriftCompensationQuality] unsignedIntValue];
+	return [[self uintForProperty:kAudioSubDevicePropertyDriftCompensationQuality] unsignedIntValue];
 }
 
 @end

@@ -20,27 +20,27 @@
 
 - (BOOL)isActive
 {
-	return [[self uInt32ForProperty:kAudioStreamPropertyIsActive] boolValue];
+	return [[self uintForProperty:kAudioStreamPropertyIsActive] boolValue];
 }
 
 - (BOOL)isOutput
 {
-	return [[self uInt32ForProperty:kAudioStreamPropertyDirection] boolValue];
+	return [[self uintForProperty:kAudioStreamPropertyDirection] boolValue];
 }
 
 - (SFBAudioStreamTerminalType)terminalType
 {
-	return [[self uInt32ForProperty:kAudioStreamPropertyTerminalType] unsignedIntValue];
+	return [[self uintForProperty:kAudioStreamPropertyTerminalType] unsignedIntValue];
 }
 
 - (UInt32)startingChannel
 {
-	return [[self uInt32ForProperty:kAudioStreamPropertyStartingChannel] unsignedIntValue];
+	return [[self uintForProperty:kAudioStreamPropertyStartingChannel] unsignedIntValue];
 }
 
 - (UInt32)latency
 {
-	return [[self uInt32ForProperty:kAudioStreamPropertyLatency] unsignedIntValue];
+	return [[self uintForProperty:kAudioStreamPropertyLatency] unsignedIntValue];
 }
 
 - (AVAudioFormat *)virtualFormat

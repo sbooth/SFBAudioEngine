@@ -20,12 +20,12 @@
 
 - (UInt32)value
 {
-	return [[self uInt32ForProperty:kAudioSliderControlPropertyValue] unsignedIntValue];
+	return [[self uintForProperty:kAudioSliderControlPropertyValue] unsignedIntValue];
 }
 
 - (NSArray *)range
 {
-	return [self uInt32ArrayForProperty:kAudioSliderControlPropertyRange];
+	return [self uintArrayForProperty:kAudioSliderControlPropertyRange];
 }
 
 @end

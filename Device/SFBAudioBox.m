@@ -14,7 +14,7 @@
 
 + (NSArray *)boxes
 {
-	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyBoxList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -56,37 +56,37 @@
 
 - (SFBAudioDeviceTransportType)transportType
 {
-	return [[self uInt32ForProperty:kAudioBoxPropertyTransportType] unsignedIntValue];
+	return [[self uintForProperty:kAudioBoxPropertyTransportType] unsignedIntValue];
 }
 
 - (BOOL)hasAudio
 {
-	return [[self uInt32ForProperty:kAudioBoxPropertyHasAudio] boolValue];
+	return [[self uintForProperty:kAudioBoxPropertyHasAudio] boolValue];
 }
 
 - (BOOL)hasVideo
 {
-	return [[self uInt32ForProperty:kAudioBoxPropertyHasVideo] boolValue];
+	return [[self uintForProperty:kAudioBoxPropertyHasVideo] boolValue];
 }
 
 - (BOOL)hasMIDI
 {
-	return [[self uInt32ForProperty:kAudioBoxPropertyHasMIDI] boolValue];
+	return [[self uintForProperty:kAudioBoxPropertyHasMIDI] boolValue];
 }
 
 - (BOOL)acquired
 {
-	return [[self uInt32ForProperty:kAudioBoxPropertyAcquired] boolValue];
+	return [[self uintForProperty:kAudioBoxPropertyAcquired] boolValue];
 }
 
 - (NSArray *)devices
 {
-	return [self audioObjectsForProperty:kAudioBoxPropertyDeviceList];
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyDeviceList];
 }
 
 - (NSArray *)clockDevices
 {
-	return [self audioObjectsForProperty:kAudioBoxPropertyClockDeviceList];
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyClockDeviceList];
 }
 
 - (NSString *)description

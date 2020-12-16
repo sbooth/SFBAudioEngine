@@ -10,7 +10,7 @@
 
 + (NSArray *)plugIns
 {
-	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyPlugInList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -26,17 +26,17 @@
 
 - (NSArray *)devices
 {
-	return [self audioObjectsForProperty:kAudioPlugInPropertyDeviceList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyDeviceList];
 }
 
 - (NSArray *)boxes
 {
-	return [self audioObjectsForProperty:kAudioPlugInPropertyBoxList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyBoxList];
 }
 
 - (NSArray *)clockDevices
 {
-	return [self audioObjectsForProperty:kAudioPlugInPropertyClockDeviceList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyClockDeviceList];
 }
 
 @end

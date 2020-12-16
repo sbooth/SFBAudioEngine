@@ -16,12 +16,12 @@
 
 - (NSArray *)currentItem
 {
-	return [self uInt32ArrayForProperty:kAudioSelectorControlPropertyCurrentItem];
+	return [self uintArrayForProperty:kAudioSelectorControlPropertyCurrentItem];
 }
 
 - (NSArray *)availableItems
 {
-	return [self uInt32ArrayForProperty:kAudioSelectorControlPropertyAvailableItems];
+	return [self uintArrayForProperty:kAudioSelectorControlPropertyAvailableItems];
 }
 
 - (NSString *)itemName
@@ -31,7 +31,7 @@
 
 - (UInt32)itemKind
 {
-	return [[self uInt32ForProperty:kAudioSelectorControlPropertyItemKind] unsignedIntValue];
+	return [[self uintForProperty:kAudioSelectorControlPropertyItemKind] unsignedIntValue];
 }
 
 @end

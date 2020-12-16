@@ -16,7 +16,7 @@
 
 - (BOOL)value
 {
-	return [[self uInt32ForProperty:kAudioSliderControlPropertyValue] boolValue];
+	return [[self uintForProperty:kAudioSliderControlPropertyValue] boolValue];
 }
 
 @end

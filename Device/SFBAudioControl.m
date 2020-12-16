@@ -16,12 +16,12 @@
 
 - (SFBAudioObjectPropertyScope)scope
 {
-	return [[self uInt32ForProperty:kAudioControlPropertyScope] unsignedIntValue];
+	return [[self uintForProperty:kAudioControlPropertyScope] unsignedIntValue];
 }
 
 - (SFBAudioObjectPropertyElement)element
 {
-	return [[self uInt32ForProperty:kAudioControlPropertyElement] unsignedIntValue];
+	return [[self uintForProperty:kAudioControlPropertyElement] unsignedIntValue];
 }
 
 @end

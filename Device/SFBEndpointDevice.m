@@ -35,7 +35,7 @@
 
 - (NSArray *)endPoints
 {
-	return [self audioObjectsForProperty:kAudioEndPointDevicePropertyEndPointList];
+	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList];
 }
 
 - (pid_t)isPrivate

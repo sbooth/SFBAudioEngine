@@ -10,7 +10,7 @@
 
 + (NSArray *)transportManagers
 {
-	return [[SFBAudioObject systemObject] audioObjectsForProperty:kAudioHardwarePropertyTransportManagerList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyTransportManagerList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -21,12 +21,12 @@
 
 - (NSArray *)endPoints
 {
-	return [self audioObjectsForProperty:kAudioTransportManagerPropertyEndPointList];
+	return [self audioObjectArrayForProperty:kAudioTransportManagerPropertyEndPointList];
 }
 
 - (SFBAudioDeviceTransportType)transportType
 {
-	return [[self uInt32ForProperty:kAudioTransportManagerPropertyTransportType] unsignedIntValue];
+	return [[self uintForProperty:kAudioTransportManagerPropertyTransportType] unsignedIntValue];
 }
 
 @end

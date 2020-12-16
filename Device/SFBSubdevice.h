@@ -28,7 +28,7 @@ NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
 @property (class, nonatomic, nullable, readonly) NSArray<SFBSubdevice *> *subdevices;
 
 /// Returns the extra latency or \c 0 on error
-@property (nonatomic, readonly) Float64 extraLatency;
+@property (nonatomic, readonly) double extraLatency;
 /// Returns the drift compensation or \c 0 on error
 @property (nonatomic, readonly) BOOL driftCompensation;
 /// Returns the drift compensation quality or \c 0 on error

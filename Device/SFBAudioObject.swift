@@ -5,6 +5,140 @@
 
 import Foundation
 
+extension AudioObject {
+	/// Returns `true` if the underlying audio object has the specified property
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: `true` if the property is supported
+	func hasProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
+		return __hasProperty(property, in: scope, onElement: element)
+	}
+
+	/// Returns `true` if the underlying audio object has the specified property and it is settable
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: `true` if the property is settable
+	func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
+		return __propertyIsSettable(property, in: scope, onElement: element)
+	}
+
+	/// Returns the value for `property` as an `UInt` or `nil` on error
+	/// - note: `property` must refer to a property of type `UInt32`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> UInt? {
+		guard let value = __uint(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value.uintValue
+	}
+
+	/// Returns the value for `property` as an array `UInt` or `nil` on error
+	/// - note: `property` must refer to a property of type array of `UInt32`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [UInt]? {
+		guard let value = __uintArray(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value.map { $0.uintValue }
+	}
+
+	/// Returns the value for `property` as a `Float` or `nil` on error
+	/// - note: `property` must refer to a property of type `Float32`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func floatForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Float? {
+		guard let value = __float(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value.floatValue
+	}
+
+	/// Returns the value for `property` as a `Double` or `nil` on error
+	/// - note: `property` must refer to a property of type `Float64`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func doubleForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Double? {
+		guard let value = __double(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value.doubleValue
+	}
+
+	/// Returns the value for `property` as a `String` or `nil` on error
+	/// - note: `property` must refer to a property of type `CFStringRef`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func stringForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> String? {
+		guard let value = __string(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value
+	}
+
+	/// Returns the value for `property` as a `Dictionary` or `nil` on error
+	/// - note: `property` must refer to a property of type `CFDictionaryRef`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func dictionaryForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AnyHashable: Any]? {
+		guard let value = __dictionary(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value
+	}
+
+	/// Returns the value for `property` as an `AudioObject` or `nil` on error
+	/// - note: `property` must refer to a property of type `AudioObjectID`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func audioObjectForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioObject? {
+		guard let value = __forProperty(property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value
+	}
+
+	/// Returns the value for `property` as an array of `AudioObject` or `nil` on error
+	/// - note: `property` must refer to a property of type array of `AudioObjectID`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	func audioObjectArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioObject]? {
+		guard let value = __audioObjectArray(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value
+	}
+
+	/// Performs `block` when the specified property changes
+	/// - parameter property: The property to observe
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) {
+		__whenProperty(property, in: scope, changesOnElement: element, perform: block)
+	}
+
+}
+
 extension AudioObject.PropertySelector: ExpressibleByStringLiteral {
 	public init(stringLiteral value: StringLiteralType) {
 		var fourcc: UInt32 = 0
@@ -14,6 +148,20 @@ extension AudioObject.PropertySelector: ExpressibleByStringLiteral {
 		self.init(rawValue: fourcc)!
 	}
 }
+
+extension AudioObject.PropertyElement {
+	/// The master element, `kAudioObjectPropertyElementMaster`
+	public static var master: AudioObject.PropertyElement {
+		return kAudioObjectPropertyElementMaster
+	}
+
+	/// The wildcard element, `kAudioObjectPropertyElementWildcard`
+	public static var wildcard: AudioObject.PropertyElement {
+		return kAudioObjectPropertyElementWildcard
+	}
+}
+
+// MARK: - Debugging Helpers
 
 extension AudioObject.PropertySelector: CustomDebugStringConvertible {
 	public var debugDescription: String {
@@ -40,18 +188,6 @@ extension AudioObject.PropertyScope: CustomDebugStringConvertible {
 		case .wildcard: 		return ".wildcard"
 		@unknown default: 		return "UNKNOWN"
 		}
-	}
-}
-
-extension AudioObject.PropertyElement {
-	/// The master element, `kAudioObjectPropertyElementMaster`
-	public static var master: AudioObject.PropertyElement {
-		return kAudioObjectPropertyElementMaster
-	}
-
-	/// The wildcard element, `kAudioObjectPropertyElementWildcard`
-	public static var wildcard: AudioObject.PropertyElement {
-		return kAudioObjectPropertyElementWildcard
 	}
 }
 

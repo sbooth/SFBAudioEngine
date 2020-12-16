@@ -18,14 +18,14 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (Float32)scalarValue
+- (float)scalarValue
 {
-	return [[self float32ForProperty:kAudioLevelControlPropertyScalarValue] floatValue];
+	return [[self floatForProperty:kAudioLevelControlPropertyScalarValue] floatValue];
 }
 
-- (Float32)decibelValue
+- (float)decibelValue
 {
-	return [[self float32ForProperty:kAudioLevelControlPropertyDecibelValue] floatValue];
+	return [[self floatForProperty:kAudioLevelControlPropertyDecibelValue] floatValue];
 }
 
 - (NSArray *)decibelRange
@@ -47,7 +47,7 @@
 	return [NSArray arrayWithObjects:@(value.mMinimum), @(value.mMaximum), nil];
 }
 
-- (Float32)convertToDecibelsFromScalar:(Float32)scalar
+- (float)convertToDecibelsFromScalar:(float)scalar
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertScalarToDecibels,
@@ -66,7 +66,7 @@
 	return value;
 }
 
-- (Float32)convertToScalarFromDecibels:(Float32)decibels
+- (float)convertToScalarFromDecibels:(float)decibels
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertDecibelsToScalar,

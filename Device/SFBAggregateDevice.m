@@ -50,7 +50,7 @@
 
 - (NSArray *)activeSubdevices
 {
-	return [self audioObjectsForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList];
+	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList];
 }
 
 - (NSDictionary *)composition
