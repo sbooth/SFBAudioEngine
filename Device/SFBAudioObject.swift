@@ -11,7 +11,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: `true` if the property is supported
-	func hasProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
+	public func hasProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
 		return __hasProperty(property, in: scope, onElement: element)
 	}
 
@@ -20,7 +20,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: `true` if the property is settable
-	func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
+	public func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
 		return __propertyIsSettable(property, in: scope, onElement: element)
 	}
 
@@ -30,7 +30,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> UInt? {
+	public func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> UInt? {
 		guard let value = __uint(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -43,7 +43,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [UInt]? {
+	public func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [UInt]? {
 		guard let value = __uintArray(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -56,7 +56,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func floatForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Float? {
+	public func floatForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Float? {
 		guard let value = __float(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -69,7 +69,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func doubleForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Double? {
+	public func doubleForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Double? {
 		guard let value = __double(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -82,7 +82,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func stringForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> String? {
+	public func stringForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> String? {
 		guard let value = __string(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -95,7 +95,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func dictionaryForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AnyHashable: Any]? {
+	public func dictionaryForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AnyHashable: Any]? {
 		guard let value = __dictionary(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -108,7 +108,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func audioObjectForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioObject? {
+	public func audioObjectForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioObject? {
 		guard let value = __forProperty(property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -121,7 +121,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	func audioObjectArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioObject]? {
+	public func audioObjectArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioObject]? {
 		guard let value = __audioObjectArray(forProperty: property, in: scope, onElement: element) else {
 			return nil
 		}
@@ -133,7 +133,7 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
-	func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) {
+	public func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) {
 		__whenProperty(property, in: scope, changesOnElement: element, perform: block)
 	}
 
