@@ -26,7 +26,7 @@
 	return [[self floatForProperty:kAudioLevelControlPropertyDecibelValue] floatValue];
 }
 
-- (NSArray *)decibelRange
+- (NSValue *)decibelRange
 {
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyDecibelRange,
@@ -42,7 +42,7 @@
 		return nil;
 	}
 
-	return [NSArray arrayWithObjects:@(value.mMinimum), @(value.mMaximum), nil];
+	return [NSValue valueWithAudioValueRange:value];
 }
 
 - (float)convertToDecibelsFromScalar:(float)scalar
@@ -81,6 +81,22 @@
 	}
 
 	return value;
+}
+
+@end
+
+@implementation NSValue (AudioValueRange)
+
++ (instancetype)valueWithAudioValueRange:(AudioValueRange)avr
+{
+	return [NSValue value:&avr withObjCType:@encode(AudioValueRange)];
+}
+
+- (AudioValueRange)audioValueRangeValue
+{
+	AudioValueRange avr;
+	[self getValue:&avr];
+	return avr;
 }
 
 @end
