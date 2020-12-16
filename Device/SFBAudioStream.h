@@ -43,37 +43,25 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
 /// Returns \c YES if the stream is active
 /// @note This corresponds to \c kAudioStreamPropertyIsActive
-@property (nonatomic, readonly) BOOL isActive;
+- (BOOL)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns \c YES if this is an output stream
 /// @note This corresponds to \c kAudioStreamPropertyDirection
-@property (nonatomic, readonly) BOOL isOutput;
+- (BOOL)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the terminal type  or \c 0 on error
 /// @note This corresponds to \c kAudioStreamPropertyTerminalType
-@property (nonatomic, readonly) SFBAudioStreamTerminalType terminalType;
+- (SFBAudioStreamTerminalType)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the starting channel in the owning device  or \c 0 on error
 /// @note This corresponds to \c kAudioStreamPropertyStartingChannel
-@property (nonatomic, readonly) UInt32 startingChannel;
+- (UInt32)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the latency  or \c 0 on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
-@property (nonatomic, readonly) UInt32 latency;
-
-/// Retrieves the virtual format  and returns \c YES on success
-/// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
-/// @param format A pointer to an \c AudioStreamBasicDescription to receive the format
-/// @return \c YES on success
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format NS_SWIFT_UNAVAILABLE("Use -getVirtualFormat:onElement: instead");
+- (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Retrieves the virtual format  and returns \c YES on success
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @param format A pointer to an \c AudioStreamBasicDescription to receive the format
 /// @param element The desired element
 /// @return \c YES on success
 - (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-
-/// Retrieves the physical format  and returns \c YES on success
-/// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
-/// @param format A pointer to an \c AudioStreamBasicDescription to receive the format
-/// @return \c YES on success
-- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format NS_SWIFT_UNAVAILABLE("Use -getPhysicalFormat:onElement: instead");;
 /// Retrieves the physical format  and returns \c YES on success
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
 /// @param format A pointer to an \c AudioStreamBasicDescription to receive the format

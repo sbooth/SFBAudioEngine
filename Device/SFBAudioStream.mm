@@ -32,47 +32,35 @@ namespace {
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (BOOL)isActive
+- (BOOL)isActiveOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyIsActive) boolValue];
+	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyIsActive, kAudioObjectPropertyScopeGlobal, element);
 }
 
-- (BOOL)isOutput
+- (BOOL)isOutputOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyDirection) boolValue];
+	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyDirection, kAudioObjectPropertyScopeGlobal, element);
 }
 
-- (SFBAudioStreamTerminalType)terminalType
+- (SFBAudioStreamTerminalType)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return (SFBAudioStreamTerminalType)[SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyTerminalType) unsignedIntValue];
+	return (SFBAudioStreamTerminalType)SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyTerminalType, kAudioObjectPropertyScopeGlobal, element);
 }
 
-- (UInt32)startingChannel
+- (UInt32)startingChannelOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyStartingChannel) unsignedIntValue];
+	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyStartingChannel, kAudioObjectPropertyScopeGlobal, element);
 }
 
-- (UInt32)latency
+- (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [SFB::UInt32ForProperty(_objectID, kAudioStreamPropertyLatency) unsignedIntValue];
-}
-
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format
-{
-	NSParameterAssert(format != NULL);
-	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyVirtualFormat);
+	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyLatency, kAudioObjectPropertyScopeGlobal, element);
 }
 
 - (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element
 {
 	NSParameterAssert(format != NULL);
 	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyVirtualFormat, element);
-}
-
-- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format
-{
-	NSParameterAssert(format != NULL);
-	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyPhysicalFormat);
 }
 
 - (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format  onElement:(SFBAudioObjectPropertyElement)element
