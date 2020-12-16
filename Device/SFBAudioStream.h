@@ -56,19 +56,39 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// Returns the latency  or \c 0 on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
 - (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Retrieves the virtual format  and returns \c YES on success
+/// Returns the virtual format  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
-/// @param format A pointer to an \c AudioStreamBasicDescription to receive the format
-/// @param element The desired element
-/// @return \c YES on success
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Retrieves the physical format  and returns \c YES on success
+/// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
+- (nullable NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the available virtual formats  or \c nil on error
+/// @note This corresponds to \c kAudioStreamPropertyAvailableVirtualFormats
+/// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
+- (nullable NSArray<NSValue *> *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the physical format  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
-/// @param format A pointer to an \c AudioStreamBasicDescription to receive the format
-/// @param element The desired element
-/// @return \c YES on success
-- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the available physical formats  or \c nil on error
+/// @note This corresponds to \c kAudioStreamPropertyAvailablePhysicalFormats
+/// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
+- (nullable NSArray<NSValue *> *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+@end
 
+@interface NSValue (AudioStreamBasicDescription)
+/// Creates a new value object containing the specified \c AudioStreamBasicDescription structure
+/// @param asbd The value for the new object
+/// @return A new value object that contains \c asbd
++ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd;
+/// Returns the \c AudioStreamBasicDescription structure representation of the value.
+- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue;
+@end
+
+@interface NSValue (AudioStreamRangedDescription)
+/// Creates a new value object containing the specified \c AudioStreamRangedDescription structure
+/// @param asrd The value for the new object
+/// @return A new value object that contains \c asrd
++ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd;
+/// Returns the \c AudioStreamRangedDescription structure representation of the value.
+- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue;
 @end
 
 NS_ASSUME_NONNULL_END

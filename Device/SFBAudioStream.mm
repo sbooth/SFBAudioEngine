@@ -10,16 +10,23 @@
 
 namespace {
 
-	bool AudioStreamBasicDescriptionForProperty(AudioObjectID objectID, AudioStreamBasicDescription& streamDescription, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	NSValue * _Nullable AudioStreamBasicDescriptionForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		return SFB::GetFixedSizeProperty(objectID, propertyAddress, streamDescription);
+		AudioStreamBasicDescription value;
+		return SFB::GetFixedSizeProperty(objectID, propertyAddress, value) ? [NSValue valueWithAudioStreamBasicDescription:value] : nil;
 	}
 
-	bool AudioStreamBasicDescriptionArrayForProperty(AudioObjectID objectID, std::vector<AudioStreamBasicDescription>& streamDescriptions, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	NSArray<NSValue *> * _Nullable AudioStreamRangedDescriptionArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		return SFB::GetArrayProperty(objectID, propertyAddress, streamDescriptions);
+		std::vector<AudioStreamRangedDescription> values;
+		if(!SFB::GetArrayProperty(objectID, propertyAddress, values))
+			return nil;
+		NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
+		for(AudioStreamRangedDescription value : values)
+			[result addObject:[NSValue valueWithAudioStreamRangedDescription:value]];
+		return result;
 	}
 
 }
@@ -57,16 +64,56 @@ namespace {
 	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioStreamPropertyLatency, kAudioObjectPropertyScopeGlobal, element);
 }
 
-- (BOOL)getVirtualFormat:(AudioStreamBasicDescription *)format onElement:(SFBAudioObjectPropertyElement)element
+- (NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element
 {
-	NSParameterAssert(format != NULL);
-	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyVirtualFormat, element);
+	return AudioStreamBasicDescriptionForProperty(_objectID, kAudioStreamPropertyVirtualFormat);
 }
 
-- (BOOL)getPhysicalFormat:(AudioStreamBasicDescription *)format  onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element
 {
-	NSParameterAssert(format != NULL);
-	return AudioStreamBasicDescriptionForProperty(_objectID, *format, kAudioStreamPropertyPhysicalFormat, element);
+	return AudioStreamRangedDescriptionArrayForProperty(_objectID, kAudioStreamPropertyAvailableVirtualFormats);
+}
+
+- (NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element
+{
+	return AudioStreamBasicDescriptionForProperty(_objectID, kAudioStreamPropertyPhysicalFormat);
+}
+
+- (NSArray *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element
+{
+	return AudioStreamRangedDescriptionArrayForProperty(_objectID, kAudioStreamPropertyAvailablePhysicalFormats);
+}
+
+@end
+
+@implementation NSValue (AudioStreamBasicDescription)
+
++ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd
+{
+	return [NSValue value:&asbd withObjCType:@encode(AudioStreamBasicDescription)];
+}
+
+- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue
+{
+	AudioStreamBasicDescription asbd;
+	[self getValue:&asbd];
+	return asbd;
+}
+
+@end
+
+@implementation NSValue (AudioStreamRangedDescription)
+
++ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd
+{
+	return [NSValue value:&asrd withObjCType:@encode(AudioStreamRangedDescription)];
+}
+
+- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue
+{
+	AudioStreamRangedDescription asrd;
+	[self getValue:&asrd];
+	return asrd;
 }
 
 @end

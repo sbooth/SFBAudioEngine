@@ -60,11 +60,21 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The virtual format
 	public func virtualFormat(_ element: PropertyElement = .master) -> AudioStreamBasicDescription? {
-		var format = AudioStreamBasicDescription()
-		guard __getVirtualFormat(&format, onElement: element) else {
+		guard let value = __virtualFormat(onElement: element) else {
 			return nil
 		}
-		return format
+		return value.audioStreamBasicDescriptionValue()
+	}
+
+	/// Returns the available virtual formats or `nil` on error
+	/// - note: This corresponds to `kAudioStreamPropertyAvailableVirtualFormats`
+	/// - parameter element: The desired element
+	/// - returns: The available virtual formats
+	public func availableVirtualFormats(_ element: PropertyElement = .master) -> [AudioStreamRangedDescription]? {
+		guard let values = __availableVirtualFormats(onElement: element) else {
+			return nil
+		}
+		return values.map { $0.audioStreamRangedDescriptionValue() }
 	}
 
 	/// Returns the physical format or `nil` on error
@@ -72,11 +82,21 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The physical format
 	public func physicalFormat(_ element: PropertyElement = .master) -> AudioStreamBasicDescription? {
-		var format = AudioStreamBasicDescription()
-		guard __getPhysicalFormat(&format, onElement: element) else {
+		guard let value = __physicalFormat(onElement: element) else {
 			return nil
 		}
-		return format
+		return value.audioStreamBasicDescriptionValue()
+	}
+
+	/// Returns the available physical formats or `nil` on error
+	/// - note: This corresponds to `kAudioStreamPropertyAvailablePhysicalFormats`
+	/// - parameter element: The desired element
+	/// - returns: The available physical formats
+	public func availablePhysicalFormats(_ element: PropertyElement = .master) -> [AudioStreamRangedDescription]? {
+		guard let values = __availablePhysicalFormats(onElement: element) else {
+			return nil
+		}
+		return values.map { $0.audioStreamRangedDescriptionValue() }
 	}
 }
 
