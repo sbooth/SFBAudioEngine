@@ -78,7 +78,7 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// @param asbd The value for the new object
 /// @return A new value object that contains \c asbd
 + (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd;
-/// Returns the \c AudioStreamBasicDescription structure representation of the value.
+/// Returns the \c AudioStreamBasicDescription structure representation of the value
 - (AudioStreamBasicDescription)audioStreamBasicDescriptionValue;
 @end
 
@@ -87,7 +87,7 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// @param asrd The value for the new object
 /// @return A new value object that contains \c asrd
 + (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd;
-/// Returns the \c AudioStreamRangedDescription structure representation of the value.
+/// Returns the \c AudioStreamRangedDescription structure representation of the value
 - (AudioStreamRangedDescription)audioStreamRangedDescriptionValue;
 @end
 
