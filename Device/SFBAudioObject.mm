@@ -4,7 +4,6 @@
  */
 
 #import <map>
-#import <vector>
 
 #import "SFBAudioObject+Internal.h"
 
@@ -23,7 +22,6 @@
 #import "SFBSliderControl.h"
 #import "SFBStereoPanControl.h"
 #import "SFBSubdevice.h"
-#import "SFBCStringForOSType.h"
 
 os_log_t gSFBAudioObjectLog = NULL;
 
@@ -50,194 +48,6 @@ namespace {
 		dispatch_once(&onceToken, ^{
 			gSFBAudioObjectLog = os_log_create("org.sbooth.AudioEngine", "AudioObject");
 		});
-	}
-
-	bool HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		return AudioObjectHasProperty(objectID, &propertyAddress);
-	}
-
-	bool PropertyIsSettable(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		Boolean isSettable;
-		OSStatus result = AudioObjectIsPropertySettable(objectID, &propertyAddress, &isSettable);
-		if(result != kAudioHardwareNoError) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectIsPropertySettable ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
-		}
-		return isSettable;
-	}
-
-	template <typename T>
-	bool GetFixedSizeProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, T& value, UInt32 qualifierDataSize = 0, const void *qualifierData = nullptr)
-	{
-		NSCParameterAssert(objectID != kAudioObjectUnknown);
-
-		UInt32 dataSize = sizeof(value);
-		OSStatus result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifierDataSize, qualifierData, &dataSize, &value);
-		if(kAudioHardwareNoError != result) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
-		}
-
-		return true;
-	}
-
-	template <typename T>
-	bool GetVariableSizeProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, std::unique_ptr<T>& value, UInt32 qualifierDataSize = 0, const void *qualifierData = nullptr)
-	{
-		NSCParameterAssert(objectID != kAudioObjectUnknown);
-
-		UInt32 dataSize = 0;
-		OSStatus result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifierDataSize, qualifierData, &dataSize);
-		if(result != kAudioHardwareNoError) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
-		}
-
-		T *rawValue = (T *)std::malloc(dataSize);
-		if(!rawValue) {
-			os_log_error(gSFBAudioObjectLog, "Unable to allocate memory");
-			return false;
-		}
-
-		result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifierDataSize, qualifierData, &dataSize, rawValue);
-		if(kAudioHardwareNoError != result) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			free(rawValue);
-			return false;
-		}
-
-		value = std::unique_ptr<T>{rawValue};
-
-		return true;
-	}
-
-	template <typename T>
-	bool GetArrayProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, std::vector<T>& values, UInt32 qualifierDataSize = 0, const void *qualifierData = nullptr)
-	{
-		NSCParameterAssert(objectID != kAudioObjectUnknown);
-
-		UInt32 dataSize = 0;
-		OSStatus result = AudioObjectGetPropertyDataSize(objectID, &propertyAddress, qualifierDataSize, qualifierData, &dataSize);
-		if(result != kAudioHardwareNoError) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
-		}
-
-		values.clear();
-		values.resize(dataSize / sizeof(T));
-
-		result = AudioObjectGetPropertyData(objectID, &propertyAddress, qualifierDataSize, qualifierData, &dataSize, &values[0]);
-		if(kAudioHardwareNoError != result) {
-			os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
-		}
-
-		return true;
-	}
-
-	NSNumber * _Nullable UInt32ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		UInt32 value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
-	}
-
-	NSNumber * _Nullable Float32ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		Float32 value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
-	}
-
-	NSNumber * _Nullable Float64ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		Float64 value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
-	}
-
-	NSString * _Nullable StringForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		CFStringRef value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? (__bridge_transfer NSString *)value : nil;
-	}
-
-	NSDictionary * _Nullable DictionaryForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		CFDictionaryRef value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? (__bridge_transfer NSDictionary *)value : nil;
-	}
-
-	SFBAudioObject * AudioObjectForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		AudioObjectID value;
-		return GetFixedSizeProperty(objectID, propertyAddress, value) ? [[SFBAudioObject alloc] initWithAudioObjectID:value] : nil;
-	}
-
-	NSArray <NSNumber *> * _Nullable UInt32ArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-
-		std::vector<UInt32> values;
-		if(!GetArrayProperty(objectID, propertyAddress, values))
-			return nil;
-		NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
-		for(UInt32 value : values)
-			[result addObject:@(value)];
-		return result;
-	}
-
-	NSArray<SFBAudioObject *> * AudioObjectArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-
-		std::vector<AudioObjectID> values;
-		if(!GetArrayProperty(objectID, propertyAddress, values))
-			return nil;
-		NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
-		for(UInt32 value : values)
-			[result addObject:[[SFBAudioObject alloc] initWithAudioObjectID:value]];
-		return result;
-	}
-	
-	AudioClassID AudioObjectClass(AudioObjectID objectID)
-	{
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector	= kAudioObjectPropertyClass,
-			.mScope		= kAudioObjectPropertyScopeGlobal,
-			.mElement	= kAudioObjectPropertyElementMaster
-		};
-		AudioClassID classID;
-		return GetFixedSizeProperty(objectID, propertyAddress, classID) ? classID : 0;
-	}
-
-	AudioClassID AudioObjectBaseClass(AudioObjectID objectID)
-	{
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector	= kAudioObjectPropertyBaseClass,
-			.mScope		= kAudioObjectPropertyScopeGlobal,
-			.mElement	= kAudioObjectPropertyElementMaster
-		};
-		AudioClassID classID;
-		return GetFixedSizeProperty(objectID, propertyAddress, classID) ? classID : 0;
-	}
-
-	bool AudioDeviceHasBuffersInScope(AudioObjectID deviceID, AudioObjectPropertyScope scope)
-	{
-		AudioObjectPropertyAddress propertyAddress = {
-			.mSelector	= kAudioDevicePropertyStreamConfiguration,
-			.mScope		= scope,
-			.mElement	= kAudioObjectPropertyElementMaster
-		};
-		std::unique_ptr<AudioBufferList> value;
-		return GetVariableSizeProperty(deviceID, propertyAddress, value) ? value->mNumberBuffers > 0 : NO;
 	}
 
 	bool RemovePropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
@@ -293,18 +103,146 @@ namespace {
 
 }
 
+#pragma mark Property Information
+
+bool SFB::HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	return AudioObjectHasProperty(objectID, &propertyAddress);
+}
+
+bool SFB::PropertyIsSettable(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	Boolean isSettable;
+	OSStatus result = AudioObjectIsPropertySettable(objectID, &propertyAddress, &isSettable);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectIsPropertySettable ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
+		return false;
+	}
+	return isSettable;
+}
+
+#pragma mark Typed Property Getters
+
+NSNumber * SFB::UInt32ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	UInt32 value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
+}
+
+NSNumber * SFB::Float32ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	Float32 value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
+}
+
+NSNumber * SFB::Float64ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	Float64 value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? @(value) : nil;
+}
+
+NSString * SFB::StringForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	CFStringRef value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? (__bridge_transfer NSString *)value : nil;
+}
+
+NSDictionary * SFB::DictionaryForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	CFDictionaryRef value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? (__bridge_transfer NSDictionary *)value : nil;
+}
+
+SFBAudioObject * SFB::AudioObjectForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	AudioObjectID value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? [[SFBAudioObject alloc] initWithAudioObjectID:value] : nil;
+}
+
+
+NSArray <NSNumber *> * SFB::UInt32ArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+
+	std::vector<UInt32> values;
+	if(!GetArrayProperty(objectID, propertyAddress, values))
+		return nil;
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
+	for(UInt32 value : values)
+		[result addObject:@(value)];
+	return result;
+}
+
+NSArray<SFBAudioObject *> * SFB::AudioObjectArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+
+	std::vector<AudioObjectID> values;
+	if(!GetArrayProperty(objectID, propertyAddress, values))
+		return nil;
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
+	for(UInt32 value : values)
+		[result addObject:[[SFBAudioObject alloc] initWithAudioObjectID:value]];
+	return result;
+}
+
+#pragma mark - Audio Object Helpers
+
+AudioClassID SFB::AudioObjectClass(AudioObjectID objectID)
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioObjectPropertyClass,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+	AudioClassID classID;
+	return GetFixedSizeProperty(objectID, propertyAddress, classID) ? classID : 0;
+}
+
+AudioClassID SFB::AudioObjectBaseClass(AudioObjectID objectID)
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioObjectPropertyBaseClass,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+	AudioClassID classID;
+	return GetFixedSizeProperty(objectID, propertyAddress, classID) ? classID : 0;
+}
+
+#pragma mark - Audio Device Helpers
+
+bool SFB::AudioDeviceHasBuffersInScope(AudioObjectID deviceID, AudioObjectPropertyScope scope)
+{
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioDevicePropertyStreamConfiguration,
+		.mScope		= scope,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+	std::unique_ptr<AudioBufferList> value;
+	return GetVariableSizeProperty(deviceID, propertyAddress, value) ? value->mNumberBuffers > 0 : NO;
+}
+
 extern "C" {
 
 #pragma mark - Audio Object Class Determination
 
 	BOOL SFBAudioObjectIsClass(AudioObjectID objectID, AudioClassID classID)
 	{
-		return AudioObjectClass(objectID) == classID;
+		return SFB::AudioObjectClass(objectID) == classID;
 	}
 
 	BOOL SFBAudioObjectIsClassOrSubclassOf(AudioObjectID objectID, AudioClassID classID)
 	{
-		return AudioObjectClass(objectID) == classID || AudioObjectBaseClass(objectID) == classID;
+		return SFB::AudioObjectClass(objectID) == classID || SFB::AudioObjectBaseClass(objectID) == classID;
 	}
 
 	BOOL SFBAudioObjectIsPlugIn(AudioObjectID objectID) 		{ return SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioPlugInClassID); }
@@ -325,8 +263,8 @@ extern "C" {
 	BOOL SFBAudioDeviceIsEndpointDevice(AudioObjectID objectID) 	{ return SFBAudioObjectIsClass(objectID, kAudioEndPointDeviceClassID); }
 	BOOL SFBAudioDeviceIsEndpoint(AudioObjectID objectID) 			{ return SFBAudioObjectIsClass(objectID, kAudioEndPointClassID); }
 
-	BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID) 		{ return AudioDeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeInput); }
-	BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID) 		{ return AudioDeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput); }
+	BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID) 		{ return SFB::AudioDeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeInput); }
+	BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID) 		{ return SFB::AudioDeviceHasBuffersInScope(deviceID, kAudioObjectPropertyScopeOutput); }
 
 #pragma mark - Audio Control Information
 
@@ -395,8 +333,8 @@ static SFBAudioObject *sSystemObject = nil;
 	if(objectID == kAudioObjectSystemObject)
 		return [SFBAudioObject systemObject];
 
-	AudioClassID classID = AudioObjectClass(objectID);
-	AudioClassID baseClassID = AudioObjectBaseClass(objectID);
+	AudioClassID classID = SFB::AudioObjectClass(objectID);
+	AudioClassID baseClassID = SFB::AudioObjectBaseClass(objectID);
 	switch(baseClassID) {
 		case kAudioObjectClassID:
 			switch(classID) {
@@ -507,152 +445,152 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (BOOL)hasProperty:(SFBAudioObjectPropertySelector)property
 {
-	return HasProperty(_objectID, property);
+	return SFB::HasProperty(_objectID, property);
 }
 
 - (BOOL)hasProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return HasProperty(_objectID, property, scope);
+	return SFB::HasProperty(_objectID, property, scope);
 }
 
 - (BOOL)hasProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return HasProperty(_objectID, property, scope, element);
+	return SFB::HasProperty(_objectID, property, scope, element);
 }
 
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property
 {
-	return PropertyIsSettable(_objectID, property);
+	return SFB::PropertyIsSettable(_objectID, property);
 }
 
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return PropertyIsSettable(_objectID, property, scope);
+	return SFB::PropertyIsSettable(_objectID, property, scope);
 }
 
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return PropertyIsSettable(_objectID, property, element);
+	return SFB::PropertyIsSettable(_objectID, property, element);
 }
 
 - (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return UInt32ForProperty(_objectID, property);
+	return SFB::UInt32ForProperty(_objectID, property);
 }
 
 - (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return UInt32ForProperty(_objectID, property, scope);
+	return SFB::UInt32ForProperty(_objectID, property, scope);
 }
 
 - (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return UInt32ForProperty(_objectID, property, scope, element);
+	return SFB::UInt32ForProperty(_objectID, property, scope, element);
 }
 
 - (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return UInt32ArrayForProperty(_objectID, property);
+	return SFB::UInt32ArrayForProperty(_objectID, property);
 }
 
 - (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return UInt32ArrayForProperty(_objectID, property, scope);
+	return SFB::UInt32ArrayForProperty(_objectID, property, scope);
 }
 
 - (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return UInt32ArrayForProperty(_objectID, property, scope, element);
+	return SFB::UInt32ArrayForProperty(_objectID, property, scope, element);
 }
 
 - (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return Float32ForProperty(_objectID, property);
+	return SFB::Float32ForProperty(_objectID, property);
 }
 
 - (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return Float32ForProperty(_objectID, property, scope);
+	return SFB::Float32ForProperty(_objectID, property, scope);
 }
 
 - (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return Float32ForProperty(_objectID, property, scope, element);
+	return SFB::Float32ForProperty(_objectID, property, scope, element);
 }
 
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return Float64ForProperty(_objectID, property);
+	return SFB::Float64ForProperty(_objectID, property);
 }
 
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return Float64ForProperty(_objectID, property, scope);
+	return SFB::Float64ForProperty(_objectID, property, scope);
 }
 
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return Float64ForProperty(_objectID, property, scope, element);
+	return SFB::Float64ForProperty(_objectID, property, scope, element);
 }
 
 - (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return StringForProperty(_objectID, property);
+	return SFB::StringForProperty(_objectID, property);
 }
 
 - (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, property, scope);
+	return SFB::StringForProperty(_objectID, property, scope);
 }
 
 - (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, property, scope, element);
+	return SFB::StringForProperty(_objectID, property, scope, element);
 }
 
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return DictionaryForProperty(_objectID, property);
+	return SFB::DictionaryForProperty(_objectID, property);
 }
 
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return DictionaryForProperty(_objectID, property, scope);
+	return SFB::DictionaryForProperty(_objectID, property, scope);
 }
 
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return DictionaryForProperty(_objectID, property, scope, element);
+	return SFB::DictionaryForProperty(_objectID, property, scope, element);
 }
 
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return AudioObjectForProperty(_objectID, property);
+	return SFB::AudioObjectForProperty(_objectID, property);
 }
 
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return AudioObjectForProperty(_objectID, property, scope);
+	return SFB::AudioObjectForProperty(_objectID, property, scope);
 }
 
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return AudioObjectForProperty(_objectID, property, scope, element);
+	return SFB::AudioObjectForProperty(_objectID, property, scope, element);
 }
 
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
-	return AudioObjectArrayForProperty(_objectID, property);
+	return SFB::AudioObjectArrayForProperty(_objectID, property);
 }
 
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return AudioObjectArrayForProperty(_objectID, property, scope);
+	return SFB::AudioObjectArrayForProperty(_objectID, property, scope);
 }
 
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return AudioObjectArrayForProperty(_objectID, property, scope, element);
+	return SFB::AudioObjectArrayForProperty(_objectID, property, scope, element);
 }
 
 - (void)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
@@ -681,77 +619,77 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (AudioClassID)baseClassID
 {
-	return [UInt32ForProperty(_objectID, kAudioObjectPropertyBaseClass) unsignedIntValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioObjectPropertyBaseClass) unsignedIntValue];
 }
 
 - (AudioClassID)classID
 {
-	return [UInt32ForProperty(_objectID, kAudioObjectPropertyClass) unsignedIntValue];
+	return [SFB::UInt32ForProperty(_objectID, kAudioObjectPropertyClass) unsignedIntValue];
 }
 
 - (SFBAudioObject *)owner
 {
-	return AudioObjectForProperty(_objectID, kAudioObjectPropertyOwner);
+	return SFB::AudioObjectForProperty(_objectID, kAudioObjectPropertyOwner);
 }
 
 - (NSString *)name
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyName);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyName);
 }
 
 - (NSString *)modelName
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyModelName);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyModelName);
 }
 
 - (NSString *)manufacturer
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyManufacturer);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyManufacturer);
 }
 
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementName, kAudioObjectPropertyScopeGlobal, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementName, kAudioObjectPropertyScopeGlobal, element);
 }
 
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementName, scope, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementName, scope, element);
 }
 
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, kAudioObjectPropertyScopeGlobal, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, kAudioObjectPropertyScopeGlobal, element);
 }
 
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, scope, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, scope, element);
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, kAudioObjectPropertyScopeGlobal, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, kAudioObjectPropertyScopeGlobal, element);
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, scope, element);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, scope, element);
 }
 
 - (NSArray *)ownedObjects
 {
-	return AudioObjectArrayForProperty(_objectID, kAudioObjectPropertyOwnedObjects);
+	return SFB::AudioObjectArrayForProperty(_objectID, kAudioObjectPropertyOwnedObjects);
 }
 
 - (NSString *)serialNumber
 {
-	return StringForProperty(_objectID, kAudioObjectPropertySerialNumber);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertySerialNumber);
 }
 
 - (NSString *)firmwareVersion
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyFirmwareVersion);
+	return SFB::StringForProperty(_objectID, kAudioObjectPropertyFirmwareVersion);
 }
 
 @end
