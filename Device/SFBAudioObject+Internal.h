@@ -23,21 +23,6 @@ extern os_log_t gSFBAudioObjectLog;
 extern "C" {
 #endif
 
-#pragma mark -  General property support
-
-NSNumber * _Nullable SFBUInt32ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-NSArray <NSNumber *> * _Nullable SFBUInt32ArrayForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-
-NSNumber * _Nullable SFBFloat32ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-NSNumber * _Nullable SFBFloat64ForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-
-NSString * _Nullable SFBStringForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-NSDictionary * _Nullable SFBDictionaryForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-
-SFBAudioObject * _Nullable SFBAudioObjectForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-NSArray <SFBAudioObject *> * _Nullable SFBAudioObjectArrayForProperty(AudioObjectID objectID, const AudioObjectPropertyAddress *propertyAddress);
-
-
 #pragma mark - Audio object class determination
 
 BOOL SFBAudioObjectIsClass(AudioObjectID objectID, AudioClassID classID);
