@@ -691,9 +691,9 @@ static SFBAudioObject *sSystemObject = nil;
 	return [UInt32ForProperty(_objectID, kAudioObjectPropertyClass) unsignedIntValue];
 }
 
-- (NSString *)owner
+- (SFBAudioObject *)owner
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyOwner);
+	return AudioObjectForProperty(_objectID, kAudioObjectPropertyOwner);
 }
 
 - (NSString *)name
