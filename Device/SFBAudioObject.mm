@@ -308,32 +308,37 @@ namespace {
 
 #pragma mark - Property Listeners
 
-	bool RemovePropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	bool RemovePropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
 	{
 		NSCParameterAssert(objectID != kAudioObjectUnknown);
 
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 
 		const auto listenerBlock = listenerBlocks.find(propertyAddress);
-		if(listenerBlock == listenerBlocks.end())
-			return false;
+		if(listenerBlock != listenerBlocks.end()) {
+			os_log_info(gSFBAudioObjectLog, "Removing property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", objectID, SFBCStringForOSType(property), SFBCStringForOSType(scope), element);
 
-		os_log_info(gSFBAudioObjectLog, "Removing property listener on object 0x%x for {'%{public}.4s', '%{public}.4s', %u}", objectID, SFBCStringForOSType(property), SFBCStringForOSType(scope), element);
+			auto block = listenerBlock->second;
+			listenerBlocks.erase(listenerBlock);
 
-		OSStatus result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), listenerBlock->second);
-		if(result != kAudioHardwareNoError)
-			os_log_error(gSFBAudioObjectLog, "AudioObjectRemovePropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(property), SFBCStringForOSType(scope), element, result, SFBCStringForOSType(result));
-
-		listenerBlocks.erase(listenerBlock);
+			OSStatus result = AudioObjectRemovePropertyListenerBlock(objectID, &propertyAddress, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), block);
+			if(result != kAudioHardwareNoError) {
+				os_log_error(gSFBAudioObjectLog, "AudioObjectRemovePropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(property), SFBCStringForOSType(scope), element, result, SFBCStringForOSType(result));
+				if(error)
+					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+				return false;
+			}
+		}
 
 		return true;
 	}
 
-	bool AddPropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, dispatch_block_t block, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	bool AddPropertyListener(AudioObjectID objectID, std::map<AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock>& listenerBlocks, dispatch_block_t block, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
 	{
 		NSCParameterAssert(objectID != kAudioObjectUnknown);
 
-		RemovePropertyListener(objectID, listenerBlocks, property, scope, element);
+		if(!RemovePropertyListener(objectID, listenerBlocks, property, scope, element, error))
+			return false;
 
 		if(block) {
 			AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
@@ -352,6 +357,8 @@ namespace {
 			if(result != kAudioHardwareNoError) {
 				os_log_error(gSFBAudioObjectLog, "AudioObjectAddPropertyListenerBlock ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(property), SFBCStringForOSType(scope), element, result, SFBCStringForOSType(result));
 				listenerBlocks.erase(propertyAddress);
+				if(error)
+					*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
 				return false;
 			}
 		}
@@ -565,6 +572,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element);
 }
 
+- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element, error);
+}
+
 - (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property);
@@ -578,6 +590,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element);
+}
+
+- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element, error);
 }
 
 - (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property
@@ -595,6 +612,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return NumberForArithmeticProperty<Float32>(_objectID, property, scope, element);
 }
 
+- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return NumberForArithmeticProperty<Float32>(_objectID, property, scope, element, error);
+}
+
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return NumberForArithmeticProperty<Float64>(_objectID, property);
@@ -608,6 +630,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return NumberForArithmeticProperty<Float64>(_objectID, property, scope, element);
+}
+
+- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return NumberForArithmeticProperty<Float64>(_objectID, property, scope, element, error);
 }
 
 - (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property
@@ -625,6 +652,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return StringForProperty(_objectID, property, scope, element);
 }
 
+- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return StringForProperty(_objectID, property, scope, element, error);
+}
+
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return DictionaryForProperty(_objectID, property);
@@ -638,6 +670,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return DictionaryForProperty(_objectID, property, scope, element);
+}
+
+- (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return DictionaryForProperty(_objectID, property, scope, element, error);
 }
 
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property
@@ -655,6 +692,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectForProperty(_objectID, property, scope, element);
 }
 
+- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioObjectForProperty(_objectID, property, scope, element, error);
+}
+
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return AudioObjectArrayForProperty(_objectID, property);
@@ -668,6 +710,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope, element);
+}
+
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioObjectArrayForProperty(_objectID, property, scope, element, error);
 }
 
 - (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property
@@ -685,6 +732,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element);
 }
 
+- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element, error);
+}
+
 - (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property);
@@ -698,6 +750,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element);
+}
+
+- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element, error);
 }
 
 - (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property
@@ -715,19 +772,29 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioValueRangeArrayForProperty(_objectID, property, scope, element);
 }
 
-- (void)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
+- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	AddPropertyListener(_objectID, _listenerBlocks, block, property);
+	return AudioValueRangeArrayForProperty(_objectID, property, scope, element, error);
 }
 
-- (void)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+- (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
 {
-	AddPropertyListener(_objectID, _listenerBlocks, block, property, scope);
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property);
 }
 
-- (void)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
-	AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element);
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope);
+}
+
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element);
+}
+
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block error:(NSError **)error
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element, error);
 }
 
 - (NSString *)description
