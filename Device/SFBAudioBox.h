@@ -24,28 +24,28 @@ NS_SWIFT_NAME(AudioBox) @interface SFBAudioBox : SFBAudioObject
 
 /// Returns the box UID or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyBoxUID
-@property (nonatomic, nullable, readonly) NSString *boxUID;
-/// Returns the transport type  or \c 0 on error
+@property (nonatomic, nullable, readonly) NSString *boxUID NS_REFINED_FOR_SWIFT;
+/// Returns the transport type  or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyTransportType
-@property (nonatomic, readonly) SFBAudioDeviceTransportType transportType;
-/// Returns \c YES if the box has audio
+@property (nonatomic, readonly) NSNumber *transportType NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the box has audio  or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyHasAudio
-@property (nonatomic, readonly) BOOL hasAudio;
-/// Returns \c YES if the box has video
+@property (nonatomic, readonly) NSNumber *hasAudio NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the box has video  or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyHasVideo
-@property (nonatomic, readonly) BOOL hasVideo;
-/// Returns \c YES if the box has MIDI
+@property (nonatomic, readonly) NSNumber *hasVideo NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the box has MIDI  or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyHasMIDI
-@property (nonatomic, readonly) BOOL hasMIDI;
-/// Returns \c YES if the box is acquired
+@property (nonatomic, readonly) NSNumber *hasMIDI NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the box is acquired  or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyAcquired
-@property (nonatomic, readonly) BOOL acquired;
+@property (nonatomic, readonly) NSNumber *acquired NS_REFINED_FOR_SWIFT;
 /// Returns an array  of audio devices provided by the box or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyDeviceList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices NS_REFINED_FOR_SWIFT;
 /// Returns an array  of audio clock devices provided by the box or \c nil on error
 /// @note This corresponds to \c kAudioBoxPropertyClockDeviceList
-@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices;
+@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices NS_REFINED_FOR_SWIFT;
 
 @end
 

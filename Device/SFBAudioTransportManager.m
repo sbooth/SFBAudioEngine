@@ -24,9 +24,9 @@
 	return [self audioObjectArrayForProperty:kAudioTransportManagerPropertyEndPointList];
 }
 
-- (SFBAudioDeviceTransportType)transportType
+- (NSNumber *)transportType
 {
-	return [[self uintForProperty:kAudioTransportManagerPropertyTransportType] unsignedIntValue];
+	return [self uintForProperty:kAudioTransportManagerPropertyTransportType];
 }
 
 @end
