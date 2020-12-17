@@ -59,7 +59,7 @@
 
 - (NSNumber *)domain
 {
-	return [self stringForProperty:kAudioClockDevicePropertyClockDomain];
+	return [self uintForProperty:kAudioClockDevicePropertyClockDomain];
 }
 
 - (NSNumber *)isAlive
