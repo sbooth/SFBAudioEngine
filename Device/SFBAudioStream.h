@@ -43,19 +43,19 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
 /// Returns \c @ YES if the stream is active or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyIsActive
-- (NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns \c @ YES if this is an output stream or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyDirection
-- (NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the terminal type  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyTerminalType
-- (NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the starting channel in the owning device  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyStartingChannel
-- (NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the latency  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
-- (NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (nullable NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the virtual format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
