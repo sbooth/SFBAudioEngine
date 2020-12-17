@@ -15,7 +15,7 @@ NS_SWIFT_NAME(SliderControl) @interface SFBSliderControl : SFBAudioControl
 @property (nonatomic, readonly) UInt32 value;
 /// Returns an array of available values or \c nil on error
 /// @note This corresponds to \c kAudioSliderControlPropertyRange
-@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *range;
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *range NS_REFINED_FOR_SWIFT;
 
 @end
 
