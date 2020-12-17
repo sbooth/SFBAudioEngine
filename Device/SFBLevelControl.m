@@ -16,71 +16,65 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (float)scalarValue
+- (NSNumber *)scalarValue
 {
-	return [[self floatForProperty:kAudioLevelControlPropertyScalarValue] floatValue];
+	return [self floatForProperty:kAudioLevelControlPropertyScalarValue];
 }
 
-- (float)decibelValue
+- (NSNumber *)decibelValue
 {
-	return [[self floatForProperty:kAudioLevelControlPropertyDecibelValue] floatValue];
+	return [self floatForProperty:kAudioLevelControlPropertyDecibelValue];
 }
 
 - (NSValue *)decibelRange
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioLevelControlPropertyDecibelRange,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	AudioValueRange value = {0};
-	UInt32 dataSize = sizeof(value);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioLevelControlPropertyDecibelRange) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return [NSValue valueWithAudioValueRange:value];
+	return [self audioValueRangeForProperty:kAudioLevelControlPropertyDecibelRange];
 }
 
-- (float)convertToDecibelsFromScalar:(float)scalar
+- (NSNumber *)convertToDecibelsFromScalar:(NSNumber *)scalar error:(NSError **)error
 {
+	NSParameterAssert(scalar != nil);
+
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertScalarToDecibels,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	Float32 value = scalar;
+	Float32 value = scalar.floatValue;
 	UInt32 dataSize = sizeof(value);
 	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioLevelControlPropertyConvertScalarToDecibels) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nanf("1");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return nil;
 	}
 
-	return value;
+	return @(value);
 }
 
-- (float)convertToScalarFromDecibels:(float)decibels
+- (NSNumber *)convertToScalarFromDecibels:(NSNumber *)decibels error:(NSError **)error
 {
+	NSParameterAssert(decibels != nil);
+
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertDecibelsToScalar,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	Float32 value = decibels;
+	Float32 value = decibels.floatValue;
 	UInt32 dataSize = sizeof(value);
 	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioLevelControlPropertyConvertDecibelsToScalar) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nanf("1");
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return nil;
 	}
 
-	return value;
+	return @(value);
 }
 
 @end

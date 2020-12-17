@@ -6,12 +6,21 @@
 import Foundation
 
 extension LevelControl {
-	/// Returns the decibel range or `nil` on error
+	/// Returns the control's scalar value
+	/// - note: This corresponds to `kAudioLevelControlPropertyScalarValue`
+	func scalarValue() throws -> Float {
+		return try floatForProperty(.levelControlScalarValue)
+	}
+
+	/// Returns the control's decibel value
+	/// - note: This corresponds to `kAudioLevelControlPropertyDecibelValue`
+	func decibelValue() throws -> Float {
+		return try floatForProperty(.levelControlDecibelValue)
+	}
+
+	/// Returns the decibel range
 	/// - note: This corresponds to `kAudioLevelControlPropertyDecibelRange`
-	public var decibelRange: AudioValueRange? {
-		guard let value = __decibelRange else {
-			return nil
-		}
-		return value.audioValueRangeValue()
+	public func decibelRange() throws -> AudioValueRange {
+		return try audioValueRangeForProperty(.levelControlDecibelRange)
 	}
 }

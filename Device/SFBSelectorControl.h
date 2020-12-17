@@ -18,10 +18,10 @@ NS_SWIFT_NAME(SelectorControl) @interface SFBSelectorControl : SFBAudioControl
 @property (nonatomic, nullable, readonly) NSArray <NSNumber *> *availableItems NS_REFINED_FOR_SWIFT;
 /// Returns the item's name or \c nil on error
 /// @note This corresponds to \c kAudioSelectorControlPropertyItemName
-@property (nonatomic, nullable, readonly) NSString *itemName;
-/// Returns the item's kind or \c 0 on error
+@property (nonatomic, nullable, readonly) NSString *itemName NS_REFINED_FOR_SWIFT;
+/// Returns the item's kind or \c nil on error
 /// @note This corresponds to \c kAudioSelectorControlPropertyItemKind
-@property (nonatomic, readonly) UInt32 itemKind;
+@property (nonatomic, nullable, readonly) NSNumber *itemKind NS_REFINED_FOR_SWIFT;
 
 @end
 

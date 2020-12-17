@@ -10,9 +10,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// An audio boolean control
 NS_SWIFT_NAME(BooleanControl) @interface SFBBooleanControl : SFBAudioControl
 
-/// Returns the control's value
+/// Returns the control's value or \c nil on error
 /// @note This corresponds to \c kAudioBooleanControlPropertyValue
-@property (nonatomic, readonly) BOOL value;
+@property (nonatomic, nullable, readonly) NSNumber *value NS_REFINED_FOR_SWIFT;
 
 @end
 

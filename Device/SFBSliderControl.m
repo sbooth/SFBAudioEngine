@@ -14,9 +14,9 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (UInt32)value
+- (NSNumber *)value
 {
-	return [[self uintForProperty:kAudioSliderControlPropertyValue] unsignedIntValue];
+	return [self uintForProperty:kAudioSliderControlPropertyValue];
 }
 
 - (NSArray *)range

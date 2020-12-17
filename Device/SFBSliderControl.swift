@@ -6,12 +6,15 @@
 import Foundation
 
 extension SliderControl {
+	/// Returns the control's value
+	/// - note: This corresponds to `kAudioSliderControlPropertyValue`
+	public func value() throws -> Float {
+		return try floatForProperty(.sliderControlValue)
+	}
+	
 	/// Returns the available values
 	/// - note: This corresponds to `kAudioSliderControlPropertyRange`
-	public var range: [UInt]? {
-		guard let values = __range else {
-			return nil
-		}
-		return values.map { $0.uintValue }
+	public func range() throws -> [UInt] {
+		return try uintsForProperty(.sliderControlRange)
 	}
 }

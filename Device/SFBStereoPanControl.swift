@@ -6,7 +6,6 @@
 import Foundation
 
 extension StereoPanControl {
-
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
 	public func value() throws -> Float {

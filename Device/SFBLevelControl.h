@@ -10,26 +10,26 @@ NS_ASSUME_NONNULL_BEGIN
 /// An audio level control
 NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
 
-/// Returns the control's scalar value
+/// Returns the control's scalar value or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyScalarValue
-@property (nonatomic, readonly) float scalarValue;
+@property (nonatomic, nullable, readonly) NSNumber *scalarValue NS_REFINED_FOR_SWIFT;
 
-/// Returns the control's decibel value
+/// Returns the control's decibel value or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyDecibelValue
-@property (nonatomic, readonly) float decibelValue;
+@property (nonatomic, nullable, readonly) NSNumber *decibelValue NS_REFINED_FOR_SWIFT;
 
 /// Returns the control's decibel range or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyDecibelRange
 /// @note The return value contains a wrapped \c AudioValueRange  structure
 @property (nonatomic, nullable, readonly) NSValue *decibelRange NS_REFINED_FOR_SWIFT;
 
-/// Converts and returns \c scalar converted to decibels
+/// Converts and returns \c scalar converted to decibels or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyConvertScalarToDecibels
-- (float)convertToDecibelsFromScalar:(float)scalar;
+- (nullable NSNumber *)convertToDecibelsFromScalar:(NSNumber *)scalar error:(NSError **)error;
 
-/// Converts and returns \c decibels converted to scalar
+/// Converts and returns \c decibels converted to scalar or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyConvertDecibelsToScalar
-- (float)convertToScalarFromDecibels:(float)decibels;
+- (nullable NSNumber *)convertToScalarFromDecibels:(NSNumber *)decibels error:(NSError **)error;
 
 @end
 

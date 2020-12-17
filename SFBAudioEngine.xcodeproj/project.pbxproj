@@ -11,6 +11,7 @@
 		32025160258ADAAB00A0A8DF /* SFBStereoPanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3202515F258ADAAB00A0A8DF /* SFBStereoPanControl.swift */; };
 		32025166258AFC5600A0A8DF /* SFBSliderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32025165258AFC5600A0A8DF /* SFBSliderControl.swift */; };
 		32025168258AFF8800A0A8DF /* SFBSelectorControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32025167258AFF8800A0A8DF /* SFBSelectorControl.swift */; };
+		3202516A258BEE6A00A0A8DF /* SFBBooleanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32025169258BEE6A00A0A8DF /* SFBBooleanControl.swift */; };
 		32073138256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
@@ -578,6 +579,7 @@
 		3202515F258ADAAB00A0A8DF /* SFBStereoPanControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBStereoPanControl.swift; sourceTree = "<group>"; };
 		32025165258AFC5600A0A8DF /* SFBSliderControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBSliderControl.swift; sourceTree = "<group>"; };
 		32025167258AFF8800A0A8DF /* SFBSelectorControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBSelectorControl.swift; sourceTree = "<group>"; };
+		32025169258BEE6A00A0A8DF /* SFBBooleanControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBBooleanControl.swift; sourceTree = "<group>"; };
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1071,6 +1073,7 @@
 				3268F8712455D133006A5911 /* SFBAudioDeviceNotifier.m */,
 				326F824625893D66009E10AB /* SFBBooleanControl.h */,
 				326F824325893D66009E10AB /* SFBBooleanControl.m */,
+				32025169258BEE6A00A0A8DF /* SFBBooleanControl.swift */,
 				326F824725893D66009E10AB /* SFBLevelControl.h */,
 				326F824525893D66009E10AB /* SFBLevelControl.m */,
 				3202515D258AD39900A0A8DF /* SFBLevelControl.swift */,
@@ -1757,6 +1760,7 @@
 				326D3CAF242D2A21002AEC52 /* SFBDSDIFFFile.mm in Sources */,
 				326F8238258934AF009E10AB /* SFBAudioControl.m in Sources */,
 				32DD9D82257C106900B47CFD /* AVAudioChannelLayout+SFBChannelLabels.m in Sources */,
+				3202516A258BEE6A00A0A8DF /* SFBBooleanControl.swift in Sources */,
 				322859BB242417B10080B500 /* SFBAudioMetadata.m in Sources */,
 				321296DF244CAB840008DC93 /* SFBDSDPCMDecoder.mm in Sources */,
 				325A5E07243F8D8B003138D5 /* SFBDataInputSource.m in Sources */,

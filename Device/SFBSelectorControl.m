@@ -29,9 +29,9 @@
 	return [self stringForProperty:kAudioSelectorControlPropertyItemName];
 }
 
-- (UInt32)itemKind
+- (NSNumber *)itemKind
 {
-	return [[self uintForProperty:kAudioSelectorControlPropertyItemKind] unsignedIntValue];
+	return [self uintForProperty:kAudioSelectorControlPropertyItemKind];
 }
 
 @end

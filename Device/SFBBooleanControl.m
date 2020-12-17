@@ -14,9 +14,9 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (BOOL)value
+- (NSNumber *)value
 {
-	return [[self uintForProperty:kAudioSliderControlPropertyValue] boolValue];
+	return [self uintForProperty:kAudioSliderControlPropertyValue];
 }
 
 @end
