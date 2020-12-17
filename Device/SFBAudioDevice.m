@@ -24,7 +24,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 + (NSArray *)devices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices] ?: [NSArray array];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyDevices];
 }
 
 + (SFBAudioDevice *)defaultInputDevice
@@ -155,7 +155,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSArray *)relatedDevices
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices] ?: [NSArray array];
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyRelatedDevices];
 }
 
 - (UInt32)clockDomain
@@ -190,17 +190,17 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSArray *)streams
 {
-	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams] ?: [NSArray array];
+	return [self audioObjectArrayForProperty:kAudioDevicePropertyStreams];
 }
 
 - (NSArray *)controls
 {
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList] ?: [NSArray array];
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
 }
 
 - (NSArray *)controlsInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList inScope:scope] ?: [NSArray array];
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList inScope:scope];
 }
 
 - (NSArray *)controlsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element

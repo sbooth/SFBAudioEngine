@@ -17,9 +17,9 @@ extern const NSNotificationName SFBAudioDevicesChangedNotification;
 /// @note This class has four scopes (\c kAudioObjectPropertyScopeGlobal, \c kAudioObjectPropertyScopeInput, \c kAudioObjectPropertyScopeOutput, and \c kAudioObjectPropertyScopePlayThrough), a master element (\c kAudioObjectPropertyElementMaster), and an element for each channel in each stream
 NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 
-/// Returns an array of available audio devices
+/// Returns an array of available audio devices or \c nil on error
 /// @note This corresponds to \c kAudioHardwarePropertyDevices on the object \c kAudioObjectSystemObject
-@property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *devices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
 
 /// Returns the default input device or \c nil on error
 /// @note This corresponds to \c kAudioHardwarePropertyDefaultInputDevice on the object \c kAudioObjectSystemObject
@@ -33,13 +33,13 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// @note This corresponds to \c kAudioHardwarePropertyDefaultSystemOutputDevice on the object \c kAudioObjectSystemObject
 @property (class, nonatomic, nullable, readonly) SFBAudioDevice *defaultSystemOutputDevice;
 
-/// Returns an array of available audio devices supporting input
+/// Returns an array of available audio devices supporting input or \c nil on error
 /// @note A device supports input if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeInput, kAudioObjectPropertyElementMaster }
-@property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *inputDevices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *inputDevices;
 
-/// Returns an array of available audio devices supporting output
+/// Returns an array of available audio devices supporting output or \c nil on error
 /// @note A device supports output if it has buffers in \c { kAudioDevicePropertyStreamConfiguration, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMaster }
-@property (class, nonatomic, readonly) NSArray<SFBAudioDevice *> *outputDevices;
+@property (class, nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *outputDevices;
 
 /// Returns an initialized \c SFBAudioDevice object with the specified device UID
 /// @param deviceUID The desired device UID
