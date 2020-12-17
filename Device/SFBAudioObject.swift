@@ -128,6 +128,45 @@ extension AudioObject {
 		return value
 	}
 
+	/// Returns the value for `property` as an `AudioStreamBasicDescription` or `nil` on error
+	/// - note: `property` must refer to a property of type `AudioStreamBasicDescription`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	public func audioStreamBasicDescriptionForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioStreamBasicDescription? {
+		guard let value = __audioStreamBasicDescription(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return value.audioStreamBasicDescriptionValue()
+	}
+
+	/// Returns the value for `property` as an array of `AudioStreamRangedDescription` or `nil` on error
+	/// - note: `property` must refer to a property of type array of `AudioStreamRangedDescription`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	public func audioStreamRangedDescriptionArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioStreamRangedDescription]? {
+		guard let values = __audioStreamRangedDescriptionArray(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return values.map { $0.audioStreamRangedDescriptionValue() }
+	}
+
+	/// Returns the value for `property` as an array of `AudioValueRange` or `nil` on error
+	/// - note: `property` must refer to a property of type array of `AudioValueRange`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	public func audioValueRangeArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioValueRange]? {
+		guard let values = __audioValueRangeArray(forProperty: property, in: scope, onElement: element) else {
+			return nil
+		}
+		return values.map { $0.audioValueRangeValue() }
+	}
+
 	/// Performs `block` when the specified property changes
 	/// - parameter property: The property to observe
 	/// - parameter scope: The desired scope

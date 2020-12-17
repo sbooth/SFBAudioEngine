@@ -123,7 +123,7 @@ bool SFB::PropertyIsSettable(AudioObjectID objectID, AudioObjectPropertySelector
 	return isSettable;
 }
 
-#pragma mark Typed Property Getters
+#pragma mark Typed Scalar Property Getters
 
 NSNumber * SFB::UInt32ForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
 {
@@ -167,6 +167,14 @@ SFBAudioObject * SFB::AudioObjectForProperty(AudioObjectID objectID, AudioObject
 	return GetFixedSizeProperty(objectID, propertyAddress, value) ? [[SFBAudioObject alloc] initWithAudioObjectID:value] : nil;
 }
 
+NSValue * SFB::AudioStreamBasicDescriptionForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	AudioStreamBasicDescription value;
+	return GetFixedSizeProperty(objectID, propertyAddress, value) ? [NSValue valueWithAudioStreamBasicDescription:value] : nil;
+}
+
+#pragma mark - Typed Array Property Getters
 
 NSArray <NSNumber *> * SFB::UInt32ArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
 {
@@ -176,7 +184,7 @@ NSArray <NSNumber *> * SFB::UInt32ArrayForProperty(AudioObjectID objectID, Audio
 	if(!GetArrayProperty(objectID, propertyAddress, values))
 		return nil;
 	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
-	for(UInt32 value : values)
+	for(auto value : values)
 		[result addObject:@(value)];
 	return result;
 }
@@ -189,8 +197,32 @@ NSArray<SFBAudioObject *> * SFB::AudioObjectArrayForProperty(AudioObjectID objec
 	if(!GetArrayProperty(objectID, propertyAddress, values))
 		return nil;
 	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
-	for(UInt32 value : values)
+	for(auto value : values)
 		[result addObject:[[SFBAudioObject alloc] initWithAudioObjectID:value]];
+	return result;
+}
+
+NSArray<NSValue *> * SFB::AudioStreamRangedDescriptionArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	std::vector<AudioStreamRangedDescription> values;
+	if(!GetArrayProperty(objectID, propertyAddress, values))
+		return nil;
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
+	for(auto value : values)
+		[result addObject:[NSValue valueWithAudioStreamRangedDescription:value]];
+	return result;
+}
+
+NSArray<NSValue *> * SFB::AudioValueRangeArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope, AudioObjectPropertyElement element)
+{
+	AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+	std::vector<AudioValueRange> values;
+	if(!GetArrayProperty(objectID, propertyAddress, values))
+		return nil;
+	NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
+	for(auto value : values)
+		[result addObject:[NSValue valueWithAudioValueRange:value]];
 	return result;
 }
 
@@ -591,6 +623,51 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return SFB::AudioObjectArrayForProperty(_objectID, property, scope, element);
+}
+
+- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return SFB::AudioStreamBasicDescriptionForProperty(_objectID, property);
+}
+
+- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return SFB::AudioStreamBasicDescriptionForProperty(_objectID, property, scope);
+}
+
+- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return SFB::AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element);
+}
+
+- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return SFB::AudioStreamRangedDescriptionArrayForProperty(_objectID, property);
+}
+
+- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return SFB::AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope);
+}
+
+- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return SFB::AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element);
+}
+
+- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return SFB::AudioValueRangeArrayForProperty(_objectID, property);
+}
+
+- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return SFB::AudioValueRangeArrayForProperty(_objectID, property, scope);
+}
+
+- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return SFB::AudioValueRangeArrayForProperty(_objectID, property, scope, element);
 }
 
 - (void)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block

@@ -28,22 +28,6 @@ extension AudioDevice {
 
 	public func foo()
 	{
-		for s in streams! {
-//			print("\(s.physicalFormat)")
-//			print("\(s.virtualFormat)")
-		}
-
-		var asbd = AudioStreamBasicDescription(mSampleRate: 44100, mFormatID: kAudioFormatLinearPCM, mFormatFlags: kAudioFormatFlagIsFloat|kAudioFormatFlagIsNonInterleaved, mBytesPerPacket: 32, mFramesPerPacket: 1, mBytesPerFrame: 32, mChannelsPerFrame: 4, mBitsPerChannel: 32, mReserved: 0)
-		let f = AVAudioFormat(streamDescription: &asbd)
-		print("\(f)")
-
-		return
-
-		whenPropertyChanges(.baseClass) {
-			print("foo")
-		}
-
-		hasProperty(.baseClass, scope: .global, element: .master)
 		let props: [AudioObjectPropertySelector] = [
 			kAudioDevicePropertyConfigurationApplication,
 			kAudioDevicePropertyDeviceUID,

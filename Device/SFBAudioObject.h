@@ -325,7 +325,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Returns the audio object's ID
 @property (nonatomic, readonly) AudioObjectID objectID;
 
-#pragma mark - Audio Object Properties
+#pragma mark - Audio Object Property Information
 
 /// Returns \c YES if the underlying audio object has the specified property
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -362,6 +362,8 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @return \c YES if the property is settable
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+
+#pragma mark - Audio Object Property Retrieval
 
 /// Returns the value for \c property as an \c UInt32 or \c nil on error
 /// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -538,6 +540,72 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @return The property value
 - (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as a wrapped \c AudioStreamBasicDescription structure or \c nil on error
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type \c AudioStreamBasicDescription
+/// @param property The property to query
+/// @return The property value
+- (nullable NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -audioStreamBasicDescriptionForProperty:inScope:onElement:");
+/// Returns the value for \c property as a wrapped \c AudioStreamBasicDescription structure or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type \c AudioStreamBasicDescription
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -audioStreamBasicDescriptionForProperty:inScope:onElement:");
+/// Returns the value for \c property as a wrapped \c AudioStreamBasicDescription structure or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c propertyAddress must refer to a property of type \c AudioStreamBasicDescription
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as an array of wrapped \c AudioStreamRangedDescription structures or \c nil on error
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioStreamRangedDescription
+/// @param property The property to query
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -audioStreamRangedDescriptionArrayForProperty:inScope:onElement:");
+/// Returns the value for \c property as an array of wrapped \c AudioStreamRangedDescription structures or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioStreamRangedDescription
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -audioStreamRangedDescriptionArrayForProperty:inScope:onElement:");
+/// Returns the value for \c property as an array of wrapped \c AudioStreamRangedDescription structures or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioStreamRangedDescription
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as an array of wrapped \c AudioValueRange structures or \c nil on error
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioValueRange
+/// @param property The property to query
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -audioValueRangeArrayForProperty:inScope:onElement:");
+/// Returns the value for \c property as an array of wrapped \c AudioValueRange structures or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioValueRange
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -audioValueRangeArrayForProperty:inScope:onElement:");
+/// Returns the value for \c property as an array of wrapped \c AudioValueRange structures or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c propertyAddress must refer to a property of type array of \c AudioValueRange
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSArray<NSValue *> *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 /// Performs a block when the specified property changes
 /// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }

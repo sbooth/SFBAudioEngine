@@ -76,6 +76,10 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 /// Returns the configuration application or \c nil on error
 /// @note This corresponds to \c kAudioDevicePropertyConfigurationApplication
 @property (nonatomic, nullable, readonly) NSString *configurationApplication;
+
+- (nullable NSString *)configurationApplicationInScope:(SFBAudioObjectPropertyScope)scope;
+- (nullable NSString *)configurationApplicationInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element;
+
 /// Returns the device UID or \c nil on error
 @property (nonatomic, nullable, readonly) NSString *deviceUID;
 /// Returns the model UID or \c nil on error

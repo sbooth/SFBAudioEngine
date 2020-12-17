@@ -8,27 +8,11 @@
 
 #import "SFBCStringForOSType.h"
 
-namespace {
-
-	NSArray<NSValue *> * _Nullable AudioValueRangeArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
-	{
-		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
-		std::vector<AudioValueRange> values;
-		if(!SFB::GetArrayProperty(objectID, propertyAddress, values))
-			return nil;
-		NSMutableArray *result = [NSMutableArray arrayWithCapacity:values.size()];
-		for(AudioValueRange value : values)
-			[result addObject:[NSValue valueWithAudioValueRange:value]];
-		return result;
-	}
-
-}
-
 @implementation SFBClockDevice
 
 + (NSArray *)clockDevices
 {
-	return SFB::AudioObjectArrayForProperty(kAudioObjectSystemObject, kAudioHardwarePropertyClockDeviceList);
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -65,52 +49,52 @@ namespace {
 
 - (NSString *)clockDeviceUID
 {
-	return SFB::StringForProperty(_objectID, kAudioClockDevicePropertyDeviceUID);
+	return [self stringForProperty:kAudioClockDevicePropertyDeviceUID];
 }
 
 - (SFBAudioDeviceTransportType)transportType
 {
-	return (SFBAudioDeviceTransportType)SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertyTransportType);
+	return [[self uintForProperty:kAudioDevicePropertyTransportType] unsignedIntValue];
 }
 
 - (UInt32)domain
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertyClockDomain);
+	return [[self uintForProperty:kAudioDevicePropertyClockDomain] unsignedIntValue];
 }
 
 - (BOOL)isAlive
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertyDeviceIsAlive);
+	return [[self uintForProperty:kAudioDevicePropertyDeviceIsAlive] boolValue];
 }
 
 - (BOOL)isRunning
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertyDeviceIsRunning);
+	return [[self uintForProperty:kAudioDevicePropertyDeviceIsRunning] boolValue];
 }
 
 - (UInt32)latency
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertyLatency);
+	return [[self uintForProperty:kAudioDevicePropertyLatency] unsignedIntValue];
 }
 
 - (NSArray *)controls
 {
-	return SFB::AudioObjectArrayForProperty(_objectID, kAudioObjectPropertyControlList);
+	return [self audioObjectArrayForProperty:kAudioObjectPropertyControlList];
 }
 
 - (UInt32)safetyOffset
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioDevicePropertySafetyOffset);
+	return [[self uintForProperty:kAudioDevicePropertySafetyOffset] unsignedIntValue];
 }
 
 - (double)sampleRate
 {
-	return SFB::NumericTypeForProperty<UInt32>(_objectID, kAudioClockDevicePropertyNominalSampleRate);
+	return [[self doubleForProperty:kAudioClockDevicePropertyNominalSampleRate] doubleValue];
 }
 
 - (NSArray *)availableSampleRates
 {
-	return AudioValueRangeArrayForProperty(_objectID, kAudioStreamPropertyAvailableVirtualFormats);
+	return [self audioValueRangeArrayForProperty:kAudioClockDevicePropertyAvailableNominalSampleRates];
 }
 
 - (NSString *)description
