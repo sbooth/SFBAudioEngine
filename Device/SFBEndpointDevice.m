@@ -36,23 +36,9 @@
 	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList];
 }
 
-- (pid_t)isPrivate
+- (NSNumber *)isPrivate
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioEndPointDevicePropertyIsPrivate,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	pid_t pid = 0;
-	UInt32 dataSize = sizeof(pid);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &pid);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioEndPointDevicePropertyIsPrivate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return 0;
-	}
-
-	return pid;
+	return [self uintForProperty:kAudioEndPointDevicePropertyIsPrivate];
 }
 
 @end
