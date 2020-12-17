@@ -27,12 +27,15 @@ NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
 /// Returns an array of available subdevices or \c nil on error
 @property (class, nonatomic, nullable, readonly) NSArray<SFBSubdevice *> *subdevices;
 
-/// Returns the extra latency or \c 0 on error
-@property (nonatomic, readonly) double extraLatency;
-/// Returns the drift compensation or \c 0 on error
-@property (nonatomic, readonly) BOOL driftCompensation;
-/// Returns the drift compensation quality or \c 0 on error
-@property (nonatomic, readonly) SFBSubdeviceDriftCompensationQuality driftCompensationQuality;
+/// Returns the extra latency or \c nil on error
+/// @note This corresponds to \c kAudioSubDevicePropertyExtraLatency
+@property (nonatomic, readonly) NSNumber *extraLatency NS_REFINED_FOR_SWIFT;
+/// Returns the drift compensation or \c nil on error
+/// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensation
+@property (nonatomic, readonly) NSNumber *driftCompensation NS_REFINED_FOR_SWIFT;
+/// Returns the drift compensation quality or \c nil on error
+/// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensationQuality
+@property (nonatomic, readonly) NSNumber *driftCompensationQuality NS_REFINED_FOR_SWIFT;
 
 @end
 

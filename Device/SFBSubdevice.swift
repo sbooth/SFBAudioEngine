@@ -5,6 +5,26 @@
 
 import Foundation
 
+extension Subdevice {
+	/// Returns the extra latency
+	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
+	func extraLatency() throws -> Double {
+		return try doubleForProperty(.subdeviceExtraLatency)
+	}
+
+	/// Returns the drift compensation
+	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
+	func driftCompensation() throws -> Bool {
+		return try uintForProperty(.subdeviceDriftCompensation) != 0
+	}
+
+	/// Returns the drift compensation quality
+	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
+	func driftCompensationQuality() throws -> UInt {
+		return try uintForProperty(.subdeviceDriftCompensationQuality)
+	}
+}
+
 extension Subdevice.DriftCompensationQuality: CustomDebugStringConvertible {
 	public var debugDescription: String {
 		switch self {
@@ -13,7 +33,7 @@ extension Subdevice.DriftCompensationQuality: CustomDebugStringConvertible {
 		case .medium: 		return ".medium"
 		case .high:			return ".high"
 		case .max:			return ".max"
-		@unknown default: 	return "UNKNOWN"
+		@unknown default: 	return "UNKNOWN (\(self.rawValue))"
 		}
 	}
 }

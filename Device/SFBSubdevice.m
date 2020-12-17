@@ -26,19 +26,19 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (double)extraLatency
+- (NSNumber *)extraLatency
 {
-	return [[self doubleForProperty:kAudioSubDevicePropertyExtraLatency] doubleValue];
+	return [self doubleForProperty:kAudioSubDevicePropertyExtraLatency];
 }
 
-- (BOOL)driftCompensation
+- (NSNumber *)driftCompensation
 {
-	return [[self uintForProperty:kAudioSubDevicePropertyDriftCompensation] boolValue];
+	return [self uintForProperty:kAudioSubDevicePropertyDriftCompensation];
 }
 
-- (SFBSubdeviceDriftCompensationQuality)driftCompensationQuality
+- (NSNumber *)driftCompensationQuality
 {
-	return [[self uintForProperty:kAudioSubDevicePropertyDriftCompensationQuality] unsignedIntValue];
+	return [self uintForProperty:kAudioSubDevicePropertyDriftCompensationQuality];
 }
 
 @end
