@@ -56,18 +56,18 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// Returns the latency  or \c 0 on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
 - (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the virtual format  or \c nil on error
+/// Returns the virtual format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
 - (nullable NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the available virtual formats  or \c nil on error
+/// Returns the available virtual formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailableVirtualFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
 - (nullable NSArray<NSValue *> *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the physical format  or \c nil on error
+/// Returns the physical format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
 - (nullable NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the available physical formats  or \c nil on error
+/// Returns the available physical formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailablePhysicalFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
 - (nullable NSArray<NSValue *> *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
