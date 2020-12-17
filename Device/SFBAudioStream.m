@@ -14,29 +14,29 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (BOOL)isActiveOnElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self uintForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element] boolValue];
+	return [self uintForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
-- (BOOL)isOutputOnElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self uintForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element] boolValue];
+	return [self uintForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
-- (SFBAudioStreamTerminalType)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self uintForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element] unsignedIntValue];
+	return [self uintForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
-- (UInt32)startingChannelOnElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self uintForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element] unsignedIntValue];
+	return [self uintForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
-- (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self uintForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element] unsignedIntValue];
+	return [self uintForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element

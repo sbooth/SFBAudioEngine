@@ -41,21 +41,21 @@ typedef NS_ENUM(UInt32, SFBAudioStreamTerminalType) {
 /// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal), a master element (\c kAudioObjectPropertyElementMaster), and an element for each channel in each stream
 NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 
-/// Returns \c YES if the stream is active
+/// Returns \c @ YES if the stream is active or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyIsActive
-- (BOOL)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns \c YES if this is an output stream
+- (NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if this is an output stream or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyDirection
-- (BOOL)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the terminal type  or \c 0 on error
+- (NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the terminal type  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyTerminalType
-- (SFBAudioStreamTerminalType)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the starting channel in the owning device  or \c 0 on error
+- (NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the starting channel in the owning device  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyStartingChannel
-- (UInt32)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
-/// Returns the latency  or \c 0 on error
+- (NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Returns the latency  or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyLatency
-- (UInt32)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+- (NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the virtual format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
