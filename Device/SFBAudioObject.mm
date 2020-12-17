@@ -835,79 +835,79 @@ static SFBAudioObject *sSystemObject = nil;
 
 @implementation SFBAudioObject (SFBAudioObjectProperties)
 
-- (AudioClassID)baseClassID
+- (NSNumber *)baseClassID
 {
-	return [NumberForArithmeticProperty<AudioClassID>(_objectID, kAudioObjectPropertyBaseClass) unsignedIntValue];
+	return [self uintForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyBaseClass];
 }
 
-- (AudioClassID)classID
+- (NSNumber *)classID
 {
-	return [NumberForArithmeticProperty<AudioClassID>(_objectID, kAudioObjectPropertyClass) unsignedIntValue];
+	return [self uintForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyClass];
 }
 
 - (SFBAudioObject *)owner
 {
-	return AudioObjectForProperty(_objectID, kAudioObjectPropertyOwner);
+	return [self audioObjectForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwner];
 }
 
 - (NSString *)name
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyName);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyName];
 }
 
 - (NSString *)modelName
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyModelName);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyModelName];
 }
 
 - (NSString *)manufacturer
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyManufacturer);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyManufacturer];
 }
 
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementName, kAudioObjectPropertyScopeGlobal, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementName, scope, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:scope onElement:element];
 }
 
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, kAudioObjectPropertyScopeGlobal, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementCategoryName, scope, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:scope onElement:element];
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, kAudioObjectPropertyScopeGlobal, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementNumberName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyElementNumberName, scope, element);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementNumberName inScope:scope onElement:element];
 }
 
 - (NSArray *)ownedObjects
 {
-	return AudioObjectArrayForProperty(_objectID, kAudioObjectPropertyOwnedObjects);
+	return [self audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwnedObjects];
 }
 
 - (NSString *)serialNumber
 {
-	return StringForProperty(_objectID, kAudioObjectPropertySerialNumber);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertySerialNumber];
 }
 
 - (NSString *)firmwareVersion
 {
-	return StringForProperty(_objectID, kAudioObjectPropertyFirmwareVersion);
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyFirmwareVersion];
 }
 
 @end

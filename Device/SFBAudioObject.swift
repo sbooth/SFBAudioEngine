@@ -169,6 +169,81 @@ extension AudioObject {
 
 }
 
+extension AudioObject {
+	/// Returns the audio object's base class
+	/// - note: This corresponds to `kAudioObjectPropertyBaseClass`
+	func baseClassID() throws -> AudioClassID {
+		return AudioClassID(try uintForProperty(.baseClass))
+	}
+
+	/// Returns the audio object's class
+	/// - note: This corresponds to `kAudioObjectPropertyClass`
+	func classID() throws -> AudioClassID {
+		return AudioClassID(try uintForProperty(.class))
+	}
+
+	/// Returns the audio object's owning object
+	/// - note: This corresponds to `kAudioObjectPropertyOwner`
+	/// - note: The system object does not have an owner
+	func owner() throws -> AudioObject {
+		return try audioObjectForProperty(.owner)
+	}
+
+	/// Returns the audio object's name
+	/// - note: This corresponds to `kAudioObjectPropertyName`
+	func name() throws -> String {
+		return try stringForProperty(.name)
+	}
+
+	/// Returns the audio object's model name
+	/// - note: This corresponds to `kAudioObjectPropertyModelName`
+	func modelName() throws -> String {
+		return try stringForProperty(.modelName)
+	}
+
+	/// Returns the audio object's manufacturer
+	/// - note: This corresponds to `kAudioObjectPropertyManufacturer`
+	func manufacturer() throws -> String {
+		return try stringForProperty(.manufacturer)
+	}
+
+	/// Returns the name of the specified element
+	/// - note: This corresponds to `kAudioObjectPropertyElementName`
+	func nameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+		return try stringForProperty(.elementName, scope: scope, element: element)
+	}
+
+	/// Returns the category name of the specified element
+	/// - note: This corresponds to `kAudioObjectPropertyElementCategoryName`
+	func categoryNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+		return try stringForProperty(.elementName, scope: scope, element: element)
+	}
+
+	/// Returns the number name of the specified element
+	/// - note: This corresponds to `kAudioObjectPropertyElementNumberName`
+	func numberNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
+		return try stringForProperty(.elementName, scope: scope, element: element)
+	}
+
+	/// Returns the audio objects owned by this object
+	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
+	func ownedObjects() throws -> [AudioObject] {
+		return try audioObjectsForProperty(.ownedObjects)
+	}
+
+	/// Returns the audio object's serial number
+	/// - note: This corresponds to `kAudioObjectPropertySerialNumber`
+	func serialNumber() throws -> String {
+		return try stringForProperty(.serialNumber)
+	}
+
+	/// Returns the audio object's firmware version
+	/// - note: This corresponds to `kAudioObjectPropertyFirmwareVersion`
+	func firmwareVersion() throws -> String {
+		return try stringForProperty(.firmwareVersion)
+	}
+}
+
 extension AudioObject.PropertySelector: ExpressibleByStringLiteral {
 	public init(stringLiteral value: StringLiteralType) {
 		var fourcc: UInt32 = 0
