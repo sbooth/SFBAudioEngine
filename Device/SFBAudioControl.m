@@ -14,14 +14,14 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (SFBAudioObjectPropertyScope)scope
+- (NSNumber *)scope
 {
-	return [[self uintForProperty:kAudioControlPropertyScope] unsignedIntValue];
+	return [self uintForProperty:kAudioControlPropertyScope];
 }
 
-- (SFBAudioObjectPropertyElement)element
+- (NSNumber *)element
 {
-	return [[self uintForProperty:kAudioControlPropertyElement] unsignedIntValue];
+	return [self uintForProperty:kAudioControlPropertyElement];
 }
 
 @end

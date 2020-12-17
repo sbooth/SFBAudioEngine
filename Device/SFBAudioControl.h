@@ -11,13 +11,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note This class has a single scope (\c kAudioObjectPropertyScopeGlobal) and a single element (\c kAudioObjectPropertyElementMaster)
 NS_SWIFT_NAME(AudioControl) @interface SFBAudioControl : SFBAudioObject
 
-/// Returns the scope or \c 0 on error
+/// Returns the scope or \c nil on error
 /// @note This corresponds to \c kAudioControlPropertyScope
-@property (nonatomic, readonly) SFBAudioObjectPropertyScope scope;
+@property (nonatomic, readonly) NSNumber *scope;
 
-/// Returns the element or \c 0 on error
+/// Returns the element or \c nil on error
 /// @note This corresponds to \c kAudioControlPropertyElement
-@property (nonatomic, readonly) SFBAudioObjectPropertyElement element;
+@property (nonatomic, readonly) NSNumber *element;
 
 @end
 
