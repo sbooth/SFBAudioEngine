@@ -865,29 +865,14 @@ static SFBAudioObject *sSystemObject = nil;
 	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyManufacturer];
 }
 
-- (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element
-{
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
-}
-
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:scope onElement:element];
 }
 
-- (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element
-{
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
-}
-
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:scope onElement:element];
-}
-
-- (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element
-{
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementNumberName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope

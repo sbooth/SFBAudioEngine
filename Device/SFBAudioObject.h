@@ -791,23 +791,12 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @note This corresponds to \c kAudioObjectPropertyManufacturer
 @property (nonatomic, nullable, readonly) NSString *manufacturer NS_REFINED_FOR_SWIFT;
 
-/// Returns the name of the specified element in the global scope
-/// @note This corresponds to \c kAudioObjectPropertyElementName
-- (nullable NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -nameOfElement:inScope:");
 /// Returns the name of the specified element in the specified scope
 /// @note This corresponds to \c kAudioObjectPropertyElementName
 - (nullable NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
-
-/// Returns the category name of the specified element in the global scope
-/// @note This corresponds to \c kAudioObjectPropertyElementCategoryName
-- (nullable NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -categoryNameOfElement:inScope:");
 /// Returns the category name of the specified element in the specified scope
 /// @note This corresponds to \c kAudioObjectPropertyElementCategoryName
 - (nullable NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
-
-/// Returns the number name of the specified element in the global scope
-/// @note This corresponds to \c kAudioObjectPropertyElementNumberName
-- (nullable NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -numberNameOfElement:inScope:");
 /// Returns the number name of the specified element in the specified scope
 /// @note This corresponds to \c kAudioObjectPropertyElementNumberName
 - (nullable NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
