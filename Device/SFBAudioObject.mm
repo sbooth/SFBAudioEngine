@@ -693,3 +693,43 @@ static SFBAudioObject *sSystemObject = nil;
 }
 
 @end
+
+@implementation NSValue (SFBCoreAudioStructs)
+
++ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd
+{
+	return [NSValue value:&asbd withObjCType:@encode(AudioStreamBasicDescription)];
+}
+
+- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue
+{
+	AudioStreamBasicDescription asbd;
+	[self getValue:&asbd];
+	return asbd;
+}
+
++ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd
+{
+	return [NSValue value:&asrd withObjCType:@encode(AudioStreamRangedDescription)];
+}
+
+- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue
+{
+	AudioStreamRangedDescription asrd;
+	[self getValue:&asrd];
+	return asrd;
+}
+
++ (instancetype)valueWithAudioValueRange:(AudioValueRange)avr
+{
+	return [NSValue value:&avr withObjCType:@encode(AudioValueRange)];
+}
+
+- (AudioValueRange)audioValueRangeValue
+{
+	AudioValueRange avr;
+	[self getValue:&avr];
+	return avr;
+}
+
+@end

@@ -615,4 +615,27 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 @end
 
+@interface NSValue (SFBCoreAudioStructs)
+/// Creates a new value object containing the specified \c AudioStreamBasicDescription structure
+/// @param asbd The value for the new object
+/// @return A new value object that contains \c asbd
++ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd;
+/// Returns the \c AudioStreamBasicDescription structure representation of the value
+- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue;
+
+/// Creates a new value object containing the specified \c AudioStreamRangedDescription structure
+/// @param asrd The value for the new object
+/// @return A new value object that contains \c asrd
++ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd;
+/// Returns the \c AudioStreamRangedDescription structure representation of the value
+- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue;
+
+/// Creates a new value object containing the specified \c AudioValueRange structure
+/// @param avr The value for the new object
+/// @return A new value object that contains \c avr
++ (instancetype)valueWithAudioValueRange:(AudioValueRange)avr;
+/// Returns the \c AudioValueRange structure representation of the value
+- (AudioValueRange)audioValueRangeValue;
+@end
+
 NS_ASSUME_NONNULL_END
