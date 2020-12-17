@@ -24,28 +24,28 @@ NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 
 /// Returns the clock device UID or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyDeviceUID
-@property (nonatomic, nullable, readonly) NSString *clockDeviceUID;
-/// Returns the transport type  or \c 0 on error
+@property (nonatomic, nullable, readonly) NSString *clockDeviceUID NS_REFINED_FOR_SWIFT;
+/// Returns the transport type  or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyTransportType
-@property (nonatomic, readonly) SFBAudioDeviceTransportType transportType;
-/// Returns the domain  or \c 0 on error
+@property (nonatomic, nullable, readonly) NSNumber *transportType NS_REFINED_FOR_SWIFT;
+/// Returns the domain  or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyClockDomain
-@property (nonatomic, readonly) UInt32 domain;
-/// Returns \c YES if the clock device is alive
+@property (nonatomic, nullable, readonly) NSNumber *domain NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the clock device is alive or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyDeviceIsAlive
-@property (nonatomic, readonly) BOOL isAlive;
-/// Returns \c YES if the clock device is running
+@property (nonatomic, nullable, readonly) NSNumber *isAlive NS_REFINED_FOR_SWIFT;
+/// Returns \c @ YES if the clock device is running or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyDeviceIsRunning
-@property (nonatomic, readonly) BOOL isRunning;
-/// Returns the latency  or \c 0 on error
+@property (nonatomic, nullable, readonly) NSNumber *isRunning NS_REFINED_FOR_SWIFT;
+/// Returns the latency  or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyLatency
-@property (nonatomic, readonly) UInt32 latency;
+@property (nonatomic, readonly) NSNumber *latency NS_REFINED_FOR_SWIFT;
 /// Returns an array  of the clock device's audio controls or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyControlList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioControl *> *controls;
-/// Returns the device sample rate or \c NaN on error
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioControl *> *controls NS_REFINED_FOR_SWIFT;
+/// Returns the device sample rate or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyNominalSampleRate
-@property (nonatomic, readonly) double sampleRate;
+@property (nonatomic, nullable, readonly) NSNumber *sampleRate NS_REFINED_FOR_SWIFT;
 /// Returns an array of available sample rates or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyAvailableNominalSampleRates
 /// @note The return value contains an array of wrapped \c AudioValueRange structures
