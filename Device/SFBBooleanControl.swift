@@ -11,5 +11,4 @@ extension LevelControl {
 	func value() throws -> Bool {
 		return try uintForProperty(.booleanControlValue) != 0
 	}
-
 }
