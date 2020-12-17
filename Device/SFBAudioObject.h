@@ -129,8 +129,8 @@ typedef NS_ENUM(AudioObjectPropertySelector, SFBAudioObjectPropertySelector) {
 	SFBAudioObjectPropertySelectorSelectorControlItemKind 			= kAudioSelectorControlPropertyItemKind,
 
 	// AudioStereoPanControl
-	SFBAudioObjectPropertySelectorPanControlValue 				= kAudioStereoPanControlPropertyValue,
-	SFBAudioObjectPropertySelectorPanControlPanningChannels 	= kAudioStereoPanControlPropertyPanningChannels,
+	SFBAudioObjectPropertySelectorStereoPanControlValue 			= kAudioStereoPanControlPropertyValue,
+	SFBAudioObjectPropertySelectorStereoPanControlPanningChannels 	= kAudioStereoPanControlPropertyPanningChannels,
 
 	/// Wildcard  selector, useful for notifications
 	SFBAudioObjectPropertySelectorWildcard 	= kAudioObjectPropertySelectorWildcard,
@@ -674,6 +674,37 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
 - (nullable NSArray<NSValue *> *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as a wrapped \c AudioValueRange structure or \c nil on error
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type \c AudioValueRange
+/// @param property The property to query
+/// @return The property value
+- (nullable NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -audioValueRangeForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as a wrapped \c AudioValueRange structure or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c propertyAddress must refer to a property of type \c AudioValueRange
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -audioValueRangeForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as a wrapped \c AudioValueRange structure or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c propertyAddress must refer to a property of type \c AudioValueRange
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -audioValueRangeForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as a wrapped \c AudioValueRange structure or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c propertyAddress must refer to a property of type \c AudioValueRange
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an array of wrapped \c AudioValueRange structures or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }

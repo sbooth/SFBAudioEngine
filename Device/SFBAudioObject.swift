@@ -6,6 +6,7 @@
 import Foundation
 
 extension AudioObject {
+
 	/// Returns `true` if the underlying audio object has the specified property
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -30,11 +31,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> UInt? {
-		guard let value = __uint(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value.uintValue
+	/// - throws: An error if the property could not be retrieved
+	public func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt {
+		return try __uint(forProperty: property, in: scope, onElement: element).uintValue
 	}
 
 	/// Returns the value for `property` as an array `UInt` or `nil` on error
@@ -43,11 +42,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [UInt]? {
-		guard let value = __uintArray(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value.map { $0.uintValue }
+	/// - throws: An error if the property could not be retrieved
+	public func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [UInt] {
+		return try __uintArray(forProperty: property, in: scope, onElement: element).map { $0.uintValue }
 	}
 
 	/// Returns the value for `property` as a `Float` or `nil` on error
@@ -56,11 +53,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func floatForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Float? {
-		guard let value = __float(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value.floatValue
+	/// - throws: An error if the property could not be retrieved
+	public func floatForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> Float {
+		return try __float(forProperty: property, in: scope, onElement: element).floatValue
 	}
 
 	/// Returns the value for `property` as a `Double` or `nil` on error
@@ -69,11 +64,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func doubleForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Double? {
-		guard let value = __double(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value.doubleValue
+	/// - throws: An error if the property could not be retrieved
+	public func doubleForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> Double {
+		return try __double(forProperty: property, in: scope, onElement: element).doubleValue
 	}
 
 	/// Returns the value for `property` as a `String` or `nil` on error
@@ -82,11 +75,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func stringForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> String? {
-		guard let value = __string(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value
+	/// - throws: An error if the property could not be retrieved
+	public func stringForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> String {
+		return try __string(forProperty: property, in: scope, onElement: element)
 	}
 
 	/// Returns the value for `property` as a `Dictionary` or `nil` on error
@@ -95,11 +86,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func dictionaryForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AnyHashable: Any]? {
-		guard let value = __dictionary(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value
+	/// - throws: An error if the property could not be retrieved
+	public func dictionaryForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AnyHashable: Any] {
+		return try __dictionary(forProperty: property, in: scope, onElement: element)
 	}
 
 	/// Returns the value for `property` as an `AudioObject` or `nil` on error
@@ -108,11 +97,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func audioObjectForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioObject? {
-		guard let value = __forProperty(property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value
+	/// - throws: An error if the property could not be retrieved
+	public func audioObjectForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioObject {
+		return try __forProperty(property, in: scope, onElement: element)
 	}
 
 	/// Returns the value for `property` as an array of `AudioObject` or `nil` on error
@@ -121,11 +108,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func audioObjectArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioObject]? {
-		guard let value = __audioObjectArray(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value
+	/// - throws: An error if the property could not be retrieved
+	public func audioObjectsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AudioObject] {
+		return try __audioObjectArray(forProperty: property, in: scope, onElement: element)
 	}
 
 	/// Returns the value for `property` as an `AudioStreamBasicDescription` or `nil` on error
@@ -134,11 +119,20 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func audioStreamBasicDescriptionForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> AudioStreamBasicDescription? {
-		guard let value = __audioStreamBasicDescription(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return value.audioStreamBasicDescriptionValue()
+	/// - throws: An error if the property could not be retrieved
+	public func audioStreamBasicDescriptionForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioStreamBasicDescription {
+		return try __audioStreamBasicDescription(forProperty: property, in: scope, onElement: element).audioStreamBasicDescriptionValue()
+	}
+
+	/// Returns the value for `property` as an `AudioValueRange` or `nil` on error
+	/// - note: `property` must refer to a property of type `AudioValueRange`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func audioValueRangeForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioValueRange {
+		return try __audioValueRange(forProperty: property, in: scope, onElement: element).audioValueRangeValue()
 	}
 
 	/// Returns the value for `property` as an array of `AudioStreamRangedDescription` or `nil` on error
@@ -147,11 +141,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func audioStreamRangedDescriptionArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioStreamRangedDescription]? {
-		guard let values = __audioStreamRangedDescriptionArray(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return values.map { $0.audioStreamRangedDescriptionValue() }
+	/// - throws: An error if the property could not be retrieved
+	public func audioStreamRangedDescriptionsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AudioStreamRangedDescription] {
+		return try __audioStreamRangedDescriptionArray(forProperty: property, in: scope, onElement: element).map { $0.audioStreamRangedDescriptionValue() }
 	}
 
 	/// Returns the value for `property` as an array of `AudioValueRange` or `nil` on error
@@ -160,11 +152,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: The property value
-	public func audioValueRangeArrayForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> [AudioValueRange]? {
-		guard let values = __audioValueRangeArray(forProperty: property, in: scope, onElement: element) else {
-			return nil
-		}
-		return values.map { $0.audioValueRangeValue() }
+	/// - throws: An error if the property could not be retrieved
+	public func audioValueRangesForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AudioValueRange] {
+		return try __audioValueRangeArray(forProperty: property, in: scope, onElement: element).map { $0.audioValueRangeValue() }
 	}
 
 	/// Performs `block` when the specified property changes
@@ -172,8 +162,9 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
-	public func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) {
-		__whenProperty(property, in: scope, changesOnElement: element, perform: block)
+	/// - throws: An error if the property listener could not be set
+	public func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) throws {
+		try __whenProperty(property, in: scope, changesOnElement: element, perform: block)
 	}
 
 }

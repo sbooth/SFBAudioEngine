@@ -218,6 +218,15 @@ namespace {
 		return ObjectForFixedSizeProperty(objectID, propertyAddress, error, transform);
 	}
 
+	NSValue * _Nullable AudioValueRangeForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		NSValue * (^transform)(const AudioValueRange&) = ^(const AudioValueRange& value){
+			return [NSValue valueWithAudioValueRange:value];
+		};
+		return ObjectForFixedSizeProperty(objectID, propertyAddress, error, transform);
+	}
+
 #pragma mark Typed Array Property Getters
 
 	template <typename T, typename R>
@@ -755,6 +764,26 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element, error);
+}
+
+- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return AudioValueRangeForProperty(_objectID, property);
+}
+
+- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return AudioValueRangeForProperty(_objectID, property, scope);
+}
+
+- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return AudioValueRangeForProperty(_objectID, property, scope, element);
+}
+
+- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioValueRangeForProperty(_objectID, property, scope, element, error);
 }
 
 - (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property
