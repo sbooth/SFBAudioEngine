@@ -85,35 +85,3 @@ namespace {
 }
 
 @end
-
-@implementation NSValue (AudioStreamBasicDescription)
-
-+ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd
-{
-	return [NSValue value:&asbd withObjCType:@encode(AudioStreamBasicDescription)];
-}
-
-- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue
-{
-	AudioStreamBasicDescription asbd;
-	[self getValue:&asbd];
-	return asbd;
-}
-
-@end
-
-@implementation NSValue (AudioStreamRangedDescription)
-
-+ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd
-{
-	return [NSValue value:&asrd withObjCType:@encode(AudioStreamRangedDescription)];
-}
-
-- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue
-{
-	AudioStreamRangedDescription asrd;
-	[self getValue:&asrd];
-	return asrd;
-}
-
-@end

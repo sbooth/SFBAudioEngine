@@ -73,22 +73,4 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 - (nullable NSArray<NSValue *> *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 @end
 
-@interface NSValue (AudioStreamBasicDescription)
-/// Creates a new value object containing the specified \c AudioStreamBasicDescription structure
-/// @param asbd The value for the new object
-/// @return A new value object that contains \c asbd
-+ (instancetype)valueWithAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd;
-/// Returns the \c AudioStreamBasicDescription structure representation of the value
-- (AudioStreamBasicDescription)audioStreamBasicDescriptionValue;
-@end
-
-@interface NSValue (AudioStreamRangedDescription)
-/// Creates a new value object containing the specified \c AudioStreamRangedDescription structure
-/// @param asrd The value for the new object
-/// @return A new value object that contains \c asrd
-+ (instancetype)valueWithAudioStreamRangedDescription:(AudioStreamRangedDescription)asrd;
-/// Returns the \c AudioStreamRangedDescription structure representation of the value
-- (AudioStreamRangedDescription)audioStreamRangedDescriptionValue;
-@end
-
 NS_ASSUME_NONNULL_END
