@@ -14,9 +14,9 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (float)value
+- (NSNumber *)value
 {
-	return [[self floatForProperty:kAudioStereoPanControlPropertyValue] floatValue];
+	return [self floatForProperty:kAudioStereoPanControlPropertyValue];
 }
 
 - (NSArray *)panningChannels

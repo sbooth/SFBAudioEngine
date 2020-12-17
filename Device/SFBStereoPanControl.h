@@ -10,9 +10,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// An audio stereo pan control
 NS_SWIFT_NAME(StereoPanControl) @interface SFBStereoPanControl : SFBAudioControl
 
-/// Returns the control's value
+/// Returns the control's value or \c nil on error
 /// @note This corresponds to \c kAudioStereoPanControlPropertyValue
-@property (nonatomic, readonly) float value;
+@property (nonatomic, nullable, readonly) NSNumber *value NS_REFINED_FOR_SWIFT;
 
 /// Returns the control's panning channels or \c nil on error
 /// @note This corresponds to \c kAudioStereoPanControlPropertyPanningChannels

@@ -6,12 +6,16 @@
 import Foundation
 
 extension StereoPanControl {
+
+	/// Returns the control's value
+	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
+	public func value() throws -> Float {
+		return try floatForProperty(.stereoPanControlValue)
+	}
+
 	/// Returns the control's panning channels
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyPanningChannels`
-	public var panningChannels: [UInt]? {
-		guard let values = __panningChannels else {
-			return nil
-		}
-		return values.map { $0.uintValue }
+	public func panningChannels() throws -> [UInt] {
+		return try uintsForProperty(.stereoPanControlPanningChannels)
 	}
 }
