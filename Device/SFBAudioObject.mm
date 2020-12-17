@@ -951,3 +951,18 @@ static SFBAudioObject *sSystemObject = nil;
 }
 
 @end
+
+@implementation NSNumber (SFBpid)
+
++ (instancetype)numberWithPid:(pid_t)pid
+{
+	static_assert(_Generic((pid_t)0, int: 1, default: 0), "pid_t is not int");
+	return [NSNumber numberWithInt:pid];
+}
+
+- (pid_t)pidValue
+{
+	return self.intValue;
+}
+
+@end

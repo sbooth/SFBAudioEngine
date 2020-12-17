@@ -216,7 +216,7 @@ extension AudioObject.PropertyScope: CustomDebugStringConvertible {
 		case .output: 			return ".output"
 		case .playThrough: 		return ".playThrough"
 		case .wildcard: 		return ".wildcard"
-		@unknown default: 		return "UNKNOWN"
+		@unknown default: 		return "UNKNOWN (\(self.rawValue))"
 		}
 	}
 }
@@ -252,7 +252,7 @@ extension AudioDevice.TransportType: CustomDebugStringConvertible {
 		case .airPlay:			return ".airPlay"
 		case .AVB:				return ".AVB"
 		case .thunderbolt:		return ".thunderbolt"
-		@unknown default: 		return "UNKNOWN"
+		@unknown default: 		return "UNKNOWN (\(self.rawValue))"
 		}
 	}
 }

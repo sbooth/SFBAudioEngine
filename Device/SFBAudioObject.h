@@ -847,4 +847,13 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (AudioValueRange)audioValueRangeValue;
 @end
 
+@interface NSNumber (SFBpid)
+/// Creates a new number object containing the specified \c pid_t
+/// @param pid The value for the new object
+/// @return A new number object that contains \c pid
++ (instancetype)numberWithPid:(pid_t)pid;
+/// Returns the \c pid_t representation of the value
+- (pid_t)pidValue;
+@end
+
 NS_ASSUME_NONNULL_END
