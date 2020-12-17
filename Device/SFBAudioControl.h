@@ -13,11 +13,11 @@ NS_SWIFT_NAME(AudioControl) @interface SFBAudioControl : SFBAudioObject
 
 /// Returns the scope or \c nil on error
 /// @note This corresponds to \c kAudioControlPropertyScope
-@property (nonatomic, nullable, readonly) NSNumber *scope;
+@property (nonatomic, nullable, readonly) NSNumber *scope NS_REFINED_FOR_SWIFT;
 
 /// Returns the element or \c nil on error
 /// @note This corresponds to \c kAudioControlPropertyElement
-@property (nonatomic, nullable, readonly) NSNumber *element;
+@property (nonatomic, nullable, readonly) NSNumber *element NS_REFINED_FOR_SWIFT;
 
 @end
 
