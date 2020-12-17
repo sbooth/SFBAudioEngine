@@ -6,11 +6,11 @@
 import Foundation
 
 extension ClockDevice {
-	/// Returns an array of available sample rates or `[]` on error
-	public var availableSampleRates: [Double] {
+	/// Returns an array of available sample rates or `nil` on error
+	public var availableSampleRates: [AudioValueRange]? {
 		guard let sampleRates = __availableSampleRates else {
-			return []
+			return nil
 		}
-		return sampleRates.map { $0.doubleValue }
+		return sampleRates.map { $0.audioValueRangeValue() }
 	}
 }

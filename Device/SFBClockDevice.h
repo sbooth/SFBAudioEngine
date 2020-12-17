@@ -5,6 +5,8 @@
 
 #import <SFBAudioEngine/SFBAudioObject.h>
 
+@class SFBAudioControl;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio clock device
@@ -40,13 +42,14 @@ NS_SWIFT_NAME(ClockDevice) @interface SFBClockDevice : SFBAudioObject
 @property (nonatomic, readonly) UInt32 latency;
 /// Returns an array  of the clock device's audio controls or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyControlList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioObject *> *controls;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioControl *> *controls;
 /// Returns the device sample rate or \c NaN on error
 /// @note This corresponds to \c kAudioClockDevicePropertyNominalSampleRate
 @property (nonatomic, readonly) double sampleRate;
 /// Returns an array of available sample rates or \c nil on error
 /// @note This corresponds to \c kAudioClockDevicePropertyAvailableNominalSampleRates
-@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *availableSampleRates NS_REFINED_FOR_SWIFT;
+/// @note The return value contains an array of wrapped \c AudioValueRange structures
+@property (nonatomic, nullable, readonly) NSArray<NSValue *> *availableSampleRates NS_REFINED_FOR_SWIFT;
 
 @end
 
