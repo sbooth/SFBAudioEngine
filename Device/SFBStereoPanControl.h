@@ -14,9 +14,9 @@ NS_SWIFT_NAME(StereoPanControl) @interface SFBStereoPanControl : SFBAudioControl
 /// @note This corresponds to \c kAudioStereoPanControlPropertyValue
 @property (nonatomic, readonly) float value;
 
-/// Returns the control's panning channels
+/// Returns the control's panning channels or \c nil on error
 /// @note This corresponds to \c kAudioStereoPanControlPropertyPanningChannels
-@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *panningChannels;
+@property (nonatomic, nullable, readonly) NSArray<NSNumber *> *panningChannels NS_REFINED_FOR_SWIFT;
 
 @end
 

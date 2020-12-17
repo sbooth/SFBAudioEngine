@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3202515E258AD39900A0A8DF /* SFBLevelControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3202515D258AD39900A0A8DF /* SFBLevelControl.swift */; };
+		32025160258ADAAB00A0A8DF /* SFBStereoPanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3202515F258ADAAB00A0A8DF /* SFBStereoPanControl.swift */; };
 		32073138256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32073139256313C8008BEDA7 /* SFBAudioConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32073137256313C8008BEDA7 /* SFBAudioConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3207313B25631560008BEDA7 /* SFBAudioConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 3207313A25631560008BEDA7 /* SFBAudioConverter.m */; };
@@ -572,6 +573,7 @@
 
 /* Begin PBXFileReference section */
 		3202515D258AD39900A0A8DF /* SFBLevelControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBLevelControl.swift; sourceTree = "<group>"; };
+		3202515F258ADAAB00A0A8DF /* SFBStereoPanControl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFBStereoPanControl.swift; sourceTree = "<group>"; };
 		32073137256313C8008BEDA7 /* SFBAudioConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFBAudioConverter.h; sourceTree = "<group>"; };
 		3207313A25631560008BEDA7 /* SFBAudioConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFBAudioConverter.m; sourceTree = "<group>"; };
 		3210AB9017B9C05A00743639 /* SFBAudioEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SFBAudioEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1074,6 +1076,7 @@
 				326F823C25893ABB009E10AB /* SFBSliderControl.m */,
 				326F824225893D66009E10AB /* SFBStereoPanControl.h */,
 				326F824125893D66009E10AB /* SFBStereoPanControl.m */,
+				3202515F258ADAAB00A0A8DF /* SFBStereoPanControl.swift */,
 			);
 			path = Device;
 			sourceTree = "<group>";
@@ -1792,6 +1795,7 @@
 				326D3CB1242D2A21002AEC52 /* SFBDSFFile.mm in Sources */,
 				32DD9D88257D4D5C00B47CFD /* AVAudioFormat+SFBFormatTransformation.m in Sources */,
 				32DA679325360D8A004BE933 /* SFBAudioMetadata.swift in Sources */,
+				32025160258ADAAB00A0A8DF /* SFBStereoPanControl.swift in Sources */,
 				32D740CB255F6D91004D3C1A /* SFBFileOutputSource.m in Sources */,
 				329CFF432588F54200335A06 /* SFBSubdevice.swift in Sources */,
 				326D3CCB242D2A21002AEC52 /* SFBTrueAudioFile.mm in Sources */,
