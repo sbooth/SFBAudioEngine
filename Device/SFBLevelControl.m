@@ -84,19 +84,3 @@
 }
 
 @end
-
-@implementation NSValue (AudioValueRange)
-
-+ (instancetype)valueWithAudioValueRange:(AudioValueRange)avr
-{
-	return [NSValue value:&avr withObjCType:@encode(AudioValueRange)];
-}
-
-- (AudioValueRange)audioValueRangeValue
-{
-	AudioValueRange avr;
-	[self getValue:&avr];
-	return avr;
-}
-
-@end

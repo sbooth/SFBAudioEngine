@@ -33,13 +33,4 @@ NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
 
 @end
 
-@interface NSValue (AudioValueRange)
-/// Creates a new value object containing the specified \c AudioValueRange structure
-/// @param avr The value for the new object
-/// @return A new value object that contains \c avr
-+ (instancetype)valueWithAudioValueRange:(AudioValueRange)avr;
-/// Returns the \c AudioValueRange structure representation of the value
-- (AudioValueRange)audioValueRangeValue;
-@end
-
 NS_ASSUME_NONNULL_END
