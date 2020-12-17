@@ -10,7 +10,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioObjectIsControl(objectID));
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioControlClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 

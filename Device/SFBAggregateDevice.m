@@ -21,10 +21,10 @@
 	}]];
 }
 
-- (instancetype)initWithAudioObjectID:(AudioObjectID)audioObjectID
+- (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioDeviceIsAggregate(audioObjectID));
-	return [super initWithAudioObjectID:audioObjectID];
+	NSParameterAssert(SFBAudioObjectIsClass(objectID, kAudioAggregateDeviceClassID));
+	return [super initWithAudioObjectID:objectID];
 }
 
 - (NSArray *)allSubdevices

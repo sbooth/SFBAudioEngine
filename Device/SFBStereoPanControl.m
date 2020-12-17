@@ -10,7 +10,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioControlIsStereoPan(objectID));
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioStereoPanControlClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 

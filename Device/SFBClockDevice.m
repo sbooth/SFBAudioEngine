@@ -17,7 +17,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioObjectIsClockDevice(objectID));
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioClockDeviceClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 

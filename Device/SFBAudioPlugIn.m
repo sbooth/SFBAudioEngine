@@ -15,7 +15,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioObjectIsPlugIn(objectID));
+	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioPlugInClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 

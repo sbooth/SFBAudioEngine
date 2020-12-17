@@ -15,7 +15,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioPlugInIsTransportManager(objectID));
+	NSParameterAssert(SFBAudioObjectIsClass(objectID, kAudioTransportManagerClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 

@@ -22,7 +22,7 @@
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
 {
-	NSParameterAssert(SFBAudioDeviceIsEndpointDevice(objectID));
+	NSParameterAssert(SFBAudioObjectIsClass(objectID, kAudioEndPointDeviceClassID));
 	return [super initWithAudioObjectID:objectID];
 }
 
