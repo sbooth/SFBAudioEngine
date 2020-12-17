@@ -19,16 +19,16 @@ NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 
 /// Returns the bundle ID or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyBundleID
-@property (nonatomic, nullable, readonly) NSString *bundleID;
+@property (nonatomic, nullable, readonly) NSString *bundleID NS_REFINED_FOR_SWIFT;
 /// Returns an array  of audio devices provided by the plug in or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyDeviceList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioDevice *> *devices NS_REFINED_FOR_SWIFT;
 /// Returns an array  of audio boxes provided by the plug in or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyBoxList
-@property (nonatomic, nullable, readonly) NSArray<SFBAudioBox *> *boxes;
+@property (nonatomic, nullable, readonly) NSArray<SFBAudioBox *> *boxes NS_REFINED_FOR_SWIFT;
 /// Returns an array  of audio clock devices provided by the plug in or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyClockDeviceList
-@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices;
+@property (nonatomic, nullable, readonly) NSArray<SFBClockDevice *> *clockDevices NS_REFINED_FOR_SWIFT;
 
 @end
 
