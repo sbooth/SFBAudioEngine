@@ -9,7 +9,7 @@ extension ClockDevice {
 	/// Returns the clock device UID
 	/// - note: This corresponds to `kAudioClockDevicePropertyDeviceUID`
 	func clockDeviceUID() throws -> String {
-		return try stringForProperty(.clockDeviceDeviceUID)
+		return try stringForProperty(.clockDeviceUID)
 	}
 
 	/// Returns the transport type
@@ -27,13 +27,13 @@ extension ClockDevice {
 	/// Returns `true` if the clock device is alive
 	/// - note: This corresponds to `kAudioClockDevicePropertyDeviceIsAlive`
 	public func isAlive() throws -> Bool {
-		return try uintForProperty(.clockDeviceDeviceIsAlive) != 0
+		return try uintForProperty(.clockDeviceIsAlive) != 0
 	}
 
 	/// Returns `true` if the clock device is running
 	/// - note: This corresponds to `kAudioClockDevicePropertyDeviceIsRunning`
 	public func isRunning() throws -> Bool {
-		return try uintForProperty(.clockDeviceDeviceIsRunning) != 0
+		return try uintForProperty(.clockDeviceIsRunning) != 0
 	}
 
 	/// Returns the latency
