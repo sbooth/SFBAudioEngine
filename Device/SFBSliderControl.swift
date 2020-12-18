@@ -9,12 +9,12 @@ extension SliderControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioSliderControlPropertyValue`
 	public func value() throws -> Float {
-		return try floatForProperty(.sliderControlValue)
+		return try getProperty(.sliderControlValue)
 	}
 	
 	/// Returns the available values
 	/// - note: This corresponds to `kAudioSliderControlPropertyRange`
 	public func range() throws -> [UInt] {
-		return try uintsForProperty(.sliderControlRange)
+		return try getProperty(.sliderControlRange)
 	}
 }

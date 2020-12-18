@@ -9,19 +9,19 @@ extension LevelControl {
 	/// Returns the control's scalar value
 	/// - note: This corresponds to `kAudioLevelControlPropertyScalarValue`
 	func scalarValue() throws -> Float {
-		return try floatForProperty(.levelControlScalarValue)
+		return try getProperty(.levelControlScalarValue)
 	}
 
 	/// Returns the control's decibel value
 	/// - note: This corresponds to `kAudioLevelControlPropertyDecibelValue`
 	func decibelValue() throws -> Float {
-		return try floatForProperty(.levelControlDecibelValue)
+		return try getProperty(.levelControlDecibelValue)
 	}
 
 	/// Returns the decibel range
 	/// - note: This corresponds to `kAudioLevelControlPropertyDecibelRange`
 	public func decibelRange() throws -> AudioValueRange {
-		return try audioValueRangeForProperty(.levelControlDecibelRange)
+		return try getProperty(.levelControlDecibelRange)
 	}
 
 	/// Converts `scalar` to decibels and returns the converted value

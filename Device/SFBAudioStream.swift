@@ -11,7 +11,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: `true` if the stream is active
 	public func isActive(_ element: PropertyElement = .master) throws -> Bool {
-		return try uintForProperty(.streamIsActive, scope: .global, element: element) != 0
+		return try getProperty(.streamIsActive, scope: .global, element: element) != 0
 	}
 
 	/// Returns `true` if the stream is an output stream
@@ -19,7 +19,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: `true` if the stream is an output stream
 	public func isOutput(_ element: PropertyElement = .master) throws -> Bool {
-		return try uintForProperty(.streamDirection, scope: .global, element: element) != 0
+		return try getProperty(.streamDirection, scope: .global, element: element) != 0
 	}
 
 	/// Returns the terminal type
@@ -27,7 +27,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The terminal type
 	public func terminalType(_ element: PropertyElement = .master) throws -> TerminalType {
-		return TerminalType(rawValue: UInt32(try uintForProperty(.streamTerminalType, scope: .global, element: element)))!
+		return TerminalType(rawValue: UInt32(try getProperty(.streamTerminalType, element: element) as UInt))!
 	}
 
 	/// Returns the starting channel
@@ -35,7 +35,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The starting channel
 	public func startingChannel(_ element: PropertyElement = .master) throws -> UInt {
-		return try uintForProperty(.streamStartingChannel, scope: .global, element: element)
+		return try getProperty(.streamStartingChannel, scope: .global, element: element)
 	}
 
 	/// Returns the latency
@@ -43,7 +43,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The latency
 	public func latency(_ element: PropertyElement = .master) throws -> UInt {
-		return try uintForProperty(.streamLatency, scope: .global, element: element)
+		return try getProperty(.streamLatency, scope: .global, element: element)
 	}
 
 	/// Returns the virtual format
@@ -51,7 +51,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The virtual format
 	public func virtualFormat(_ element: PropertyElement = .master) throws -> AudioStreamBasicDescription {
-		return try audioStreamBasicDescriptionForProperty(.streamVirtualFormat, scope: .global, element: element)
+		return try getProperty(.streamVirtualFormat, scope: .global, element: element)
 	}
 
 	/// Returns the available virtual formats
@@ -59,7 +59,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The available virtual formats
 	public func availableVirtualFormats(_ element: PropertyElement = .master) throws -> [AudioStreamRangedDescription] {
-		return try audioStreamRangedDescriptionsForProperty(.streamAvailableVirtualFormats, scope: .global, element: element)
+		return try getProperty(.streamAvailableVirtualFormats, scope: .global, element: element)
 	}
 
 	/// Returns the physical format
@@ -67,7 +67,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The physical format
 	public func physicalFormat(_ element: PropertyElement = .master) throws -> AudioStreamBasicDescription {
-		return try audioStreamBasicDescriptionForProperty(.streamPhysicalFormat, scope: .global, element: element)
+		return try getProperty(.streamPhysicalFormat, scope: .global, element: element)
 	}
 
 	/// Returns the available physical formats
@@ -75,7 +75,7 @@ extension AudioStream {
 	/// - parameter element: The desired element
 	/// - returns: The available physical formats
 	public func availablePhysicalFormats(_ element: PropertyElement = .master) throws -> [AudioStreamRangedDescription] {
-		return try audioStreamRangedDescriptionsForProperty(.streamAvailablePhysicalFormats, scope: .global, element: element)
+		return try getProperty(.streamAvailablePhysicalFormats, scope: .global, element: element)
 	}
 }
 

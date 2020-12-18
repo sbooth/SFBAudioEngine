@@ -9,19 +9,19 @@ extension Subdevice {
 	/// Returns the extra latency
 	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
 	func extraLatency() throws -> Double {
-		return try doubleForProperty(.subdeviceExtraLatency)
+		return try getProperty(.subdeviceExtraLatency)
 	}
 
 	/// Returns the drift compensation
 	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
 	func driftCompensation() throws -> Bool {
-		return try uintForProperty(.subdeviceDriftCompensation) != 0
+		return try getProperty(.subdeviceDriftCompensation) != 0
 	}
 
 	/// Returns the drift compensation quality
 	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
 	func driftCompensationQuality() throws -> UInt {
-		return try uintForProperty(.subdeviceDriftCompensationQuality)
+		return try getProperty(.subdeviceDriftCompensationQuality)
 	}
 }
 

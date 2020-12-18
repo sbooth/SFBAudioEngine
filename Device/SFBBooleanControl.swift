@@ -9,6 +9,6 @@ extension LevelControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioBooleanControlPropertyValue`
 	func value() throws -> Bool {
-		return try uintForProperty(.booleanControlValue) != 0
+		return try getProperty(.booleanControlValue) != 0
 	}
 }
