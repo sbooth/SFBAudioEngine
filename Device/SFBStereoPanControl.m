@@ -21,7 +21,7 @@
 
 - (NSArray *)panningChannels
 {
-	return [self uintArrayForProperty:kAudioStereoPanControlPropertyPanningChannels];
+	return [self unsignedIntArrayForProperty:kAudioStereoPanControlPropertyPanningChannels];
 }
 
 @end

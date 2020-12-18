@@ -54,27 +54,27 @@
 
 - (NSNumber *)transportType
 {
-	return [self uintForProperty:kAudioBoxPropertyTransportType];
+	return [self unsignedIntForProperty:kAudioBoxPropertyTransportType];
 }
 
 - (NSNumber *)hasAudio
 {
-	return [self uintForProperty:kAudioBoxPropertyHasAudio];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasAudio];
 }
 
 - (NSNumber *)hasVideo
 {
-	return [self uintForProperty:kAudioBoxPropertyHasVideo];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasVideo];
 }
 
 - (NSNumber *)hasMIDI
 {
-	return [self uintForProperty:kAudioBoxPropertyHasMIDI];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasMIDI];
 }
 
 - (NSNumber *)acquired
 {
-	return [self uintForProperty:kAudioBoxPropertyAcquired];
+	return [self unsignedIntForProperty:kAudioBoxPropertyAcquired];
 }
 
 - (NSArray *)devices

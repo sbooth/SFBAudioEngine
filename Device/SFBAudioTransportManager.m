@@ -26,7 +26,7 @@
 
 - (NSNumber *)transportType
 {
-	return [self uintForProperty:kAudioTransportManagerPropertyTransportType];
+	return [self unsignedIntForProperty:kAudioTransportManagerPropertyTransportType];
 }
 
 @end

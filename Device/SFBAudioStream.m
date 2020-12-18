@@ -16,27 +16,27 @@
 
 - (NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self uintForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self uintForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self uintForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self uintForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self uintForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element];
 }
 
 - (NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element

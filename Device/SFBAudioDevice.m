@@ -150,7 +150,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSNumber *)transportType
 {
-	return [self uintForProperty:kAudioDevicePropertyTransportType];
+	return [self unsignedIntForProperty:kAudioDevicePropertyTransportType];
 }
 
 - (NSArray *)relatedDevices
@@ -160,32 +160,32 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSNumber *)clockDomain
 {
-	return [self uintForProperty:kAudioDevicePropertyClockDomain];
+	return [self unsignedIntForProperty:kAudioDevicePropertyClockDomain];
 }
 
 - (NSNumber *)isAlive
 {
-	return [self uintForProperty:kAudioDevicePropertyDeviceIsAlive];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsAlive];
 }
 
 - (NSNumber *)isRunning
 {
-	return [self uintForProperty:kAudioDevicePropertyDeviceIsRunning];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceIsRunning];
 }
 
 - (NSNumber *)canBeDefaultInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self uintForProperty:kAudioDevicePropertyDeviceCanBeDefaultDevice inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultDevice inScope:scope];
 }
 
 - (NSNumber *)canBeSystemDefaultInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self uintForProperty:kAudioDevicePropertyDeviceCanBeDefaultSystemDevice inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyDeviceCanBeDefaultSystemDevice inScope:scope];
 }
 
 - (NSNumber *)latencyInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self uintForProperty:kAudioDevicePropertyLatency inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertyLatency inScope:scope];
 }
 
 - (NSArray *)streamsInScope:(SFBAudioObjectPropertyScope)scope
@@ -200,7 +200,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self uintForProperty:kAudioDevicePropertySafetyOffset inScope:scope];
+	return [self unsignedIntForProperty:kAudioDevicePropertySafetyOffset inScope:scope];
 }
 
 - (NSNumber *)sampleRate
@@ -242,12 +242,12 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (NSNumber *)isHidden
 {
-	return [self uintForProperty:kAudioDevicePropertyIsHidden];
+	return [self unsignedIntForProperty:kAudioDevicePropertyIsHidden];
 }
 
 - (NSArray *)preferredStereoChannelsInScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self uintArrayForProperty:kAudioDevicePropertyPreferredChannelsForStereo inScope:scope];
+	return [self unsignedIntArrayForProperty:kAudioDevicePropertyPreferredChannelsForStereo inScope:scope];
 }
 
 - (AVAudioChannelLayout *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope

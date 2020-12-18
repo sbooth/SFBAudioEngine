@@ -665,42 +665,42 @@ static SFBAudioObject *sSystemObject = nil;
 
 #pragma mark - Property Retrieval
 
-- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property
+- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return NumberForArithmeticProperty<UInt32>(_objectID, property);
 }
 
-- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope);
 }
 
-- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element);
 }
 
-- (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element, error);
 }
 
-- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property
+- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property);
 }
 
-- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope);
 }
 
-- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element);
 }
 
-- (NSArray *)uintArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element, error);
 }
@@ -959,12 +959,12 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (NSNumber *)baseClassID
 {
-	return [self uintForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyBaseClass];
+	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyBaseClass];
 }
 
 - (NSNumber *)classID
 {
-	return [self uintForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyClass];
+	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyClass];
 }
 
 - (SFBAudioObject *)owner

@@ -54,27 +54,27 @@
 
 - (NSNumber *)transportType
 {
-	return [self uintForProperty:kAudioClockDevicePropertyTransportType];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyTransportType];
 }
 
 - (NSNumber *)domain
 {
-	return [self uintForProperty:kAudioClockDevicePropertyClockDomain];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyClockDomain];
 }
 
 - (NSNumber *)isAlive
 {
-	return [self uintForProperty:kAudioClockDevicePropertyDeviceIsAlive];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsAlive];
 }
 
 - (NSNumber *)isRunning
 {
-	return [self uintForProperty:kAudioClockDevicePropertyDeviceIsRunning];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsRunning];
 }
 
 - (NSNumber *)latency
 {
-	return [self uintForProperty:kAudioClockDevicePropertyLatency];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyLatency];
 }
 
 - (NSArray *)controls

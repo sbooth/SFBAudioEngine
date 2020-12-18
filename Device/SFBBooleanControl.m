@@ -16,7 +16,7 @@
 
 - (NSNumber *)value
 {
-	return [self uintForProperty:kAudioSliderControlPropertyValue];
+	return [self unsignedIntForProperty:kAudioSliderControlPropertyValue];
 }
 
 @end

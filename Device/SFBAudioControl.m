@@ -16,12 +16,12 @@
 
 - (NSNumber *)scope
 {
-	return [self uintForProperty:kAudioControlPropertyScope];
+	return [self unsignedIntForProperty:kAudioControlPropertyScope];
 }
 
 - (NSNumber *)element
 {
-	return [self uintForProperty:kAudioControlPropertyElement];
+	return [self unsignedIntForProperty:kAudioControlPropertyElement];
 }
 
 @end

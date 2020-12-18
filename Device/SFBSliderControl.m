@@ -16,12 +16,12 @@
 
 - (NSNumber *)value
 {
-	return [self uintForProperty:kAudioSliderControlPropertyValue];
+	return [self unsignedIntForProperty:kAudioSliderControlPropertyValue];
 }
 
 - (NSArray *)range
 {
-	return [self uintArrayForProperty:kAudioSliderControlPropertyRange];
+	return [self unsignedIntArrayForProperty:kAudioSliderControlPropertyRange];
 }
 
 @end

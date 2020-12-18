@@ -53,7 +53,7 @@ extension AudioObject {
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
 	public func uintForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt {
-		return try __uint(forProperty: property, in: scope, onElement: element).uintValue
+		return try __unsignedInt(forProperty: property, in: scope, onElement: element).uintValue
 	}
 
 	/// Returns the value for `property` as an array `UInt`
@@ -64,7 +64,7 @@ extension AudioObject {
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
 	public func uintsForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [UInt] {
-		return try __uintArray(forProperty: property, in: scope, onElement: element).map { $0.uintValue }
+		return try __unsignedIntArray(forProperty: property, in: scope, onElement: element).map { $0.uintValue }
 	}
 
 	/// Returns the value for `property` as a `Float`

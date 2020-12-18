@@ -33,12 +33,12 @@
 
 - (NSNumber *)driftCompensation
 {
-	return [self uintForProperty:kAudioSubDevicePropertyDriftCompensation];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation];
 }
 
 - (NSNumber *)driftCompensationQuality
 {
-	return [self uintForProperty:kAudioSubDevicePropertyDriftCompensationQuality];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality];
 }
 
 @end

@@ -129,4 +129,41 @@ extension AudioDevice {
 
 	// PREFERRED CHANNEL LAYOUT
 
+	public func foo()
+	{
+
+		let props: [AudioObjectPropertySelector] = [
+			kAudioDevicePropertyConfigurationApplication,
+			kAudioDevicePropertyDeviceUID,
+			kAudioDevicePropertyModelUID,
+			kAudioDevicePropertyTransportType,
+			kAudioDevicePropertyRelatedDevices,
+			kAudioDevicePropertyClockDomain,
+			kAudioDevicePropertyDeviceIsAlive,
+			kAudioDevicePropertyDeviceIsRunning,
+			kAudioDevicePropertyDeviceCanBeDefaultDevice,
+			kAudioDevicePropertyDeviceCanBeDefaultSystemDevice,
+			kAudioDevicePropertyLatency,
+			kAudioDevicePropertyStreams,
+			kAudioObjectPropertyControlList,
+			kAudioDevicePropertySafetyOffset,
+			kAudioDevicePropertyNominalSampleRate,
+			kAudioDevicePropertyAvailableNominalSampleRates,
+			kAudioDevicePropertyIcon,
+			kAudioDevicePropertyIsHidden,
+			kAudioDevicePropertyPreferredChannelsForStereo,
+			kAudioDevicePropertyPreferredChannelLayout
+		]
+
+		let scopes: [PropertyScope] = [.global, .input, .output, .playThrough]
+
+		for prop in props {
+			for scope in scopes {
+				let p = PropertySelector(rawValue: prop)!
+				let has = hasProperty(p, scope: scope)
+				print("hasProperty( \(p), \(scope) ) = \(has)")
+			}
+			print("\n")
+		}
+	}
 }

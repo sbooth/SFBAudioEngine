@@ -38,7 +38,7 @@
 
 - (NSNumber *)isPrivate
 {
-	return [self uintForProperty:kAudioEndPointDevicePropertyIsPrivate];
+	return [self unsignedIntForProperty:kAudioEndPointDevicePropertyIsPrivate];
 }
 
 @end
