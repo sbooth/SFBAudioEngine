@@ -9,6 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// The log for \c SFBAudioObject and subclasses
 extern os_log_t gSFBAudioObjectLog;
 
 @interface SFBAudioObject ()
@@ -23,10 +24,14 @@ extern os_log_t gSFBAudioObjectLog;
 extern "C" {
 #endif
 
+	/// Returns \c YES if the class of \c objectID is \c classID
 	BOOL SFBAudioObjectIsClass(AudioObjectID objectID, AudioClassID classID);
+	/// Returns \c YES if the class or base class of \c objectID is \c classID
 	BOOL SFBAudioObjectIsClassOrSubclassOf(AudioObjectID objectID, AudioClassID classID);
 
+	/// Returns \c YES if \c deviceID has audio buffers in the input scope
 	BOOL SFBAudioDeviceSupportsInput(AudioObjectID deviceID);
+	/// Returns \c YES if \c deviceID has audio buffers in the output scope
 	BOOL SFBAudioDeviceSupportsOutput(AudioObjectID deviceID);
 
 #ifdef __cplusplus
