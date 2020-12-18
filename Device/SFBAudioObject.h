@@ -551,6 +551,37 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return The property value
 - (nullable NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
+/// Returns the value for \c property as an \c NSURL object or \c nil on error
+/// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c CFURLRef
+/// @param property The property to query
+/// @return The property value
+- (nullable NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -urlForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as an \c NSURL object or \c nil on error
+/// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c CFURLRef
+/// @param property The property to query
+/// @param scope The desired scope
+/// @return The property value
+- (nullable NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -urlForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as an \c NSURL object or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c CFURLRef
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return The property value
+- (nullable NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -urlForProperty:inScope:onElement:error:");
+/// Returns the value for \c property as an \c NSURL object or \c nil on error
+/// @note This queries \c { property, scope, element }
+/// @note \c property must refer to a property of type \c CFURLRef
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
 /// Returns the value for \c property as an \c SFBAudioObject object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 /// @note \c propertyAddress must refer to a property of type \c AudioObjectID

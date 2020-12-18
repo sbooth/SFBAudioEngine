@@ -200,6 +200,12 @@ namespace {
 		return ObjectForCFTypeProperty<NSDictionary>(objectID, propertyAddress, error);
 	}
 
+	NSURL * _Nullable URLForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return ObjectForCFTypeProperty<NSURL>(objectID, propertyAddress, error);
+	}
+
 	SFBAudioObject * _Nullable AudioObjectForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
@@ -684,6 +690,26 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return DictionaryForProperty(_objectID, property, scope, element, error);
+}
+
+- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return URLForProperty(_objectID, property);
+}
+
+- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return URLForProperty(_objectID, property, scope);
+}
+
+- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return URLForProperty(_objectID, property, scope, element);
+}
+
+- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return URLForProperty(_objectID, property, scope, element, error);
 }
 
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property

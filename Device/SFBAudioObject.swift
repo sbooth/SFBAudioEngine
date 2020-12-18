@@ -25,7 +25,7 @@ extension AudioObject {
 		return __propertyIsSettable(property, in: scope, onElement: element)
 	}
 
-	/// Returns the value for `property` as an `UInt` or `nil` on error
+	/// Returns the value for `property` as an `UInt`
 	/// - note: `property` must refer to a property of type `UInt32`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -36,7 +36,7 @@ extension AudioObject {
 		return try __uint(forProperty: property, in: scope, onElement: element).uintValue
 	}
 
-	/// Returns the value for `property` as an array `UInt` or `nil` on error
+	/// Returns the value for `property` as an array `UInt`
 	/// - note: `property` must refer to a property of type array of `UInt32`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -47,7 +47,7 @@ extension AudioObject {
 		return try __uintArray(forProperty: property, in: scope, onElement: element).map { $0.uintValue }
 	}
 
-	/// Returns the value for `property` as a `Float` or `nil` on error
+	/// Returns the value for `property` as a `Float`
 	/// - note: `property` must refer to a property of type `Float32`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -58,7 +58,7 @@ extension AudioObject {
 		return try __float(forProperty: property, in: scope, onElement: element).floatValue
 	}
 
-	/// Returns the value for `property` as a `Double` or `nil` on error
+	/// Returns the value for `property` as a `Double`
 	/// - note: `property` must refer to a property of type `Float64`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -69,7 +69,7 @@ extension AudioObject {
 		return try __double(forProperty: property, in: scope, onElement: element).doubleValue
 	}
 
-	/// Returns the value for `property` as a `String` or `nil` on error
+	/// Returns the value for `property` as a `String`
 	/// - note: `property` must refer to a property of type `CFStringRef`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -80,7 +80,7 @@ extension AudioObject {
 		return try __string(forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Returns the value for `property` as a `Dictionary` or `nil` on error
+	/// Returns the value for `property` as a `Dictionary`
 	/// - note: `property` must refer to a property of type `CFDictionaryRef`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -91,7 +91,18 @@ extension AudioObject {
 		return try __dictionary(forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Returns the value for `property` as an `AudioObject` or `nil` on error
+	/// Returns the value for `property` as a `URL`
+	/// - note: `property` must refer to a property of type `CFURLRef`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func urlForProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> URL {
+		return try __url(forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Returns the value for `property` as an `AudioObject`
 	/// - note: `property` must refer to a property of type `AudioObjectID`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -102,7 +113,7 @@ extension AudioObject {
 		return try __forProperty(property, in: scope, onElement: element)
 	}
 
-	/// Returns the value for `property` as an array of `AudioObject` or `nil` on error
+	/// Returns the value for `property` as an array of `AudioObject`
 	/// - note: `property` must refer to a property of type array of `AudioObjectID`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -113,7 +124,7 @@ extension AudioObject {
 		return try __audioObjectArray(forProperty: property, in: scope, onElement: element)
 	}
 
-	/// Returns the value for `property` as an `AudioStreamBasicDescription` or `nil` on error
+	/// Returns the value for `property` as an `AudioStreamBasicDescription`
 	/// - note: `property` must refer to a property of type `AudioStreamBasicDescription`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -124,7 +135,7 @@ extension AudioObject {
 		return try __audioStreamBasicDescription(forProperty: property, in: scope, onElement: element).audioStreamBasicDescriptionValue()
 	}
 
-	/// Returns the value for `property` as an `AudioValueRange` or `nil` on error
+	/// Returns the value for `property` as an `AudioValueRange`
 	/// - note: `property` must refer to a property of type `AudioValueRange`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -135,7 +146,7 @@ extension AudioObject {
 		return try __audioValueRange(forProperty: property, in: scope, onElement: element).audioValueRangeValue()
 	}
 
-	/// Returns the value for `property` as an array of `AudioStreamRangedDescription` or `nil` on error
+	/// Returns the value for `property` as an array of `AudioStreamRangedDescription`
 	/// - note: `property` must refer to a property of type array of `AudioStreamRangedDescription`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -146,7 +157,7 @@ extension AudioObject {
 		return try __audioStreamRangedDescriptionArray(forProperty: property, in: scope, onElement: element).map { $0.audioStreamRangedDescriptionValue() }
 	}
 
-	/// Returns the value for `property` as an array of `AudioValueRange` or `nil` on error
+	/// Returns the value for `property` as an array of `AudioValueRange`
 	/// - note: `property` must refer to a property of type array of `AudioValueRange`
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
