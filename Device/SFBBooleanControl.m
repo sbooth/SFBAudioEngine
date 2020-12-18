@@ -16,7 +16,12 @@
 
 - (NSNumber *)value
 {
-	return [self unsignedIntForProperty:kAudioSliderControlPropertyValue];
+	return [self unsignedIntForProperty:kAudioBooleanControlPropertyValue];
+}
+
+- (BOOL)setValue:(BOOL)value error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioBooleanControlPropertyValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 @end

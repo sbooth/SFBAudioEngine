@@ -11,4 +11,10 @@ extension LevelControl {
 	func value() throws -> Bool {
 		return try getProperty(.booleanControlValue) != 0
 	}
+
+	/// Sets the control's value
+	/// - note: This corresponds to `kAudioBooleanControlPropertyValue`
+	func setValue(_ value: Bool) throws {
+		try setProperty(.booleanControlValue, UInt(value ? 1 : 0))
+	}
 }
