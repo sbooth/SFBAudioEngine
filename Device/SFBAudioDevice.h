@@ -117,10 +117,10 @@ NS_SWIFT_NAME(AudioDevice) @interface SFBAudioDevice : SFBAudioObject
 - (nullable NSNumber *)safetyOffsetInScope:(SFBAudioObjectPropertyScope)scope NS_REFINED_FOR_SWIFT;
 
 /// Returns the device sample rate or \c nil on error
-/// @note This returns \c { kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioDevicePropertyNominalSampleRate
 @property (nonatomic, nullable, readonly) NSNumber *sampleRate NS_REFINED_FOR_SWIFT;
 /// Sets the device sample rate
-/// @note This sets \c { kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioDevicePropertyNominalSampleRate
 /// @param sampleRate The desired sample rate
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the sample rate was set successfully

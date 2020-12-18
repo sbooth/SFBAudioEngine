@@ -131,7 +131,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 	return SFBAudioObjectIsClass(_objectID, kAudioSubDeviceClassID);
 }
 
-#pragma mark - Device Properties
+#pragma mark - Device Base Properties
 
 - (NSString *)configurationApplication
 {
@@ -211,23 +211,7 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 - (BOOL)setSampleRate:(double)sampleRate error:(NSError **)error
 {
 	os_log_info(gSFBAudioObjectLog, "Setting device 0x%x sample rate to %.2f Hz", _objectID, sampleRate);
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyNominalSampleRate,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	Float64 nominalSampleRate = sampleRate;
-	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(nominalSampleRate), &nominalSampleRate);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioDevicePropertyNominalSampleRate) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
-		return NO;
-	}
-
-	return YES;
+	return [self setDouble:sampleRate forProperty:kAudioDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSArray *)availableSampleRates
@@ -252,37 +236,10 @@ static SFBAudioDeviceNotifier *sAudioDeviceNotifier = nil;
 
 - (AVAudioChannelLayout *)preferredChannelLayoutInScope:(SFBAudioObjectPropertyScope)scope
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioDevicePropertyPreferredChannelLayout,
-		.mScope		= scope,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	if(!AudioObjectHasProperty(_objectID, &propertyAddress)) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectHasProperty (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') is false", SFBCStringForOSType(scope));
-		return nil;
-	}
-
-	UInt32 dataSize = 0;
-	OSStatus result = AudioObjectGetPropertyDataSize(_objectID, &propertyAddress, 0, NULL, &dataSize);
-	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyDataSize (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
-		return nil;
-	}
-
-	AudioChannelLayout *preferredChannelLayout = malloc(dataSize);
-	result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, preferredChannelLayout);
-	if(kAudioHardwareNoError != result) {
-		os_log_debug(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioDevicePropertyPreferredChannelLayout, '%{public}.4s') failed: %d", SFBCStringForOSType(scope), result);
-		free(preferredChannelLayout);
-		return nil;
-	}
-
-	AVAudioChannelLayout *channelLayout = [AVAudioChannelLayout layoutWithLayout:preferredChannelLayout];
-	free(preferredChannelLayout);
-
-	return channelLayout;
+	return [self audioChannelLayoutForProperty:kAudioDevicePropertyPreferredChannelLayout inScope:scope];
 }
+
+#pragma mark - Audio Device Properties
 
 - (BOOL)isHoggedInScope:(SFBAudioObjectPropertyScope)scope
 {
