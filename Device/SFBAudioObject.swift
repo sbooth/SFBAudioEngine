@@ -7,6 +7,8 @@ import Foundation
 
 extension AudioObject {
 
+	// MARK: - Property Information
+
 	/// Returns `true` if the underlying audio object has the specified property
 	/// - parameter property: The property to query
 	/// - parameter scope: The desired scope
@@ -24,6 +26,24 @@ extension AudioObject {
 	public func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
 		return __propertyIsSettable(property, in: scope, onElement: element)
 	}
+
+	// MARK: - Property Observation
+
+	/// Performs `block` when the specified property changes
+	/// - parameter property: The property to observe
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
+	/// - throws: An error if the property listener could not be set
+	public func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) throws {
+		try __whenProperty(property, in: scope, changesOnElement: element, perform: block)
+	}
+
+}
+
+extension AudioObject {
+
+	// MARK: - Property Retrieval
 
 	/// Returns the value for `property` as an `UInt`
 	/// - note: `property` must refer to a property of type `UInt32`
@@ -168,14 +188,43 @@ extension AudioObject {
 		return try __audioValueRangeArray(forProperty: property, in: scope, onElement: element).map { $0.audioValueRangeValue() }
 	}
 
-	/// Performs `block` when the specified property changes
-	/// - parameter property: The property to observe
+}
+
+extension AudioObject {
+
+	// MARK: - Property Setting
+
+	/// Sets the value for `property` as a `UInt`
+	/// - note: `property` must refer to a property of type `UInt32`
+	/// - parameter value: The desired property value
+	/// - parameter property: The property to set
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
-	/// - parameter block: A closure to invoke when the property changes or `nil` to remove the previous value
-	/// - throws: An error if the property listener could not be set
-	public func whenPropertyChanges(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, perform block:(() -> Void)?) throws {
-		try __whenProperty(property, in: scope, changesOnElement: element, perform: block)
+	/// - throws: An error if the property could not be set
+	public func set(_ value: UInt, property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setUnsignedInt(UInt32(value), forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Sets the value for `property` as a `Float`
+	/// - note: `property` must refer to a property of type `Float32`
+	/// - parameter value: The desired property value
+	/// - parameter property: The property to set
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func set(_ value: Float, property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setFloat(value, forProperty: property, in: scope, onElement: element)
+	}
+
+	/// Sets the value for `property` as a `Double`
+	/// - note: `property` must refer to a property of type `Float64`
+	/// - parameter value: The desired property value
+	/// - parameter property: The property to set
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func set(_ value: Double, property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setDouble(value, forProperty: property, in: scope, onElement: element)
 	}
 
 }

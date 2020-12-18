@@ -325,7 +325,11 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Returns the audio object's ID
 @property (nonatomic, readonly) AudioObjectID objectID;
 
-#pragma mark - Audio Object Property Information
+@end
+
+@interface SFBAudioObject (SFBPropertyBasics)
+
+#pragma mark - Property Information
 
 /// Returns \c YES if the underlying audio object has the specified property
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -363,7 +367,43 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return \c YES if the property is settable
 - (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
-#pragma mark - Audio Object Property Retrieval
+#pragma mark - Property Observation
+
+/// Performs a block when the specified property changes
+/// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @param property The property to observe
+/// @param block A block to invoke when the property changes or \c nil to remove the previous value
+/// @return \c YES on success
+- (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
+/// Performs a block when the specified property in a scope changes
+/// @note This observes \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @param property The property to observe
+/// @param scope The desired scope
+/// @param block A block to invoke when the property changes or \c nil to remove the previous value
+/// @return \c YES on success
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
+/// Performs a block when the specified property on an element in a scope changes
+/// @param property The property to observe
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param block A block to invoke when the property changes or \c nil to remove the previous value
+/// @return \c YES on success
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
+/// Performs a block when the specified property on an element in a scope changes
+/// @param property The property to observe
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param block A block to invoke when the property changes or \c nil to remove the previous value
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+@end
+
+/// Property Retrieval
+@interface SFBAudioObject (SFBPropertyGetters)
+
+#pragma mark - Property Retrieval
 
 /// Returns the value for \c property as an \c UInt32 or \c nil on error
 /// @note This queries \c { property, SFBAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
@@ -768,39 +808,49 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return The property value
 - (nullable NSArray<NSValue *> *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
-/// Performs a block when the specified property changes
-/// @note This observes \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-/// @param property The property to observe
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-/// @return \c YES on success
-- (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
-/// Performs a block when the specified property in a scope changes
-/// @note This observes \c { property, scope, kAudioObjectPropertyElementMaster }
-/// @param property The property to observe
-/// @param scope The desired scope
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-/// @return \c YES on success
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
-/// Performs a block when the specified property on an element in a scope changes
-/// @param property The property to observe
+@end
+
+/// Property Setting
+@interface SFBAudioObject (SFBPropertySetters)
+
+#pragma mark - Property Setting
+
+/// Sets the value for \c property as an \c unsigned \c int
+/// @note This sets \c { property, scope, element }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to set
 /// @param scope The desired scope
 /// @param element The desired element
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
-/// @return \c YES on success
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block NS_SWIFT_UNAVAILABLE("Use -whenPropertyChanges:inScope:onElement:performBlock:error:");
-/// Performs a block when the specified property on an element in a scope changes
-/// @param property The property to observe
-/// @param scope The desired scope
-/// @param element The desired element
-/// @param block A block to invoke when the property changes or \c nil to remove the previous value
 /// @param error An optional pointer to an \c NSError object to receive error information
-/// @return \c YES on success
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(_Nullable dispatch_block_t)block error:(NSError **)error NS_REFINED_FOR_SWIFT;
+/// @return \c YES if successful
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Sets the value for \c property as a \c Float32
+/// @note This sets \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float32
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setFloat:(float)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Sets the value for \c property as a \c Float64
+/// @note This sets \c { property, scope, element }
+/// @note \c property must refer to a property of type \c Float64
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setDouble:(double)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 
 /// AudioObject Properties
 @interface SFBAudioObject (SFBAudioObjectProperties)
+
+#pragma mark - AudioObject Properties
 
 /// Returns the audio object's base class or \c nil on error
 /// @note This corresponds to \c kAudioObjectPropertyBaseClass
@@ -845,6 +895,9 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 @end
 
+#pragma mark -
+
+/// \c NSValue support for \c CoreAudio structures
 @interface NSValue (SFBCoreAudioStructs)
 /// Creates a new value object containing the specified \c AudioStreamBasicDescription structure
 /// @param asbd The value for the new object
@@ -868,6 +921,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (AudioValueRange)audioValueRangeValue;
 @end
 
+/// \c NSValue support for \c pid_t
 @interface NSNumber (SFBpid)
 /// Creates a new number object containing the specified \c pid_t
 /// @param pid The value for the new object

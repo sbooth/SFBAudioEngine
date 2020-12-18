@@ -37,6 +37,14 @@ struct ::std::default_delete<AudioBufferList> {
 	void operator()(AudioBufferList *abl) const noexcept { std::free(abl); }
 };
 
+template <>
+struct ::std::default_delete<AudioChannelLayout> {
+	default_delete() = default;
+	template <class U>
+	constexpr default_delete(default_delete<U>) noexcept {}
+	void operator()(AudioChannelLayout *acl) const noexcept { std::free(acl); }
+};
+
 bool operator<(const AudioObjectPropertyAddress& lhs, const AudioObjectPropertyAddress& rhs);
 bool operator<(const AudioObjectPropertyAddress& lhs, const AudioObjectPropertyAddress& rhs)
 {
@@ -140,7 +148,25 @@ namespace {
 		return true;
 	}
 
-#pragma mark Property Information
+#pragma mark - Basic Property Setters
+
+	template <typename T>
+	bool SetFixedSizeProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const T& value, NSError **error = nullptr, UInt32 qualifierDataSize = 0, const void * _Nullable qualifierData = nullptr)
+	{
+		NSCParameterAssert(objectID != kAudioObjectUnknown);
+
+		OSStatus result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifierDataSize, qualifierData, sizeof(value), &value);
+		if(kAudioHardwareNoError != result) {
+			os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
+			if(error)
+				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return false;
+		}
+
+		return true;
+	}
+
+#pragma mark - Property Information
 
 	bool HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
 	{
@@ -160,7 +186,7 @@ namespace {
 		return isSettable;
 	}
 
-#pragma mark Typed Scalar Property Getters
+#pragma mark - Typed Scalar Property Getters
 
 	template <typename T, typename R>
 	R * _Nullable ObjectForFixedSizeProperty(AudioObjectID objectID, AudioObjectPropertyAddress propertyAddress, NSError **error, R * _Nullable (^transform)(const T& value))
@@ -233,7 +259,37 @@ namespace {
 		return ObjectForFixedSizeProperty(objectID, propertyAddress, error, transform);
 	}
 
-#pragma mark Typed Array Property Getters
+	AVAudioChannelLayout * _Nullable AudioChannelLayoutForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		std::unique_ptr<AudioChannelLayout> value;
+		if(!GetVariableSizeProperty(objectID, propertyAddress, value))
+			return nil;
+		return [AVAudioChannelLayout layoutWithLayout:value.get()];
+	}
+
+#pragma mark - Typed Scalar Property Setters
+
+	template <typename T>
+	bool SetCFTypePropertyFromObject(AudioObjectID objectID, AudioObjectPropertyAddress propertyAddress, const T *value, NSError **error = nullptr)
+	{
+		return SetFixedSizeProperty(objectID, propertyAddress, (__bridge CFTypeRef)value, error);
+	}
+
+	template <typename T, typename std::enable_if_t<std::is_arithmetic<T>::value, bool> = true>
+	bool SetArithmeticProperty(AudioObjectID objectID, const T& value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return SetFixedSizeProperty(objectID, propertyAddress, value, error);
+	}
+
+	bool SetStringForProperty(AudioObjectID objectID, NSString * value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return SetCFTypePropertyFromObject(objectID, propertyAddress, value, error);
+	}
+
+#pragma mark - Typed Array Property Getters
 
 	template <typename T, typename R>
 	NSArray<R *> * _Nullable ObjectArrayForFixedSizeProperty(AudioObjectID objectID, AudioObjectPropertyAddress propertyAddress, NSError **error, R * _Nullable (^transform)(const T& value))
@@ -540,7 +596,16 @@ static SFBAudioObject *sSystemObject = nil;
 	return _objectID;
 }
 
-#pragma mark - Audio Object Properties
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<%@ 0x%x>", self.className, _objectID];
+}
+
+@end
+
+@implementation SFBAudioObject (SFBPropertyBasics)
+
+#pragma mark - Property Information
 
 - (BOOL)hasProperty:(SFBAudioObjectPropertySelector)property
 {
@@ -571,6 +636,34 @@ static SFBAudioObject *sSystemObject = nil;
 {
 	return PropertyIsSettable(_objectID, property, element);
 }
+
+- (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property);
+}
+
+#pragma mark - Property Observation
+
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope);
+}
+
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element);
+}
+
+- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block error:(NSError **)error
+{
+	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element, error);
+}
+
+@end
+
+@implementation SFBAudioObject (SFBPropertyGetters)
+
+#pragma mark - Property Retrieval
 
 - (NSNumber *)uintForProperty:(SFBAudioObjectPropertySelector)property
 {
@@ -832,34 +925,37 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioValueRangeArrayForProperty(_objectID, property, scope, element, error);
 }
 
-- (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
+@end
+
+@implementation SFBAudioObject (SFBPropertySetters)
+
+#pragma mark - Property Setting
+
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	return AddPropertyListener(_objectID, _listenerBlocks, block, property);
+	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope, element, error);
 }
 
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
+- (BOOL)setFloat:(float)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope);
+	return SetArithmeticProperty<Float32>(_objectID, value, property, scope, element, error);
 }
 
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block
+- (BOOL)setDouble:(double)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element);
+	return SetArithmeticProperty<Float64>(_objectID, value, property, scope, element, error);
 }
 
-- (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope changesOnElement:(SFBAudioObjectPropertyElement)element performBlock:(dispatch_block_t)block error:(NSError **)error
+- (BOOL)setString:(NSString *)string forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	return AddPropertyListener(_objectID, _listenerBlocks, block, property, scope, element, error);
-}
-
-- (NSString *)description
-{
-	return [NSString stringWithFormat:@"<%@ 0x%x>", self.className, _objectID];
+	return SetStringForProperty(_objectID, string, property, scope, element, error);
 }
 
 @end
 
 @implementation SFBAudioObject (SFBAudioObjectProperties)
+
+#pragma mark - AudioObject Properties
 
 - (NSNumber *)baseClassID
 {
@@ -922,6 +1018,8 @@ static SFBAudioObject *sSystemObject = nil;
 }
 
 @end
+
+#pragma mark -
 
 @implementation NSValue (SFBCoreAudioStructs)
 
