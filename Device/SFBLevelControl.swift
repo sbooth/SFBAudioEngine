@@ -23,4 +23,16 @@ extension LevelControl {
 	public func decibelRange() throws -> AudioValueRange {
 		return try audioValueRangeForProperty(.levelControlDecibelRange)
 	}
+
+	/// Converts `scalar` to decibels and returns the converted value
+	/// - note: This corresponds to `kAudioLevelControlPropertyConvertScalarToDecibels`
+	public func convertToDecibels(_ scalar: Float) throws -> Float {
+		return try __convertToDecibels(fromScalar: scalar).floatValue
+	}
+
+	/// Converts `decibels` to scalar and returns the converted value
+	/// - note: This corresponds to `kAudioLevelControlPropertyConvertDecibelsToScalar`
+	public func convertToScalar(_ decibels: Float) throws -> Float {
+		return try __convertToScalar(fromDecibels: decibels).floatValue
+	}
 }

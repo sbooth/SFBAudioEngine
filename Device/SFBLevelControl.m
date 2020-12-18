@@ -31,17 +31,15 @@
 	return [self audioValueRangeForProperty:kAudioLevelControlPropertyDecibelRange];
 }
 
-- (NSNumber *)convertToDecibelsFromScalar:(NSNumber *)scalar error:(NSError **)error
+- (NSNumber *)convertToDecibelsFromScalar:(float)scalar error:(NSError **)error
 {
-	NSParameterAssert(scalar != nil);
-
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertScalarToDecibels,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	Float32 value = scalar.floatValue;
+	Float32 value = scalar;
 	UInt32 dataSize = sizeof(value);
 	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
 	if(result != kAudioHardwareNoError) {
@@ -54,17 +52,15 @@
 	return @(value);
 }
 
-- (NSNumber *)convertToScalarFromDecibels:(NSNumber *)decibels error:(NSError **)error
+- (NSNumber *)convertToScalarFromDecibels:(float)decibels error:(NSError **)error
 {
-	NSParameterAssert(decibels != nil);
-
 	AudioObjectPropertyAddress propertyAddress = {
 		.mSelector	= kAudioLevelControlPropertyConvertDecibelsToScalar,
 		.mScope		= kAudioObjectPropertyScopeGlobal,
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	Float32 value = decibels.floatValue;
+	Float32 value = decibels;
 	UInt32 dataSize = sizeof(value);
 	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
 	if(result != kAudioHardwareNoError) {
