@@ -263,7 +263,7 @@ namespace {
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		std::unique_ptr<AudioChannelLayout> value;
-		if(!GetVariableSizeProperty(objectID, propertyAddress, value))
+		if(!GetVariableSizeProperty(objectID, propertyAddress, value, error))
 			return nil;
 		return [AVAudioChannelLayout layoutWithLayout:value.get()];
 	}
@@ -925,6 +925,25 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioValueRangeArrayForProperty(_objectID, property, scope, element, error);
 }
 
+- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property
+{
+	return AudioChannelLayoutForProperty(_objectID, property);
+}
+
+- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return AudioChannelLayoutForProperty(_objectID, property, scope);
+}
+
+- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return AudioChannelLayoutForProperty(_objectID, property, scope, element);
+}
+
+- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return AudioChannelLayoutForProperty(_objectID, property, scope, element, error);
+}
 @end
 
 @implementation SFBAudioObject (SFBPropertySetters)

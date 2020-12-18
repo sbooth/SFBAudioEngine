@@ -188,6 +188,17 @@ extension AudioObject {
 		return try __audioValueRangeArray(forProperty: property, in: scope, onElement: element).map { $0.audioValueRangeValue() }
 	}
 
+	/// Returns the value for `property` as a wrapped `AudioChannelLayout` structure
+	/// - note: `property` must refer to a property of type array of `AudioChannelLayout`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AVAudioChannelLayout {
+		return try __audioChannelLayout(forProperty: property, in: scope, onElement: element)
+	}
+
 }
 
 extension AudioObject {
