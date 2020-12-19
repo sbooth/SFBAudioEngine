@@ -466,7 +466,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an \c NSDictionary object or \c nil on error
 /// @note \c property must refer to a property of type \c CFDictionaryRef
@@ -476,6 +476,15 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
 - (nullable NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Returns the value for \c property as an array of \c CFTypeRef objects or \c nil on error
+/// @note \c property must refer to a property of type array of \c CFArrayRef
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable NSArray *)arrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an \c NSURL object or \c nil on error
 /// @note \c property must refer to a property of type \c CFURLRef
@@ -503,7 +512,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an array of \c SFBAudioObject objects or \c nil on error
 /// @note \c property must refer to a property of type array of \c AudioObjectID
@@ -522,7 +531,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSArray<SFBAudioObject *> *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as a wrapped \c AudioStreamBasicDescription structure or \c nil on error
 /// @note \c property must refer to a property of type \c AudioStreamBasicDescription

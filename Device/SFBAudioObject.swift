@@ -111,6 +111,17 @@ extension AudioObject {
 		return try __dictionary(forProperty: property, in: scope, onElement: element)
 	}
 
+	/// Returns the value for `property` as a `Array`
+	/// - note: `property` must refer to a property of type `CFArrayRef`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [Any] {
+		return try __array(forProperty: property, in: scope, onElement: element)
+	}
+
 	/// Returns the value for `property` as a `URL`
 	/// - note: `property` must refer to a property of type `CFURLRef`
 	/// - parameter property: The property to query

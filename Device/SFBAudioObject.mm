@@ -253,6 +253,12 @@ namespace {
 		return ObjectForCFTypeProperty<NSDictionary>(objectID, propertyAddress, qualifier, error);
 	}
 
+	NSArray * _Nullable ArrayForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return ObjectForCFTypeProperty<NSArray>(objectID, propertyAddress, qualifier, error);
+	}
+
 	NSURL * _Nullable URLForProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, const SFBAudioObjectPropertyQualifier& qualifier = SFBAudioObjectPropertyQualifier(), NSError **error = nullptr)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
@@ -748,7 +754,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return StringForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
+- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
 {
 	return StringForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
@@ -756,6 +762,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return DictionaryForProperty(_objectID, property, scope, element, {}, error);
+}
+
+- (NSArray *)arrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return ArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
 - (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -768,7 +779,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
+- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
 {
 	return AudioObjectForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
@@ -778,7 +789,7 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(unsigned int)qualifierSize error:(NSError **)error
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
