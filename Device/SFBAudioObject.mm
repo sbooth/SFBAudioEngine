@@ -768,6 +768,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectForProperty(_objectID, property, scope, element, {}, error);
 }
 
+- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
+{
+	return AudioObjectForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
+}
+
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, {}, error);

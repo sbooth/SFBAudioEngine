@@ -130,7 +130,7 @@ extension AudioObject {
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
 	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> AudioObject {
-		return try __forProperty(property, in: scope, onElement: element)
+		return try __forProperty(property, in: scope, onElement: element, qualifier: nil, qualifierSize: 0)
 	}
 
 	/// Returns the value for `property` as an array of `AudioObject`
