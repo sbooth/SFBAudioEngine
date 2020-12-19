@@ -8,13 +8,13 @@ import Foundation
 extension ClockDevice {
 	/// Returns the clock device UID
 	/// - note: This corresponds to `kAudioClockDevicePropertyDeviceUID`
-	func clockDeviceUID() throws -> String {
+	public func clockDeviceUID() throws -> String {
 		return try getProperty(.clockDeviceUID)
 	}
 
 	/// Returns the transport type
 	/// - note: This corresponds to `kAudioClockDevicePropertyTransportType`
-	func transportType() throws -> AudioDevice.TransportType {
+	public func transportType() throws -> AudioDevice.TransportType {
 		return AudioDevice.TransportType(rawValue: UInt32(try getProperty(.clockDeviceTransportType) as UInt))!
 	}
 
@@ -44,7 +44,7 @@ extension ClockDevice {
 
 	/// Returns the audio controls
 	/// - note: This corresponds to `kAudioClockDevicePropertyControlList`
-	func controls() throws -> [AudioControl] {
+	public func controls() throws -> [AudioControl] {
 		return try getProperty(.clockDeviceControlList) as [AudioObject] as! [AudioControl]
 	}
 

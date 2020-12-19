@@ -14,7 +14,7 @@ extension SliderControl {
 
 	/// Sets the control's value
 	/// - note: This corresponds to `kAudioBooleanControlPropertyValue`
-	func setValue(_ value: UInt) throws {
+	public func setValue(_ value: UInt) throws {
 		try setProperty(.sliderControlValue, value)
 	}
 

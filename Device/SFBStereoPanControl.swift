@@ -14,7 +14,7 @@ extension StereoPanControl {
 
 	/// Sets the control's value
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
-	func setValue(_ value: Float) throws {
+	public func setValue(_ value: Float) throws {
 		try setProperty(.stereoPanControlValue, value)
 	}
 
