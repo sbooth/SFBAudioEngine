@@ -31,20 +31,20 @@
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	AudioObjectID clockDeviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(clockDeviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(clockDeviceUID), &clockDeviceUID, &specifierSize, &clockDeviceID);
+	AudioObjectID objectID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(objectID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(clockDeviceUID), &clockDeviceUID, &specifierSize, &objectID);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyTranslateUIDToClockDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
-	if(clockDeviceID == kAudioObjectUnknown) {
+	if(objectID == kAudioObjectUnknown) {
 		os_log_error(gSFBAudioObjectLog, "Unknown audio clock device UID: %{public}@", clockDeviceUID);
 		return nil;
 	}
 
-	return [self initWithAudioObjectID:clockDeviceID];
+	return [self initWithAudioObjectID:objectID];
 }
 
 - (NSString *)clockDeviceUID

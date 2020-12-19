@@ -31,20 +31,20 @@
 		.mElement	= kAudioObjectPropertyElementMaster
 	};
 
-	AudioObjectID deviceID = kAudioObjectUnknown;
-	UInt32 specifierSize = sizeof(deviceID);
-	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(boxUID), &boxUID, &specifierSize, &deviceID);
+	AudioObjectID objectID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(objectID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(boxUID), &boxUID, &specifierSize, &objectID);
 	if(result != kAudioHardwareNoError) {
 		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyTranslateUIDToBox) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
 		return nil;
 	}
 
-	if(deviceID == kAudioObjectUnknown) {
+	if(objectID == kAudioObjectUnknown) {
 		os_log_error(gSFBAudioObjectLog, "Unknown audio box UID: %{public}@", boxUID);
 		return nil;
 	}
 
-	return [self initWithAudioObjectID:deviceID];
+	return [self initWithAudioObjectID:objectID];
 }
 
 - (NSString *)boxUID
