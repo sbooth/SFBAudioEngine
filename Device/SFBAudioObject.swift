@@ -249,6 +249,17 @@ extension AudioObject {
 		try __setAudioStreamBasicDescription(value, forProperty: property, in: scope, onElement: element)
 	}
 
+	/// Sets the value for `property` as an `AudioObject`
+	/// - note: `property` must refer to a property of type `AudioObjectID`
+	/// - parameter property: The property to set
+	/// - parameter value: The desired property value
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - throws: An error if the property could not be set
+	public func setProperty(_ property: PropertySelector, _ value: AudioObject, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try __setAudioObject(value, forProperty: property, in: scope, onElement: element)
+	}
+
 }
 
 extension AudioObject {

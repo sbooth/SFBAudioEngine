@@ -1004,6 +1004,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return SetAudioStreamBasicDescriptionForProperty(_objectID, value, property, scope, element, error);
 }
 
+- (BOOL)setAudioObject:(SFBAudioObject *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return SetArithmeticProperty<AudioObjectID>(_objectID, value.objectID, property, scope, element, error);
+}
+
 @end
 
 @implementation SFBAudioObject (SFBAudioObjectProperties)
