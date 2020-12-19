@@ -26,19 +26,19 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (NSDictionary *)composition
+- (NSDictionary *)compositionInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)endPoints
+- (NSArray *)endpointsInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList inScope:scope onElement:element error:NULL];
 }
 
-- (NSNumber *)isPrivate
+- (NSNumber *)isPrivateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioEndPointDevicePropertyIsPrivate inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+	return [self unsignedIntForProperty:kAudioEndPointDevicePropertyIsPrivate inScope:scope onElement:element error:NULL];
 }
 
 @end

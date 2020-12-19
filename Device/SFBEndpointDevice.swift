@@ -9,19 +9,19 @@ extension EndpointDevice {
 	/// Returns the endoint device's composition
 	/// - note: This corresponds to `kAudioEndPointDevicePropertyComposition`
 	/// @note The constants for the dictionary keys are located in \c AudioHardwareBase.h
-	public func composition() throws -> [AnyHashable: Any] {
-		return try getProperty(.endpointDeviceComposition)
+	public func composition(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AnyHashable: Any] {
+		return try getProperty(.endpointDeviceComposition, scope: scope, element: element)
 	}
 
 	/// Returns the available endpoints
 	/// - note: This corresponds to `kAudioEndPointDevicePropertyEndPointList`
-	public func endpoints() throws -> [AudioDevice] {
-		return try getProperty(.endpointDeviceEndPointList) as [AudioObject] as! [AudioDevice]
+	public func endpoints(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AudioDevice] {
+		return try getProperty(.endpointDeviceEndPointList, scope: scope, element: element) as [AudioObject] as! [AudioDevice]
 	}
 
 	/// Returns the owning `pid_t` (`0` for public devices)
 	/// - note: This corresponds to `kAudioEndPointDevicePropertyIsPrivate`
-	public func isPrivate() throws -> pid_t {
-		return pid_t(try getProperty(.endpointDeviceIsPrivate) as UInt)
+	public func isPrivate(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> pid_t {
+		return pid_t(try getProperty(.endpointDeviceIsPrivate, scope: scope, element: element) as UInt)
 	}
 }
