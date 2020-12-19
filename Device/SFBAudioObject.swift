@@ -97,7 +97,20 @@ extension AudioObject {
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
 	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> String {
-		return try __string(forProperty: property, in: scope, onElement: element)
+		return try __string(forProperty: property, in: scope, onElement: element, qualifier: nil, qualifierSize: 0)
+	}
+
+	/// Returns the value for `property` as a `String`
+	/// - note: `property` must refer to a property of type `CFStringRef`
+	/// - parameter property: The property to query
+	/// - parameter scope: The desired scope
+	/// - parameter element: The desired element
+	/// - parameter qualifier: The property qualifier
+	/// - returns: The property value
+	/// - throws: An error if the property could not be retrieved
+	public func getProperty<Q>(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, qualifier: Q) throws -> String {
+		var q = qualifier
+		return try __string(forProperty: property, in: scope, onElement: element, qualifier: &q, qualifierSize: UInt32(MemoryLayout<Q>.size))
 	}
 
 	/// Returns the value for `property` as a `Dictionary`

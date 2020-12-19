@@ -534,21 +534,21 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @note \c property must refer to a property of type \c CFStringRef
 /// @param property The property to query
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:error:");
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:qualifier:qualifierSize:error:");
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
 /// @note \c property must refer to a property of type \c CFStringRef
 /// @param property The property to query
 /// @param scope The desired scope
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:error:");
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:qualifier:qualifierSize:error:");
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note \c property must refer to a property of type \c CFStringRef
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:error:");
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:qualifier:qualifierSize:error:");
 /// Returns the value for \c property as an \c NSString object or \c nil on error
 /// @note \c property must refer to a property of type \c CFStringRef
 /// @param property The property to query
@@ -556,7 +556,17 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return The property value
-- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_SWIFT_UNAVAILABLE("Use -stringForProperty:inScope:onElement:qualifier:qualifierSize:error:");
+/// Returns the value for \c property as an \c NSString object or \c nil on error
+/// @note \c property must refer to a property of type \c CFStringRef
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param qualifier An optonal pointer to a property qualifier
+/// @param qualifierSize The size, in bytes, of the data pointed to by \c qualifier
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return The property value
+- (nullable NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(nullable const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the value for \c property as an \c NSDictionary object or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
