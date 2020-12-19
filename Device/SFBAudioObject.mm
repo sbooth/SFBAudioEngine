@@ -773,6 +773,11 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
+- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element qualifier:(const void *)qualifier qualifierSize:(UInt32)qualifierSize error:(NSError **)error
+{
+	return AudioObjectArrayForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
+}
+
 - (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element, {}, error);
@@ -908,6 +913,19 @@ static SFBAudioObject *sSystemObject = nil;
 - (NSArray *)ownedObjects
 {
 	return [self audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwnedObjects inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+}
+
+- (NSArray *)ownedObjectsOfType:(NSArray *)types
+{
+	NSParameterAssert(types != nil);
+
+	std::vector<AudioClassID> classIDs;
+	classIDs.reserve(types.count);
+	for(NSNumber *type in types)
+		classIDs.push_back(type.unsignedIntValue);
+
+	UInt32 qualifierSize = (UInt32)(sizeof(AudioClassID) * classIDs.size());
+	return [self audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwnedObjects inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:&classIDs[0] qualifierSize:qualifierSize error:NULL];
 }
 
 - (NSString *)serialNumber

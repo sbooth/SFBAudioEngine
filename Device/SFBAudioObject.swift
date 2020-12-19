@@ -100,19 +100,6 @@ extension AudioObject {
 		return try __string(forProperty: property, in: scope, onElement: element, qualifier: nil, qualifierSize: 0)
 	}
 
-	/// Returns the value for `property` as a `String`
-	/// - note: `property` must refer to a property of type `CFStringRef`
-	/// - parameter property: The property to query
-	/// - parameter scope: The desired scope
-	/// - parameter element: The desired element
-	/// - parameter qualifier: The property qualifier
-	/// - returns: The property value
-	/// - throws: An error if the property could not be retrieved
-	public func getProperty<Q>(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master, qualifier: Q) throws -> String {
-		var q = qualifier
-		return try __string(forProperty: property, in: scope, onElement: element, qualifier: &q, qualifierSize: UInt32(MemoryLayout<Q>.size))
-	}
-
 	/// Returns the value for `property` as a `Dictionary`
 	/// - note: `property` must refer to a property of type `CFDictionaryRef`
 	/// - parameter property: The property to query
@@ -154,7 +141,7 @@ extension AudioObject {
 	/// - returns: The property value
 	/// - throws: An error if the property could not be retrieved
 	public func getProperty(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> [AudioObject] {
-		return try __audioObjectArray(forProperty: property, in: scope, onElement: element)
+		return try __audioObjectArray(forProperty: property, in: scope, onElement: element, qualifier: nil, qualifierSize: 0)
 	}
 
 	/// Returns the value for `property` as an `AudioStreamBasicDescription`
@@ -335,6 +322,14 @@ extension AudioObject {
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
 	func ownedObjects() throws -> [AudioObject] {
 		return try getProperty(.ownedObjects)
+	}
+
+	/// Returns the audio objects owned by this object
+	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
+	func ownedObjects(types: [UInt]) throws -> [AudioObject] {
+		let qualifier: [AudioClassID] = types.map { AudioClassID($0)  }
+		let qualifierSize: UInt32 = UInt32(MemoryLayout<AudioClassID>.size * types.count)
+		return try __audioObjectArray(forProperty: .ownedObjects, in: .global, onElement: .master, qualifier: qualifier, qualifierSize: qualifierSize)
 	}
 
 	/// Returns the audio object's serial number
