@@ -20,13 +20,13 @@ extension SelectorControl {
 
 	/// Returns the item's name
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemName`
-	public func itemName() throws -> String {
-		return try getProperty(.selectorControlItemName)
+	public func nameOfItem(_ itemID: UInt) throws -> String {
+		return try getProperty(.selectorControlItemName, qualifier: itemID)
 	}
 
 	/// Returns the item's kind
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemKind`
-	public func itemKind() throws -> String {
-		return try getProperty(.selectorControlItemKind)
+	public func kindOfItem(_ itemID: UInt) throws -> String {
+		return try getProperty(.selectorControlItemKind, qualifier: itemID)
 	}
 }

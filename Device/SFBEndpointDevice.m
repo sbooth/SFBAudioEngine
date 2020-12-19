@@ -28,17 +28,17 @@
 
 - (NSDictionary *)composition
 {
-	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition];
+	return [self dictionaryForProperty:kAudioEndPointDevicePropertyComposition inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)endPoints
 {
-	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList];
+	return [self audioObjectArrayForProperty:kAudioEndPointDevicePropertyEndPointList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)isPrivate
 {
-	return [self unsignedIntForProperty:kAudioEndPointDevicePropertyIsPrivate];
+	return [self unsignedIntForProperty:kAudioEndPointDevicePropertyIsPrivate inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 @end

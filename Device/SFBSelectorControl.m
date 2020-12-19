@@ -16,22 +16,27 @@
 
 - (NSArray *)currentItem
 {
-	return [self unsignedIntArrayForProperty:kAudioSelectorControlPropertyCurrentItem];
+	return [self unsignedIntArrayForProperty:kAudioSelectorControlPropertyCurrentItem inScope:SFBAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+}
+
+- (BOOL)setCurrentItem:(NSArray <NSNumber *> *)values error:(NSError **)error
+{
+	return [self setUnsignedIntArray:values forProperty:kAudioSelectorControlPropertyCurrentItem inScope:SFBAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSArray *)availableItems
 {
-	return [self unsignedIntArrayForProperty:kAudioSelectorControlPropertyAvailableItems];
+	return [self unsignedIntArrayForProperty:kAudioSelectorControlPropertyAvailableItems inScope:SFBAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (NSString *)itemName
+- (NSString *)nameOfItem:(UInt32)itemID
 {
-	return [self stringForProperty:kAudioSelectorControlPropertyItemName];
+	return [self stringForProperty:kAudioSelectorControlPropertyItemName inScope:SFBAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:&itemID qualifierSize:sizeof(itemID) error:NULL];
 }
 
-- (NSNumber *)itemKind
+- (NSString *)kindOfItem:(UInt32)itemID
 {
-	return [self unsignedIntForProperty:kAudioSelectorControlPropertyItemKind];
+	return [self stringForProperty:kAudioSelectorControlPropertyItemKind inScope:SFBAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:&itemID qualifierSize:sizeof(itemID) error:NULL];
 }
 
 @end

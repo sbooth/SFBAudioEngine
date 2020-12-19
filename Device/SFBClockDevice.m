@@ -12,7 +12,7 @@
 
 + (NSArray *)clockDevices
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyClockDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -49,47 +49,47 @@
 
 - (NSString *)clockDeviceUID
 {
-	return [self stringForProperty:kAudioClockDevicePropertyDeviceUID];
+	return [self stringForProperty:kAudioClockDevicePropertyDeviceUID inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)transportType
 {
-	return [self unsignedIntForProperty:kAudioClockDevicePropertyTransportType];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyTransportType inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)domain
 {
-	return [self unsignedIntForProperty:kAudioClockDevicePropertyClockDomain];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyClockDomain inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)isAlive
 {
-	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsAlive];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsAlive inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)isRunning
 {
-	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsRunning];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyDeviceIsRunning inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)latency
 {
-	return [self unsignedIntForProperty:kAudioClockDevicePropertyLatency];
+	return [self unsignedIntForProperty:kAudioClockDevicePropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)controls
 {
-	return [self audioObjectArrayForProperty:kAudioClockDevicePropertyControlList];
+	return [self audioObjectArrayForProperty:kAudioClockDevicePropertyControlList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)sampleRate
 {
-	return [self doubleForProperty:kAudioClockDevicePropertyNominalSampleRate];
+	return [self doubleForProperty:kAudioClockDevicePropertyNominalSampleRate inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)availableSampleRates
 {
-	return [self audioValueRangeArrayForProperty:kAudioClockDevicePropertyAvailableNominalSampleRates];
+	return [self audioValueRangeArrayForProperty:kAudioClockDevicePropertyAvailableNominalSampleRates inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)description

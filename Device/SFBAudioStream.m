@@ -16,32 +16,32 @@
 
 - (NSNumber *)isActiveOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyIsActive inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSNumber *)isOutputOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyDirection inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSNumber *)terminalTypeOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyTerminalType inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSNumber *)startingChannelOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyStartingChannel inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSNumber *)latencyOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self unsignedIntForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element];
+	return [self unsignedIntForProperty:kAudioStreamPropertyLatency inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyVirtualFormat];
+	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyVirtualFormat inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -51,12 +51,12 @@
 
 - (NSArray *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioStreamRangedDescriptionArrayForProperty:kAudioStreamPropertyAvailableVirtualFormats];
+	return [self audioStreamRangedDescriptionArrayForProperty:kAudioStreamPropertyAvailableVirtualFormats inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyPhysicalFormat];
+	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyPhysicalFormat inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 - (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -66,7 +66,7 @@
 
 - (NSArray *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioStreamRangedDescriptionArrayForProperty:kAudioStreamPropertyAvailablePhysicalFormats];
+	return [self audioStreamRangedDescriptionArrayForProperty:kAudioStreamPropertyAvailablePhysicalFormats inScope:kAudioObjectPropertyScopeGlobal onElement:element error:NULL];
 }
 
 @end

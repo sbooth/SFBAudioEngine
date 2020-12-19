@@ -16,7 +16,7 @@
 
 - (NSNumber *)value
 {
-	return [self unsignedIntForProperty:kAudioSliderControlPropertyValue];
+	return [self unsignedIntForProperty:kAudioSliderControlPropertyValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (BOOL)setValue:(unsigned int)value error:(NSError **)error
@@ -26,7 +26,7 @@
 
 - (NSArray *)range
 {
-	return [self unsignedIntArrayForProperty:kAudioSliderControlPropertyRange];
+	return [self unsignedIntArrayForProperty:kAudioSliderControlPropertyRange inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 @end

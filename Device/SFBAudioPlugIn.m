@@ -10,7 +10,7 @@
 
 + (NSArray *)plugIns
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyPlugInList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -21,22 +21,22 @@
 
 - (NSString *)bundleID
 {
-	return [self stringForProperty:kAudioPlugInPropertyBundleID];
+	return [self stringForProperty:kAudioPlugInPropertyBundleID inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)devices
 {
-	return [self audioObjectArrayForProperty:kAudioPlugInPropertyDeviceList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)boxes
 {
-	return [self audioObjectArrayForProperty:kAudioPlugInPropertyBoxList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyBoxList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)clockDevices
 {
-	return [self audioObjectArrayForProperty:kAudioPlugInPropertyClockDeviceList];
+	return [self audioObjectArrayForProperty:kAudioPlugInPropertyClockDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 @end

@@ -28,17 +28,17 @@
 
 - (NSNumber *)extraLatency
 {
-	return [self doubleForProperty:kAudioSubDevicePropertyExtraLatency];
+	return [self doubleForProperty:kAudioSubDevicePropertyExtraLatency inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)driftCompensation
 {
-	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)driftCompensationQuality
 {
-	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 @end

@@ -12,7 +12,7 @@
 
 + (NSArray *)boxes
 {
-	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList];
+	return [[SFBAudioObject systemObject] audioObjectArrayForProperty:kAudioHardwarePropertyBoxList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (instancetype)initWithAudioObjectID:(AudioObjectID)objectID
@@ -49,42 +49,42 @@
 
 - (NSString *)boxUID
 {
-	return [self stringForProperty:kAudioBoxPropertyBoxUID];
+	return [self stringForProperty:kAudioBoxPropertyBoxUID inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)transportType
 {
-	return [self unsignedIntForProperty:kAudioBoxPropertyTransportType];
+	return [self unsignedIntForProperty:kAudioBoxPropertyTransportType inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)hasAudio
 {
-	return [self unsignedIntForProperty:kAudioBoxPropertyHasAudio];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasAudio inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)hasVideo
 {
-	return [self unsignedIntForProperty:kAudioBoxPropertyHasVideo];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasVideo inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)hasMIDI
 {
-	return [self unsignedIntForProperty:kAudioBoxPropertyHasMIDI];
+	return [self unsignedIntForProperty:kAudioBoxPropertyHasMIDI inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)acquired
 {
-	return [self unsignedIntForProperty:kAudioBoxPropertyAcquired];
+	return [self unsignedIntForProperty:kAudioBoxPropertyAcquired inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)devices
 {
-	return [self audioObjectArrayForProperty:kAudioBoxPropertyDeviceList];
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSArray *)clockDevices
 {
-	return [self audioObjectArrayForProperty:kAudioBoxPropertyClockDeviceList];
+	return [self audioObjectArrayForProperty:kAudioBoxPropertyClockDeviceList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)description

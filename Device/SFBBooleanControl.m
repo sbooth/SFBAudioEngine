@@ -16,7 +16,7 @@
 
 - (NSNumber *)value
 {
-	return [self unsignedIntForProperty:kAudioBooleanControlPropertyValue];
+	return [self unsignedIntForProperty:kAudioBooleanControlPropertyValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (BOOL)setValue:(BOOL)value error:(NSError **)error

@@ -18,7 +18,7 @@
 
 - (NSNumber *)scalarValue
 {
-	return [self floatForProperty:kAudioLevelControlPropertyScalarValue];
+	return [self floatForProperty:kAudioLevelControlPropertyScalarValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (BOOL)setScalarValue:(float)value error:(NSError **)error
@@ -28,7 +28,7 @@
 
 - (NSNumber *)decibelValue
 {
-	return [self floatForProperty:kAudioLevelControlPropertyDecibelValue];
+	return [self floatForProperty:kAudioLevelControlPropertyDecibelValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (BOOL)setDecibelValue:(float)value error:(NSError **)error
@@ -38,7 +38,7 @@
 
 - (NSValue *)decibelRange
 {
-	return [self audioValueRangeForProperty:kAudioLevelControlPropertyDecibelRange];
+	return [self audioValueRangeForProperty:kAudioLevelControlPropertyDecibelRange inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)convertToDecibelsFromScalar:(float)scalar error:(NSError **)error
