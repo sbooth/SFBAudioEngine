@@ -60,6 +60,13 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
 /// @note The return value contains a wrapped \c AudioStreamBasicDescription structure
 - (nullable NSValue *)virtualFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets the virtual format
+/// @note This corresponds to \c kAudioStreamPropertyVirtualFormat
+/// @param value The desired value
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns the available virtual formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailableVirtualFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures
@@ -67,6 +74,13 @@ NS_SWIFT_NAME(AudioStream) @interface SFBAudioStream : SFBAudioObject
 /// Returns the physical format or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
 - (nullable NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// Sets the physical format
+/// @note This corresponds to \c kAudioStreamPropertyPhysicalFormat
+/// @param value The desired value
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns the available physical formats or \c nil on error
 /// @note This corresponds to \c kAudioStreamPropertyAvailablePhysicalFormats
 /// @note The return value contains an array of wrapped \c AudioStreamRangedDescription structures

@@ -54,6 +54,12 @@ extension AudioStream {
 		return try getProperty(.streamVirtualFormat, scope: .global, element: element)
 	}
 
+	/// Sets the virtual format
+	/// - note: This corresponds to `kAudioStreamPropertyVirtualFormat`
+	public func setVirtualFormat(_ value: AudioStreamBasicDescription, _ element: PropertyElement = .master) throws {
+		return try setProperty(.streamVirtualFormat, value)
+	}
+
 	/// Returns the available virtual formats
 	/// - note: This corresponds to `kAudioStreamPropertyAvailableVirtualFormats`
 	/// - parameter element: The desired element
@@ -68,6 +74,12 @@ extension AudioStream {
 	/// - returns: The physical format
 	public func physicalFormat(_ element: PropertyElement = .master) throws -> AudioStreamBasicDescription {
 		return try getProperty(.streamPhysicalFormat, scope: .global, element: element)
+	}
+
+	/// Sets the physical format
+	/// - note: This corresponds to `kAudioStreamPropertyPhysicalFormat`
+	public func setPhysicalFormat(_ value: AudioStreamBasicDescription, _ element: PropertyElement = .master) throws {
+		return try setProperty(.streamPhysicalFormat, value)
 	}
 
 	/// Returns the available physical formats

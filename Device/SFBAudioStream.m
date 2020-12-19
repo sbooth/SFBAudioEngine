@@ -44,6 +44,11 @@
 	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyVirtualFormat];
 }
 
+- (BOOL)setVirtualFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setAudioStreamBasicDescription:value forProperty:kAudioStreamPropertyVirtualFormat inScope:kAudioObjectPropertyScopeGlobal onElement:element error:error];
+}
+
 - (NSArray *)availableVirtualFormatsOnElement:(SFBAudioObjectPropertyElement)element
 {
 	return [self audioStreamRangedDescriptionArrayForProperty:kAudioStreamPropertyAvailableVirtualFormats];
@@ -52,6 +57,11 @@
 - (NSValue *)physicalFormatOnElement:(SFBAudioObjectPropertyElement)element
 {
 	return [self audioStreamBasicDescriptionForProperty:kAudioStreamPropertyPhysicalFormat];
+}
+
+- (BOOL)setPhysicalFormat:(AudioStreamBasicDescription)value onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return [self setAudioStreamBasicDescription:value forProperty:kAudioStreamPropertyPhysicalFormat inScope:kAudioObjectPropertyScopeGlobal onElement:element error:error];
 }
 
 - (NSArray *)availablePhysicalFormatsOnElement:(SFBAudioObjectPropertyElement)element
