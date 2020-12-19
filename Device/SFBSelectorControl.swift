@@ -21,12 +21,14 @@ extension SelectorControl {
 	/// Returns the item's name
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemName`
 	public func nameOfItem(_ itemID: UInt) throws -> String {
-		return try getProperty(.selectorControlItemName, qualifier: itemID)
+		var qualifier: UInt32 = UInt32(itemID)
+		return try __string(forProperty: .selectorControlItemName, in: .global, onElement: .master, qualifier: &qualifier, qualifierSize: UInt32(MemoryLayout<UInt32>.size))
 	}
 
 	/// Returns the item's kind
 	/// - note: This corresponds to `kAudioSelectorControlPropertyItemKind`
 	public func kindOfItem(_ itemID: UInt) throws -> String {
-		return try getProperty(.selectorControlItemKind, qualifier: itemID)
+		var qualifier: UInt32 = UInt32(itemID)
+		return try __string(forProperty: .selectorControlItemKind, in: .global, onElement: .master, qualifier: &qualifier, qualifierSize: UInt32(MemoryLayout<UInt32>.size))
 	}
 }
