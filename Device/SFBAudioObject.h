@@ -859,6 +859,16 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return \c YES if successful
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
+/// Sets the value for \c property as an array of \c unsigned \c int
+/// @note \c property must refer to a property of type array of \c UInt32
+/// @param value The desired value
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setUnsignedIntArray:(NSArray<NSNumber *> *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
 /// Sets the value for \c property as a \c float
 /// @note \c property must refer to a property of type \c Float32
 /// @param value The desired value

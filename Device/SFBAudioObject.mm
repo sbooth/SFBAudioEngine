@@ -166,6 +166,23 @@ namespace {
 		return true;
 	}
 
+	template <typename T>
+	bool SetArrayProperty(AudioObjectID objectID, const AudioObjectPropertyAddress& propertyAddress, const std::vector<T>& values, NSError **error = nullptr, UInt32 qualifierDataSize = 0, const void * _Nullable qualifierData = nullptr)
+	{
+		NSCParameterAssert(objectID != kAudioObjectUnknown);
+
+		UInt32 dataSize = (UInt32)(sizeof(T) * values.size());
+		OSStatus result = AudioObjectSetPropertyData(objectID, &propertyAddress, qualifierDataSize, qualifierData, dataSize, &values[0]);
+		if(kAudioHardwareNoError != result) {
+			os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (0x%x, '%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", objectID, SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
+			if(error)
+				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return false;
+		}
+
+		return true;
+	}
+
 #pragma mark - Property Information
 
 	bool HasProperty(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
@@ -346,6 +363,26 @@ namespace {
 			return [NSValue valueWithAudioValueRange:value];
 		};
 		return ObjectArrayForFixedSizeProperty(objectID, propertyAddress, error, transform);
+	}
+
+#pragma mark - Typed Array Property Setters
+
+	template <typename T, typename std::enable_if_t<std::is_arithmetic<T>::value, bool> = true>
+	bool SetArithmeticArrayForProperty(AudioObjectID objectID, NSArray<NSNumber *> *values, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		std::vector<T> v;
+		v.reserve(values.count);
+		for(NSNumber *value in values)
+			v.push_back(_Generic((T)0,
+								 bool:			value.boolValue,
+								 char: 			value.charValue, 		unsigned char: 			value.unsignedCharValue,
+								 short: 		value.shortValue, 		unsigned short: 		value.unsignedShortValue,
+								 int: 			value.intValue, 		unsigned int: 			value.unsignedIntValue,
+								 long: 			value.longValue, 		unsigned long: 			value.unsignedLongValue,
+								 long long: 	value.longLongValue, 	unsigned long long: 	value.unsignedLongLongValue,
+								 float:			value.floatValue,		double:					value.doubleValue));
+		return SetArrayProperty(objectID, propertyAddress, v, error);
 	}
 
 #pragma mark - Audio Object Helpers
@@ -982,6 +1019,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope, element, error);
+}
+
+- (BOOL)setUnsignedIntArray:(NSArray<NSNumber *> *)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return SetArithmeticArrayForProperty<UInt32>(_objectID, value, property, scope, element, error);
 }
 
 - (BOOL)setFloat:(float)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
