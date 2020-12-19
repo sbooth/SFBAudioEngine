@@ -19,6 +19,11 @@
 	return [self floatForProperty:kAudioStereoPanControlPropertyValue];
 }
 
+- (BOOL)setValue:(float)value error:(NSError **)error
+{
+	return [self setFloat:value forProperty:kAudioStereoPanControlPropertyValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+}
+
 - (NSArray *)panningChannels
 {
 	return [self unsignedIntArrayForProperty:kAudioStereoPanControlPropertyPanningChannels];

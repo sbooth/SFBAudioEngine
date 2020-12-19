@@ -12,6 +12,12 @@ extension StereoPanControl {
 		return try getProperty(.stereoPanControlValue)
 	}
 
+	/// Sets the control's value
+	/// - note: This corresponds to `kAudioStereoPanControlPropertyValue`
+	func setValue(_ value: Float) throws {
+		try setProperty(.stereoPanControlValue, value)
+	}
+
 	/// Returns the control's panning channels
 	/// - note: This corresponds to `kAudioStereoPanControlPropertyPanningChannels`
 	public func panningChannels() throws -> [UInt] {
