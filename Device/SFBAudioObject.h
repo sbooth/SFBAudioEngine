@@ -829,18 +829,21 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// Sets the value for \c property as an \c unsigned \c int
 /// @note This sets \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 /// @note \c property must refer to a property of type \c UInt32
+/// @param value The desired value
 /// @param property The property to set
 /// @return \c YES if successful
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
 /// Sets the value for \c property as an \c unsigned \c int
 /// @note This sets \c { property, scope, kAudioObjectPropertyElementMaster }
 /// @note \c property must refer to a property of type \c UInt32
+/// @param value The desired value
 /// @param property The property to set
 /// @param scope The desired scope
 /// @return \c YES if successful
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
 /// Sets the value for \c property as an \c unsigned \c int
 /// @note \c property must refer to a property of type \c UInt32
+/// @param value The desired value
 /// @param property The property to set
 /// @param scope The desired scope
 /// @param element The desired element
@@ -848,6 +851,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
 /// Sets the value for \c property as an \c unsigned \c int
 /// @note \c property must refer to a property of type \c UInt32
+/// @param value The desired value
 /// @param property The property to set
 /// @param scope The desired scope
 /// @param element The desired element
@@ -857,6 +861,7 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 /// Sets the value for \c property as a \c Float32
 /// @note \c property must refer to a property of type \c Float32
+/// @param value The desired value
 /// @param property The property to set
 /// @param scope The desired scope
 /// @param element The desired element
@@ -866,12 +871,23 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 
 /// Sets the value for \c property as a \c Float64
 /// @note \c property must refer to a property of type \c Float64
+/// @param value The desired value
 /// @param property The property to set
 /// @param scope The desired scope
 /// @param element The desired element
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if successful
 - (BOOL)setDouble:(double)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
+
+/// Sets the value for \c property as an \c AudioStreamBasicDescription
+/// @note \c property must refer to a property of type \c AudioStreamBasicDescription
+/// @param value The desired value
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setAudioStreamBasicDescription:(AudioStreamBasicDescription)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 

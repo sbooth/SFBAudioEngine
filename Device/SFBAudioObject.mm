@@ -285,10 +285,16 @@ namespace {
 		return SetFixedSizeProperty(objectID, propertyAddress, value, error);
 	}
 
-	bool SetStringForProperty(AudioObjectID objectID, NSString * value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	bool SetStringForProperty(AudioObjectID objectID, NSString *value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		return SetCFTypePropertyFromObject(objectID, propertyAddress, value, error);
+	}
+
+	bool SetAudioStreamBasicDescriptionForProperty(AudioObjectID objectID, const AudioStreamBasicDescription& value, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
+	{
+		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
+		return SetFixedSizeProperty(objectID, propertyAddress, value, error);
 	}
 
 #pragma mark - Typed Array Property Getters
@@ -991,6 +997,11 @@ static SFBAudioObject *sSystemObject = nil;
 - (BOOL)setString:(NSString *)string forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return SetStringForProperty(_objectID, string, property, scope, element, error);
+}
+
+- (BOOL)setAudioStreamBasicDescription:(AudioStreamBasicDescription)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return SetAudioStreamBasicDescriptionForProperty(_objectID, value, property, scope, element, error);
 }
 
 @end
