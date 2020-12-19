@@ -27,75 +27,45 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (NSArray *)allSubdevices
+- (NSArray *)allSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyFullSubDeviceList,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFArrayRef fullSubDeviceList = NULL;
-	UInt32 dataSize = sizeof(fullSubDeviceList);
-	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &fullSubDeviceList);
-	if(result != kAudioHardwareNoError) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioAggregateDevicePropertyFullSubDeviceList) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		return nil;
-	}
-
-	return (__bridge_transfer NSArray *)fullSubDeviceList;
+	return [self arrayForProperty:kAudioAggregateDevicePropertyFullSubDeviceList inScope:scope onElement:element error:NULL];
 }
 
-- (NSArray *)activeSubdevices
+- (NSArray *)activeSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList];
+	return [self audioObjectArrayForProperty:kAudioAggregateDevicePropertyActiveSubDeviceList inScope:scope onElement:element error:NULL];
 }
 
-- (NSDictionary *)composition
+- (NSDictionary *)compositionInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [self dictionaryForProperty:kAudioAggregateDevicePropertyComposition];
+	return [self dictionaryForProperty:kAudioAggregateDevicePropertyComposition inScope:scope onElement:element error:NULL];
 }
 
-- (SFBAudioDevice *)masterSubdevice
+- (SFBAudioDevice *)masterSubdeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return (SFBAudioDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyMasterSubDevice];
+	return (SFBAudioDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyMasterSubDevice inScope:scope onElement:element error:NULL];
 }
 
-- (SFBClockDevice *)clockDevice
+- (SFBClockDevice *)clockDeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice];
+	return (SFBClockDevice *)[self audioObjectForProperty:kAudioAggregateDevicePropertyClockDevice inScope:scope onElement:element error:NULL];
 }
 
-- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice error:(NSError **)error
+- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
-	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device to %{public}@", _objectID, clockDevice.clockDeviceUID ?: @"nil");
-
-	AudioObjectPropertyAddress propertyAddress = {
-		.mSelector	= kAudioAggregateDevicePropertyClockDevice,
-		.mScope		= kAudioObjectPropertyScopeGlobal,
-		.mElement	= kAudioObjectPropertyElementMaster
-	};
-
-	CFStringRef clockDeviceUID = (__bridge CFStringRef)clockDevice.clockDeviceUID;
-	OSStatus result = AudioObjectSetPropertyData(_objectID, &propertyAddress, 0, NULL, sizeof(clockDeviceUID), &clockDeviceUID);
-	if(kAudioHardwareNoError != result) {
-		os_log_error(gSFBAudioObjectLog, "AudioObjectSetPropertyData (kAudioAggregateDevicePropertyClockDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
-		if(error)
-			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
-		return NO;
-	}
-
-	return YES;
+	os_log_info(gSFBAudioObjectLog, "Setting aggregate device 0x%x clock device ('%{public}.4s', %u) to %{public}@", _objectID, SFBCStringForOSType(scope), element, clockDevice.clockDeviceUID ?: @"nil");
+	return [self setAudioObject:clockDevice forProperty:kAudioAggregateDevicePropertyClockDevice inScope:scope onElement:element error:error];
 }
 
-- (BOOL)isPrivate
+- (NSNumber *)isPrivateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self.composition objectForKey:@ kAudioAggregateDeviceIsPrivateKey] boolValue];
+	return [[self compositionInScope:scope onElement:element] objectForKey:@ kAudioAggregateDeviceIsPrivateKey];
 }
 
-- (BOOL)isStacked
+- (NSNumber *)isStackedInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return [[self.composition objectForKey:@ kAudioAggregateDeviceIsStackedKey] boolValue];
+	return [[self compositionInScope:scope onElement:element] objectForKey:@ kAudioAggregateDeviceIsStackedKey];
 }
 
 @end

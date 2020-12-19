@@ -17,40 +17,40 @@ NS_SWIFT_NAME(AggregateDevice) @interface SFBAggregateDevice : SFBAudioDevice
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAggregateDevice *> *aggregateDevices;
 
 /// Returns the UIDs of all subdevices in the aggregate device, active or inactive, or \c nil on error
-/// @note This returns \c { kAudioAggregateDevicePropertyFullSubDeviceList, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, nullable, readonly) NSArray <NSString *> * allSubdevices;
+/// @note This corresponds to \c kAudioAggregateDevicePropertyFullSubDeviceList
+- (nullable NSArray <NSString *> *)allSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Returns the active subdevices in the aggregate device or \c nil on error
-/// @note This returns \c { kAudioAggregateDevicePropertyActiveSubDeviceList, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, nullable, readonly) NSArray <SFBAudioDevice *> * activeSubdevices;
+/// @note This corresponds to \c kAudioAggregateDevicePropertyActiveSubDeviceList
+- (nullable NSArray <SFBAudioDevice *> *)activeSubdevicesInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 /// Returns the aggregate device's composition \c nil on error
-/// @note This returns \c { kAudioAggregateDevicePropertyComposition, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioAggregateDevicePropertyComposition
 /// @note The constants for the dictionary keys are located in \c AudioHardware.h
-@property (nonatomic, nullable, readonly) NSDictionary * composition;
+- (nullable NSDictionary *) compositionInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 /// Returns the aggregate device's master subdevice or \c nil on error
-/// @note This returns \c { kAudioAggregateDevicePropertyMasterSubDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, nullable, readonly) SFBAudioDevice * masterSubdevice;
+/// @note This corresponds to \c kAudioAggregateDevicePropertyMasterSubDevice
+- (nullable SFBAudioDevice *) masterSubdeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 /// The aggregate device's clock device or \c nil if none
-/// @note This returns \c { kAudioAggregateDevicePropertyClockDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
-@property (nonatomic, nullable, readonly) SFBClockDevice * clockDevice;
+/// @note This corresponds to \c kAudioAggregateDevicePropertyClockDevice
+- (nullable SFBClockDevice *) clockDeviceInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 /// Sets the aggregate device's clock device
-/// @note This sets \c { kAudioAggregateDevicePropertyClockDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note This corresponds to \c kAudioAggregateDevicePropertyClockDevice
 /// @param clockDevice The desired clock device
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES if the clock device was set successfully
-- (BOOL)setClockDevice:(nullable SFBClockDevice *)clockDevice error:(NSError **)error;
+- (BOOL)setClockDevice:(SFBClockDevice *)clockDevice inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Convenience Accessors
 
 /// Returns \c YES if the aggregate device is private
 /// @note This returns the value of \c kAudioAggregateDeviceIsPrivateKey from \c self.composition
-@property (nonatomic, readonly) BOOL isPrivate;
+- (nullable NSNumber *)isPrivateInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 /// Returns \c YES if the aggregate device is stacked
 /// @note This returns the value of \c kAudioAggregateDeviceIsStackedKey from \c self.composition
-@property (nonatomic, readonly) BOOL isStacked;
+- (nullable NSNumber *)isStackedInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
 @end
 
