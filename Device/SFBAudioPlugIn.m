@@ -6,6 +6,7 @@
 #import "SFBAudioPlugIn.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBAggregateDevice.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBAudioPlugIn
@@ -45,6 +46,36 @@
 	}
 
 	return [self initWithAudioObjectID:objectID];
+}
+
+- (SFBAggregateDevice *)createAggregateDevice:(NSDictionary *)composition error:(NSError **)error
+{
+	NSParameterAssert(composition != nil);
+	CFDictionaryRef qualifier = (__bridge CFDictionaryRef)composition;
+	return (SFBAggregateDevice *)[self audioObjectForProperty:kAudioPlugInCreateAggregateDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
+}
+
+- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)aggregateDevice error:(NSError **)error
+{
+	NSParameterAssert(aggregateDevice != nil);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioPlugInDestroyAggregateDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID value = aggregateDevice.objectID;
+	UInt32 dataSize = sizeof(value);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioPlugInDestroyAggregateDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
 }
 
 - (NSString *)bundleID

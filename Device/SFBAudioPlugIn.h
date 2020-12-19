@@ -5,7 +5,7 @@
 
 #import <SFBAudioEngine/SFBAudioObject.h>
 
-@class SFBAudioDevice, SFBAudioBox, SFBClockDevice;
+@class SFBAggregateDevice, SFBAudioDevice, SFBAudioBox, SFBClockDevice;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,6 +21,20 @@ NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 /// @param bundleID The desired bundle ID
 /// @return An initialized \c SFBAudioPlugIn object or \c nil if \c bundleID is invalid or unknown
 - (nullable instancetype)initWithBundleID:(NSString *)bundleID;
+
+/// Creates and returns an initialized \c SFBAggregateDevice object or \c nil on error
+/// @note This corresponds to \c kAudioPlugInCreateAggregateDevice
+/// @note The constants for the dictionary keys are located in \c AudioHardware.h
+/// @param composition The composition of the new aggregate device
+/// @param error An optional pointer to an \c NSError object to receive error information
+- (nullable SFBAggregateDevice *)createAggregateDevice:(NSDictionary *)composition error:(NSError **)error;
+
+/// Destroys an aggregate device
+/// @note This corresponds to \c kAudioPlugInDestroyAggregateDevice
+/// @param aggregateDevice The aggregate device to destroy
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES on success, \c NO otherwise
+- (BOOL)destroyAggregateDevice:(SFBAggregateDevice *)aggregateDevice error:(NSError **)error NS_SWIFT_NAME(destroyAggregateDevice(_:));
 
 /// Returns the bundle ID or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyBundleID
