@@ -723,39 +723,9 @@ static SFBAudioObject *sSystemObject = nil;
 
 #pragma mark - Property Retrieval
 
-- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return NumberForArithmeticProperty<UInt32>(_objectID, property);
-}
-
-- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope);
-}
-
-- (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element);
-}
-
 - (NSNumber *)unsignedIntForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return NumberForArithmeticProperty<UInt32>(_objectID, property, scope, element, {}, error);
-}
-
-- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property);
-}
-
-- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope);
-}
-
-- (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element);
 }
 
 - (NSArray *)unsignedIntArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -763,59 +733,14 @@ static SFBAudioObject *sSystemObject = nil;
 	return NumberArrayForArithmeticProperty<UInt32>(_objectID, property, scope, element, {}, error);
 }
 
-- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return NumberForArithmeticProperty<Float32>(_objectID, property);
-}
-
-- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return NumberForArithmeticProperty<Float32>(_objectID, property, scope);
-}
-
-- (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return NumberForArithmeticProperty<Float32>(_objectID, property, scope, element);
-}
-
 - (NSNumber *)floatForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return NumberForArithmeticProperty<Float32>(_objectID, property, scope, element, {}, error);
 }
 
-- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return NumberForArithmeticProperty<Float64>(_objectID, property);
-}
-
-- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return NumberForArithmeticProperty<Float64>(_objectID, property, scope);
-}
-
-- (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return NumberForArithmeticProperty<Float64>(_objectID, property, scope, element);
-}
-
 - (NSNumber *)doubleForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return NumberForArithmeticProperty<Float64>(_objectID, property, scope, element, {}, error);
-}
-
-- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return StringForProperty(_objectID, property);
-}
-
-- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return StringForProperty(_objectID, property, scope);
-}
-
-- (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return StringForProperty(_objectID, property, scope, element);
 }
 
 - (NSString *)stringForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -828,39 +753,9 @@ static SFBAudioObject *sSystemObject = nil;
 	return StringForProperty(_objectID, property, scope, element, { qualifier, qualifierSize }, error);
 }
 
-- (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return DictionaryForProperty(_objectID, property);
-}
-
-- (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return DictionaryForProperty(_objectID, property, scope);
-}
-
-- (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return DictionaryForProperty(_objectID, property, scope, element);
-}
-
 - (NSDictionary *)dictionaryForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return DictionaryForProperty(_objectID, property, scope, element, {}, error);
-}
-
-- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return URLForProperty(_objectID, property);
-}
-
-- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return URLForProperty(_objectID, property, scope);
-}
-
-- (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return URLForProperty(_objectID, property, scope, element);
 }
 
 - (NSURL *)urlForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -868,39 +763,9 @@ static SFBAudioObject *sSystemObject = nil;
 	return URLForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioObjectForProperty(_objectID, property);
-}
-
-- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioObjectForProperty(_objectID, property, scope);
-}
-
-- (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioObjectForProperty(_objectID, property, scope, element);
-}
-
 - (SFBAudioObject *)audioObjectForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioObjectForProperty(_objectID, property, scope, element, {}, error);
-}
-
-- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioObjectArrayForProperty(_objectID, property);
-}
-
-- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioObjectArrayForProperty(_objectID, property, scope);
-}
-
-- (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioObjectArrayForProperty(_objectID, property, scope, element);
 }
 
 - (NSArray *)audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -908,39 +773,9 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioObjectArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioStreamBasicDescriptionForProperty(_objectID, property);
-}
-
-- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope);
-}
-
-- (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element);
-}
-
 - (NSValue *)audioStreamBasicDescriptionForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioStreamBasicDescriptionForProperty(_objectID, property, scope, element, {}, error);
-}
-
-- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property);
-}
-
-- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope);
-}
-
-- (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element);
 }
 
 - (NSArray *)audioStreamRangedDescriptionArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -948,59 +783,14 @@ static SFBAudioObject *sSystemObject = nil;
 	return AudioStreamRangedDescriptionArrayForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioValueRangeForProperty(_objectID, property);
-}
-
-- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioValueRangeForProperty(_objectID, property, scope);
-}
-
-- (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioValueRangeForProperty(_objectID, property, scope, element);
-}
-
 - (NSValue *)audioValueRangeForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioValueRangeForProperty(_objectID, property, scope, element, {}, error);
 }
 
-- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioValueRangeArrayForProperty(_objectID, property);
-}
-
-- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioValueRangeArrayForProperty(_objectID, property, scope);
-}
-
-- (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioValueRangeArrayForProperty(_objectID, property, scope, element);
-}
-
 - (NSArray *)audioValueRangeArrayForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
 	return AudioValueRangeArrayForProperty(_objectID, property, scope, element, {}, error);
-}
-
-- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property
-{
-	return AudioChannelLayoutForProperty(_objectID, property);
-}
-
-- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property  inScope:(SFBAudioObjectPropertyScope)scope
-{
-	return AudioChannelLayoutForProperty(_objectID, property, scope);
-}
-
-- (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
-{
-	return AudioChannelLayoutForProperty(_objectID, property, scope, element);
 }
 
 - (AVAudioChannelLayout *)audioChannelLayoutForProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
@@ -1072,62 +862,62 @@ static SFBAudioObject *sSystemObject = nil;
 
 - (NSNumber *)baseClassID
 {
-	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyBaseClass];
+	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyBaseClass inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSNumber *)classID
 {
-	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyClass];
+	return [self unsignedIntForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyClass inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (SFBAudioObject *)owner
 {
-	return [self audioObjectForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwner];
+	return [self audioObjectForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwner inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)name
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyName];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)modelName
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyModelName];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyModelName inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)manufacturer
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyManufacturer];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyManufacturer inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)nameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:scope onElement:element];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementName inScope:scope onElement:element error:NULL];
 }
 
 - (NSString *)categoryNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:scope onElement:element];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementCategoryName inScope:scope onElement:element error:NULL];
 }
 
 - (NSString *)numberNameOfElement:(SFBAudioObjectPropertyElement)element inScope:(SFBAudioObjectPropertyScope)scope
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementNumberName inScope:scope onElement:element];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyElementNumberName inScope:scope onElement:element error:NULL];
 }
 
 - (NSArray *)ownedObjects
 {
-	return [self audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwnedObjects];
+	return [self audioObjectArrayForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyOwnedObjects inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)serialNumber
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertySerialNumber];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertySerialNumber inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 - (NSString *)firmwareVersion
 {
-	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyFirmwareVersion];
+	return [self stringForProperty:(SFBAudioObjectPropertySelector)kAudioObjectPropertyFirmwareVersion inScope:(SFBAudioObjectPropertyScope)kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
 @end
