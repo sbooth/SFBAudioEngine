@@ -8,32 +8,32 @@ import Foundation
 extension Subdevice {
 	/// Returns the extra latency
 	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
-	func extraLatency() throws -> Double {
-		return try getProperty(.subdeviceExtraLatency)
+	func extraLatency(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> Double {
+		return try getProperty(.subdeviceExtraLatency, scope: scope, element: element)
 	}
 
 	/// Returns the drift compensation
 	/// - note: This corresponds to `kAudioSubDevicePropertyDriftCompensation`
-	func driftCompensation() throws -> Bool {
-		return try getProperty(.subdeviceDriftCompensation) != 0
+	func driftCompensation(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> Bool {
+		return try getProperty(.subdeviceDriftCompensation, scope: scope, element: element) != 0
 	}
 
 	/// Sets the drift compensation
 	/// - note: This corresponds to `kAudioSubDevicePropertyDriftCompensation`
-	func setDriftCompensation(_ value: Bool) throws {
-		try setProperty(.subdeviceDriftCompensation, UInt(value ? 1 : 0))
+	func setDriftCompensation(_ value: Bool, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try setProperty(.subdeviceDriftCompensation, UInt(value ? 1 : 0), scope: scope, element: element)
 	}
 
 	/// Returns the drift compensation quality
 	/// - note: This corresponds to `kAudioSubDevicePropertyDriftQuality`
-	func driftCompensationQuality() throws -> UInt {
-		return try getProperty(.subdeviceDriftCompensationQuality)
+	func driftCompensationQuality(_ scope: PropertyScope = .global, element: PropertyElement = .master) throws -> UInt {
+		return try getProperty(.subdeviceDriftCompensationQuality, scope: scope, element: element)
 	}
 
 	/// Sets the drift compensation quality
 	/// - note: This corresponds to `kAudioSubDevicePropertyDriftQuality`
-	func setDriftCompensationQuality(_ value: UInt) throws {
-		try setProperty(.subdeviceDriftCompensationQuality, value)
+	func setDriftCompensationQuality(_ value: UInt, scope: PropertyScope = .global, element: PropertyElement = .master) throws {
+		try setProperty(.subdeviceDriftCompensationQuality, value, scope: scope, element: element)
 	}
 }
 
