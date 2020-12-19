@@ -6,6 +6,8 @@
 #import "SFBAudioTransportManager.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBCStringForOSType.h"
+
 @implementation SFBAudioTransportManager
 
 + (NSArray *)transportManagers
@@ -17,6 +19,32 @@
 {
 	NSParameterAssert(SFBAudioObjectIsClass(objectID, kAudioTransportManagerClassID));
 	return [super initWithAudioObjectID:objectID];
+}
+
+- (instancetype)initWithBundleID:(NSString *)bundleID
+{
+	NSParameterAssert(bundleID != nil);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyTranslateBundleIDToTransportManager,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID objectID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(objectID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(bundleID), &bundleID, &specifierSize, &objectID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyTranslateBundleIDToTransportManager) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	if(objectID == kAudioObjectUnknown) {
+		os_log_error(gSFBAudioObjectLog, "Unknown audio transport manager bundle ID: %{public}@", bundleID);
+		return nil;
+	}
+
+	return [self initWithAudioObjectID:objectID];
 }
 
 - (NSArray *)endPoints

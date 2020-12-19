@@ -17,6 +17,11 @@ NS_SWIFT_NAME(AudioPlugIn) @interface SFBAudioPlugIn : SFBAudioObject
 /// @note This corresponds to \c kAudioHardwarePropertyPlugInList on the object \c kAudioObjectSystemObject
 @property (class, nonatomic, nullable, readonly) NSArray<SFBAudioPlugIn *> *plugIns;
 
+/// Returns an initialized \c SFBAudioPlugIn object with the specified bundle ID
+/// @param bundleID The desired bundle ID
+/// @return An initialized \c SFBAudioPlugIn object or \c nil if \c bundleID is invalid or unknown
+- (nullable instancetype)initWithBundleID:(NSString *)bundleID;
+
 /// Returns the bundle ID or \c nil on error
 /// @note This corresponds to \c kAudioPlugInPropertyBundleID
 @property (nonatomic, nullable, readonly) NSString *bundleID NS_REFINED_FOR_SWIFT;

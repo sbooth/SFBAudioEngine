@@ -6,6 +6,8 @@
 #import "SFBAudioPlugIn.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBCStringForOSType.h"
+
 @implementation SFBAudioPlugIn
 
 + (NSArray *)plugIns
@@ -17,6 +19,32 @@
 {
 	NSParameterAssert(SFBAudioObjectIsClassOrSubclassOf(objectID, kAudioPlugInClassID));
 	return [super initWithAudioObjectID:objectID];
+}
+
+- (instancetype)initWithBundleID:(NSString *)bundleID
+{
+	NSParameterAssert(bundleID != nil);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioHardwarePropertyTranslateBundleIDToPlugIn,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID objectID = kAudioObjectUnknown;
+	UInt32 specifierSize = sizeof(objectID);
+	OSStatus result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, sizeof(bundleID), &bundleID, &specifierSize, &objectID);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioHardwarePropertyTranslateBundleIDToPlugIn) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		return nil;
+	}
+
+	if(objectID == kAudioObjectUnknown) {
+		os_log_error(gSFBAudioObjectLog, "Unknown audio plugin bundle ID: %{public}@", bundleID);
+		return nil;
+	}
+
+	return [self initWithAudioObjectID:objectID];
 }
 
 - (NSString *)bundleID
