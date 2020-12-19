@@ -23,8 +23,8 @@ extension AudioObject {
 	/// - parameter scope: The desired scope
 	/// - parameter element: The desired element
 	/// - returns: `true` if the property is settable
-	public func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) -> Bool {
-		return __propertyIsSettable(property, in: scope, onElement: element)
+	public func propertyIsSettable(_ property: PropertySelector, scope: PropertyScope = .global, element: PropertyElement = .master) throws -> Bool {
+		return try __propertyIsSettable(property, in: scope, onElement: element).boolValue
 	}
 
 	// MARK: - Property Observation

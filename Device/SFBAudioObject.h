@@ -350,23 +350,30 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 /// @return \c YES if the property is supported
 - (BOOL)hasProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
 
-/// Returns \c YES if the underlying audio object has the specified property and it is settable
+/// Returns \c @ YES if the underlying audio object has the specified property and it is settable or \c nil on error
 /// @note This queries \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
 /// @param property The property to query
-/// @return \c YES if the property is settable
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -propertyIsSettable:inScope:onElement:");
-/// Returns \c YES if the underlying audio object has the specified property in a scope and it is settable
+/// @return \c @ YES if the property is settable
+- (nullable NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -propertyIsSettable:inScope:onElement:error:");
+/// Returns \c @ YES if the underlying audio object has the specified property in a scope and it is settable or \c nil on error
 /// @note This queries \c { property, scope, kAudioObjectPropertyElementMaster }
 /// @param property The property to query
 /// @param scope The desired scope
-/// @return \c YES if the property is settable
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -propertyIsSettable:inScope:onElement:");
-/// Returns \c YES if the underlying audio object has the specified property on an element in a scope and it is settable
+/// @return \c @ YES if the property is settable
+- (nullable NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -propertyIsSettable:inScope:onElement:error:");
+/// Returns \c @ YES if the underlying audio object has the specified property on an element in a scope and it is settable or \c nil on error
 /// @param property The property to query
 /// @param scope The desired scope
 /// @param element The desired element
-/// @return \c YES if the property is settable
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_REFINED_FOR_SWIFT;
+/// @return \c @ YES if the property is settable
+- (nullable NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -propertyIsSettable:inScope:onElement:error:");
+/// Returns \c @ YES if the underlying audio object has the specified property on an element in a scope and it is settable or \c nil on error
+/// @param property The property to query
+/// @param scope The desired scope
+/// @param element The desired element
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c @ YES if the property is settable
+- (nullable NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Property Observation
 
@@ -820,7 +827,26 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 #pragma mark - Property Setting
 
 /// Sets the value for \c property as an \c unsigned \c int
-/// @note This sets \c { property, scope, element }
+/// @note This sets \c { property, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to set
+/// @return \c YES if successful
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
+/// Sets the value for \c property as an \c unsigned \c int
+/// @note This sets \c { property, scope, kAudioObjectPropertyElementMaster }
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to set
+/// @param scope The desired scope
+/// @return \c YES if successful
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
+/// Sets the value for \c property as an \c unsigned \c int
+/// @note \c property must refer to a property of type \c UInt32
+/// @param property The property to set
+/// @param scope The desired scope
+/// @param element The desired element
+/// @return \c YES if successful
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element NS_SWIFT_UNAVAILABLE("Use -setUnsignedInt:forProperty:inScope:onElement:error:");
+/// Sets the value for \c property as an \c unsigned \c int
 /// @note \c property must refer to a property of type \c UInt32
 /// @param property The property to set
 /// @param scope The desired scope
@@ -830,7 +856,6 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Sets the value for \c property as a \c Float32
-/// @note This sets \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float32
 /// @param property The property to set
 /// @param scope The desired scope
@@ -840,7 +865,6 @@ NS_SWIFT_NAME(AudioObject) @interface SFBAudioObject : NSObject
 - (BOOL)setFloat:(float)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Sets the value for \c property as a \c Float64
-/// @note This sets \c { property, scope, element }
 /// @note \c property must refer to a property of type \c Float64
 /// @param property The property to set
 /// @param scope The desired scope

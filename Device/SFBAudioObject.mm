@@ -174,16 +174,18 @@ namespace {
 		return AudioObjectHasProperty(objectID, &propertyAddress);
 	}
 
-	bool PropertyIsSettable(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster)
+	NSNumber * _Nullable PropertyIsSettable(AudioObjectID objectID, AudioObjectPropertySelector property, AudioObjectPropertyScope scope = kAudioObjectPropertyScopeGlobal, AudioObjectPropertyElement element = kAudioObjectPropertyElementMaster, NSError **error = nullptr)
 	{
 		AudioObjectPropertyAddress propertyAddress = { .mSelector = property, .mScope = scope, .mElement = element };
 		Boolean isSettable;
 		OSStatus result = AudioObjectIsPropertySettable(objectID, &propertyAddress, &isSettable);
 		if(result != kAudioHardwareNoError) {
 			os_log_error(gSFBAudioObjectLog, "AudioObjectIsPropertySettable ('%{public}.4s', '%{public}.4s', %u) failed: %d '%{public}.4s'", SFBCStringForOSType(propertyAddress.mSelector), SFBCStringForOSType(propertyAddress.mScope), propertyAddress.mElement, result, SFBCStringForOSType(result));
-			return false;
+			if(error)
+				*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			return nil;
 		}
-		return isSettable;
+		return isSettable ? @YES : @NO;
 	}
 
 #pragma mark - Typed Scalar Property Getters
@@ -622,27 +624,32 @@ static SFBAudioObject *sSystemObject = nil;
 	return HasProperty(_objectID, property, scope, element);
 }
 
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property
+- (NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property
 {
 	return PropertyIsSettable(_objectID, property);
 }
 
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+- (NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
 {
 	return PropertyIsSettable(_objectID, property, scope);
 }
 
-- (BOOL)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
 {
-	return PropertyIsSettable(_objectID, property, element);
+	return PropertyIsSettable(_objectID, property, scope, element);
 }
+
+- (NSNumber *)propertyIsSettable:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+{
+	return PropertyIsSettable(_objectID, property, scope, element, error);
+}
+
+#pragma mark - Property Observation
 
 - (BOOL)whenPropertyChanges:(SFBAudioObjectPropertySelector)property performBlock:(dispatch_block_t)block
 {
 	return AddPropertyListener(_objectID, _listenerBlocks, block, property);
 }
-
-#pragma mark - Property Observation
 
 - (BOOL)whenProperty:(SFBAudioObjectPropertySelector)property changesinScope:(SFBAudioObjectPropertyScope)scope performBlock:(dispatch_block_t)block
 {
@@ -944,11 +951,27 @@ static SFBAudioObject *sSystemObject = nil;
 {
 	return AudioChannelLayoutForProperty(_objectID, property, scope, element, error);
 }
+
 @end
 
 @implementation SFBAudioObject (SFBPropertySetters)
 
 #pragma mark - Property Setting
+
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property
+{
+	return SetArithmeticProperty<UInt32>(_objectID, value, property);
+}
+
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope
+{
+	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope);
+}
+
+- (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+{
+	return SetArithmeticProperty<UInt32>(_objectID, value, property, scope, element);
+}
 
 - (BOOL)setUnsignedInt:(unsigned int)value forProperty:(SFBAudioObjectPropertySelector)property inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
 {
