@@ -47,7 +47,37 @@
 	return [self initWithAudioObjectID:objectID];
 }
 
-- (NSArray *)endPoints
+- (nullable SFBAudioObject *)createEndpointDevice:(NSDictionary *)composition error:(NSError **)error
+{
+	NSParameterAssert(composition != nil);
+	CFDictionaryRef qualifier = (__bridge CFDictionaryRef)composition;
+	return [self audioObjectForProperty:kAudioTransportManagerCreateEndPointDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
+}
+
+- (BOOL)destroyEndpointDevice:(SFBAudioObject *)endpointDevice error:(NSError **)error
+{
+	NSParameterAssert(endpointDevice != nil);
+
+	AudioObjectPropertyAddress propertyAddress = {
+		.mSelector	= kAudioTransportManagerDestroyEndPointDevice,
+		.mScope		= kAudioObjectPropertyScopeGlobal,
+		.mElement	= kAudioObjectPropertyElementMaster
+	};
+
+	AudioObjectID value = endpointDevice.objectID;
+	UInt32 dataSize = sizeof(value);
+	OSStatus result = AudioObjectGetPropertyData(_objectID, &propertyAddress, 0, NULL, &dataSize, &value);
+	if(result != kAudioHardwareNoError) {
+		os_log_error(gSFBAudioObjectLog, "AudioObjectGetPropertyData (kAudioTransportManagerDestroyEndPointDevice) failed: %d '%{public}.4s'", result, SFBCStringForOSType(result));
+		if(error)
+			*error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+		return NO;
+	}
+
+	return YES;
+}
+
+- (NSArray *)endpoints
 {
 	return [self audioObjectArrayForProperty:kAudioTransportManagerPropertyEndPointList inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
