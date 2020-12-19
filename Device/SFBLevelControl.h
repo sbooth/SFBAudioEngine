@@ -13,10 +13,20 @@ NS_SWIFT_NAME(LevelControl) @interface SFBLevelControl : SFBAudioControl
 /// Returns the control's scalar value or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyScalarValue
 @property (nonatomic, nullable, readonly) NSNumber *scalarValue NS_REFINED_FOR_SWIFT;
+/// Sets the control's scalar value
+/// @note This corresponds to \c kAudioLevelControlPropertyScalarValue
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setScalarValue:(float)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the control's decibel value or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyDecibelValue
 @property (nonatomic, nullable, readonly) NSNumber *decibelValue NS_REFINED_FOR_SWIFT;
+/// Sets the control's decibel value
+/// @note This corresponds to \c kAudioLevelControlPropertyDecibelValue
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setDecibelValue:(float)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 /// Returns the control's decibel range or \c nil on error
 /// @note This corresponds to \c kAudioLevelControlPropertyDecibelRange

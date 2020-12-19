@@ -21,9 +21,19 @@
 	return [self floatForProperty:kAudioLevelControlPropertyScalarValue];
 }
 
+- (BOOL)setScalarValue:(float)value error:(NSError **)error
+{
+	return [self setFloat:value forProperty:kAudioLevelControlPropertyScalarValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+}
+
 - (NSNumber *)decibelValue
 {
 	return [self floatForProperty:kAudioLevelControlPropertyDecibelValue];
+}
+
+- (BOOL)setDecibelValue:(float)value error:(NSError **)error
+{
+	return [self setFloat:value forProperty:kAudioLevelControlPropertyDecibelValue inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 - (NSValue *)decibelRange
