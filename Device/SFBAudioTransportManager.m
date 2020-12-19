@@ -6,6 +6,7 @@
 #import "SFBAudioTransportManager.h"
 #import "SFBAudioObject+Internal.h"
 
+#import "SFBEndpointDevice.h"
 #import "SFBCStringForOSType.h"
 
 @implementation SFBAudioTransportManager
@@ -47,14 +48,14 @@
 	return [self initWithAudioObjectID:objectID];
 }
 
-- (nullable SFBAudioObject *)createEndpointDevice:(NSDictionary *)composition error:(NSError **)error
+- (nullable SFBEndpointDevice *)createEndpointDevice:(NSDictionary *)composition error:(NSError **)error
 {
 	NSParameterAssert(composition != nil);
 	CFDictionaryRef qualifier = (__bridge CFDictionaryRef)composition;
-	return [self audioObjectForProperty:kAudioTransportManagerCreateEndPointDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
+	return (SFBEndpointDevice *)[self audioObjectForProperty:kAudioTransportManagerCreateEndPointDevice inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster qualifier:qualifier qualifierSize:sizeof(qualifier) error:error];
 }
 
-- (BOOL)destroyEndpointDevice:(SFBAudioObject *)endpointDevice error:(NSError **)error
+- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)endpointDevice error:(NSError **)error
 {
 	NSParameterAssert(endpointDevice != nil);
 

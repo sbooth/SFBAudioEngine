@@ -5,6 +5,8 @@
 
 #import <SFBAudioEngine/SFBAudioPlugIn.h>
 
+@class SFBEndpointDevice;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// An audio transport manager
@@ -20,19 +22,19 @@ NS_SWIFT_NAME(AudioTransportManager) @interface SFBAudioTransportManager : SFBAu
 /// @return An initialized \c SFBAudioTransportManager object or \c nil if \c bundleID is invalid or unknown
 - (nullable instancetype)initWithBundleID:(NSString *)bundleID;
 
-/// Creates and returns an initialized \c SFBAudioObject object or \c nil on error
+/// Creates and returns an initialized \c SFBEndpointDevice object or \c nil on error
 /// @note This corresponds to \c kAudioTransportManagerCreateEndPointDevice
 /// @note The constants for the dictionary keys are located in \c AudioHardware.h
 /// @param composition The composition of the new endpoint device
 /// @param error An optional pointer to an \c NSError object to receive error information
-- (nullable SFBAudioObject *)createEndpointDevice:(NSDictionary *)composition error:(NSError **)error;
+- (nullable SFBEndpointDevice *)createEndpointDevice:(NSDictionary *)composition error:(NSError **)error;
 
 /// Destroys an endpoint device
 /// @note This corresponds to \c kAudioTransportManagerDestroyEndPointDevice
 /// @param endpointDevice The endpoint device to destroy
 /// @param error An optional pointer to an \c NSError object to receive error information
 /// @return \c YES on success, \c NO otherwise
-- (BOOL)destroyEndpointDevice:(SFBAudioObject *)endpointDevice error:(NSError **)error NS_SWIFT_NAME(destroyEndpointDevice(_:));
+- (BOOL)destroyEndpointDevice:(SFBEndpointDevice *)endpointDevice error:(NSError **)error NS_SWIFT_NAME(destroyEndpointDevice(_:));
 
 /// Returns an array  of audio endpoints provided by the transport manager or \c nil on error
 /// @note This corresponds to \c kAudioTransportManagerPropertyEndPointList
