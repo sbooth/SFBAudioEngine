@@ -13,15 +13,27 @@ extension Subdevice {
 	}
 
 	/// Returns the drift compensation
-	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
+	/// - note: This corresponds to `kAudioSubDevicePropertyDriftCompensation`
 	func driftCompensation() throws -> Bool {
 		return try getProperty(.subdeviceDriftCompensation) != 0
 	}
 
+	/// Sets the drift compensation
+	/// - note: This corresponds to `kAudioSubDevicePropertyDriftCompensation`
+	func setDriftCompensation(_ value: Bool) throws {
+		try setProperty(.subdeviceDriftCompensation, UInt(value ? 1 : 0))
+	}
+
 	/// Returns the drift compensation quality
-	/// - note: This corresponds to `kAudioSubDevicePropertyExtraLatency`
+	/// - note: This corresponds to `kAudioSubDevicePropertyDriftQuality`
 	func driftCompensationQuality() throws -> UInt {
 		return try getProperty(.subdeviceDriftCompensationQuality)
+	}
+
+	/// Sets the drift compensation quality
+	/// - note: This corresponds to `kAudioSubDevicePropertyDriftQuality`
+	func setDriftCompensationQuality(_ value: UInt) throws {
+		try setProperty(.subdeviceDriftCompensationQuality, value)
 	}
 }
 

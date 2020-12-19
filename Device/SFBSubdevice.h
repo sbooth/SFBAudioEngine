@@ -33,9 +33,19 @@ NS_SWIFT_NAME(Subdevice) @interface SFBSubdevice : SFBAudioDevice
 /// Returns the drift compensation or \c nil on error
 /// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensation
 @property (nonatomic, nullable, readonly) NSNumber *driftCompensation NS_REFINED_FOR_SWIFT;
+/// Sets drift compensation
+/// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensation
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setDriftCompensation:(BOOL)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 /// Returns the drift compensation quality or \c nil on error
 /// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensationQuality
 @property (nonatomic, nullable, readonly) NSNumber *driftCompensationQuality NS_REFINED_FOR_SWIFT;
+/// Sets the drift compensation quality
+/// @note This corresponds to \c kAudioSubDevicePropertyDriftCompensationQuality
+/// @param error An optional pointer to an \c NSError object to receive error information
+/// @return \c YES if successful
+- (BOOL)setDriftCompensationQuality:(unsigned int)value error:(NSError **)error NS_REFINED_FOR_SWIFT;
 
 @end
 

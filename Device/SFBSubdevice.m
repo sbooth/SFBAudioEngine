@@ -36,9 +36,19 @@
 	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
+- (BOOL)setDriftCompensation:(BOOL)value error:(NSError **)error
+{
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioSubDevicePropertyDriftCompensation inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
+}
+
 - (NSNumber *)driftCompensationQuality
 {
 	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
+}
+
+- (BOOL)setDriftCompensationQuality:(unsigned int)value error:(NSError **)error
+{
+	return [self setUnsignedInt:value forProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 @end
