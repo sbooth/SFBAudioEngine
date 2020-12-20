@@ -286,12 +286,16 @@ extension AudioObject {
 extension AudioObject {
 	/// Returns the audio object's base class
 	/// - note: This corresponds to `kAudioObjectPropertyBaseClass`
+	/// - returns: The audio object's base class
+	/// - throws: An error if the property could not be retrieved
 	func baseClassID() throws -> AudioClassID {
 		return AudioClassID(try getProperty(.baseClass) as UInt)
 	}
 
 	/// Returns the audio object's class
 	/// - note: This corresponds to `kAudioObjectPropertyClass`
+	/// - returns: The audio object's class
+	/// - throws: An error if the property could not be retrieved
 	func classID() throws -> AudioClassID {
 		return AudioClassID(try getProperty(.class) as UInt)
 	}
@@ -299,54 +303,76 @@ extension AudioObject {
 	/// Returns the audio object's owning object
 	/// - note: This corresponds to `kAudioObjectPropertyOwner`
 	/// - note: The system object does not have an owner
+	/// - returns: The audio object's owning object
+	/// - throws: An error if the property could not be retrieved
 	func owner() throws -> AudioObject {
 		return try getProperty(.owner)
 	}
 
 	/// Returns the audio object's name
 	/// - note: This corresponds to `kAudioObjectPropertyName`
+	/// - returns: The audio object's name
+	/// - throws: An error if the property could not be retrieved
 	func name() throws -> String {
 		return try getProperty(.name)
 	}
 
 	/// Returns the audio object's model name
 	/// - note: This corresponds to `kAudioObjectPropertyModelName`
+	/// - returns: The audio object's model name
+	/// - throws: An error if the property could not be retrieved
 	func modelName() throws -> String {
 		return try getProperty(.modelName)
 	}
 
 	/// Returns the audio object's manufacturer
 	/// - note: This corresponds to `kAudioObjectPropertyManufacturer`
+	/// - returns: The audio object's manufacturer
+	/// - throws: An error if the property could not be retrieved
 	func manufacturer() throws -> String {
 		return try getProperty(.manufacturer)
 	}
 
 	/// Returns the name of the specified element
 	/// - note: This corresponds to `kAudioObjectPropertyElementName`
+	/// - parameter element: The desired element
+	/// - parameter scope: The desired scope
+	/// - returns: The name of the specified element
+	/// - throws: An error if the property could not be retrieved
 	func nameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
 	/// Returns the category name of the specified element
 	/// - note: This corresponds to `kAudioObjectPropertyElementCategoryName`
+	/// - parameter element: The desired element
+	/// - parameter scope: The desired scope
+	/// - returns: The category name of the specified element
+	/// - throws: An error if the property could not be retrieved
 	func categoryNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
 	/// Returns the number name of the specified element
 	/// - note: This corresponds to `kAudioObjectPropertyElementNumberName`
+	/// - returns: The drift compensation
+	/// - throws: An error if the property could not be retrieved
 	func numberNameOfElement(_ element: PropertyElement, scope: PropertyScope = .global) throws -> String {
 		return try getProperty(.elementName, scope: scope, element: element)
 	}
 
 	/// Returns the audio objects owned by this object
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
+	/// - returns: The audio objects owned by this object
+	/// - throws: An error if the property could not be retrieved
 	func ownedObjects() throws -> [AudioObject] {
 		return try getProperty(.ownedObjects)
 	}
 
 	/// Returns the audio objects owned by this object
 	/// - note: This corresponds to `kAudioObjectPropertyOwnedObjects`
+	/// - returns: The audio objects owned by this object
+	/// - throws: An error if the property could not be retrieved
 	func ownedObjects(types: [UInt]) throws -> [AudioObject] {
 		let qualifier: [AudioClassID] = types.map { AudioClassID($0)  }
 		let qualifierSize: UInt32 = UInt32(MemoryLayout<AudioClassID>.size * types.count)
@@ -355,12 +381,16 @@ extension AudioObject {
 
 	/// Returns the audio object's serial number
 	/// - note: This corresponds to `kAudioObjectPropertySerialNumber`
+	/// - returns: The audio object's serial number
+	/// - throws: An error if the property could not be retrieved
 	func serialNumber() throws -> String {
 		return try getProperty(.serialNumber)
 	}
 
 	/// Returns the audio object's firmware version
 	/// - note: This corresponds to `kAudioObjectPropertyFirmwareVersion`
+	/// - returns: The audio object's firmware version
+	/// - throws: An error if the property could not be retrieved
 	func firmwareVersion() throws -> String {
 		return try getProperty(.firmwareVersion)
 	}
