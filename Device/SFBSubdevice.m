@@ -26,29 +26,29 @@
 	return [super initWithAudioObjectID:objectID];
 }
 
-- (NSNumber *)extraLatencyInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)extraLatency
 {
-	return [self doubleForProperty:kAudioSubDevicePropertyExtraLatency inScope:scope onElement:element error:NULL];
+	return [self doubleForProperty:kAudioSubDevicePropertyExtraLatency inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (NSNumber *)driftCompensationInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)driftCompensation
 {
-	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation inScope:scope onElement:element error:NULL];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensation inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setDriftCompensation:(BOOL)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (BOOL)setDriftCompensation:(BOOL)value error:(NSError **)error
 {
-	return [self setUnsignedInt:(value != 0) forProperty:kAudioSubDevicePropertyDriftCompensation inScope:scope onElement:element error:error];
+	return [self setUnsignedInt:(value != 0) forProperty:kAudioSubDevicePropertyDriftCompensation inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
-- (NSNumber *)driftCompensationQualityInScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element
+- (NSNumber *)driftCompensationQuality
 {
-	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:scope onElement:element error:NULL];
+	return [self unsignedIntForProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:NULL];
 }
 
-- (BOOL)setDriftCompensationQuality:(unsigned int)value inScope:(SFBAudioObjectPropertyScope)scope onElement:(SFBAudioObjectPropertyElement)element error:(NSError **)error
+- (BOOL)setDriftCompensationQuality:(unsigned int)value error:(NSError **)error
 {
-	return [self setUnsignedInt:value forProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:scope onElement:element error:error];
+	return [self setUnsignedInt:value forProperty:kAudioSubDevicePropertyDriftCompensationQuality inScope:kAudioObjectPropertyScopeGlobal onElement:kAudioObjectPropertyElementMaster error:error];
 }
 
 @end
