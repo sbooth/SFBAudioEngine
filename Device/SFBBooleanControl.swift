@@ -8,7 +8,6 @@ import Foundation
 extension LevelControl {
 	/// Returns the control's value
 	/// - note: This corresponds to `kAudioBooleanControlPropertyValue`
-	/// - returns: The control's value
 	/// - throws: An error if the property could not be retrieved
 	public func value() throws -> Bool {
 		return try getProperty(.booleanControlValue) != 0
